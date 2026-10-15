@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9338e6049690497e8249d03e7d8cf721, type: 3}
+  m_Name: StageFieldView_Default
+  m_EditorClassIdentifier: 
+  stageFieldViewData:
+    fieldDisplayMode: 1
+    cellPrefab: {fileID: 3971630385216421542, guid: 707f8962d39a55c45bdecf22990b0ff3, type: 3}
+    alternateCellPrefab: {fileID: 0}
+    cellOffsetSize: {x: 0.8, y: 1, z: 0.8}
+    cellPaddingX: 0.1
+    cellPaddingY: 0.1
+    outlineCellSpacing: {x: 1, y: 1}
+    gridLineWidth: 0.05
+    gridDecalMaterial: {fileID: 2100000, guid: a37d1aa4286135a48a2ca4097db22dc8, type: 2}
+    gridDecalDepth: 1
+    outlineThickness: 0.06
+    outlineYOffset: 0.02
+    handUnitLayerMask:
+      serializedVersion: 2
+      m_Bits: 256
+    ghostMaterial: {fileID: 0}
+    validGhostTint: {r: 0.45, g: 1, b: 0.55, a: 0.5}
+    invalidGhostTint: {r: 1, g: 0.4, b: 0.4, a: 0.5}
+    ghostWorldOffset: {x: 0, y: 0.05, z: 0}
+    ghostScale: 0.5
+    fieldUnitScale: 0.5

@@ -1,0 +1,12 @@
+{
+  "situationId": "S05",
+  "_note": "자신이 빈사(HP 1). 룰은 공격이 있으면 무조건 공격하며 피해가 같아 좌표로 고른다(가정: 0).",
+  "ruleChoice": 0,
+  "self": { "unit": "Demon", "hp": 1, "maxHp": 5, "atk": 1, "move": 3 },
+  "candidates": [
+    { "id": 0, "action": "attack", "target": "Sniper", "targetHp": 1,  "expectedDamage": 1, "killsTarget": true,  "threatAfter": 3, "distToTargetAfter": 1 },
+    { "id": 1, "action": "attack", "target": "Akimbo", "targetHp": 10, "expectedDamage": 1, "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 1 },
+    { "id": 2, "action": "move",   "target": "",       "targetHp": 0,  "expectedDamage": 0, "killsTarget": false, "threatAfter": 0, "distToTargetAfter": 4 },
+    { "id": 3, "action": "wait",   "target": "",       "targetHp": 0,  "expectedDamage": 0, "killsTarget": false, "threatAfter": 3, "distToTargetAfter": 1 }
+  ]
+}

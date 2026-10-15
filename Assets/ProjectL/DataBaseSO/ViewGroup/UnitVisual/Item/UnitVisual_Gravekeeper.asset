@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_Gravekeeper
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 17
+    prefab: {fileID: 6710815147032878235, guid: 035794848a9e7de4bb183cfb2dfc22a0, type: 3}
+    displayName: Gravekeeper
+    timelineIcon: {fileID: 21300000, guid: 321fa3b6e30327e42ad91504a092bd05, type: 3}
+    infoIcon: {fileID: 21300000, guid: cf9549ee832c2334292ab83c85e3c74c, type: 3}

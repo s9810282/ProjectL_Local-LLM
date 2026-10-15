@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1910000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1910000002}
+  - component: {fileID: 1910000003}
+  m_Layer: 0
+  m_Name: FmodAudioServiceTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1910000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1910000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: Event Slot 0
+    displayName: Attack
+    selectedEventPath: event:/PostFX/SFX/Unit/Attack
+    selectedEventGuid: '{7ced36ab-72ec-4ec6-a94b-d3a7d8914a5f}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: UnitDetailType
+      idString: 2198871359:2723693367
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 4
+      defaultValue: 0
+      useOverride: 1
+      value: 3
+      labels:
+      - Police_A
+      - Akimbo
+      - Shotgun
+      - Sniper
+      - Building
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 5ea5f176ea5549868fff6cb1c9fc42d8
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 4
+      labelValue: Sniper
+      labelIndex: 3
+    - presetId: f66bf2a9950945b9a610465f99f68976
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 4
+      labelValue: Akimbo
+      labelIndex: 1
+    currentPresetIndex: -1
+  playerKey:
+    key: d7e3f06459e94a9a9c6ad4ea7d3b7a21
+  legacyPlayerId: 

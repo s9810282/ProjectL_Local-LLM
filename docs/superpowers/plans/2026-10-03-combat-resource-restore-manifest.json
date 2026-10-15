@@ -1,0 +1,600 @@
+{
+  "sourceCommit": "ae07af37e9e897e4462c102b67d6b05f7a0bb8db",
+  "sourceCatalog": "Assets/DataBase/SO/Stage/UnitTable/Visual/UnitVisualCatalog.asset",
+  "assets": [
+    {
+      "source": "Assets/PACK/Ballista/Models/Convex/SM_Wep_Ballista_Mobile_01_Convex.asset",
+      "destination": "Assets/ProjectL/PACK/Ballista/Models/Convex/SM_Wep_Ballista_Mobile_01_Convex.asset",
+      "guid": "dbc1ad5483d9c6e4e839b8a2fc53be68",
+      "sha256": "d5c35d0e5d82265765234ccf349a412ea24f70d42311ecc8bbe7d7d609c10ff6",
+      "scriptsRemoved": [
+        "5b71ad40e238046238f9b0c6f33c3791"
+      ]
+    },
+    {
+      "source": "Assets/PACK/Ballista/Models/SM_Wep_Ballista_Mobile_01.fbx",
+      "destination": "Assets/ProjectL/PACK/Ballista/Models/SM_Wep_Ballista_Mobile_01.fbx",
+      "guid": "3e74f5682b119c448b20bfb54a522578",
+      "sha256": "d6ef512f6d8e9ebd0ae83bb8fcedd3c238d233df6a64d2f17994af6d783c58f9",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/Ballista/Prefabs/SiegeEngines/SM_Wep_Ballista_Mobile_01.prefab",
+      "destination": "Assets/ProjectL/PACK/Ballista/Prefabs/SiegeEngines/SM_Wep_Ballista_Mobile_01.prefab",
+      "guid": "51339d6107dc96a469e865d4642a8641",
+      "sha256": "cb115a71641784cf3be9a24181fecc0f342888fc22096141adfe5ab3f5286139",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Materials/PolygonFantasyKingdom_Mat_01_A.mat",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Materials/PolygonFantasyKingdom_Mat_01_A.mat",
+      "guid": "71e41e43b459a244abaf5acca76b89ee",
+      "sha256": "536a51030dfe81b7ad211bcbbf45ac9985146de90eda108596bed62cc28a8879",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Models/Convex/SM_Wep_Hot_Oil_02_Convex.asset",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Models/Convex/SM_Wep_Hot_Oil_02_Convex.asset",
+      "guid": "400de0499a7b22d4685e48bcf3d7224b",
+      "sha256": "8d0f4728860687383932bd6be16f9bc646acad2e6b854ff1a5d76c505debae3a",
+      "scriptsRemoved": [
+        "5b71ad40e238046238f9b0c6f33c3791"
+      ]
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Models/SM_Wep_Hot_Oil_02.fbx",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Models/SM_Wep_Hot_Oil_02.fbx",
+      "guid": "1f5cd62a70a6ed64ebd758c7f463981a",
+      "sha256": "e63d02d2ed72c3bcea79a1a4241b1fee6e6c9c331726c108c979d0436fc7d342",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Prefabs/SiegeEngines/SM_Wep_Hot_Oil_02.prefab",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Prefabs/SiegeEngines/SM_Wep_Hot_Oil_02.prefab",
+      "guid": "c8dbe9d21e178fb4b8f0c81393393249",
+      "sha256": "a46d9bca385ad9fd8d6c1da740bd90189754fbf69c26d93335354be9f4fda850",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Textures/Misc/PolygonFantasyKingdom_Texture_Emmisive.png",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Textures/Misc/PolygonFantasyKingdom_Texture_Emmisive.png",
+      "guid": "ddc131df32f11f54a98daf8633aee1a3",
+      "sha256": "7866b150971fa0b52a7a11ec09e3c813df8b6cf3294cdde36b33abaa72e865cf",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Textures/Misc/PolygonFantasyKingdom_Texture_Normal_01.png",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Textures/Misc/PolygonFantasyKingdom_Texture_Normal_01.png",
+      "guid": "ee4ca7d229aa8f04cab686907c5f3396",
+      "sha256": "77580aebc13887babc1051f8348c88b2f1f1a398232d668d907942dde725a19c",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/PACK/PolygonFantasyKingdom/Textures/PolygonFantasyKingdom_Texture_01_A.png",
+      "destination": "Assets/ProjectL/PACK/PolygonFantasyKingdom/Textures/PolygonFantasyKingdom_Texture_01_A.png",
+      "guid": "270fd5c64f7118c4495be93b7ce2530c",
+      "sha256": "521945a2e8e647730e09db3cfe0921ce7941d969209816e62c471a554b6470ee",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/Base.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/Base.prefab",
+      "guid": "0c39bddbbcf195b4e8f4a1227d31a966",
+      "sha256": "ccd1989a3f64b9364e7c47d7dd2046c1b2c8cbb1a222e657b725da14ae44f6d1",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/Enemy.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/Enemy.prefab",
+      "guid": "c52e7ebe3799d2243bbb0a6fe0bcae71",
+      "sha256": "a0752b096afea3320ca204bbcd4cf513078c25ba4c8010abac379f17f243eae0",
+      "scriptsRemoved": [
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitView.cs",
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitSelectable.cs"
+      ]
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/EnemyUnit_Ballista.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/EnemyUnit_Ballista.prefab",
+      "guid": "642518c57301d30469215547e3999e73",
+      "sha256": "df2b40c19617a7694d36dbb9d8b724359d7cb6898a9901cc9f4495596a7d0a99",
+      "scriptsRemoved": [
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitView.cs",
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitSelectable.cs",
+        "Assets/Scripts/ProjectL/Unity/View/Animation/BallistaWeapon.cs",
+        "Assets/Scripts/ProjectL/Unity/View/Animation/UnitProceduralMotion.cs"
+      ]
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/EnemyUnit_UnderTaker.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/EnemyUnit_UnderTaker.prefab",
+      "guid": "035794848a9e7de4bb183cfb2dfc22a0",
+      "sha256": "6ee53b03b989a684d7b4d6d6c7388b9d985f095d07107b5c70c4a44faf32f4f8",
+      "scriptsRemoved": [
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitView.cs",
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitSelectable.cs"
+      ]
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/StageUnit_CatusCannon.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_CatusCannon.prefab",
+      "guid": "740814e4d9acd3f42a3515d16094e717",
+      "sha256": "d2b13a1f449202635a59ee2c4012ea46bdee752d15dfdc2e92241d0c51c8b9e4",
+      "scriptsRemoved": [
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitView.cs",
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitSelectable.cs",
+        "Assets/Scripts/ProjectL/Unity/View/Animation/MortarWeapon.cs",
+        "Assets/Scripts/ProjectL/Unity/View/Animation/UnitProceduralMotion.cs"
+      ]
+    },
+    {
+      "source": "Assets/Prefabs/Stage/Units/StageUnit_MainCharacter.prefab",
+      "destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_MainCharacter.prefab",
+      "guid": "997984e858b340aa83745d5c217bce25",
+      "sha256": "5e4437c7e771e1235a60d5878834e95cf745ba648f9a881d27461eb0d2073ff1",
+      "scriptsRemoved": [
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitView.cs",
+        "Assets/Scripts/ProjectL/Unity/View/HandQueue/HandUnitSelectable.cs"
+      ]
+    },
+    {
+      "source": "Assets/Resources/Test/Model/FBX/AkimboTest.fbx",
+      "destination": "Assets/ProjectL/Resources/Test/Model/FBX/AkimboTest.fbx",
+      "guid": "7943597e817e7174a917caa3dd5639c3",
+      "sha256": "feaf8eae2697534946be57c3de55d6f39beea382dcae2af8cc67881198984d8f",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Resources/Test/Model/FBX/Enemy.fbx",
+      "destination": "Assets/ProjectL/Resources/Test/Model/FBX/Enemy.fbx",
+      "guid": "8f58a22e29ec0c04a98ff99f367d6e78",
+      "sha256": "190ce9e24ba77e4c1a6a59fdd17efc10e89a0d6288fa4aa1dc0736ea6d8960cd",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Resources/Test/Model/FBX/EnemyHorse.fbx",
+      "destination": "Assets/ProjectL/Resources/Test/Model/FBX/EnemyHorse.fbx",
+      "guid": "4aa0c6dd29cddce41a67f10c0656b6a2",
+      "sha256": "dd083f072dd60bc7fb1c6205a00e6502a06bbbbe1a08bd035719fb50bb0121d2",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Resources/Test/Model/FBX/New Material.mat",
+      "destination": "Assets/ProjectL/Resources/Test/Model/FBX/New Material.mat",
+      "guid": "a139a89aa53c3a44c8f8668191041d1d",
+      "sha256": "0c5001ba013c8ff2f0d3b5fbf5e863706149fc732006ad4c4646e42e20bb4b8d",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Character_AkimboIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Character_AkimboIcon.png",
+      "guid": "15090cb96cc01074081f79386729a6f2",
+      "sha256": "174922a3bca0e446098f75e0cd8a707c437e6ad00651413aff8233c1b120b707",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Character_CactusIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Character_CactusIcon.png",
+      "guid": "76b0032ded0d4a743a1bf05da01b57a0",
+      "sha256": "c02e740b396e9d30c9261dc2143c33784a8250bd6b773dbf3cae479ef1caf980",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Character_HeavyshotgunIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Character_HeavyshotgunIcon.png",
+      "guid": "161ef89f3cca79540b2a514f166fccef",
+      "sha256": "c46faefae813090c0d81689b9dc8e1f3d50440021cca0cf4519154754d1ab8c5",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Character_MainIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Character_MainIcon.png",
+      "guid": "72c0244785a39ee46bb168cbcf373fc9",
+      "sha256": "7e8c732a33c0ed6c57f5388fb967b472d2aaf6808a5d6e7290fbf729e9c4f52f",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Character_SniperIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Character_SniperIcon.png",
+      "guid": "e099d528c5fef344eb30278a4d906916",
+      "sha256": "bd1cca078b7b6361de6928f238332b5e86277ffdd8b10c4e7677ac77a6087dbf",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Enemy_BallistaIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Enemy_BallistaIcon.png",
+      "guid": "b92f23684f2a9174dac56caccfdea67d",
+      "sha256": "c89fd23d3592d3e27fb9d2ea3f527f7bd31ea61673588fc3ad8d50e65d4710c0",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Enemy_MinerIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Enemy_MinerIcon.png",
+      "guid": "92125961ea0ad344ebf1e264f71bc65b",
+      "sha256": "d01ac6e97874e517bfb8a18456923181378ba06e96ca599159ccba514b2f0ccc",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/AlphaIcon/Enemy_UndertakerIcon.png",
+      "destination": "Assets/ProjectL/Sprites/AlphaIcon/Enemy_UndertakerIcon.png",
+      "guid": "cf9549ee832c2334292ab83c85e3c74c",
+      "sha256": "09164bd354536061d8162aacc68e941a3107e587b57567d7a78ffd189ed7c46a",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI.png",
+      "guid": "d9c2e05127051bd4781d32a1a7ab6d4f",
+      "sha256": "895ce6ecff0ca6dec2115c723c6010a4b5479417d2fa3436c7a45bdd98abc5ca",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI_Akimbo.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI_Akimbo.png",
+      "guid": "5b8e05f2aec73b0499931c7d56315723",
+      "sha256": "9a776fa755806c750a9f197220b72aad993581a80edb267035a58f2a4d886584",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI_Cactus.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI_Cactus.png",
+      "guid": "74e2938ef5ebbf24788651017a0b3fca",
+      "sha256": "b3bb926b37cea3fd9413af4e91f28aed637264d962bd9e22d0ebe21584f8fbe4",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI_HeavyShotgun.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI_HeavyShotgun.png",
+      "guid": "4aac831e4a9b8ab4bbe508ab13b348d4",
+      "sha256": "60fe7b9787e8c619f17f055f2f6473bb900140b311e65edabdfcbd2cbf8632c8",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI_Main.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI_Main.png",
+      "guid": "cd23ef965660c6642b8998aa39ad4070",
+      "sha256": "3be709dc5868236d2502a42eb6b7b8fffc76d323cd10c010078c3d1e14793792",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/HandUI_Sniper.png",
+      "destination": "Assets/ProjectL/Sprites/Card/HandUI_Sniper.png",
+      "guid": "844d99fe010f57242abcc16470590959",
+      "sha256": "2eb058e5594fa73ad1d25d5ac8208d29e72b68de270d2aed989e3120aa913c7e",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/스나이퍼_핸드초상화_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Card/스나이퍼_핸드초상화_1024.png",
+      "guid": "74d1fc012fec10041b52a6c28f27c80d",
+      "sha256": "be098799ba4abacf6cc27df6e47d561a12e7127d31292123afaffc7183046927",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/아킴보_핸드초상화_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Card/아킴보_핸드초상화_1024.png",
+      "guid": "61a7ce1b4cd03d841a8b6c193b2a7bc9",
+      "sha256": "f57ca43d13158cc5d44f4729f1c4ed8e24f9f40d13cc4ab7e15b48b7938a7328",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Card/헤비샷건_핸드초상화_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Card/헤비샷건_핸드초상화_1024.png",
+      "guid": "464345b64c098e141b9c9a98994029f2",
+      "sha256": "a07892738ac8df030c113b531201c5c634a2a6cfb3403d2750acbb1f4a8ef7ba",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/가시.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/가시.png",
+      "guid": "5b7681cdc68f04245ab7eb9361e9d7b0",
+      "sha256": "fe2464fd92a056562e58ef0b0581c7f8ba9092fd11e8a6be8d4ad709fc3fe041",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/관통_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/관통_1024.png",
+      "guid": "ae98a114fcf08ca44b11bffa3598a5dd",
+      "sha256": "1bdba9e0486f0f1244791f3bf6ddd16c6108ebe0f312b20261502f03252dd705",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/난사_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/난사_1024.png",
+      "guid": "22707f80b5a45f445bbf0ddb939cd77f",
+      "sha256": "a3ec8f00d49cb7079fca92a0efd3e989b8bda688021bd973d90d1bccfa450273",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/넉백_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/넉백_1024.png",
+      "guid": "21ce7390994a2b744bef4d4050727b7d",
+      "sha256": "76d960762ad2f7283cdf7c297d3ada70d6f00e0ad0c3185d820ef1840bd4785e",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/산탄_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/산탄_1024.png",
+      "guid": "aa84f8fff39b5574da09298acd7d1d74",
+      "sha256": "5573c064005ef6af15c92d309fd8b79fe17107d359b7214a5d0dc21c52065fa8",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/신속.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/신속.png",
+      "guid": "e12e704d3a2473f4494c3a233ea5c178",
+      "sha256": "5d02c99ea7e062fae639a8c0dddfcb7e5ea184cc39572197a4960f8fc37588e1",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Icon/집중_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Icon/집중_1024.png",
+      "guid": "be6d11a183ea8d144b372a1480c72390",
+      "sha256": "25b5de73a30dde09b963a4e45bf75566e32e3f5f9f89e577cd0af8bf9868466a",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Move white.png",
+      "destination": "Assets/ProjectL/Sprites/Move white.png",
+      "guid": "add95c5e4f4bad84abf12f83f82526fe",
+      "sha256": "b438204a10277ea964cb4f9727b890966aa3f1ec3d954b95de48bf3a2e300964",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Move.png",
+      "destination": "Assets/ProjectL/Sprites/Move.png",
+      "guid": "16050a87ae4d4ea449c947e9ee6d829c",
+      "sha256": "def8483feaf2005b961a838bf43e572ea72d23dd32721844a0dd92253f015f8c",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Panel_9Slice_256.png",
+      "destination": "Assets/ProjectL/Sprites/Panel_9Slice_256.png",
+      "guid": "2c572a25918e4854f942e1cf72983b3d",
+      "sha256": "17c42d79bc592ec165989db8fe2694728dd1c0d08ff260011b2e0bec715be973",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/Panel_Source_1024.png",
+      "destination": "Assets/ProjectL/Sprites/Panel_Source_1024.png",
+      "guid": "c7a8aab6d35b13a4fb515687c8f6ee26",
+      "sha256": "da4e89d04313bb56c35065702abfd5501e67e0fe37bd79e8ead2570dae4b2007",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Akimbo_Icon.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Akimbo_Icon.png",
+      "guid": "3443468e435c64945bd1c44641bec975",
+      "sha256": "7d3f0dcc8395172e263f5513a85cac8621a4ccae2800b8662f8a4ec199f9a342",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Enemy_Ballista.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Enemy_Ballista.png",
+      "guid": "dc1b2db27fb18db4ebcc6931f06a7380",
+      "sha256": "48cc41326dc9e45e4526d2295ca8373908f65afce7ed35a402c3472058e422fb",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Enemy_Miner.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Enemy_Miner.png",
+      "guid": "0a13ae9f91b677d4aa377a0dbf5fcaf7",
+      "sha256": "6f5d8c7d452417e263da3a41a77b830916d2554d513d37045eff9ced22c86355",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Enemy_Undertaker.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Enemy_Undertaker.png",
+      "guid": "321fa3b6e30327e42ad91504a092bd05",
+      "sha256": "5733f5fc117ecd5aacaa917d73bc95e8f723196dd8bc0a6f4d9eff463384032d",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/HeavyShotgun_Icon.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/HeavyShotgun_Icon.png",
+      "guid": "0969d33a788be194bb8199fd879e9a76",
+      "sha256": "0904d7370ce485c4ffef1338ea3747a19a89b5c36c253ef7c111d928c07c0517",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Main_Icon.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Main_Icon.png",
+      "guid": "6453b57ec70db4b459d5a8dae784050a",
+      "sha256": "59502890a7065136d1b20c11d0186d9576623bbd9847e18df57f748951736db1",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/TimelineIcon/Sniper_Icon.png",
+      "destination": "Assets/ProjectL/Sprites/TimelineIcon/Sniper_Icon.png",
+      "guid": "fa7a18d3fac6f054bb0d3a51ae96a1b2",
+      "sha256": "5afa66df131596b3d77b77e6d118b0f18a4aa278bd906625e0b1512c17a40bcc",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/UnitInfo/ActionCostUI_Empty.png",
+      "destination": "Assets/ProjectL/Sprites/UnitInfo/ActionCostUI_Empty.png",
+      "guid": "4183c845c1a205b49b12d4ea5638ccf5",
+      "sha256": "a90f6b0482c7f5fbbcbc1a67484a8035a0986f3886ec5b79b2bfc2dca0de9108",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/UnitInfo/ActionCostUI_Fill.png",
+      "destination": "Assets/ProjectL/Sprites/UnitInfo/ActionCostUI_Fill.png",
+      "guid": "d63387073e8ef4c49b9bf863dcc6db85",
+      "sha256": "e8f0b7d8c703611ec278acf76b190bddee19eeca0e3f75f4d4cd7c8cfb6a4395",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/atk.png",
+      "destination": "Assets/ProjectL/Sprites/atk.png",
+      "guid": "641c915ace38efd49b78016d787ab82b",
+      "sha256": "d704021d49bf692f396d10dcce8ba5a0ed475ae9dfd246bdb122f3dab07760d2",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/dead.png",
+      "destination": "Assets/ProjectL/Sprites/dead.png",
+      "guid": "d7bedc98fd5fff94c94359cae9ce0c8b",
+      "sha256": "abccea3fadbb700f5c52425560f9a1f3d7b67b57f28ad7c370255bd00373b37c",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/draw.png",
+      "destination": "Assets/ProjectL/Sprites/draw.png",
+      "guid": "fa86b9f9a5c2af24481ce0024713aa31",
+      "sha256": "5941b0d95d0cdb460a45c23fae54fe176495cdfe2fa5e6ce497b783d077ee065",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/heart-removebg-preview.png",
+      "destination": "Assets/ProjectL/Sprites/heart-removebg-preview.png",
+      "guid": "a8837645982253e499310ef78009d53d",
+      "sha256": "cb5d0f65af9b27a985ef8ec2df3d03cfa2a3949ce498646997832e845dc9defc",
+      "scriptsRemoved": []
+    },
+    {
+      "source": "Assets/Sprites/white atk.png",
+      "destination": "Assets/ProjectL/Sprites/white atk.png",
+      "guid": "048dcc49e33315244bf14f9aa97e05db",
+      "sha256": "c2ee00551a6f463fdd8c7c4340545022aeabfa75d5751fd62e3cb13ff4c393b8",
+      "scriptsRemoved": []
+    }
+  ],
+  "reused": {
+    "Assets/Resources/Test/Model/Prefab/TestUnit_Base.prefab": "Assets/ProjectL/Resources/Test/Model/Prefab/TestUnit_Base.prefab",
+    "Assets/Prefabs/Stage/Units/StageUnit_Sniper.prefab": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Sniper.prefab",
+    "Assets/Prefabs/Stage/Units/StageUnit_ShotGun.prefab": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_ShotGun.prefab",
+    "Assets/Prefabs/Stage/Units/StageUnit_Akimbo.prefab": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Akimbo.prefab",
+    "Assets/Resources/Test/Model/Prefab/Sniper.prefab": "Assets/ProjectL/Resources/Test/Model/Prefab/Sniper.prefab",
+    "Assets/Resources/Test/Model/Prefab/ShotGun.prefab": "Assets/ProjectL/Resources/Test/Model/Prefab/ShotGun.prefab",
+    "Assets/Resources/Test/Model/Prefab/Akimbo.prefab": "Assets/ProjectL/Resources/Test/Model/Prefab/Akimbo.prefab",
+    "Assets/Resources/Test/Model/FBX/Sniper.fbx": "Assets/ProjectL/Resources/Test/Model/FBX/Sniper.fbx",
+    "Assets/Resources/Test/Model/FBX/ShotGun.fbx": "Assets/ProjectL/Resources/Test/Model/FBX/ShotGun.fbx",
+    "Assets/Resources/Test/Model/FBX/BaseModel.fbx": "Assets/ProjectL/Resources/Test/Model/FBX/BaseModel.fbx",
+    "Assets/Resources/Test/Model/FBX/Akimbo.fbx": "Assets/ProjectL/Resources/Test/Model/FBX/Akimbo.fbx"
+  },
+  "viewDatabase": [
+    {
+      "key": 10,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Akimbo.asset",
+      "fields": {
+        "prefab": "{fileID: 9207010993953873707, guid: df3d7d5280e0477fb54cf819ce8b8854, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 3443468e435c64945bd1c44641bec975, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: 15090cb96cc01074081f79386729a6f2, type: 3}"
+      }
+    },
+    {
+      "key": 11,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_ShotGun.asset",
+      "fields": {
+        "prefab": "{fileID: 6512138577729276396, guid: 8d8c2cd006ae494ab1ca6a71f6123052, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 0969d33a788be194bb8199fd879e9a76, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: 161ef89f3cca79540b2a514f166fccef, type: 3}"
+      }
+    },
+    {
+      "key": 12,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Sniper.asset",
+      "fields": {
+        "prefab": "{fileID: 8332828158528335965, guid: 2bd556bb583a4d6db644d8cef352411f, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: fa7a18d3fac6f054bb0d3a51ae96a1b2, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: e099d528c5fef344eb30278a4d906916, type: 3}"
+      }
+    },
+    {
+      "key": 13,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Demon.asset",
+      "fields": {
+        "prefab": "{fileID: 1614431886125179084, guid: c52e7ebe3799d2243bbb0a6fe0bcae71, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 0a13ae9f91b677d4aa377a0dbf5fcaf7, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: 92125961ea0ad344ebf1e264f71bc65b, type: 3}"
+      }
+    },
+    {
+      "key": 14,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_MainCharacter.asset",
+      "fields": {
+        "prefab": "{fileID: 171435926316743227, guid: 3b5fb1cb70e1ffe45bea7cdf23a7c0ff, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 6453b57ec70db4b459d5a8dae784050a, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: 72c0244785a39ee46bb168cbcf373fc9, type: 3}"
+      }
+    },
+    {
+      "key": 15,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Ballista.asset",
+      "fields": {
+        "prefab": "{fileID: 1614431886125179084, guid: 642518c57301d30469215547e3999e73, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: dc1b2db27fb18db4ebcc6931f06a7380, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: b92f23684f2a9174dac56caccfdea67d, type: 3}"
+      }
+    },
+    {
+      "key": 16,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_CactusCannon.asset",
+      "fields": {
+        "prefab": "{fileID: 8332828158528335965, guid: 740814e4d9acd3f42a3515d16094e717, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 76b0032ded0d4a743a1bf05da01b57a0, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: 76b0032ded0d4a743a1bf05da01b57a0, type: 3}"
+      }
+    },
+    {
+      "key": 17,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Gravekeeper.asset",
+      "fields": {
+        "prefab": "{fileID: 6710815147032878235, guid: 035794848a9e7de4bb183cfb2dfc22a0, type: 3}",
+        "timelineIcon": "{fileID: 21300000, guid: 321fa3b6e30327e42ad91504a092bd05, type: 3}",
+        "infoIcon": "{fileID: 21300000, guid: cf9549ee832c2334292ab83c85e3c74c, type: 3}"
+      }
+    },
+    {
+      "key": 20,
+      "path": "Assets/ProjectL/DataBaseSO/ViewGroup/UnitVisual/Item/UnitVisual_Headquarters.asset",
+      "fields": {
+        "prefab": "{fileID: 6038080095466229805, guid: 0c39bddbbcf195b4e8f4a1227d31a966, type: 3}",
+        "timelineIcon": "{fileID: 0}",
+        "infoIcon": "{fileID: 0}"
+      }
+    }
+  ],
+  "repairedExistingPrefabs": [
+    {
+      "path": "Assets/ProjectL/Resources/Test/Model/Prefab/TestUnit_Base.prefab",
+      "removedScriptGuids": [
+        "c533315b0c874fe4b8b4524a39db55b7",
+        "6fa1d86b2697447a8b4c0bde8eb5bce2",
+        "db95d8729be3ed645879d08086ecb211"
+      ]
+    }
+  ],
+  "notes": [
+    "CactusCannon uses Character_CactusIcon for both icons instead of the source catalog Sniper icons.",
+    "Convex assets retain all Mesh subasset IDs; missing editor-tool containers removed.",
+    "Source catalog MainCharacter already uses TestUnit_Base; no new original MainCharacter model exists in this source catalog."
+  ],
+  "staticValidation": {
+    "passed": true,
+    "restoredAssets": 62,
+    "spriteImages": 42,
+    "checkedFiles": 158,
+    "dependencyAssetsVisited": 83,
+    "yamlExternalFileIdChecks": 165,
+    "viewDatabaseKeys": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      20
+    ],
+    "packageDependencies": {
+      "933532a4fcc9baf4fa0491de14d08ed7": "Library\\PackageCache\\com.unity.render-pipelines.universal@7b0cf3c8f06b\\Shaders\\Lit.shader.meta",
+      "d0353a89b1f911e48b9e16bdc9f2e058": "Library\\PackageCache\\com.unity.render-pipelines.universal@7b0cf3c8f06b\\Editor\\AssetVersion.cs.meta",
+      "31321ba15b8f8eb4c954353edc038b1d": "Library\\PackageCache\\com.unity.render-pipelines.universal@7b0cf3c8f06b\\Runtime\\Materials\\Lit.mat.meta"
+    },
+    "protectedFilesUnchanged": true,
+    "failures": []
+  }
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{2d520b07-8086-4642-b2cc-1317d4c1b5c0}">
+		<property name="assetPath">
+			<value>SFX_Rider_Cancel.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>0.66426303854875279</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{84825bae-1885-4526-87b7-4996686cf407}</destination>
+		</relationship>
+	</object>
+</objects>

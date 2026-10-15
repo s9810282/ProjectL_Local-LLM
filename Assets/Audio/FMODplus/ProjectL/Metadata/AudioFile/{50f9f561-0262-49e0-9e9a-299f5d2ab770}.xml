@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{50f9f561-0262-49e0-9e9a-299f5d2ab770}">
+		<property name="assetPath">
+			<value>SFX_Rider_Hammer_Attack_refine.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>2.1747165532879817</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{84825bae-1885-4526-87b7-4996686cf407}</destination>
+		</relationship>
+	</object>
+</objects>

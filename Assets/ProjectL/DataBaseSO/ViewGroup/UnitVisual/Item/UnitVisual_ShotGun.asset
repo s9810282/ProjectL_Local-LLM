@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_ShotGun
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 11
+    prefab: {fileID: 6512138577729276396, guid: 8d8c2cd006ae494ab1ca6a71f6123052, type: 3}
+    displayName: ShotGun
+    timelineIcon: {fileID: 21300000, guid: 0969d33a788be194bb8199fd879e9a76, type: 3}
+    infoIcon: {fileID: 21300000, guid: 161ef89f3cca79540b2a514f166fccef, type: 3}

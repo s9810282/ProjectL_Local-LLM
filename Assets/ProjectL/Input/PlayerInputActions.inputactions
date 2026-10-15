@@ -1,0 +1,515 @@
+{
+    "version": 1,
+    "name": "PlayerInputActions",
+    "maps": [
+        {
+            "name": "Common",
+            "id": "35415a8c-ac3a-41da-8b44-17862370a8f2",
+            "actions": [
+                {
+                    "name": "OpenSettings",
+                    "type": "Button",
+                    "id": "308de236-e7b5-4a4b-86ed-24fb9067d5a8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "680a9570-1cc7-4b03-b70f-05b282730063",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenSettings",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Settings",
+            "id": "c163f70a-4c36-4bdc-8a1c-1db0c7d5e164",
+            "actions": [
+                {
+                    "name": "Close",
+                    "type": "Button",
+                    "id": "12667748-3d2b-4aef-875c-749326b243d9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "90ed501c-94c8-442b-b7cb-3ecd4fba05b2",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Close",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "StageSelection",
+            "id": "bc27af4a-9bb0-477c-8f4e-d817734c46b7",
+            "actions": [
+                {
+                    "name": "PointerPosition",
+                    "type": "Value",
+                    "id": "a51fe253-82d9-4f28-9259-0f3f2cc1276a",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "4dc6c987-bc09-42a2-bd92-6e379b794990",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=1)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Confirm",
+                    "type": "Button",
+                    "id": "63a0d980-9d9d-4b0e-9e75-6b9c024f0f20",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Cancel",
+                    "type": "Button",
+                    "id": "79fe65fb-1f91-45cb-90ac-6b20e904b92f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "63b5d8b2-89a1-46e6-991a-b3e4e6476cf1",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PointerPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d72a967a-0d3e-4440-ad90-82b352c04fa5",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b0a38df6-c3b8-4ec7-a3d7-1e94b7945454",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Confirm",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0c72e628-098d-4e63-a21b-0683c8ad9eee",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Cancel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Deployment",
+            "id": "61850b1b-8315-41db-a1b0-60a67e168604",
+            "actions": [
+                {
+                    "name": "PointerPosition",
+                    "type": "Value",
+                    "id": "160dbe4c-495d-43ab-a46c-3fbb79d7f0d4",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Press",
+                    "type": "Button",
+                    "id": "2cd3677d-ae83-4c95-8193-80cca4fc5a8f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=1)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Cancel",
+                    "type": "Button",
+                    "id": "ca18935d-c9b1-442f-a987-89964a508deb",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "EnterCombat",
+                    "type": "Button",
+                    "id": "7a9e3a69-4e05-49c9-8b27-0b4e0d1cf6a2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "DrawCharacter",
+                    "type": "Button",
+                    "id": "54e06cb0-7a8f-437b-a10a-7568c68729b6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "27370814-8cf2-4844-8437-18476fb57d62",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PointerPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c789f2aa-ef17-4044-8079-f0bc6674f31a",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Press",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1ec92117-223e-4511-91a8-b1b16678ebf0",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Cancel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d25f3ee7-299b-4f77-a28f-3e7d03d30fad",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "EnterCombat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "518e3fa2-4a16-4be2-ae3d-accf0925f141",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "DrawCharacter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Combat",
+            "id": "bcb98750-1aa3-4e8e-bc40-55b339ae4324",
+            "actions": [
+                {
+                    "name": "PointerPosition",
+                    "type": "Value",
+                    "id": "3f1c2a90-6d47-4b18-9c05-2a7e51d8b410",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "8b2d4e61-0fa3-4c92-b7d6-53e1c8047a29",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=1)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Cancel",
+                    "type": "Button",
+                    "id": "c47a19f3-52b8-4d06-8e13-9f6b2d70c5a4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "EndTurn",
+                    "type": "Button",
+                    "id": "1d6e83b7-4a29-4f51-b0c8-72d945e13f6b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MoveMode",
+                    "type": "Button",
+                    "id": "a9057c24-b3e6-41df-95a2-6c81047be3d5",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AttackMode",
+                    "type": "Button",
+                    "id": "5e83b0d1-9c74-4a2f-8b16-3d07e5921ca8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Return",
+                    "type": "Button",
+                    "id": "ec7cb13f-3590-40bc-933c-e4c75b1e4786",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2c74e0a8-51d3-4f96-a7b2-08e63d194b7f",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PointerPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7a35d962-c081-4e47-b3f5-91d0286ea4c3",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e40b7159-2d86-4a03-9c74-5b1f83d6027e",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Cancel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6f92a3c5-807b-4d1e-a64f-2c58b09d7e13",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "EndTurn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "04d158e7-6b39-4c85-92a0-7f36c1e2d940",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveMode",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9b71c4a6-3e50-482d-b8f9-1a24d70e56c8",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AttackMode",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "54dd6768-cd55-42d8-b3b2-2d2fba424c61",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Return",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+          "name": "Artifact",
+          "id": "21204221-deab-4cb7-b5d6-30936d053aee",
+          "actions": [
+            {
+              "name": "PointerPosition",
+              "type": "Value",
+              "id": "affd2d9d-55d5-45f7-938f-67d0c428cca2",
+              "expectedControlType": "Vector2",
+              "processors": "",
+              "interactions": "",
+              "initialStateCheck": true
+            },
+            {
+              "name": "Select",
+              "type": "Button",
+              "id": "2216bede-0813-42df-8357-770cd7a1c9e4",
+              "expectedControlType": "",
+              "processors": "",
+              "interactions": "Press(behavior=1)",
+              "initialStateCheck": false
+            },
+            {
+              "name": "Cancel",
+              "type": "Button",
+              "id": "d6f1b84e-5b51-436a-ba04-919410ae4d6e",
+              "expectedControlType": "",
+              "processors": "",
+              "interactions": "",
+              "initialStateCheck": false
+            },
+            {
+              "name": "RotateLeft",
+              "type": "Button",
+              "id": "dd0688a4-e472-445c-8a50-81291b41d5ee",
+              "expectedControlType": "",
+              "processors": "",
+              "interactions": "Press(behavior=0)",
+              "initialStateCheck": false
+            },
+            {
+              "name": "RotateRight",
+              "type": "Button",
+              "id": "e17b0d6c-3a28-4c8a-90d3-eb82f58895fc",
+              "expectedControlType": "",
+              "processors": "",
+              "interactions": "Press(behavior=0)",
+              "initialStateCheck": false
+            }
+          ],
+          "bindings": [
+            {
+              "name": "",
+              "id": "810f06a6-553e-4930-9fe7-5beec9228a00",
+              "path": "<Pointer>/position",
+              "interactions": "",
+              "processors": "",
+              "groups": "",
+              "action": "PointerPosition",
+              "isComposite": false,
+              "isPartOfComposite": false
+            },
+            {
+              "name": "",
+              "id": "0aea16eb-e710-4105-9398-6cc3001452b7",
+              "path": "<Pointer>/press",
+              "interactions": "",
+              "processors": "",
+              "groups": "",
+              "action": "Select",
+              "isComposite": false,
+              "isPartOfComposite": false
+            },
+            {
+              "name": "",
+              "id": "faefa990-1ff9-4dae-b21e-a1286798d0b6",
+              "path": "<Mouse>/rightButton",
+              "interactions": "",
+              "processors": "",
+              "groups": "",
+              "action": "Cancel",
+              "isComposite": false,
+              "isPartOfComposite": false
+            },
+            {
+              "name": "",
+              "id": "519b4fe4-e1e9-4236-ab56-710daa8aea16",
+              "path": "<Keyboard>/q",
+              "interactions": "",
+              "processors": "",
+              "groups": "",
+              "action": "RotateLeft",
+              "isComposite": false,
+              "isPartOfComposite": false
+            },
+            {
+              "name": "",
+              "id": "f0e50fe8-ec1e-4839-b373-9546181fc7ef",
+              "path": "<Keyboard>/e",
+              "interactions": "",
+              "processors": "",
+              "groups": "",
+              "action": "RotateRight",
+              "isComposite": false,
+              "isPartOfComposite": false
+            }
+          ]
+        }
+    ],
+    "controlSchemes": []
+}

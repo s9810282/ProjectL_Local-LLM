@@ -1,0 +1,449 @@
+{
+  "ReplacedEmptyFolderMetadata": [
+    {
+      "Path": "Assets/ProjectL/Resources.meta",
+      "Content": "fileFormatVersion: 2\nguid: 5bdb62740e1eb71469a03a2bd80e34a1\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n"
+    },
+    {
+      "Path": "Assets/ProjectL/Prefabs.meta",
+      "Content": "fileFormatVersion: 2\nguid: 100d9168933547340a2907950ba35231\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n"
+    }
+  ],
+  "Files": [
+    {
+      "Source": "Assets/Resources.meta",
+      "Destination": "Assets/ProjectL/Resources.meta",
+      "Sha256": "62D8D02C534EB6A40AB79C84804B23AACE93BC9AF10BD877A75A1B46D610BCEF"
+    },
+    {
+      "Source": "Assets/Resources/Font.meta",
+      "Destination": "Assets/ProjectL/Resources/Font.meta",
+      "Sha256": "41652D3F2738BAAEDCA835EC8E91CE941A661B93EFE6CDE8FE835DA5525AE262"
+    },
+    {
+      "Source": "Assets/Resources/Test.meta",
+      "Destination": "Assets/ProjectL/Resources/Test.meta",
+      "Sha256": "296593F624E305F8D125C13886E38E38CCC4425C4B7273626467004845ACFF1E"
+    },
+    {
+      "Source": "Assets/Resources/Font/Hahmlet-Bold SDF.asset",
+      "Destination": "Assets/ProjectL/Resources/Font/Hahmlet-Bold SDF.asset",
+      "Sha256": "EF679DFEE6E61CAC2F156A8B6073836B0BEFDBD6B7560542E0A53517466A99A5"
+    },
+    {
+      "Source": "Assets/Resources/Font/Hahmlet-Bold SDF.asset.meta",
+      "Destination": "Assets/ProjectL/Resources/Font/Hahmlet-Bold SDF.asset.meta",
+      "Sha256": "7DAB2B8D57242D12FACDAECB44596772AC7BD2E4CCD6C74D647C722AB3E374B0"
+    },
+    {
+      "Source": "Assets/Resources/Font/Hahmlet-Bold.ttf",
+      "Destination": "Assets/ProjectL/Resources/Font/Hahmlet-Bold.ttf",
+      "Sha256": "8FA80ED5C08FDDE20BE7FD4921DE77B682508CD936DDEE6D9978118182547EA6"
+    },
+    {
+      "Source": "Assets/Resources/Font/Hahmlet-Bold.ttf.meta",
+      "Destination": "Assets/ProjectL/Resources/Font/Hahmlet-Bold.ttf.meta",
+      "Sha256": "F22840D209996027F64436E3DFAD3E8BB73D7D7687B8529D9A09376CBCA15420"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model.meta",
+      "Sha256": "E2680F2FD569FDDB5356F2CEF691FF9D84773DB1031A8AB8E62DD60D7502A1D5"
+    },
+    {
+      "Source": "Assets/Resources/Test/Stage.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Stage.meta",
+      "Sha256": "589252F94E79B6DB2AFF76A5BFED41A8E58F2D36351B0F768EADACE6E692C82F"
+    },
+    {
+      "Source": "Assets/Resources/Test/StageSelect.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/StageSelect.meta",
+      "Sha256": "38715E88D9730F9E749A27004AE1392825239B3FD7BEDBA80A657CF8DAFF788F"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX.meta",
+      "Sha256": "2293519C504FB80AF6E32EB62F50F68F31D3D131007AF0D9D72A1758830A2061"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab.meta",
+      "Sha256": "0687C4C71AF178F970C1AEF3B70FDDF16C907974D7351196D82F2F3D8149CA57"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/Akimbo.fbx",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/Akimbo.fbx",
+      "Sha256": "80B87B69D1ED4A6D5367F90D6D56AFEA2B6C263EDE83ADEF5A399F5D7F5C4B6E"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/Akimbo.fbx.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/Akimbo.fbx.meta",
+      "Sha256": "D9CF596ECD560FF9ED3DAD23F8249228150C7DEAC629F94429D4BED374866C04"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/BaseModel.fbx",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/BaseModel.fbx",
+      "Sha256": "20FACCBA61DF1BAA81B440F1FAE12CF5D147924EDB9891B0FF3C21D7259AE24E"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/BaseModel.fbx.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/BaseModel.fbx.meta",
+      "Sha256": "864FB6AFC95835296B5A75E495654D742CBA756F5B6C52EDD139EB26934D7E07"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/ShotGun.fbx",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/ShotGun.fbx",
+      "Sha256": "EB89B37DB3A2170CA3CAFBA2C53188AC488DB51423E63D36456A3586CBF90349"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/ShotGun.fbx.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/ShotGun.fbx.meta",
+      "Sha256": "1E5E4BFC40675BE922D8801E4C2C9CC67C448A88C89A2838B0E9AB35DFC7ECE0"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/Sniper.fbx",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/Sniper.fbx",
+      "Sha256": "D2D232FEE5E7CEF7E2DD456CB0FC2C0AD7A6322558316CDBDF902B5AB5D28CD4"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/FBX/Sniper.fbx.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/FBX/Sniper.fbx.meta",
+      "Sha256": "286D51D1E93E21DE4AB40D9D66E819544D248EC20B73B50E4BE657EE888FA250"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/Akimbo.prefab",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/Akimbo.prefab",
+      "Sha256": "56339F7A9DB7F894FD9C76291B2F7FF422FA8E4C40DB81B63FF90E43C6A67EB7"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/Akimbo.prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/Akimbo.prefab.meta",
+      "Sha256": "53940EB7C50F6ABA773B23C262E2782CBC3407B56FA6ECC2974B8FDBF533EE69"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/ShotGun.prefab",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/ShotGun.prefab",
+      "Sha256": "02E25A612AD9B8423E0390B1F0DAB3DE8EF5BC4748F37A6D5E205F2619695EB7"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/ShotGun.prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/ShotGun.prefab.meta",
+      "Sha256": "B05F315F71F3B50515965FB5B57DB1185D3662FDCC35127F2A5600C1A3D4FDC8"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/Sniper.prefab",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/Sniper.prefab",
+      "Sha256": "24117149433605E25EBA7F4E88DB035B1974287F15DB7E865613285FF3D18D40"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/Sniper.prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/Sniper.prefab.meta",
+      "Sha256": "AC3E8262178B32B286E77DD251FE40D07732073DCC059EBBAA87AA0A9BF62305"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/TestUnit_Base.prefab",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/TestUnit_Base.prefab",
+      "Sha256": "3E1C49C356527AE489CDB7FB6B7051C01226BE09D92300A92C79D8B01A8429A2"
+    },
+    {
+      "Source": "Assets/Resources/Test/Model/Prefab/TestUnit_Base.prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Model/Prefab/TestUnit_Base.prefab.meta",
+      "Sha256": "5D5DAF9959C2189B444D4657C01B72A792DA0F9DE70D11C56373D35921BE7A9A"
+    },
+    {
+      "Source": "Assets/Resources/Test/Stage/Board.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Stage/Board.meta",
+      "Sha256": "E80CCE64956C2196C8B729FEE3394343105D4246E21CC4DD0234ECDAFE61C824"
+    },
+    {
+      "Source": "Assets/Resources/Test/Stage/Board/Cube.prefab",
+      "Destination": "Assets/ProjectL/Resources/Test/Stage/Board/Cube.prefab",
+      "Sha256": "1E9003666965B455504075412F639026FCD6F299B0FC0255F3FDFCB90F48E803"
+    },
+    {
+      "Source": "Assets/Resources/Test/Stage/Board/Cube.prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/Stage/Board/Cube.prefab.meta",
+      "Sha256": "AF0027D0687DD41CACC42C7199AE2E1CDDA6722CBCDECC6527839FB6650F299D"
+    },
+    {
+      "Source": "Assets/Resources/Test/StageSelect/UI.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/StageSelect/UI.meta",
+      "Sha256": "FD9A23FF56F97F3FC5A34B3BFA3BE7912DEDFBD52148A29B505057D62E07E299"
+    },
+    {
+      "Source": "Assets/Resources/Test/StageSelect/UI/Prefab.meta",
+      "Destination": "Assets/ProjectL/Resources/Test/StageSelect/UI/Prefab.meta",
+      "Sha256": "689F8FEF8289A55EA740B19782F4A66BD1C9B87D2769961AF13C8D4D31C3BE0B"
+    },
+    {
+      "Source": "Assets/Prefabs.meta",
+      "Destination": "Assets/ProjectL/Prefabs.meta",
+      "Sha256": "A683BFC39105285F7A5FF03A1182BAA9DED324BB7F0E020C09223627AFB41EBF"
+    },
+    {
+      "Source": "Assets/Prefabs/Default.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default.meta",
+      "Sha256": "5A49940B461F6720D3DB14B2B2E9D8677C58D04C5887EE0E7F2C82C3230B9834"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Stage.meta",
+      "Sha256": "0F33E5CC485F05D9441AF9E7C915440399B261E40FD55BFFC2343D261918A3A6"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect.meta",
+      "Sha256": "EFE8AE2221B92784203B9EF168719C0FA6BFAF43939C6C4A4158FE9BAB39CE75"
+    },
+    {
+      "Source": "Assets/Prefabs/UI.meta",
+      "Destination": "Assets/ProjectL/Prefabs/UI.meta",
+      "Sha256": "3D034FA00735D2EA0EB761F9DCB62A9594C858D5033621CAC5F9B86ECFF4FC71"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Capsule.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Capsule.prefab",
+      "Sha256": "FB58CE261B3241E930FFE080372D0B5A1E8770C26FD846F4216344591DAC73B1"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Capsule.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Capsule.prefab.meta",
+      "Sha256": "A1E30F9BF38DBE624A49D66C3E1EA0EC31A2EF008FF50A7CE2B6EFAE98E4416E"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Cube.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Cube.prefab",
+      "Sha256": "911D4CC03E0DCBB4320106070ECCDD3A4CA3C0079BF25554116B4E30AACD8432"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Cube.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Cube.prefab.meta",
+      "Sha256": "770868DA5EF773372A465816400BBDC08CEDD7F1705FD3CB73C7673CCBB9B050"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Cylinder.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Cylinder.prefab",
+      "Sha256": "F849909A37CA269403DB3E775C88A636099FFBFF0F3D375CEE0B48E6EEAD1CC5"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Cylinder.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Cylinder.prefab.meta",
+      "Sha256": "06E9B4BDF1651836E4A23BD4D2EAE5F97BAB5898916C80CA26B3A27CAA2F725E"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Plane.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Plane.prefab",
+      "Sha256": "2E3A2277B5FF48379BF2DA250A7741BD588689BABE2D418AF70243761D4D9B4D"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Plane.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Plane.prefab.meta",
+      "Sha256": "AE2A96873A43108AFEE57443D6BA9AA70917B286EEF15228A35D83CAD5C34DC6"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Quad.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Quad.prefab",
+      "Sha256": "E6CD443D6D7B546ABD1329A1B3BDD90A7A7A5A491F241085997552B947395196"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Quad.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Quad.prefab.meta",
+      "Sha256": "4BDEEEF281C80DD06D31B5AD2FDCA87DB4020725010AEEFA8D5B84489F3EEFAE"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Sphere.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Sphere.prefab",
+      "Sha256": "1719B4EBB88D4CEBE25F0B110B939F661CB69FD2068C570EE177099A0621EE58"
+    },
+    {
+      "Source": "Assets/Prefabs/Default/Sphere.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Default/Sphere.prefab.meta",
+      "Sha256": "E108BDB603C9208F82E555E09B85B3CB99D6AE9C6FB23D7C9D67273BD5076B23"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units.meta",
+      "Sha256": "4156712700ED784C99C1EC65E84ACA73B5435AB4737C34AF558C316C36D170CA"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_Akimbo.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Akimbo.prefab",
+      "Sha256": "318B15BDE10CD0CA2010E35A604BCD04F9FEEEAA61A0C16AE153F19E1827074F"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_Akimbo.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Akimbo.prefab.meta",
+      "Sha256": "51B12D0D4CDEC2DE3C829DC6007C0C55E4577C8BE447811B3BA87D1E82FFA1D0"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_ShotGun.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_ShotGun.prefab",
+      "Sha256": "3DA238C2C1921B6629A86A71809170DD63ADD589895295C221E353CBBF388A4B"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_ShotGun.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_ShotGun.prefab.meta",
+      "Sha256": "CA0E0F1143DFA53821A9BC8FCC6CA0E0324CC3F9D0CEDA133302C088B3986B5D"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_Sniper.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Sniper.prefab",
+      "Sha256": "03F710518702DA701AA506E87512177B9D4522B17CE04DA28C2FA5EC35917972"
+    },
+    {
+      "Source": "Assets/Prefabs/Stage/Units/StageUnit_Sniper.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Stage/Units/StageUnit_Sniper.prefab.meta",
+      "Sha256": "4372CA073A26CE1B21B6D7F405A12AC8752FE6FB5EC36B4CC6595126B818336F"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure.meta",
+      "Sha256": "98E50A0987CFA911BB880B50BB43C47F0E8D404B5BDDB89BF14EC90E4CBA7327"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals.meta",
+      "Sha256": "DAD3D451ACE4E22772B2D9A16D6887402CB65EFBDAEA8D9BDF2FD131C0A59961"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapConnection.mat",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapConnection.mat",
+      "Sha256": "13421093BFD10508DA25F03A41411C0AD1E4F3E805EA0B680E0B3DAABAE5B9D2"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapConnection.mat.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapConnection.mat.meta",
+      "Sha256": "4261FE365DBBFD6F9CFFF637AD3C35330A007A34FF2A31869F4ED4DB3AC12619"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapConnection.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapConnection.prefab",
+      "Sha256": "6575DC266B99B56D9FC9D968F23227520DBE32D5D09062094BDE2E94375184EF"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapConnection.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapConnection.prefab.meta",
+      "Sha256": "3CEE9E8E2E7F14AC0C84D4887E7F2CCC310DC057F7A69EC08F8445846F5D346C"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapHighlight.mat",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapHighlight.mat",
+      "Sha256": "75061A3CF5ACB86F46AFAF4AF77C34C744EB4E73F74FD11FDB0D7D6BCC1C33C5"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapHighlight.mat.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapHighlight.mat.meta",
+      "Sha256": "84CB1AC1F85B612119FCDABF41712907F27647D766C343A5B054CFF7A6EECAC4"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapNode.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapNode.prefab",
+      "Sha256": "D41C0102F87C95D9DD1AC96C307BEDCDF4956FA7AC52CDF91C3C3B09358E2118"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Infrastructure/StageMapNode.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Infrastructure/StageMapNode.prefab.meta",
+      "Sha256": "CBBCBC91FADF7C8B75BE0057C69C88C14FF6EFF93E43A3C93C5313E4FC822E67"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.mat",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.mat",
+      "Sha256": "6219DD9C07A1D713D9CF56B570382F9AD2140C9EAFFDEBAC1B4D4A7DB0DB5675"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.mat.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.mat.meta",
+      "Sha256": "1BE4B42D0AD07462221FE9633E3F50A72137B19791DCA74946F2D344F60F0A19"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.prefab",
+      "Sha256": "CD410B38B31CBF9D4ECA092AA4230D50D9FB5BC751C2A46A25E2ED96A4851163"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_BossPlaceholder.prefab.meta",
+      "Sha256": "494B2B43EDF54E402DF41A97A178CF7508E8A9EE61CD784694026A3FA4BEA849"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.mat",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.mat",
+      "Sha256": "542CED190BF58FDFA861A2069DA16865A969B231EA5AFD0E494F4A004187E7A3"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.mat.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.mat.meta",
+      "Sha256": "2C401DE5DACB182F4AADC3685A391FD74BA548E1FB20972339831BB0825CFE81"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.prefab",
+      "Sha256": "635FAB7F22F5A32E45D6CEDCBF588EB645079F1B8496BB17ADB37852BC5D9D95"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_NormalPlaceholder.prefab.meta",
+      "Sha256": "882B2C78960836D67F8AF87F86CDDE1F2975644D79B92CC816302085217FBB0E"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.mat",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.mat",
+      "Sha256": "B4B43AD50671DD1E9D2500DC15F2D269E121B089BD36D43686E4E85AC6E76FE1"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.mat.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.mat.meta",
+      "Sha256": "39E90C158FEA9A82309F71A345FE1D53D756A882BDD050381D456891384CA2A4"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.prefab",
+      "Sha256": "B89641E9C2127432F1C677A25C81B6CEBA8DCB73FB42021063F13BC10D83DDDE"
+    },
+    {
+      "Source": "Assets/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/StageSelect/Visuals/StageVisual_PlayerPlaceholder.prefab.meta",
+      "Sha256": "A61449004500B5B6605CAFDCD91F7685053F16B15BDC8DF417D18A5F2FD90217"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/Items/TestEffect.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Effects/TestEffect.prefab",
+      "Sha256": "6FB0A9DC6BE447C7CD9967F34FFD198249B1C9C336ADF4900C84ECEEFA750FA8"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/Items/TestEffect.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Effects/TestEffect.prefab.meta",
+      "Sha256": "3A1B2C7F48ED0047C0BCF2D0010031978206001B90053D4CD793D60AFB883C04"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/Point Light.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Lights/Point Light.prefab",
+      "Sha256": "324E7EA42832EFAFB3AA17FAD52A13A298C517E74334BC1EB6EEF8DE527FB788"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/Point Light.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Lights/Point Light.prefab.meta",
+      "Sha256": "856D65077A8DA3E044B9E2BC5B7360180B1394FCF2E721D616643949604A9536"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/Spot Light.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Lights/Spot Light.prefab",
+      "Sha256": "4F360B3463FF215C314FBA88962A7B025F5F268463709678BC6ED1C7842EB3CF"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/Spot Light.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Render/Lights/Spot Light.prefab.meta",
+      "Sha256": "98126D49C248C677ACF449E822D5624BE166611C236599F4B79DF3D2366C1F25"
+    },
+    {
+      "Source": "Assets/Audio/TestCode/FmodAudioServiceTest.prefab",
+      "Destination": "Assets/ProjectL/Prefabs/Test/Audio/FmodAudioServiceTest.prefab",
+      "Sha256": "352541E60CA123636D5F7E52FDFD4B19DCC09F9A8A0AF0CE3B8BE64040926BAA"
+    },
+    {
+      "Source": "Assets/Audio/TestCode/FmodAudioServiceTest.prefab.meta",
+      "Destination": "Assets/ProjectL/Prefabs/Test/Audio/FmodAudioServiceTest.prefab.meta",
+      "Sha256": "1D644CD69C47A441D02AF93280303EE616C60F061FF56542292480CDE15F1126"
+    }
+  ]
+}

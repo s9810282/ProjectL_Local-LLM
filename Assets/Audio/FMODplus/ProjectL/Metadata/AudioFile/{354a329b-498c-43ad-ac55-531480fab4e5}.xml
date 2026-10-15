@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{354a329b-498c-43ad-ac55-531480fab4e5}">
+		<property name="assetPath">
+			<value>SFX_Cannon_Ballistar_Attack_Draw2.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>1.1436507936507936</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{84825bae-1885-4526-87b7-4996686cf407}</destination>
+		</relationship>
+	</object>
+</objects>

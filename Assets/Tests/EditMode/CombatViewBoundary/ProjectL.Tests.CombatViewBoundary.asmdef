@@ -1,0 +1,23 @@
+{
+    "name": "ProjectL.Tests.CombatViewBoundary",
+    "rootNamespace": "ProjectL.Tests.CombatViewBoundary",
+    "references": [
+        "GUID:05931ba9661d9e745859bbdf70325edb",
+        "GUID:42f479a350493ca4abd078910e78a9ad"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

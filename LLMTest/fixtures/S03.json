@@ -1,0 +1,12 @@
+{
+  "situationId": "S03",
+  "_note": "관통 공격(대상 여럿). target은 쉼표로 잇고 expectedDamage는 합계, killsTarget은 하나라도 처치. 룰은 피해 합계 최대인 0.",
+  "ruleChoice": 0,
+  "self": { "unit": "Ballista", "hp": 10, "maxHp": 10, "atk": 10, "move": 5 },
+  "candidates": [
+    { "id": 0, "action": "attack", "target": "Akimbo,ShotGun",       "targetHp": 20, "expectedDamage": 17, "killsTarget": true,  "threatAfter": 1, "distToTargetAfter": 3 },
+    { "id": 1, "action": "attack", "target": "MainCharacter",        "targetHp": 50, "expectedDamage": 10, "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 3 },
+    { "id": 2, "action": "attack", "target": "Sniper,MainCharacter", "targetHp": 54, "expectedDamage": 11, "killsTarget": true,  "threatAfter": 1, "distToTargetAfter": 3 },
+    { "id": 3, "action": "wait",   "target": "",                     "targetHp": 0,  "expectedDamage": 0,  "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 3 }
+  ]
+}

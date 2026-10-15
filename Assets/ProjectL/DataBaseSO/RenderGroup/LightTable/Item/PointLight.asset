@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 447d04635d6dd644689c3169ccf3d756, type: 3}
+  m_Name: PointLight
+  m_EditorClassIdentifier: 
+  lightData:
+    presetType: 1
+    unityLightType: 2
+    lightPrefab: {fileID: 7720044238623427160, guid: 1147d0c660cb03a46aa62b939c92711a, type: 3}
+    initialPoolSize: 10

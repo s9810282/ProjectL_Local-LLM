@@ -1,0 +1,20 @@
+{
+    "name": "ProjectL.Tool.Editor",
+    "rootNamespace": "ProjectL.Tool.Editor",
+    "references": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "NPOI.dll",
+        "NPOI.OOXML.dll",
+        "NPOI.OpenXml4Net.dll",
+        "NPOI.OpenXmlFormats.dll",
+        "ICSharpCode.SharpZipLib.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

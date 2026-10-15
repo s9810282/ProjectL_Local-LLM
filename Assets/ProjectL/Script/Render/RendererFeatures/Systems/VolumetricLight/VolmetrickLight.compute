@@ -1,0 +1,177 @@
+#pragma kernel CSMain
+
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
+Texture2D<float4> _ActiveColor;
+Texture2D<float> _CameraDepth;
+Texture2D<float> _LightDepth;
+RWTexture2D<float4> _Result;
+
+SamplerState sampler_LinearClamp;
+
+int _width;
+int _height;
+float _LightingRange;
+int _LightingSteps;
+
+float _LightingIntensity;
+float _LightingIntensityMax;
+float _ShadowIntensity;
+float _ShadowIntensityMax;
+
+float4x4 _InverseViewProj;
+float4x4 _MainLightWorldToShadow[4];
+// URP sets these globals for the same camera that rendered _LightDepth.
+float4 _CascadeShadowSplitSpheres0;
+float4 _CascadeShadowSplitSpheres1;
+float4 _CascadeShadowSplitSpheres2;
+float4 _CascadeShadowSplitSpheres3;
+float4 _CascadeShadowSplitSphereRadii;
+float4 _MainLightShadowParams;
+int _VolumetricCascadeCount;
+
+float InterleavedGradientNoise(float2 pixelCoord)
+{
+    float3 magic = float3(0.06711056, 0.00583715, 52.9829189);
+    return frac(magic.z * frac(dot(pixelCoord, magic.xy)));
+}
+
+float3 ReconstructWorldPos(float2 uv, float depth)
+{
+    return ComputeWorldSpacePosition(uv, depth, _InverseViewProj);
+}
+
+int SelectShadowCascade(float3 positionWS)
+{
+    if (_VolumetricCascadeCount <= 0 || _MainLightShadowParams.x <= 0.0)
+        return -1;
+
+    // URP does not upload split spheres in single-cascade mode.
+    if (_VolumetricCascadeCount == 1)
+        return 0;
+
+    float3 delta0 = positionWS - _CascadeShadowSplitSpheres0.xyz;
+    float3 delta1 = positionWS - _CascadeShadowSplitSpheres1.xyz;
+    float3 delta2 = positionWS - _CascadeShadowSplitSpheres2.xyz;
+    float3 delta3 = positionWS - _CascadeShadowSplitSpheres3.xyz;
+    float4 distancesSquared = float4(dot(delta0, delta0), dot(delta1, delta1),
+                                    dot(delta2, delta2), dot(delta3, delta3));
+
+    [unroll]
+    for (int cascade = 0; cascade < 4; cascade++)
+    {
+        if (cascade < _VolumetricCascadeCount &&
+            distancesSquared[cascade] < _CascadeShadowSplitSphereRadii[cascade])
+            return cascade;
+    }
+
+    return -1;
+}
+
+float GetShadowAttenuation(float3 positionWS)
+{
+    int cascade = SelectShadowCascade(positionWS);
+    if (cascade < 0)
+        return 1.0;
+
+    float4 shadowCoord = mul(_MainLightWorldToShadow[cascade], float4(positionWS, 1.0));
+    if (abs(shadowCoord.w) < 0.000001)
+        return 1.0;
+    shadowCoord.xyz /= shadowCoord.w;
+
+    // URP packs two cascades horizontally, and three/four in a 2x2 atlas.
+    float2 tileScale = float2(_VolumetricCascadeCount > 1 ? 0.5 : 1.0,
+                             _VolumetricCascadeCount > 2 ? 0.5 : 1.0);
+    float2 tileMin = float2(cascade % 2, cascade / 2) * tileScale;
+    float2 tileMax = tileMin + tileScale;
+    if (any(shadowCoord.xy < tileMin) || any(shadowCoord.xy > tileMax) ||
+        shadowCoord.z <= 0.0 || shadowCoord.z >= 1.0)
+        return 1.0;
+
+    uint shadowWidth, shadowHeight;
+    _LightDepth.GetDimensions(shadowWidth, shadowHeight);
+    float2 texelSize = 1.0 / float2(shadowWidth, shadowHeight);
+    float shadow = 0.0;
+    
+    float2 offsets[4] =
+    {
+        float2(-0.5, -0.5), float2(0.5, -0.5),
+        float2(-0.5, 0.5), float2(0.5, 0.5)
+    };
+    
+    for (int j = 0; j < 4; j++)
+    {
+        // Keep filtering inside the chosen cascade, including at atlas seams.
+        float2 sampleUV = clamp(shadowCoord.xy + offsets[j] * texelSize,
+                                tileMin + 0.5 * texelSize, tileMax - 0.5 * texelSize);
+        float mapDepth = _LightDepth.SampleLevel(sampler_LinearClamp, sampleUV, 0);
+        
+#if UNITY_REVERSED_Z
+        shadow += (shadowCoord.z >= mapDepth - 0.0005) ? 1.0 : 0.0;
+#else
+        shadow += (shadowCoord.z <= mapDepth + 0.0005) ? 1.0 : 0.0;
+#endif
+    }
+    
+    return shadow * 0.25;
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _width || id.y >= (uint) _height)
+        return;
+
+    float2 uv = float2((id.x + 0.5) / (float) _width, (id.y + 0.5) / (float) _height);
+    float deviceDepth = _CameraDepth[id.xy];
+
+#if UNITY_REVERSED_Z
+    const float nearDepth = 1.0;
+    const float farDepth = 0.0;
+    bool hasSceneDepth = deviceDepth > 0.0001;
+#else
+    const float nearDepth = 0.0;
+    const float farDepth = 1.0;
+    bool hasSceneDepth = deviceDepth < 0.9999;
+#endif
+
+    float3 rayOrigin = ReconstructWorldPos(uv, nearDepth);
+    float3 rayEnd = ReconstructWorldPos(uv, hasSceneDepth ? deviceDepth : farDepth);
+    float3 rayDir = rayEnd - rayOrigin;
+    float rayLength = min(length(rayDir), _LightingRange);
+    
+    if (rayLength <= 0.001)
+    {
+        _Result[id.xy] = _ActiveColor[id.xy];
+        return;
+    }
+
+    rayDir = normalize(rayDir);
+
+    float stepSize = rayLength / (float) _LightingSteps;
+    float totalScattering = 0.0;
+    
+    float ditherOffset = InterleavedGradientNoise(float2(id.x, id.y));
+
+    for (int i = 0; i < _LightingSteps; i++)
+    {
+        float3 currentStepPos = rayOrigin + (rayDir * ((i + ditherOffset) * stepSize));
+        float shadowAttenuation = GetShadowAttenuation(currentStepPos);
+
+        if (shadowAttenuation > 0.0)
+        {
+            totalScattering += _LightingIntensity * stepSize * shadowAttenuation;
+            totalScattering = min(totalScattering, _LightingIntensityMax);
+        }
+        
+        if (shadowAttenuation < 1.0)
+        {
+            totalScattering -= _ShadowIntensity * stepSize * (1.0 - shadowAttenuation);
+            totalScattering = max(totalScattering, _ShadowIntensityMax);
+        }
+    }
+
+    float4 originalColor = _ActiveColor[id.xy];
+    _Result[id.xy] = originalColor + float4(totalScattering, totalScattering, totalScattering, 0.0);
+
+}

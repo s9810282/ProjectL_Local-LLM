@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451116720e1f49dd859e87fd7ca91e1e, type: 3}
+  m_Name: NodeVisual_Shop_Regular
+  m_EditorClassIdentifier: 
+  stageNodeVisualData:
+    stageType: 2
+    mapRole: 0
+    visualPrefab: {fileID: 4750872047159365611, guid: 3794f71dd05f51a4fb10b510dde9d1d7, type: 3}
+    icon: {fileID: 0}
+    displayName: Shop

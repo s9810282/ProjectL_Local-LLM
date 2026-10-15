@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{75a6d71b-ad80-42c7-a235-327dc18e5d7f}">
+		<property name="assetPath">
+			<value>AMB_Stage_Wind.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>60.807619047619049</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{84825bae-1885-4526-87b7-4996686cf407}</destination>
+		</relationship>
+	</object>
+</objects>

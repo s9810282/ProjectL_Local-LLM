@@ -1,0 +1,12 @@
+{
+  "situationId": "S04",
+  "_note": "공격 불가, 추적. 추적 대상은 가장 가까운 MainCharacter. 룰은 대상 쪽으로 붙는 0.",
+  "ruleChoice": 0,
+  "self": { "unit": "Demon", "hp": 5, "maxHp": 5, "atk": 1, "move": 3 },
+  "candidates": [
+    { "id": 0, "action": "move", "target": "", "targetHp": 0, "expectedDamage": 0, "killsTarget": false, "threatAfter": 3, "distToTargetAfter": 1 },
+    { "id": 1, "action": "move", "target": "", "targetHp": 0, "expectedDamage": 0, "killsTarget": false, "threatAfter": 0, "distToTargetAfter": 4 },
+    { "id": 2, "action": "move", "target": "", "targetHp": 0, "expectedDamage": 0, "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 3 },
+    { "id": 3, "action": "wait", "target": "", "targetHp": 0, "expectedDamage": 0, "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 4 }
+  ]
+}

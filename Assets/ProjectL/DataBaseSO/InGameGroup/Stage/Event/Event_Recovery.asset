@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4ac4ce6d4d54848a876797bcf1005f4, type: 3}
+  m_Name: Event_Recovery
+  m_EditorClassIdentifier:
+  recoveryOptions:
+  - {fileID: 11400000, guid: 8f3f0de0766245508577c618f8b48554, type: 2}
+  - {fileID: 11400000, guid: 9f9e24d464f8461f942fe478f8a10e4a, type: 2}

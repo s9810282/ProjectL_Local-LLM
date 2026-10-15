@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4868e4b4dc54239afcfb15058b753bc, type: 3}
+  m_Name: StageMapView_Default
+  m_EditorClassIdentifier: 
+  stageMapViewData:
+    depthSpacing: 4
+    widthSpacing: 4
+    nodeScale: 1
+    lineHeight: 0.05
+    lineWidth: 0.12
+    currentColor: {r: 0.15, g: 0.8, b: 1, a: 1}
+    selectableColor: {r: 1, g: 1, b: 1, a: 1}
+    hoveredColor: {r: 1, g: 0.9, b: 0.4, a: 1}
+    candidateColor: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unavailableColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
+    hoverEffect: 0
+    selectEffect: 0
+    nodePrefab: {fileID: 6496193282617364774, guid: 9c0ec12fe10960f468920bc07b96dbc3, type: 3}
+    connectionPrefab: {fileID: 503761410003762905, guid: 049f22bbdc1aac64ebe98686d1295927, type: 3}
+    startVisualPrefab: {fileID: 0}
+    currentMarkerPrefab: {fileID: 4459212197141883090, guid: bcc3f48a8cb84f70bd886adc2b3b0d13, type: 3}
+    markerMoveDuration: 0.6
+    markerJumpHeight: 0.8
+    nodeMask:
+      serializedVersion: 2
+      m_Bits: 1
+    pickDistance: 1000

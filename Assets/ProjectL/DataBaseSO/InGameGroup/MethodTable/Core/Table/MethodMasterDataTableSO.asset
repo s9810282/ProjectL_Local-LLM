@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d56b9aceafe408ebf57589ac31c39ac, type: 3}
+  m_Name: MethodMasterDataTableSO
+  m_EditorClassIdentifier: 
+  databaseItems: []
+  MethodMaster:
+  - Method_Key: 30110
+    Method_Type: 1
+    Method_ChoiceRange: 1
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30120
+    Method_Type: 1
+    Method_ChoiceRange: 2
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30210
+    Method_Type: 2
+    Method_ChoiceRange: 1
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30220
+    Method_Type: 2
+    Method_ChoiceRange: 2
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30310
+    Method_Type: 3
+    Method_ChoiceRange: 1
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30320
+    Method_Type: 3
+    Method_ChoiceRange: 2
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30410
+    Method_Type: 4
+    Method_ChoiceRange: 1
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30420
+    Method_Type: 4
+    Method_ChoiceRange: 2
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30510
+    Method_Type: 5
+    Method_ChoiceRange: 1
+    Method_Splash: 0
+    Method_SplashValue: 0
+  - Method_Key: 30520
+    Method_Type: 5
+    Method_ChoiceRange: 2
+    Method_Splash: 0
+    Method_SplashValue: 0

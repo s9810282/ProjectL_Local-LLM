@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7811fa7707c4c7b8f0f515bb17006fa, type: 3}
+  m_Name: Unit_Gravekeeper
+  m_EditorClassIdentifier:
+  key: 17
+  role: 0
+  ownerEligibility: 1
+  footprintWidth: 1
+  footprintHeight: 1
+  maxHealth: 10
+  physicalDefense: 0
+  moveRange: 5
+  moveCost: 1
+  category: 20
+  targetingMethod: {fileID: 11400000, guid: 4b69de16e50a408fa8cca60d6db58d46, type: 2}
+  attackRange: 1
+  attackPower: 10
+  maxActionCost: 5
+  attackCost: 2
+  cannonAreaType: -1
+  cannonAreaRange: 0
+  pierceRayCount: 1
+  priority: 30
+  delay: 35
+  traits:
+  - rid: 8168724886227222528
+  references:
+    version: 2
+    RefIds:
+    - rid: 8168724886227222528
+      type: {class: KnockbackTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        distanceCells: 1

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{abb5c2c9-e9d0-4eec-9a1d-16bd3bca9b6c}">
+		<property name="name">
+			<value>BGM</value>
+		</property>
+		<relationship name="folder">
+			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{c4b19b54-7687-496e-a850-8b0fd2426391}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{c4b19b54-7687-496e-a850-8b0fd2426391}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>4</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>Title</value>
+			<value>StageSelect</value>
+			<value>Day</value>
+			<value>Night</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

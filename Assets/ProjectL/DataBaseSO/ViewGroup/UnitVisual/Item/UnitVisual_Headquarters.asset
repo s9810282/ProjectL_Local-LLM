@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_Headquarters
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 20
+    prefab: {fileID: 6038080095466229805, guid: 0c39bddbbcf195b4e8f4a1227d31a966, type: 3}
+    displayName: base
+    timelineIcon: {fileID: 0}
+    infoIcon: {fileID: 0}

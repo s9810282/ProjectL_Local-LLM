@@ -1,0 +1,11 @@
+{
+  "situationId": "S01",
+  "_note": "처치 vs 큰 대상. 피해가 같으면 룰은 처치 여부를 보지 않고 좌표로 고른다(손으로 정한 가정: 1).",
+  "ruleChoice": 1,
+  "self": { "unit": "Demon", "hp": 5, "maxHp": 5, "atk": 1, "move": 3 },
+  "candidates": [
+    { "id": 0, "action": "attack", "target": "Akimbo",        "targetHp": 1,  "expectedDamage": 1, "killsTarget": true,  "threatAfter": 2, "distToTargetAfter": 1 },
+    { "id": 1, "action": "attack", "target": "MainCharacter", "targetHp": 50, "expectedDamage": 1, "killsTarget": false, "threatAfter": 1, "distToTargetAfter": 1 },
+    { "id": 2, "action": "wait",   "target": "",              "targetHp": 0,  "expectedDamage": 0, "killsTarget": false, "threatAfter": 2, "distToTargetAfter": 1 }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "situationId": "S06",
+  "_note": "이동 후 공격(move_attack). 실제 적 턴은 이동→공격 한 묶음이라 후보 단위로 시험. 룰은 가장 가까운 MainCharacter 쪽 1.",
+  "ruleChoice": 1,
+  "self": { "unit": "Gravekeeper", "hp": 10, "maxHp": 10, "atk": 10, "move": 5 },
+  "candidates": [
+    { "id": 0, "action": "move_attack", "target": "Sniper",        "targetHp": 10, "expectedDamage": 10, "killsTarget": true,  "threatAfter": 3, "distToTargetAfter": 3 },
+    { "id": 1, "action": "move_attack", "target": "MainCharacter", "targetHp": 50, "expectedDamage": 10, "killsTarget": false, "threatAfter": 2, "distToTargetAfter": 1 },
+    { "id": 2, "action": "move",        "target": "",              "targetHp": 0,  "expectedDamage": 0,  "killsTarget": false, "threatAfter": 0, "distToTargetAfter": 3 },
+    { "id": 3, "action": "wait",        "target": "",              "targetHp": 0,  "expectedDamage": 0,  "killsTarget": false, "threatAfter": 0, "distToTargetAfter": 5 }
+  ]
+}

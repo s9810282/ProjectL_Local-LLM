@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43e631929d0344b4ead82d30c6e4fe40, type: 3}
+  m_Name: ArtifactViewDataTable
+  m_EditorClassIdentifier: 
+  databaseItems:
+  - {fileID: 11400000, guid: 00e558befca546eb812a5fd9c91f0de9, type: 2}
+  - {fileID: 11400000, guid: 6e2a102d272e4904847567ba159c1f59, type: 2}
+  - {fileID: 11400000, guid: 9b4c4180c8394ebebe3d3aeea8cfc8fe, type: 2}

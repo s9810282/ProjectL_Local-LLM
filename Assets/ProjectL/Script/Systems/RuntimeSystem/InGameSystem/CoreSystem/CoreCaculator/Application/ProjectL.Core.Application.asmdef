@@ -1,0 +1,17 @@
+{
+    "name": "ProjectL.Core.Application",
+    "rootNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application",
+    "references": [
+        "GUID:05931ba9661d9e745859bbdf70325edb",
+        "GUID:9b019b81075a3af4d9f545e338271abd"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

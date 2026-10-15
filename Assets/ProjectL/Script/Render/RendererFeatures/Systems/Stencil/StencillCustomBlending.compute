@@ -1,0 +1,79 @@
+#pragma kernel CSMain
+
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
+Texture2D<float4> _ActiveTex;
+Texture2D<float4> _TargetRenderTexture;
+Texture2D<float> _DepthTex;
+Texture2D<float4> _LineNoiseTexture;
+SamplerState sampler_LinearClamp;
+SamplerState sampler_LinearRepeat;
+RWTexture2D<float4> _Result;
+
+uint _Width;
+uint _Height;
+float2 _CircleCenter;
+float _CircleRadius;
+float _TargetRenderTextureThickness;
+float _LineThickness; // Full width in world units.
+float4 _LineColor;
+float _LineNoiseOffset;
+float2 _LineNoiseTiling;
+float4x4 _InverseViewProjection;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Width || id.y >= _Height)
+        return;
+
+    float2 uv = (float2(id.xy) + 0.5) / float2(_Width, _Height);
+    float4 source = _ActiveTex.Load(int3(id.xy, 0));
+    float depth = _DepthTex.Load(int3(id.xy, 0));
+
+    // Sky has no surface to reconstruct or draw a terrain boundary on.
+#if UNITY_REVERSED_Z
+    bool hasSurface = depth > 0.000001;
+#else
+    bool hasSurface = depth < 0.999999;
+    depth = lerp(UNITY_NEAR_CLIP_VALUE, 1.0, depth);
+#endif
+    if (!hasSurface)
+    {
+        _Result[id.xy] = source;
+        return;
+    }
+
+    float3 worldPos = ComputeWorldSpacePosition(uv, depth, _InverseViewProjection);
+    float2 centerOffset = worldPos.xz - _CircleCenter;
+    float radius = length(centerOffset);
+    // Polar coordinates keep the spatial tiling independent of animation time.
+    // Whole angular repeats make the atan2 seam join on the repeating texture.
+    float angle = radius > 0.000001 ? atan2(centerOffset.y, centerOffset.x) : 0.0;
+    float angularRepeats = max(1.0, round(abs(_LineNoiseTiling.x)));
+    float2 noiseUV = float2(
+        angle * (1.0 / TWO_PI) * angularRepeats,
+        radius * abs(_LineNoiseTiling.y) - _LineNoiseOffset);
+    float noise = _LineNoiseTexture.SampleLevel(sampler_LinearRepeat, noiseUV, 0).r;
+    // Positive distance is inside the radius. Keep the interior solid and put
+    // the noisy transition outside the circle so the flame tips point outward.
+    float signedDistance = _CircleRadius - radius;
+    float transitionWidth = noise * _TargetRenderTextureThickness;
+    float targetMask = transitionWidth > 0.0
+        ? smoothstep(-transitionWidth, 0.0, signedDistance)
+        : step(0.0, signedDistance);
+
+    // UV sampling supports a B RenderTexture with a different resolution.
+    float4 target = _TargetRenderTexture.SampleLevel(sampler_LinearClamp, uv, 0);
+    float4 color = lerp(source, target, targetMask);
+    
+    // 같은 경계를 LineThickness만큼 바깥으로 옮긴 뒤 원래 마스크를 빼서 외곽만 남긴다.
+    float expandedMask = transitionWidth > 0.0
+        ? smoothstep(-transitionWidth, 0.0, signedDistance + _LineThickness)
+        : step(0.0, signedDistance + _LineThickness);
+    float lineMask = max(0.0, expandedMask - targetMask);
+    lineMask *= step(0.000001, _LineThickness) * saturate(_LineColor.a);
+
+    color.rgb = lerp(color.rgb, _LineColor.rgb, lineMask);
+    _Result[id.xy] = color;
+}

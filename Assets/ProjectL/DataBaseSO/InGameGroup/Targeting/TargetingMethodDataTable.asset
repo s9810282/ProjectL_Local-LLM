@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38724c6f4e394c0bbc1c67147af5931e, type: 3}
+  m_Name: TargetingMethodDataTable
+  m_EditorClassIdentifier: 
+  databaseItems:
+  - {fileID: 11400000, guid: 370b1888064844bc8421c2bf81b89916, type: 2}
+  - {fileID: 11400000, guid: 4b69de16e50a408fa8cca60d6db58d46, type: 2}
+  - {fileID: 11400000, guid: fed398bfcedb40f6912dd5d8d61ed661, type: 2}

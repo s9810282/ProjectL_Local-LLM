@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{922e158e-94f4-4cf7-925c-0069ed213173}">
+		<property name="name">
+			<value>UnitType</value>
+		</property>
+		<relationship name="folder">
+			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{3ad7bd7d-9802-4f8f-8089-d7346845f564}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{3ad7bd7d-9802-4f8f-8089-d7346845f564}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>6</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>MainCharactor</value>
+			<value>Base</value>
+			<value>Rider</value>
+			<value>Heavy</value>
+			<value>Cannon</value>
+			<value>Enemy</value>
+		</property>
+		<property name="initialValue">
+			<value>1</value>
+		</property>
+	</object>
+</objects>

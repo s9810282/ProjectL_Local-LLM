@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7811fa7707c4c7b8f0f515bb17006fa, type: 3}
+  m_Name: Unit_ShotGun
+  m_EditorClassIdentifier: 
+  key: 11
+  role: 0
+  ownerEligibility: 0
+  footprintWidth: 1
+  footprintHeight: 1
+  maxHealth: 10
+  physicalDefense: 0
+  moveRange: 3
+  moveCost: 1
+  targetingMethod: {fileID: 11400000, guid: 4b69de16e50a408fa8cca60d6db58d46, type: 2}
+  attackRange: 2
+  category: 10
+  attackPower: 1
+  maxActionCost: 3
+  attackCost: 1
+  priority: 10
+  delay: 10
+  traits:
+  - rid: 5555178182223855693
+  references:
+    version: 2
+    RefIds:
+    - rid: 5555178182223855693
+      type: {class: DistanceDamageScaleTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        percentByDistance: 9600000032000000

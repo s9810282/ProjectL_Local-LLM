@@ -1,0 +1,12 @@
+{
+  "situationId": "S02",
+  "_note": "둘 다 처치 가능. 룰은 실제 피해가 큰 ShotGun(10)을 고른다. 0번이 더 안전하고 메인 캐릭터다.",
+  "ruleChoice": 1,
+  "self": { "unit": "Gravekeeper", "hp": 10, "maxHp": 10, "atk": 10, "move": 5 },
+  "candidates": [
+    { "id": 0, "action": "attack", "target": "MainCharacter", "targetHp": 8,  "expectedDamage": 8,  "killsTarget": true,  "threatAfter": 2, "distToTargetAfter": 1 },
+    { "id": 1, "action": "attack", "target": "ShotGun",       "targetHp": 10, "expectedDamage": 10, "killsTarget": true,  "threatAfter": 4, "distToTargetAfter": 1 },
+    { "id": 2, "action": "move",   "target": "",              "targetHp": 0,  "expectedDamage": 0,  "killsTarget": false, "threatAfter": 0, "distToTargetAfter": 4 },
+    { "id": 3, "action": "wait",   "target": "",              "targetHp": 0,  "expectedDamage": 0,  "killsTarget": false, "threatAfter": 3, "distToTargetAfter": 1 }
+  ]
+}

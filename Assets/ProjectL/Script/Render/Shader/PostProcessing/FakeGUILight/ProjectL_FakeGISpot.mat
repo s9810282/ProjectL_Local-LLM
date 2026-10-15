@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ProjectL_FakeGISpot
+  m_Shader: {fileID: 4800000, guid: 177ee394e4a04bf381f5349d54645896, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _ACCURATECOLORS_ON
+  - _BEAMENABLED_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _GradientTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AccurateColors: 1
+    - _BeamDensity: 1.024
+    - _BeamEnabled: 1
+    - _BeamSteps: 16
+    - _CloseFade: 0
+    - _CloseTransition: 0.5
+    - _CoreEnabled: 0
+    - _CoreIntensity: 8
+    - _CoreRadius: 0.2
+    - _CoreRim: 0.25
+    - _CoreRimPower: 2
+    - _CoreSoftness: 0.5
+    - _DirectionalLightThreshold: 0
+    - _DitherIntensity: 0.1
+    - _EnableDither: 0
+    - _EnableFlicker: 0
+    - _EnableHalo: 0
+    - _EnableNoise: 0
+    - _EnableShading: 0
+    - _EnableSpecular: 0
+    - _FarFade: 50
+    - _FarTransition: 5
+    - _FlickerIntensity: 0.1
+    - _FlickerSoftness: 0.5
+    - _FlickerSpeed: 5
+    - _HaloDepthFade: 0.5
+    - _HaloPosterize: 0
+    - _HaloSize: 0.5
+    - _LightFalloff: 2
+    - _LightIntensity: 1
+    - _LightPosterize: 0
+    - _LightRadius: 5
+    - _LightSoftness: 0.5
+    - _NoiseMovement: 0
+    - _NoiseScale: 1
+    - _Noisiness: 0.2
+    - _ShadingBlend: 0
+    - _ShadingSoftness: 0.5
+    - _SizeFlickering: 0
+    - _SpecularIntensity: 0.25
+    - _SpecularPower: 32
+    - _SpotInnerAngle: 30
+    - _SpotOuterAngle: 50
+    - _UseDirectionalLightAttenuation: 0
+    m_Colors:
+    - _CoreColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FlickerHue: {r: 1, g: 0.8, b: 0.5, a: 1}
+    - _HaloTint: {r: 1, g: 1, b: 1, a: 1}
+    - _LightTint: {r: 1, g: 0.85, b: 0.6, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

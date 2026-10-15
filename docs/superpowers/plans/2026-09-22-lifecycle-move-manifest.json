@@ -1,0 +1,252 @@
+[
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem.meta",
+    "Hash": "7BC29D32BFFA07FBF397725F0CFDA99CA2856585CA45DB812239D731EC8CF207"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base.meta",
+    "Hash": "475DA26B4E6815DBF07C4BBABF9CA60E5F95DFAA9A6EBAA5168CF174F743A450"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles.meta",
+    "Hash": "61A3223D369677367AE517CA812C6A7758EFA81BFE218441CD7018F728959E49"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycleSystemGroup.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycleSystemGroup.cs",
+    "Hash": "44E3E1F2AF83180657EB51EA3B8E5D8AEAB329AE7F09E84712FB80F31E43C743"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycleSystemGroup.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycleSystemGroup.cs.meta",
+    "Hash": "E70682D8CB8CDDA94F304CB8E124A3A4FAFEA57AB943CE3DD0FC208CF517DA56"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleBase.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleBase.cs",
+    "Hash": "A064E54C101EB1E7FEBA878F62B1DFE3201CD87AE0431D60D74B419E4865F9E9"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleBase.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleBase.cs.meta",
+    "Hash": "330EFA7AFA5877CCF7C97E86E417309DC6579F8763606ECF346DA8D3C5B834AF"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleKey.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleKey.cs",
+    "Hash": "87998DC041A5EC6BC43E5498717FB2C1A162677AE69F9AF60086B1BCA37F8143"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleKey.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleKey.cs.meta",
+    "Hash": "4708142EEDF056B013932739DDC8E89FC19E8399CF136FEADF695CB8E7E34A21"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleManager.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleManager.cs",
+    "Hash": "4DBA1B998A49CA28E8EF0089A47B4B44E8ED818B4C388A84F143D6739707CB73"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/Base/LifeCycleManager.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/Base/LifeCycleManager.cs.meta",
+    "Hash": "AF635E8752C18540BA7E8E01DD743553B4E271ED2E64A2E03F1731E94F127138"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact.meta",
+    "Hash": "7C3E19766B4FF787A87E03C3A07255543C8A936ABB3789B83CC042FC1C177441"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat.meta",
+    "Hash": "8CF148CA5B308567438EA16DD7C95A4979FD0E3DC58DD1D5DC37E76B8A1EB962"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby.meta",
+    "Hash": "4F38FD6ACA715F01F6F5EEA439F87AEBDD87F3239C13960FB718B9A62F4744F5"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage.meta",
+    "Hash": "78EA41ABA8F15F5C058E9352CD6850EA8E39265B7E736D8FAFB863E6D5BBEC9E"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/ArtifactLifeCycle.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/ArtifactLifeCycle.cs",
+    "Hash": "DA39AC56135385A2B2A8BB7A4331E5E55EBECDA8669ABC191690E9FD6045F53E"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/ArtifactLifeCycle.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/ArtifactLifeCycle.cs.meta",
+    "Hash": "B4851E1D02C8ECEB392DFBD1FD7A2F786113D8F9C01ACF3B7A14EE558B3DE23C"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs.meta",
+    "Hash": "EA4632D2D747C60761DB76D99B91EF6F98A3988EAA4F5FCEB3D58DC3517B092A"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Plans.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Plans.meta",
+    "Hash": "E338E84C5A772BA422B7F48B1C4386ACCD4AB5427A5E66BD1D4A45B746A2F147"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs/ArtifactJob.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs/ArtifactJob.cs",
+    "Hash": "3B616085D66E9CFD4309F0D1106AA243419D5C79AB8981CBFBCDF959AAD8697E"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs/ArtifactJob.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Jobs/ArtifactJob.cs.meta",
+    "Hash": "7B40CF2A9CEB7B9221AB24778E649A420B67F69D573FF9E44BFEB95D409C9FEB"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Plans/ArtifactPlan.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Plans/ArtifactPlan.cs",
+    "Hash": "B1EFEAD67EBCB49338EBC802ABCA72C7CE03C58004DCBA4B204953A542764B5B"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Artifact/Plans/ArtifactPlan.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Artifact/Plans/ArtifactPlan.cs.meta",
+    "Hash": "0562243CE23311F43929A672FD151FF070F09BB874E3B670B5029B43C79AB3D4"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/CombatLifeCycle.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/CombatLifeCycle.cs",
+    "Hash": "91B9FE011FFC63A4023C565E02CD5A18BA782CDC92202BBD4FAA470438ACE034"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/CombatLifeCycle.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/CombatLifeCycle.cs.meta",
+    "Hash": "7483491D1FFF83F3A41BD54A6CFCCA76AE1195C431BF13FD1D88327377381D33"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Jobs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Jobs.meta",
+    "Hash": "FD7EB3C31E3C76087B12056165CD5D6673852E5FF72B83A33759E6C278BDA6DE"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Plans.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans.meta",
+    "Hash": "399BE676DEB29DE57A6150FA8160FF201BAFB6A386AC5E0EB176CDF63BE99C71"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Jobs/CombatJob.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Jobs/CombatJob.cs",
+    "Hash": "5DA4FCD9CDC6F4DCC8E9D1274957B36EA08CFD6E42BFB8524EC6B5FB3F6804C4"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Jobs/CombatJob.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Jobs/CombatJob.cs.meta",
+    "Hash": "58B8887E73786C285465CB3898DECA2D056C2614ECD6527BF4BCD58F9806ADBB"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs",
+    "Hash": "8FFA6E6DA9B910153AF497909C15207654E2FF8E223DB06055B0A536B91B1A0C"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs.meta",
+    "Hash": "4765F224247F239D096E9C03875088CA01B8127D4F9E0FBD5A538985974FBBB1"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs.meta",
+    "Hash": "BB52CE379A7D4B76748112F4CC21002C7BB0B65E9328A948B126A34D42E330DB"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/LobbyLifeCycle.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/LobbyLifeCycle.cs",
+    "Hash": "4D933F2D8CB1113F444D24702001A6B5E40FF84AEA367B243547D77DDA13BA4C"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/LobbyLifeCycle.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/LobbyLifeCycle.cs.meta",
+    "Hash": "A602B083C5F419B0C76E35203A8D0E3142BDE8F7FEFB10F56696D9AB99418C41"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Plans.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Plans.meta",
+    "Hash": "57A00C0D355F769A12BB229137B26FC81D090DFB0C2D814BF23448B41F96A3A1"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs/LobbyJob.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs/LobbyJob.cs",
+    "Hash": "9D2B62B7E1587297181D57F95F23031455D0E3CB4754DB6FD968622153730F5E"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs/LobbyJob.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Jobs/LobbyJob.cs.meta",
+    "Hash": "E9E612A491669E244F6B4D7810BFC0FA499AF1142AFF3CD299DAA8C0383F0935"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Plans/LobbyPlan.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Plans/LobbyPlan.cs",
+    "Hash": "E63993564B0C0EE95DEA522297DA50A6346434390B14B2C328477B94EAA5622E"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Lobby/Plans/LobbyPlan.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Lobby/Plans/LobbyPlan.cs.meta",
+    "Hash": "D45B329ADCE32D4FF2EAFCF57170522FDD17F91D10085E7F29463CFB6EE0E41F"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Jobs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs.meta",
+    "Hash": "6CFB6FA679F874ADE9E858A596BC68AF0DB89DC56471224957CDFACF18A74BFB"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Plans.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans.meta",
+    "Hash": "C308A0EEAEA64F1D188A3D1060B671224E5C516F7EDF912A3FE607F5ADFCAF8D"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs",
+    "Hash": "87460DC7101D1CC5B949F1099759110ABEFE4C0025E072349FBDFD2409F13826"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs.meta",
+    "Hash": "99DE678B8A4A22972989206F7B8AA22CE4BE4F0FA5B0D515CBD33A199F86F803"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs",
+    "Hash": "C88A6962A3CECD315990B4C9FA4FF4F8BBD3C0C44D2CCC8CA0445046D2B247CD"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs.meta",
+    "Hash": "CD08520E78A8B0D9D9B4A73356A174BB25ED591421C59BF0446DC99C27901C62"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs",
+    "Hash": "AC8AA43DFD746034E6CC335D07B29B74A7BD02A1840617A0A985526ED36AA73D"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/RuntimeSystem/GlobalSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs.meta",
+    "Hash": "5B5A97140BF2D0AAC8D5F5427E5ADC7827030E652C4FEA4C348FF12D395FCB3B"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/Factory/Runtime/Global/LifeCycle.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/Factory/Runtime/LifeCycle.meta",
+    "Hash": "D995DA7CD209EB2A04F118FD37956C0A15A5E31D2041ABA50E902A67A5524B49"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/Factory/Runtime/Global/LifeCycle/LifeCycleSystemFactory.cs",
+    "Destination": "Assets/ProjectL/Script/Systems/Factory/Runtime/LifeCycle/LifeCycleSystemFactory.cs",
+    "Hash": "31B9611E5F7E96B55F79DB49EF27C177A6D8FD16D686B14424CD689760925657"
+  },
+  {
+    "Source": "Assets/ProjectL/Script/Systems/Factory/Runtime/Global/LifeCycle/LifeCycleSystemFactory.cs.meta",
+    "Destination": "Assets/ProjectL/Script/Systems/Factory/Runtime/LifeCycle/LifeCycleSystemFactory.cs.meta",
+    "Hash": "5BB0F6B5FBCB59AAD8C04EDC48D9477DB365E7F895888DEB9579B3B8990F8132"
+  }
+]

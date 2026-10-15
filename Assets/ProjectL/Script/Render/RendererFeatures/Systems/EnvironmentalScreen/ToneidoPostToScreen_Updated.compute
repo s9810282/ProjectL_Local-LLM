@@ -1,0 +1,163 @@
+#pragma kernel CSMain
+
+Texture2D<float4> _Source;
+Texture2D<float4> _Layer1Texture;
+Texture2D<float4> _Layer2Texture;
+Texture2D<float4> _Layer3Texture;
+RWTexture2D<float4> _Result;
+
+SamplerState sampler_LinearRepeat;
+
+uint _Width;
+uint _Height;
+
+float _Time;
+float _Aspect;
+
+float2 _MaskCenter;
+
+float2 _Layer1Radius;
+float _Layer1EdgeSoftness;
+float4 _Layer1Color;
+float _Layer1Blending;
+float _Layer1Tiling;
+float _Layer1Speed;
+float2 _Layer1Direction;
+
+float2 _Layer2Radius;
+float _Layer2EdgeSoftness;
+float4 _Layer2Color;
+float _Layer2Blending;
+float _Layer2Tiling;
+float _Layer2Speed;
+float2 _Layer2Direction;
+
+float2 _Layer3Radius;
+float _Layer3EdgeSoftness;
+float4 _Layer3Color;
+float _Layer3Blending;
+float _Layer3Tiling;
+float _Layer3Speed;
+float2 _Layer3Direction;
+
+float SampleIntensity(Texture2D<float4> textureToSample, float2 uv)
+{
+    float4 value = textureToSample.SampleLevel(
+        sampler_LinearRepeat,
+        frac(uv),
+        0);
+
+    return value.r;
+
+}
+
+float EllipseOutsideMask(
+    float2 uv,
+    float2 center,
+    float2 radius,
+    float edgeSoftness)
+{
+    float2 position = uv - center;
+
+    radius = max(radius, float2(0.000001f, 0.000001f));
+
+    float2 ellipseSpace = float2(
+        position.x / radius.x,
+        position.y / radius.y);
+
+    float ellipseDistance = length(ellipseSpace);
+    float softness = max(edgeSoftness, 0.000001f);
+
+    return smoothstep(
+        1.0f,
+        1.0f + softness,
+        ellipseDistance);
+}
+
+float ApplyLayer(
+    inout float3 color,
+    Texture2D<float4> textureToSample,
+    float2 uv,
+    float2 radius,
+    float edgeSoftness,
+    float4 layerColor,
+    float blending,
+    float tiling,
+    float speed,
+    float2 direction)
+{
+    float mask = EllipseOutsideMask(
+        uv,
+        _MaskCenter,
+        radius,
+        edgeSoftness);
+
+    float2 textureUv = uv * max(tiling, 0.0f);
+    textureUv += direction * speed * _Time;
+
+    float textureAmount = SampleIntensity(
+        textureToSample,
+        textureUv);
+
+    float amount = saturate(
+        textureAmount * blending * mask);
+
+    color = lerp(
+        color,
+        layerColor.rgb,
+        amount);
+
+    return amount;
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Width || id.y >= _Height)
+        return;
+
+    uint2 pixel = id.xy;
+    float2 uv = (float2(pixel) + 0.5f) / float2(_Width, _Height);
+
+    float3 resultColor = _Source[pixel].rgb;
+
+    ApplyLayer(
+        resultColor,
+        _Layer1Texture,
+        uv,
+        _Layer1Radius,
+        _Layer1EdgeSoftness,
+        _Layer1Color,
+        _Layer1Blending,
+        _Layer1Tiling,
+        _Layer1Speed,
+        _Layer1Direction);
+
+    ApplyLayer(
+        resultColor,
+        _Layer2Texture,
+        uv,
+        _Layer2Radius,
+        _Layer2EdgeSoftness,
+        _Layer2Color,
+        _Layer2Blending,
+        _Layer2Tiling,
+        _Layer2Speed,
+        _Layer2Direction);
+
+    ApplyLayer(
+        resultColor,
+        _Layer3Texture,
+        uv,
+        _Layer3Radius,
+        _Layer3EdgeSoftness,
+        _Layer3Color,
+        _Layer3Blending,
+        _Layer3Tiling,
+        _Layer3Speed,
+        _Layer3Direction);
+
+    _Result[pixel] = float4(
+        resultColor,
+        _Source[pixel].a);
+}

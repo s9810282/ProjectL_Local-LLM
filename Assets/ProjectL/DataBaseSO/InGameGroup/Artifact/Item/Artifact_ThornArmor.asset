@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 595b3cc9e58807a4a8ca8e1be3be0f4f, type: 3}
+  m_Name: Artifact_ThornArmor
+  m_EditorClassIdentifier: 
+  artifactId: 1002
+  initialCount: 1
+  cells:
+  - x: 0
+    y: 0
+  - x: 1
+    y: 0
+  effects:
+  - entryId: night_reflect_damage
+    trigger: 12
+    source:
+      faction: 2
+      category: 0
+    condition:
+      type: 2
+      comparison: 0
+    target:
+      type: 2
+      faction: 2
+      category: 0
+      excludeCategory: 0
+      useHpRatioFilter: 0
+      maxHpRatio: 0
+    location:
+      type: 0
+    effect:
+      type: 1
+      statId: 
+      knockbackDistance: 0
+    value:
+      type: 0
+      basis: 0
+      amount: 3
+    durationTurns: 0

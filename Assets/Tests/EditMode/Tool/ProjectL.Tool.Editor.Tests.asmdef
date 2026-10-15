@@ -1,0 +1,21 @@
+{
+    "name": "ProjectL.Tool.Editor.Tests",
+    "rootNamespace": "ProjectL.Tool.Editor.Tests",
+    "references": ["ProjectL.Tool.Editor"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "NPOI.dll",
+        "NPOI.OOXML.dll",
+        "NPOI.OpenXml4Net.dll",
+        "NPOI.OpenXmlFormats.dll",
+        "ICSharpCode.SharpZipLib.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

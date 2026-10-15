@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71d386c8f1f780e4c9753151e51cbcec, type: 3}
+  m_Name: TempOutlineMaterial
+  m_EditorClassIdentifier: 
+  materialData:
+    key: _Outline
+    material: {fileID: 2100000, guid: 395c7c025f43eab45825447f65c9fab2, type: 2}

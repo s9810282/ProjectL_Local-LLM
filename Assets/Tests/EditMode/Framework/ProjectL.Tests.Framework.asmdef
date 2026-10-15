@@ -1,0 +1,9 @@
+{
+    "name": "ProjectL.Tests.Framework",
+    "references": ["Framework", "ProjectL.Systems", "ProjectL.Core.Contracts", "ProjectL.Core.Application", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.InputSystem", "Cinemachine", "FMODPlus", "FMODUnity"],
+    "includePlatforms": ["Editor"],
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}

@@ -1,0 +1,16 @@
+{
+    "name": "ProjectL.Core.Domain",
+    "rootNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain",
+    "references": [
+        "GUID:05931ba9661d9e745859bbdf70325edb"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

@@ -1,0 +1,671 @@
+{
+  "Files": [
+    {
+      "Source": "Assets/DataBase/SO/Architecture.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture.meta",
+      "Sha256": "DD9D08B2CD8B14C0908CDFB8906AF7404963FB60BE2A331981E79182557C0A07"
+    },
+    {
+      "Source": "Assets/DataBase/SO/DatabaseCatalogSO.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset",
+      "Sha256": "0EB740321D9545C4C83F0712DA431A63B1A4B673D78F65A0CB840A1302883195"
+    },
+    {
+      "Source": "Assets/DataBase/SO/DatabaseCatalogSO.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset.meta",
+      "Sha256": "39EE6707CF6688E4C5D7E896E9EAB594CE363DCBAAB160841B8BC472C68D0B54"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup.meta",
+      "Sha256": "6D957C1457800EE2C8F5B68B7D497036F98B0467D73EEF4D903A5ED069051FBC"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage.meta",
+      "Sha256": "144B327E7D4BD5877270A533D73FE6A1F80CD697F95F71D01193D0331C45B4E1"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/ArchitectureCatalog.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/ArchitectureCatalog.asset",
+      "Sha256": "7CC31C4696DA1C387BB346C17303FF6AF9D98B6799252216496D2A7AB7B1B067"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/ArchitectureCatalog.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/ArchitectureCatalog.asset.meta",
+      "Sha256": "164E603CADE8F79103BB2373307CC3BC89A606AC210BCCB30F96129A664F39CC"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions.meta",
+      "Sha256": "64DA1107CEB5D5EE131C3801EFB5C60CA71D8FF6DD61E36D136EE4F42566394E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_L.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_L.asset",
+      "Sha256": "410E182CCA58BC7CE9CB760C28F46E161D787991D4C297BE78919423EDB23F05"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_L.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_L.asset.meta",
+      "Sha256": "CE43D29696411B0A05E9A911C9E4CD6FABB06C203F4C9FC80DEBD4BAA4384446"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_O.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_O.asset",
+      "Sha256": "1C6FC83F70BB45E346F8D05BC8547E237566F5D1E92722F82D8AB3972D06BD7F"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_O.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_O.asset.meta",
+      "Sha256": "476F07AFE19CC08FC8854554C6F3234F56FEA6D3C372CC94F82D29D331C2AE31"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_S.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_S.asset",
+      "Sha256": "E5B69EDECBFACA1DF87B8F00A0E5486D43D34B4D6A8179D12A13C19781E0550C"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_S.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_S.asset.meta",
+      "Sha256": "4A871D3864CEAB80D07781D036D11E2C7491DBC48AF175EC99B084DDD183BBA5"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_T.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_T.asset",
+      "Sha256": "820E32F338FFBB0F69527BF7CC305146F45319D2EB5315982FE512BAAAD7E71A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_T.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_T.asset.meta",
+      "Sha256": "62A9A674D30D5AD12FEEA6F6A4F1DF9BDC4322326AD472B2701974257F9DD9A4"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_Z.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_Z.asset",
+      "Sha256": "4B311AFBDAD2087A35D50713EF05DC159A358C7AB4B0811E10E6C696DAD8DE30"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Architecture/Definitions/Architecture_Z.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Architecture/Definitions/Architecture_Z.asset.meta",
+      "Sha256": "7D40DB3D3065AE292C06887A67FBFC0E5BE02C56F56200C95D0F1A482E9D8454"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/ColorTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/ColorTable.meta",
+      "Sha256": "5E2AAA6A8E612DB10221AA7152D3B1D5001EEE9D7AD243401CC403EE55683828"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable.meta",
+      "Sha256": "BC355ECD2780ED7002621BB80EF80671E41D33DE79F2AE2E34EE7117EF833383"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable.meta",
+      "Sha256": "67879D9C105EBF165CDA39E42F2023E36AC24D3740D3554B8EA2943800FAA0EC"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/RenderGroup.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/RenderGroup.asset",
+      "Sha256": "B297B1AE56C945F2D08EE3A51E68583E0C8ADB8E1AA1984557C1EE1CE0E4CEDB"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/RenderGroup.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/RenderGroup.asset.meta",
+      "Sha256": "A55142D37B235283987BCC2D8BC0B11038781D2BD0B9AF121EB63C4723C9DF0A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/EffectDataTable.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable/EffectDataTable.asset",
+      "Sha256": "6236D0AD298E6E3C3E76886470D646F52B75610F01A2ECB131D727BAB4A06F6A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/EffectDataTable.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable/EffectDataTable.asset.meta",
+      "Sha256": "8B7CA14CA585D674E2400CBFC62D8AB4CDDA2ECE2CB1B3D0780908E658F50870"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/Items.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable/Items.meta",
+      "Sha256": "D1C9431B87EFF4CAE87EDCDD85346FFDB302327BA105F525D6EC7502858BBE02"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/Items/TestEffect.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable/Items/TestEffect.asset",
+      "Sha256": "7D794FA5030339276701402E834B331EB6655ACA80A530C15D1FBC14200080D7"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/EffectTable/Items/TestEffect.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/EffectTable/Items/TestEffect.asset.meta",
+      "Sha256": "6CEA02D9368A3D26466A37B744BC42361087E26D4C915EBE2F896BB9774C2834"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/Item.meta",
+      "Sha256": "44CB4243FC59A5C5AA207E6778C1852006FAEBB4F31945934638E3354986E36F"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/LightDataTableSO.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/LightDataTableSO.asset",
+      "Sha256": "EF883D6DA60E1B39948F1E3343DF62CF0290245783364F3DA61FE885D7D10258"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/LightDataTableSO.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/LightDataTableSO.asset.meta",
+      "Sha256": "BAAF350AC07FA0C2AF6A43BB5E76D1E6DBA7192BEA74BF443354BC6EABBBB33E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/PointLight.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/Item/PointLight.asset",
+      "Sha256": "6DF812D03B19C5B429F85B73D3BC00294CAE7A13144005BF43ED321F46E840BB"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/PointLight.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/Item/PointLight.asset.meta",
+      "Sha256": "130253A16E341E8C34BA13B0E4AAE6FBAF82CD8D262ACE2BD6E55CC974F0AB8C"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/SpotLight.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/Item/SpotLight.asset",
+      "Sha256": "1479E61599E8322C04130BB29653FF04EE92A9818ADC5B5B1CDA260C643E75A8"
+    },
+    {
+      "Source": "Assets/DataBase/SO/RenderGroup/LightTable/Item/SpotLight.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/RenderGroup/LightTable/Item/SpotLight.asset.meta",
+      "Sha256": "8E4F792E589D14BBE1486CA3D56582669BC6018E550579D8B0B779C4183920F0"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable.meta",
+      "Sha256": "01F7FC64C24BE0FC2EDD20113FB1FD38D6CA244FD068E929978FC8CF4D8C2BAE"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSceneViewConfig.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSceneViewConfig.asset",
+      "Sha256": "BAABF25485D62C01CC80C1E9740FE6FC3D79728E322AF4220B528BCD0F440B33"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSceneViewConfig.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSceneViewConfig.asset.meta",
+      "Sha256": "F9E1BFD44795042C669F4E483FE2B9EDC171DC7EBE28A7B603890974877D9511"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect.meta",
+      "Sha256": "237236E9198A3082029A6C078B5922A81D0CCF1348B0235A326473977B95F587"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable.meta",
+      "Sha256": "760EBC7AD25E61FCC47E4AB97EBAF6B1B1F9E04096CD2C890431FCEC7F7B241B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable.meta",
+      "Sha256": "D98BB61907001C713B31D111E3C2120DA653881835053F31D609BB131E5251C4"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7.meta",
+      "Sha256": "115CC354066E0B51CC18C6947695026AB959FD56C1CBE00A6CD08B951C9E7273"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8.meta",
+      "Sha256": "A7B1913602EA5C4B9F7079D39C4BDB38DA70924D39CBCF503DF085E76680FCE3"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9.meta",
+      "Sha256": "DCDCE4F354D8BB4A735A03CED0A0CA5EE7E8C4C922C0B6520A3C418D24434900"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/FieldCamera.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/FieldCamera.asset",
+      "Sha256": "C164EF32302DCC270313C0467A9345DA291EF72DF36BE397B14BDF8C9D6CAD0E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/FieldCamera.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/FieldCamera.asset.meta",
+      "Sha256": "C752418F2F99757A081B6DBDF20D63033C260BB78FAB2AE823065C84B9851E0D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/FieldPrefab.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/FieldPrefab.asset",
+      "Sha256": "5C8B34FAE4498729B095E28E2B64418F41BB21A4C9327778F171CCFFA886C25D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/FieldPrefab.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/FieldPrefab.asset.meta",
+      "Sha256": "116D31CD7B01A900FB5A68829F900869195015529A491FA60AE78F7B8DF4F82B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x6.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x6.asset",
+      "Sha256": "304684CDD82AF98E99A29BAE8862D8EED98B11001036D7C07AE138DE69B82402"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x6.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x6.asset.meta",
+      "Sha256": "06BEF9790E9FA556488A4DDAC48B7958ABD5BDE3D7952525C31F6E8A8EF2B1FC"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x7.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x7.asset",
+      "Sha256": "58185D33FD686724CB50D8A982456931A4701E300CD1F9472500F46D614E4679"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x7.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x7.asset.meta",
+      "Sha256": "6C10A38709FC26FD07D67F9267803B0C78FC98F8E38970D3EEF1DC8A3E9AB6E6"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x8.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x8.asset",
+      "Sha256": "6020B77AD37A517FF1917DE989E3F171E4C79723887BCC72F091CED4414FF88D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x8.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x8.asset.meta",
+      "Sha256": "1530221A0E82D339FF3A9DBA60078875B9BE2AB5882D50106E140F332781EC9B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x9.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x9.asset",
+      "Sha256": "502EF994312DB0B1257BB5FD84C75F840F1B1F05C619E4443EBD296BA10771CA"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_7/Field_7x9.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_7/Field_7x9.asset.meta",
+      "Sha256": "41EC3DA1FEB9A2B7649BBA51E53D99FA09064C3AB78115CB998D25FB7B165370"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x6.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x6.asset",
+      "Sha256": "44CF08173A0C18CE2E5935F4C9B150CF688DE0159197E5A895BA0404CFBA832C"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x6.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x6.asset.meta",
+      "Sha256": "19C5C93906535CA541A0F984DA96AF2F25A4CFDB92FC51C2045D0FE407F00F84"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x7.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x7.asset",
+      "Sha256": "12062570BDF95754BB16F854F73AB470152178F35B15FAC8BE1A2921FE6DB573"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x7.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x7.asset.meta",
+      "Sha256": "0E23895D86B47F3B904BDAC81AF6567391BEF68B11EA898EA8256DA744023561"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x8.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x8.asset",
+      "Sha256": "C8B717E4F0B419CAF88B38448D275236C9A0EBC7D330A717AFBBA2DD5065501A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x8.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x8.asset.meta",
+      "Sha256": "20E93666C06D04948927B6B72965A86026010492767DE36C94AADF73E5DFD446"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x9.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x9.asset",
+      "Sha256": "898902BA01F8803B0C2171274C0114922D4D89C0916709EF08AB5FAEA4D67CD4"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_8/Field_8x9.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_8/Field_8x9.asset.meta",
+      "Sha256": "B87DE163F3B39D2B39217AD6381024C92FE459F29FA49B77AA5F2C3A58D67B5F"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x6.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x6.asset",
+      "Sha256": "F114857716AF5D728DF342DD34081C56DD5D5A7B602F21BC460E6D6CE22FA967"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x6.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x6.asset.meta",
+      "Sha256": "1ED134E7D830F1678BFE5FD487F3A0DBCF09057A243A0EFB7C07050F245F3BD9"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x7.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x7.asset",
+      "Sha256": "28C5F2EAA913547F56E90420F876EBD8E3BE8167A8455A659E18FC1732AF3198"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x7.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x7.asset.meta",
+      "Sha256": "84FDD7789DBC332D57D3C9D8A9C885FAC047B3055805D25D01D74712CD52CA74"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x8.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x8.asset",
+      "Sha256": "50E58A33A691030CEA37AC705BE31D234ADA1B437792F289D6CE3F9E867AA52D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x8.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x8.asset.meta",
+      "Sha256": "AB4C99EA85D677356788882F9459D2CEDB1F2579F4BEFF5DFEA9C621A3FDC203"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x9.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x9.asset",
+      "Sha256": "A08DDD698653A63D6D67D73B2ADC7059678FE2032CE843E6F4891A82B6A0F8A9"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/FieldTable/Field_9/Field_9x9.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/FieldTable/Field_9/Field_9x9.asset.meta",
+      "Sha256": "3DECD0E82695B8EA883AA9A05AE92804F6180F0F4D2DBF430C1BDA31A85ECE6A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapChapter1.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapChapter1.asset",
+      "Sha256": "E6C1E9BE1BCF7059FFB8E0549E3B7524C054EFC74CB998C40AE954532B8416BE"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapChapter1.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapChapter1.asset.meta",
+      "Sha256": "3EB78D02DDA24C2FBDDE7CFB6F2E2FD393FAC066F5F4A1EC62B8F070DA61C7BA"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapViewConfig.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapViewConfig.asset",
+      "Sha256": "068D322D3E267421903DCBC0E1D0BF7416E6CCD5BD6CFA1A21E91898CD58AD60"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapViewConfig.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapViewConfig.asset.meta",
+      "Sha256": "B20678F843748A3DAB22FD7316B7AD0172F5E891FEBF1C1A21FA23C2B5FF65C0"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapVisualCatalog.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapVisualCatalog.asset",
+      "Sha256": "4E75B2404729992E6E0A1E5252657FF2F9A1FD28111735B86D7C0E603ED096A7"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageSelect/StageMapVisualCatalog.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageSelect/StageMapVisualCatalog.asset.meta",
+      "Sha256": "1F9A7E78FF6F12997F75A9DB686A67C58D60FB0B2344B19CAFE5E02412BACBB9"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Nomal_A.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Nomal_A.asset",
+      "Sha256": "1177987ADE9F371C60C46F01101540FE14B28DED622342D6137C34B264DF3B96"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Nomal_A.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Nomal_A.asset.meta",
+      "Sha256": "AFEDE1488BDDA5E354FFDAA53841B57C552D197D2BB87E67743D6A1D295F20AE"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_B.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_B.asset",
+      "Sha256": "1EC632BA787155551F9D3D0D21C69217D016923DBE62A3C45CCF61400C8F4931"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_B.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_B.asset.meta",
+      "Sha256": "E9B430B9AFA6F03A6154391C611EC84A5B0AC4B8CB3F62556F782A86005B4763"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_C.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_C.asset",
+      "Sha256": "F08F010AF986E1AC0D893A022453D36834250BE4C5FFDF870A1A9A9FDC4F3126"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_C.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_C.asset.meta",
+      "Sha256": "8279E7299F53FE2EB2811E6399E879645A9186E048887C4CBDEDE4FD6A508BAA"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_D.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_D.asset",
+      "Sha256": "9588E37BF7662EF635102D47D2B132CBAAD63FF3F60EA4639B6EDFD44DECAD7A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_D.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_D.asset.meta",
+      "Sha256": "05EEB5840879ABA3BB016215499C24A2E12D3D4EC31D1DCCB26C9E29C75CF078"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_E.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_E.asset",
+      "Sha256": "64B976BA84DA9E1850847ACE39967A3C6A28DAE11545F5CEA4A078F2C199591B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_E.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_E.asset.meta",
+      "Sha256": "E7C2AC03ED624A39161B9AA81BE889F184068885741B227E6B536046C5CEF336"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_F.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_F.asset",
+      "Sha256": "6057349EA7CCB98A3ADB2E4B8FE63C3A203E5122C9D2AFA9E4EC2936B39113ED"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_F.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_F.asset.meta",
+      "Sha256": "B2B23A1484E130C25D39E815C5F62F9D825492C6177C30F3D0F32AE2EC5031A7"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_G.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_G.asset",
+      "Sha256": "1F6FFBB9E7CD89682CDE0D8B9F76B248961CBBC68400FFD8472CFE89701EE760"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_G.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_G.asset.meta",
+      "Sha256": "D3A6EB500D809176E6C692F17EC83CAD19E8FB47A2E0680A043F427993B9BE58"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_H.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_H.asset",
+      "Sha256": "E7150E530D303D7C25657C077A7688F85C5BC356B1194E74B8ABC26D4A86E799"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_H.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_H.asset.meta",
+      "Sha256": "6EAAEF23DDA04EABBE63EF1C439072573F7810A68640C7A2E16B028DB0D4D250"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_I.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_I.asset",
+      "Sha256": "93E3150FF8D7007922C1829FF555A0221C35CD24BE7614D8B4B3C83E1A6B909E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_I.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_I.asset.meta",
+      "Sha256": "4DC398D794AAA24FC65FE9BEF3152EB4074AE66ED4EE5EBFBC47B36503B8127D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_J.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_J.asset",
+      "Sha256": "0388B17E97AD21F2F9BE1D6D5B610004F91490B340B4D6C4CCC49E855BB24C30"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/Stage_Normal_J.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/Stage_Normal_J.asset.meta",
+      "Sha256": "DF985E53BDED2503CFFDB496F78BE14ACDA5131EC0E608564E7AA7C394962E41"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/StageDefinition_Boss.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/StageDefinition_Boss.asset",
+      "Sha256": "C06D9508D72CDEE967859AC92161B6A1E4AE8BC6DCE2117051641C6672A1538E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/StageTable/StageDefinition_Boss.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/StageTable/StageDefinition_Boss.asset.meta",
+      "Sha256": "3CD7C99BBC31EFF9F0B49EC2406E46068BEA87FFAE1B1308417DC73ADE5D6744"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy.meta",
+      "Sha256": "828C206942C3E8495143F60934E7922EC6CCFCA1E01EB977C9FE093C61E66F1B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player.meta",
+      "Sha256": "C217C78A330C5F4B414616F05AC27AF4E30E18AA3411854280330082EAE7B0C2"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Structure.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Structure.meta",
+      "Sha256": "58D504A2D03640BC262A42233413D53962F00ECCEAE57CCBE3F46FBEE7081661"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/UnitRoster.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/UnitRoster.asset",
+      "Sha256": "688B47A7015356792DBB0456105F71E066F7A165D74170EF17D96336485EDE78"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/UnitRoster.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/UnitRoster.asset.meta",
+      "Sha256": "AFD03145E0E37E0DAA752D3995207F2E2AF7A60C109E32DC69DD60DFB7DB22EE"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Visual.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Visual.meta",
+      "Sha256": "6E31C37A02D4637762B4AE48CABB18A61A1DA3963B2AB82DB1944760BD142FF4"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_1.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_1.asset",
+      "Sha256": "2AB7675427C594FBDF2733B1675061E3274813A94CD2B342C4F77D2350665309"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_1.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_1.asset.meta",
+      "Sha256": "F51D68F32DA14E92582EB31E9699ABA9D437B7E4C1D9E47B0A423D6DEDFF71FD"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_2.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_2.asset",
+      "Sha256": "160E650B18552AE274080213CFA1AE6A1EC42DD3DBCB220708B59DF6F3F8FE9A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_2.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_2.asset.meta",
+      "Sha256": "5C58031DA982CF811EC703BA42A9AA995656A3FA58A7E5C2E97A467DB4A4F53E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_3.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_3.asset",
+      "Sha256": "DBB5241CA11B545AC980C4DED2423EBB882CB495F16E4CC488EA453C2ED8E8F8"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_3.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_3.asset.meta",
+      "Sha256": "804A396C9B0ADAE278CF687EED8C053693477C78169FA77C20178B47AD0C1E86"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_4.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_4.asset",
+      "Sha256": "C77A90C4B371DD7492B9F0866A440A2EE41E60EAADCE7679ED5DFFAA3DD78F08"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_4.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_4.asset.meta",
+      "Sha256": "4B2BDA84BA5553186EC50EAE05F3217C645ABF9129AC1839348A16E4F2B07940"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_5.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_5.asset",
+      "Sha256": "ECC2F79710139BB50EBFA7D330C5FFD416554DB35ABD257AC2424C7604BAD15B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Chapter1_Enemy_5.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Chapter1_Enemy_5.asset.meta",
+      "Sha256": "38F7E27182F481C455AA96409FD12B24D0268162FDDE9C9BB7EEED0E85470373"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Unit.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Unit.meta",
+      "Sha256": "554D12EFBA14347EDFB9D29B9B84DB85A7F3ADD7E4CEF3B938303EE98B99F8EB"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Unit/Demon.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Unit/Demon.asset",
+      "Sha256": "91FDC539127D55FA5F66ACBCFDE63A5648DD5EE7271CA299BCFE89047CC5785F"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Enemy/Unit/Demon.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Enemy/Unit/Demon.asset.meta",
+      "Sha256": "74E9B2B50A782FB5901DC5EE112988BA17589963BE69E915ED70187F845A9F1A"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/PlayerLoadout.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/PlayerLoadout.asset",
+      "Sha256": "4FAA89646150C79B1F8803D9267630A31788D5D07EFF75C9A2FDDC95FAD7801B"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/PlayerLoadout.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/PlayerLoadout.asset.meta",
+      "Sha256": "7DA3039242F7BECF64D46160FA189F1E02A397165237F0A7E1D94D1E67ED710E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit.meta",
+      "Sha256": "D7754DE88894C476587270D85C5A6EC92B297703142D2A8090949AAB2CF5E4A8"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/Akimbo.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/Akimbo.asset",
+      "Sha256": "7A9EB72E2D706E1D563E883B865E897B518E0E504942B1A44EB542A2DF47673D"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/Akimbo.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/Akimbo.asset.meta",
+      "Sha256": "2BEFA2C3FE09515A69579553D9D04D15C9FB8B3786DB04E5AF0A149F76BD490E"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/ShotGun.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/ShotGun.asset",
+      "Sha256": "91521B114DD0C8D71C288D3628D977EAB1468E8E9F4869910E43427AACF8CEFA"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/ShotGun.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/ShotGun.asset.meta",
+      "Sha256": "4F481F6F5B38A83B1B724765CEAA43CB0A1414C91FB23E0215CBA97C207B5496"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/Sniper.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/Sniper.asset",
+      "Sha256": "841482E1F1781F88E1C8B04F3614D094AB02D8C96DE9DBFC8FA73431C85A3326"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Player/Unit/Sniper.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Player/Unit/Sniper.asset.meta",
+      "Sha256": "66660522FBD47616590DAD154FA5B13A1D8264BEC38468646AD3FD26AD4186C3"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Structure/Headquarters.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Structure/Headquarters.asset",
+      "Sha256": "CB0D3BACC659877D1A0EA42157E843194B3E95A635E8373C2293F2C2FDDEE65F"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Structure/Headquarters.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Structure/Headquarters.asset.meta",
+      "Sha256": "CCEF9D9BDC7824C8D4F6FA8C09AFC27600A09734D42018A2593CB4443CC24D98"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Visual/UnitVisualCatalog.asset",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Visual/UnitVisualCatalog.asset",
+      "Sha256": "21516A923488C57CF07949C4A953F7134E56278D57869C60C8289994731971D9"
+    },
+    {
+      "Source": "Assets/DataBase/SO/Stage/UnitTable/Visual/UnitVisualCatalog.asset.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO/Stage/UnitTable/Visual/UnitVisualCatalog.asset.meta",
+      "Sha256": "D63AE33F8E7194D70929CEF3C82B266C264635CEFEA0320997D3683997F555B3"
+    },
+    {
+      "Source": "Assets/DataBase/SO.meta",
+      "Destination": "Assets/ProjectL/DataBaseSO.meta",
+      "Sha256": "35E0E922AE0799823AF201D903000B288AF731EF395B2BCDEE077582AC4AD585"
+    }
+  ],
+  "ReplacedDestinationFolderMetadata": "fileFormatVersion: 2\nguid: 2c96dffd19670fb4cba1340b4884f5b5\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n",
+  "RemovedEmptyParentMetadata": "fileFormatVersion: 2\r\nguid: 5579d6c715d55d141afa7832c1fe8cb6\r\nfolderAsset: yes\r\nDefaultImporter:\r\n  externalObjects: {}\r\n  userData: \r\n  assetBundleName: \r\n  assetBundleVariant: \r\n"
+}

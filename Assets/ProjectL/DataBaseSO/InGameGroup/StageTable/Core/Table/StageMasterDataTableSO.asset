@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5f1369f72394d948b662037d2f81d14, type: 3}
+  m_Name: StageMasterDataTableSO
+  m_EditorClassIdentifier: 
+  databaseItems: []
+  StageMaster:
+  - Stage_Key: 100001
+    Stage_Name: StartPoint
+    Stage_NameKOR: "\uC2DC\uC791\uC9C0\uC810"
+    Stage_RoleType: 2
+    Stage_Weather: 0
+    Stage_Event: 200001
+    Stage_Level: 0
+    Stage_Clear: 1
+    Stage_Continuity: 1
+    Stage_ContinuityTime: 0
+    Stage_Weight: 0
+    Stage_WeightOption: 0
+    Stage_RewardItem: 0
+    Stage_RewardFame: 0
+    Stage_Description: 0
+  - Stage_Key: 100002
+    Stage_Name: StartPoint
+    Stage_NameKOR: "\uC2DC\uC791\uC9C0\uC810"
+    Stage_RoleType: 2
+    Stage_Weather: 0
+    Stage_Event: 200001
+    Stage_Level: 0
+    Stage_Clear: 1
+    Stage_Continuity: 1
+    Stage_ContinuityTime: 0
+    Stage_Weight: 0
+    Stage_WeightOption: 0
+    Stage_RewardItem: 0
+    Stage_RewardFame: 0
+    Stage_Description: 0

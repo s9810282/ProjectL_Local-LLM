@@ -1,0 +1,19 @@
+{
+  "name": "ProjectL.Systems",
+  "rootNamespace": "ProjectL.Systems",
+  "references": [
+    "ExcelImporter",
+    "GUID:35f607f0ed2f88042885a2eeb5107ace",
+    "GUID:05931ba9661d9e745859bbdf70325edb",
+    "GUID:42f479a350493ca4abd078910e78a9ad",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.TextMeshPro",
+    "Cinemachine",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "GUID:3a8ff804ec7d01c4887b0d7414c53a0c",
+    "GUID:0c752da273b17c547ae705acf0f2adf2"
+  ],
+  "autoReferenced": true,
+  "noEngineReferences": false
+}

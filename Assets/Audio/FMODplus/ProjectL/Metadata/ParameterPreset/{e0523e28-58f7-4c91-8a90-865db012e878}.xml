@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{e0523e28-58f7-4c91-8a90-865db012e878}">
+		<property name="name">
+			<value>Weather</value>
+		</property>
+		<relationship name="folder">
+			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{7a9b2fb4-8b2f-43de-b089-27f112f5d64d}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{7a9b2fb4-8b2f-43de-b089-27f112f5d64d}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>4</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>Common</value>
+			<value>Rain</value>
+			<value>Drought</value>
+			<value>Thunder</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

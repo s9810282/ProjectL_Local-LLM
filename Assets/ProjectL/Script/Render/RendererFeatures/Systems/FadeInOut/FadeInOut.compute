@@ -1,0 +1,34 @@
+#pragma kernel CSMain
+
+Texture2D<float4> _ActiveTexture;
+Texture2D<float4> _FadeTexture;
+RWTexture2D<float4> _Result;
+
+float _FadeValue;
+float4 _FadeColor;
+uint _Width;
+uint _Height;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Width || id.y >= _Height)
+        return;
+
+    uint2 pixel = id.xy;
+    float2 uv = (float2(pixel) + 0.5) / float2(_Width, _Height);
+
+    uint textureWidth;
+    uint textureHeight;
+    _FadeTexture.GetDimensions(textureWidth, textureHeight);
+    uint2 fadePixel = min(
+        uint2(uv * float2(textureWidth, textureHeight)),
+        uint2(textureWidth - 1, textureHeight - 1));
+
+    float4 sceneColor = _ActiveTexture[pixel];
+    float fadeMask = smoothstep(0, _FadeTexture[fadePixel].r, _FadeValue) * _FadeColor.a;
+    
+    _Result[pixel] = float4(
+    lerp(sceneColor.rgb, _FadeColor.rgb, fadeMask),
+    sceneColor.a);
+}

@@ -1,0 +1,119 @@
+#pragma kernel CSMain
+
+Texture2D<float4> _NormalTex;
+Texture2D<float> _DepthTex;
+Texture2D<float4> _ActiveTex;
+
+RWTexture2D<float4> _Result;
+
+float _EdgeIntensity;
+float _DepthSensitivity;
+
+float _DepthThreshold;
+float _NormalThreshold;
+
+float4 _EdgeColor;
+
+uint _Width;
+uint _Height;
+
+static const int2 SearchOffsets[8] =
+{
+    int2(0, -1),
+    int2(-1, 0),
+    int2(1, 0),
+    int2(0, 1),
+    
+    int2(1, -1),
+    int2(-1, 1),
+    int2(1, 1),
+    int2(-1, -1),
+};
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Width || id.y >= _Height)
+        return;
+
+
+    uint2 pixel = id.xy;
+    float centerDepth = _DepthTex[pixel];
+
+    float3 centerNormal =
+        normalize(_NormalTex[pixel].xyz);
+
+    float4 currentColor =
+        _ActiveTex[pixel];
+
+    float maxDepthDifference = 0.0;
+    float maxNormalDifference = 0.0;
+    
+    float CenterDepthDifference = 0.0;
+    float CenterNormalDifference = 0.0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        int2 samplePos =
+            int2(pixel) + SearchOffsets[i];
+
+        if (samplePos.x < 0 ||
+            samplePos.x >= (int) _Width ||
+            samplePos.y < 0 ||
+            samplePos.y >= (int) _Height)
+        {
+            continue;
+        }
+
+        float sampleDepth =
+            _DepthTex[samplePos];
+
+        float depthDifference =
+            abs(centerDepth - sampleDepth) * _DepthSensitivity;
+
+        maxDepthDifference =
+            max(maxDepthDifference, depthDifference);
+        
+        CenterDepthDifference += depthDifference;
+
+
+        float3 sampleNormal =
+            normalize(_NormalTex[samplePos].xyz);
+
+        float normalDot =
+            dot(centerNormal, sampleNormal);
+
+        float normalDifference =
+            1.0 - normalDot;
+
+        maxNormalDifference =
+            max(
+                maxNormalDifference,
+                normalDifference
+            );
+        
+        CenterNormalDifference += normalDifference;
+    }
+
+    float depthEdge =
+        step(_DepthThreshold, maxDepthDifference);
+
+    float normalEdge =
+        step(_NormalThreshold, maxNormalDifference);
+
+    float edge =
+        max(depthEdge, normalEdge);
+
+    edge *= _EdgeIntensity;
+
+    edge = saturate(edge);
+
+    float4 resultColor =
+        lerp(
+            currentColor,
+            _EdgeColor,
+            edge
+        );
+
+    _Result[pixel] = resultColor;
+}

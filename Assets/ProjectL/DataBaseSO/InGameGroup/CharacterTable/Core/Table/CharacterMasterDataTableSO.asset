@@ -1,0 +1,248 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7247e3fd19f1413cbc39b37d12536e50, type: 3}
+  m_Name: CharacterMasterDataTableSO
+  m_EditorClassIdentifier: 
+  databaseItems: []
+  CharacterMaster:
+  - Character_Key: 1001
+    Character_Name: T_AllyBase
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uBCF4\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 1
+    Character_PositionType: 1
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 120
+    Character_AttackValue: 25
+    Character_DefenseValue: 8
+    Character_Priority: 10
+    Character_Delay: 100
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 3
+    Character_MoveCost: 1
+    Character_AttackMethod: 30120
+    Character_AttackRange: 1
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91001
+  - Character_Key: 1002
+    Character_Name: T_AllyRider
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uAE30\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 2
+    Character_PositionType: 1
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 100
+    Character_AttackValue: 30
+    Character_DefenseValue: 5
+    Character_Priority: 10
+    Character_Delay: 80
+    Character_MaxCost: 4
+    Character_MoveMethod: 30310
+    Character_MoveRange: 4
+    Character_MoveCost: 1
+    Character_AttackMethod: 30220
+    Character_AttackRange: 2
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91002
+  - Character_Key: 1003
+    Character_Name: T_AllyHeavy
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uC911\uAC11\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 3
+    Character_PositionType: 1
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 200
+    Character_AttackValue: 20
+    Character_DefenseValue: 20
+    Character_Priority: 10
+    Character_Delay: 140
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 2
+    Character_MoveCost: 1
+    Character_AttackMethod: 30520
+    Character_AttackRange: 1
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91003
+  - Character_Key: 1004
+    Character_Name: T_AllyGun
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uD3EC\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 4
+    Character_PositionType: 1
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 80
+    Character_AttackValue: 40
+    Character_DefenseValue: 3
+    Character_Priority: 10
+    Character_Delay: 120
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 2
+    Character_MoveCost: 1
+    Character_AttackMethod: 30420
+    Character_AttackRange: 3
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91004
+  - Character_Key: 2001
+    Character_Name: T_EnemyBase
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uBCF4\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 1
+    Character_PositionType: 2
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 120
+    Character_AttackValue: 25
+    Character_DefenseValue: 8
+    Character_Priority: 10
+    Character_Delay: 100
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 3
+    Character_MoveCost: 1
+    Character_AttackMethod: 30120
+    Character_AttackRange: 1
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91005
+  - Character_Key: 2002
+    Character_Name: T_EnemyRider
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uAE30\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 2
+    Character_PositionType: 2
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 100
+    Character_AttackValue: 30
+    Character_DefenseValue: 5
+    Character_Priority: 10
+    Character_Delay: 80
+    Character_MaxCost: 4
+    Character_MoveMethod: 30310
+    Character_MoveRange: 4
+    Character_MoveCost: 1
+    Character_AttackMethod: 30220
+    Character_AttackRange: 2
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91006
+  - Character_Key: 2003
+    Character_Name: T_EnemyHeavy
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uC911\uAC11\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 3
+    Character_PositionType: 2
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 200
+    Character_AttackValue: 20
+    Character_DefenseValue: 20
+    Character_Priority: 10
+    Character_Delay: 140
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 2
+    Character_MoveCost: 1
+    Character_AttackMethod: 30520
+    Character_AttackRange: 1
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91007
+  - Character_Key: 2004
+    Character_Name: T_EnemyGun
+    Character_NameKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uD3EC\uBCD1"
+    Character_Level: 1
+    Character_MaxLevel: 1
+    Character_RoleType: 4
+    Character_PositionType: 2
+    Character_Unlock: 0
+    Character_UnlockTrigger: 0
+    Character_HealthValue: 80
+    Character_AttackValue: 40
+    Character_DefenseValue: 3
+    Character_Priority: 10
+    Character_Delay: 120
+    Character_MaxCost: 3
+    Character_MoveMethod: 30110
+    Character_MoveRange: 2
+    Character_MoveCost: 1
+    Character_AttackMethod: 30420
+    Character_AttackRange: 3
+    Character_AttackCost: 2
+    Character_WeaponUpgradeEffect: 0
+    Character_UpgradeStatistic: 0
+    Character_State: 
+    Character_Inventory: 0
+    Character_NeedExperiencePoint: 0
+    Character_KillExperiencePoint: 10
+    Character_KillGold: 5
+    Character_Description: 91008

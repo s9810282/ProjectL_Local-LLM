@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="Bank" id="{813adef0-9eb0-4394-9c8c-13efbbeb3c03}">
+		<property name="name">
+			<value>PostFX</value>
+		</property>
+		<relationship name="folder">
+			<destination>{d8e627bb-2ae1-4411-be18-6f5b1fbda627}</destination>
+		</relationship>
+	</object>
+</objects>

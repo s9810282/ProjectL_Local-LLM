@@ -1,0 +1,9 @@
+{
+    "name": "FMODPlus.Editor",
+    "references": [
+        "FMODPlus",
+        "FMODUnity"
+    ],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}

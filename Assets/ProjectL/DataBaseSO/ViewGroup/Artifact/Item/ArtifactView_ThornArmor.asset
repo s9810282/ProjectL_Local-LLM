@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28b01127f0825d147a2895e54bd7aa9d, type: 3}
+  m_Name: ArtifactView_ThornArmor
+  m_EditorClassIdentifier: 
+  artifactViewData:
+    artifactId: 1002
+    displayName: "\uAC00\uC2DC\uC2EC\uC7A5"
+    description: "밤에 적의 공격에 반격 피해를 주는 효과를 제공합니다."
+    icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    prefab: {fileID: 7458559281675288433, guid: c3f2dd3831fd1104f9337b7757bbc160, type: 3}

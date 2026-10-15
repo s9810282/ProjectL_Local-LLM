@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a0c39bfe104ef8a300d522dccfdab8, type: 3}
+  m_Name: DescriptionMasterDataTableSO
+  m_EditorClassIdentifier: 
+  databaseItems: []
+  DescriptionMaster:
+  - Description_Key: 91001
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uBCF4\uBCD1"
+  - Description_Key: 91002
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uAE30\uBCD1"
+  - Description_Key: 91003
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uC911\uAC11\uBCD1"
+  - Description_Key: 91004
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC544\uAD70 \uD3EC\uBCD1"
+  - Description_Key: 91005
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uBCF4\uBCD1"
+  - Description_Key: 91006
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uAE30\uBCD1"
+  - Description_Key: 91007
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uC911\uAC11\uBCD1"
+  - Description_Key: 91008
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uC801\uAD70 \uD3EC\uBCD1"
+  - Description_Key: 92001
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uB098\uBB34\uC0C1\uC790"
+  - Description_Key: 92002
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uB3CC\uBCBD"
+  - Description_Key: 92003
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uCCA0\uBCBD"
+  - Description_Key: 92004
+    Description_TextKOR: "\uD14C\uC2A4\uD2B8 \uBAA8\uB798\uC8FC\uBA38\uB2C8"

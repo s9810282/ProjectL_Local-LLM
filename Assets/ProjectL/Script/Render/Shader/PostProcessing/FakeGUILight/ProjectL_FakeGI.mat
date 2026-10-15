@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ProjectL_FakeGI
+  m_Shader: {fileID: 4800000, guid: 9065134808f4b9e47b2697e46643c462, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _ACCURATECOLORS_ON
+  - _COREENABLED_ON
+  - _ENABLESHADING_ON
+  - _USEDIRECTIONALLIGHTATTENUATION_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _GradientTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex:
+        m_Texture: {fileID: 2800000, guid: 37993c740d62873488c036b33b932ca9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AccurateColors: 1
+    - _CloseFade: 0
+    - _CloseTransition: 0.5
+    - _CoreEnabled: 1
+    - _CoreIntensity: 1
+    - _CoreRadius: 0.054
+    - _CoreRim: 0.49
+    - _CoreRimPower: 8
+    - _CoreSoftness: 1
+    - _DirectionalLightThreshold: 0
+    - _DitherIntensity: 0.1
+    - _EnableDither: 0
+    - _EnableFlicker: 0
+    - _EnableHalo: 0
+    - _EnableNoise: 0
+    - _EnableShading: 1
+    - _EnableSpecular: 0
+    - _FarFade: 5
+    - _FarTransition: 1
+    - _FlickerIntensity: 0.1
+    - _FlickerSoftness: 0.5
+    - _FlickerSpeed: 5
+    - _HaloDepthFade: 0.695
+    - _HaloPosterize: 0.082
+    - _HaloSize: 0.718
+    - _LightFalloff: 0.1
+    - _LightIntensity: 1.24
+    - _LightPosterize: 0.781
+    - _LightRadius: 4.04
+    - _LightSoftness: 1
+    - _NoiseMovement: 0
+    - _NoiseScale: 1
+    - _Noisiness: 0.39
+    - _ShadingBlend: 0.238
+    - _ShadingSoftness: 0.238
+    - _SizeFlickering: 0
+    - _SpecularIntensity: 0.226
+    - _SpecularPower: 32
+    - _UseDirectionalLightAttenuation: 1
+    m_Colors:
+    - _CoreColor: {r: 14.093172, g: 10.4272175, b: 0, a: 1}
+    - _FlickerHue: {r: 1, g: 0.8, b: 0.5, a: 1}
+    - _HaloTint: {r: 1, g: 1, b: 1, a: 1}
+    - _LightTint: {r: 1.0592737, g: 0.99272275, b: 0.08494178, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

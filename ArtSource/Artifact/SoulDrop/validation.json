@@ -1,0 +1,14 @@
+{
+  "object": "SoulDrop_Model",
+  "changedVertices": 155,
+  "components": 8,
+  "oldGap": 1.9035168290138245,
+  "newGap": 2.2,
+  "translation": 0.2964831709861757,
+  "roundtripMaxError": 0.00010000000000010001,
+  "counts": [
+    2736,
+    5210,
+    1
+  ]
+}

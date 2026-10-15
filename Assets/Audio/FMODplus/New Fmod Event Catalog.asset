@@ -1,0 +1,508 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5c8ac020d8fee44cb32b37ad604e375, type: 3}
+  m_Name: New Fmod Event Catalog
+  m_EditorClassIdentifier: 
+  bankFolderOverride: 
+  includedBanks:
+  - BGM
+  - Master
+  - PostFX
+  loadSampleData: 1
+  lastScanTime: 2026-10-10 13:48:56
+  lastScannedFolder: D:/Unity 6000.0.73f1/Local LLM/Assets/Audio/FMODplus/ProjectL/Build/Desktop
+  lastBankFileCount: 4
+  lastEventCount: 18
+  lastBusCount: 8
+  buses:
+  - path: bus:/
+    name: Master
+    parentPath: 
+    guidString: '{c76f3247-cc7b-4f63-ab00-932026952d0c}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/AMB
+    name: AMB
+    parentPath: bus:/
+    guidString: '{370283c4-4a77-41f5-8fcb-d0471f3e7f42}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/BGM
+    name: BGM
+    parentPath: bus:/
+    guidString: '{ceaec4bb-5ef5-48b6-a2e4-8d00ecf6b12f}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/PostFX
+    name: PostFX
+    parentPath: bus:/
+    guidString: '{f51df435-d9c1-4065-a827-d0915dfb2a81}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/PostFX/SFX
+    name: SFX
+    parentPath: bus:/PostFX
+    guidString: '{ef5de5af-8a57-446e-b088-cff52c6df72d}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/PostFX/Unit
+    name: Unit
+    parentPath: bus:/PostFX
+    guidString: '{ac0f88bc-b237-430b-9cf2-1aa6fd413dbf}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/Reverb
+    name: Reverb
+    parentPath: bus:/
+    guidString: '{473cddbc-065a-48b0-a55d-4aaf56122e51}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/UI
+    name: UI
+    parentPath: bus:/
+    guidString: '{84d202a5-304d-477d-b48f-6d76cbbd4df2}'
+    sourceBankPaths:
+    - bank:/Master
+  events:
+  - path: event:/BGM/Stage
+    folderPath: BGM
+    eventName: Stage
+    displayName: Stage
+    sourceBankPath: bank:/BGM
+    guidString: '{318bbf6d-cc75-4308-8a7c-be29047a9ab1}'
+    isOneShot: 0
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 186204
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: BGM
+      idString: 3971289681:440833136
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      labels:
+      - Title
+      - Day
+      - Night
+  - path: event:/BGM/Title
+    folderPath: BGM
+    eventName: Title
+    displayName: Title
+    sourceBankPath: bank:/BGM
+    guidString: '{7299b3b8-4a2d-4efe-bf02-734a4d1eabdf}'
+    isOneShot: 0
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 65612
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/AMB/SelectScreen
+    folderPath: PostFX/AMB
+    eventName: SelectScreen
+    displayName: SelectScreen
+    sourceBankPath: bank:/PostFX
+    guidString: '{f4efb598-b2ab-4063-8964-65e8640c54bb}'
+    isOneShot: 0
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 60807
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/AMB/TimeChange
+    folderPath: PostFX/AMB
+    eventName: TimeChange
+    displayName: TimeChange
+    sourceBankPath: bank:/Master
+    guidString: '{71633171-b411-4d0e-9187-ee1c2269a9d2}'
+    isOneShot: 0
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 190481
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: BGM
+      idString: 3971289681:440833136
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      labels:
+      - Title
+      - Day
+      - Night
+  - path: event:/PostFX/SFX/Boss/Train
+    folderPath: PostFX/SFX/Boss
+    eventName: Train
+    displayName: Train
+    sourceBankPath: bank:/PostFX
+    guidString: '{3549fee8-d62a-4237-8141-241bc6b7c613}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 4119
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Boss/TrainBell
+    folderPath: PostFX/SFX/Boss
+    eventName: TrainBell
+    displayName: TrainBell
+    sourceBankPath: bank:/PostFX
+    guidString: '{925d96fa-9369-4354-969c-e181d0bfcaa5}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 5458
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Tile/Cancel
+    folderPath: PostFX/SFX/Tile
+    eventName: Cancel
+    displayName: Cancel
+    sourceBankPath: bank:/PostFX
+    guidString: '{a7e0d7b0-f697-4646-ba5b-5db0435de533}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Tile/Pick
+    folderPath: PostFX/SFX/Tile
+    eventName: Pick
+    displayName: Pick
+    sourceBankPath: bank:/PostFX
+    guidString: '{d1bbc1be-9470-43d2-8606-608ec7c25536}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: Tile
+      idString: 3761801636:2059815316
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 6
+      defaultValue: 0
+      labels:
+      - Field
+      - Forest
+      - Mountain
+      - Main
+      - Brewery
+      - Factory
+      - Unit
+  - path: event:/PostFX/SFX/Tile/Place
+    folderPath: PostFX/SFX/Tile
+    eventName: Place
+    displayName: Place
+    sourceBankPath: bank:/PostFX
+    guidString: '{143ae25f-52e6-4aa8-ad03-4f42e29460f2}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: Tile
+      idString: 3761801636:2059815316
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 6
+      defaultValue: 0
+      labels:
+      - Field
+      - Forest
+      - Mountain
+      - Main
+      - Brewery
+      - Factory
+      - Unit
+  - path: event:/PostFX/SFX/Tile/Reward
+    folderPath: PostFX/SFX/Tile
+    eventName: Reward
+    displayName: Reward
+    sourceBankPath: bank:/PostFX
+    guidString: '{d0ba8cb6-49d1-4fdf-a3eb-75b371468c4f}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Tile/Spin
+    folderPath: PostFX/SFX/Tile
+    eventName: Spin
+    displayName: Spin
+    sourceBankPath: bank:/PostFX
+    guidString: '{04fd2fa5-c038-495e-a307-87cb9031ae43}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/AttackEvents/Attack
+    folderPath: PostFX/SFX/Unit/AttackEvents
+    eventName: Attack
+    displayName: Attack
+    sourceBankPath: bank:/PostFX
+    guidString: '{7ced36ab-72ec-4ec6-a94b-d3a7d8914a5f}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: AbilityActive
+      idString: 1342662476:929127323
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      labels:
+      - False
+      - True
+    - name: UnitDetailType
+      idString: 3541570850:1740262346
+      scanIndex: 1
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 7
+      defaultValue: 0
+      labels:
+      - Akimbo
+      - Sniper
+      - Batender
+      - Cowboy
+      - Hammer
+      - Shotgun
+      - Catus
+      - Minecart
+  - path: event:/PostFX/SFX/Unit/Cancel
+    folderPath: PostFX/SFX/Unit
+    eventName: Cancel
+    displayName: Cancel
+    sourceBankPath: bank:/PostFX
+    guidString: '{5bc7c7f7-fd9b-49ec-a773-c41a163b28f2}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: UnitType
+      idString: 584323627:900261421
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      labels:
+      - MainCharactor
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+  - path: event:/PostFX/SFX/Unit/Damaged
+    folderPath: PostFX/SFX/Unit
+    eventName: Damaged
+    displayName: Damaged
+    sourceBankPath: bank:/PostFX
+    guidString: '{1f5af7a5-bf67-424d-b62a-b1e1f472a18f}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: UnitType
+      idString: 584323627:900261421
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      labels:
+      - MainCharactor
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+  - path: event:/PostFX/SFX/Unit/Dead
+    folderPath: PostFX/SFX/Unit
+    eventName: Dead
+    displayName: Dead
+    sourceBankPath: bank:/PostFX
+    guidString: '{1c0e59b3-741f-490a-b301-04f9959ae055}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: UnitType
+      idString: 584323627:900261421
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      labels:
+      - MainCharactor
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+  - path: event:/PostFX/SFX/Unit/EnemyAttack
+    folderPath: PostFX/SFX/Unit
+    eventName: EnemyAttack
+    displayName: EnemyAttack
+    sourceBankPath: bank:/PostFX
+    guidString: '{8530ed1a-071f-412b-9465-fe9e1a9bb2fb}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/Movement
+    folderPath: PostFX/SFX/Unit
+    eventName: Movement
+    displayName: Movement
+    sourceBankPath: bank:/PostFX
+    guidString: '{c4efcc2a-bb89-4444-b7e0-abbe804c9a33}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: UnitType
+      idString: 584323627:900261421
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      labels:
+      - MainCharactor
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+  - path: event:/PostFX/SFX/Unit/Pick
+    folderPath: PostFX/SFX/Unit
+    eventName: Pick
+    displayName: Pick
+    sourceBankPath: bank:/PostFX
+    guidString: '{113557c6-e24a-49dc-8a98-da37be0cfd68}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: UnitType
+      idString: 584323627:900261421
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      labels:
+      - MainCharactor
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
