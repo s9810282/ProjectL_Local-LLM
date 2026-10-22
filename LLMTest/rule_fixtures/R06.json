@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R06",
+  "title": "Gravekeeper의 유효한 넉백으로 역할 선택 전환",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "서로 다른 최종 위치에서 공격해 메인 피해 6 또는 5가 제공된다. 두 최종 위치의 메인 접근 비용은 0이고 다음 공격 위협은 있다고 가정한다.",
+    "역할 후보는 살아남은 메인을 한 칸 밀었고, 동일 피해 처리 후 넉백 전·후 메인에서 적 본진 공격 위치까지의 이동 AP 비용이 0→5라고 제공한다. 지형 우회나 경로를 실제 계산한 값은 아니다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "regular",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_more_damage",
+      "label": "메인 6 피해, 본진 접근 지연 없음",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 44,
+        "regular": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": [
+          {
+            "before": 0,
+            "after": 0,
+            "targetId": "main"
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "regular",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_useful_knockback",
+      "label": "메인 5 피해, 본진에서 유효하게 밀어냄",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 1,
+          "refund": 0,
+          "steps": 1
+        },
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 45,
+        "regular": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": [
+          {
+            "before": 0,
+            "after": 5,
+            "targetId": "main"
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "regular",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_more_damage"
+    ],
+    "role": [
+      "b_useful_knockback"
+    ],
+    "reason": "승리 정책은 더 큰 즉시 피해를, 역할 정책은 작은 전술 차이 안에서 살아남은 대상을 본진에서 밀어내는 기동·교란 행동을 선택해야 한다."
+  }
+}

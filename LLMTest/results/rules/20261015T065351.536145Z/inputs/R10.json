@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R10",
+  "title": "빈사 행위자가 위험을 지우려고 무익하게 사망하지 않음",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "두 후보는 상대 피해·본진·다른 아군 이득이 전혀 없다. 생존 대기 후보는 Sniper의 피해 1 공격으로 제거될 잠재 위험이 있고, 이동 후보는 이번 행동 안에 자기 HP 1을 잃고 즉시 사망한다.",
+    "자기 피해는 알려진 위험 칸 진입의 제공 결과라는 가정이다. 실제 칸이나 환경 실행을 검증하지 않는다. 사망 후보의 사후 접근·거리·위협은 사용하지 않는다."
+  ],
+  "self": {
+    "unit": "Demon",
+    "hp": 1,
+    "maxHp": 5,
+    "ap": 3,
+    "maxAp": 3,
+    "moveRange": 3
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_stay_alive",
+      "label": "살아남지만 다음 반격 위험이 있음",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "wait",
+          "cost": 0,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 1,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "sniper",
+            "availableAp": 1,
+            "maxAp": 1,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_pointless_self_death",
+      "label": "이득 없이 이번 이동에서 바로 사망",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 1,
+          "refund": 0,
+          "steps": 1
+        }
+      ],
+      "selfHpAfter": 0,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": null,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행위자가 이미 사망해 이후 자기 반격 위험을 적용하지 않는다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "행위자가 이미 사망해 이후 자기 반격 위험을 적용하지 않는다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_stay_alive"
+    ],
+    "role": [
+      "a_stay_alive"
+    ],
+    "reason": "다른 이득이 같은데 즉시 사망해서 미래 위험 계산이 사라지는 것을 이익으로 삼아서는 안 된다. 두 정책 모두 생존 후보를 선호해야 한다."
+  }
+}

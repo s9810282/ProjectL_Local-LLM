@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R04",
+  "title": "Ballista 반복 반격 노출과 안전한 이동",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "공격 후보와 이동 후보 모두 메인 접근 비용은 0, 가장 가까운 플레이어와의 거리는 4라고 제공한다. 위치·사선은 좌표로 검증하지 않았다.",
+    "공격 후보에서만 Sniper가 AP 3/공격비 1/최종 피해 3의 불변 제자리 공격을 할 수 있다. 이동 후보에서는 Sniper 사거리 밖이라고 가정한다. 메인은 두 일정에서 행동 기회가 없다."
+  ],
+  "self": {
+    "unit": "Ballista",
+    "hp": 8,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_exposed_shot",
+      "label": "메인 10 피해 후 반복 반격 노출",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 8,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "sniper",
+            "availableAp": 3,
+            "maxAp": 3,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 3
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_safe_move",
+      "label": "공격하지 않고 반격 사거리 밖으로 이동",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 3,
+          "refund": 0,
+          "steps": 1
+        }
+      ],
+      "selfHpAfter": 8,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행위자의 다음 행동 전 기회 없음."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "제공된 최종 위치에서 제자리 공격 사거리 밖이라는 가정."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_safe_move"
+    ],
+    "role": [
+      "b_safe_move"
+    ],
+    "reason": "한 번의 가벼운 반격으로 보지 말고 AP로 가능한 반복 공격의 제거 위험을 고려해야 한다. 두 정책 모두 이 교환에서는 안전한 이동을 선택해야 한다."
+  }
+}
