@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:25:15.7924313Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"정규 유닛을 처치하여 미래의 위협을 제거하고, 다음 턴에 주체도 5 HP로 살아남을 수 있습니다.\", \"scores\": [5, 5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1122398900,
+  "load_duration": 3782000,
+  "prompt_eval_count": 1336,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 274424000,
+  "eval_count": 57,
+  "eval_duration": 725096000
+}

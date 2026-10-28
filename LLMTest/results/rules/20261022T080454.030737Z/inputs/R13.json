@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R13",
+  "title": "이번 후보가 처치한 반격자는 자동 제외",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "원래 반격 일정의 Sniper 기회는 후보 A에서 Sniper를 처치한 뒤에도 입력에 남겨 두었다. 평가기는 행동 후 HP 0인 상대의 위험을 적용하지 않아야 한다.",
+    "후보 B는 메인 4 피해를 주지만 Sniper가 생존해 최종 피해 4의 제자리 공격 한 번으로 자기 HP 3을 제거한다."
+  ],
+  "self": {
+    "unit": "Ballista",
+    "hp": 3,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    },
+    {
+      "id": "guard",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_remove_responder",
+      "label": "Sniper 10 HP 처치",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 3,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 0,
+        "guard": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "sniper"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "sniper",
+            "availableAp": 1,
+            "maxAp": 1,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 4
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "guard",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_leave_responder",
+      "label": "Sniper를 남기고 메인 4 피해",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 3,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 46,
+        "sniper": 10,
+        "guard": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "sniper",
+            "availableAp": 1,
+            "maxAp": 1,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 4
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "guard",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_remove_responder"
+    ],
+    "role": [
+      "a_remove_responder"
+    ],
+    "reason": "행동 뒤 제거된 상대의 반격은 실제 위험에 남아 있지 않다. 두 정책 모두 위험을 없애면서 상대를 제거하는 후보를 선택해야 한다."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T08:09:25.833699Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": 2, \"reason\": \"Sniper,MainCharacter를 처치하여 위협을 줄이고 거리 유지에 유리합니다.\", \"scores\": [0, 1, 10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1055508200,
+  "load_duration": 3815100,
+  "prompt_eval_count": 487,
+  "prompt_eval_cached_count": 203,
+  "prompt_eval_duration": 381323000,
+  "eval_count": 46,
+  "eval_duration": 619973000
+}

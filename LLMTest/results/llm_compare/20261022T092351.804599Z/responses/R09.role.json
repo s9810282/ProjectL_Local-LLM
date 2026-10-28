@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:13.6142913Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"정규 유닛을 처치하여 미래 행동을 제거하는 것이 주체 생존보다 우선하며, 보스 캐릭터에 대한 피해는 2 대 3로 더 나쁘지 않습니다.\", \"scores\": [1, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1178403700,
+  "load_duration": 4308800,
+  "prompt_eval_count": 1356,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 243532000,
+  "eval_count": 61,
+  "eval_duration": 791057000
+}

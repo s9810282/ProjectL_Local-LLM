@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:19.021677Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이동작업이 없으며, 주요 목표인 플레이어의 HP를 감소시키는 것이 동료를 죽이는 것보다 우선합니다.\", \"scores\": [5, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1002874100,
+  "load_duration": 4685900,
+  "prompt_eval_count": 1195,
+  "prompt_eval_cached_count": 662,
+  "prompt_eval_duration": 238935000,
+  "eval_count": 48,
+  "eval_duration": 658007000
+}

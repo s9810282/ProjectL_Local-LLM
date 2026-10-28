@@ -45,7 +45,7 @@ def profiles(settings, sweep):
     ]
     changes += [(f"main_{v}", {"main": v}) for v in (20, 25, 35, 40)]
     changes += [(f"discount_{v}", {"riskDiscount": Decimal(v)}) for v in ("0.25", "0.75", "1")]
-    changes += [(f"role_loss_{v}", {"roleMaxLoss": v}) for v in (0, 6, 18)]
+    changes += [(f"role_loss_{v}", {"roleMaxLoss": v}) for v in (0, 12, 18)]
     changes += [(f"role_bonus_{v}", {"roleBonus": v}) for v in (10, 30)]
     for name, overrides in changes:
         item = copy.deepcopy(settings)
@@ -211,12 +211,13 @@ def main(argv=None):
     parser.add_argument("case", nargs="?", help="상황 ID 또는 파일명(예: R01)")
     parser.add_argument("--sweep", action="store_true", help="이전식·한 항목 계수 변경도 비교")
     parser.add_argument("--weights", type=Path, default=ROOT / "config" / "rule_weights.json")
+    parser.add_argument("--fixtures", type=Path, default=ROOT / "rule_fixtures", help="상황 폴더(보류 검증은 validation_fixtures)")
     parser.add_argument("--output", type=Path, default=ROOT / "results" / "rules", help="매 실행의 고유 UTC 폴더를 만들 상위 경로")
     parser.add_argument("--list", action="store_true", help="상황 목록만 표시")
     args = parser.parse_args(argv)
-    paths = sorted((ROOT / "rule_fixtures").glob("*.json"))
+    paths = sorted(args.fixtures.glob("*.json"))
     if not paths:
-        parser.error("rule_fixtures에 상황 JSON이 없습니다.")
+        parser.error(f"{args.fixtures}에 상황 JSON이 없습니다.")
     sources, ids = [], set()
     try:
         for path in paths:

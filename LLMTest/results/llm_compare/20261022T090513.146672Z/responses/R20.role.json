@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:52.2253712Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격으로 메인 캐릭터를 직접 타격하고 거리 유지가 가능하므로 가장 유리합니다.\", \"scores\": [9, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 853792700,
+  "load_duration": 4072700,
+  "prompt_eval_count": 1021,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 214936000,
+  "eval_count": 40,
+  "eval_duration": 518969000
+}

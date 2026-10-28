@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:31.4650031Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 핵심 역할인 적을 HQ에서 밀어내는 것을 위해 이동하며, 자멸하거나 주요 적을 즉시 처치하지 않는 것이 최선입니다.\", \"scores\": [8, 0, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1124393100,
+  "load_duration": 4992300,
+  "prompt_eval_count": 1106,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 237575000,
+  "eval_count": 59,
+  "eval_duration": 753333000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:16.399868Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"기대되는 피해가 0 이고 다음 턴까지 생존할 수 있는 유일한 행동입니다.\", \"scores\": [10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 808738100,
+  "load_duration": 4198800,
+  "prompt_eval_count": 920,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 140845000,
+  "eval_count": 40,
+  "eval_duration": 553482000
+}

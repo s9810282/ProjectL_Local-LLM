@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:33.3468515Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper이 주체 (main) 를 밀어내어 기지를 위협하는 것이 더 유리합니다.\", \"scores\": [5, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 910434800,
+  "load_duration": 3655200,
+  "prompt_eval_count": 1054,
+  "prompt_eval_cached_count": 535,
+  "prompt_eval_duration": 233536000,
+  "eval_count": 44,
+  "eval_duration": 565358000
+}

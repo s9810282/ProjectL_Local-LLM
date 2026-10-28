@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T08:28:49.9341727Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 핵심 역할인 HQ 접근을 방해하기 위해 주체 (main) 를 5 AP로 밀어내는 것이 더 유리하다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1418572500,
+  "load_duration": 8466500,
+  "prompt_eval_count": 1047,
+  "prompt_eval_cached_count": 533,
+  "prompt_eval_duration": 323125000,
+  "eval_count": 53,
+  "eval_duration": 904754000
+}

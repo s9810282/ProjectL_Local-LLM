@@ -1,0 +1,104 @@
+{
+  "view": {
+    "self": {
+      "unit": "Gravekeeper",
+      "hp": 10,
+      "maxHp": 10,
+      "ap": 5,
+      "maxAp": 5
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 8,
+        "maxHp": 50
+      },
+      {
+        "id": "regular",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "attack",
+        "battle": "enemy_wins",
+        "hits": [
+          {
+            "id": "main",
+            "role": "main",
+            "hpBefore": 8,
+            "hpAfter": 0,
+            "killed": true
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": null,
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 1
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "regular",
+            "role": "regular",
+            "hpBefore": 10,
+            "hpAfter": 0,
+            "killed": true
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 10,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 1
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "a_main_kill",
+    "c2": "b_regular_kill"
+  },
+  "ruleChoices": {
+    "victory": "a_main_kill",
+    "role": "a_main_kill"
+  }
+}

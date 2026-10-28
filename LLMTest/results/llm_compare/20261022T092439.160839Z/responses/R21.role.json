@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:25:16.7961202Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"정규 유닛을 처치하여 미래 공격을 차단하는 것이 주체 생존보다 우선합니다.\", \"scores\": [5, 5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1002095700,
+  "load_duration": 3666900,
+  "prompt_eval_count": 1464,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 274282000,
+  "eval_count": 46,
+  "eval_duration": 590403000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:21.3035714Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동은 보조 유닛을 처치하여 미래의 위협을 제거하고, 다음 턴에 주체 유닛이 사망할 위험이 있는 c3 보다 더 안전한 승리 기회를 제공합니다\", \"scores\": [10, 0, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1309830400,
+  "load_duration": 3884700,
+  "prompt_eval_count": 1269,
+  "prompt_eval_cached_count": 662,
+  "prompt_eval_duration": 264262000,
+  "eval_count": 65,
+  "eval_duration": 933165000
+}

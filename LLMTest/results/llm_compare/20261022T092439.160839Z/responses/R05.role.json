@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:49.3432122Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"c2는 내 유닛이 다음 턴 전에 사망하므로, c1처럼 유닛을 유지하면서 주력 캐릭터를 공격하는 것이 더 유리합니다.\", \"scores\": [8, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1106528900,
+  "load_duration": 3916800,
+  "prompt_eval_count": 1280,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 245383000,
+  "eval_count": 54,
+  "eval_duration": 695347000
+}

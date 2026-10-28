@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:01.5579813Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Regular unit kill removes future threats and is the highest priority action for \", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 868114200,
+  "load_duration": 4083100,
+  "prompt_eval_count": 1241,
+  "prompt_eval_cached_count": 786,
+  "prompt_eval_duration": 220425000,
+  "eval_count": 37,
+  "eval_duration": 557101000
+}

@@ -1,0 +1,52 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the enemy commander AI in a turn-based tactics game.\nEach request gives your unit's status (\"self\") and a numbered list of candidate actions (\"candidates\").\nAll numbers are pre-computed by the game. Trust them and do not recompute distances or damage.\n\nField meanings:\n- expectedDamage: damage this action deals\n- killsTarget: true if this action defeats the target\n- threatAfter: number of player units that can attack you after this action (lower is safer)\n- distToTargetAfter: distance to your chase target after this action\n\nGoal: help the enemy side win the battle, defeating player units while staying alive.\n\nScore EVERY candidate from 0 (worst) to 10 (best), in the same order as the list.\nThen pick the single best candidate id.\nReply with JSON only: {\"scores\": [...], \"choice\": <id>, \"reason\": \"<one short sentence in Korean>\"}\n"
+    },
+    {
+      "role": "user",
+      "content": "{\"self\": {\"unit\": \"Demon\", \"hp\": 5, \"maxHp\": 5, \"atk\": 1, \"move\": 3}, \"candidates\": [{\"id\": 0, \"action\": \"attack\", \"target\": \"Akimbo\", \"targetHp\": 1, \"expectedDamage\": 1, \"killsTarget\": true, \"threatAfter\": 2, \"distToTargetAfter\": 1}, {\"id\": 1, \"action\": \"attack\", \"target\": \"MainCharacter\", \"targetHp\": 50, \"expectedDamage\": 1, \"killsTarget\": false, \"threatAfter\": 1, \"distToTargetAfter\": 1}, {\"id\": 2, \"action\": \"wait\", \"target\": \"\", \"targetHp\": 0, \"expectedDamage\": 0, \"killsTarget\": false, \"threatAfter\": 2, \"distToTargetAfter\": 1}]}"
+    }
+  ],
+  "stream": false,
+  "think": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "scores": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "choice": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 80
+      }
+    },
+    "required": [
+      "scores",
+      "choice",
+      "reason"
+    ]
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 200
+  }
+}

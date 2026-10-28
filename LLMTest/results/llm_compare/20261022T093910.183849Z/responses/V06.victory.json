@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:24.1697529Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동은 다음 턴까지 생존할 확률을 높이고, 다음 턴에 주체 (main) 를 위협할 수 있는 위치로 유지합니다.\", \"scores\": [9, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1201554800,
+  "load_duration": 4119100,
+  "prompt_eval_count": 1173,
+  "prompt_eval_cached_count": 662,
+  "prompt_eval_duration": 291126000,
+  "eval_count": 54,
+  "eval_duration": 735172000
+}

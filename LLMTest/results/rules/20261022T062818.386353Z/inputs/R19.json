@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R19",
+  "title": "Focus 3스택 Sniper의 제자리 반복 공격에 노출되는 Ballista 관통",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(대조 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "Sniper는 AP 3·공격비 1·공격력 1, Focus 스택당 +1·최대 3이다. 이 상황은 3스택이며 제자리에서 공격하므로 한 턴 동안 1회 피해 4가 유지된다(fixed).",
+    "관통 사선은 메인 10, 일반 regular_b 7 순서로 감쇠한다(대상당 30%).",
+    "후퇴는 1칸 이동(AP 3)으로 Sniper 사거리 4 밖으로 나간다. 다음 턴에는 다시 1칸 이동(3)과 공격(4)이 AP 5를 넘으므로 위협하지 못한다.",
+    "후퇴 뒤 사선 복귀 비용은 3이다."
+  ],
+  "self": {
+    "unit": "Ballista",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    },
+    {
+      "id": "regular_b",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_lane_shot",
+      "label": "메인 10·일반 7 관통, Sniper 4×3 노출",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "sniper": 10,
+        "regular_b": 3
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main",
+        "regular_b"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 3,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [
+          {
+            "opponentId": "sniper",
+            "availableAp": 3,
+            "maxAp": 3,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 4
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "regular_b",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_retreat",
+      "label": "1칸 후퇴, Sniper 사거리 밖",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 3,
+          "refund": 0,
+          "steps": 1
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10,
+        "regular_b": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 3,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 5,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "regular_b",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_retreat"
+    ],
+    "role": [
+      "b_retreat"
+    ],
+    "reason": "Ballista는 대체하기 어려운 원거리 화력이다. 처치가 없는 관통 피해를 얻으려고 제자리 Sniper의 반복 공격에 확정 제거되는 위치에 남지 않는다."
+  }
+}

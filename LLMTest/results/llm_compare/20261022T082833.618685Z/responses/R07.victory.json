@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T08:28:51.1631432Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"sniper를 처치하여 주력单位的 HP를 유지하면서 승리할 확률을 높입니다.\", \"scores\": [10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1225991400,
+  "load_duration": 10704600,
+  "prompt_eval_count": 999,
+  "prompt_eval_cached_count": 424,
+  "prompt_eval_duration": 323034000,
+  "eval_count": 42,
+  "eval_duration": 711798000
+}

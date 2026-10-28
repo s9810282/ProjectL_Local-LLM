@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:27.4694961Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 주요 역할인 HQ 보호와 플레이어 유닛의 거리를 유지하는 것을 위해, 다음 턴에도 생존할 수 있는 c2를 선택합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1073052000,
+  "load_duration": 5714900,
+  "prompt_eval_count": 1027,
+  "prompt_eval_cached_count": 533,
+  "prompt_eval_duration": 217048000,
+  "eval_count": 59,
+  "eval_duration": 754969000
+}

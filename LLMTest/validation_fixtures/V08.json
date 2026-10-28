@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "situationId": "V08",
+  "title": "Demon이 빈사 Sniper를 처치하고 다음 턴 사망",
+  "source": "synthetic",
+  "assumptions": [
+    "보류 검증 상황이다. 가이드판 지시문 고정 뒤 작성했고 룰 가중치·지시문 조정에 쓰지 않는다.",
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(입력 대응 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·경로·공격 기하는 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "Demon HP 5, AP 3, 공격력 1. 메인과 HP 1 Sniper에 모두 붙어 있다.",
+    "a는 Sniper를 처치하지만 메인 반격(1×5)으로 다음 턴 전에 사망한다.",
+    "b는 메인에게 1 피해를 주고 같은 반격으로 사망한다.",
+    "c는 1칸 물러나 두 상대의 제자리 사거리 밖으로 나가고 다음 턴 다시 위협할 수 있다."
+  ],
+  "self": {
+    "unit": "Demon",
+    "hp": 5,
+    "maxHp": 5,
+    "ap": 3,
+    "maxAp": 3,
+    "moveRange": 3
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 1,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_kill_sniper",
+      "label": "Sniper 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 1,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 0
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "sniper"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "main",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": []
+      }
+    },
+    {
+      "id": "b_hit_main",
+      "label": "메인 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 1,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 49,
+        "sniper": 1
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "main",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "c_step_back",
+      "label": "1칸 이동",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 1,
+          "refund": 0,
+          "steps": 1
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 1
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 2,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_kill_sniper"
+    ],
+    "role": [
+      "a_kill_sniper"
+    ],
+    "reason": "가장 약한 적 Demon과 플레이어 유닛 하나의 교환은 적 진영에 유리하다(R23과 같은 의도, 다른 형태: 지금이 아니라 다음 턴 사망)."
+  }
+}

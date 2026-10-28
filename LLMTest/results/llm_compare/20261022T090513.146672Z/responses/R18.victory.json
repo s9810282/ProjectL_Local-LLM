@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:47.3433005Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"자신의 생존과 이동으로 다음 턴에 공격 기회를 확보해야 합니다.\", \"scores\": [0, 0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 885012200,
+  "load_duration": 3700600,
+  "prompt_eval_count": 995,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 237791000,
+  "eval_count": 41,
+  "eval_duration": 534589000
+}

@@ -1,0 +1,1453 @@
+{
+  "createdUtc": "2026-10-22T09:38:26.258310+00:00",
+  "weightsFile": "D:\\Unity 6000.0.73f1\\Local LLM\\LLMTest\\config\\rule_weights.json",
+  "weightsSourceSha256": "41f0cfcde8a4807a024ceb28a35ef0d6a363f31023b5fccd8566d00c0938e3df",
+  "runnerSha256": "a9a0c12bc652b144aa23a424b210bfdadfae2bbc374cfed15e12b04d10225ca9",
+  "evaluatorSha256": "8e28c4ef5e875b6eaa93849d9df7cc6f3522665c1a0ec4e371a1b58fc6b5f830",
+  "profiles": {
+    "revised": {
+      "sha256": "3769540751d11052c420d377b4c02d34a16ac9136de2158f3722d30423ae9e7e",
+      "settings": {
+        "version": "rule-v2.1-2026-10-22",
+        "mainDamageMode": "reference_hp",
+        "mainReferenceHp": 10,
+        "riskMode": "ap_budget",
+        "weights": {
+          "main": 30,
+          "damage": 20,
+          "kill": 30,
+          "progress": 15,
+          "friendlyLoss": 35,
+          "selfLoss": 35,
+          "baseLoss": 60
+        },
+        "riskDiscount": "0.5",
+        "progressReferenceAp": 5,
+        "roleMaxLoss": 6,
+        "roleBonus": 20,
+        "roleProfiles": {
+          "Demon": {
+            "threat": "0.6",
+            "approach": "0.4"
+          },
+          "Gravekeeper": {
+            "knockback": "0.7",
+            "threat": "0.3"
+          },
+          "Ballista": {
+            "lane": "0.7",
+            "spacing": "0.3"
+          }
+        },
+        "knockbackReferenceAp": 5,
+        "laneReferenceTargets": 3,
+        "spacingMin": 1,
+        "spacingFull": 4
+      }
+    }
+  },
+  "results": [
+    {
+      "profile": "revised",
+      "situationId": "V01",
+      "caseFile": "V01.json",
+      "caseSha256": "ae58574c0b7597896f09509a7a000d1b161c504dccb48c9cb44b6009040f6f60",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "a_lane"
+        ],
+        "role": [
+          "a_lane"
+        ],
+        "reason": "메인 처치는 즉시 승리다. 아군 Demon 손실이 있어도 두 정책 모두 승리를 고른다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V01",
+        "title": "아군 피해를 동반해도 즉시 승리",
+        "source": "synthetic",
+        "choices": {
+          "victory": "a_lane",
+          "role": "a_lane"
+        },
+        "bestVictoryScore": "-8.0",
+        "roleFloor": "-14.0",
+        "candidates": [
+          {
+            "id": "a_lane",
+            "label": "관통 사선 a",
+            "eligible": true,
+            "reason": "",
+            "outcome": "enemy_win",
+            "features": {
+              "M": "0.4",
+              "D": "1",
+              "K": "1",
+              "P": "0",
+              "F": "2",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.35"
+            },
+            "contributions": {
+              "main": "12.0",
+              "damage": "20",
+              "kill": "30",
+              "progress": "0",
+              "friendlyLoss": "-70",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "7.00"
+            },
+            "victoryScore": "-8.0",
+            "roleScore": "-1.00",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "note": "no future response after battle end or actor death",
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "b_single",
+            "label": "단일 사선 b",
+            "eligible": true,
+            "reason": "lower_outcome",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "1",
+              "K": "1",
+              "P": "0",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "20",
+              "kill": "30",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "50.0",
+            "roleScore": "56.0",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V02",
+      "caseFile": "V02.json",
+      "caseSha256": "ecfcf0f38ca8791d2358f683f8b8fd6e37abfc0a4e6e9c64463d3c03ec8ceb6e",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "b_single"
+        ],
+        "role": [
+          "b_single"
+        ],
+        "reason": "두 명 처치보다 자기 본진 파괴(즉시 패배)를 피하는 것이 먼저다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V02",
+        "title": "본진을 관통하는 처치 사선은 즉시 패배",
+        "source": "synthetic",
+        "choices": {
+          "victory": "b_single",
+          "role": "b_single"
+        },
+        "bestVictoryScore": "30.0",
+        "roleFloor": "24.0",
+        "candidates": [
+          {
+            "id": "a_lane",
+            "label": "관통 사선 a",
+            "eligible": true,
+            "reason": "lower_outcome",
+            "outcome": "enemy_loss",
+            "features": {
+              "M": "0",
+              "D": "1.7",
+              "K": "2",
+              "P": "0",
+              "F": "0",
+              "R": "0.0",
+              "B": "1",
+              "Q": "0.35"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "34.0",
+              "kill": "60",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-60",
+              "roleBonus": "7.00"
+            },
+            "victoryScore": "34.0",
+            "roleScore": "41.00",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "note": "no future response after battle end or actor death",
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "b_single",
+            "label": "단일 사선 b",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "30.0",
+            "roleScore": "36.0",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V03",
+      "caseFile": "V03.json",
+      "caseSha256": "1b20d9320be4951751575e30aaf512cb521289b2d9de9ddaf10b40fac7f443d7",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "a_move_two"
+        ],
+        "role": [
+          "a_move_two"
+        ],
+        "reason": "다음 턴 사망을 감수하고 한 칸 더 붙을 이유가 없다. 살아남으면서 다음 턴 위협이 가능한 전진이 낫다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V03",
+        "title": "Demon의 안전한 전진과 반격 사거리 안 전진",
+        "source": "synthetic",
+        "choices": {
+          "victory": "a_move_two",
+          "role": "a_move_two"
+        },
+        "bestVictoryScore": "3.125000000000000000000000000",
+        "roleFloor": "-2.875000000000000000000000000",
+        "candidates": [
+          {
+            "id": "a_move_two",
+            "label": "2칸 이동",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "0.2083333333333333333333333333",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.9333333333333333333333333333"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "3.125000000000000000000000000",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "18.66666666666666666666666667"
+            },
+            "victoryScore": "3.125000000000000000000000000",
+            "roleScore": "21.79166666666666666666666667",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "b_move_three",
+            "label": "3칸 이동",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "0.375",
+              "F": "0",
+              "R": "1.0",
+              "B": "0",
+              "Q": "1.0"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "5.625",
+              "friendlyLoss": "-0",
+              "selfLoss": "-35.0",
+              "baseLoss": "-0",
+              "roleBonus": "20.0"
+            },
+            "victoryScore": "-29.375",
+            "roleScore": "-9.375",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "5",
+              "appliedDamage": "5",
+              "attacksApplied": 5,
+              "trace": [
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 4,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 4,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 4,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 3,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 2,
+                  "apBefore": 3,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 2,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 2,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 3,
+                  "apBefore": 2,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 4,
+                  "apBefore": 1,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 0,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "2"
+            }
+          },
+          {
+            "id": "c_wait",
+            "label": "대기",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "0.000",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.2500"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0.000",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "5.0000"
+            },
+            "victoryScore": "0.000",
+            "roleScore": "5.0000",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V04",
+      "caseFile": "V04.json",
+      "caseSha256": "86148f186001a6d0a73ac1d2e3bbf249fcd37a04e1f089b134c991af0e4d0b76",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "b_single"
+        ],
+        "role": [
+          "b_single"
+        ],
+        "reason": "처치 없는 일반 4 피해를 위해 아군 유닛 하나를 잃지 않는다. 역할(여러 대상 관통)도 아군 손실을 정당화하지 않는다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V04",
+        "title": "아군 Demon을 죽이는 관통과 깨끗한 메인 공격",
+        "source": "synthetic",
+        "choices": {
+          "victory": "b_single",
+          "role": "b_single"
+        },
+        "bestVictoryScore": "30.0",
+        "roleFloor": "24.0",
+        "candidates": [
+          {
+            "id": "a_lane",
+            "label": "관통 사선 a",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0.4",
+              "K": "0",
+              "P": "0",
+              "F": "2",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.65"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "8.0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-70",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "13.00"
+            },
+            "victoryScore": "-32.0",
+            "roleScore": "-19.00",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "b_single",
+            "label": "단일 사선 b",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "30.0",
+            "roleScore": "36.0",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V05",
+      "caseFile": "V05.json",
+      "caseSha256": "b4f8d6f0ef409bea2ba48abc399fbffcd86a09a9ab4534854bcba96e3bbdd05b",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "a_kill"
+        ],
+        "role": [
+          "a_kill"
+        ],
+        "reason": "어차피 약한 유닛이 다음 턴 사망을 감수한다면 처치와 교환해야 한다. 메인 10 피해만 얻고 잃는 것은 손해다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V05",
+        "title": "빈사 Gravekeeper의 처치와 다음 턴 사망",
+        "source": "synthetic",
+        "choices": {
+          "victory": "a_kill",
+          "role": "a_kill"
+        },
+        "bestVictoryScore": "29.00",
+        "roleFloor": "23.00",
+        "candidates": [
+          {
+            "id": "a_kill",
+            "label": "akimbo 공격",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "1",
+              "K": "1",
+              "P": "0",
+              "F": "0",
+              "R": "0.60",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "20",
+              "kill": "30",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-21.00",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "29.00",
+            "roleScore": "35.00",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "5",
+              "appliedDamage": "2",
+              "attacksApplied": 2,
+              "trace": [
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 4,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 4,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 2,
+                  "apBefore": 3,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 2,
+                  "damage": 1,
+                  "appliedDamage": 0,
+                  "selfHpAfter": 0,
+                  "status": "no_hp_damage"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 3,
+                  "apBefore": 2,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 0,
+                  "selfHpAfter": 0,
+                  "status": "no_hp_damage"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 4,
+                  "apBefore": 1,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 0,
+                  "damage": 1,
+                  "appliedDamage": 0,
+                  "selfHpAfter": 0,
+                  "status": "no_hp_damage"
+                }
+              ],
+              "actualSelfLoss": "0.0",
+              "futurePowerLoss": "1.2"
+            }
+          },
+          {
+            "id": "b_retreat",
+            "label": "2칸 이동",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "-0.2857142857142857142857142857",
+              "F": "0",
+              "R": "0.00",
+              "B": "0",
+              "Q": "0.0"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "-4.285714285714285714285714286",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.00",
+              "baseLoss": "-0",
+              "roleBonus": "0.0"
+            },
+            "victoryScore": "-4.285714285714285714285714286",
+            "roleScore": "-4.285714285714285714285714286",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0.0",
+              "futurePowerLoss": "0.0"
+            }
+          },
+          {
+            "id": "c_main_hit",
+            "label": "메인 공격",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "0.60",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-21.00",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "9.00",
+            "roleScore": "15.00",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "2",
+              "appliedDamage": "2",
+              "attacksApplied": 2,
+              "trace": [
+                {
+                  "opponentId": "akimbo",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 2,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "akimbo",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 3,
+                  "cost": 2,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0.0",
+              "futurePowerLoss": "1.2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V06",
+      "caseFile": "V06.json",
+      "caseSha256": "0ada0dde2d20b50bc45dd680e9f27c1b3ba44b7cfa3b21d0c630f6d39203cce9",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "a_hit_in_place"
+        ],
+        "role": [
+          "b_move_hit"
+        ],
+        "reason": "피해가 같으면 승리 정책은 반격 2를 피한다. 역할 정책은 작은 위험을 감수하고 메인을 본진에서 밀어내는 교란을 고른다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V06",
+        "title": "작은 반격 위험을 감수하는 유효 넉백",
+        "source": "synthetic",
+        "choices": {
+          "victory": "a_hit_in_place",
+          "role": "b_move_hit"
+        },
+        "bestVictoryScore": "30.0",
+        "roleFloor": "24.0",
+        "candidates": [
+          {
+            "id": "a_hit_in_place",
+            "label": "제자리 메인 공격",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.3"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "6.0"
+            },
+            "victoryScore": "30.0",
+            "roleScore": "36.0",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "b_move_hit",
+            "label": "이동 후 메인 공격",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "0.10",
+              "B": "0",
+              "Q": "1.0"
+            },
+            "contributions": {
+              "main": "30",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-3.50",
+              "baseLoss": "-0",
+              "roleBonus": "20.0"
+            },
+            "victoryScore": "26.50",
+            "roleScore": "46.50",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "2",
+              "appliedDamage": "2",
+              "attacksApplied": 2,
+              "trace": [
+                {
+                  "opponentId": "akimbo",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 2,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 9,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "akimbo",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 3,
+                  "cost": 2,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 8,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0.2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V07",
+      "caseFile": "V07.json",
+      "caseSha256": "d928a6a935d312fc68d488c132806bb6d90bbfb97faabb4652b2b955f212dc8d",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "b_step_back"
+        ],
+        "role": [
+          "b_step_back"
+        ],
+        "reason": "메인 1 피해와 유닛 하나를 바꾸지 않는다. 압박 역할은 다음 턴에 다시 위협할 수 있는 거리에서 유지한다."
+      },
+      "expectedMatch": true,
+      "expectedNote": "일치",
+      "error": null,
+      "result": {
+        "situationId": "V07",
+        "title": "Demon의 메인 1 피해와 한 칸 물러서기",
+        "source": "synthetic",
+        "choices": {
+          "victory": "b_step_back",
+          "role": "b_step_back"
+        },
+        "bestVictoryScore": "-2.500000000000000000000000000",
+        "roleFloor": "-8.500000000000000000000000000",
+        "candidates": [
+          {
+            "id": "a_hit_main",
+            "label": "메인 공격",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0.1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "1.0",
+              "B": "0",
+              "Q": "1.0"
+            },
+            "contributions": {
+              "main": "3.0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-35.0",
+              "baseLoss": "-0",
+              "roleBonus": "20.0"
+            },
+            "victoryScore": "-32.0",
+            "roleScore": "-12.0",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "5",
+              "appliedDamage": "5",
+              "attacksApplied": 5,
+              "trace": [
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 4,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 4,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 4,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 3,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 2,
+                  "apBefore": 3,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 2,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 2,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 3,
+                  "apBefore": 2,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 4,
+                  "apBefore": 1,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 0,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "2"
+            }
+          },
+          {
+            "id": "b_step_back",
+            "label": "1칸 이동",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "-0.1666666666666666666666666667",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.9333333333333333333333333333"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "-2.500000000000000000000000000",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "18.66666666666666666666666667"
+            },
+            "victoryScore": "-2.500000000000000000000000000",
+            "roleScore": "16.16666666666666666666666667",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          },
+          {
+            "id": "c_far_back",
+            "label": "3칸 이동",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "-0.375",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.2500"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "-5.625",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "5.0000"
+            },
+            "victoryScore": "-5.625",
+            "roleScore": "-0.6250",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "profile": "revised",
+      "situationId": "V08",
+      "caseFile": "V08.json",
+      "caseSha256": "25578b9c77760ba4be2d1cbd74050b475db5251d4b4a2978e7954315c91921c8",
+      "status": "evaluated",
+      "expected": {
+        "victory": [
+          "a_kill_sniper"
+        ],
+        "role": [
+          "a_kill_sniper"
+        ],
+        "reason": "가장 약한 적 Demon과 플레이어 유닛 하나의 교환은 적 진영에 유리하다(R23과 같은 의도, 다른 형태: 지금이 아니라 다음 턴 사망)."
+      },
+      "expectedMatch": false,
+      "expectedNote": "기대 선택 불일치: victory",
+      "error": null,
+      "result": {
+        "situationId": "V08",
+        "title": "Demon이 빈사 Sniper를 처치하고 다음 턴 사망",
+        "source": "synthetic",
+        "choices": {
+          "victory": "c_step_back",
+          "role": "a_kill_sniper"
+        },
+        "bestVictoryScore": "-2.500000000000000000000000000",
+        "roleFloor": "-8.500000000000000000000000000",
+        "candidates": [
+          {
+            "id": "a_kill_sniper",
+            "label": "Sniper 공격",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0.1",
+              "K": "1",
+              "P": "0",
+              "F": "0",
+              "R": "1.0",
+              "B": "0",
+              "Q": "1.0"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "2.0",
+              "kill": "30",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-35.0",
+              "baseLoss": "-0",
+              "roleBonus": "20.0"
+            },
+            "victoryScore": "-3.0",
+            "roleScore": "17.0",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "5",
+              "appliedDamage": "5",
+              "attacksApplied": 5,
+              "trace": [
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 4,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 4,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 4,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 3,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 2,
+                  "apBefore": 3,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 2,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 2,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 3,
+                  "apBefore": 2,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 4,
+                  "apBefore": 1,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 0,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "2"
+            }
+          },
+          {
+            "id": "b_hit_main",
+            "label": "메인 공격",
+            "eligible": true,
+            "reason": "outside_role_budget",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0.1",
+              "D": "0",
+              "K": "0",
+              "P": "0",
+              "F": "0",
+              "R": "1.0",
+              "B": "0",
+              "Q": "1.0"
+            },
+            "contributions": {
+              "main": "3.0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "0",
+              "friendlyLoss": "-0",
+              "selfLoss": "-35.0",
+              "baseLoss": "-0",
+              "roleBonus": "20.0"
+            },
+            "victoryScore": "-32.0",
+            "roleScore": "-12.0",
+            "roleEligible": false,
+            "response": {
+              "capacityDamage": "5",
+              "appliedDamage": "5",
+              "attacksApplied": 5,
+              "trace": [
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 0,
+                  "apBefore": 5,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 4,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 4,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 1,
+                  "apBefore": 4,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 3,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 3,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 2,
+                  "apBefore": 3,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 2,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 2,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 3,
+                  "apBefore": 2,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 1,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 1,
+                  "status": "applied"
+                },
+                {
+                  "opponentId": "main",
+                  "opportunityIndex": 0,
+                  "attackIndex": 4,
+                  "apBefore": 1,
+                  "cost": 1,
+                  "refund": 0,
+                  "apAfter": 0,
+                  "damage": 1,
+                  "appliedDamage": 1,
+                  "selfHpAfter": 0,
+                  "status": "applied"
+                }
+              ],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "2"
+            }
+          },
+          {
+            "id": "c_step_back",
+            "label": "1칸 이동",
+            "eligible": true,
+            "reason": "",
+            "outcome": "ongoing",
+            "features": {
+              "M": "0",
+              "D": "0",
+              "K": "0",
+              "P": "-0.1666666666666666666666666667",
+              "F": "0",
+              "R": "0.0",
+              "B": "0",
+              "Q": "0.9333333333333333333333333333"
+            },
+            "contributions": {
+              "main": "0",
+              "damage": "0",
+              "kill": "0",
+              "progress": "-2.500000000000000000000000000",
+              "friendlyLoss": "-0",
+              "selfLoss": "-0.0",
+              "baseLoss": "-0",
+              "roleBonus": "18.66666666666666666666666667"
+            },
+            "victoryScore": "-2.500000000000000000000000000",
+            "roleScore": "16.16666666666666666666666667",
+            "roleEligible": true,
+            "response": {
+              "capacityDamage": "0",
+              "appliedDamage": "0",
+              "attacksApplied": 0,
+              "trace": [],
+              "actualSelfLoss": "0",
+              "futurePowerLoss": "0"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

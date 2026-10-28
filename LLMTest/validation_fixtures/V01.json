@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "situationId": "V01",
+  "title": "아군 피해를 동반해도 즉시 승리",
+  "source": "synthetic",
+  "assumptions": [
+    "보류 검증 상황이다. 가이드판 지시문 고정 뒤 작성했고 룰 가중치·지시문 조정에 쓰지 않는다.",
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(입력 대응 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·경로·공격 기하는 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "Ballista 관통은 첫 대상 10, 둘째 7, 셋째 4 피해다(대상당 30% 감쇠).",
+    "a 사선은 일반 regular_a(10, 처치), 아군 Demon(7, 사망), 메인(HP 4, 처치) 순서로 지난다. b는 다른 일반 유닛 하나만 처치한다.",
+    "b 뒤에는 모든 상대가 제자리 사거리 밖이다."
+  ],
+  "self": {
+    "unit": "Ballista",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 4,
+      "maxHp": 50
+    },
+    {
+      "id": "regular_a",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    },
+    {
+      "id": "regular_b",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [
+    {
+      "id": "ally_demon",
+      "hp": 5,
+      "maxHp": 5
+    }
+  ],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_lane",
+      "label": "관통 사선 a",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 0,
+        "regular_a": 0,
+        "regular_b": 10
+      },
+      "allyHpAfter": {
+        "ally_demon": 0
+      },
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main",
+        "regular_a"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "regular_b",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_single",
+      "label": "단일 사선 b",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 4,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 4,
+        "regular_a": 10,
+        "regular_b": 0
+      },
+      "allyHpAfter": {
+        "ally_demon": 5
+      },
+      "approachCostAfter": 0,
+      "hitIds": [
+        "regular_b"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "regular_a",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_lane"
+    ],
+    "role": [
+      "a_lane"
+    ],
+    "reason": "메인 처치는 즉시 승리다. 아군 Demon 손실이 있어도 두 정책 모두 승리를 고른다."
+  }
+}

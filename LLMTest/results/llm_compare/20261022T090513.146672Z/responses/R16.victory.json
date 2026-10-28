@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:43.4480165Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동으로 플레이어 메인 캐릭터를 즉시 처치하여 승리할 수 있습니다.\", \"scores\": [10, 0, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 867507500,
+  "load_duration": 3207800,
+  "prompt_eval_count": 937,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 226586000,
+  "eval_count": 41,
+  "eval_duration": 531395000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:58.5323005Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"기대되는 피해로 죽더라도 다음 턴에 위협할 수 있고, c1은 즉시 사망하여 모든 기회를 잃게 합니다.\", \"scores\": [0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1023272200,
+  "load_duration": 4284100,
+  "prompt_eval_count": 1026,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 192511000,
+  "eval_count": 50,
+  "eval_duration": 644931000
+}

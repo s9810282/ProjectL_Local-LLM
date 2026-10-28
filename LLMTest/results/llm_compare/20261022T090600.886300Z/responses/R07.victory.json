@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:13.3775394Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"sniper를 처치하고 본인이 다음 턴까지 생존할 수 있어 가장 유리합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 893525000,
+  "load_duration": 3434600,
+  "prompt_eval_count": 999,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 237242000,
+  "eval_count": 42,
+  "eval_duration": 544914000
+}

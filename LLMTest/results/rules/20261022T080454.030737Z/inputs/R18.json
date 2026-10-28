@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R18",
+  "title": "밤 ThornArmor 반사로 빈사 Gravekeeper가 자멸하는 공격",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(대조 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "ThornArmor(플레이어 Artifact): 밤에 적이 공격하면 마지막 공격자가 3 피해를 받는다고 해석했다. 필터 의미는 대조 문서 §7에서 확인 필요다.",
+    "행위자 HP 3이므로 어느 공격이든 반사 3 피해로 사망한다. 후퇴는 2칸(AP 2) 이동으로 두 상대의 제자리 사거리를 벗어난다고 가정한다.",
+    "후퇴 뒤 메인 공격 위치까지의 이동 비용은 0에서 2로 늘어난다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 3,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "akimbo",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_main_hit_die",
+      "label": "메인 10 피해 뒤 반사로 자멸",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 0,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": null,
+        "knockbackDelays": [
+          {
+            "targetId": "main",
+            "before": 0,
+            "after": 0
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "akimbo",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_regular_kill_die",
+      "label": "일반 유닛 처치 뒤 반사로 자멸",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 0,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "akimbo": 0
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "akimbo"
+      ],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": null,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "c_retreat",
+      "label": "2칸 후퇴, 피해 없음",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 2,
+          "refund": 0,
+          "steps": 2
+        }
+      ],
+      "selfHpAfter": 3,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 2,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 3,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "akimbo",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_regular_kill_die"
+    ],
+    "role": [
+      "b_regular_kill_die"
+    ],
+    "reason": "빈사 Gravekeeper 하나와 일반 유닛 하나의 교환은 받아들일 만하다. 메인 10 피해만을 위해 자멸하지는 않는다. 후퇴는 이득 없이 접근만 늦춘다."
+  }
+}

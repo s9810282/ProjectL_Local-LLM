@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:25:10.6001156Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Regular unit kill is the highest priority, outweighing the loss of my own unit.\", \"scores\": [5, 10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 913062600,
+  "load_duration": 3194700,
+  "prompt_eval_count": 1359,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 241757000,
+  "eval_count": 42,
+  "eval_duration": 545755000
+}

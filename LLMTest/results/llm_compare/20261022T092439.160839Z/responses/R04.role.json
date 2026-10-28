@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:47.279966Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격 행동은 다음 턴에 자기가 죽게 되므로, 현재 턴에서 주력 캐릭터를 10 점만 데미지하는 이동 행동이 더 안전합니다.\", \"scores\": [0, 1]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1105452000,
+  "load_duration": 4148500,
+  "prompt_eval_count": 1208,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 205589000,
+  "eval_count": 60,
+  "eval_duration": 770802000
+}

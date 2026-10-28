@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:07:14.7403661Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 핵심 역할인 HQ 보호와 이동으로 플레이어 단위를 밀어내는 것이 최선이다.\", \"scores\": [0, 10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 971039200,
+  "load_duration": 4171600,
+  "prompt_eval_count": 1106,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 240941000,
+  "eval_count": 48,
+  "eval_duration": 607976000
+}

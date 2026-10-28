@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:46.4563397Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 핵심 역할인 플레이어 유닛을 HQ에서 밀어내어 (knockback) 전세를 역전하는 것이 더 유리합니다.\", \"scores\": [5, 9]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1023490300,
+  "load_duration": 3763300,
+  "prompt_eval_count": 1019,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 217222000,
+  "eval_count": 53,
+  "eval_duration": 685425000
+}

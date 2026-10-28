@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:29.1698327Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동은 스니퍼를 처치하여 미래의 위협을 제거하고, 다음 턴에 주체에게 5 데미지를 입히며 승리할 확률을 높입니다.\", \"scores\": [5, 8, 3]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1249400800,
+  "load_duration": 5243100,
+  "prompt_eval_count": 1236,
+  "prompt_eval_cached_count": 695,
+  "prompt_eval_duration": 250714000,
+  "eval_count": 63,
+  "eval_duration": 851426000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:25.3344493Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 주된 역할인 HQ 접근을 방해하는 공격을 선택해야 하며, 이동 후 공격은 오히려 HQ 접근 비용을 증가시킵니다.\", \"scores\": [9, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1162685800,
+  "load_duration": 4272600,
+  "prompt_eval_count": 1301,
+  "prompt_eval_cached_count": 790,
+  "prompt_eval_duration": 234310000,
+  "eval_count": 59,
+  "eval_duration": 807842000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:39:27.9176955Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이동은 다음 턴에 주력单位的 위협을 유지할 수 없게 하므로, 즉시 공격으로 주력单位的 HP를 1 감소시키는 c1을 선택합니다.\", \"scores\": [8, 5, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1287692900,
+  "load_duration": 3818400,
+  "prompt_eval_count": 1335,
+  "prompt_eval_cached_count": 790,
+  "prompt_eval_duration": 245220000,
+  "eval_count": 64,
+  "eval_duration": 904675000
+}

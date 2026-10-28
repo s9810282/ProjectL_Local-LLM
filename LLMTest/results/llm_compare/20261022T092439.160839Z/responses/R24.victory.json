@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:25:21.5113348Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"플레이어의 정규 병력을 처치하여 미래의 위협을 제거했습니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 787982200,
+  "load_duration": 2745500,
+  "prompt_eval_count": 1076,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 197737000,
+  "eval_count": 37,
+  "eval_duration": 477489000
+}

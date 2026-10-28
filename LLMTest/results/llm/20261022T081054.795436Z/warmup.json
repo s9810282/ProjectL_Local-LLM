@@ -1,0 +1,25 @@
+{
+  "summary": {
+    "situation": "S01",
+    "wall_ms": 1023,
+    "error": "",
+    "load_s": 0.004
+  },
+  "response": {
+    "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+    "created_at": "2026-10-22T08:10:55.8391358Z",
+    "message": {
+      "role": "assistant",
+      "content": "{\"choice\": 1, \"reason\": \"주인공을 공격하여 위협을 줄이고 추격 거리도 유지하는 것이 가장 안전합니다.\", \"scores\": [5, 8, 3]}"
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 996699200,
+    "load_duration": 3958700,
+    "prompt_eval_count": 417,
+    "prompt_eval_cached_count": 203,
+    "prompt_eval_duration": 236198000,
+    "eval_count": 44,
+    "eval_duration": 645733000
+  }
+}

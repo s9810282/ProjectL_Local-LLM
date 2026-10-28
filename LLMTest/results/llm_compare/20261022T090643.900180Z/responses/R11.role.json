@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:07:05.5459514Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"장거리 공격이 가능한 상태이므로 기다림으로 주력单位和 일반 유닛을 동시에 타격할 기회를 유지해야 합니다.\", \"scores\": [10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 843047700,
+  "load_duration": 3752300,
+  "prompt_eval_count": 795,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 143344000,
+  "eval_count": 46,
+  "eval_duration": 585700000
+}

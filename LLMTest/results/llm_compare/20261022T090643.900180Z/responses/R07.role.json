@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:57.8112407Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"주인공을 공격하지 않고 sniper 을 처치하여 다음 턴에 주력 공격을 할 수 있는 상태를 유지했습니다.\", \"scores\": [10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1003767700,
+  "load_duration": 3782400,
+  "prompt_eval_count": 1110,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 241666000,
+  "eval_count": 49,
+  "eval_duration": 626761000
+}

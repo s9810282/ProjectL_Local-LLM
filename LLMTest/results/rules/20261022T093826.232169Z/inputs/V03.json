@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "situationId": "V03",
+  "title": "Demon의 안전한 전진과 반격 사거리 안 전진",
+  "source": "synthetic",
+  "assumptions": [
+    "보류 검증 상황이다. 가이드판 지시문 고정 뒤 작성했고 룰 가중치·지시문 조정에 쓰지 않는다.",
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(입력 대응 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·경로·공격 기하는 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "Demon은 HP 5, AP 3, 이동 범위 3·칸당 1, 공격비 1, 공격력 1이다. 지금은 아무도 공격할 수 없다.",
+    "a는 2칸 전진해 메인 공격 위치까지 1이 남고 모든 상대의 제자리 사거리 밖이다.",
+    "b는 3칸 전진해 메인과 붙는다. 메인이 AP 5로 1 피해를 5번 줄 수 있다.",
+    "c는 대기한다. 다음 턴에 이동 3과 공격 1이 AP 3을 넘어 위협하지 못한다."
+  ],
+  "self": {
+    "unit": "Demon",
+    "hp": 5,
+    "maxHp": 5,
+    "ap": 3,
+    "maxAp": 3,
+    "moveRange": 3
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 3,
+  "candidates": [
+    {
+      "id": "a_move_two",
+      "label": "2칸 이동",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 2,
+          "refund": 0,
+          "steps": 2
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 2,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_move_three",
+      "label": "3칸 이동",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 3,
+          "refund": 0,
+          "steps": 3
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "main",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "c_wait",
+      "label": "대기",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "wait",
+          "cost": 0,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 5,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 3,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_move_two"
+    ],
+    "role": [
+      "a_move_two"
+    ],
+    "reason": "다음 턴 사망을 감수하고 한 칸 더 붙을 이유가 없다. 살아남으면서 다음 턴 위협이 가능한 전진이 낫다."
+  }
+}

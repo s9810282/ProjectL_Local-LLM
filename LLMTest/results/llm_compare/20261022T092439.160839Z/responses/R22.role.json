@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:25:18.8529306Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"정규 유닛을 처치하여 미래의 공격을 차단하고 메인 캐릭터에 더 많은 피해를 입히는 것이 더 유리합니다.\", \"scores\": [8, 6]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1026017800,
+  "load_duration": 3685700,
+  "prompt_eval_count": 1408,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 258954999,
+  "eval_count": 48,
+  "eval_duration": 616909000
+}

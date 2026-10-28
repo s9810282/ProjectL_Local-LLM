@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R15",
+  "title": "불완전한 반격 일정은 위험 0으로 대체하지 않음",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "순서와 행동 기회가 확정되지 않았으며 complete=false로 제공한 입력 검증 사례다. 비위협 사유를 적었더라도 완전성을 증명하지 않는다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "regular",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_incomplete_window",
+      "label": "메인 6 피해이나 일정 완전성 없음",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 44,
+        "regular": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": false,
+        "assumptions": "누가 먼저 행동하는지 확정되지 않았고 이 일정은 완전하지 않다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "regular",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "status": "unevaluated",
+    "reason": "알 수 없는 반격 순서를 0 피해로 넣어 공격을 추천하지 말고 누락 원인이 있는 상황 전체를 미평가로 남겨야 한다."
+  }
+}

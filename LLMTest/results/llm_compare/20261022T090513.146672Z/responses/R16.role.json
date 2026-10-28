@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:44.4247218Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이동하지 않고 바로 주체 (main) 를 처치하여 승리할 수 있는 최적의 행동입니다.\", \"scores\": [10, 0, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 974451800,
+  "load_duration": 5220600,
+  "prompt_eval_count": 1048,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 223177000,
+  "eval_count": 48,
+  "eval_duration": 617487000
+}

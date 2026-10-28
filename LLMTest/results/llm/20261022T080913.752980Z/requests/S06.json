@@ -1,0 +1,53 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the enemy commander AI in a turn-based tactics game.\nEach request gives your unit's status (\"self\") and a numbered list of candidate actions (\"candidates\").\nAll numbers are pre-computed by the game. Trust them and do not recompute distances or damage.\n\nField meanings:\n- expectedDamage: damage this action deals\n- killsTarget: true if this action defeats the target\n- threatAfter: number of player units that can attack you after this action (lower is safer)\n- distToTargetAfter: distance to your chase target after this action\n\nGoal: help the enemy side win the battle, defeating player units while staying alive.\n\nScore EVERY candidate from 0 (worst) to 10 (best), in the same order as the list.\nThen pick the single best candidate id.\nReply with JSON only: {\"scores\": [...], \"choice\": <id>, \"reason\": \"<one short sentence in Korean>\"}\n"
+    },
+    {
+      "role": "user",
+      "content": "{\"self\": {\"unit\": \"Gravekeeper\", \"hp\": 10, \"maxHp\": 10, \"atk\": 10, \"move\": 5}, \"candidates\": [{\"id\": 0, \"action\": \"move_attack\", \"target\": \"Sniper\", \"targetHp\": 10, \"expectedDamage\": 10, \"killsTarget\": true, \"threatAfter\": 3, \"distToTargetAfter\": 3}, {\"id\": 1, \"action\": \"move_attack\", \"target\": \"MainCharacter\", \"targetHp\": 50, \"expectedDamage\": 10, \"killsTarget\": false, \"threatAfter\": 2, \"distToTargetAfter\": 1}, {\"id\": 2, \"action\": \"move\", \"target\": \"\", \"targetHp\": 0, \"expectedDamage\": 0, \"killsTarget\": false, \"threatAfter\": 0, \"distToTargetAfter\": 3}, {\"id\": 3, \"action\": \"wait\", \"target\": \"\", \"targetHp\": 0, \"expectedDamage\": 0, \"killsTarget\": false, \"threatAfter\": 0, \"distToTargetAfter\": 5}]}"
+    }
+  ],
+  "stream": false,
+  "think": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "scores": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "minItems": 4,
+        "maxItems": 4
+      },
+      "choice": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 80
+      }
+    },
+    "required": [
+      "scores",
+      "choice",
+      "reason"
+    ]
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 200
+  }
+}

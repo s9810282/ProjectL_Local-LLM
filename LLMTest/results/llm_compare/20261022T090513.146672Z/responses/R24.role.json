@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:00.5705414Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"사격으로 적의 사격수 (sniper) 를 즉시 처치하여 승리 조건을 달성했습니다.\", \"scores\": [10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 881884900,
+  "load_duration": 4272500,
+  "prompt_eval_count": 951,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 198702000,
+  "eval_count": 45,
+  "eval_duration": 574094000
+}

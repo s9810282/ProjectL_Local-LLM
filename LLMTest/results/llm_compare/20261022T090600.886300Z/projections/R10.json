@@ -1,0 +1,88 @@
+{
+  "view": {
+    "self": {
+      "unit": "Demon",
+      "hp": 1,
+      "maxHp": 5,
+      "ap": 3,
+      "maxAp": 3
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "sniper",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "move 1",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 0,
+          "diesNow": true
+        },
+        "beforeMyNextTurn": null,
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": null
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "wait",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 1,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 1,
+          "hpAfter": 0,
+          "dies": true
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 1
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "b_pointless_self_death",
+    "c2": "a_stay_alive"
+  },
+  "ruleChoices": {
+    "victory": "a_stay_alive",
+    "role": "a_stay_alive"
+  }
+}

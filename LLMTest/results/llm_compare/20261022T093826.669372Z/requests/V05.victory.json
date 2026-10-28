@@ -1,0 +1,52 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the enemy commander AI in a turn-based tactics game.\nEach request gives your unit (\"self\"), the player units (\"players\"), your other units (\"allies\"), your headquarters, and a list of candidate actions (\"candidates\").\nAll numbers are pre-computed by the game. Trust them and do not recompute anything. Every listed candidate is legal.\n\nCandidate fields:\n- actions: what your unit does, in order\n- battle: \"enemy_wins\" if the player main character dies now (you win), \"enemy_loses\" if your headquarters is destroyed now, otherwise \"continues\"\n- hits: player units that lose HP from this action (hpBefore -> hpAfter, killed)\n- allyLosses: your own other units that lose HP from this action\n- headquartersHpAfter: your headquarters HP after this action\n- self: your unit's HP after this action, and diesNow if it dies now\n- beforeMyNextTurn: damage the players are expected to deal to your unit before your next turn, your HP after that, and whether you die. null if the battle ended or you already died\n- mainApproachCost: action points you need to reach a position that can attack the player main character (before and after this action). null means unreachable\n- next: whether you can threaten a player unit on your next turn, and the distance to the nearest player unit\n- knockback: player units you pushed, and their action-point cost to reach your headquarters before and after the push\n\nGoal: help the enemy side win the battle.\nTake an immediate win if one exists. Otherwise weigh defeating player units and damaging the player main character against losing your own units and headquarters.\n\nScore EVERY candidate from 0 (worst) to 10 (best), in the same order as the list.\nThen pick the single best candidate id.\nReply with JSON only: {\"scores\": [...], \"choice\": \"<candidate id>\", \"reason\": \"<one short sentence in Korean>\"}\n"
+    },
+    {
+      "role": "user",
+      "content": "{\"self\": {\"unit\": \"Gravekeeper\", \"hp\": 2, \"maxHp\": 10, \"ap\": 5, \"maxAp\": 5}, \"players\": [{\"id\": \"main\", \"role\": \"main\", \"hp\": 50, \"maxHp\": 50}, {\"id\": \"akimbo\", \"role\": \"regular\", \"hp\": 10, \"maxHp\": 10}], \"allies\": [], \"headquarters\": {\"hp\": 3, \"maxHp\": 3}, \"candidates\": [{\"id\": \"c1\", \"actions\": \"attack\", \"battle\": \"continues\", \"hits\": [{\"id\": \"akimbo\", \"role\": \"regular\", \"hpBefore\": 10, \"hpAfter\": 0, \"killed\": true}], \"allyLosses\": [], \"headquartersHpAfter\": 3, \"self\": {\"hpAfter\": 2, \"diesNow\": false}, \"beforeMyNextTurn\": {\"expectedDamage\": 2, \"hpAfter\": 0, \"dies\": true}, \"mainApproachCost\": {\"before\": 0, \"after\": 0}, \"next\": {\"canThreatenNext\": true, \"nearestPlayerDistance\": 1}, \"knockback\": []}, {\"id\": \"c2\", \"actions\": \"move 2\", \"battle\": \"continues\", \"hits\": [], \"allyLosses\": [], \"headquartersHpAfter\": 3, \"self\": {\"hpAfter\": 2, \"diesNow\": false}, \"beforeMyNextTurn\": {\"expectedDamage\": 0, \"hpAfter\": 2, \"dies\": false}, \"mainApproachCost\": {\"before\": 0, \"after\": 2}, \"next\": {\"canThreatenNext\": false, \"nearestPlayerDistance\": 3}, \"knockback\": []}, {\"id\": \"c3\", \"actions\": \"attack\", \"battle\": \"continues\", \"hits\": [{\"id\": \"main\", \"role\": \"main\", \"hpBefore\": 50, \"hpAfter\": 40, \"killed\": false}], \"allyLosses\": [], \"headquartersHpAfter\": 3, \"self\": {\"hpAfter\": 2, \"diesNow\": false}, \"beforeMyNextTurn\": {\"expectedDamage\": 2, \"hpAfter\": 0, \"dies\": true}, \"mainApproachCost\": {\"before\": 0, \"after\": 0}, \"next\": {\"canThreatenNext\": true, \"nearestPlayerDistance\": 1}, \"knockback\": [{\"targetId\": \"main\", \"headquartersApproachBefore\": 0, \"headquartersApproachAfter\": 0}]}]}"
+    }
+  ],
+  "stream": false,
+  "think": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "scores": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "choice": {
+        "type": "string",
+        "enum": [
+          "c1",
+          "c2",
+          "c3"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 80
+      }
+    },
+    "required": [
+      "scores",
+      "choice",
+      "reason"
+    ]
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 200
+  }
+}

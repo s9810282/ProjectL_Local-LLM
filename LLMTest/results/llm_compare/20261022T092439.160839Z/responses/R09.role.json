@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:57.5073049Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 미래 행동을 제거하는 것이 더 우선이며, 동맹 유닛의 사망은 불가피한 손실로 받아들입니다.\", \"scores\": [5, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1077626300,
+  "load_duration": 4814700,
+  "prompt_eval_count": 1356,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 241959000,
+  "eval_count": 54,
+  "eval_duration": 687762000
+}

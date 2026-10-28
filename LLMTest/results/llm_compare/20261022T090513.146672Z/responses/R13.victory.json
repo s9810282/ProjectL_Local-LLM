@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:39.8376451Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"스니퍼를 처치하여 전세를 역전시키면서 본인이 다음 턴까지 생존할 수 있습니다.\", \"scores\": [10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 909448300,
+  "load_duration": 3565400,
+  "prompt_eval_count": 902,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 212287000,
+  "eval_count": 46,
+  "eval_duration": 590742000
+}

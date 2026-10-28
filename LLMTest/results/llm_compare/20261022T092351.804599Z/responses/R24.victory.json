@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:37.8222252Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"플레이어의 정규 병사를 처치하여 미래 행동을 완전히 차단해야 합니다.\", \"scores\": [10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 802132300,
+  "load_duration": 3675000,
+  "prompt_eval_count": 1076,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 198961000,
+  "eval_count": 38,
+  "eval_duration": 490847000
+}

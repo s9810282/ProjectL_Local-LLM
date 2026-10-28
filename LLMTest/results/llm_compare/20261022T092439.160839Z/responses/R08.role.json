@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:55.2923183Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 역할인 플레이어 유닛을 본진에서 밀어내는 효과 (knockback) 가 주된 목표이므로, 메인 캐릭터를 공격하는 c2보다\", \"scores\": [10, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1151868000,
+  "load_duration": 3730500,
+  "prompt_eval_count": 1307,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 222564000,
+  "eval_count": 60,
+  "eval_duration": 794724000
+}

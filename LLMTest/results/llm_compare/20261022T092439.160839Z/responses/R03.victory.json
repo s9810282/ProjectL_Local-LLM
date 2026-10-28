@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:44.2281928Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"정규 병사를 처치하여 미래의 공격을 차단하고 승리 확률을 높입니다.\", \"scores\": [10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 854718300,
+  "load_duration": 3916100,
+  "prompt_eval_count": 1113,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 204370000,
+  "eval_count": 41,
+  "eval_duration": 532013000
+}

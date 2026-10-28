@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:14.6447273Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"기대되는 피해로 즉시 사망하는 c2 대신, 현재 생존하며 다음 턴에 적을 위협할 수 있는 c1을 선택합니다.\", \"scores\": [9, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1028289400,
+  "load_duration": 3819900,
+  "prompt_eval_count": 1026,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 186712000,
+  "eval_count": 54,
+  "eval_duration": 693706000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:38:48.0008564Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격으로 메인 캐릭터의 HP를 줄이고 다음 턴에도 위협할 수 있는 위치를 유지해야 합니다.\", \"scores\": [10, 8, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1017127500,
+  "load_duration": 4311600,
+  "prompt_eval_count": 1082,
+  "prompt_eval_cached_count": 537,
+  "prompt_eval_duration": 245840000,
+  "eval_count": 49,
+  "eval_duration": 661985000
+}

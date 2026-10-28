@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R02",
+  "title": "메인 6 피해와 일반 8 피해",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "서로 다른 이동·공격 후보에서 최종 피해가 메인 6 또는 일반 8로 제공되며 그 피해 차이의 기하·효과 원인은 검증하지 않는다. 두 후보의 후속 위험·접근·역할 값은 같다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "regular",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_main_pressure",
+      "label": "메인 6 피해",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 44,
+        "regular": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "regular",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_regular_damage",
+      "label": "일반 유닛 8 피해",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "regular": 2
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "regular"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. fixed 공격은 최종 피해·비용이 반복 동안 불변이고 환급이 없다고 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          },
+          {
+            "opponentId": "regular",
+            "reason": "이 synthetic 일정에서 행위자의 다음 행동 전에 제자리 공격 기회가 없다고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_main_pressure"
+    ],
+    "role": [
+      "a_main_pressure"
+    ],
+    "reason": "즉시 처치가 없는 비슷한 교환에서는 승패 목표인 메인 압박을 두 정책 모두 더 가치 있게 보아야 한다."
+  }
+}

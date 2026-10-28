@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T08:28:40.8978222Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 즉시 처치하여 위협을 제거하고 점수를 높이는 것이 최선입니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1160140700,
+  "load_duration": 14574900,
+  "prompt_eval_count": 877,
+  "prompt_eval_cached_count": 422,
+  "prompt_eval_duration": 281915000,
+  "eval_count": 43,
+  "eval_duration": 733088000
+}

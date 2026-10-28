@@ -1,0 +1,28 @@
+{
+  "version": "rule-v2.1-2026-10-22",
+  "mainDamageMode": "reference_hp",
+  "mainReferenceHp": 10,
+  "riskMode": "ap_budget",
+  "weights": {
+    "main": 30,
+    "damage": 20,
+    "kill": 30,
+    "progress": 15,
+    "friendlyLoss": 35,
+    "selfLoss": 35,
+    "baseLoss": 60
+  },
+  "riskDiscount": 0.5,
+  "progressReferenceAp": 5,
+  "roleMaxLoss": 6,
+  "roleBonus": 20,
+  "roleProfiles": {
+    "Demon": { "threat": 0.6, "approach": 0.4 },
+    "Gravekeeper": { "knockback": 0.7, "threat": 0.3 },
+    "Ballista": { "lane": 0.7, "spacing": 0.3 }
+  },
+  "knockbackReferenceAp": 5,
+  "laneReferenceTargets": 3,
+  "spacingMin": 1,
+  "spacingFull": 4
+}

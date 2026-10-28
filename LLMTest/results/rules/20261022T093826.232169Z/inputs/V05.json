@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "situationId": "V05",
+  "title": "빈사 Gravekeeper의 처치와 다음 턴 사망",
+  "source": "synthetic",
+  "assumptions": [
+    "보류 검증 상황이다. 가이드판 지시문 고정 뒤 작성했고 룰 가중치·지시문 조정에 쓰지 않는다.",
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(입력 대응 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·경로·공격 기하는 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "Gravekeeper HP 2/10. a는 일반 akimbo를 처치하지만 인접한 메인이 AP 5로 1 피해를 5번 줄 수 있어 다음 턴 전에 사망한다.",
+    "b는 2칸 후퇴해 모든 상대의 사거리 밖이다. 메인 공격 위치까지 비용은 0에서 2가 된다.",
+    "c는 메인에게 10 피해를 주고 넉백으로 메인을 사거리 밖으로 밀지만, 인접한 akimbo(AP 5, 공격비 2, 공격력 1)가 2번 공격해 사망한다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 2,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "akimbo",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_kill",
+      "label": "akimbo 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 2,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "akimbo": 0
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "akimbo"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "main",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 1,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": []
+      }
+    },
+    {
+      "id": "b_retreat",
+      "label": "2칸 이동",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 2,
+          "refund": 0,
+          "steps": 2
+        }
+      ],
+      "selfHpAfter": 2,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 2,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 3,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "akimbo",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "c_main_hit",
+      "label": "메인 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 2,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": [
+          {
+            "targetId": "main",
+            "before": 0,
+            "after": 0
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "akimbo",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 2,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_kill"
+    ],
+    "role": [
+      "a_kill"
+    ],
+    "reason": "어차피 약한 유닛이 다음 턴 사망을 감수한다면 처치와 교환해야 한다. 메인 10 피해만 얻고 잃는 것은 손해다."
+  }
+}

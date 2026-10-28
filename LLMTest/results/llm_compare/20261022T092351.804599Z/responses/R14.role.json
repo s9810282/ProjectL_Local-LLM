@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:21.1754874Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격으로 메인 캐릭터의 HP를 감소시켜 승리 가능성을 높이고, 다음 턴에도 위협할 수 있는 위치를 유지합니다.\", \"scores\": [8, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 949994400,
+  "load_duration": 3294800,
+  "prompt_eval_count": 1206,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 199632000,
+  "eval_count": 49,
+  "eval_duration": 631364000
+}

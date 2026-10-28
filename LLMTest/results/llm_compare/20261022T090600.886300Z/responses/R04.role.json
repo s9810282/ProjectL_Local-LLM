@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:08.7045576Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격 시 자기가 죽고 다음 턴에 공격할 수 없으므로, 이동하여 다음 턴에 주체 (main) 를 위협하는 것이 더 유리합니다.\", \"scores\": [5, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1042101500,
+  "load_duration": 4121600,
+  "prompt_eval_count": 955,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 201319000,
+  "eval_count": 57,
+  "eval_duration": 730641000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:06:43.6092386Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"sniper를 처치하여 적의 주요 위협을 제거하고 다음 턴에도 위협할 수 있는 위치를 유지했습니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 934125600,
+  "load_duration": 3381200,
+  "prompt_eval_count": 951,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 201188000,
+  "eval_count": 48,
+  "eval_duration": 615697000
+}

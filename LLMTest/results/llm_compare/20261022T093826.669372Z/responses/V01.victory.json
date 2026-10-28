@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:38:32.3395193Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동으로 주력单位和 보조 병력이 즉시 처치되어 승리할 수 있습니다.\", \"scores\": [10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 630202800,
+  "load_duration": 3861000,
+  "prompt_eval_count": 968,
+  "prompt_eval_cached_count": 964,
+  "prompt_eval_duration": 57641000,
+  "eval_count": 40,
+  "eval_duration": 557933000
+}

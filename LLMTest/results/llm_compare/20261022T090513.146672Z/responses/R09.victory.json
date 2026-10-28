@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:34.2892957Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"정규 병사 regular_a 를 처치하여 적의 주요 병력을 제거하고 승리 확률을 높입니다.\", \"scores\": [10, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 929505200,
+  "load_duration": 4540200,
+  "prompt_eval_count": 992,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 238378000,
+  "eval_count": 45,
+  "eval_duration": 581793000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:12.4341713Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"정규 병사 regular_a 를 처치하여 적의 공격력을 제거하고, 동맹 부대 ally_scout의 손실에도 불구하고 승리 확률을 높이는 것이 최\", \"scores\": [8, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1183066400,
+  "load_duration": 4102800,
+  "prompt_eval_count": 1228,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 238473000,
+  "eval_count": 58,
+  "eval_duration": 822833000
+}

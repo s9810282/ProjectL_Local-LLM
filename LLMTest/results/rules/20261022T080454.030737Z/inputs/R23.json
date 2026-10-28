@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "situationId": "R23",
+  "title": "밤 ThornArmor 반사로 Demon이 빈사 일반 유닛과 교환",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(대조 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·전체 이동 경로·점유·공격 기하를 제공하거나 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "두 정책은 같은 관측 자료와 후보를 사용한다. 회복·최대 HP 변경·무작위 효과는 없으며 표시된 결과 이외의 추가 피해는 없다고 가정한다.",
+    "ThornArmor(플레이어 Artifact): 밤에 적이 공격하면 마지막 공격자가 3 피해를 받는다고 해석했다. 필터 의미는 대조 문서 §7에서 확인 필요다.",
+    "Demon은 HP 3/5, AP 3, 공격비 1, 공격력 1이다. HP 1 Sniper를 처치하면 반사 3 피해로 Demon도 사망한다.",
+    "전진은 1칸(AP 1) 이동으로 메인 공격 위치까지의 비용을 2에서 1로 줄이고 모든 상대의 제자리 사거리 밖에 머문다.",
+    "후보는 공격 1회만 비교한다. Demon이 AP 3으로 여러 번 공격하는 후보는 이번에 만들지 않는다."
+  ],
+  "self": {
+    "unit": "Demon",
+    "hp": 3,
+    "maxHp": 5,
+    "ap": 3,
+    "maxAp": 3,
+    "moveRange": 3
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "hp": 1,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 2,
+  "candidates": [
+    {
+      "id": "a_trade_kill",
+      "label": "HP 1 Sniper 처치, 반사로 자멸",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 1,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 0,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 0
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 2,
+      "hitIds": [
+        "sniper"
+      ],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": null,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_advance",
+      "label": "1칸 전진, 피해 없음",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 1,
+          "refund": 0,
+          "steps": 1
+        }
+      ],
+      "selfHpAfter": 3,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 50,
+        "sniper": 1
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 2,
+        "knockbackDelays": []
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다(대조 문서 §7 확인 필요).",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_trade_kill"
+    ],
+    "role": [
+      "a_trade_kill"
+    ],
+    "reason": "가장 약한 적 유닛(Demon) 하나로 플레이어 유닛 하나를 없애는 교환은 적 진영에 유리하다. 두 정책 모두 교환해야 한다. [검토 요청: 유닛별 전력 가치 가설과 연결]"
+  }
+}

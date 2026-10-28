@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:19.4230673Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"주인공을 공격하는 대신 다음 턴에 죽을 위험이 있는 행동은 절대 선택하지 않습니다.\", \"scores\": [10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 977135000,
+  "load_duration": 11516700,
+  "prompt_eval_count": 1266,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 216558000,
+  "eval_count": 47,
+  "eval_duration": 607498000
+}

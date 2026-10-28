@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "situationId": "V06",
+  "title": "작은 반격 위험을 감수하는 유효 넉백",
+  "source": "synthetic",
+  "assumptions": [
+    "보류 검증 상황이다. 가이드판 지시문 고정 뒤 작성했고 룰 가중치·지시문 조정에 쓰지 않는다.",
+    "synthetic 기획 판단 사례다. 제공된 최종 결과와 비용의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-10-22 DB 에셋 값이다(입력 대응 문서 §3.1). 카테고리 상성은 기본표 기준 모두 1.0이다.",
+    "좌표·경로·공격 기하는 검증하지 않는다. legal=true와 접근 비용·거리·넉백 비용은 작성자가 제공한 가정이다.",
+    "Gravekeeper 공격력 10, 넉백 1칸, Rider 이동비 환급(턴당 1회 가정).",
+    "a는 제자리에서 메인 10 피해, 넉백은 본진 접근 비용을 바꾸지 않는다. 이후 모든 상대가 사거리 밖이다.",
+    "b는 1칸 이동 뒤 메인 10 피해, 넉백으로 메인의 본진 접근 비용을 0에서 5로 늘린다. 끝난 위치가 akimbo(AP 5, 공격비 2, 공격력 1)와 붙어 2 피해를 받는다."
+  ],
+  "self": {
+    "unit": "Gravekeeper",
+    "hp": 10,
+    "maxHp": 10,
+    "ap": 5,
+    "maxAp": 5,
+    "moveRange": 5
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "hp": 50,
+      "maxHp": 50
+    },
+    {
+      "id": "akimbo",
+      "role": "regular",
+      "hp": 10,
+      "maxHp": 10
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 3,
+    "maxHp": 3
+  },
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_hit_in_place",
+      "label": "제자리 메인 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 0,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": [
+          {
+            "targetId": "main",
+            "before": 0,
+            "after": 0
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          },
+          {
+            "opponentId": "akimbo",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_move_hit",
+      "label": "이동 후 메인 공격",
+      "legal": true,
+      "actions": [
+        {
+          "kind": "move",
+          "cost": 1,
+          "refund": 0,
+          "steps": 1
+        },
+        {
+          "kind": "attack",
+          "cost": 2,
+          "refund": 1,
+          "steps": 0
+        }
+      ],
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 3,
+      "playerHpAfter": {
+        "main": 40,
+        "akimbo": 10
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": [
+          {
+            "targetId": "main",
+            "before": 0,
+            "after": 5
+          }
+        ]
+      },
+      "responseWindow": {
+        "complete": true,
+        "assumptions": "후보 완료 뒤부터 행위자의 다음 행동 직전까지의 순서 있는 일정이다. 플레이어 턴 시작 AP는 최대치로 가정한다.",
+        "opportunities": [
+          {
+            "opponentId": "akimbo",
+            "availableAp": 5,
+            "maxAp": 5,
+            "mode": "fixed",
+            "repeatSafe": true,
+            "attackCost": 2,
+            "damagePerAttack": 1
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "이 synthetic 일정에서 행위자의 행동 후 위치가 해당 상대의 제자리 사거리 밖이라고 가정한다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_hit_in_place"
+    ],
+    "role": [
+      "b_move_hit"
+    ],
+    "reason": "피해가 같으면 승리 정책은 반격 2를 피한다. 역할 정책은 작은 위험을 감수하고 메인을 본진에서 밀어내는 교란을 고른다."
+  }
+}

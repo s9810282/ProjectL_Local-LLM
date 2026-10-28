@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:23.0053507Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동으로 주군의 HP가 0이 되어 승리할 수 있으므로 가장 우선순위가 높습니다.\", \"scores\": [10, 0, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 949943000,
+  "load_duration": 4160000,
+  "prompt_eval_count": 1301,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 221702000,
+  "eval_count": 47,
+  "eval_duration": 603176000
+}

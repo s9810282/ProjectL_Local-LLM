@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:18.4238325Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"사격 (sniper) 을 처치하여 미래의 위협을 제거하고, 다음 턴에 자기가 죽을 위험이 있는 공격을 피했습니다.\", \"scores\": [5, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1044672000,
+  "load_duration": 3354100,
+  "prompt_eval_count": 1138,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 217158000,
+  "eval_count": 54,
+  "eval_duration": 695699000
+}

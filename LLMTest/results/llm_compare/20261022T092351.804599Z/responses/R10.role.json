@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:24:15.5885955Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이동으로 사망하는 대신 기다림으로 다음 턴까지 위협할 수 있고, 다음 턴에 사망할 위험을 줄입니다.\", \"scores\": [0, 1]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 942268400,
+  "load_duration": 3703900,
+  "prompt_eval_count": 1154,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 181292000,
+  "eval_count": 50,
+  "eval_duration": 645628000
+}

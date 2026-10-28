@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-22T09:05:23.5529311Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 전술적 이점을 얻는 것이 더 유리합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 847036200,
+  "load_duration": 4358900,
+  "prompt_eval_count": 988,
+  "prompt_eval_cached_count": 533,
+  "prompt_eval_duration": 224669000,
+  "eval_count": 41,
+  "eval_duration": 528116999
+}
