@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:08.2304912Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"sniper를 처치하여 플레이어의 위협을 제거하고, 다음 턴에 자기가 죽지 않고 HQ도 안전한 상태가 됩니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 599506800,
+  "load_duration": 2061800,
+  "prompt_eval_count": 902,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 102238000,
+  "eval_count": 51,
+  "eval_duration": 435324000
+}

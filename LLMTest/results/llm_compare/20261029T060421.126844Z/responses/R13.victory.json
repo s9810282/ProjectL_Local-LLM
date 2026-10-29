@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:41.7061804Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"스니퍼를 처치하여 승리를 확정 짓고, 다음 턴에도 위협할 수 있는 안전한 선택입니다.\", \"scores\": [10, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 588977600,
+  "load_duration": 1536700,
+  "prompt_eval_count": 902,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 104319000,
+  "eval_count": 49,
+  "eval_duration": 420141000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:43.7143438Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이동 없이 바로 적의 보조 요원을 처치하여 전투력을 제거하는 것이 가장 효과적입니다.\", \"scores\": [8, 5, 6]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 578601900,
+  "load_duration": 2060400,
+  "prompt_eval_count": 1336,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 125551000,
+  "eval_count": 45,
+  "eval_duration": 381040000
+}

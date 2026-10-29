@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:07.0604403Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"기대 피해가 0이고 다음 턴에 위협할 수 있는 최적의 대기 행동입니다.\", \"scores\": [10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 486291900,
+  "load_duration": 1552100,
+  "prompt_eval_count": 684,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 74108000,
+  "eval_count": 40,
+  "eval_duration": 347161000
+}

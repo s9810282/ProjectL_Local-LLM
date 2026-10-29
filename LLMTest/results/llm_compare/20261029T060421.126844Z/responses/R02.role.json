@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:26.2246554Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 전선에서 제거하고, 메인 캐릭터를 위협할 수 있는 상태를 유지하며 점진적으로 근접하는 것이 더 유리합니다.\", \"scores\": [5, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 629428700,
+  "load_duration": 2070500,
+  "prompt_eval_count": 990,
+  "prompt_eval_cached_count": 533,
+  "prompt_eval_duration": 100373000,
+  "eval_count": 55,
+  "eval_duration": 477857000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:39.6213982Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 미래 행동을 완전히 차단하는 것이 주체 공격으로 주체만 공격하는 것보다 더 중요합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 616321300,
+  "load_duration": 1535600,
+  "prompt_eval_count": 1272,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 101670000,
+  "eval_count": 50,
+  "eval_duration": 436660000
+}

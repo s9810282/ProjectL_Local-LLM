@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:49.9187692Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"주인공을 직접 공격하여 HP를 줄이고, 다음 턴에도 위협할 수 있는 최적의 위치를 유지합니다.\", \"scores\": [5, 3, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 637918200,
+  "load_duration": 1542300,
+  "prompt_eval_count": 1100,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 127507000,
+  "eval_count": 52,
+  "eval_duration": 446218000
+}

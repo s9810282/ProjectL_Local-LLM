@@ -1,0 +1,133 @@
+{
+  "view": {
+    "self": {
+      "unit": "Gravekeeper",
+      "hp": 3,
+      "maxHp": 10,
+      "ap": 5,
+      "maxAp": 5
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "akimbo",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "main",
+            "role": "main",
+            "hpBefore": 50,
+            "hpAfter": 40,
+            "killed": false
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 0,
+          "diesNow": true
+        },
+        "beforeMyNextTurn": null,
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": null
+        },
+        "knockback": [
+          {
+            "targetId": "main",
+            "headquartersApproachBefore": 0,
+            "headquartersApproachAfter": 0
+          }
+        ]
+      },
+      {
+        "id": "c2",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "akimbo",
+            "role": "regular",
+            "hpBefore": 10,
+            "hpAfter": 0,
+            "killed": true
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 0,
+          "diesNow": true
+        },
+        "beforeMyNextTurn": null,
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": null
+        },
+        "knockback": []
+      },
+      {
+        "id": "c3",
+        "actions": "move 2",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 3,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 3,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 2
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": 3
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "a_main_hit_die",
+    "c2": "b_regular_kill_die",
+    "c3": "c_retreat"
+  },
+  "ruleChoices": {
+    "victory": "b_regular_kill_die",
+    "role": "b_regular_kill_die"
+  }
+}

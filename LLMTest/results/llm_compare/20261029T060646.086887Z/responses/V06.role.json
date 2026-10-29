@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:53.6437398Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 역할인 주력 캐릭터를 HQ 방향으로 밀어내어 (knockback) 방어 위치를 확보해야 합니다.\", \"scores\": [8, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 593452300,
+  "load_duration": 1535100,
+  "prompt_eval_count": 1301,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 105346000,
+  "eval_count": 49,
+  "eval_duration": 420968000
+}

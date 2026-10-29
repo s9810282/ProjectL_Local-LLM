@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:07.981594Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"공격 행동은 다음 턴에 자기가 죽게 되므로, 현재 턴에서 무손실로 이동하는 것이 더 안전합니다.\", \"scores\": [8, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 615168700,
+  "load_duration": 2713600,
+  "prompt_eval_count": 1147,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 102570000,
+  "eval_count": 51,
+  "eval_duration": 430686000
+}

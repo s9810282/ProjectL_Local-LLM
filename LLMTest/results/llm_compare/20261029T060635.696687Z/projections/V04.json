@@ -1,0 +1,128 @@
+{
+  "view": {
+    "self": {
+      "unit": "Ballista",
+      "hp": 10,
+      "maxHp": 10,
+      "ap": 5,
+      "maxAp": 5
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "regular",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [
+      {
+        "id": "ally_demon",
+        "hp": 5,
+        "maxHp": 5
+      }
+    ],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "main",
+            "role": "main",
+            "hpBefore": 50,
+            "hpAfter": 40,
+            "killed": false
+          },
+          {
+            "id": "regular",
+            "role": "regular",
+            "hpBefore": 10,
+            "hpAfter": 6,
+            "killed": false
+          }
+        ],
+        "allyLosses": [
+          {
+            "id": "ally_demon",
+            "hpBefore": 5,
+            "hpAfter": 0,
+            "killed": true
+          }
+        ],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 10,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 4
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "main",
+            "role": "main",
+            "hpBefore": 50,
+            "hpAfter": 40,
+            "killed": false
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 10,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 4
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "a_lane",
+    "c2": "b_single"
+  },
+  "ruleChoices": {
+    "victory": "b_single",
+    "role": "b_single"
+  }
+}

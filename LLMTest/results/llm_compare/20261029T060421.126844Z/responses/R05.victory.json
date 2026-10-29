@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:29.226504Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이 행동은 다음 턴까지 생존할 수 있는 유일한 안전한 선택입니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 504748300,
+  "load_duration": 3108600,
+  "prompt_eval_count": 916,
+  "prompt_eval_cached_count": 422,
+  "prompt_eval_duration": 103316000,
+  "eval_count": 40,
+  "eval_duration": 349843000
+}

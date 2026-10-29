@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:46.8507255Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이동으로 다음 턴에 적을 위협할 수 있게 하고, 자신의 생존과 주력单位的 접근 비용을 줄입니다.\", \"scores\": [0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 577209400,
+  "load_duration": 1552400,
+  "prompt_eval_count": 1185,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 95322000,
+  "eval_count": 48,
+  "eval_duration": 402912000
+}

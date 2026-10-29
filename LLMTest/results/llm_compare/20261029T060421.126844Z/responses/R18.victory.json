@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:46.313264Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 전력을 약화시키되, 본인이 사망하는 것을 피할 수 있는 유일한 공격 옵션입니다.\", \"scores\": [0, 8, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 632236400,
+  "load_duration": 1547800,
+  "prompt_eval_count": 995,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 115989000,
+  "eval_count": 52,
+  "eval_duration": 453553000
+}

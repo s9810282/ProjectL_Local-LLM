@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:52.3835678Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이동으로 HP 0 상태가 아닌 채 적을 위협할 수 있는 위치로 이동해야 합니다.\", \"scores\": [0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 553210200,
+  "load_duration": 2062900,
+  "prompt_eval_count": 821,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 93959000,
+  "eval_count": 44,
+  "eval_duration": 387968000
+}

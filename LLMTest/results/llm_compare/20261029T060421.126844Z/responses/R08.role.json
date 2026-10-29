@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:37.5773202Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper이 주체 (main) 를 뒤로 밀어 HQ 접근 비용을 증가시켜 플레이어의 공격을 방해해야 합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 596097200,
+  "load_duration": 2064900,
+  "prompt_eval_count": 1054,
+  "prompt_eval_cached_count": 535,
+  "prompt_eval_duration": 109604000,
+  "eval_count": 49,
+  "eval_duration": 422111000
+}

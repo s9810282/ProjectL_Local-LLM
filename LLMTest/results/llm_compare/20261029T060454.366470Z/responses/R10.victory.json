@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:05.9111343Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"기지를 보호하고 다음 턴에 공격할 기회를 얻습니다.\", \"scores\": [0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 480306700,
+  "load_duration": 2075600,
+  "prompt_eval_count": 790,
+  "prompt_eval_cached_count": 431,
+  "prompt_eval_duration": 88218000,
+  "eval_count": 36,
+  "eval_duration": 314958000
+}

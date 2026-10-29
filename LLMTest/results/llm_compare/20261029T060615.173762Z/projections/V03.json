@@ -1,0 +1,119 @@
+{
+  "view": {
+    "self": {
+      "unit": "Demon",
+      "hp": 5,
+      "maxHp": 5,
+      "ap": 3,
+      "maxAp": 3
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "sniper",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "move 2",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 5,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 5,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 3,
+          "after": 1
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 2
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "move 3",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 5,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 5,
+          "hpAfter": 0,
+          "dies": true
+        },
+        "mainApproachCost": {
+          "before": 3,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 1
+        },
+        "knockback": []
+      },
+      {
+        "id": "c3",
+        "actions": "wait",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 5,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 5,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 3,
+          "after": 3
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": 4
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "a_move_two",
+    "c2": "b_move_three",
+    "c3": "c_wait"
+  },
+  "ruleChoices": {
+    "victory": "a_move_two",
+    "role": "a_move_two"
+  }
+}

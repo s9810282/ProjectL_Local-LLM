@@ -1,0 +1,96 @@
+{
+  "view": {
+    "self": {
+      "unit": "Demon",
+      "hp": 3,
+      "maxHp": 5,
+      "ap": 3,
+      "maxAp": 3
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "sniper",
+        "role": "regular",
+        "hp": 1,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "move 1",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 3,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 3,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 2,
+          "after": 1
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 2
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "sniper",
+            "role": "regular",
+            "hpBefore": 1,
+            "hpAfter": 0,
+            "killed": true
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 0,
+          "diesNow": true
+        },
+        "beforeMyNextTurn": null,
+        "mainApproachCost": {
+          "before": 2,
+          "after": 2
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": null
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "b_advance",
+    "c2": "a_trade_kill"
+  },
+  "ruleChoices": {
+    "victory": "b_advance",
+    "role": "b_advance"
+  }
+}

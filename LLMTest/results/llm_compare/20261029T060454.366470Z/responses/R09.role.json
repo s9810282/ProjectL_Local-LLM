@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:05.4155482Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"정규 병사 regular_a 를 처치하여 적의 주요 병력을 제거하고, 알리 스카우트 ally_scout 를 희생하더라도 전황을 유리하게 만들 수\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 729814600,
+  "load_duration": 1582400,
+  "prompt_eval_count": 1103,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 114151000,
+  "eval_count": 61,
+  "eval_duration": 545260000
+}

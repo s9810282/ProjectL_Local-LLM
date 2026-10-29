@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:44.0558588Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"주인공에게 직접 공격하여 다음 턴까지 생존할 확률을 높이고, 다음 턴에 적을 위협할 수 있는 위치로 이동합니다.\", \"scores\": [9, 5, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 660755300,
+  "load_duration": 1546300,
+  "prompt_eval_count": 1207,
+  "prompt_eval_cached_count": 662,
+  "prompt_eval_duration": 109738000,
+  "eval_count": 57,
+  "eval_duration": 477685000
+}

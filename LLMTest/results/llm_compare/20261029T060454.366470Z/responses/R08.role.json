@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:04.0224754Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 핵심 역할인 플레이어 유닛을 본부에서 멀리 밀어내는 효과 (knockback) 가 c1 에서만 제공되므로 승리 확률을 높\", \"scores\": [10, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 711148300,
+  "load_duration": 2580300,
+  "prompt_eval_count": 1054,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 105179000,
+  "eval_count": 59,
+  "eval_duration": 533279000
+}

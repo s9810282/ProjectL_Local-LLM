@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:39.0034781Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 미래 행동을 제거하는 것이 주체나 메인 캐릭터를 공격하는 것보다 우선합니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 589982400,
+  "load_duration": 2641000,
+  "prompt_eval_count": 1144,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 102063000,
+  "eval_count": 48,
+  "eval_duration": 415567000
+}

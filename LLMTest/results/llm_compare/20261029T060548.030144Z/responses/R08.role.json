@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:57.8927585Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 역할인 주요 캐릭터를 HQ 방향으로 밀어내어 (knockback) 방어 효율을 높이는 것이 더 중요합니다.\", \"scores\": [8, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 620224000,
+  "load_duration": 2581200,
+  "prompt_eval_count": 1307,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 106700000,
+  "eval_count": 50,
+  "eval_duration": 433587000
+}

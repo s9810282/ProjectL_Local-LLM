@@ -1,0 +1,113 @@
+{
+  "view": {
+    "self": {
+      "unit": "Ballista",
+      "hp": 10,
+      "maxHp": 10,
+      "ap": 5,
+      "maxAp": 5
+    },
+    "players": [
+      {
+        "id": "main",
+        "role": "main",
+        "hp": 50,
+        "maxHp": 50
+      },
+      {
+        "id": "sniper",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      },
+      {
+        "id": "regular_b",
+        "role": "regular",
+        "hp": 10,
+        "maxHp": 10
+      }
+    ],
+    "allies": [],
+    "headquarters": {
+      "hp": 3,
+      "maxHp": 3
+    },
+    "candidates": [
+      {
+        "id": "c1",
+        "actions": "attack",
+        "battle": "continues",
+        "hits": [
+          {
+            "id": "main",
+            "role": "main",
+            "hpBefore": 50,
+            "hpAfter": 40,
+            "killed": false
+          },
+          {
+            "id": "regular_b",
+            "role": "regular",
+            "hpBefore": 10,
+            "hpAfter": 3,
+            "killed": false
+          }
+        ],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 2,
+          "hpAfter": 8,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 0
+        },
+        "next": {
+          "canThreatenNext": true,
+          "nearestPlayerDistance": 4
+        },
+        "knockback": []
+      },
+      {
+        "id": "c2",
+        "actions": "move 1",
+        "battle": "continues",
+        "hits": [],
+        "allyLosses": [],
+        "headquartersHpAfter": 3,
+        "self": {
+          "hpAfter": 10,
+          "diesNow": false
+        },
+        "beforeMyNextTurn": {
+          "expectedDamage": 0,
+          "hpAfter": 10,
+          "dies": false
+        },
+        "mainApproachCost": {
+          "before": 0,
+          "after": 3
+        },
+        "next": {
+          "canThreatenNext": false,
+          "nearestPlayerDistance": 5
+        },
+        "knockback": []
+      }
+    ]
+  },
+  "aliases": {
+    "c1": "a_lane_shot",
+    "c2": "b_retreat"
+  },
+  "ruleChoices": {
+    "victory": "a_lane_shot",
+    "role": "a_lane_shot"
+  }
+}

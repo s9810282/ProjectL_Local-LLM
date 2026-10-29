@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:54.2643025Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이동으로 다음 턴에 주체를 위협할 수 있는 위치로 이동하며, 공격 시 자기가 죽을 위험이 있습니다.\", \"scores\": [5, 8, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 619005400,
+  "load_duration": 2062900,
+  "prompt_eval_count": 1207,
+  "prompt_eval_cached_count": 662,
+  "prompt_eval_duration": 110504000,
+  "eval_count": 52,
+  "eval_duration": 445674000
+}

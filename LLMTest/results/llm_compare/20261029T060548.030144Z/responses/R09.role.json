@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:59.1939305Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 미래 행동을 제거하는 것이 더 우선이며, 동맹 유닛의 손실은 현재 상황에서는 수용 가능한 수준입니다.\", \"scores\": [5, 8]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 644995500,
+  "load_duration": 2070800,
+  "prompt_eval_count": 1356,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 113809000,
+  "eval_count": 54,
+  "eval_duration": 452479000
+}

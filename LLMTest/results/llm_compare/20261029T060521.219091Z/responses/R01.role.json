@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:22.7871454Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이 행동으로 주역이 즉시 사망하여 승리하므로 가장 우선순위가 높습니다.\", \"scores\": [10, 9]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 613219500,
+  "load_duration": 2072100,
+  "prompt_eval_count": 1222,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 210775000,
+  "eval_count": 40,
+  "eval_duration": 341030000
+}

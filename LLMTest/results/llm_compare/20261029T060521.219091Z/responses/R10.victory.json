@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:33.1263017Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"기대되는 피해로 인해 다음 턴에 사망하지만, c2 는 즉시 사망하므로 c1 이 더 낫습니다.\", \"scores\": [9, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 573548700,
+  "load_duration": 2065700,
+  "prompt_eval_count": 1026,
+  "prompt_eval_cached_count": 667,
+  "prompt_eval_duration": 87604000,
+  "eval_count": 48,
+  "eval_duration": 414794000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:42.0147119Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"일반 유닛을 처치하여 미래의 공격 기회를 완전히 차단하는 것이 가장 우선입니다.\", \"scores\": [10, 5, 5]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 566290700,
+  "load_duration": 2071300,
+  "prompt_eval_count": 1397,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 118362000,
+  "eval_count": 44,
+  "eval_duration": 382286000
+}

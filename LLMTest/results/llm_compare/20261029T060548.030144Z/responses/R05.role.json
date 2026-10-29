@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:54.3940563Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"Gravekeeper의 다음 턴까지 생존해야 HQ 보호와 추격에 유리하므로, 다음 턴에 사망하는 c2 대신 주체에게 6 점 피해를 주는 c1을섀\", \"scores\": [0, 1]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 774070300,
+  "load_duration": 2065700,
+  "prompt_eval_count": 1280,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 103951000,
+  "eval_count": 63,
+  "eval_duration": 598934000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:00.4053734Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Demon unit must survive to threaten the main character next turn; c2 keeps the '\",\"scores\": [0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 656505500,
+  "load_duration": 3106500,
+  "prompt_eval_count": 1154,
+  "prompt_eval_cached_count": 795,
+  "prompt_eval_duration": 87675000,
+  "eval_count": 40,
+  "eval_duration": 496927000
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:46.9835707Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"Gravekeeper의 핵심 역할인 HQ 보호와 플레이어 유닛의 거리를 유지하는 것이 최우선이며, c3만이 이를 보장합니다.\", \"scores\": [0, 0, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 668746900,
+  "load_duration": 2086700,
+  "prompt_eval_count": 1106,
+  "prompt_eval_cached_count": 542,
+  "prompt_eval_duration": 116543000,
+  "eval_count": 56,
+  "eval_duration": 476253000
+}

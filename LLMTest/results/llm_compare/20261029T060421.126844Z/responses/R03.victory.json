@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:04:26.8426922Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"일반 유닛을 처치하여 플레이어의 공격력을 제거하고 다음 턴에 주체에게 위협을 가할 수 있는 최선의 기회를 잡습니다.\", \"scores\": [5, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 616497100,
+  "load_duration": 1555200,
+  "prompt_eval_count": 877,
+  "prompt_eval_cached_count": 422,
+  "prompt_eval_duration": 101186000,
+  "eval_count": 54,
+  "eval_duration": 464932000
+}

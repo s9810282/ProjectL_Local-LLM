@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:45.4107159Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"이동은 불가능한 상태이므로, 주사위를 맞고 죽더라도 적의 정규병을 즉시 처치하는 것이 최선입니다.\", \"scores\": [10, 9, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 656605600,
+  "load_duration": 1892900,
+  "prompt_eval_count": 1236,
+  "prompt_eval_cached_count": 695,
+  "prompt_eval_duration": 111380000,
+  "eval_count": 55,
+  "eval_duration": 472523000
+}

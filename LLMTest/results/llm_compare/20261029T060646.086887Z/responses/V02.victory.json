@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:06:48.2170393Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"c2는 본거지를 파괴하여 패배하므로, 주력 캐릭터를 공격하는 c1을 선택합니다.\", \"scores\": [8, 0]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 583165400,
+  "load_duration": 1545100,
+  "prompt_eval_count": 1158,
+  "prompt_eval_cached_count": 692,
+  "prompt_eval_duration": 103564000,
+  "eval_count": 47,
+  "eval_duration": 408280000
+}

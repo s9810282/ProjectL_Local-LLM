@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-10-29T06:05:26.7740071Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이 행동은 다음 턴까지 생존할 수 있는 반면, c1 은 다음 턴에 사망하여 매우 위험합니다.\", \"scores\": [5, 9]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 566792500,
+  "load_duration": 1536100,
+  "prompt_eval_count": 1152,
+  "prompt_eval_cached_count": 658,
+  "prompt_eval_duration": 104303000,
+  "eval_count": 47,
+  "eval_duration": 404494000
+}
