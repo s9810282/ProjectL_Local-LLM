@@ -16,9 +16,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// <summary>명령 또는 자동 진행 한 번의 최종 처리 사실. 미리보기 응답은 포함하지 않는다.</summary>
     public sealed class CombatResult
     {
+        public long BattleInstanceId { get; }
+        public long ControllerTurnSequence { get; }
         public int Sequence { get; }
         public CombatProcessingKind Kind { get; }
         public int CommandNumber { get; }
+        public MovementUndoResult UndoMovement { get; }
         public bool Accepted { get; }
 
         /// <summary>수락 시 빈 문자열, 거절 시 Core의 사유 코드. 표시 문구가 아니다.</summary>
@@ -29,17 +32,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public EntityId ActorId { get; }
         public MovementDestination? Movement { get; }
         public MovementPathResult PathMovement { get; }
-        public CheckpointReturnResult ReturnMovement { get; }
-        public CombatDrawSettlement Draw { get; }
+        public UnitActionUseSettlementSnapshot ActionUseSettlement { get; }
         public IReadOnlyList<CombatEvent> Events { get; }
         public IReadOnlyList<AttackBlockedContact> BlockedContacts { get; }
 
         public CombatResult(int sequence, CombatProcessingKind kind, int commandNumber,
             bool accepted, string reason, AttackResult? attack = null, StageOutcomeSnapshot? outcome = null,
             CombatCommandKind commandKind = CombatCommandKind.None, EntityId actorId = default,
-            MovementDestination? movement = null, CombatDrawSettlement draw = null, IReadOnlyList<CombatEvent> events = null,
-            MovementPathResult pathMovement = null, CheckpointReturnResult returnMovement = null,
-            IReadOnlyList<AttackBlockedContact> blockedContacts = null)
+            MovementDestination? movement = null, IReadOnlyList<CombatEvent> events = null,
+            MovementPathResult pathMovement = null,
+            IReadOnlyList<AttackBlockedContact> blockedContacts = null, long battleInstanceId = 0,
+            long controllerTurnSequence = 0, UnitActionUseSettlementSnapshot actionUseSettlement = null, MovementUndoResult undoMovement = null)
         {
             if (sequence <= 0)
                 throw new ArgumentOutOfRangeException(nameof(sequence));
@@ -51,6 +54,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentException("수락은 빈 사유, 거절은 비어 있지 않은 사유 코드가 필요합니다.",
                     nameof(reason));
 
+            if (battleInstanceId < 0 || controllerTurnSequence < 0) throw new ArgumentOutOfRangeException(nameof(battleInstanceId));
+            BattleInstanceId = battleInstanceId; ControllerTurnSequence = controllerTurnSequence;
             Sequence = sequence;
             BlockedContacts = AttackBlockedContact.CopyCollection(blockedContacts);
             Kind = kind;
@@ -59,15 +64,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Reason = reason;
             Attack = attack;
             Outcome = outcome;
-            CommandKind = commandKind; ActorId = actorId; Movement = movement; Draw = draw;
-            if ((!accepted && (pathMovement != null || returnMovement != null)) ||
-                (pathMovement != null && returnMovement != null))
+            CommandKind = commandKind; ActorId = actorId; Movement = movement;
+            if (!accepted && pathMovement != null)
                 throw new ArgumentException("이동 결과는 수락된 명령의 단일 이동 유형에만 넣을 수 있습니다.");
             PathMovement = pathMovement;
-            ReturnMovement = returnMovement;
+            ActionUseSettlement = actionUseSettlement;
+            if (!accepted && actionUseSettlement != null) throw new ArgumentException("거절 결과에는 행동 정산이 없습니다.");
             Events = Array.AsReadOnly((events ?? Array.Empty<CombatEvent>()).ToArray());
             if (Events.Any(e => e == null) || (!accepted && Events.Count != 0))
                 throw new ArgumentException("거절 결과 또는 null 사건을 게시할 수 없습니다.");
+            MovementUndoResult.Validate(accepted, commandKind, actorId, undoMovement, actionUseSettlement, Events, movement, pathMovement, attack);
+            UndoMovement = undoMovement;
         }
     }
 }

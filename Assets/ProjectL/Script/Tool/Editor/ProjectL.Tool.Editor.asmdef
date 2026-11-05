@@ -1,7 +1,16 @@
 {
     "name": "ProjectL.Tool.Editor",
     "rootNamespace": "ProjectL.Tool.Editor",
-    "references": [],
+    "references": [
+        "ProjectL.Tool.Runtime",
+        "Framework",
+        "ProjectL.Core.Contracts",
+        "ProjectL.Core.Domain",
+        "Cinemachine",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.Collections"
+    ],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

@@ -14,9 +14,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Targeting.Item
         [SerializeField] private TargetingSplash splash = TargetingSplash.None;
         [Tooltip("Splash가 None이면 0, 그 외에는 1 이상입니다. 100을 넘는 배율도 허용합니다.")]
         [SerializeField, Min(0)] private int splashPercent;
+        [SerializeField] private TargetingChoiceAngle choiceAngle = TargetingChoiceAngle.Unrestricted;
 
         internal int MethodKey => methodKey;
 
-        public override IData GetData() => new TargetingMethodData(methodKey, shape, choiceMode, splash, splashPercent);
+        public override IData GetData() => new TargetingMethodData(methodKey, shape, choiceMode, splash, splashPercent, choiceAngle);
     }
 }

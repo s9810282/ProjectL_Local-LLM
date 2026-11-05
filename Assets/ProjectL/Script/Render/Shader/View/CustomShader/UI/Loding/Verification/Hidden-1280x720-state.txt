@@ -1,0 +1,1 @@
+phase=Hidden rootAlpha=0 rootRect=(x:-500.44, y:-281.50, width:1000.89, height:563.00) windRect=(x:-500.44, y:-281.50, width:1000.89, height:563.00) windCull=False inheritedAlpha=0 shaderPhase=0 rendererDepth=-1 cameraScene=

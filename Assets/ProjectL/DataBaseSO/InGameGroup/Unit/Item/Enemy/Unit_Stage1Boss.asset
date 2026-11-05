@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7811fa7707c4c7b8f0f515bb17006fa, type: 3}
+  m_Name: Unit_Stage1Boss
+  m_EditorClassIdentifier: 
+  key: 18
+  role: 0
+  ownerEligibility: 1
+  killRewardConfigured: 1
+  killRewardEligible: 1
+  killGold: 300
+  killExperience: 500
+  canMoveVoluntarily: 0
+  canBasicAttack: 0
+  isForcedMovementImmune: 1
+  footprintWidth: 1
+  footprintHeight: 1
+  maxHealth: 100
+  physicalDefense: 5
+  targetingMethod: {fileID: 11400000, guid: 342d3be8bd50a2240a43f33d4ce0bfa0, type: 2}
+  attackRange: 4
+  category: 50
+  attackPower: 5
+  wallDelivery: 1
+  wallPropagation: 1
+  priority: 30
+  traits:
+  - rid: 8374416328686829568
+  - rid: 8374416328686829569
+  - rid: 8374416328686829570
+  references:
+    version: 2
+    RefIds:
+    - rid: 8374416328686829568
+      type: {class: NecromancyTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        summonedUnit: {fileID: 11400000, guid: e3fff6ce2cc044c7a30d09eb7b151c36, type: 2}
+        maxLivingSummons: 2
+        firstActionDelay: 7
+    - rid: 8374416328686829569
+      type: {class: RoarTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        hitThreshold: 5
+    - rid: 8374416328686829570
+      type: {class: KnockbackTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        distanceCells: 3

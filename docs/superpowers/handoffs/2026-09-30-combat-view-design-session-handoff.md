@@ -133,7 +133,7 @@ PlayerInputActions → UnityInputBridge → InputSystem.Submit → (Layer 허용
 | **I** 인터페이스 분리 | 필요한 만큼만 받는다: ReadSink/WriteSink 분리, `IHasViewQuery`처럼 좁은 계약 | Core 측에는 ReadSink만, View에는 필요한 WriteSink만. `IBufferQuery`는 모두 노출하므로(D1, 관례로만 보호) 모듈에는 필요한 싱크만 꺼내 보관한다 |
 | **D** 의존성 역전 | 구체 타입·씬 검색이 아니라 **서비스 인터페이스**에 의존한다. `PostBindService`로 받는다. 조립은 Factory(루트)가 한다 | 지침 §25 `GetComponent`/`Find` 남용 금지. Core.Application은 Buffer를 모른다. Global 입력은 스테이지 입력 구체 타입을 모른다(루트가 주입) |
 
-**과하게 하지 않는다.** 지침 §27 "과도한 추상화 금지", §28 "추가 전 확인 순서"를 따른다. 쓰임이 하나뿐인 인터페이스나 계층은 만들지 않는다.
+**과하게 하지 않는다.** 지침 §27 "과도한 추상화 금지", §28 "추가 전 확인 순서"를 따른다. 미래의 교체 가능성만을 위한 인터페이스나 계층은 만들지 않는다. 다만 구현·호출자가 하나라는 이유만으로 분리를 기각하지 않는다. 현재 기능의 변경 범위를 실제로 줄이는 구체 클래스·조립 경계는 §4.6으로 평가한다.
 
 ### 4.3 Framework 계약 (MUST, 프로그래머 가이드 §6)
 
@@ -173,6 +173,19 @@ PlayerInputActions → UnityInputBridge → InputSystem.Submit → (Layer 허용
 - **Core 로직은 건드리지 않는다.** 필요한 것은 Core 전달 문서에 요청으로 적는다(`CLAUDE.md`).
 - FieldCamera, Architecture는 다른 View 작업자 영역이다.
 - Framework 공용 파일(ServiceKeys, Factory, Group, asmdef, `JobType`)은 필요한 줄만 바꾸고 민형님께 공유 문서를 쓴다.
+
+### 4.6 기능 변경의 독립성 — 조립과 기능 구현 분리
+
+2026-10-14 사용자 추가 기준이다. §4.1~4.5를 대체하지 않고 함께 점검한다.
+
+> 조립 책임과 기능 구현을 분리해서, 한 기능을 수정할 때 관련 없는 기능의 코드까지 불필요하게 읽거나 수정·검증하지 않아도 되게 한다.
+
+- **조립**은 객체 생성, 설정, 의존성 연결을 맡는다. **기능 구현**은 해당 기능의 표시·동작을 맡는다. 공통 수명 순서와 공개 호출 계약은 명시된 소유자가 조정한다. 단일 화면 진입점이 모든 하위 객체를 직접 생성하거나 기능을 직접 구현해야 한다는 뜻은 아니다.
+- 판단 단위는 실제 변경 시나리오다. 기능 내부 표현 변경, 의존성 추가·교체, 공통 계약·수명 변경을 나눠 각각 **수정할 파일, 이해해야 할 코드, 검증할 동작**이 어디까지인지 비교한다. 기능 내부 변경은 해당 구현과 관련 검증에 머무르고, 조립 변경은 조립 지점에 모이는 방향을 선호한다.
+- 클래스 수·줄 수·위임 메서드 수, 새 상태의 유무만으로 분리를 승인하거나 기각하지 않는다. 무상태 표시 변환도 독립된 변경 이유가 있으면 분리할 수 있다. 기존 Presenter로 책임을 모을 수 있는지 먼저 보고, 필요하면 응집된 기능 클래스를 둔다. 모든 피드백을 새 거대 클래스에 옮기거나 의존성을 통째로 담은 객체로 감추는 것은 개선 근거가 아니다.
+- 상태·규칙·자원 소유권은 하나로 유지한다. 필요한 의존성만 명시적으로 주입하며, 분리를 이유로 Buffer 사실·비용 슬롯·매핑·해제 상태를 복제하지 않는다. 내부 협력 객체를 모두 Framework System·Service로 등록하지 않는다.
+- 검증 범위는 실제 영향으로 정한다. 공용 슬롯·Mapper·취소·Release 등 공유 계약이 바뀌면 영향받는 기능과 통합 회귀를 함께 확인한다. 기능 분리는 다른 기능에 대한 검증이 항상 0이라는 보장이 아니라, **관련 없는 확인이 관성적으로 따라붙지 않도록 경계를 만드는 것**이다.
+- 설계·리뷰에는 대표 변경 시나리오의 분리 전후 비교와 남는 공통 경계를 적는다. "책임이 하나다", "상태 중복이 없다"는 설명만으로 한 클래스에 구현을 계속 모으는 결론을 내리지 않는다.
 
 ## 5. 설계에 들어갈 때 참고할 기존 결정
 
@@ -216,7 +229,7 @@ PlayerInputActions → UnityInputBridge → InputSystem.Submit → (Layer 허용
 | [입력 설계](../specs/2026-09-30-stage-input-design.md) / [계획](../plans/2026-09-30-stage-input-plan.md) | 입력 규칙 I1~I9, 결정 D1~D7, §11 구현 결과 |
 | [Buffer 설계](../specs/2026-09-29-combat-view-buffer-design.md) / [계획](../plans/2026-09-29-combat-view-buffer-plan.md) | 입력 Buffer 규칙 V1~V9 |
 | [Core 요청](2026-09-29-combat-view-buffer-core-requests.md) | R1~R6 |
-| [천명님 캐릭터 Buffer 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md) | Core 이전 방향(Task 0~2 완료) |
+| 천명님 캐릭터 Buffer 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) | Core 이전 방향(Task 0~2 완료) |
 | [대응표](../specs/2026-09-28-stage-view-buffer-mapping.md) | 옛 전투 View 코드 분류 |
 | [Framework 개발 지침](../framework/Framework%20Development%20Guidelines.md) | 설계 원칙(§2 역할, §11 Build 후 불변, §20 이벤트, §23 DB vs 런타임, §25~28) |
 | [프로그래머 가이드](../../../Assets/ProjectL/Script/Systems/Documentation/framework-programmer-guide.md) | FW-001~016, DR-001~012 |

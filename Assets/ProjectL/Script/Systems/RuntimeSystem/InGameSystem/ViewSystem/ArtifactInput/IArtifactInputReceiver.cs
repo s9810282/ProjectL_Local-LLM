@@ -1,6 +1,6 @@
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
 {
-    /// <summary>맵 View가 받는 입력입니다. 아티팩트 판별과 명령 기록은 수신 View가 담당합니다.</summary>
+    /// <summary>로비 아티팩트 팝업(드래그 컨트롤러·팝업 컨트롤러의 입력 수신자)이 받는 입력입니다. 아티팩트 판별과 명령 기록은 수신 View가 담당합니다.</summary>
     public interface IArtifactInputReceiver
     {
         void PointerMoved(float screenX, float screenY);

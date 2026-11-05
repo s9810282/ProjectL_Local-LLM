@@ -1,0 +1,375 @@
+{
+  "checkpoint": "R1 accepted working-tree source immediately before R2; HEAD7f4e1d9dcaa5d5248a635d23c7ad9fcd5b1789fb plus uncommitted R0/R1",
+  "capabilityImplementations": {
+    "IEffectAttackResolvedRule": 0,
+    "IEffectKillChainActivatedRule": 0,
+    "IEffectDisplacementResolvedRule": 0
+  },
+  "productionRequestConstructors": 0,
+  "referenceLines": [
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackDeliveryExecutor.cs",
+      "line": 46,
+      "text": "FollowUpAttackExecutor.ResolveAttack(plan, world, arrival, deliveredVictims, attackEventIndex);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackKnockbackCalculator.cs",
+      "line": 161,
+      "text": "FollowUpAttackExecutor.ResolveDisplacement(plan, world, arrival, deliveredVictims, id, displacement.CompletedSteps);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 18,
+      "text": "internal static class FollowUpAttackExecutor"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 24,
+      "text": "var kills = new List<EffectAttributedKill>();"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 29,
+      "text": "kills.Add(new EffectAttributedKill(c.Final.EntityId, c.Final.Owner, c.Expected.Anchor.Value));"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 32,
+      "text": "kills.Add(new EffectAttributedKill(s.Final.EntityId, s.Final.Owner, s.Expected.Anchor));"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 34,
+      "text": "var context = new AttackResolvedEffectContext(actor, plan.Aim,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 37,
+      "text": "foreach (var request in plan.Engine.PlanAttackResolved(CombatCommandEffects.Capture(actor, plan.Profile), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 45,
+      "text": "var context = new KillChainActivatedEffectContext(actor, recipientId, plan.Cause,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 47,
+      "text": "foreach (var request in plan.Engine.PlanKillChainActivated(CombatCommandEffects.Capture(actor, plan.Profile), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 55,
+      "text": "var context = new DisplacementResolvedEffectContext(actor, targetId, completedSteps, plan.Cause,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 57,
+      "text": "foreach (var request in plan.Engine.PlanDisplacementResolved(CombatCommandEffects.Capture(actor, plan.Profile), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 61,
+      "text": "private static void ExecuteTarget(EffectFollowUpRequest request, CommandAttackPlan parent,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 69,
+      "text": "var id = candidates[request.Delivery == FollowUpDeliveryKind.RandomTarget ? arrival.ChooseRandom(candidates.Length) : 0];"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 141,
+      "text": "internal static void Execute(EffectFollowUpRequest request, CommandAttackPlan parent,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+      "line": 149,
+      "text": "if (request.Delivery != FollowUpDeliveryKind.SameDirection)"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/KillChainAttackCalculator.cs",
+      "line": 133,
+      "text": "FollowUpAttackExecutor.ResolveKillChain(parent, world, projection, deliveredVictims, victim.EntityId);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 197,
+      "text": "public IReadOnlyList<EffectFollowUpRequest> PlanAttackResolved(IReadOnlyList<EffectRuleBinding> bindings, in AttackResolvedEffectContext context)"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 199,
+      "text": "var requests = new List<EffectFollowUpRequest>();"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 202,
+      "text": "if (binding.Rule is not IEffectAttackResolvedRule rule) continue;"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 203,
+      "text": "foreach (var request in rule.PlanAttackResolved(new EffectRuleInput(binding.Origin, binding.ExpectedState), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 212,
+      "text": "public IReadOnlyList<EffectFollowUpRequest> PlanKillChainActivated(IReadOnlyList<EffectRuleBinding> bindings, in KillChainActivatedEffectContext context)"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 214,
+      "text": "var requests = new List<EffectFollowUpRequest>();"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 217,
+      "text": "if (binding.Rule is not IEffectKillChainActivatedRule rule) continue;"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 218,
+      "text": "foreach (var request in rule.PlanKillChainActivated(new EffectRuleInput(binding.Origin, binding.ExpectedState), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 227,
+      "text": "public IReadOnlyList<EffectFollowUpRequest> PlanDisplacementResolved(IReadOnlyList<EffectRuleBinding> bindings, in DisplacementResolvedEffectContext context)"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 229,
+      "text": "var requests = new List<EffectFollowUpRequest>();"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 232,
+      "text": "if (binding.Rule is not IEffectDisplacementResolvedRule rule) continue;"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+      "line": 233,
+      "text": "foreach (var request in rule.PlanDisplacementResolved(new EffectRuleInput(binding.Origin, binding.ExpectedState), context))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+      "line": 11,
+      "text": "internal readonly struct EffectAttributedKill"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+      "line": 25,
+      "text": "public EffectAttributedKill(EntityId targetId, Owner owner, CellCoord deathAnchor)"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+      "line": 33,
+      "text": "internal sealed class AttackResolvedEffectContext"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+      "line": 43,
+      "text": "public IReadOnlyList<EffectAttributedKill> Kills"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+      "line": 59,
+      "text": "public AttackResolvedEffectContext(CharacterCombatFacts actor, AttackAim aim, IReadOnlyList<EffectAttributedKill> kills,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/DisplacementResolvedEffectContext.cs",
+      "line": 9,
+      "text": "internal sealed class DisplacementResolvedEffectContext"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/DisplacementResolvedEffectContext.cs",
+      "line": 35,
+      "text": "public DisplacementResolvedEffectContext(CharacterCombatFacts actor, EntityId targetId, int completedSteps,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/KillChainActivatedEffectContext.cs",
+      "line": 9,
+      "text": "internal sealed class KillChainActivatedEffectContext"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/KillChainActivatedEffectContext.cs",
+      "line": 31,
+      "text": "public KillChainActivatedEffectContext(CharacterCombatFacts actor, EntityId recipientId, EffectCausalChain cause,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 11,
+      "text": "internal enum FollowUpDeliveryKind"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 17,
+      "text": "internal sealed class EffectFollowUpRequest"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 27,
+      "text": "public FollowUpDeliveryKind Delivery"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 51,
+      "text": "public EffectFollowUpRequest(EffectOriginKey origin, EntityId actorId, FollowUpDeliveryKind delivery,"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 56,
+      "text": "if (!Enum.IsDefined(typeof(FollowUpDeliveryKind), delivery))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 64,
+      "text": "delivery == FollowUpDeliveryKind.FixedTarget && ids.Length != 1 ||"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+      "line": 65,
+      "text": "delivery == FollowUpDeliveryKind.SameDirection && (ids.Length != 0 || aim.Kind != AttackAimKind.Direction))"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/ICombatEffectEngine.cs",
+      "line": 27,
+      "text": "IReadOnlyList<EffectFollowUpRequest> PlanAttackResolved(IReadOnlyList<EffectRuleBinding> bindings, in AttackResolvedEffectContext context);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/ICombatEffectEngine.cs",
+      "line": 28,
+      "text": "IReadOnlyList<EffectFollowUpRequest> PlanKillChainActivated(IReadOnlyList<EffectRuleBinding> bindings, in KillChainActivatedEffectContext context);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/ICombatEffectEngine.cs",
+      "line": 29,
+      "text": "IReadOnlyList<EffectFollowUpRequest> PlanDisplacementResolved(IReadOnlyList<EffectRuleBinding> bindings, in DisplacementResolvedEffectContext context);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 21,
+      "text": "internal interface IEffectAttackResolvedRule : ICombatEffectRule"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 23,
+      "text": "System.Collections.Generic.IReadOnlyList<EffectFollowUpRequest> PlanAttackResolved(in EffectRuleInput input, in AttackResolvedEffectContext context);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 26,
+      "text": "internal interface IEffectKillChainActivatedRule : ICombatEffectRule"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 28,
+      "text": "System.Collections.Generic.IReadOnlyList<EffectFollowUpRequest> PlanKillChainActivated(in EffectRuleInput input, in KillChainActivatedEffectContext context);"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 31,
+      "text": "internal interface IEffectDisplacementResolvedRule : ICombatEffectRule"
+    },
+    {
+      "file": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+      "line": 33,
+      "text": "System.Collections.Generic.IReadOnlyList<EffectFollowUpRequest> PlanDisplacementResolved(in EffectRuleInput input, in DisplacementResolvedEffectContext context);"
+    },
+    {
+      "file": "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+      "line": 41,
+      "text": "var request = new EffectFollowUpRequest(TraitEffectOrigin.Create(plan.Actor.EntityId, TraitKey.LuckyBullet),"
+    },
+    {
+      "file": "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+      "line": 42,
+      "text": "plan.Actor.EntityId, (FollowUpDeliveryKind)delivery, default, new[] { new EntityId(2) }, 100, false, EffectCausalChain.Empty);"
+    },
+    {
+      "file": "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+      "line": 43,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, world.CreateArrivalProjection(plan), new HashSet<EntityId>());"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 109,
+      "text": "var request = new EffectFollowUpRequest(TraitEffectOrigin.Create(plan.Actor.EntityId, TraitKey.LuckyBullet),"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 110,
+      "text": "plan.Actor.EntityId, (FollowUpDeliveryKind)kind, default, new[] { new EntityId(2) }, 100, false, EffectCausalChain.Empty);"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 111,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, arrival, new HashSet<EntityId>());"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 115,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, arrival, new HashSet<EntityId>());"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 378,
+      "text": "var request = new EffectFollowUpRequest(TraitEffectOrigin.Create(plan.Actor.EntityId, TraitKey.LuckyBullet),"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 379,
+      "text": "plan.Actor.EntityId, (FollowUpDeliveryKind)kind, default, new[] { new EntityId(2) }, 100, false, EffectCausalChain.Empty);"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 380,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, arrival, new HashSet<EntityId>());"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 430,
+      "text": "var request = new EffectFollowUpRequest(TraitEffectOrigin.Create(plan.Actor.EntityId, TraitKey.LuckyBullet),"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 431,
+      "text": "plan.Actor.EntityId, FollowUpDeliveryKind.FixedTarget, default, new[] { new EntityId(2) }, 100, false, EffectCausalChain.Empty);"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 432,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, arrival, new HashSet<EntityId>());"
+    },
+    {
+      "file": "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+      "line": 433,
+      "text": "FollowUpAttackExecutor.Execute(request, plan, world, arrival, new HashSet<EntityId>());"
+    }
+  ],
+  "removedSourceAndMeta": [
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs.meta",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs.meta",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/DisplacementResolvedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/DisplacementResolvedEffectContext.cs.meta",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/KillChainActivatedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/KillChainActivatedEffectContext.cs.meta",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs.meta"
+  ],
+  "changedOwnersAndTests": [
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackDeliveryExecutor.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackKnockbackCalculator.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/KillChainAttackCalculator.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/ICombatEffectEngine.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+    "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+    "Assets/Tests/EditMode/LegacyEnhancementRetirementTests.cs",
+    "Assets/Tests/EditMode/SacrificeTraitTests.cs"
+  ]
+}

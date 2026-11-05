@@ -1,0 +1,2347 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+OcclusionCullingSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_OcclusionBakeSettings:
+    smallestOccluder: 5
+    smallestHole: 0.25
+    backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_Fog: 0
+  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogMode: 3
+  m_FogDensity: 0.01
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientIntensity: 1
+  m_AmbientMode: 0
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_HaloStrength: 0.5
+  m_FlareStrength: 1
+  m_FlareFadeSpeed: 3
+  m_HaloTexture: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
+  m_DefaultReflectionMode: 0
+  m_DefaultReflectionResolution: 128
+  m_ReflectionBounces: 1
+  m_ReflectionIntensity: 1
+  m_CustomReflection: {fileID: 0}
+  m_Sun: {fileID: 0}
+  m_UseRadianceAmbientProbe: 0
+--- !u!157 &3
+LightmapSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
+  m_GISettings:
+    serializedVersion: 2
+    m_BounceScale: 1
+    m_IndirectOutputScale: 1
+    m_AlbedoBoost: 1
+    m_EnvironmentLightingMode: 0
+    m_EnableBakedLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
+  m_LightmapEditorSettings:
+    serializedVersion: 12
+    m_Resolution: 2
+    m_BakeResolution: 40
+    m_AtlasSize: 1024
+    m_AO: 0
+    m_AOMaxDistance: 1
+    m_CompAOExponent: 1
+    m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
+    m_Padding: 2
+    m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
+    m_TextureCompression: 1
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 1
+    m_PVRSampling: 1
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 1
+    m_PVRFilteringGaussRadiusAO: 1
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
+  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingSettings: {fileID: 0}
+--- !u!196 &4
+NavMeshSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_BuildSettings:
+    serializedVersion: 3
+    agentTypeID: 0
+    agentRadius: 0.5
+    agentHeight: 2
+    agentSlope: 45
+    agentClimb: 0.4
+    ledgeDropHeight: 0
+    maxJumpAcrossDistance: 0
+    minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
+    manualTileSize: 0
+    tileSize: 256
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
+    debug:
+      m_Flags: 0
+  m_NavMeshData: {fileID: 0}
+--- !u!1 &1001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1002}
+  - component: {fileID: 1003}
+  m_Layer: 0
+  m_Name: TraitActivationPreview
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2002}
+  - {fileID: 4002}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1df5e7d676cb4e4691ae7e1873f5d718, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: aa1d605f11e3d924bb057df8ce63f4f7, type: 2}
+  field: {fileID: 2003}
+  units: {fileID: 4003}
+  output: {fileID: 5003}
+--- !u!1 &2001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2002}
+  - component: {fileID: 2003}
+  m_Layer: 0
+  m_Name: Field
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3002}
+  m_Father: {fileID: 1002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afefb050b44a45c080bd5d6b6eb3829e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cellsRoot: {fileID: 3002}
+  playerZoneColor: {r: 0.55, g: 0.75, b: 1, a: 1}
+  railColor: {r: 0.85, g: 0.75, b: 0.45, a: 1}
+  hoverColor: {r: 1, g: 1, b: 0.6, a: 1}
+  hoverValidColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+  hoverInvalidColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  attackHoverColor: {r: 1, g: 1, b: 0.6, a: 1}
+  attackHoverValidColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+  attackHoverInvalidColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  affectedColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+  movementDraftColor: {r: 0.05, g: 1, b: 0.75, a: 1}
+  hazardRangeColor: {r: 1, g: 0.15686275, b: 0, a: 1}
+  enemyAttackRangeColor: {r: 1, g: 0.15662651, b: 0, a: 1}
+  attackRangeColor: {r: 1, g: 0.483896, b: 0.24056602, a: 1}
+  enemyMoveRangeColor: {r: 0.45, g: 0.85, b: 1, a: 1}
+  allyHoverMoveRangeColor: {r: 0.45, g: 0.85, b: 1, a: 1}
+  moveRangeColor: {r: 0.10849059, g: 1, b: 0.20388347, a: 1}
+  activeActorColor: {r: 1, g: 0.95, b: 0.3, a: 1}
+  objectiveTargetColor: {r: 1, g: 0.25, b: 0.75, a: 1}
+  fillAlpha: 0.183
+  trajectoryColor: {r: 1, g: 0.95, b: 0.75, a: 1}
+  trajectoryBlockedColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  knockbackDestinationColor: {r: 1, g: 0.8509804, b: 0.2, a: 1}
+  knockbackColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  knockbackBlockedColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  knockbackImmuneColor: {r: 0.65, g: 0.65, b: 0.65, a: 1}
+--- !u!1 &3001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3002}
+  m_Layer: 0
+  m_Name: Cells
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4002}
+  - component: {fileID: 4003}
+  m_Layer: 0
+  m_Name: Units
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1524133634}
+  m_Father: {fileID: 1002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efb394a4e50b424b9a5e11522b65bb94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitsRoot: {fileID: 4002}
+  healthLabelTemplate: {fileID: 1524133635}
+  healthLabelOffset: {x: 0, y: 3, z: 0}
+  unitHudPrefab: {fileID: 2357416071669939133, guid: 00cab0740211fab4b98acc6b915bba01, type: 3}
+  unitHudOffset: {x: 0, y: 1.5, z: 0}
+  unitHudScreenScale: 1.5428572
+  obstacleHudOffset: {x: 0, y: 1, z: 0}
+  obstacleHudScreenScale: 1.5428572
+--- !u!1 &5001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5002}
+  - component: {fileID: 5003}
+  - component: {fileID: 5004}
+  - component: {fileID: 5005}
+  - component: {fileID: 5006}
+  - component: {fileID: 5007}
+  m_Layer: 0
+  m_Name: TraitPreviewOutput
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.9238795}
+  m_LocalPosition: {x: 4, y: 12, z: -8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &5003
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.12, g: 0.14, b: 0.18, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.1
+  far clip plane: 500
+  field of view: 60
+  orthographic: 1
+  orthographic size: 8
+  m_Depth: -1
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!114 &5004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72ece51f2901e7445ab60da3685d6b5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShowDebugText: 0
+  m_ShowCameraFrustum: 1
+  m_IgnoreTimeScale: 0
+  m_WorldUpOverride: {fileID: 0}
+  m_UpdateMethod: 2
+  m_BlendUpdateMethod: 1
+  m_DefaultBlend:
+    m_Style: 1
+    m_Time: 0.5
+    m_CustomCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  m_CustomBlends: {fileID: 0}
+  m_CameraCutEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_CameraActivatedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &5005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 1
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+--- !u!81 &5006
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  m_Enabled: 1
+--- !u!114 &5007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nonRigidbodyVelocity: 0
+  attenuationObject: {fileID: 0}
+--- !u!1 &594652442
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 594652444}
+  - component: {fileID: 594652443}
+  - component: {fileID: 594652445}
+  - component: {fileID: 594652446}
+  - component: {fileID: 594652447}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &594652443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7216d008ba51de74ab083de646bb7348, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerIdDefinitions:
+  - key: b38bf67dc65347f4b6b7fe01686bfb7f
+    displayName: AMBGM
+  - key: a1ee485028f04a57b7b693d1f72be58f
+    displayName: Unit
+  - key: d2641c0dc8f0434a8965f8d5b8b0a08a
+    displayName: SFX
+  busCatalogs:
+  - {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  busPauseSettings:
+  - busGuid: '{c76f3247-cc7b-4f63-ab00-932026952d0c}'
+    busPath: bus:/
+    pauseOnGamePause: 0
+  - busGuid: '{370283c4-4a77-41f5-8fcb-d0471f3e7f42}'
+    busPath: bus:/AMB
+    pauseOnGamePause: 0
+  - busGuid: '{ceaec4bb-5ef5-48b6-a2e4-8d00ecf6b12f}'
+    busPath: bus:/BGM
+    pauseOnGamePause: 0
+  - busGuid: '{f51df435-d9c1-4065-a827-d0915dfb2a81}'
+    busPath: bus:/PostFX
+    pauseOnGamePause: 1
+  - busGuid: '{69c46a4c-ccbc-4543-8d7a-b48957baa623}'
+    busPath: bus:/PostFX/Artifact
+    pauseOnGamePause: 0
+  - busGuid: '{2b907c47-8c84-44d8-9c0c-22937c7b9e07}'
+    busPath: bus:/PostFX/Obstacle
+    pauseOnGamePause: 1
+  - busGuid: '{ef5de5af-8a57-446e-b088-cff52c6df72d}'
+    busPath: bus:/PostFX/SFX
+    pauseOnGamePause: 1
+  - busGuid: '{ac0f88bc-b237-430b-9cf2-1aa6fd413dbf}'
+    busPath: bus:/PostFX/Unit
+    pauseOnGamePause: 1
+  - busGuid: '{48c1e1ed-4318-4633-9ca3-18c63054de6a}'
+    busPath: bus:/PostFX/Unit/Enemy
+    pauseOnGamePause: 0
+  - busGuid: '{473cddbc-065a-48b0-a55d-4aaf56122e51}'
+    busPath: bus:/Reverb
+    pauseOnGamePause: 1
+  - busGuid: '{84d202a5-304d-477d-b48f-6d76cbbd4df2}'
+    busPath: bus:/UI
+    pauseOnGamePause: 0
+  logRegister: 0
+  logWarnings: 1
+--- !u!4 &594652444
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &594652445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: BGM
+    displayName: Stage
+    selectedEventPath: event:/BGM/Stage
+    selectedEventGuid: '{318bbf6d-cc75-4308-8a7c-be29047a9ab1}'
+    playbackMode: 0
+    playOnStart: 1
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: BGM
+      idString: 3971289681:440833136
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 3
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - Title
+      - StageSelect
+      - Day
+      - Night
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 3e0d3e7a32d44393a43535cee45b5c1c
+      targetParameterName: BGM
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 3
+      labelValue: Title
+      labelIndex: 0
+    - presetId: cd877ea412aa471aa2abc5cdc1a460a9
+      targetParameterName: BGM
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 3
+      labelValue: StageSelect
+      labelIndex: 1
+    - presetId: e5fb9a07df1e4a07bc056e437df1121e
+      targetParameterName: BGM
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 3
+      labelValue: Day
+      labelIndex: 2
+    - presetId: d4c99b1d998a4917b96d1b06991d9112
+      targetParameterName: BGM
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 3
+      labelValue: Night
+      labelIndex: 3
+    currentPresetIndex: -1
+  - slotName: AMB
+    displayName: SelectScreen
+    selectedEventPath: event:/PostFX/AMB/SelectScreen
+    selectedEventGuid: '{f4efb598-b2ab-4063-8964-65e8640c54bb}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: UIClick
+    displayName: Click
+    selectedEventPath: event:/UI/Click
+    selectedEventGuid: '{00398ca5-04ca-42df-8808-dc189076138d}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 2
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: UIHover
+    displayName: Hover
+    selectedEventPath: event:/UI/Hover
+    selectedEventGuid: '{e01c7449-0944-4f71-8f9b-89524c6ef26c}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 2
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: UIReward
+    displayName: Reward
+    selectedEventPath: event:/UI/Reward
+    selectedEventGuid: '{13b3f167-90d5-4460-a177-13b035d4fcf6}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 2
+    stealOldestInstance: 0
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 6
+    displayName: GameStart
+    selectedEventPath: event:/UI/GameStart
+    selectedEventGuid: '{e9cddcbb-1fb5-408a-a208-932cc0972233}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 7
+    displayName: Mark
+    selectedEventPath: event:/PostFX/SFX/Unit/D_Buff/Mark
+    selectedEventGuid: '{9a325c61-c937-464a-90ad-273a1a8a9778}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 7
+    displayName: StageChanger
+    selectedEventPath: event:/BGM/StageChanger
+    selectedEventGuid: '{78889dcf-03c6-429c-a0af-ba176c09efa3}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  playerKey:
+    key: b38bf67dc65347f4b6b7fe01686bfb7f
+  legacyPlayerId: 
+--- !u!114 &594652446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: UnitPick
+    displayName: Pick
+    selectedEventPath: event:/PostFX/SFX/Unit/Pick
+    selectedEventGuid: '{113557c6-e24a-49dc-8a98-da37be0cfd68}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 0
+      value: 1
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 3a392ac2da244830810e6c2fbc3947f7
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 366aecbb8e1d412d91fe0f80a505d9a3
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: b642d961a8014f4cb019ae6ee7bdb040
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 5
+      labelValue: Rider
+      labelIndex: 2
+    - presetId: a83b94f1bcbb44f383f9a26c59191069
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 5
+      labelValue: Heavy
+      labelIndex: 3
+    - presetId: 738c273b4fd3491db29c45a1292824c2
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 5
+      labelValue: Cannon
+      labelIndex: 4
+    - presetId: 8816cd63f01e4fca83fc35e94a1e583e
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 5
+      minValue: 0
+      maxValue: 5
+      labelValue: Enemy
+      labelIndex: 5
+    currentPresetIndex: -1
+  - slotName: UnitCancel
+    displayName: Cancel
+    selectedEventPath: event:/PostFX/SFX/Unit/Cancel
+    selectedEventGuid: '{5bc7c7f7-fd9b-49ec-a773-c41a163b28f2}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 0
+      value: 1
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 4a6b554bfa8e4a8fa190ef7fcd4b74d6
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 28ab89b8707e4be9b5923851fa8fb766
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 041016ca1df24596b5672ff48dfc48c8
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 5
+      labelValue: Rider
+      labelIndex: 2
+    - presetId: e29dbb47259947c8b8cfdc0bfc8e78a0
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 5
+      labelValue: Heavy
+      labelIndex: 3
+    - presetId: 569eeb4ecf9844ef8ef73a8f63ddc075
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 5
+      labelValue: Cannon
+      labelIndex: 4
+    currentPresetIndex: -1
+  - slotName: UnitMovement
+    displayName: Movement
+    selectedEventPath: event:/PostFX/SFX/Unit/Movement
+    selectedEventGuid: '{c4efcc2a-bb89-4444-b7e0-abbe804c9a33}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 0
+      value: 1
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 00a6c7ada7d84692a0d1e95910f9abbc
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: fa6a8943087c419cb3c6378e7ad71f40
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 3dd92f7a41a8415dad5cc5d29d33017d
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 5
+      labelValue: Rider
+      labelIndex: 2
+    - presetId: 36385d1353244b3aab65288b3ac62a08
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 5
+      labelValue: Heavy
+      labelIndex: 3
+    - presetId: 1ebca798258d486ba0939b3ad7419365
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 5
+      labelValue: Cannon
+      labelIndex: 4
+    - presetId: a7746198582449ab84b26774e7429dea
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 5
+      minValue: 0
+      maxValue: 5
+      labelValue: Enemy
+      labelIndex: 5
+    currentPresetIndex: -1
+  - slotName: UnitDead
+    displayName: Dead
+    selectedEventPath: event:/PostFX/SFX/Unit/Dead
+    selectedEventGuid: '{1c0e59b3-741f-490a-b301-04f9959ae055}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 0
+      value: 1
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 62eccae7abde4036948288339321d887
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 4a24529b3b9943bf963fe421bde7959f
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 80e57e94d75b4a90b001dfb1a2a5fba2
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 5
+      labelValue: Rider
+      labelIndex: 2
+    - presetId: 0d27fe51da554ae5b9944f00ec9fc836
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 5
+      labelValue: Heavy
+      labelIndex: 3
+    - presetId: d2acfd148a73464cb7594a57ee45bd5f
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 5
+      labelValue: Cannon
+      labelIndex: 4
+    - presetId: bfc01b4713e04151b704364f5bf4b0e1
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 5
+      minValue: 0
+      maxValue: 5
+      labelValue: Enemy
+      labelIndex: 5
+    currentPresetIndex: -1
+  - slotName: UnitAttack
+    displayName: Attack
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/Attack
+    selectedEventGuid: '{7ced36ab-72ec-4ec6-a94b-d3a7d8914a5f}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: AbilityActive
+      idString: 1342662476:929127323
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - False
+      - True
+    - name: UnitDetailType
+      idString: 3541570850:1740262346
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 17
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - Akimbo
+      - Sniper
+      - Batender
+      - Cowboy
+      - Hammer
+      - Shotgun
+      - GraveKeeper
+      - Umbrella
+      - Catus
+      - Minecart
+      - Balistar
+      - Pickel
+      - Shovel
+      - E_Cannon
+      - Boss_1
+      - Shield
+      - Explosion
+      - Impact
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: 85c5cf25516f4693a86b8dabbe48f843
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 17
+      labelValue: Akimbo
+      labelIndex: 0
+    - presetId: ceece55b5ed040c9a885efec22d601ca
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 17
+      labelValue: Akimbo
+      labelIndex: 0
+    - presetId: a4543871a6434a13b4d241220630d171
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 17
+      labelValue: Sniper
+      labelIndex: 1
+    - presetId: 3ea2d65334e14f0aa2988bf8399efa50
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 17
+      labelValue: Batender
+      labelIndex: 2
+    - presetId: e5dbb519ad42473484e4fcfb3f82ab6c
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 17
+      labelValue: Cowboy
+      labelIndex: 3
+    - presetId: a8fc80c95af04985a9569503791cbdb4
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 17
+      labelValue: Hammer
+      labelIndex: 4
+    - presetId: 20b058385cce477b93075e2323798c1e
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 5
+      minValue: 0
+      maxValue: 17
+      labelValue: Shotgun
+      labelIndex: 5
+    - presetId: edafcec4ecb044f8914da27951925cf6
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 6
+      minValue: 0
+      maxValue: 17
+      labelValue: GraveKeeper
+      labelIndex: 6
+    - presetId: 9e63911b1dae4e18ab796e5bc23879b5
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 7
+      minValue: 0
+      maxValue: 17
+      labelValue: Umbrella
+      labelIndex: 7
+    - presetId: 531c5f9ca0d44510b03517c54a770974
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 8
+      minValue: 0
+      maxValue: 17
+      labelValue: Catus
+      labelIndex: 8
+    - presetId: 476bbdd5e8e14172b60aef431c5fef67
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 9
+      minValue: 0
+      maxValue: 17
+      labelValue: Minecart
+      labelIndex: 9
+    - presetId: c3c1c171c47b422d843e182c5e9de5d4
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 10
+      minValue: 0
+      maxValue: 17
+      labelValue: Balistar
+      labelIndex: 10
+    - presetId: cd1aa4055234426da6aaa847105e6f46
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 11
+      minValue: 0
+      maxValue: 17
+      labelValue: Pickel
+      labelIndex: 11
+    - presetId: 2a642c3eec9d412fba06888ca76bc3b7
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 12
+      minValue: 0
+      maxValue: 17
+      labelValue: Shovel
+      labelIndex: 12
+    - presetId: f044d9db82cd4157909640a95516db91
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 13
+      minValue: 0
+      maxValue: 17
+      labelValue: E_Cannon
+      labelIndex: 13
+    - presetId: 9eeae6b1560a44d284a3a2e13c7b1ee3
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 14
+      minValue: 0
+      maxValue: 17
+      labelValue: Boss_1
+      labelIndex: 14
+    - presetId: 01861a934b834aa0bfa136b515506d75
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 15
+      minValue: 0
+      maxValue: 17
+      labelValue: Shield
+      labelIndex: 15
+    - presetId: 62ab5ad0bed84298ae59076b510cff6b
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 16
+      minValue: 0
+      maxValue: 17
+      labelValue: Explosion
+      labelIndex: 16
+    - presetId: 27128826cf7047f19adaa4e1a754a320
+      targetParameterName: UnitDetailType
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 17
+      minValue: 0
+      maxValue: 17
+      labelValue: Impact
+      labelIndex: 17
+    currentPresetIndex: -1
+  - slotName: ObsDamaged
+    displayName: Damaged
+    selectedEventPath: event:/PostFX/SFX/Obstacle/Damaged
+    selectedEventGuid: '{2f02d20c-3af5-4311-ae81-a826759d026f}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: ObsBroken
+    displayName: Broken
+    selectedEventPath: event:/PostFX/SFX/Obstacle/Broken
+    selectedEventGuid: '{07cd8946-18d2-4c59-90a4-6c9054749e6d}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Artifact
+    displayName: Cancel
+    selectedEventPath: event:/PostFX/SFX/Artifact/Cancel
+    selectedEventGuid: '{b072ac55-0f24-43d7-85e8-5ca246281b1b}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Artifact
+    displayName: Pick
+    selectedEventPath: event:/PostFX/SFX/Artifact/Pick
+    selectedEventGuid: '{a6f0ccf8-18c4-4126-9084-b80f61bcd1d0}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Artifact
+    displayName: Placement
+    selectedEventPath: event:/PostFX/SFX/Artifact/Placement
+    selectedEventGuid: '{b22130ac-625b-410d-94ed-f73b380f1f79}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 12
+    displayName: ObjectActive
+    selectedEventPath: event:/PostFX/SFX/Object/ObjectActive
+    selectedEventGuid: '{bc955ad4-747d-46bd-83d6-c8d627c4b759}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Object
+      idString: 3920689037:999423724
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - Mine
+      - Badge
+      - Flag
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: UnitDamaged
+    displayName: Damaged
+    selectedEventPath: event:/PostFX/SFX/Unit/Damaged
+    selectedEventGuid: '{58c161a5-a313-488f-8c25-bb4bf85051df}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 0
+      value: 1
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: d265cac97e1941b3be70dc89ad8d2645
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 5
+      labelValue: None
+      labelIndex: 0
+    - presetId: 4f2c68669fd04448abc2bc82370e3526
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 5
+      labelValue: Base
+      labelIndex: 1
+    - presetId: 4049149f34794a8887ef5a5acfccabd5
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 5
+      labelValue: Rider
+      labelIndex: 2
+    - presetId: 0bae306a4e42421f8bfcbf76f46a834d
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 3
+      minValue: 0
+      maxValue: 5
+      labelValue: Heavy
+      labelIndex: 3
+    - presetId: a6ed507aa0a8466c895407b2668ac531
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 4
+      minValue: 0
+      maxValue: 5
+      labelValue: Cannon
+      labelIndex: 4
+    - presetId: 9636f0c99b0c42828c75915d1e3c4404
+      targetParameterName: Category
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 1
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 5
+      minValue: 0
+      maxValue: 5
+      labelValue: Enemy
+      labelIndex: 5
+    currentPresetIndex: -1
+  playerKey:
+    key: a1ee485028f04a57b7b693d1f72be58f
+  legacyPlayerId: 
+--- !u!114 &594652447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: Event Slot 0
+    displayName: Tornado
+    selectedEventPath: event:/PostFX/SFX/Terrain/Tornado
+    selectedEventGuid: '{d1ad7667-196d-44fa-8d6b-28f3b9db738f}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 1
+    displayName: Tornado_Ended
+    selectedEventPath: event:/PostFX/SFX/Terrain/Tornado_Ended
+    selectedEventGuid: '{fe7f879f-7dc9-40dc-b70c-17069d2f0417}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 3
+    displayName: MineExplosion
+    selectedEventPath: event:/PostFX/SFX/Terrain/MineExplosion
+    selectedEventGuid: '{6a9321da-5ccc-4e21-bb87-a094ea87d8e0}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 2
+    displayName: FallStone
+    selectedEventPath: event:/PostFX/SFX/Terrain/FallStone
+    selectedEventGuid: '{39c7cb60-b3a4-446c-9ddb-98b65c4e5b53}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 4
+    displayName: Haboob
+    selectedEventPath: event:/PostFX/SFX/Terrain/Haboob
+    selectedEventGuid: '{579d063a-4ad6-4fae-aa36-c6c84763c47c}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 5
+    displayName: WeakTerrian
+    selectedEventPath: event:/PostFX/SFX/Terrain/WeakTerrian
+    selectedEventGuid: '{b1e9cf3a-7379-4c4e-8218-e10d0cda52c3}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: CrackLv
+      idString: 2801227969:53620063
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - 0
+      - 1
+      - 2
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: feefbf4129624f4382c8029ce23b2788
+      targetParameterName: CrackLv
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 2
+      labelValue: 0
+      labelIndex: 0
+    - presetId: 216631d5abbe4e168d19a2e3648d30d9
+      targetParameterName: CrackLv
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 2
+      labelValue: 1
+      labelIndex: 1
+    - presetId: ec2bd0d298084df1bb35a37415953ab4
+      targetParameterName: CrackLv
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 2
+      minValue: 0
+      maxValue: 2
+      labelValue: 2
+      labelIndex: 2
+    currentPresetIndex: -1
+  - slotName: Event Slot 6
+    displayName: Mark
+    selectedEventPath: event:/PostFX/SFX/Unit/D_Buff/Mark
+    selectedEventGuid: '{9a325c61-c937-464a-90ad-273a1a8a9778}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 7
+    displayName: Train
+    selectedEventPath: event:/PostFX/SFX/Boss/Train
+    selectedEventGuid: '{3549fee8-d62a-4237-8141-241bc6b7c613}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 8
+    displayName: TrainBell
+    selectedEventPath: event:/PostFX/SFX/Boss/TrainBell
+    selectedEventGuid: '{925d96fa-9369-4354-969c-e181d0bfcaa5}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  playerKey:
+    key: d2641c0dc8f0434a8965f8d5b8b0a08a
+  legacyPlayerId:
+--- !u!1 &1524133633
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1524133634}
+  - component: {fileID: 1524133636}
+  - component: {fileID: 1524133635}
+  m_Layer: 0
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1524133634
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1524133633}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 20, y: 5}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1524133635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1524133633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Sample text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 6
+  m_fontSizeBase: 6
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 0
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  _SortingLayer: 0
+  _SortingLayerID: 0
+  _SortingOrder: 0
+  m_hasFontAssetChanged: 0
+  m_renderer: {fileID: 1524133636}
+  m_maskType: 0
+--- !u!23 &1524133636
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1524133633}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 594652444}
+  - {fileID: 1002}
+  - {fileID: 5002}

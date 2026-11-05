@@ -17,7 +17,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         RunEnded,
         ContinuationRejected,
         /// <summary>보유 메인 캐릭터가 없다. 새 Run 시작(로스터 설치)을 거치지 않고 전투에 들어가려 한 경우다.</summary>
-        RosterNotInitialized
+        RosterNotInitialized,
+        /// <summary>현재 맵 진입 경로에서 지원하지 않는 스테이지 종류 또는 역할이다.</summary>
+        UnsupportedStageType,
+        EnhancementShopUnavailable,
+        /// <summary>필수 성장 선택 또는 마지막 결과의 소비 확인을 기다리고 있다.</summary>
+        PendingTraitGrowth
     }
 
     /// <summary>승인된 명령에 필요한 Buffer 기록만 기술하며 진행 상태를 소유하지 않는다.</summary>

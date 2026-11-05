@@ -11,7 +11,7 @@ namespace ProjectL.Tests.Core
 {
     /// <summary>
     /// Task 10b: 확정된 대상별 피해 단계 순서와 상성 통합을 검증한다.
-    /// 순서는 Trait 가산 → Category 상성 → PhysicalDefense → Heavy 피격 경감 → 최종 피해다.
+    /// 공격자 가산 뒤 Category 상성 → PhysicalDefense를 검증한다. 피격 경감과 최소 피해는 Attack이 조립한다.
     /// </summary>
     public sealed class CategoryDamagePipelineTests
     {
@@ -24,7 +24,7 @@ namespace ProjectL.Tests.Core
         // 하나의 다중 대상 공격에서 피격자 Category마다 독립적인 배율이 적용된다.
         [TestCase(CategoryKey.Heavy, 7, 3)]   // Rider->Heavy 0.7: 2.8 -> 3
         [TestCase(CategoryKey.Cannon, 12, 5)] // 4 * 1.2 = 4.8 -> 5
-        [TestCase(CategoryKey.Base, 10, 4)]   // Rider->Base 1.0: 4
+        [TestCase(CategoryKey.Main, 10, 4)]   // Rider->Base 1.0: 4
         public void Calculate_AppliesIndependentMultiplierPerDefender(
             CategoryKey defender, int expectedNumerator, int expectedDamage)
         {
@@ -33,8 +33,7 @@ namespace ProjectL.Tests.Core
             TargetDamageBreakdown breakdown = pipeline.Calculate(
                 damageBeforeMatchup: 4,
                 attackerCategory: CategoryKey.Rider,
-                defenderCategory: defender,
-                incomingReduction: 0);
+                defenderCategory: defender);
 
             Assert.That(breakdown.MatchupNumerator, Is.EqualTo(expectedNumerator));
             Assert.That(breakdown.DamageAfterMatchup, Is.EqualTo(expectedDamage));
@@ -48,9 +47,9 @@ namespace ProjectL.Tests.Core
             TargetDamagePipeline pipeline = CreatePipeline();
 
             TargetDamageBreakdown riderIntoHeavy = pipeline.Calculate(
-                10, CategoryKey.Rider, CategoryKey.Heavy, 0);
+                10, CategoryKey.Rider, CategoryKey.Heavy);
             TargetDamageBreakdown heavyIntoRider = pipeline.Calculate(
-                10, CategoryKey.Heavy, CategoryKey.Rider, 0);
+                10, CategoryKey.Heavy, CategoryKey.Rider);
 
             Assert.That(riderIntoHeavy.DamageAfterMatchup, Is.EqualTo(7));
             Assert.That(heavyIntoRider.DamageAfterMatchup, Is.EqualTo(15));
@@ -65,42 +64,27 @@ namespace ProjectL.Tests.Core
         {
             TargetDamagePipeline pipeline = CreatePipeline();
 
-            TargetDamageBreakdown breakdown = pipeline.Calculate(damage, attacker, defender, 0);
+            TargetDamageBreakdown breakdown = pipeline.Calculate(damage, attacker, defender);
 
             Assert.That(breakdown.DamageAfterMatchup, Is.EqualTo(expected));
         }
 
-        // [사용자 확정] Heavy 경감은 상성과 PhysicalDefense 뒤에 적용된다.
-        // Rider->Heavy 입력 4: 상성 먼저면 2.8->3, 그 뒤 50% floor 경감 1 => 최종 2.
-        // Heavy 먼저였다면 4->2->1이 되므로 순서가 결과를 바꾼다.
+        // 상성 5 * 0.7을 반올림한 4에서 방어 50%를 적용하면 2다. 방어를 먼저 적용하면 1이 된다.
         [Test]
-        public void Calculate_AppliesIncomingReductionAfterMatchupAndDefense()
+        public void Calculate_AppliesDefenseAfterMatchup()
         {
             TargetDamagePipeline pipeline = CreatePipeline();
 
             TargetDamageBreakdown breakdown = pipeline.Calculate(
-                damageBeforeMatchup: 4,
+                damageBeforeMatchup: 5,
                 attackerCategory: CategoryKey.Rider,
                 defenderCategory: CategoryKey.Heavy,
-                incomingReduction: 1); // 3의 50% floor
+                physicalDefense: 50);
 
-            Assert.That(breakdown.DamageAfterMatchup, Is.EqualTo(3), "상성이 먼저 적용된다.");
-            Assert.That(breakdown.DamageAfterPhysicalDefense, Is.EqualTo(3));
-            Assert.That(breakdown.IncomingReduction, Is.EqualTo(1));
-            Assert.That(breakdown.FinalDamage, Is.EqualTo(2), "Heavy 먼저 적용한 1이 아니다.");
-        }
-
-        // 경감량은 남은 피해를 넘지 않는다.
-        [Test]
-        public void Calculate_CapsReductionAtRemainingDamage()
-        {
-            TargetDamagePipeline pipeline = CreatePipeline();
-
-            TargetDamageBreakdown breakdown = pipeline.Calculate(
-                2, CategoryKey.Base, CategoryKey.Base, incomingReduction: 99);
-
-            Assert.That(breakdown.IncomingReduction, Is.EqualTo(2));
-            Assert.That(breakdown.FinalDamage, Is.Zero);
+            Assert.That(breakdown.DamageAfterMatchup, Is.EqualTo(4));
+            Assert.That(breakdown.DamageAfterPhysicalDefense, Is.EqualTo(2));
+            Assert.That(breakdown.IncomingReduction, Is.Zero);
+            Assert.That(breakdown.FinalDamage, Is.EqualTo(2));
         }
 
         // Category가 없는 대상은 상성을 적용하지 않고 통과시킨다. 가짜 Base를 만들지 않는다.
@@ -110,7 +94,7 @@ namespace ProjectL.Tests.Core
             TargetDamagePipeline pipeline = CreatePipeline();
 
             TargetDamageBreakdown breakdown = pipeline.Calculate(
-                4, CategoryKey.Rider, defenderCategory: null, incomingReduction: 0);
+                4, CategoryKey.Rider, defenderCategory: null);
 
             Assert.That(breakdown.MatchupNumerator, Is.EqualTo(breakdown.MatchupDenominator));
             Assert.That(breakdown.FinalDamage, Is.EqualTo(4));
@@ -122,9 +106,30 @@ namespace ProjectL.Tests.Core
             TargetDamagePipeline pipeline = CreatePipeline();
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                pipeline.Calculate(-1, CategoryKey.Base, CategoryKey.Base, 0));
+                pipeline.Calculate(-1, CategoryKey.Main, CategoryKey.Main));
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                pipeline.Calculate(1, CategoryKey.Base, CategoryKey.Base, -1));
+                pipeline.Calculate(1, CategoryKey.Main, CategoryKey.Main, physicalDefense: -1));
+        }
+
+        // 방어력은 백분율이며 소수점을 버린다. 중간 계산에서는 최소 피해를 보정하지 않는다.
+        [TestCase(100, 5, 95)]
+        [TestCase(20, 5, 19)]
+        [TestCase(10, 5, 9)]
+        [TestCase(5, 0, 5)]
+        [TestCase(1, 5, 0)]
+        [TestCase(5, 100, 0)]
+        [TestCase(5, int.MaxValue, 0)]
+        [TestCase(int.MaxValue, 5, 2040109464)]
+        [TestCase(0, 5, 0)]
+        public void Calculate_PhysicalDefenseReducesPercentageWithoutMinimum(int damage, int defense, int afterDefense)
+        {
+            TargetDamageBreakdown breakdown = CreatePipeline().Calculate(
+                damage, CategoryKey.Main, CategoryKey.Main, physicalDefense: defense);
+
+            Assert.That(breakdown.DamageAfterPhysicalDefense, Is.EqualTo(afterDefense));
+            Assert.That(breakdown.FinalDamage, Is.EqualTo(afterDefense));
+            Assert.That(breakdown.IncomingReduction, Is.Zero);
+            Assert.That(breakdown.DamageAfterReceivedPercentages, Is.EqualTo((decimal)afterDefense));
         }
     }
 }

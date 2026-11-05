@@ -9,84 +9,141 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 {
     /// <summary>유닛 하나의 표시. 전투 수치와 예상 결과는 호출자가 계산해서 전달한다.</summary>
     [DisallowMultipleComponent]
-    public sealed class UnitHUD : MonoBehaviour, IUIInputReceiver
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "UnitHUD")]
+    public sealed class UnitHUD : UIWidgetBase, IUIInputReceiver, IUISecondaryClickReceiver
     {
+        private bool _ownerVisible = true;
+        internal bool OwnerVisible => _ownerVisible;
+        internal void SetOwnerVisible(bool visible)
+        {
+            if (_ownerVisible == visible && gameObject.activeSelf == visible) return;
+            _ownerVisible = visible;
+            if (visible) Open();
+            else Hide();
+        }
+        public override void Open()
+        {
+            if (_ownerVisible) base.Open();
+            else base.Hide();
+        }
+
+        [Header("Position")]
+        [Tooltip("Rider 유닛 HUD에 추가할 월드 Y 보정입니다. 양수면 위로 올립니다.")]
+        [SerializeField] private float riderHudYOffset;
+
+        /// <summary>화면 투영 전에 HUD 기준점에 더할 월드 위치 보정입니다.</summary>
+        internal Vector3 AdditionalWorldOffset => _isRider ? Vector3.up * riderHudYOffset : Vector3.zero;
+
+        [SerializeField] private UnitHUDInfoPanel infoPanel;
+        [Tooltip("기본 HUD의 HP바 옆에 표시할 병과 이미지입니다. InfoPanelMask 밖의 같은 HUD에 둡니다.")]
+        [SerializeField] private Image categoryImage;
+        internal UnitHUDInfoPanel InfoPanel => infoPanel;
+        internal EntityId EntityId => _entityId;
+
+        [Header("Damage")]
+        [SerializeField] private UnitDamageText damageText;
+        internal UnitDamageText DamageTemplate => damageText != null ? damageText :
+            throw new InvalidOperationException($"[UnitHUD] '{name}': damageText 템플릿이 필요합니다.");
+
+        /// <summary>결과 재생 측에서 전달한 확정 피해를 표시한다.</summary>
+        public void ShowDamage(int damage)
+        {
+            if (damageText != null) damageText.Show(damage);
+        }
+
+
         [Header("Health")]
-        [SerializeField] private Slider healthSlider;
-        [SerializeField] private TMP_Text healthText;
+        [SerializeField] private Image healthFill;
+        [SerializeField] private Image healthSubFill;
+        [Tooltip("HP/SubFill 뒤에 겹치는 보호막입니다. 왼쪽부터 현재 HP와 보호막의 합계까지 채웁니다.")]
+        [SerializeField] private Image shieldFill;
+        [Tooltip("Fill이 HP 1%를 줄이는 시간(초). 0이면 즉시 반영한다.")]
+        [SerializeField, Min(0f)] private float fillSecondsPerPercent = 0.003f;
+        [Tooltip("Fill 감소 완료 후 SubFill이 HP 1%를 줄이는 시간(초). 0이면 즉시 반영한다.")]
+        [SerializeField, Min(0f)] private float subFillSecondsPerPercent = 0.01f;
+        [SerializeField, InspectorName("Curr HP")] private TMP_Text healthText;
+        [SerializeField, InspectorName("Max HP")] private TMP_Text maxHealthText;
         [SerializeField] private Color playerHealthColor = Color.green;
         [SerializeField] private Color enemyHealthColor = Color.red;
-        [Header("Turn Order (Count)")]
-        [Tooltip("Timeline UI 작업 중에는 비활성화한다. 기존 Count 표시를 복원할 때 활성화한다.")]
-        [SerializeField] private bool showTurnOrder = false;
-        [SerializeField] private TMP_Text turnOrderText;
-        [SerializeField] private Image turnOrderImage;
+        [SerializeField] private Color obstacleHealthColor = Color.gray;
+        [Tooltip("예상 피해 구간의 Alpha가 원본→최소→원본으로 왕복하는 시간(초). 클수록 느리다.")]
+        [SerializeField, Min(0.05f)] private float healthPreviewPulseDuration = 1.2f;
+        [Tooltip("예상/현재 체력 텍스트를 한 번 바꾸기까지 걸리는 시간(초). 기본값은 HP 페이드 편도 시간의 두 배다.")]
+        [SerializeField, Min(0.05f)] private float healthPreviewTextInterval = 1.2f;
+        [Tooltip("예상 피해 구간이 가장 흐려졌을 때의 Alpha 배율.")]
+        [SerializeField, Range(0f, 1f)] private float healthPreviewMinAlpha = 0.15f;
 
-        [Header("Action Cost")]
-        [SerializeField] private Transform actionCostRoot;
-        [Tooltip("코스트 하나를 나타내는 Image 프리팹. MaxCost만큼 생성하고 재사용한다.")]
-        [SerializeField] private Image actionCostPrefab;
-        [Tooltip("Image 사이의 수평 간격(UI 단위).")]
-        [SerializeField, Min(0f)] private float actionCostSpacing = 10f;
-        [SerializeField] private Color playerCostColor = new(0f, 0.45f, 1f, 1f);
-        [SerializeField] private Color enemyCostColor = new(1f, 0.5f, 0f, 1f);
-        [SerializeField] private Color spentCostColor = Color.gray;
-        [SerializeField] private float spentCostRotation = 45f;
-        [Tooltip("소모/회복 시 회전 전환 시간(초). 클수록 느리며, 0이면 즉시 전환한다.")]
-        [SerializeField, Min(0f)] private float spentCostRotationDuration = 0.35f;
-        [SerializeField, Range(0f, 1f)] private float previewAlpha = 0.4f;
-        [Tooltip("미확정/예상 소모 코스트 알파가 반투명→원본→반투명으로 왕복하는 횟수(초당).")]
-        [SerializeField, Min(0.01f)] private float previewPulseSpeed = 1f;
+        [Header("Item")]
+        [Tooltip("HP바 왼쪽 위 고정 아이템입니다. 같은 HUD의 Mask/Status Root 밖에 둔 BuffIcon 인스턴스의 루트 Image를 연결합니다.")]
+        [SerializeField] private Image itemIcon;
+        private const int ItemSlot = int.MaxValue;
+        private UnitHUDStatus? _itemStatus;
+        private StatusSlot _itemSlot;
+        private Sprite _itemFallbackIcon;
 
         [Header("Buff / Debuff")]
         [SerializeField] private Transform statusRoot;
-        [Tooltip("버프/디버프 하나를 나타내는 Image 프리팹. 입력용 Button과 UIInputBinding은 자동 연결한다.")]
+        [Tooltip("버프/디버프 배경 Image 프리팹. 상태 Sprite는 자식 Icon의 Image에 표시하며, 입력용 Button·UIInputBinding·UISecondaryClickBinding은 배경에 자동 연결한다.")]
         [SerializeField] private Image statusIconPrefab;
+        [Tooltip("상태 아이콘의 가로 간격입니다. 배치 폭은 Status Root의 RectTransform에서 읽습니다.")]
         [SerializeField, Min(0f)] private float statusIconSpacing = 10f;
+        [Tooltip("여러 행으로 배치할 때 행 사이의 세로 간격입니다.")]
+        [SerializeField, Min(0f)] private float statusIconRowSpacing = 4f;
         [SerializeField] private GameObject descriptionPanel;
         [SerializeField] private TMP_Text descriptionText;
+        [SerializeField] private GameObject buffPanel;
+        [SerializeField] private TMP_Text buffTitleText;
+        [SerializeField] private TMP_Text buffDescriptionText;
 
-        private readonly List<CostSlot> _costSlots = new();
+        private bool _hasStatusLayout;
+        private UnitHUDStatusLayout _statusLayout;
         private readonly List<StatusSlot> _statusSlots = new();
         private readonly List<UnitHUDStatus> _statuses = new();
-        private int _currentHealth, _maxHealth;
+        private readonly HealthFillAnimation _healthAnimation = new();
+        private bool _hasHealth;
+        private int _currentHealth, _maxHealth, _currentShield;
+        private double HealthBarDenominator => Math.Max(_maxHealth, (double)_currentHealth + _currentShield);
         private int? _previewHealth;
-        private int _currentCost, _maxCost, _pendingMoveCost, _previewCost;
+        private float _healthPreviewElapsed;
+        private float _healthPreviewTextElapsed;
+        private Color _healthPreviewSubFillColor;
+        private bool _healthPreviewColorCaptured;
+        private Color _healthPreviewTextColor;
+        private bool _healthPreviewTextColorCaptured;
         private int _hoveredStatus = -1, _pinnedStatus = -1;
         private Owner _owner = Owner.Player;
+        private bool _isObstacle;
+        private bool _isRider;
         private EntityId _entityId;
-
-        private sealed class CostSlot
-        {
-            public Image Image;
-            public Quaternion OriginalRotation;
-            public float CurrentRotation;
-            public float TargetRotation;
-            public bool RotationInitialized;
-        }
+        // 상태 아이콘 우클릭을 받는 쪽입니다(가방 설계 P6). 없으면 우클릭은 아무것도 하지 않습니다.
+        private Action<EntityId, string> _statusSecondary;
 
         private sealed class StatusSlot
         {
             public Button Button;
+            public Image Root;
             public Image Icon;
             public UIInputBinding Input;
+            public UISecondaryClickBinding Secondary;
             public Selectable.Transition Transition;
         }
 
         private void Awake()
         {
-            // HP/텍스트/바탕은 전투 포인터를 가리지 않는다. 설명 가능한 아이콘만 나중에 입력을 연다.
+            // 데이터 바인딩 전에는 표시를 지운다. 필수 참조는 SetUnit에서 검증한다.
+            // HP/텍스트/바탕은 전투 포인터를 가리지 않는다. 설명 가능하거나 우클릭 동작이 있는 아이콘만 나중에 입력을 연다(가방 설계 P6).
             foreach (Graphic graphic in GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+            if (infoPanel != null) infoPanel.Prepare();
             ClearDescription();
-            SetTurnOrder(false, null);
+            if (itemIcon != null) itemIcon.gameObject.SetActive(false);
         }
 
         /// <summary>
-        /// View가 CharacterBuffer에서 읽은 유닛을 전달한다. Owner/HP/Cost는 같은 Buffer 조회값에서 반영한다.
+        /// View가 CharacterBuffer에서 읽은 유닛을 전달한다. Owner/HP는 같은 Buffer 조회값에서 반영한다.
         /// 다른 유닛에 재사용할 때는 이전 아이콘 선택을 정리한다. 버프 표시 데이터는 이 호출 뒤 SetStatuses로 전달한다.
         /// </summary>
         public void SetUnit(CharacterData unit)
@@ -98,198 +155,341 @@ namespace ProjectL.Systems
         internal void SetUnit(CharacterCombatFacts unit)
         {
             if (unit == null) throw new ArgumentNullException(nameof(unit));
+            ValidateReferences();
             if (_entityId != unit.EntityId) Clear();
             _entityId = unit.EntityId;
             _owner = unit.Owner;
+            _isObstacle = false;
+            _isRider = unit.Stats.Category.Key == CategoryKey.Rider;
             SetUnitExtrasVisible(true);
-            SetHealth(unit.Health.CurrentHealth, unit.Health.MaxHealth);
-            SetActionCost(unit.Stats.CurrentActionCost, unit.Stats.MaxActionCost, unit.PendingMoveActionCost);
+            SetHealth(unit.Health.CurrentHealth, unit.Health.MaxHealth, unit.TraitEffects.ActiveShieldTotal);
         }
 
-        /// <summary>건물에는 체력바와 체력 숫자만 표시한다.</summary>
+        internal void SetInfo(Sprite category, string unitName, int attack, int shield)
+        {
+            ValidateReferences();
+            categoryImage.sprite = category;
+            infoPanel.SetUnit(unitName, attack, shield);
+            infoPanel.CopyHealth(healthFill, healthSubFill, shieldFill);
+        }
+
+        /// <summary>드로우 전에는 전투 사실을 만들지 않고 기본 위젯만 준비합니다. 독립 정보창은 열지 않습니다.</summary>
+        internal void PrepareResources()
+        {
+            ValidateReferences();
+            Clear();
+            SetUnitExtrasVisible(true);
+        }
+
+        /// <summary>로딩 준비 전용입니다. 닫힌 정보창·툴팁을 열거나 정상 배치에서 강제 갱신하지 않습니다.</summary>
+        internal void PrepareActiveMeshes()
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
+            foreach (TMP_Text text in GetComponentsInChildren<TMP_Text>(false))
+                text.ForceMeshUpdate();
+        }
+
+        internal void ValidateReferences()
+        {
+            if (buffPanel == null || buffTitleText == null || buffDescriptionText == null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': buffPanel/buffTitleText/buffDescriptionText 참조가 필요합니다.");
+            if (statusRoot == null || !buffPanel.transform.IsChildOf(statusRoot) ||
+                !buffTitleText.transform.IsChildOf(buffPanel.transform) || !buffDescriptionText.transform.IsChildOf(buffPanel.transform))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': BuffPanel은 Status Root 아래, 제목과 설명은 BuffPanel 내부에 있어야 합니다.");
+            if (categoryImage == null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': categoryImage 참조가 필요합니다.");
+            if (infoPanel == null || healthFill == null || healthSubFill == null || shieldFill == null || healthText == null || maxHealthText == null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': infoPanel/healthFill/healthSubFill/shieldFill/healthText/maxHealthText 참조가 필요합니다.");
+            if (!infoPanel.transform.IsChildOf(transform) || !healthFill.transform.IsChildOf(transform) ||
+                !healthSubFill.transform.IsChildOf(transform) || !shieldFill.transform.IsChildOf(transform) || !healthText.transform.IsChildOf(infoPanel.transform) ||
+                !maxHealthText.transform.IsChildOf(infoPanel.transform))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': infoPanel/HPBar는 같은 HUD, healthText/maxHealthText는 해당 InfoPanel 내부에 있어야 합니다.");
+            if (shieldFill == healthFill || shieldFill == healthSubFill || shieldFill.sprite == null ||
+                shieldFill.type != Image.Type.Filled || shieldFill.fillMethod != Image.FillMethod.Horizontal || shieldFill.fillOrigin != 0 ||
+                shieldFill.transform.parent != healthFill.transform.parent || shieldFill.transform.parent != healthSubFill.transform.parent ||
+                shieldFill.transform.GetSiblingIndex() >= healthSubFill.transform.GetSiblingIndex() ||
+                healthSubFill.transform.GetSiblingIndex() >= healthFill.transform.GetSiblingIndex())
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': shieldFill은 Sprite가 연결된 왼쪽 시작 가로 Filled Image이며 같은 부모의 Shield → SubFill → Fill 순서가 필요합니다.");
+            if (!categoryImage.transform.IsChildOf(transform) || categoryImage.transform == transform ||
+                categoryImage.transform.IsChildOf(infoPanel.transform.parent))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': categoryImage는 같은 HUD의 InfoPanelMask 밖에 있어야 합니다.");
+            if (statusRoot != null && (!statusRoot.IsChildOf(transform) || statusRoot == transform))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot는 같은 HUD 내부에 있어야 합니다.");
+            if (itemIcon == null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': itemIcon 참조가 필요합니다.");
+            if (!itemIcon.transform.IsChildOf(transform) || itemIcon.transform == transform ||
+                itemIcon == categoryImage || itemIcon.transform.IsChildOf(infoPanel.transform.parent) ||
+                (statusRoot != null && (itemIcon.transform.IsChildOf(statusRoot) || statusRoot.IsChildOf(itemIcon.transform))) ||
+                categoryImage.transform.IsChildOf(itemIcon.transform) || itemIcon.transform.IsChildOf(categoryImage.transform))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': itemIcon은 같은 HUD의 Mask/Status Root 밖, categoryImage와 별개의 고정 슬롯이어야 합니다.");
+            RequireStatusIcon(itemIcon);
+            infoPanel.Prepare();
+        }
+
+        /// <summary>건물·장애물의 기본 체력바를 표시합니다. 선택 정보는 별도 호출로 전달합니다.</summary>
         internal void SetStructure(StructureCombatFacts structure)
         {
             if (structure == null) throw new ArgumentNullException(nameof(structure));
+            ValidateReferences();
             if (_entityId != structure.EntityId) Clear();
             _entityId = structure.EntityId;
             _owner = structure.Owner;
+            _isRider = false;
+            _isObstacle = ObstacleContentProfile.IsNativeObstacleKey(structure.Definition.Key);
+            SetItem(null);
             SetUnitExtrasVisible(false);
             SetHealth(structure.Health.CurrentHealth, structure.Health.MaxHealth);
         }
 
+        internal void SetStructureInfo(string displayName, int attackPower)
+        {
+            ValidateReferences();
+            infoPanel.SetUnit(displayName, attackPower, null);
+            infoPanel.CopyHealth(healthFill, healthSubFill, shieldFill);
+        }
+
         private void SetUnitExtrasVisible(bool visible)
         {
-            if (actionCostRoot != null) actionCostRoot.gameObject.SetActive(visible);
+            if (categoryImage != null)
+            {
+                categoryImage.gameObject.SetActive(visible);
+                if (!visible) categoryImage.sprite = null;
+            }
+            if (itemIcon != null) itemIcon.gameObject.SetActive(visible && _itemStatus.HasValue);
             if (statusRoot != null) statusRoot.gameObject.SetActive(visible);
-            if (turnOrderText != null) turnOrderText.gameObject.SetActive(visible && showTurnOrder);
-            if (turnOrderImage != null) turnOrderImage.gameObject.SetActive(visible && showTurnOrder);
         }
 
-        /// <summary>현재 체력 표시. 예상 체력은 별도의 명시적 호출로만 활성화한다.</summary>
-        public void SetHealth(int current, int maximum)
+        /// <summary>같은 사실의 현재 체력·최대 체력·유효 보호막을 함께 받습니다. 예상 체력은 별도 호출로만 활성화합니다.</summary>
+        public void SetHealth(int current, int maximum, int shield = 0)
         {
-            _maxHealth = Mathf.Max(0, maximum);
+            int nextMaximum = Mathf.Max(0, maximum);
+            bool snap = !_hasHealth || _maxHealth != nextMaximum || !isActiveAndEnabled;
+            double previousDenominator = HealthBarDenominator;
+            // 실제 피해는 예상 표시가 아닌 직전 실제 HP에서 감소를 시작한다.
+            if (_previewHealth.HasValue)
+                _healthAnimation.Snap(HealthBarAmount(_currentHealth));
+            _maxHealth = nextMaximum;
             _currentHealth = Mathf.Clamp(current, 0, _maxHealth);
+            _currentShield = Mathf.Max(0, shield);
+            // 분모 변경에 따른 압축/확장을 HP 피해로 연출하지 않습니다.
+            snap |= previousDenominator != HealthBarDenominator;
             _previewHealth = null;
-            RefreshHealth();
+            RefreshHealth(snap);
+            _hasHealth = true;
         }
 
-        /// <summary>향후 Core 예상 결과 연결용. HUD는 피해량을 계산하지 않는다.</summary>
+        /// <summary>Core 예상 피해 구간만 Alpha로 표시한다. HUD는 피해량을 계산하지 않는다.</summary>
         public void SetHealthPreview(int? projectedHealth)
         {
+            bool restoreActual = _previewHealth.HasValue && !projectedHealth.HasValue;
+            if (!_previewHealth.HasValue && projectedHealth.HasValue)
+            {
+                _healthPreviewElapsed = 0f;
+                _healthPreviewTextElapsed = 0f;
+            }
             _previewHealth = projectedHealth;
-            RefreshHealth();
+            RefreshHealth(restoreActual);
         }
 
-        private void RefreshHealth()
+        private void RefreshHealth(bool snap = false)
         {
-            int shown = Mathf.Clamp(_previewHealth ?? _currentHealth, 0, _maxHealth);
-            if (healthText != null) healthText.SetText("{0} / {1}", shown, _maxHealth);
-            if (healthSlider == null) return;
-            if (healthSlider.fillRect != null && healthSlider.fillRect.TryGetComponent(out Image fillImage))
-                fillImage.color = _owner == Owner.Enemy ? enemyHealthColor : playerHealthColor;
-            healthSlider.interactable = false;
-            healthSlider.wholeNumbers = false;
-            healthSlider.minValue = 0f;
-            healthSlider.maxValue = 1f;
-            healthSlider.SetValueWithoutNotify(_maxHealth > 0 ? (float)shown / _maxHealth : 0f);
+            int shown = _currentHealth;
+            if (maxHealthText != null) maxHealthText.SetText("{0}", _maxHealth);
+            if (healthFill != null)
+                healthFill.color = _isObstacle ? obstacleHealthColor :
+                    _owner == Owner.Enemy ? enemyHealthColor : playerHealthColor;
+            float amount = HealthBarAmount(shown);
+            if (_previewHealth.HasValue)
+            {
+                ApplyHealthPreview();
+                return;
+            }
+            RestoreHealthPreviewColor();
+            if (healthText != null) healthText.SetText("{0}", shown);
+            if (snap) _healthAnimation.Snap(amount);
+            else _healthAnimation.SetTarget(amount, fillSecondsPerPercent, subFillSecondsPerPercent);
+            ApplyHealthFill();
         }
 
-        /// <summary>
-        /// current는 Core의 CurrentActionCost(미확정 이동 비용이 이미 차감된 값).
-        /// pendingMoveCost만큼의 Image를 진영 색으로 복원해 반투명으로 표시한다.
-        /// </summary>
-        public void SetActionCost(int current, int maximum, int pendingMoveCost = 0)
+        private void FixedUpdate()
         {
-            _maxCost = Mathf.Max(0, maximum);
-            _currentCost = Mathf.Clamp(current, 0, _maxCost);
-            _pendingMoveCost = Mathf.Clamp(pendingMoveCost, 0, _maxCost - _currentCost);
-            _previewCost = 0;
-            RefreshActionCost();
+            if (!_previewHealth.HasValue && _healthAnimation.FixedTick(Time.fixedDeltaTime))
+                ApplyHealthFill();
         }
 
-        /// <summary>Core가 견적한 추가 소모량. 기존 미확정 이동 비용을 포함하지 않는다.</summary>
-        public void SetActionCostPreview(int additionalCost)
+        private void ApplyHealthFill()
         {
-            _previewCost = Mathf.Clamp(additionalCost, 0, _currentCost);
-            RefreshActionCost();
+            if (healthFill != null) healthFill.fillAmount = _healthAnimation.FillAmount;
+            if (healthSubFill != null) healthSubFill.fillAmount = _healthAnimation.SubFillAmount;
+            ApplyShieldFill();
+            CopyHealthToInfoPanel();
         }
 
-        /// <summary>유닛 진영을 명시적으로 전달한다. 체력바와 잔여/미확정 코스트 색에 반영한다.</summary>
+        private float HealthBarAmount(double value)
+        {
+            double denominator = HealthBarDenominator;
+            return denominator > 0d ? (float)(value / denominator) : 0f;
+        }
+
+        private void ApplyShieldFill()
+        {
+            // Awake/바인딩 전 Clear는 허용합니다. 필수 참조는 표시 연결 전에 검증합니다.
+            if (shieldFill == null) return;
+            shieldFill.fillAmount = HealthBarAmount((double)_currentHealth + _currentShield);
+            shieldFill.enabled = _currentShield > 0;
+        }
+
+        private void CopyHealthToInfoPanel()
+        {
+            if (healthFill != null && healthSubFill != null && shieldFill != null)
+                infoPanel?.CopyHealth(healthFill, healthSubFill, shieldFill);
+        }
+
+        private void ApplyHealthPreview()
+        {
+            float duration = Mathf.Max(0.05f, healthPreviewPulseDuration);
+            int projectedHealth = Mathf.Clamp(_previewHealth.Value, 0, _currentHealth);
+            // 텍스트는 Alpha 왕복과 독립된 간격으로 예상/현재 HP를 교대한다.
+            float textInterval = Mathf.Max(0.05f, healthPreviewTextInterval);
+            int shown = _healthPreviewTextElapsed < textInterval ? projectedHealth : _currentHealth;
+            if (healthText != null)
+            {
+                if (!_healthPreviewTextColorCaptured)
+                {
+                    _healthPreviewTextColor = healthText.color;
+                    _healthPreviewTextColorCaptured = true;
+                }
+                healthText.SetText("{0}", shown);
+                // 숫자 전환과 같은 주기로 예상 HP는 흐려지고 현재 HP는 다시 선명해진다.
+                float textAlpha = Mathf.Lerp(Mathf.Clamp01(healthPreviewMinAlpha), 1f,
+                    (1f + Mathf.Cos(_healthPreviewTextElapsed / textInterval * Mathf.PI)) * 0.5f);
+                Color textColor = _healthPreviewTextColor;
+                textColor.a *= textAlpha;
+                healthText.color = textColor;
+            }
+            // 예상 보호막 잔량은 공개되지 않았으므로 실제 분모와 실제 보호막 구간을 유지합니다.
+            float currentAmount = HealthBarAmount(_currentHealth);
+            float projectedAmount = HealthBarAmount(projectedHealth);
+            // 앞의 Fill이 남는 HP를 덮고, 뒤의 SubFill에서 피해 예상 구간만 드러난다.
+            if (healthFill != null) healthFill.fillAmount = projectedAmount;
+            if (healthSubFill == null) return;
+            if (!_healthPreviewColorCaptured)
+            {
+                _healthPreviewSubFillColor = healthSubFill.color;
+                _healthPreviewColorCaptured = true;
+            }
+            float alpha = Mathf.Lerp(Mathf.Clamp01(healthPreviewMinAlpha), 1f,
+                (1f + Mathf.Cos(_healthPreviewElapsed / duration * Mathf.PI * 2f)) * 0.5f);
+            Color color = healthFill != null ? healthFill.color : _healthPreviewSubFillColor;
+            if (_currentShield > 0)
+            {
+                // 누적 Shield Fill이 예상 HP 손실 구간에 비치지 않도록 불투명도를 유지하고 명도를 맥동합니다.
+                color.r *= alpha;
+                color.g *= alpha;
+                color.b *= alpha;
+            }
+            else color.a *= alpha;
+            healthSubFill.color = color;
+            healthSubFill.fillAmount = currentAmount;
+            ApplyShieldFill();
+            CopyHealthToInfoPanel();
+        }
+
+        private void RestoreHealthPreviewColor()
+        {
+            if (_healthPreviewTextColorCaptured)
+            {
+                if (healthText != null) healthText.color = _healthPreviewTextColor;
+                _healthPreviewTextColorCaptured = false;
+            }
+            if (!_healthPreviewColorCaptured) return;
+            if (healthSubFill != null) healthSubFill.color = _healthPreviewSubFillColor;
+            _healthPreviewColorCaptured = false;
+        }
+
+        /// <summary>유닛 진영을 명시적으로 전달한다. 체력바 색에 반영한다.</summary>
         public void SetOwner(Owner unitOwner)
         {
             if (unitOwner != Owner.Player && unitOwner != Owner.Enemy)
                 throw new ArgumentOutOfRangeException(nameof(unitOwner));
             _owner = unitOwner;
             RefreshHealth();
-            RefreshActionCost();
-        }
-
-        private void RefreshActionCost()
-        {
-            if (actionCostRoot == null || actionCostPrefab == null)
-                return;
-            while (_costSlots.Count < _maxCost)
-            {
-                Image image = Instantiate(actionCostPrefab, actionCostRoot, false);
-                image.raycastTarget = false;
-                RectTransform rect = image.rectTransform;
-                Vector2 size = rect.rect.size;
-                rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = size;
-                _costSlots.Add(new CostSlot { Image = image, OriginalRotation = rect.localRotation });
-            }
-
-            int remaining = _currentCost + _pendingMoveCost;
-            int opaque = _currentCost - _previewCost;
-            Color availableColor = _owner == Owner.Enemy ? enemyCostColor : playerCostColor;
-            float nextX = 0f;
-            for (int i = 0; i < _costSlots.Count; i++)
-            {
-                CostSlot slot = _costSlots[i];
-                slot.Image.gameObject.SetActive(i < _maxCost);
-                RectTransform rect = slot.Image.rectTransform;
-                float width = rect.rect.width * Mathf.Abs(rect.localScale.x);
-                rect.anchoredPosition = new Vector2(nextX + width * 0.5f, 0f);
-                nextX += width + Mathf.Max(0f, actionCostSpacing);
-                bool spent = i >= remaining;
-                Color color = spent ? spentCostColor : availableColor;
-                if (!spent && i >= opaque) color.a *= previewAlpha;
-                slot.Image.color = color;
-                slot.TargetRotation = spent ? spentCostRotation : 0f;
-                if (i >= _maxCost) slot.RotationInitialized = false;
-                else if (!slot.RotationInitialized || spentCostRotationDuration <= 0f)
-                {
-                    slot.CurrentRotation = slot.TargetRotation;
-                    slot.RotationInitialized = true;
-                }
-                rect.localRotation = slot.OriginalRotation *
-                    Quaternion.Euler(0f, 0f, slot.CurrentRotation);
-            }
         }
 
         private void LateUpdate()
         {
-            AnimateCostRotation(Time.unscaledDeltaTime);
-            AnimateCostPreview(Time.unscaledTime);
+            AnimateHealthPreview(Time.unscaledDeltaTime);
+            RefreshStatusLayout();
         }
 
-        internal void AnimateCostRotation(float unscaledDeltaTime)
+        /// <summary>예상 피해 구간의 Alpha만 갱신한다. 반복된 예상값 전달은 주기를 초기화하지 않는다.</summary>
+        internal void AnimateHealthPreview(float unscaledDeltaTime)
         {
-            float step = spentCostRotationDuration > 0f
-                ? Mathf.Abs(spentCostRotation) / spentCostRotationDuration * Mathf.Max(0f, unscaledDeltaTime)
-                : float.PositiveInfinity;
-            int end = Mathf.Min(_maxCost, _costSlots.Count);
-            for (int i = 0; i < end; i++)
-            {
-                CostSlot slot = _costSlots[i];
-                if (slot.CurrentRotation == slot.TargetRotation) continue;
-                slot.CurrentRotation = Mathf.MoveTowards(slot.CurrentRotation, slot.TargetRotation, step);
-                // 기준 회전에 오프셋을 적용해 반복 갱신에서도 회전이 누적되지 않는다.
-                slot.Image.rectTransform.localRotation = slot.OriginalRotation *
-                    Quaternion.Euler(0f, 0f, slot.CurrentRotation);
-            }
+            if (!_previewHealth.HasValue) return;
+            float duration = Mathf.Max(0.05f, healthPreviewPulseDuration);
+            _healthPreviewElapsed = Mathf.Repeat(_healthPreviewElapsed + Mathf.Max(0f, unscaledDeltaTime), duration);
+            float textInterval = Mathf.Max(0.05f, healthPreviewTextInterval);
+            _healthPreviewTextElapsed = Mathf.Repeat(_healthPreviewTextElapsed + Mathf.Max(0f, unscaledDeltaTime), textInterval * 2f);
+            ApplyHealthPreview();
         }
 
-        /// <summary>표시 애니메이션만 갱신한다. 반복된 견적 호출에도 위상이 초기화되지 않는다.</summary>
-        internal void AnimateCostPreview(float unscaledTime)
+        /// <summary>프리팹에 배치된 고정 아이템 한 칸입니다. 버프/디버프 목록과 레이아웃에는 넣지 않습니다.</summary>
+        internal void SetItem(UnitHUDStatus? item)
         {
-            if (_pendingMoveCost == 0 && _previewCost == 0) return;
-            float phase = unscaledTime * Mathf.Max(0.01f, previewPulseSpeed) * Mathf.PI * 2f;
-            float alphaMultiplier = Mathf.Lerp(Mathf.Clamp01(previewAlpha), 1f, (1f - Mathf.Cos(phase)) * 0.5f);
-            float baseAlpha = (_owner == Owner.Enemy ? enemyCostColor : playerCostColor).a;
-            int end = Mathf.Min(_currentCost + _pendingMoveCost, Mathf.Min(_maxCost, _costSlots.Count));
-            for (int i = _currentCost - _previewCost; i < end; i++)
+            if (item.HasValue)
             {
-                Image image = _costSlots[i].Image;
-                Color color = image.color;
-                color.a = baseAlpha * alphaMultiplier;
-                image.color = color;
+                ValidateReferences();
+                if (_itemSlot == null)
+                {
+                    Image icon = RequireStatusIcon(itemIcon);
+                    Button button = itemIcon.GetComponent<Button>();
+                    if (button == null) button = itemIcon.gameObject.AddComponent<Button>();
+                    if (button.targetGraphic == null) button.targetGraphic = itemIcon;
+                    icon.raycastTarget = false;
+                    _itemFallbackIcon = icon.sprite;
+                    _itemSlot = new StatusSlot
+                    {
+                        Root = itemIcon, Icon = icon, Button = button, Transition = button.transition,
+                        Input = UIInputBinding.Attach(button, this, ItemSlot, hasHover: true),
+                        Secondary = UISecondaryClickBinding.Attach(itemIcon.gameObject, this, ItemSlot)
+                    };
+                }
             }
-        }
-
-        /// <summary>Core Timeline에서 정한 다음 행동 순서(1부터). 현재 행위자는 N, 순서 없음은 빈칸.</summary>
-        public void SetTurnOrder(bool isActiveActor, int? predictedOrder)
-        {
-            if (!showTurnOrder)
+            bool sameKey = _itemStatus.HasValue && item.HasValue && _itemStatus.Value.Key == item.Value.Key;
+            if (!sameKey)
             {
-                if (turnOrderText != null) turnOrderText.gameObject.SetActive(false);
-                if (turnOrderImage != null) turnOrderImage.gameObject.SetActive(false);
-                return;
+                _itemSlot?.Input.OnHoverExit();
+                if (_hoveredStatus == ItemSlot) _hoveredStatus = -1;
+                if (_pinnedStatus == ItemSlot) _pinnedStatus = -1;
             }
-            if (turnOrderText == null) return;
-            if (isActiveActor) turnOrderText.SetText("N");
-            else if (predictedOrder.HasValue && predictedOrder.Value > 0)
-                turnOrderText.SetText("{0}", predictedOrder.Value);
-            else turnOrderText.SetText(string.Empty);
+            _itemStatus = item;
+            if (item.HasValue)
+            {
+                UnitHUDStatus status = item.Value;
+                _itemSlot.Icon.sprite = status.Icon != null ? status.Icon : _itemFallbackIcon;
+                bool canDescribe = CanDescribe(ItemSlot);
+                if (!canDescribe) _itemSlot.Input.OnHoverExit();
+                _itemSlot.Button.transition = canDescribe ? _itemSlot.Transition : Selectable.Transition.None;
+                _itemSlot.Button.interactable = canDescribe;
+                _itemSlot.Root.raycastTarget = canDescribe || status.HasSecondaryAction;
+            }
+            else if (_itemSlot != null)
+            {
+                _itemSlot.Icon.sprite = null;
+                _itemSlot.Root.raycastTarget = false;
+                _itemSlot.Button.interactable = false;
+            }
+            if (itemIcon != null) itemIcon.gameObject.SetActive(item.HasValue);
+            RefreshDescription();
         }
 
         /// <summary>View가 준비한 버프/디버프 아이콘과 설명. 순서 변경 시에도 Key로 선택을 유지한다.</summary>
         public void SetStatuses(IReadOnlyList<UnitHUDStatus> statuses)
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
-            string pinnedKey = IsStatusValid(_pinnedStatus) ? _statuses[_pinnedStatus].Key : null;
+            // 구성 오류는 기존 상태/입력 수명을 바꾸기 전에 거절합니다.
+            if (statuses.Count > 0) ReadStatusLayout(statuses.Count);
+            string pinnedKey = IsStatusValid(_pinnedStatus) ? StatusAt(_pinnedStatus).Key : null;
             bool sameKeys = statuses.Count == _statuses.Count;
             for (int i = 0; i < statuses.Count; i++)
             {
@@ -300,13 +500,15 @@ namespace ProjectL.Systems
                         throw new ArgumentException("Status Key는 유닛 내에서 고유해야 합니다.", nameof(statuses));
                 if (sameKeys && statuses[i].Key != _statuses[i].Key) sameKeys = false;
             }
+            Image iconTemplate = statusRoot != null && statusIconPrefab != null && statuses.Count > 0
+                ? RequireStatusIcon(statusIconPrefab) : null;
             if (!sameKeys)
             {
                 for (int i = 0; i < _statusSlots.Count; i++) _statusSlots[i].Input.OnHoverExit();
-                _hoveredStatus = -1;
+                if (_hoveredStatus != ItemSlot) _hoveredStatus = -1;
             }
             _statuses.Clear();
-            _pinnedStatus = -1;
+            _pinnedStatus = pinnedKey != null && _itemStatus.HasValue && _itemStatus.Value.Key == pinnedKey ? ItemSlot : -1;
             for (int i = 0; i < statuses.Count; i++)
             {
                 _statuses.Add(statuses[i]);
@@ -316,48 +518,110 @@ namespace ProjectL.Systems
             {
                 while (_statusSlots.Count < statuses.Count)
                 {
-                    Image icon = Instantiate(statusIconPrefab, statusRoot, false);
-                    Button button = icon.GetComponent<Button>();
-                    if (button == null) button = icon.gameObject.AddComponent<Button>();
-                    if (button.targetGraphic == null) button.targetGraphic = icon;
+                    Image root = Instantiate(statusIconPrefab, statusRoot, false);
+                    Image icon = RequireStatusIcon(root);
+                    Button button = root.GetComponent<Button>();
+                    if (button == null) button = root.gameObject.AddComponent<Button>();
+                    if (button.targetGraphic == null) button.targetGraphic = root;
+                    root.raycastTarget = false;
                     icon.raycastTarget = false;
-                    RectTransform rect = icon.rectTransform;
+                    RectTransform rect = root.rectTransform;
                     Vector2 size = rect.rect.size;
-                    rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
-                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    rect.anchorMin = rect.anchorMax = Vector2.zero;
+                    rect.pivot = Vector2.zero;
                     rect.sizeDelta = size;
                     _statusSlots.Add(new StatusSlot
                     {
-                        Button = button, Icon = icon, Transition = button.transition,
-                        Input = UIInputBinding.Attach(button, this, _statusSlots.Count)
+                        Button = button, Root = root, Icon = icon, Transition = button.transition,
+                        Input = UIInputBinding.Attach(button, this, _statusSlots.Count, hasHover: true),
+                        Secondary = UISecondaryClickBinding.Attach(root.gameObject, this, _statusSlots.Count)
                     });
                 }
-                float nextX = 0f;
                 for (int i = 0; i < _statusSlots.Count; i++)
                 {
                     StatusSlot slot = _statusSlots[i];
                     if (i < statuses.Count)
                     {
-                        RectTransform rect = slot.Icon.rectTransform;
-                        float width = rect.rect.width * Mathf.Abs(rect.localScale.x);
-                        rect.anchoredPosition = new Vector2(nextX + width * 0.5f, 0f);
-                        nextX += width + Mathf.Max(0f, statusIconSpacing);
-                        slot.Icon.sprite = statuses[i].Icon != null ? statuses[i].Icon : statusIconPrefab.sprite;
+                        slot.Icon.sprite = statuses[i].Icon != null ? statuses[i].Icon : iconTemplate.sprite;
                         // Description 미구현/참조 누락이면 아이콘 표시만 한다.
                         bool canDescribe = CanDescribe(i);
                         if (!canDescribe) slot.Input.OnHoverExit();
                         slot.Button.transition = canDescribe ? slot.Transition : Selectable.Transition.None;
                         slot.Button.interactable = canDescribe;
-                        slot.Icon.raycastTarget = canDescribe;
+                        // 설명이 없어도 우클릭 동작(아이템 해제 등)이 있으면 입력을 받는다. 왼쪽 클릭 고정은 설명 가능할 때만이다(가방 설계 P6).
+                        slot.Root.raycastTarget = canDescribe || statuses[i].HasSecondaryAction;
                     }
                     slot.Button.gameObject.SetActive(i < statuses.Count);
                 }
             }
+            RefreshStatusLayout(force: true);
             RefreshDescription();
+        }
+
+        /// <summary>게임 상태를 다시 읽지 않고 실제 가로 폭이 바뀔 때만 기존 슬롯을 재배치합니다.</summary>
+        private void RefreshStatusLayout(bool force = false)
+        {
+            RectTransform area = statusRoot as RectTransform;
+            if (_statuses.Count == 0)
+            {
+                if (area != null && area.rect.height != 0f)
+                    area.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 0f);
+                _hasStatusLayout = false;
+                return;
+            }
+
+            if (!force && _hasStatusLayout && area != null && _statusLayout.Width == area.rect.width) return;
+            UnitHUDStatusLayout layout = ReadStatusLayout(_statuses.Count);
+            if (!force && _hasStatusLayout && _statusLayout.Equals(layout)) return;
+            area.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, layout.Height);
+            for (int i = 0; i < layout.Count; i++)
+            {
+                layout.PositionOf(i, out float x, out float y);
+                _statusSlots[i].Root.rectTransform.anchoredPosition3D = new Vector3(x, y, 0f);
+            }
+            _statusLayout = layout;
+            _hasStatusLayout = true;
+        }
+
+        /// <summary>표현에 필요한 크기만 읽습니다. 아이콘의 분류/효과/입력은 해석하지 않습니다.</summary>
+        private UnitHUDStatusLayout ReadStatusLayout(int count)
+        {
+            RectTransform area = statusRoot as RectTransform;
+            if (area == null || statusIconPrefab == null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot(RectTransform)/statusIconPrefab 연결이 필요합니다.");
+            if (area.pivot != Vector2.zero || area.anchorMin.y != area.anchorMax.y)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot의 Pivot은 (0, 0), 세로 Anchor는 고정이어야 합니다.");
+            if (area.GetComponent<LayoutGroup>() != null || area.GetComponent<ContentSizeFitter>() != null ||
+                statusIconPrefab.GetComponent<ContentSizeFitter>() != null)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot의 LayoutGroup/ContentSizeFitter와 statusIconPrefab의 ContentSizeFitter는 코드 배치와 함께 사용할 수 없습니다.");
+            RectTransform template = statusIconPrefab.rectTransform;
+            Vector3 scale = template.localScale;
+            if (!(scale.x > 0f) || !(scale.y > 0f) || template.localRotation != Quaternion.identity)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusIconPrefab은 양수 X/Y 배율과 회전 (0, 0, 0)이 필요합니다.");
+            try
+            {
+                return new UnitHUDStatusLayout(area.rect.width, template.rect.width * scale.x,
+                    template.rect.height * scale.y, statusIconSpacing, statusIconRowSpacing, count);
+            }
+            catch (ArgumentException error)
+            {
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot 폭/statusIconPrefab 크기/statusIconSpacing/statusIconRowSpacing이 유효하지 않습니다. {error.Message}", error);
+            }
+        }
+
+        private static Image RequireStatusIcon(Image root)
+        {
+            Transform iconTransform = root.transform.Find("Icon");
+            Image icon = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
+            if (icon == null)
+                throw new InvalidOperationException($"[UnitHUD] statusIconPrefab '{root.name}'의 자식 Icon에 Image가 필요합니다.");
+            return icon;
         }
 
         void IUIInputReceiver.Click(int slot)
         {
+            // 버프는 호버 중에만 표시하고, 장착 아이템만 기존 클릭 고정을 사용합니다.
+            if (slot != ItemSlot) return;
             if (!isActiveAndEnabled || !CanDescribe(slot)) return;
             _pinnedStatus = _pinnedStatus == slot ? -1 : slot;
             // 같은 아이콘을 다시 클릭하면 hover 중이어도 닫는다.
@@ -378,17 +642,45 @@ namespace ProjectL.Systems
             RefreshDescription();
         }
 
-        private bool IsStatusValid(int slot) => slot >= 0 && slot < _statuses.Count;
-        private bool CanDescribe(int slot) => descriptionPanel != null && descriptionText != null &&
-            IsStatusValid(slot) && !string.IsNullOrWhiteSpace(_statuses[slot].Description);
+        /// <summary>
+        /// 상태 아이콘 우클릭을 받을 쪽을 정합니다(가방 설계 P6). 우클릭 동작이 있는 상태(<see cref="UnitHUDStatus.HasSecondaryAction"/>)만
+        /// (이 HUD의 개체 ID, 상태 Key)를 넘깁니다. HUD는 그 동작이 무엇인지 해석하지 않습니다. null이면 우클릭을 무시합니다.
+        /// </summary>
+        public void SetStatusSecondaryHandler(Action<EntityId, string> handler) => _statusSecondary = handler;
+
+        void IUISecondaryClickReceiver.SecondaryClick(int slot)
+        {
+            if (!isActiveAndEnabled || _statusSecondary == null || _entityId.IsEmpty ||
+                !IsStatusValid(slot) || !StatusAt(slot).HasSecondaryAction)
+                return;
+            _statusSecondary(_entityId, StatusAt(slot).Key);
+        }
+
+        private bool IsStatusValid(int slot) => slot == ItemSlot ? _itemStatus.HasValue : slot >= 0 && slot < _statuses.Count;
+        private UnitHUDStatus StatusAt(int slot) => slot == ItemSlot ? _itemStatus.Value : _statuses[slot];
+        private bool CanDescribe(int slot) => IsStatusValid(slot) &&
+            (slot == ItemSlot
+                ? descriptionPanel != null && descriptionText != null && !string.IsNullOrWhiteSpace(StatusAt(slot).Description)
+                : buffPanel != null && buffTitleText != null && buffDescriptionText != null &&
+                    (!string.IsNullOrWhiteSpace(StatusAt(slot).Title) || !string.IsNullOrWhiteSpace(StatusAt(slot).Description)));
 
         private void RefreshDescription()
         {
             int slot = IsStatusValid(_pinnedStatus) ? _pinnedStatus : _hoveredStatus;
-            bool show = isActiveAndEnabled && CanDescribe(slot);
+            bool show = isActiveAndEnabled && slot == ItemSlot && CanDescribe(slot);
             if (descriptionText != null)
-                descriptionText.SetText(show ? _statuses[slot].Description : string.Empty);
+                descriptionText.SetText(show ? StatusAt(slot).Description : string.Empty);
             if (descriptionPanel != null) descriptionPanel.SetActive(show);
+            bool showBuff = isActiveAndEnabled && _hoveredStatus >= 0 && CanDescribe(_hoveredStatus);
+            if (buffTitleText != null)
+                buffTitleText.SetText(showBuff ? StatusAt(_hoveredStatus).Title : string.Empty);
+            if (buffDescriptionText != null)
+                buffDescriptionText.SetText(showBuff ? StatusAt(_hoveredStatus).Description : string.Empty);
+            if (buffPanel != null)
+            {
+                if (showBuff) buffPanel.transform.SetAsLastSibling();
+                buffPanel.SetActive(showBuff);
+            }
         }
 
         private void ClearDescription()
@@ -397,37 +689,56 @@ namespace ProjectL.Systems
             RefreshDescription();
         }
 
-        /// <summary>Hover 해제, 확정/취소/모드 변경 뒤 호출한다.</summary>
+        /// <summary>화면에서 숨길 때 hover만 정리합니다. 핀 선택·수치·진행 중인 연출은 보존합니다.</summary>
+        internal void ClearStatusHover()
+        {
+            infoPanel?.ClearHover();
+            _itemSlot?.Input.OnHoverExit();
+            for (int i = 0; i < _statusSlots.Count; i++) _statusSlots[i].Input.OnHoverExit();
+            _hoveredStatus = -1;
+            RefreshDescription();
+        }
+
+        /// <summary>Hover 해제, 확정/취소/모드 변경 뒤 예상 체력 표시를 지운다.</summary>
         public void ClearPreview()
         {
+            bool restoreActual = _previewHealth.HasValue;
             _previewHealth = null;
-            _previewCost = 0;
-            RefreshHealth();
-            RefreshActionCost();
+            RefreshHealth(restoreActual);
         }
 
         /// <summary>다른 유닛에 재사용하거나 풀 반환 전에 호출한다.</summary>
         public void Clear()
         {
+            if (damageText != null) damageText.Clear();
+            SetItem(null);
+            // 바인딩 전 정리와 반복 풀 반환도 허용한다.
             _entityId = EntityId.Empty;
+            _isRider = false;
             _owner = Owner.Player;
+            _isObstacle = false;
+            SetUnitExtrasVisible(false);
             for (int i = 0; i < _statusSlots.Count; i++)
             {
                 _statusSlots[i].Input.OnHoverExit();
                 _statusSlots[i].Button.gameObject.SetActive(false);
             }
             _statuses.Clear();
+            RefreshStatusLayout(force: true);
             ClearDescription();
+            _hasHealth = false;
             SetHealth(0, 0);
-            SetActionCost(0, 0);
-            SetTurnOrder(false, null);
         }
 
-        private void OnDisable()
+        protected override void OnUIHidden()
         {
+            _itemSlot?.Input.OnHoverExit();
             for (int i = 0; i < _statusSlots.Count; i++) _statusSlots[i].Input.OnHoverExit();
             ClearDescription();
             ClearPreview();
+            _healthAnimation.Complete();
+            ApplyHealthFill();
+            _hasHealth = false;
         }
     }
 
@@ -437,13 +748,19 @@ namespace ProjectL.Systems
         public string Key { get; }
         public Sprite Icon { get; }
         public string Description { get; }
+        public string Title { get; }
 
-        public UnitHUDStatus(string key, Sprite icon, string description)
+        /// <summary>우클릭 동작이 있는지입니다(가방 설계 P6). 참이면 설명이 없어도 아이콘이 입력을 받고 우클릭을 HUD 처리기로 넘깁니다.</summary>
+        public bool HasSecondaryAction { get; }
+
+        public UnitHUDStatus(string key, Sprite icon, string description, bool hasSecondaryAction = false, string title = null)
         {
             if (string.IsNullOrEmpty(key)) throw new ArgumentException("Status Key가 필요합니다.", nameof(key));
             Key = key;
             Icon = icon;
             Description = description ?? string.Empty;
+            Title = title ?? string.Empty;
+            HasSecondaryAction = hasSecondaryAction;
         }
     }
 }

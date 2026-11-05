@@ -17,12 +17,13 @@ MonoBehaviour:
   - BGM
   - Master
   - PostFX
+  - UI
   loadSampleData: 1
-  lastScanTime: 2026-10-10 13:48:56
-  lastScannedFolder: D:/Unity 6000.0.73f1/Local LLM/Assets/Audio/FMODplus/ProjectL/Build/Desktop
-  lastBankFileCount: 4
-  lastEventCount: 18
-  lastBusCount: 8
+  lastScanTime: 2026-10-20 05:24:32
+  lastScannedFolder: C:/Users/Hyeon2-400/Project_L/Assets/Audio/FMODplus/ProjectL/Build/Desktop
+  lastBankFileCount: 5
+  lastEventCount: 41
+  lastBusCount: 11
   buses:
   - path: bus:/
     name: Master
@@ -48,6 +49,18 @@ MonoBehaviour:
     guidString: '{f51df435-d9c1-4065-a827-d0915dfb2a81}'
     sourceBankPaths:
     - bank:/Master
+  - path: bus:/PostFX/Artifact
+    name: Artifact
+    parentPath: bus:/PostFX
+    guidString: '{69c46a4c-ccbc-4543-8d7a-b48957baa623}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/PostFX/Obstacle
+    name: Obstacle
+    parentPath: bus:/PostFX
+    guidString: '{2b907c47-8c84-44d8-9c0c-22937c7b9e07}'
+    sourceBankPaths:
+    - bank:/Master
   - path: bus:/PostFX/SFX
     name: SFX
     parentPath: bus:/PostFX
@@ -58,6 +71,12 @@ MonoBehaviour:
     name: Unit
     parentPath: bus:/PostFX
     guidString: '{ac0f88bc-b237-430b-9cf2-1aa6fd413dbf}'
+    sourceBankPaths:
+    - bank:/Master
+  - path: bus:/PostFX/Unit/Enemy
+    name: Enemy
+    parentPath: bus:/PostFX/Unit
+    guidString: '{48c1e1ed-4318-4633-9ca3-18c63054de6a}'
     sourceBankPaths:
     - bank:/Master
   - path: bus:/Reverb
@@ -83,7 +102,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 186204
+    lengthMs: 248067
     minDistance: 1
     maxDistance: 20
     parameters:
@@ -95,12 +114,27 @@ MonoBehaviour:
       isReadOnly: 0
       isAutomatic: 0
       min: 0
-      max: 2
+      max: 3
       defaultValue: 0
       labels:
       - Title
+      - StageSelect
       - Day
       - Night
+  - path: event:/BGM/StageChanger
+    folderPath: BGM
+    eventName: StageChanger
+    displayName: StageChanger
+    sourceBankPath: bank:/PostFX
+    guidString: '{78889dcf-03c6-429c-a0af-ba176c09efa3}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 3562
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
   - path: event:/BGM/Title
     folderPath: BGM
     eventName: Title
@@ -151,12 +185,55 @@ MonoBehaviour:
       isReadOnly: 0
       isAutomatic: 0
       min: 0
-      max: 2
+      max: 3
       defaultValue: 0
       labels:
       - Title
+      - StageSelect
       - Day
       - Night
+  - path: event:/PostFX/SFX/Artifact/Cancel
+    folderPath: PostFX/SFX/Artifact
+    eventName: Cancel
+    displayName: Cancel
+    sourceBankPath: bank:/PostFX
+    guidString: '{b072ac55-0f24-43d7-85e8-5ca246281b1b}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 643
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Artifact/Pick
+    folderPath: PostFX/SFX/Artifact
+    eventName: Pick
+    displayName: Pick
+    sourceBankPath: bank:/PostFX
+    guidString: '{a6f0ccf8-18c4-4126-9084-b80f61bcd1d0}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1156
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Artifact/Placement
+    folderPath: PostFX/SFX/Artifact
+    eventName: Placement
+    displayName: Placement
+    sourceBankPath: bank:/PostFX
+    guidString: '{b22130ac-625b-410d-94ed-f73b380f1f79}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 669
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
   - path: event:/PostFX/SFX/Boss/Train
     folderPath: PostFX/SFX/Boss
     eventName: Train
@@ -167,7 +244,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 4119
+    lengthMs: 10645
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -185,6 +262,160 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters: []
+  - path: event:/PostFX/SFX/Object/ObjectActive
+    folderPath: PostFX/SFX/Object
+    eventName: ObjectActive
+    displayName: ObjectActive
+    sourceBankPath: bank:/PostFX
+    guidString: '{bc955ad4-747d-46bd-83d6-c8d627c4b759}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: Object
+      idString: 3920689037:999423724
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      labels:
+      - Mine
+      - Badge
+      - Flag
+  - path: event:/PostFX/SFX/Obstacle/Broken
+    folderPath: PostFX/SFX/Obstacle
+    eventName: Broken
+    displayName: Broken
+    sourceBankPath: bank:/PostFX
+    guidString: '{07cd8946-18d2-4c59-90a4-6c9054749e6d}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1875
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Obstacle/Damaged
+    folderPath: PostFX/SFX/Obstacle
+    eventName: Damaged
+    displayName: Damaged
+    sourceBankPath: bank:/PostFX
+    guidString: '{2f02d20c-3af5-4311-ae81-a826759d026f}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1625
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/FallStone
+    folderPath: PostFX/SFX/Terrain
+    eventName: FallStone
+    displayName: FallStone
+    sourceBankPath: bank:/PostFX
+    guidString: '{39c7cb60-b3a4-446c-9ddb-98b65c4e5b53}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 2659
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/Haboob
+    folderPath: PostFX/SFX/Terrain
+    eventName: Haboob
+    displayName: Haboob
+    sourceBankPath: bank:/PostFX
+    guidString: '{579d063a-4ad6-4fae-aa36-c6c84763c47c}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 2875
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/MineExplosion
+    folderPath: PostFX/SFX/Terrain
+    eventName: MineExplosion
+    displayName: MineExplosion
+    sourceBankPath: bank:/PostFX
+    guidString: '{6a9321da-5ccc-4e21-bb87-a094ea87d8e0}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 6757
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/Tornado
+    folderPath: PostFX/SFX/Terrain
+    eventName: Tornado
+    displayName: Tornado
+    sourceBankPath: bank:/PostFX
+    guidString: '{d1ad7667-196d-44fa-8d6b-28f3b9db738f}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 5351
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/Tornado_Ended
+    folderPath: PostFX/SFX/Terrain
+    eventName: Tornado_Ended
+    displayName: Tornado_Ended
+    sourceBankPath: bank:/PostFX
+    guidString: '{fe7f879f-7dc9-40dc-b70c-17069d2f0417}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 3500
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/WeakTerrian
+    folderPath: PostFX/SFX/Terrain
+    eventName: WeakTerrian
+    displayName: WeakTerrian
+    sourceBankPath: bank:/PostFX
+    guidString: '{b1e9cf3a-7379-4c4e-8218-e10d0cda52c3}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: CrackLv
+      idString: 2801227969:53620063
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      labels:
+      - 0
+      - 1
+      - 2
   - path: event:/PostFX/SFX/Tile/Cancel
     folderPath: PostFX/SFX/Tile
     eventName: Cancel
@@ -326,7 +557,7 @@ MonoBehaviour:
       isReadOnly: 0
       isAutomatic: 0
       min: 0
-      max: 7
+      max: 15
       defaultValue: 0
       labels:
       - Akimbo
@@ -335,8 +566,114 @@ MonoBehaviour:
       - Cowboy
       - Hammer
       - Shotgun
+      - GraveKeeper
+      - Umbrella
       - Catus
       - Minecart
+      - Balistar
+      - Pickel
+      - Shovel
+      - E_Cannon
+      - Boss_1
+      - Shield
+  - path: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+    folderPath: PostFX/SFX/Unit/AttackEvents
+    eventName: Bullets
+    displayName: Bullets
+    sourceBankPath: bank:/PostFX
+    guidString: '{016f6625-aa8d-4f57-98b3-2d42e2d9a2ce}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters:
+    - name: Parameter 1
+      idString: 4264485949:2808170142
+      scanIndex: 0
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 2
+      defaultValue: 0
+      labels:
+      - Bullet
+      - Arrow
+      - Bomb
+  - path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Boss_Stage1
+    folderPath: PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy
+    eventName: Boss_Stage1
+    displayName: Boss_Stage1
+    sourceBankPath: bank:/PostFX
+    guidString: '{f66c4deb-54c2-4f6e-9ca9-1481ed792460}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 937
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/E_Cannon
+    folderPath: PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy
+    eventName: E_Cannon
+    displayName: E_Cannon
+    sourceBankPath: bank:/PostFX
+    guidString: '{43902a02-959d-4afe-81ee-3c5992c1b5eb}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 4746
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Pickel
+    folderPath: PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy
+    eventName: Pickel
+    displayName: Pickel
+    sourceBankPath: bank:/PostFX
+    guidString: '{dd14c6d9-800c-4db2-8c43-25eda82f05c3}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1728
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Sheld
+    folderPath: PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy
+    eventName: Sheld
+    displayName: Sheld
+    sourceBankPath: bank:/PostFX
+    guidString: '{030c8968-fc72-4911-845a-259ec89fe005}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 2613
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Shovel
+    folderPath: PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy
+    eventName: Shovel
+    displayName: Shovel
+    sourceBankPath: bank:/PostFX
+    guidString: '{3fd76325-9d49-4e0d-8253-d579e8ca1e1c}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1375
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
   - path: event:/PostFX/SFX/Unit/Cancel
     folderPath: PostFX/SFX/Unit
     eventName: Cancel
@@ -351,7 +688,7 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters:
-    - name: UnitType
+    - name: Category
       idString: 584323627:900261421
       scanIndex: 0
       kind: 2
@@ -362,18 +699,32 @@ MonoBehaviour:
       max: 5
       defaultValue: 1
       labels:
-      - MainCharactor
+      - None
       - Base
       - Rider
       - Heavy
       - Cannon
       - Enemy
+  - path: event:/PostFX/SFX/Unit/D_Buff/Mark
+    folderPath: PostFX/SFX/Unit/D_Buff
+    eventName: Mark
+    displayName: Mark
+    sourceBankPath: bank:/PostFX
+    guidString: '{9a325c61-c937-464a-90ad-273a1a8a9778}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1393
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
   - path: event:/PostFX/SFX/Unit/Damaged
     folderPath: PostFX/SFX/Unit
     eventName: Damaged
     displayName: Damaged
     sourceBankPath: bank:/PostFX
-    guidString: '{1f5af7a5-bf67-424d-b62a-b1e1f472a18f}'
+    guidString: '{58c161a5-a313-488f-8c25-bb4bf85051df}'
     isOneShot: 1
     isSnapshot: 0
     is3D: 0
@@ -382,7 +733,7 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters:
-    - name: UnitType
+    - name: Category
       idString: 584323627:900261421
       scanIndex: 0
       kind: 2
@@ -393,7 +744,7 @@ MonoBehaviour:
       max: 5
       defaultValue: 1
       labels:
-      - MainCharactor
+      - None
       - Base
       - Rider
       - Heavy
@@ -413,7 +764,7 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters:
-    - name: UnitType
+    - name: Category
       idString: 584323627:900261421
       scanIndex: 0
       kind: 2
@@ -424,26 +775,12 @@ MonoBehaviour:
       max: 5
       defaultValue: 1
       labels:
-      - MainCharactor
+      - None
       - Base
       - Rider
       - Heavy
       - Cannon
       - Enemy
-  - path: event:/PostFX/SFX/Unit/EnemyAttack
-    folderPath: PostFX/SFX/Unit
-    eventName: EnemyAttack
-    displayName: EnemyAttack
-    sourceBankPath: bank:/PostFX
-    guidString: '{8530ed1a-071f-412b-9465-fe9e1a9bb2fb}'
-    isOneShot: 1
-    isSnapshot: 0
-    is3D: 0
-    hasSustainPoint: 0
-    lengthMs: 0
-    minDistance: 1
-    maxDistance: 20
-    parameters: []
   - path: event:/PostFX/SFX/Unit/Movement
     folderPath: PostFX/SFX/Unit
     eventName: Movement
@@ -458,7 +795,7 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters:
-    - name: UnitType
+    - name: Category
       idString: 584323627:900261421
       scanIndex: 0
       kind: 2
@@ -469,7 +806,7 @@ MonoBehaviour:
       max: 5
       defaultValue: 1
       labels:
-      - MainCharactor
+      - None
       - Base
       - Rider
       - Heavy
@@ -489,7 +826,7 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters:
-    - name: UnitType
+    - name: Category
       idString: 584323627:900261421
       scanIndex: 0
       kind: 2
@@ -500,9 +837,65 @@ MonoBehaviour:
       max: 5
       defaultValue: 1
       labels:
-      - MainCharactor
+      - None
       - Base
       - Rider
       - Heavy
       - Cannon
       - Enemy
+  - path: event:/UI/Click
+    folderPath: UI
+    eventName: Click
+    displayName: Click
+    sourceBankPath: bank:/UI
+    guidString: '{00398ca5-04ca-42df-8808-dc189076138d}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/GameStart
+    folderPath: UI
+    eventName: GameStart
+    displayName: GameStart
+    sourceBankPath: bank:/UI
+    guidString: '{e9cddcbb-1fb5-408a-a208-932cc0972233}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 2958
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/Hover
+    folderPath: UI
+    eventName: Hover
+    displayName: Hover
+    sourceBankPath: bank:/UI
+    guidString: '{e01c7449-0944-4f71-8f9b-89524c6ef26c}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1206
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/Reward
+    folderPath: UI
+    eventName: Reward
+    displayName: Reward
+    sourceBankPath: bank:/UI
+    guidString: '{13b3f167-90d5-4460-a177-13b035d4fcf6}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1102
+    minDistance: 1
+    maxDistance: 20
+    parameters: []

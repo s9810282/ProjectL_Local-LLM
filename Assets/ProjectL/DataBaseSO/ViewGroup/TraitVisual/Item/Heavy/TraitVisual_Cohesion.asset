@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_Cohesion
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 290
+    displayName: "\uACB0\uC18D"
+    icon: {fileID: 21300000, guid: 0c620d6e01a396948a302b7450eb5cbb, type: 3}
+    description: "주변 {반경}칸의 배치된 아군 수 만큼 \n자신의 방어력이 {아군당방어력증가량} 증가하고\n아군에게 보호막 {아군당보호막량}을 제공합니다."
+    defenseReductionDescription: 
+    rankValueFormat: "\uBC29\uC5B4\uB825 {0} \u2192 {2} (+{1}) \xB7 \uBCF4\uD638\uB9C9
+      {3} \u2192 {5} (+{4})"
+    activations:
+    - kind: 340
+      direction: 1
+      cueTiming: 0
+      bodyText:
+        enabled: 1
+        textSource: 1
+        overrideText: "\uBC29\uC5B4\uB825 \uC99D\uAC00"
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 13
+          anchor: 1
+          delay: 0
+          point: 3
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+    - kind: 340
+      direction: 2
+      cueTiming: 0
+      bodyText:
+        enabled: 1
+        textSource: 1
+        overrideText: "\uBC29\uC5B4\uB825 \uAC10\uC18C"
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 14
+          anchor: 1
+          delay: 0
+          point: 3
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

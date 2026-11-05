@@ -6,9 +6,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public sealed class ThornFieldTraitSpec : TraitSpec
     {
         public int ThornDamage { get; }
+        public int DefenseReductionPercent { get; }
+        public UnitTurnTickPhase TickPhase { get; }
         public int LifetimeUnitTurns { get; }
 
-        public ThornFieldTraitSpec(int thornDamage, int lifetimeUnitTurns)
+        public ThornFieldTraitSpec(int thornDamage, int lifetimeUnitTurns,
+            int defenseReductionPercent = 0, UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended)
             : base(TraitKey.ThornField)
         {
             if (thornDamage < 1)
@@ -16,8 +19,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (lifetimeUnitTurns < 1)
                 throw new ArgumentOutOfRangeException(nameof(lifetimeUnitTurns));
 
+            if (defenseReductionPercent < 0 || defenseReductionPercent > 100)
+                throw new ArgumentOutOfRangeException(nameof(defenseReductionPercent));
+            if (!Enum.IsDefined(typeof(UnitTurnTickPhase), tickPhase))
+                throw new ArgumentOutOfRangeException(nameof(tickPhase));
+            DefenseReductionPercent = defenseReductionPercent;
+            TickPhase = tickPhase;
             ThornDamage = thornDamage;
             LifetimeUnitTurns = lifetimeUnitTurns;
+        }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            var otherSpec = (ThornFieldTraitSpec)other;
+            return ThornDamage == otherSpec.ThornDamage &&
+                DefenseReductionPercent == otherSpec.DefenseReductionPercent &&
+                TickPhase == otherSpec.TickPhase &&
+                LifetimeUnitTurns == otherSpec.LifetimeUnitTurns;
         }
     }
 }

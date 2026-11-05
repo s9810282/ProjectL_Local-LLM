@@ -8,13 +8,12 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
     {
         /// <summary>부트스트랩 전용 씬입니다. LifeCycle을 배정하지 않습니다.</summary>
         public const int Boot = 0;
+        public const int Lobby = 1;
 
-        public const int Stage = 1;
+        public const int Stage = 2;
 
-        public const int Combat = 2;
+        public const int Combat = 3;
 
-        /// <summary>예약 번호입니다. 씬이 아직 없어 시작 대상으로 쓰지 않습니다.</summary>
-        public const int Lobby = 3;
 
         /// <summary>예약 번호입니다. 씬이 아직 없어 시작 대상으로 쓰지 않습니다.</summary>
         public const int Artifact = 4;
@@ -29,5 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
         public const string StagePath = "Assets/Scenes/StageSelect.unity";
 
         public const string CombatPath = "Assets/Scenes/Combat.unity";
+
+        public const string LobbyPath = "Assets/Scenes/Lobby.unity";
     }
 }

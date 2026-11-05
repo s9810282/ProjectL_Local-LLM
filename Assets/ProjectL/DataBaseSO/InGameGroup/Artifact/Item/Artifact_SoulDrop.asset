@@ -24,17 +24,17 @@ MonoBehaviour:
   - x: 1
     y: 1
   effects:
-  - entryId: soul_drop_attack
+  - entryId: soul_drop
     trigger: 11
     source:
-      faction: 0
+      faction: 2
       category: 0
     condition:
       type: 2
       comparison: 0
     target:
-      type: 0
-      faction: 2
+      type: 5
+      faction: 1
       category: 0
       excludeCategory: 0
       useHpRatioFilter: 0
@@ -42,37 +42,15 @@ MonoBehaviour:
     location:
       type: 2
     effect:
-      type: 5
-      statId: AttackPower
+      type: 7
+      statId: 
       knockbackDistance: 0
+      soulGrowth:
+        attackBonus: 1
+        maxHealthBonus: 1
+        healAmount: 0
     value:
       type: 0
       basis: 0
-      amount: 1
-    durationTurns: 0
-  - entryId: soul_drop_health
-    trigger: 11
-    source:
-      faction: 0
-      category: 0
-    condition:
-      type: 2
-      comparison: 0
-    target:
-      type: 0
-      faction: 2
-      category: 0
-      excludeCategory: 0
-      useHpRatioFilter: 0
-      maxHpRatio: 0
-    location:
-      type: 2
-    effect:
-      type: 5
-      statId: MaxHealth
-      knockbackDistance: 0
-    value:
-      type: 0
-      basis: 0
-      amount: 1
-    durationTurns: 0
+      amount: 0
+    durationTurns: 5

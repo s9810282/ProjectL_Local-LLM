@@ -36,6 +36,10 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
         PreparedCurrentMap PrepareMapSelection(int mapKey);
         void InstallMapSelection(PreparedCurrentMap prepared);
         PreparedCurrentSelection PrepareSelection(BattleEntrySelection selection);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        PreparedCurrentSelection PrepareDevelopmentSelection(int expectedChapterKey, bool expectedHasSelection,
+            StageSelectionData expectedStage, StageNodeId targetNodeId, StageKey targetStageKey, string targetStageName);
+#endif
         PreparedCurrentSelection PrepareRecoverySelection(RecoveryEntryPreparation preparation);
         PreparedCurrentSelection PrepareShopSelection(ShopEntryPreparation preparation);
         void InstallSelection(PreparedCurrentSelection prepared);
@@ -104,7 +108,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
 
     internal sealed class CurrentProgressBuffer :
         ICurrentProgressBufferReadSink, ICurrentProgressBufferWriteSink,
-        ICurrentProgressBufferStore, IExportSystemServices
+        ICurrentProgressBufferStore, IStageCommandResultReadSink, IStageCommandResultStore, IExportSystemServices
     {
         public bool HasMap => CurrentMapKey > 0;
         public int CurrentMapKey { get; private set; }
@@ -112,6 +116,26 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
         public StageSelectionData CurrentStage { get; private set; }
         public CurrentShopData Shop { get; private set; }
         public CurrentRecoveryData Recovery { get; private set; }
+        // 입력 발급 번호와 같은 Buffer 수명이다. 선택 정리·새 Run은 이 기록을 초기화하지 않는다.
+        private StageEntryCommandResult _mapCommandResult;
+        private ShopCommandResult _shopCommandResult;
+        public int HandledMapCommandNumber => _mapCommandResult.RequestNumber;
+        public int HandledShopCommandNumber => _shopCommandResult.RequestNumber;
+
+        public bool TryGetMapResult(out StageEntryCommandResult result)
+        {
+            result = _mapCommandResult;
+            return result.RequestNumber > 0;
+        }
+
+        public bool TryGetShopResult(out ShopCommandResult result)
+        {
+            result = _shopCommandResult;
+            return result.RequestNumber > 0;
+        }
+
+        void IStageCommandResultStore.InstallMapResult(StageEntryCommandResult result) => _mapCommandResult = result;
+        void IStageCommandResultStore.InstallShopResult(ShopCommandResult result) => _shopCommandResult = result;
 
         public void SelectMap(int mapKey)
             => InstallMapSelection(PrepareMapSelection(mapKey));
@@ -161,7 +185,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
         {
             if (HasSelection == false || Shop != null || Recovery != null)
                 throw new InvalidOperationException("상점 상품을 설치할 현재 선택 상태가 맞지 않습니다.");
-            Shop = new CurrentShopData(offers);
+            Shop = new CurrentShopData(offers, new StageEntryId(Guid.NewGuid()));
         }
 
         public void SetRecoveryOptions(IReadOnlyList<RecoveryOptionSpec> options)
@@ -176,6 +200,20 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
             CurrentMapKey == chapterKey && HasSelection == hasSelection &&
             CurrentStage.NodeId == expected.NodeId && CurrentStage.StageKey == expected.StageKey &&
             CurrentStage.StageName == expected.StageName;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        PreparedCurrentSelection ICurrentProgressBufferStore.PrepareDevelopmentSelection(int expectedChapterKey,
+            bool expectedHasSelection, StageSelectionData expectedStage, StageNodeId targetNodeId,
+            StageKey targetStageKey, string targetStageName)
+        {
+            StageSelectionData.RequireEntry(expectedChapterKey, expectedHasSelection, expectedStage,
+                targetNodeId, targetStageKey, targetStageName);
+            if (!MatchesExpected(expectedChapterKey, expectedHasSelection, expectedStage))
+                throw new InvalidOperationException("개발 진행 제안의 선택 원본이 현재 선택과 다릅니다.");
+            return new PreparedCurrentSelection(new StageSelectionData(targetNodeId.Value,
+                targetStageKey.Value, targetStageName), null, null);
+        }
+#endif
 
         PreparedCurrentSelection ICurrentProgressBufferStore.PrepareSelection(BattleEntrySelection selection)
         {
@@ -201,7 +239,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
 
             return new PreparedCurrentSelection(new StageSelectionData(preparation.TargetNodeId.Value,
                 preparation.TargetStageKey.Value, preparation.TargetStageName), null,
-                new CurrentRecoveryData(preparation.Options));
+                preparation.Context.EntryId.IsEmpty
+                    ? new CurrentRecoveryData(preparation.Options)
+                    : new CurrentRecoveryData(preparation.Options, preparation.Context, mainId: preparation.MainId));
         }
 
         PreparedCurrentSelection ICurrentProgressBufferStore.PrepareShopSelection(ShopEntryPreparation preparation)
@@ -214,7 +254,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
                 throw new InvalidOperationException("같은 상점 노드의 상품을 다시 설치할 수 없습니다.");
 
             return new PreparedCurrentSelection(new StageSelectionData(preparation.TargetNodeId.Value,
-                preparation.TargetStageKey.Value, preparation.TargetStageName), new CurrentShopData(preparation.Offers), null);
+                preparation.TargetStageKey.Value, preparation.TargetStageName), new CurrentShopData(preparation.Offers, new StageEntryId(Guid.NewGuid()), visitKind: preparation.VisitKind, mainId: preparation.MainId,
+                    training: preparation.TrainingDefinition, owned: preparation.ExpectedOwned,
+                    balance: preparation.ExpectedBalance, rosterRevision: preparation.ExpectedRosterRevision), null);
         }
 
         void ICurrentProgressBufferStore.InstallSelection(PreparedCurrentSelection prepared)
@@ -243,6 +285,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Current
             sink.AddService<ICurrentProgressBufferReadSink>(this);
             sink.AddService<ICurrentProgressBufferWriteSink>(this);
             sink.AddService<ICurrentProgressBufferStore>(this);
+            sink.AddService<IStageCommandResultReadSink>(this);
+            sink.AddService<IStageCommandResultStore>(this);
         }
     }
 

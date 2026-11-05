@@ -1,7 +1,9 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Rewards;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Experience;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -10,6 +12,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Contexts;
@@ -21,10 +24,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>한 명령의 최종 변경만 계산한다. 계산 중의 투영값은 호출 이후 보관하지 않는다.</summary>
     public static class CombatCommandCalculator
     {
+        /// <summary>명령 하나를 계산한다. 원래 명령 정산 뒤 대기 포효를 반응 단계로 붙인다(T5.2). 미리보기는 반응을 건너뛴다(G13).</summary>
         public static CombatCommandTransition Calculate(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
-            => Calculate(input, rules, out _);
+            => MovementUndoPolicy.Reconcile(BossRoarCalculator.ApplyPendingReactions(Calculate(input, rules, out _), rules));
 
         public static AttackRangeResult GetAttackRange(CombatCommandInput input) => CombatAttackQueries.Range(input);
+
+        /// <summary>현재 공개 사실로 선택 유닛의 일반 행동 가능 여부를 반환한다.</summary>
+        public static CombatActionAvailability GetActionAvailability(CombatCommandInput input) => CombatActionAdmission.GetAvailability(input);
+
+        /// <summary>필드 유닛 하나의 공격 범위 칸 조회다. 차례·국면과 무관하고 지형은 플레이어 시점이다(호버 공격 범위 설계 UR2).</summary>
+        public static UnitAttackRangeResult GetUnitAttackRange(CombatCommandInput input) => CombatAttackQueries.UnitRange(input);
 
         public static CombatCommandTransition Advance(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
         {
@@ -32,9 +42,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (input.ProcessingKind != CombatProcessingKind.Advance || input.State.Phase != CombatFlowPhase.Automatic ||
                 input.State.Turn.StagePhase != StagePhase.Combat)
                 throw new InvalidOperationException("자동 진행 입력이 아닙니다.");
-            return input.State.ActiveActorId.IsEmpty
-                ? CombatGimmickCalculator.TryAdvance(input) ?? CombatTurnCalculator.BeginNext(input)
-                : EnemyAi.EnemyAiTurnService.Calculate(input, rules);
+            var advanced = input.State.Turn.ControllerPhase switch
+            {
+                CombatControllerPhase.StartingPlayer or CombatControllerPhase.StartingEnemy => CombatTurnCalculator.BeginControllerTurn(input),
+                CombatControllerPhase.Enemy => EnemyAi.EnemyAiTurnService.Calculate(input, rules),
+                _ => throw new InvalidOperationException("자동 진행 가능한 진영 단계가 아닙니다.")
+            };
+            // 자동 진행 끝도 반응 경계다. 대기는 카운터에서 계산하므로 내부 단계 경계와 겹쳐도 같은 포효가 두 번 나가지 않는다.
+            return MovementUndoPolicy.Reconcile(BossRoarCalculator.ApplyPendingReactions(advanced, rules));
         }
 
         public static AttackPreview Preview(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
@@ -54,297 +69,86 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             preview = default;
             if (input == null) throw new ArgumentNullException(nameof(input));
             MovementEnvironmentCalculator.RequireRules(rules);
+            if (input.Kind == CombatCommandKind.UndoMove) return MovementUndoCalculator.Calculate(input);
+            if (input.Kind == CombatCommandKind.EquipItem || input.Kind == CombatCommandKind.UnequipItem || input.Kind == CombatCommandKind.ReplaceItem)
+                return Items.ItemEquipmentCalculator.Calculate(input);
             if (input.Kind == CombatCommandKind.Move) return CombatMovementCalculator.Calculate(input, rules);
-            if (input.Kind == CombatCommandKind.ReturnToCheckpoint) return CheckpointReturnCalculator.Calculate(input);
-            if (input.Kind == CombatCommandKind.EndUnitTurn) return CombatTurnCalculator.EndTurn(input, rules);
+            if (input.Kind == CombatCommandKind.EndPlayerTurn) return CombatTurnCalculator.EndPlayerTurn(input, rules);
             if (input.Kind == CombatCommandKind.EnterCombat) return CombatTurnCalculator.EnterCombat(input, rules);
             if (input.Kind == CombatCommandKind.PlaceMainCharacter || input.Kind == CombatCommandKind.PlaceUnit)
                 return CombatPlacementCalculator.Place(input, rules);
             if (input.Kind == CombatCommandKind.ReturnUnit) return CombatPlacementCalculator.Return(input);
-            if (input.Kind == CombatCommandKind.DrawCharacter) return CombatDrawCalculator.Calculate(input);
-            if (input.Kind != CombatCommandKind.Attack) return Reject(input, "UnsupportedCommand");
-            var admission = CombatAttackQueries.Actor(input, out var originalActor);
-            if (admission != AttackFailureReason.None) return Reject(input, admission.ToString());
-            var profile = RequiredProfile(input, originalActor);
-            var environment = publicPreview ? input.State.Environment.VisibleTo(originalActor.Owner) : input.State.Environment;
-            if (input.ObstacleContents.Count > 0 || input.State.Structures.Any(s => ObstacleContentProfile.IsNativeObstacleKey(s.Definition.Key)))
-                ObstacleContentProfile.Validate(input.ObstacleContents, input.EnvironmentBindings, input.State.Structures);
-            var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight,
-                input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
-            var evaluation = CombatAttackQueries.Selection(input, originalActor, profile, environment: environment, walls: walls);
-            if (evaluation.FailureReason != AttackFailureReason.None)
-                return Reject(input, evaluation.FailureReason.ToString(), evaluation.BlockedContacts);
-            var blockedContacts = new List<AttackBlockedContact>(evaluation.BlockedContacts);
-            var selection = evaluation.Selection;
-            var selected = selection.ReachableCells;
-            var targets = selection.Targets;
-            bool pierce = selection.IsPiercing;
-            var eligible = selection.EligibleCharacters.ToArray();
-            var structures = selection.EligibleStructures.ToArray();
-            var direction = AttackRotation(input.Aim, originalActor.Anchor.Value);
-            var engine = new CombatEffectEngine();
-            var bindings = CombatCommandEffects.Capture(originalActor, profile);
-            var cost = engine.EvaluateAttackCost(bindings, new AttackCostEffectContext(originalActor.Stats.AttackCost));
-            if (cost.EffectiveCost > originalActor.Stats.CurrentActionCost) return Reject(input, "ActionCostInsufficient", blockedContacts);
-
-            var projected = input.Characters.ToDictionary(c => c.EntityId);
-            var finalStructures = input.State.Structures.ToArray();
-            var fields = input.State.ThornFields.ToDictionary(f => f.Cell);
-            var counts = input.SoulCounts.ToDictionary(p => p.Key, p => p.Value);
-            var consumed = new List<long>();
-            var events = new List<CombatEvent>();
-            var deathAnchors = new Dictionary<EntityId, CellCoord>();
-            var projectedStructures = finalStructures.ToDictionary(s => s.EntityId);
-            var attackGroups = new CommandAttackGroups();
-            var obstacles = new ObstacleReactionCalculator(input, environment, projected, projectedStructures, events, deathAnchors, attackGroups);
-            var obstacleHits = new List<(EntityId Id, int Damage, CombatDamageOrigin Origin)>();
-            var souls = new SoulEffectCalculator(input.Artifacts);
-            souls.RequireSupportedAttackSettlement();
-            var soulField = input.Souls;
-            var actor = CombatMovementCalculator.SealPendingMovement(originalActor);
-            projected[actor.EntityId] = actor;
-            bindings = CombatCommandEffects.Capture(actor, profile);
-            cost = engine.EvaluateAttackCost(bindings, new AttackCostEffectContext(actor.Stats.AttackCost));
-            if (cost.EffectiveCost > actor.Stats.CurrentActionCost) return Reject(input, "ActionCostInsufficient", blockedContacts);
-            int count = actor.OwnedId.HasValue ? counts[actor.OwnedId.Value] : 0;
-            int commonDamage = engine.EvaluateAttackDamage(bindings, new AttackDamageEffectContext(
-                souls.EvaluateAttackPower(actor, count, input.Characters, events))).EffectiveDamage;
-            var pipeline = new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault()));
-            var potential = new Dictionary<EntityId, int>();
-            var normalizationLoss = new Dictionary<EntityId, int>();
-            var breakdowns = new Dictionary<EntityId, TargetDamageBreakdown>();
-            var rayDetails = new Dictionary<EntityId, List<PierceRayHitPreview>>();
-            var roles = targets.ToDictionary(p => p.Key, p => p.Value);
-            int attackEventIndex = events.Count;
-            if (pierce)
-            {
-                int budget = PierceTargetBudget(input, actor, profile, commonDamage);
-                var hits = PierceTargetCollector.ApplyBudget(selection.PierceTrace, budget);
-                roles.Clear();
-                foreach (var hit in hits)
-                {
-                    var decay = engine.EvaluatePierceFalloff(bindings, new PierceFalloffEffectContext(commonDamage, hit.Encounter));
-                    var victim = eligible.SingleOrDefault(c => c.EntityId == hit.Id);
-                    int scaled = ScaleByTargetDistance(engine, bindings, actor, hit.Id, victim, structures,
-                        CategoryMatchupDamageCalculator.Apply(commonDamage, decay.RemainingPercent, 100));
-                    var damage = CombatDamageCalculator.Attack(input, engine, pipeline, actor, victim, scaled, AttackTargetRole.Designated,
-                        profile.Method.SplashPercent, null, direction, environment);
-                    int finalDamage = CombatDamageCalculator.ApplyHeldDefense(attackGroups, projected, hit.Id,
-                        damage.FinalDamage, new CombatDamageOrigin(actor.Anchor, actor.EntityId, CommandAttackGroups.Direct), events);
-                    potential[hit.Id] = checked(potential.GetValueOrDefault(hit.Id) + finalDamage);
-                    breakdowns[hit.Id] = damage;
-                    if (!rayDetails.TryGetValue(hit.Id, out var detail)) rayDetails.Add(hit.Id, detail = new List<PierceRayHitPreview>());
-                    detail.Add(new PierceRayHitPreview(hit.Ray, hit.Encounter, damage.DamageBeforeMatchup,
-                        damage.MatchupNumerator, damage.MatchupDenominator, damage.DamageAfterMatchup,
-                        damage.DamageAfterPhysicalDefense, damage.IncomingReduction, finalDamage));
-                    roles[hit.Id] = AttackTargetRole.Designated;
-                    if (obstacles.HasProfile(hit.Id)) obstacleHits.Add((hit.Id, damage.FinalDamage,
-                        new CombatDamageOrigin(actor.Anchor, actor.EntityId, 1)));
-                }
-            }
-            else
-                foreach (var target in targets)
-                {
-                    var victim = eligible.SingleOrDefault(c => c.EntityId == target.Key);
-                    int scaled = ScaleByTargetDistance(engine, bindings, actor, target.Key, victim, structures, commonDamage);
-                    var damage = CombatDamageCalculator.Attack(input, engine, pipeline, actor, victim, scaled, target.Value,
-                        profile.Method.SplashPercent, target.Value == AttackTargetRole.Additional ? selected.PrimaryCell : actor.Anchor,
-                        null, environment);
-                    int finalDamage = CombatDamageCalculator.ApplyHeldDefense(attackGroups, projected, target.Key,
-                        damage.FinalDamage, new CombatDamageOrigin(target.Value == AttackTargetRole.Additional ? selected.PrimaryCell : actor.Anchor,
-                            actor.EntityId, CommandAttackGroups.Direct), events);
-                    potential.Add(target.Key, finalDamage);
-                    breakdowns.Add(target.Key, damage);
-                    if (obstacles.HasProfile(target.Key)) obstacleHits.Add((target.Key, damage.FinalDamage,
-                        new CombatDamageOrigin(target.Value == AttackTargetRole.Additional ? selected.PrimaryCell : actor.Anchor, actor.EntityId, 1)));
-                }
-            var directDamageByTarget = potential.ToDictionary(p => p.Key, p => p.Value);
-            foreach (var pair in potential)
-            {
-                if (obstacles.HasProfile(pair.Key)) continue;
-                var origins = new[] { new CombatDamageOrigin(
-                    !pierce && roles[pair.Key] == AttackTargetRole.Additional ? selected.PrimaryCell : actor.Anchor,
-                    actor.EntityId, CommandAttackGroups.Direct) };
-                if (projected.TryGetValue(pair.Key, out var victim))
-                {
-                    projected[pair.Key] = Hurt(victim, pair.Value);
-                    CombatCommandEvents.Health(events, victim, projected[pair.Key], origins);
-                }
-                else
-                {
-                    obstacles.DamageStructure(pair.Key, pair.Value, origins[0]);
-                }
-            }
-
-            // 장애물만 타격 단위로 정산한다. 기존 일반 대상의 관통 합산 계약은 유지한다.
-            foreach (var hit in obstacleHits)
-            {
-                obstacles.DamageStructure(hit.Id, hit.Damage, hit.Origin);
-                obstacles.ResolveExplosions();
-            }
-            foreach (var blast in obstacles.BlastDamage)
-                if (potential.ContainsKey(blast.Key)) potential[blast.Key] = checked(potential[blast.Key] + blast.Value);
-            finalStructures = input.State.Structures.Select(s => projectedStructures[s.EntityId]).ToArray();
-
-            // 모든 일반 피해와 사망을 먼저 고정한 뒤 ID 순서로 밀치기를 처리한다.
-            var forcedArrivals = new List<EntityId>();
-            var knockback = engine.EvaluateKnockback(bindings);
-            int distance = knockback.Contributions.Count == 0 ? 0 : knockback.Contributions.Max(c => c.DistanceCells);
-            if (distance > 1) throw new NotSupportedException("현재 밀치기 계약은 한 칸입니다.");
-            if (distance > 0)
-                foreach (var id in roles.Keys.OrderBy(id => id).ToArray())
-                {
-                    if (!projected.TryGetValue(id, out var victim) || victim.Health.IsDead) continue;
-                    if (victim.PendingMoveActionCost != 0 || victim.MovementCheckpointAnchor != victim.Anchor.Value)
-                        throw new InvalidOperationException("밀치기 대상에 미정산 자발적 이동이 있습니다.");
-                    var step = ForcedDisplacementGeometry.ResolveBranchStep(actor.Anchor.Value, victim.Anchor.Value);
-                    var destination = ForcedDisplacementGeometry.ResolveDestinationAnchor(victim.Anchor.Value, step, distance);
-                    if (!EnvironmentTerrainRules.CanKnockback(environment, input.EnvironmentBindings, victim.Anchor.Value, destination)) continue;
-                    if (!input.State.IsInside(destination) || projected.Values.Any(c => c.EntityId != id && !c.Health.IsDead && c.OccupiedCells.Contains(destination)) ||
-                        finalStructures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(destination))) continue;
-                    var departed = PositionTileModifierCalculator.Replace(victim, PositionTileModifier.None);
-                    PositionTileModifierCalculator.RecordNormalization(events, victim, departed);
-                    normalizationLoss[id] = victim.Health.CurrentHealth - departed.Health.CurrentHealth;
-                    var consumedFields = new List<ThornFieldCellSnapshot>();
-                    ConsumeFields(fields, MovementPathCalculator.ResolvePathCells(victim.Anchor.Value, destination,
-                        Footprint(RequiredProfile(input, victim).Definition), victim.Rotation.Value), consumedFields);
-                    var origins = consumedFields.Select(f => new CombatDamageOrigin(f.Cell, null, attackGroups.Next())).ToArray();
-                    var relocated = Copy(departed, departed.Health, departed.Stats, destination);
-                    events.Add(new CombatCharacterEvent(CombatEventKind.Moved, departed, relocated));
-                    projected[id] = relocated;
-                    int thornDamage = 0;
-                    for (int j = 0; j < consumedFields.Count; j++)
-                        thornDamage = checked(thornDamage + CombatDamageCalculator.ApplyHeldDefense(attackGroups, projected, id,
-                            CombatDamageCalculator.Environment(input, consumedFields[j].ThornDamage, origins[j], destination, environment).FinalDamage,
-                            origins[j], events));
-                    relocated = projected[id];
-                    projected[id] = Hurt(relocated, thornDamage);
-                    CombatCommandEvents.Health(events, relocated, projected[id], origins);
-                    potential[id] = checked(potential.GetValueOrDefault(id) + thornDamage);
-                    if (projected[id].Health.IsDead) deathAnchors[id] = destination;
-                    else forcedArrivals.Add(id);
-                }
-
-            if (selected.PrimaryCell.HasValue)
-                foreach (var contribution in engine.EvaluateThornFieldApplication(bindings,
-                    new ThornFieldApplicationEffectContext(selected.PrimaryCell.Value)).Contributions)
-                {
-                    var propagation = AttackOcclusionResolver.ResolvePropagationCells(selected.PrimaryCell.Value,
-                        contribution.ApplicationCells.Where(input.State.IsInside).ToArray(), walls, profile.Occlusion);
-                    blockedContacts.AddRange(propagation.BlockedContacts);
-                    foreach (var cell in propagation.Cells)
-                    {
-                        var occupant = input.Characters.SingleOrDefault(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead && c.OccupiedCells.Contains(cell));
-                        // 피격 자격과 무관하게 살아 있는 구조물은 지형 생성 칸을 점유한다.
-                        var structure = input.State.Structures.SingleOrDefault(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell));
-                        if (structure != null) { fields.Remove(cell); continue; }
-                        if (occupant != null)
-                        {
-                            var beforeThorn = projected[occupant.EntityId];
-                            // 공격 직후의 가시 피해와 피격 결과도 일반 공격의 대상 자격을 따른다.
-                            if (!AttackTargetEligibility.CanTargetCharacter(actor, beforeThorn, selection.Policy)) continue;
-                            var origin = new CombatDamageOrigin(cell, actor.EntityId, attackGroups.Next());
-                            int thornDamage = CombatDamageCalculator.Environment(input, contribution.ThornDamage, origin,
-                                beforeThorn.Anchor, environment).FinalDamage;
-                            thornDamage = CombatDamageCalculator.ApplyHeldDefense(attackGroups, projected, occupant.EntityId, thornDamage, origin, events);
-                            beforeThorn = projected[occupant.EntityId];
-                            projected[occupant.EntityId] = Hurt(beforeThorn, thornDamage);
-                            CombatCommandEvents.Health(events, beforeThorn, projected[occupant.EntityId], new[] { origin });
-                            potential[occupant.EntityId] = checked(potential.GetValueOrDefault(occupant.EntityId) + thornDamage);
-                            if (!roles.ContainsKey(occupant.EntityId)) roles.Add(occupant.EntityId, AttackTargetRole.Additional);
-                        }
-                        else if (fields.TryGetValue(cell, out var existing))
-                            fields[cell] = new ThornFieldCellSnapshot(cell, Math.Max(existing.RemainingUnitTurns, contribution.LifetimeUnitTurns), existing.ThornDamage);
-                        else fields.Add(cell, new ThornFieldCellSnapshot(cell, contribution.LifetimeUnitTurns, contribution.ThornDamage));
-                    }
-                }
-
-            var traitActivations = new List<TraitActivationSnapshot>();
-            var categoryActivations = new List<CategoryActivationSnapshot>();
-            var success = engine.PlanAttackSucceeded(bindings, new AttackSucceededEffectContext(cost.PositiveCostContributors.ToArray(), direction));
-            var stats = CombatCommandEffects.Apply(actor.Stats, success);
-            CombatCommandEffects.AppendActivations(success, traitActivations, categoryActivations);
-            CombatCommandEvents.Effects(events, success);
-            int afterCost = checked(stats.CurrentActionCost - cost.EffectiveCost);
-            var refund = engine.EvaluateAttackCostRefund(bindings, new AttackActionCostRefundEffectContext(originalActor.AttackRefundEligibleMoveCost),
-                checked(stats.MaxActionCost - afterCost));
-            var refundPlan = engine.PlanAttackCostRefundApplied(bindings, refund);
-            stats = CombatCommandEffects.Apply(stats, refundPlan);
-            CombatCommandEffects.AppendActivations(refundPlan, traitActivations, categoryActivations);
-            CombatCommandEvents.Effects(events, refundPlan);
-            projected[actor.EntityId] = Copy(projected[actor.EntityId], projected[actor.EntityId].Health,
-                CombatCommandEffects.With(stats, ap: checked(afterCost + refund.EffectiveRefund)));
-            var settledActor = projected[actor.EntityId];
-            projected[actor.EntityId] = CombatMovementCalculator.CopyMovement(settledActor, settledActor.Stats,
-                settledActor.Anchor, settledActor.CommittedMoveDistance, 0, 0, 0, settledActor.MovementCheckpointAnchor);
-            // 피격 결과는 피해 정산 시점에 고정한다. 이후 도착 회복이 피해량을 되돌리지 않는다.
-            var hitHealth = roles.Keys.ToDictionary(id => id, id => projected.TryGetValue(id, out var c)
-                ? c.Health : finalStructures.Single(s => s.EntityId == id).Health);
-            var arrivalProjection = new MovementProjection(input, input.State, projected, projectedStructures,
-                fields, counts, soulField, consumed, events, deathAnchors, souls, attackGroups, environment);
-            foreach (var id in forcedArrivals.OrderBy(id => id))
-            {
-                if (projected[id].Health.IsDead || arrivalProjection.Terminal) continue;
-                MovementEnvironmentCalculator.ResolveObjectsAt(arrivalProjection, id, projected[id].Anchor.Value, rules);
-                arrivalProjection.ResolveForcedArrival(id);
-            }
-            // 처치 연쇄 공격은 강제 도착 뒤에 시작한다. 기본 공격 결과는 위에서 고정했으며 미리보기에는 넣지 않는다.
-            if (!publicPreview)
-                KillChainAttackCalculator.Resolve(input, engine, pipeline, bindings, commonDamage, arrivalProjection,
-                    projected, attackGroups, deathAnchors);
-            var results = roles.OrderBy(p => p.Key).Select(pair =>
-            {
-                var before = input.Characters.SingleOrDefault(c => c.EntityId == pair.Key)?.Health ?? structures.Single(s => s.EntityId == pair.Key).Health;
-                var after = hitHealth[pair.Key];
-                return new AttackHitResult(pair.Key, before.CurrentHealth, after.CurrentHealth, pair.Value,
-                    pair.Value == AttackTargetRole.Additional ? profile.Method.SplashPercent : 100,
-                    normalizationLoss.GetValueOrDefault(pair.Key));
-            }).ToArray();
-            var primary = roles.Where(p => p.Value == AttackTargetRole.Primary).Select(p => p.Key).DefaultIfEmpty(EntityId.Empty).Single();
-            var result = AttackResult.FromFacts(actor.EntityId, primary, direction,
-                new ActionCostSettlementSnapshot(originalActor.Stats.CurrentActionCost, cost.EffectiveCost, refund.EffectiveRefund,
-                    projected[actor.EntityId].Stats.CurrentActionCost),
-                selected.DesignatedCells.ToArray().Concat(selected.AdditionalCells.ToArray()).Distinct().OrderBy(c => c.Y).ThenBy(c => c.X).ToArray(),
-                results, selection.Cells, traitActivations: traitActivations.ToArray(), categoryActivations: categoryActivations.ToArray(),
-                blockedContacts: blockedContacts);
-            var targetPreviews = results.Select(hit =>
-            {
-                var original = input.Characters.SingleOrDefault(c => c.EntityId == hit.TargetId);
-                var occupied = original?.OccupiedCells ?? structures.Single(s => s.EntityId == hit.TargetId).OccupiedCells;
-                var damage = breakdowns.GetValueOrDefault(hit.TargetId, TargetDamageBreakdown.CreatePassthrough(0));
-                var rays = rayDetails.TryGetValue(hit.TargetId, out var details) && details.Count > 1
-                    ? details.ToArray() : Array.Empty<PierceRayHitPreview>();
-                int expectedDamage = potential.GetValueOrDefault(hit.TargetId);
-                int directDamage = directDamageByTarget.GetValueOrDefault(hit.TargetId);
-                return new AttackTargetPreview(hit.TargetId, expectedDamage, hit.TargetHealthBefore,
-                    occupied.ToArray(), rays.Length > 1 ? checked(rays.Sum(r => r.DamageBeforeMatchup)) : damage.DamageBeforeMatchup,
-                    damage.MatchupNumerator, damage.MatchupDenominator,
-                    rays.Length > 1 ? checked(rays.Sum(r => r.IncomingReduction)) : damage.IncomingReduction,
-                    rays, hit.Role, hit.AppliedSplashPercent, hit.HealthNormalizationLoss,
-                    secondaryDamage: checked(expectedDamage - directDamage));
-            }).ToArray();
-            preview = AttackPreview.FromFacts(result, targetPreviews, projected[actor.EntityId].Stats.TraitStatuses.ToArray(),
-                projected[actor.EntityId].Stats.Category);
-            events.Insert(attackEventIndex, new CombatAttackEvent(result));
-            return arrivalProjection.Complete(result);
+            if (input.Kind == CombatCommandKind.Attack) return CombatAttackCalculator.Calculate(input, rules, publicPreview, out preview);
+            return Reject(input, "UnsupportedCommand");
         }
 
         internal static CombatCommandTransition Finish(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> projected, Dictionary<CharacterInstanceId, int> counts,
             SoulFieldSnapshot soulField, Dictionary<CellCoord, ThornFieldCellSnapshot> fields,
             StructureCombatFacts[] structures, List<long> consumed, Dictionary<EntityId, CellCoord> deathAnchors,
-            SoulEffectCalculator souls, AttackResult? attack, CombatCommandState proposedState = null, bool countdown = false,
+            SoulEffectCalculator souls, AttackResult? attack, CombatCommandState proposedState = null,
             List<CombatEvent> events = null, ISet<EntityId> resolvedDeaths = null,
-            EnvironmentSemanticBindings environmentBindings = null)
+            EnvironmentSemanticBindings environmentBindings = null, UnitActionUseSettlementSnapshot actionUseSettlement = null,
+            CombatStageTally stageTally = null, IReadOnlyList<OwnedCharacterChange> proposedOwned = null)
         {
             events ??= new List<CombatEvent>();
             var sourceState = proposedState ?? input.State;
             var environment = sourceState.Environment;
             var progress = sourceState.EnvironmentProgress;
             environmentBindings ??= input.EnvironmentBindings;
+            var fallen = events.OfType<CombatFallEvent>().Select(e => e.EntityId).ToHashSet();
             FlagDropCalculator.ResolveDeaths(input, projected, structures, deathAnchors,
-                ref environment, ref environmentBindings, ref progress, events);
-            var outcome = BattleOutcomeCalculator.Resolve(projected.Values.ToArray(), structures);
+                ref environment, ref environmentBindings, ref progress, events, fallen);
+            var outcome = BattleOutcomeCalculator.Resolve(projected.Values.ToArray(), structures, input.State.Objective);
+            foreach (var character in projected.Values.ToArray())
+            {
+                if (character.Health.IsDead || outcome.IsStageEnded)
+                    projected[character.EntityId] = CombatTemporaryStateCleanup.Clear(character, events,
+                        character.Health.IsDead ? ItemEventReason.Death : ItemEventReason.BattleEnded);
+            }
+            if (!outcome.IsStageEnded) TraitPresenceReconciler.ApplyAndRecord(input, projected, events);
+            // 이 단계의 처치 경험치를 쌓고, 승리 단계면 보유 기록에 반영한다(경험치·레벨업 설계 §4.4).
+            var kills = ConfirmedKillCalculator.Collect(input, projected, events);
+            // 이 단계의 피해·이동·처치를 보유 아군의 스테이지 기록에 더한다. 승리 정산의 영수증이 이 값을 복사하므로 그 앞이다.
+            CombatStageRecordSettlement.Record(input, projected, events, kills, stageTally);
+            int gold = 0;
+            foreach (var kill in kills) gold = checked(gold + kill.Gold);
+            var rewards = sourceState.Rewards;
+            CombatRewardChange rewardChange = null;
+            var clear = outcome.Outcome == StageOutcome.Victory ? input.Battle?.ClearRewards : null;
+            if (gold != 0)
+                rewards = new CombatRewardFacts(rewards.ParticipantsCaptured, rewards.ClearParticipantIds,
+                    checked(rewards.KillGoldEarned + gold));
+            var pendingOwned = (proposedOwned ?? Array.Empty<OwnedCharacterChange>()).ToDictionary(c => c.Expected.Id);
+            var ownedInput = pendingOwned.Count == 0 ? input : input.WithPersistentFacts(input.Owned.Select(o =>
+                pendingOwned.TryGetValue(o.Id, out var change) ? change.Final : o).ToArray(), input.ItemInventory, input.GoldBalance, input.FameBalance);
+            var experience = CombatExperienceSettlement.Settle(ownedInput, projected, events, outcome, kills, rewards, clear);
+            var finalOwned = ownedInput.Owned.ToDictionary(o => o.Id);
+            foreach (var change in experience.Owned) finalOwned[change.Final.Id] = change.Final;
+            var ownedChanges = input.Owned.Where(o => !o.SameValues(finalOwned[o.Id]))
+                .Select(o => new OwnedCharacterChange(o, finalOwned[o.Id])).ToArray();
+            // 경험치 영수증도 같은 원래 기대값과 합성된 최종 보유 기록을 가리킵니다.
+            if (pendingOwned.Count > 0)
+                for (int i = 0; i < events.Count; i++)
+                    if (events[i] is CombatExperienceEvent applied && applied.Kind == CombatEventKind.ExperienceApplied)
+                    {
+                        var combined = ownedChanges.Single(c => c.Final.Id == applied.Owned.Final.Id);
+                        events[i] = CombatExperienceEvent.Applied(applied.RecipientId, combined, applied.Amount,
+                            applied.LevelsGained, applied.MainGrowth);
+                    }
+            var rewardSettlement = new CombatRewardSettlement(kills.Count, gold, clear?.Gold ?? 0, clear?.Fame ?? 0,
+                clear != null, experience.Characters);
+            int totalGold = rewardSettlement.GoldAwarded;
+            int fame = rewardSettlement.ClearFame;
+            if (totalGold != 0 || fame != 0)
+            {
+                int expected = input.GoldBalance ?? throw new InvalidOperationException("처치 골드 계산에는 현재 잔액이 필요합니다.");
+                int expectedFame = input.FameBalance ?? (fame == 0 ? 0 :
+                    throw new InvalidOperationException("클리어 명성 계산에는 현재 잔액이 필요합니다."));
+                rewardChange = new CombatRewardChange(expected, checked(expected + totalGold), expectedFame, checked(expectedFame + fame));
+            }
+            // 메인이 승리 반영으로 성장했으면 종료 체력 정산과 지속 상태 변경은 성장한 지속 상태에서 시작한다(X5).
+            var mainState = experience.GrownMain ?? input.Main;
             var main = input.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
             var finalMain = projected[main.EntityId];
             if (outcome.IsStageEnded)
@@ -358,48 +162,41 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 finalMain = projected[main.EntityId];
                 var terminal = new BattleCompletionCalculator(input.Artifacts).PlanTerminalHealth(finalMain,
-                    CharacterSettlementCalculator.WithHealth(input.Main, finalMain.Health.CurrentHealth), outcome, events);
-                var beforeTerminal = finalMain;
+                    mainState.WithCurrentHealth(finalMain.Health.CurrentHealth), outcome, events);
                 projected[main.EntityId] = finalMain = terminal.Characters[0].Final;
-                CombatCommandEvents.Health(events, beforeTerminal, finalMain);
             }
             var changes = input.Characters.Where(c => !ReferenceEquals(c, projected[c.EntityId])).OrderBy(c => c.EntityId)
                 .Select(c => new CharacterStateChange(c, projected[c.EntityId])).ToArray();
-            var persistent = new MainCharacterPersistentChange(input.Main,
-                CharacterSettlementCalculator.WithHealth(input.Main, finalMain.Health.CurrentHealth));
+            // 이번 명령에서 만든 개체는 투영에만 있다. 원래 있던 개체의 변경과 섞지 않고 최종 사실 하나로 게시한다.
+            var inputIds = input.Characters.Select(c => c.EntityId).ToHashSet();
+            var created = projected.Values.Where(c => !inputIds.Contains(c.EntityId)).OrderBy(c => c.EntityId).ToArray();
+            var persistent = new MainCharacterPersistentChange(input.MainId, input.Main,
+                mainState.WithCurrentHealth(finalMain.Health.CurrentHealth));
             var characterChanges = new CharacterChanges(changes, counts.Where(p => p.Value != input.SoulCounts[p.Key])
-                .Select(p => new SoulCountChange(p.Key, input.SoulCounts[p.Key], p.Value)).ToArray(), persistent);
+                .Select(p => new SoulCountChange(p.Key, input.SoulCounts[p.Key], p.Value)).ToArray(), persistent, created, ownedChanges);
             var deaths = changes.Where(c => !c.Expected.Health.IsDead && c.Final.Health.IsDead &&
+                !fallen.Contains(c.Final.EntityId) &&
                 (resolvedDeaths == null || !resolvedDeaths.Contains(c.Final.EntityId)))
-                .Select(c => new SoulDeathFacts(c, deathAnchors.GetValueOrDefault(c.Final.EntityId,
-                    c.Expected.Anchor ?? c.Expected.MovementCheckpointAnchor))).ToArray();
-            var deathField = souls.PlanDeaths(soulField, deaths, input.State.IsNight, countdown);
+                .Select(c => new SoulDeathFacts(c, deathAnchors.TryGetValue(c.Final.EntityId, out var anchor)
+                    ? anchor : c.Expected.Anchor ?? throw new InvalidOperationException("사망 영혼 정산의 실제 위치가 없습니다."))).ToArray();
+            var deathField = souls.PlanDeaths(soulField, deaths, input.State.IsNight);
             if (!deathField.Expected.SameValues(deathField.Final)) events.Add(new CombatSoulEvent(deathField));
             soulField = deathField.Final;
-            var dead = new HashSet<EntityId>(projected.Values.Where(c => c.Health.IsDead).Select(c => c.EntityId));
-            bool actorDead = dead.Contains(input.ActorId);
-            var turn = sourceState.Turn;
-            turn = new CombatTurnFacts(turn.StagePhase, turn.PreparationIndex, turn.MainPlacementLocked, turn.CurrentTime,
-                turn.CurrentNightTime, turn.CompletedUnitTurnCount, turn.Participants.Where(p => !dead.Contains(p.EntityId))
-                    .Select(p => new CombatTurnParticipant(p.EntityId,
-                        projected.TryGetValue(p.EntityId, out var participant) ? HeldEnvironmentEffects.EffectivePriority(participant) : p.Priority, p.Delay,
-                        p.NextActionTime, p.OpeningTurnPending, p.CompletedTurnCount)).ToArray(),
-                turn.EnemyOrigins, turn.Gimmicks);
-            var state = new CombatCommandState(input.State.BoardWidth, input.State.BoardHeight,
-                outcome.IsStageEnded ? CombatFlowPhase.Finished : actorDead && proposedState == null ? CombatFlowPhase.Automatic : sourceState.Phase,
-                actorDead || outcome.IsStageEnded ? EntityId.Empty : sourceState.ActiveActorId, sourceState.IsNight, structures,
-                fields.Values.OrderBy(f => f.Cell.Y).ThenBy(f => f.Cell.X).ToArray(),
-                sourceState.Timeline.Where(t => !t.UnitId.HasValue || !dead.Contains(t.UnitId.Value)).Select(t =>
-                    !t.UnitId.HasValue || !projected.TryGetValue(t.UnitId.Value, out var participant) ? t : t.ProjectedNightTimeAfterTurn.HasValue ?
-                    CombatTimelineEntrySnapshot.ForUnit(t.UnitId.Value, HeldEnvironmentEffects.EffectivePriority(participant),
-                        t.ScheduledTime, t.IsActive, t.ProjectedNightTimeAfterTurn.Value, t.EndsNightAfterTurn) :
-                    CombatTimelineEntrySnapshot.ForUnit(t.UnitId.Value, HeldEnvironmentEffects.EffectivePriority(participant),
-                        t.ScheduledTime, t.IsActive)).ToArray(), turn, environment, progress, sourceState.WallBlocking);
-            if (outcome.IsStageEnded) events.Add(new CombatOutcomeEvent(outcome));
+            // 개별 유닛 사망은 진영 턴을 끝내거나 예산을 채우지 않는다. 종료 결과만 모든 추가 진행을 막는다.
+            var state = sourceState.With(
+                phase: outcome.IsStageEnded ? CombatFlowPhase.Finished : sourceState.Phase,
+                structures: structures, thornFields: fields.Values.OrderBy(f => f.Cell.Y).ThenBy(f => f.Cell.X).ToArray(),
+                environment: environment, environmentProgress: progress, rewards: rewards);
+            if (outcome.IsStageEnded)
+            {
+                state = state.With(environment: TraitTrailCalculator.Clear(state.Environment, events));
+                events.Add(new CombatOutcomeEvent(outcome));
+            }
             return new CombatCommandTransition(input, true, "", characterChanges,
                 new SoulFieldChange(input.Souls, soulField), state, outcome, attack, consumed, events: events,
                 environmentBindings: input.EnvironmentBindings.SameValues(environmentBindings) ? null :
-                    new EnvironmentBindingsChange(input.EnvironmentBindings, environmentBindings), blockedContacts: attack?.BlockedContacts);
+                    new EnvironmentBindingsChange(input.EnvironmentBindings, environmentBindings), blockedContacts: attack?.BlockedContacts,
+                rewardChange: rewardChange, rewardSettlement: rewardSettlement, actionUseSettlement: actionUseSettlement);
         }
 
         internal static void Collect(CombatCommandInput input, SoulEffectCalculator souls,
@@ -408,8 +205,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             var owned = input.Owned.Single(o => o.Id == actor.OwnedId.Value);
             var main = actor.OwnershipRole == CharacterOwnershipRole.Main
-                ? CharacterSettlementCalculator.WithHealth(input.Main, actor.Health.CurrentHealth) : null;
-            int baseMax = main?.PersistentMaxHealth ?? RequiredProfile(input, actor).Definition.MaxHealth;
+                ? input.Main.WithCurrentHealth(actor.Health.CurrentHealth) : null;
+            int baseMax = main?.PersistentMaxHealth ?? SubBaseMaxHealth(actor);
             var collected = souls.Collect(new SoulCollectorInput(actor, owned, counts[owned.Id], baseMax, main, arrivalKind), field, true);
             if (collected.ConsumedSoulIds.Count != 0) events?.Add(new CombatSoulEvent(collected.Field, actor.EntityId, collected));
             foreach (var change in collected.Characters.Characters) projected[change.Final.EntityId] = change.Final;
@@ -417,6 +214,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             field = collected.Field.Final;
             consumed.AddRange(collected.ConsumedSoulIds);
         }
+
+        /// <summary>
+        /// 서브의 영혼·전투 보정 전 최대 체력이다. 생성 때 레벨로 성장시킨 값이 전투 기록에 들어 있으므로 정의에서 다시 고르지 않는다.
+        /// 전투 중 레벨이 바뀌면 전투 기록이 함께 바뀌므로 이 값도 따라간다.
+        /// </summary>
+        private static int SubBaseMaxHealth(CharacterCombatFacts actor) => SoulGrowthMath.BaseMaxHealth(actor.Health,
+            actor.Stats.SoulMaxHealthBonus, actor.TemporaryMaxHealthBonus, actor.PositionModifier.MaxHealthBonus);
 
         internal static int ConsumeFields(Dictionary<CellCoord, ThornFieldCellSnapshot> fields, CellCoord[] visited,
             List<ThornFieldCellSnapshot> consumed = null)
@@ -431,34 +235,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return damage;
         }
 
-        /// <summary>실행과 AI 목표 판정이 같은 관통 제한을 사용한다. AP·피해 적용·도착 효과는 계산하지 않는다.</summary>
-        internal static int PierceTargetBudget(CombatCommandInput input, CharacterCombatFacts actor,
-            CombatAttackProfile profile, int? commonDamage = null)
+        internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character)
         {
-            var engine = new CombatEffectEngine();
-            var bindings = CombatCommandEffects.Capture(actor, profile);
-            int damage = commonDamage ?? engine.EvaluateAttackDamage(bindings, new AttackDamageEffectContext(
-                new SoulEffectCalculator(input.Artifacts).EvaluateAttackPower(actor,
-                    actor.OwnedId.HasValue ? input.SoulCounts[actor.OwnedId.Value] : 0, input.Characters))).EffectiveDamage;
-            var falloff = engine.EvaluatePierceFalloff(bindings, new PierceFalloffEffectContext(damage, 0));
-            return falloff.TargetBudget ?? int.MaxValue;
+            if (character.OwnedId.HasValue)
+            {
+                var exact = input.Profiles.SingleOrDefault(p => p.OwnedId == character.OwnedId && p.Definition.Key == character.CharacterKey);
+                if (exact != null) return exact;
+                if (input.Owned.SingleOrDefault(o => o.Id == character.OwnedId.Value)?.Growth.IsEmpty == false)
+                    throw new InvalidOperationException("특성이 성장한 개체의 전용 프로필이 없습니다.");
+            }
+            return input.Profiles.SingleOrDefault(p => !p.OwnedId.HasValue && p.Definition.Key == character.CharacterKey) ??
+                throw new InvalidOperationException("명시적으로 연결한 지정 방식과 유닛 정의가 필요합니다.");
         }
 
-        /// <summary>공격자와 대상 사이 체비셰프 거리의 배율을 대상 피해에 적용한다. 반올림은 상성 배율과 같은 half-up이다.</summary>
-        private static int ScaleByTargetDistance(CombatEffectEngine engine, EffectRuleBinding[] bindings,
-            CharacterCombatFacts actor, EntityId targetId, CharacterCombatFacts victim, StructureCombatFacts[] structures, int damage)
+        internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character,
+            CombatProfileReadSet profileReads)
         {
-            var origin = actor.Anchor.Value;
-            var cells = victim?.OccupiedCells ?? structures.Single(s => s.EntityId == targetId).OccupiedCells;
-            int distance = cells.Min(c => checked((int)Math.Max(Math.Abs((long)c.X - origin.X), Math.Abs((long)c.Y - origin.Y))));
-            var scale = engine.EvaluateTargetDistanceDamage(bindings, new TargetDistanceDamageEffectContext(distance));
-            return scale.HasContribution ? CategoryMatchupDamageCalculator.Apply(damage, scale.Numerator, scale.Denominator) : damage;
+            var profile = RequiredProfile(input, character);
+            profileReads?.Record(character.EntityId, profile);
+            return profile;
         }
 
-        internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character) =>
-            input.Profiles.SingleOrDefault(p => p.Definition.Key == character.CharacterKey) ??
-            throw new InvalidOperationException("명시적으로 연결한 지정 방식과 유닛 정의가 필요합니다.");
-        private static TileFootprint Footprint(UnitSpec spec) => new(spec.FootprintWidth, spec.FootprintHeight, spec.FootprintLocalCells.ToArray());
         internal static CharacterCombatFacts Hurt(CharacterCombatFacts c, int damage) => Copy(c,
             new HealthStateSnapshot(Math.Max(0, c.Health.CurrentHealth - Math.Min(c.Health.CurrentHealth, damage)), c.Health.MaxHealth), c.Stats);
         internal static CombatCommandTransition Reject(CombatCommandInput input, string reason,
@@ -470,15 +267,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             UnitStatsSnapshot stats, CellCoord? anchor = null)
         {
             bool dead = health.IsDead;
-            var position = anchor ?? c.Anchor ?? c.MovementCheckpointAnchor;
-            return new CharacterCombatFacts(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner, c.OwnershipRole,
-                dead ? CharacterRuntimeArea.Excluded : c.Area, health, stats, dead ? null : c.ReserveSlotIndex,
-                dead ? null : c.Anchor.HasValue ? position : null, dead ? null : c.Rotation,
-                dead ? Array.Empty<CellCoord>() : c.Anchor.HasValue ? new[] { position } : c.OccupiedCells,
-                anchor.HasValue ? position : c.MovementCheckpointAnchor,
-                c.CommittedMoveDistance, c.PendingMoveActionCost,
-                c.TemporaryAttackBonus, c.TemporaryMaxHealthBonus,
-                c.PendingMoveDistance, c.AttackRefundEligibleMoveCost, c.PositionModifier, c.HeldEnvironment);
+            var position = anchor ?? c.Anchor;
+            // 사망하면 위치를 비우고 제외 영역으로 옮기는 규칙은 여기(Core 계산)가 소유한다. 필드 나열은 계약 사본이 맡는다.
+            return c.WithPlacement(
+                area: dead ? CharacterRuntimeArea.Excluded : c.Area,
+                reserveSlotIndex: dead ? null : c.ReserveSlotIndex,
+                anchor: dead ? null : c.Anchor.HasValue ? position : null,
+                rotation: dead ? null : c.Rotation,
+                occupiedCells: dead ? Array.Empty<CellCoord>() : c.Anchor.HasValue ? new[] { position.Value } : c.OccupiedCells,
+                health: health, stats: stats);
         }
 
         internal static Rotation4 AttackRotation(AttackAim aim, CellCoord origin)

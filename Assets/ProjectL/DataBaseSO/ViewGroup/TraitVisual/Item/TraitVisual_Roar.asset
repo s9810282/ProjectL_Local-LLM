@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_Roar
+  m_EditorClassIdentifier:
+  traitVisualData:
+    key: 90
+    displayName: "\uD3EC\uD6A8"
+    icon: {fileID: 21300000, guid: 7e1dc9b7d98d4c1408aa736c603683e0, type: 3}
+    description: "피격 횟수가 5회에 도달하면\n범위 내 적에게 자신의 공격력만큼 피해를 주고 \n3칸 밀어냅니다."
+    activations:
+    - kind: 360
+      cueTiming: 0
+      bodyText:
+        enabled: 0
+        textSource: 0
+        overrideText:
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 6
+          anchor: 1
+          delay: 0
+          point: 3
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

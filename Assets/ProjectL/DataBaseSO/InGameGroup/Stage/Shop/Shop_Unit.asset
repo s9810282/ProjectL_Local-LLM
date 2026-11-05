@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2db938caf62d41e4ac8d34ff2edce607, type: 3}
+  m_Name: Shop_Unit
+  m_EditorClassIdentifier:
+  candidates:
+  - unitDefinition: {fileID: 11400000, guid: 39a9cd647c4c4d35af33595bbea3064e, type: 2}
+  - unitDefinition: {fileID: 11400000, guid: 65c5b316864932f44b6be0119a7b4246, type: 2}
+  - unitDefinition: {fileID: 11400000, guid: f7ed96dc828146c28600c5e7b6bc277c, type: 2}
+  - unitDefinition: {fileID: 11400000, guid: 5567e8f0634b41668c4b052edc1977a6, type: 2}
+  - unitDefinition: {fileID: 11400000, guid: b8b7fa1d0a184ded941b09423dc9ec24, type: 2}
+  items: []
+  unitRecruitCostGold: 600
+  itemCategoryWeight: 2
+  unitCategoryWeight: 1

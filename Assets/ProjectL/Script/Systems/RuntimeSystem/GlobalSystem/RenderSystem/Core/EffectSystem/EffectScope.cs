@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NUnit.Framework;
 using ProjectL.Systems.DataBaseSystem.Data.Render.Table.Effect.Enum;
 using UnityEngine;
 
@@ -61,6 +62,25 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.EffectSy
             }
 
             elements.Clear();
+        }
+
+        public void Stop(EffectType Type) 
+        {
+            var target = elements.Find((e) => 
+            {
+                return e.effectType == Type;
+            });
+
+            if (target != null) 
+            {
+                target.particleStopNotifier.ClearCallback();
+                elements.Remove(target);
+                EffectSystemHandleServices.ReturnElementNode(target);
+
+                return;
+            }
+
+            throw new System.Exception($"Not Find elements Type : {Type.ToString()}");
         }
 
         private void Stop(ElementNode node)

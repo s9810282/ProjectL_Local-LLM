@@ -1,6 +1,6 @@
 # Task 8R1 — Core Combat Retirement Baseline and Coverage Inventory
 
-Date: 2026-10-02. Status: **8R1 inventory complete; no runtime/test implementation or retirement performed.** This report supplies the inputs for [8R2–8R6](../plans/2026-10-02-core-combat-legacy-retirement-plan.md). The [master Task 8](../plans/2026-09-29-character-buffer-effect-migration-plan.md) remains incomplete.
+Date: 2026-10-02. Status: **8R1 inventory complete; no runtime/test implementation or retirement performed.** This report supplies the inputs for 8R2–8R6 (Git history: `2026-10-02-core-combat-legacy-retirement-plan.md`). The master Task 8 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) remains incomplete.
 
 ## Execution scope and preserved baseline
 

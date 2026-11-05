@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521086def3fd408b9e2d78dff44ea5de, type: 3}
+  m_Name: Whiskey
+  m_EditorClassIdentifier: 
+  key: 1
+  costGold: 100
+  displayName: "\uC704\uC2A4\uD0A4"
+  description: "\uD604\uC7AC \uCCB4\uB825\uC774 \uCD5C\uB300 \uCCB4\uB825\uC758 50%\uC774\uD558\uB85C
+    \uB5A8\uC5B4\uC84C\uC744 \uB54C, \uCD5C\uB300 \uCCB4\uB825\uC758 10%\uB9CC\uD07C
+    \uC989\uC2DC \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  effect:
+    rid: 7000000000000000001
+  references:
+    version: 2
+    RefIds:
+    - rid: 7000000000000000001
+      type: {class: WhiskeyItemAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Item.Authoring, asm: ProjectL.Systems}
+      data:
+        triggerHealthPercent: 50
+        healPercent: 10

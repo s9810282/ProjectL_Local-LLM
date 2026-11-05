@@ -30,6 +30,8 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable
                     throw new InvalidOperationException("[PlayerLoadoutTable] PlayerLoadoutTable requires non-null PlayerLoadoutDataSO items.");
 
                 data.Validate();
+                // 초기 덱 번호의 모양은 저작 오류이므로 DB 생성에서 막습니다. 새 Run 시작은 Validate만 부릅니다(E2 인계 §3).
+                data.ValidateInitialDeckIndices();
 
                 if (!_dataByKey.TryAdd(data.LoadoutKey, data))
                     throw new InvalidOperationException($"[PlayerLoadoutTable] Duplicate LoadoutKey: {data.LoadoutKey}.");

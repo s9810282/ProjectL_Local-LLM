@@ -19,9 +19,7 @@ namespace ProjectL.Tests.Core
         {
             var i = Objects(new SheriffBadgeSourceFact(99, CellCoord.Right, 1, true, new[] { Owner.Player }));
             var s = i.State;
-            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase,
-                s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn,
-                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new FixturePhaseProbe()).ToArray())));
+            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new FixturePhaseProbe()).ToArray())));
             var r = CombatCommandCalculator.Calculate(i, new IMovementTileRule[] { new SheriffBadgeMovementTileRule(), new FixturePhaseProbeRule() });
             Assert.That(r.Accepted, Is.True, r.Reason);
             Assert.That(MovementTestData.Actor(r).Health.CurrentHealth, Is.EqualTo(100));
@@ -72,9 +70,7 @@ namespace ProjectL.Tests.Core
             var badge = new SheriffBadgeSourceFact(99, new CellCoord(2, 1), 1, true, new[] { Owner.Player });
             i = WithObjects(i, badge);
             var s = i.State;
-            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId,
-                s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn,
-                new MovementEnvironmentFacts(new MovementTileFact[] { badge, new FixtureForce(other.EntityId) })));
+            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { badge, new FixtureForce(other.EntityId) })));
             var rules = new IMovementTileRule[] { new SheriffBadgeMovementTileRule(), new FixtureForceRule() };
             var context = MovementContextCalculator.Capture(i, Owner.Player, rules);
             Assert.That(context.VisibleEnvironment.Tiles.Select(t => t.Id), Does.Contain(99));
@@ -111,24 +107,23 @@ namespace ProjectL.Tests.Core
                 new HealthStateSnapshot(100, 100), new CellCoord(0, 7), Rotation4.R0, new[] { new CellCoord(0, 7) }, Owner.Enemy);
             var badge = new SheriffBadgeSourceFact(99, cell, 1, true, new[] { Owner.Enemy });
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, EntityId.Empty, false,
-                new[] { headquarters }, Array.Empty<ThornFieldCellSnapshot>(), Array.Empty<CombatTimelineEntrySnapshot>(), turn,
-                new MovementEnvironmentFacts(new[] { badge }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { badge }));
             var input = new CombatCommandInput(1, i.Kind, EntityId.Empty, default, state,
                 new[] { i.Characters.Single(c => c.CharacterKey == EntityKey.Unit_MainCharacter), waiting }, i.Profiles,
                 i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
-                battle: new CombatBattleFacts(10, 20, 37, 1, 1, Array.Empty<CharacterInstanceId>(), 0, 21, 10, 2),
-                environmentBindings: Bindings(99));
+                battle: new CombatBattleFacts(10, 37, 1, 1, Array.Empty<CharacterInstanceId>(), 0),
+                environmentBindings: Bindings(99),
+                expectedBattleInstanceId: 0, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
             var r = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new SheriffBadgeMovementTileRule() });
             Assert.That(r.Accepted, Is.True, r.Reason);
             var final = r.Characters.Characters.Single(c => c.Final.EntityId == enemy.EntityId).Final;
             Assert.That(final.HeldEnvironment.BadgeAvailable, Is.True);
             Assert.That(r.FinalState.Environment.Tiles.Single().Active, Is.False);
-            Assert.That(r.FinalState.Turn.Participants.Select(p => p.EntityId), Does.Contain(enemy.EntityId));
+            Assert.That(final.ActionUse, Is.EqualTo(UnitActionUse.Deferred));
             Assert.That(r.Events.OfType<CombatObjectActivationEvent>().Single().ActivatorId, Is.EqualTo(enemy.EntityId));
         }
         [Test]
-        public void Placement_ActivatesObjectWithoutSpendingMovementResources()
+        public void Placement_ActivatesObjectAndDefersAction()
         {
             var i = CombatCommonCommandTests.Command(CombatCommandKind.PlaceUnit);
             var hand = CombatPlacementCalculator.Location(i.Characters[0], CharacterRuntimeArea.Hand, 0, null, null);
@@ -136,17 +131,17 @@ namespace ProjectL.Tests.Core
             var cell = new CellCoord(2, 0);
             var badge = new SheriffBadgeSourceFact(99, cell, 1, true, new[] { Owner.Player });
             var s = i.State;
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, EntityId.Empty, false,
-                s.Structures, s.ThornFields, s.Timeline, new CombatTurnFacts(StagePhase.Deployment), new MovementEnvironmentFacts(new[] { badge }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),new MovementEnvironmentFacts(new[] { badge }));
             var input = new CombatCommandInput(1, i.Kind, i.ActorId, default, state, i.Characters, i.Profiles,
                 i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, targetCell: cell,
-                battle: new CombatBattleFacts(10, 20, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0, 11, 10, 2),
-                environmentBindings: Bindings(99));
+                battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
+                environmentBindings: Bindings(99),
+                expectedBattleInstanceId: 0, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new SheriffBadgeMovementTileRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             var final = result.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final;
             Assert.That(final.HeldEnvironment.BadgeAvailable, Is.True);
-            Assert.That(final.Stats.CurrentActionCost, Is.EqualTo(i.Characters[0].Stats.CurrentActionCost));
+            Assert.That(final.ActionUse, Is.EqualTo(UnitActionUse.Deferred));
             Assert.That(result.FinalState.Environment.Tiles.Single().Active, Is.False);
             Assert.That(result.PathMovement, Is.Null);
         }
@@ -173,11 +168,11 @@ namespace ProjectL.Tests.Core
         {
             var s = i.State;
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim,
-                new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                    s.Structures, s.ThornFields, s.Timeline, s.Turn, new MovementEnvironmentFacts(objects)),
+                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
                 i.Characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
                 i.TargetCell, i.Rotation, i.Battle, i.ProcessingKind, i.Path, i.MovementContext, i.BattleInstanceId,
-                i.ArtifactItems, Bindings(objects.Select(o => o.Id).ToArray()), i.ObstacleContents);
+                i.ArtifactItems, Bindings(objects.Select(o => o.Id).ToArray()), i.ObstacleContents,
+                expectedBattleInstanceId: i.ExpectedBattleInstanceId, expectedControllerTurnSequence: i.ExpectedControllerTurnSequence);
         }
 
         [Test]
@@ -190,11 +185,9 @@ namespace ProjectL.Tests.Core
             Assert.That(r.FinalState.Environment.Tiles.All(t => !t.Active), Is.True);
             Assert.That(MovementTestData.Actor(r).HeldEnvironment.BadgeSourceId, Is.EqualTo(99));
             Assert.That(r.Events.OfType<CombatObjectActivationEvent>().Select(e => e.Source.Id), Is.EqualTo(new[] { 99L, 1L }));
-            Assert.That(r.PathMovement.ReturnBarrierOccurred, Is.True);
-            Assert.That(r.PathMovement.ActionCostSpent, Is.EqualTo(1));
-            var returned = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(MovementTestData.After(r),
-                CombatCommandKind.ReturnToCheckpoint), new IMovementTileRule[] { new SheriffBadgeMovementTileRule() });
-            Assert.That(returned.Accepted, Is.False);
+            Assert.That(MovementTestData.Actor(r).ActionUse, Is.EqualTo(UnitActionUse.Moved));
+            Assert.Throws<ArgumentOutOfRangeException>(() => CombatCommandComposition.Intent(MovementTestData.After(r),
+                (CombatCommandKind)9));
         }
 
         [Test]
@@ -241,7 +234,7 @@ namespace ProjectL.Tests.Core
             var hazard = new FixtureHazard(1, hazardFirst ? 1 : 2);
             var i = Objects(badge, hazard);
             var projection = new MovementProjection(i);
-            projection.Enter(CellCoord.Right, 1);
+            projection.Enter(CellCoord.Right);
             MovementEnvironmentCalculator.ResolveObjectsAt(projection, i.ActorId, CellCoord.Right,
                 new IMovementTileRule[] { new SheriffBadgeMovementTileRule(), new FixtureHazardRule() });
             Assert.That(projection.Actor.Health.IsDead, Is.EqualTo(hazardFirst));
@@ -250,18 +243,18 @@ namespace ProjectL.Tests.Core
             Assert.That(projection.Actor.HeldEnvironment.BadgeAvailable, Is.False);
             Assert.That(projection.Events.OfType<CombatObjectActivationEvent>().Select(e => e.Source.Id),
                 Is.EqualTo(hazardFirst ? new[] { 1L } : new[] { 99L, 1L }));
-            Assert.That(projection.ReturnBarrierOccurred, Is.True);
+            Assert.That(projection.Actor.Anchor, Is.EqualTo(hazardFirst ? (CellCoord?)null : CellCoord.Right));
         }
 
         internal static CombatCommandInput Objects(params ObjectSourceFact[] objects)
         {
-            var i = MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right);
+            var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var s = i.State;
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim,
-                new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                    s.Structures, s.ThornFields, s.Timeline, s.Turn, new MovementEnvironmentFacts(objects)),
+                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
                 i.Characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
-                path: i.Path, battleInstanceId: 1, environmentBindings: Bindings(objects.Select(o => o.Id).ToArray()));
+                path: i.Path, battleInstanceId: 1, environmentBindings: Bindings(objects.Select(o => o.Id).ToArray()),
+                expectedBattleInstanceId: i.ExpectedBattleInstanceId, expectedControllerTurnSequence: i.ExpectedControllerTurnSequence);
         }
 
         private sealed class FixtureHazard : ObjectSourceFact
@@ -307,10 +300,8 @@ namespace ProjectL.Tests.Core
         {
             var i = CombatCommandTestData.Input();
             var s = i.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment, new EnvironmentProgressFacts(50));
-            var stale = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment, new EnvironmentProgressFacts(51));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(50));
+            var stale = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(51));
             Assert.That(state.SameValues(stale), Is.False);
             Assert.That(CombatTurnCalculator.State(state, state.Turn, state.Phase).EnvironmentProgress.NextObjectEntryOrdinal, Is.EqualTo(50));
         }
@@ -320,9 +311,7 @@ namespace ProjectL.Tests.Core
         {
             var i = Objects(new SheriffBadgeSourceFact(99, CellCoord.Right, 10, false, new[] { Owner.Player }));
             var s = i.State;
-            Assert.Throws<ArgumentException>(() => new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase,
-                s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment,
-                new EnvironmentProgressFacts(10)));
+            Assert.Throws<ArgumentException>(() => new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,s.Environment,                new EnvironmentProgressFacts(10)));
         }
 
         internal static EnvironmentSemanticBindings Bindings(params long[] ids) =>

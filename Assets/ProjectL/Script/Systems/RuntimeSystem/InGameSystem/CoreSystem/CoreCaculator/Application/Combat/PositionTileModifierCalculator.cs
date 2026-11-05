@@ -35,16 +35,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int maxHealth = checked(actor.Health.MaxHealth - actor.PositionModifier.MaxHealthBonus + next.MaxHealthBonus);
             var health = new HealthStateSnapshot(Math.Min(actor.Health.CurrentHealth, maxHealth), maxHealth);
             var s = actor.Stats;
-            var stats = new UnitStatsSnapshot(s.MoveMethod, s.MoveRange, s.MoveCost, s.AppointRange,
-                s.AttackPower, s.PhysicalDefense, s.MaxActionCost, s.AttackCost, s.RemainingMoveRange,
-                s.CurrentActionCost, s.Priority, s.Delay, s.TraitStatuses.ToArray(), s.Category,
-                s.ArtifactAttackBonus, checked(s.AttackPower + s.ArtifactAttackBonus + next.AttackBonus),
-                s.SoulAttackBonus, s.SoulMaxHealthBonus, next.AttackBonus);
-            return new CharacterCombatFacts(actor.EntityId, actor.OwnedId, actor.CharacterKey, actor.Owner,
-                actor.OwnershipRole, actor.Area, health, stats, actor.ReserveSlotIndex, actor.Anchor, actor.Rotation,
-                actor.OccupiedCells, actor.MovementCheckpointAnchor, actor.CommittedMoveDistance,
-                actor.PendingMoveActionCost, actor.TemporaryAttackBonus, actor.TemporaryMaxHealthBonus,
-                actor.PendingMoveDistance, actor.AttackRefundEligibleMoveCost, next, actor.HeldEnvironment);
+            var stats = s.With(effectiveAttackPower: checked(s.AttackPower + s.ArtifactAttackBonus + next.AttackBonus + s.TraitAttackBonus),
+                positionAttackBonus: next.AttackBonus);
+            return actor.With(health: health, stats: stats, positionModifier: next);
         }
 
         internal static void RecordNormalization(List<CombatEvent> events, CharacterCombatFacts before,
@@ -58,8 +51,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (final.OwnershipRole != CharacterOwnershipRole.Main || final.Health.CurrentHealth == input.Main.CurrentHealth)
                 return null;
-            return new MainCharacterPersistentChange(input.Main,
-                CharacterSettlementCalculator.WithHealth(input.Main, final.Health.CurrentHealth));
+            return new MainCharacterPersistentChange(input.MainId, input.Main,
+                input.Main.WithCurrentHealth(final.Health.CurrentHealth));
         }
     }
 }

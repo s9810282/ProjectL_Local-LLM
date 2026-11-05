@@ -4,6 +4,7 @@ using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Item;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using UnityEngine;
+using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Item.Item;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Shop
 {
@@ -17,25 +18,25 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Shop
         private struct CandidateInput
         {
             [SerializeField] private UnitDataSO unitDefinition;
-            [SerializeField, Min(0)] private int cost;
 
-            public ShopCandidate ToData()
-            {
-                EntityKey key = unitDefinition != null ? unitDefinition.Key : EntityKey.None;
-                return new ShopCandidate(key, cost);
-            }
+            public EntityKey Key => unitDefinition != null ? unitDefinition.Key : EntityKey.None;
         }
 
         [SerializeField] private CandidateInput[] candidates = new CandidateInput[0];
+        [SerializeField] private ConsumableItemDataSO[] items = new ConsumableItemDataSO[0];
+        [SerializeField, Min(0)] private int unitRecruitCostGold = 600;
+        [SerializeField, Min(1)] private int itemCategoryWeight = 2;
+        [SerializeField, Min(1)] private int unitCategoryWeight = 1;
 
         public override StageType StageType => StageType.Shop;
 
         protected override IStageData CreateStageData()
         {
-            var data = new ShopCandidate[candidates?.Length ?? 0];
-            for (int i = 0; i < data.Length; i++)
-                data[i] = candidates[i].ToData();
-            return new ShopStageDetail(data);
+            var unitKeys = new EntityKey[candidates?.Length ?? 0];
+            for (int i = 0; i < unitKeys.Length; i++) unitKeys[i] = candidates[i].Key;
+            var itemKeys = new int[items?.Length ?? 0];
+            for (int i = 0; i < itemKeys.Length; i++) itemKeys[i] = items[i] != null ? items[i].Key : 0;
+            return new ShopStageDetail(unitKeys, itemKeys, unitRecruitCostGold, itemCategoryWeight, unitCategoryWeight);
         }
     }
 }

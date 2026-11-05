@@ -12,18 +12,29 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         public long SourceId { get; }
         public CellCoord Cell { get; }
         public StaticTerrainKind Kind { get; }
+        public int EntryThreshold { get; }
         public IReadOnlyList<Owner> KnownTo { get; }
 
-        public StaticTerrainPlacementData(long sourceId, CellCoord cell, StaticTerrainKind kind, IReadOnlyList<Owner> knownTo)
+        public StaticTerrainPlacementData(long sourceId, CellCoord cell, StaticTerrainKind kind,
+            IReadOnlyList<Owner> knownTo, int entryThreshold = 0)
         {
             if (sourceId < 1) throw new ArgumentOutOfRangeException(nameof(sourceId));
             if (!System.Enum.IsDefined(typeof(StaticTerrainKind), kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+            if (kind == StaticTerrainKind.WeakGround)
+            {
+                if (entryThreshold < 1) throw new ArgumentOutOfRangeException(nameof(entryThreshold));
+            }
+            else if (entryThreshold != 0)
+            {
+                throw new ArgumentException("약한 지반 이외의 지형에는 진입 한도를 지정할 수 없습니다.", nameof(entryThreshold));
+            }
             if (knownTo == null) throw new ArgumentNullException(nameof(knownTo));
             var visibility = knownTo.ToArray();
             if (visibility.Any(owner => owner != Owner.Player && owner != Owner.Enemy) ||
                 visibility.Distinct().Count() != visibility.Length)
                 throw new ArgumentException("가시성 소유자는 Player 또는 Enemy이며 중복될 수 없습니다.", nameof(knownTo));
             SourceId = sourceId; Cell = cell; Kind = kind; KnownTo = Array.AsReadOnly(visibility);
+            EntryThreshold = entryThreshold;
         }
     }
 }

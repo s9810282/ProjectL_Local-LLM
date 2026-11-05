@@ -22,7 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (attacker == null) throw new ArgumentNullException(nameof(attacker));
             if (soulCount < 0) throw new ArgumentOutOfRangeException(nameof(soulCount));
             if (facts == null) throw new ArgumentNullException(nameof(facts));
-            int power = checked(attacker.Stats.AttackPower + attacker.TemporaryAttackBonus +
+            int power = checked(attacker.Stats.AttackPower + attacker.Stats.TraitAttackBonus + attacker.TemporaryAttackBonus +
                 attacker.PositionModifier.AttackBonus + attacker.HeldEnvironment.SuppliesAttackBonus);
             if (attacker.Owner != Owner.Player) return power;
             if (!attacker.OwnedId.HasValue)
@@ -38,7 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (contribution.FlatBonus > 0)
                     activations.Add(new ArtifactActivationSnapshot(contribution.Origin, attacker.EntityId,
                         contribution.FlatBonus, contribution.FlatBonus));
-            if (activations.Count != 0) events?.Add(new CombatArtifactEvent(activations));
+            if (activations.Count != 0) events?.Add(new CombatArtifactEvent(activations, CombatArtifactPurpose.AttackPowerContribution));
             return checked(power + lastStandBonus);
         }
     }

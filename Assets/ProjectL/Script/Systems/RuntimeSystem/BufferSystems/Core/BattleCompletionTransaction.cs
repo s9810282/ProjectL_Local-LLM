@@ -1,4 +1,6 @@
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Currency;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Fame;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Map;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
@@ -13,6 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
     /// </summary>
     internal sealed class BattleCompletionTransaction
     {
+        private readonly ITraitGrowthTransaction _growth;
         private readonly BufferGuards _guards;
         private readonly ICombatStateBufferReadSink _combatRead;
         private readonly IStageProgressBufferReadSink _stageRead;
@@ -21,12 +24,18 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
         private readonly IStageProgressBufferStore _stageStore;
         private readonly IMapProgressBufferStore _mapStore;
         private readonly IRunProgressBufferStore _runStore;
+        private readonly ICurrencyBufferReadSink _currencyRead;
+        private readonly IFameBufferReadSink _fameRead;
 
         internal BattleCompletionTransaction(BufferGuards guards, ICombatStateBufferReadSink combatRead,
             IStageProgressBufferReadSink stageRead, IMapProgressBufferReadSink mapRead,
             ICombatStateBufferStore combatStore, IStageProgressBufferStore stageStore,
-            IMapProgressBufferStore mapStore, IRunProgressBufferStore runStore)
+            IMapProgressBufferStore mapStore, IRunProgressBufferStore runStore, ICurrencyBufferReadSink currencyRead,
+            IFameBufferReadSink fameRead, ITraitGrowthTransaction growth)
         {
+            _growth = growth ?? throw new System.ArgumentNullException(nameof(growth));
+            _fameRead = fameRead ?? throw new System.ArgumentNullException(nameof(fameRead));
+            _currencyRead = currencyRead ?? throw new System.ArgumentNullException(nameof(currencyRead));
             _guards = guards ?? throw new System.ArgumentNullException(nameof(guards));
             _combatRead = combatRead ?? throw new System.ArgumentNullException(nameof(combatRead));
             _stageRead = stageRead ?? throw new System.ArgumentNullException(nameof(stageRead));
@@ -47,7 +56,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
             bool found = false;
             foreach (var stage in _stageRead.GetStages(progress.ChapterKey))
                 if (stage.NodeId == progress.NodeId.Value && stage.StageKey == progress.StageKey.Value && !stage.IsClear)
+                {
                     found = true;
+                    if (changes.Rewards != null && (changes.Rewards.BattleInstanceId != _combatRead.BattleInstanceId ||
+                        changes.Rewards.StageDepth != stage.Depth || changes.Rewards.StageWidthIndex != stage.WidthIndex))
+                        throw new System.InvalidOperationException("보상 영수증의 전투와 완료 노드 좌표가 다릅니다.");
+                }
             if (!found || _mapRead.GetMap(progress.ChapterKey).IsClear)
                 throw new System.InvalidOperationException("완료할 스테이지의 진행 상태가 맞지 않습니다.");
             PreparedStageClear stageClear = progress.ClearStage
@@ -63,11 +77,18 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
 
         internal void Install(Prepared prepared)
         {
-            if (prepared.Field != null) _combatStore.InstallSoulField(prepared.Field);
-            if (prepared.Stage != null) _stageStore.InstallClear(prepared.Stage);
-            if (prepared.Map.HasValue) _mapStore.InstallClear(prepared.Map.Value);
+            if (prepared.Field != null)
+                _combatStore.InstallSoulField(prepared.Field);
+            if (prepared.Stage != null)
+                _stageStore.InstallClear(prepared.Stage);
+            if (prepared.Map.HasValue)
+                _mapStore.InstallClear(prepared.Map.Value);
             _combatStore.InstallCompletion(prepared.Changes);
-            if (prepared.Run != null) _runStore.InstallCompletion(prepared.Run);
+            if (prepared.Run != null)
+            {
+                _runStore.InstallCompletion(prepared.Run, _currencyRead.RunSpent, _fameRead.RunEarned);
+                _growth.Clear();
+            }
         }
 
         internal sealed class Prepared
@@ -79,7 +100,13 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
             internal RunCompletionReceipt Run { get; }
             internal Prepared(BattleCompletionChanges changes, PreparedStageClear stage,
                 MapProgressData? map, SoulFieldSnapshot field, RunCompletionReceipt run)
-            { Changes = changes; Stage = stage; Map = map; Field = field; Run = run; }
+            {
+                Changes = changes;
+                Stage = stage;
+                Map = map;
+                Field = field;
+                Run = run;
+            }
         }
     }
 }

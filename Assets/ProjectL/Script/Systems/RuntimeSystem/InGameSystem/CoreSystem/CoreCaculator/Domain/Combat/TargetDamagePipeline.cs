@@ -4,10 +4,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat
 {
     /// <summary>
-    /// 확정된 대상별 피해 단계 순서를 한 곳에서 계산합니다.
+    /// 대상별 스플래시·상성·방어력 단계를 계산합니다.
     /// 기존 입력은 공격자 가산 및 해당 관통 감쇠 이후의 값이다. 일반 스플래시는 공통 피해에서 먼저 절삭한다.
     /// 상성 조회는 CategoryMatchupResolver가, 경감 기여는 CombatEffectEngine이 담당하며
-    /// 이 계산기는 순서와 반올림만 책임집니다. 두 번째 피해 경로를 만들지 않습니다.
+    /// 피격 경감과 최종 최소 피해는 호출자가 이어서 적용합니다.
     /// </summary>
     public sealed class TargetDamagePipeline
     {
@@ -36,19 +36,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
         /// <summary>공격자 가산과 효과 반영 후 확정된 공통 피해에 역할별 비율을 적용하고 기존 대상별 단계를 계산한다.</summary>
         public TargetDamageBreakdown Calculate(int originalDamage, AttackTargetRole role, int splashPercent,
-            CategoryKey attackerCategory, CategoryKey? defenderCategory, int incomingReduction)
+            CategoryKey attackerCategory, CategoryKey? defenderCategory, int physicalDefense = 0)
         {
             if (originalDamage < 0)
                 throw new ArgumentOutOfRangeException(nameof(originalDamage));
             if (splashPercent < 0)
                 throw new ArgumentOutOfRangeException(nameof(splashPercent));
-            if (role != AttackTargetRole.Primary && role != AttackTargetRole.Additional && role != AttackTargetRole.Designated)
+            if (role != AttackTargetRole.Primary && role != AttackTargetRole.Additional &&
+                role != AttackTargetRole.Designated && role != AttackTargetRole.Effect)
                 throw new ArgumentOutOfRangeException(nameof(role));
 
             int scaledDamage = role == AttackTargetRole.Additional
                 ? SplashDamageCalculator.CalculateAdditional(originalDamage, splashPercent)
                 : originalDamage;
-            return Calculate(scaledDamage, attackerCategory, defenderCategory, incomingReduction);
+            return Calculate(scaledDamage, attackerCategory, defenderCategory, physicalDefense);
         }
 
         /// <summary>
@@ -60,19 +61,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// 피격자 Category입니다. Category가 없는 대상(구조물 등)은 null이며 상성을 적용하지 않습니다.
         /// 가짜 Base로 대체하지 않습니다.
         /// </param>
-        /// <param name="incomingReduction">
-        /// 피격 경감 기여 합계입니다. Heavy 등 incoming 효과가 계산한 실제 값입니다.
-        /// </param>
+        /// <param name="physicalDefense">피격자의 실효 방어력입니다. 1당 피해를 1% 줄입니다.</param>
         public TargetDamageBreakdown Calculate(
             int damageBeforeMatchup,
             CategoryKey attackerCategory,
             CategoryKey? defenderCategory,
-            int incomingReduction)
+            int physicalDefense = 0)
         {
             if (damageBeforeMatchup < 0)
                 throw new ArgumentOutOfRangeException(nameof(damageBeforeMatchup));
-            if (incomingReduction < 0)
-                throw new ArgumentOutOfRangeException(nameof(incomingReduction));
+            if (physicalDefense < 0)
+                throw new ArgumentOutOfRangeException(nameof(physicalDefense));
 
             // 이 시점에는 일반 스플래시 비율 또는 기존 관통 감쇠가 이미 반영되어 있다.
             int numerator;
@@ -97,14 +96,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 damageAfterMatchup = damageBeforeMatchup;
             }
 
-            // 3단계: PhysicalDefense.
-            // 실제 방어 공식이 프로젝트에 아직 없으므로 단계 위치만 고정하고 값을 통과시킨다.
-            // 공식이 확정되면 이 한 곳만 교체한다.
-            int damageAfterPhysicalDefense = damageAfterMatchup;
-
-            // 4단계: Heavy 등 피격 경감. 경감량은 남은 피해를 넘지 않는다.
-            int effectiveReduction = Math.Min(incomingReduction, damageAfterPhysicalDefense);
-            int finalDamage = damageAfterPhysicalDefense - effectiveReduction;
+            // 3단계: 방어력 1당 피해 1% 감소. 100 이상은 100%로 제한하고 소수점을 버린다.
+            // 곱셈은 long으로 계산한다. Heavy가 실제 방어 후 피해를 받도록 여기서는 최소값을 보정하지 않는다.
+            int damageAfterPhysicalDefense = (int)((long)damageAfterMatchup * (100 - Math.Min(physicalDefense, 100)) / 100);
 
             return new TargetDamageBreakdown(
                 damageBeforeMatchup,
@@ -112,8 +106,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 denominator,
                 damageAfterMatchup,
                 damageAfterPhysicalDefense,
-                effectiveReduction,
-                finalDamage);
+                0,
+                damageAfterPhysicalDefense);
         }
     }
 }

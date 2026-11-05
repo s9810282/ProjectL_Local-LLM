@@ -10,19 +10,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
 
+            if (state is AccelerationRuntimeState acceleration) return new AccelerationEffectStateSnapshot(acceleration.HeldAttackBonus);
+            if (state is StationaryFireRuntimeState stationaryfire) return new StationaryFireEffectStateSnapshot(stationaryfire.MovedThisOwnTurn);
+            if (state is HunterRuntimeState hunter) return new HunterEffectStateSnapshot(hunter.TargetId, hunter.SuccessfulRewards);
             if (state is FocusRuntimeState focus)
             {
                 return new FocusEffectStateSnapshot(
                     focus.ActiveStacks,
                     focus.GainScheduled,
                     focus.MovedThisTurn);
-            }
-
-            if (state is MoveAttackDiscountRuntimeState discount)
-            {
-                return new MoveAttackDiscountEffectStateSnapshot(
-                    discount.FirstMoveConsumed,
-                    discount.DiscountArmed);
             }
 
             if (state is PiercingFalloffRuntimeState)
@@ -40,6 +36,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (state is KillChainAttackRuntimeState)
                 return new KillChainAttackEffectStateSnapshot();
 
+            if (state is NecromancyRuntimeState)
+                return new NecromancyEffectStateSnapshot();
+
+            if (state is RoarRuntimeState roar)
+                return new RoarEffectStateSnapshot(roar.HitCount);
+
+
+            if (state is IntimidationRuntimeState)
+                return new IntimidationEffectStateSnapshot();
+
+            if (state is ImpactBoltRuntimeState)
+                return new ImpactBoltEffectStateSnapshot();
+
+            if (state is PullRuntimeState)
+                return new PullEffectStateSnapshot();
+
+            if (state is HuntersMarkRuntimeState)
+                return new HuntersMarkEffectStateSnapshot();
+
+
+
+
+
+
+
+            if (state is RegenerationRuntimeState regeneration)
+                return new RegenerationEffectStateSnapshot(regeneration.CompletedEligibleTurnEnds);
+
             throw new ArgumentException("Unsupported Trait runtime state", nameof(state));
         }
 
@@ -47,19 +71,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
 
+            if (snapshot is AccelerationEffectStateSnapshot acceleration) return new AccelerationRuntimeState(acceleration.HeldAttackBonus);
+            if (snapshot is StationaryFireEffectStateSnapshot stationaryfire) return new StationaryFireRuntimeState(stationaryfire.MovedThisOwnTurn);
+            if (snapshot is HunterEffectStateSnapshot hunter) return new HunterRuntimeState(hunter.TargetId, hunter.SuccessfulRewards);
             if (snapshot is FocusEffectStateSnapshot focus)
             {
                 return new FocusRuntimeState(
                     focus.ActiveStacks,
                     focus.GainScheduled,
                     focus.MovedThisTurn);
-            }
-
-            if (snapshot is MoveAttackDiscountEffectStateSnapshot discount)
-            {
-                return new MoveAttackDiscountRuntimeState(
-                    discount.FirstMoveConsumed,
-                    discount.DiscountArmed);
             }
 
             if (snapshot is PiercingFalloffEffectStateSnapshot)
@@ -76,6 +96,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             if (snapshot is KillChainAttackEffectStateSnapshot)
                 return new KillChainAttackRuntimeState();
+
+            if (snapshot is NecromancyEffectStateSnapshot)
+                return new NecromancyRuntimeState();
+
+            if (snapshot is RoarEffectStateSnapshot roar)
+                return new RoarRuntimeState(roar.HitCount);
+
+
+            if (snapshot is IntimidationEffectStateSnapshot)
+                return new IntimidationRuntimeState();
+
+            if (snapshot is ImpactBoltEffectStateSnapshot)
+                return new ImpactBoltRuntimeState();
+
+            if (snapshot is PullEffectStateSnapshot)
+                return new PullRuntimeState();
+
+            if (snapshot is HuntersMarkEffectStateSnapshot)
+                return new HuntersMarkRuntimeState();
+
+
+
+
+
+
+
+            if (snapshot is RegenerationEffectStateSnapshot regeneration)
+                return new RegenerationRuntimeState(regeneration.CompletedEligibleTurnEnds);
 
             throw new ArgumentException("Unsupported Trait snapshot", nameof(snapshot));
         }

@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Deck;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -14,42 +15,61 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int BoardWidth { get; }
         public int BoardHeight { get; }
         public int ReserveCapacity { get; }
-        public long NightLength { get; }
         public int TimelineSeed { get; }
         public CombatFlowPhase InitialPhase { get; }
         public IReadOnlyList<CharacterInstanceId> DrawOrder { get; }
         public int DrawCursor { get; }
-        public int PlayerDeploymentDepth { get; }
-        public int EnemyDeploymentDepth { get; }
+        /// <summary>아군 배치 구역이다. 빈 구역도 허용한다(1칸 이상 검사는 StageConfig가 한다).</summary>
+        public PlayerDeploymentZone PlayerZone { get; }
+        /// <summary>전환 입구다. 줄 구역이면 그 줄 수, 칸 구역이면 0이다. Core 로직은 읽지 않는다.</summary>
+        public int PlayerDeploymentDepth => PlayerZone.RowDepth ?? 0;
+        /// <summary>전환 입구다. 적 배치 구역이 없어 늘 0이다. Core 로직은 읽지 않는다.</summary>
+        public int EnemyDeploymentDepth => 0;
         public IReadOnlyList<CellCoord> RailCells { get; }
         public IReadOnlyList<StageGimmickSpec> StageGimmicks { get; }
-        public int? ManualDrawGoldCost { get; }
         public MovementEnvironmentFacts Environment { get; }
         public EnvironmentSemanticBindings EnvironmentBindings { get; }
         public WallBlockingSpec WallBlocking { get; }
         public IReadOnlyList<ObstacleContentProfile> ObstacleContents { get; }
-        /// <summary>이 스테이지의 시작 골드(수동 드로우 전용). 스테이지 경제가 없으면 0이다. Run 재화와 별개다.</summary>
-        public int InitialStageGold { get; }
+        /// <summary>전투 동안 바뀌지 않는 유닛별 특성 설정값이다(설명 수치 공개 설계 SP3).</summary>
+        public BattleTraitSettings TraitSettings { get; }
 
+        /// <summary>
+        /// 전환 입구다. 아군 줄 수로 줄 구역을 만든다. 적 줄 수는 받기만 하고 쓰지 않는다.
+        /// 새 코드는 <see cref="PlayerDeploymentZone"/>을 받는 생성자를 쓴다.
+        /// </summary>
         public CombatPreparation(int boardWidth, int boardHeight, int reserveCapacity,
-            long nightLength, int timelineSeed, CombatFlowPhase initialPhase,
-            IReadOnlyList<CharacterInstanceId> drawOrder, int drawCursor = 0,
+            int timelineSeed, CombatFlowPhase initialPhase,
+            IReadOnlyList<CharacterInstanceId> drawOrder, BattleTraitSettings traitSettings, int drawCursor = 0,
             int playerDeploymentDepth = 0, int enemyDeploymentDepth = 0,
-            CellCoord[] railCells = null, StageGimmickSpec[] stageGimmicks = null, int? manualDrawGoldCost = null,
+            CellCoord[] railCells = null, StageGimmickSpec[] stageGimmicks = null,
             MovementEnvironmentFacts environment = null, EnvironmentSemanticBindings environmentBindings = null,
-            IReadOnlyList<ObstacleContentProfile> obstacleContents = null, int initialStageGold = 0,
+            IReadOnlyList<ObstacleContentProfile> obstacleContents = null,
+            WallBlockingSpec wallBlocking = null)
+            : this(boardWidth, boardHeight, reserveCapacity, timelineSeed, initialPhase, drawOrder, drawCursor,
+                PlayerDeploymentZone.Rows(playerDeploymentDepth), traitSettings, railCells, stageGimmicks, environment, environmentBindings,
+                obstacleContents, wallBlocking)
+        {
+        }
+
+        /// <remarks>
+        /// 줄 수를 받는 옛 생성자는 drawCursor 뒤가 모두 선택 인자다. 이 생성자는 drawCursor와 구역을 필수로 받아
+        /// 인자를 생략한 기존 호출이 두 생성자 사이에서 모호해지지 않게 한다.
+        /// </remarks>
+        public CombatPreparation(int boardWidth, int boardHeight, int reserveCapacity,
+            int timelineSeed, CombatFlowPhase initialPhase,
+            IReadOnlyList<CharacterInstanceId> drawOrder, int drawCursor, PlayerDeploymentZone playerZone, BattleTraitSettings traitSettings,
+            CellCoord[] railCells = null, StageGimmickSpec[] stageGimmicks = null,
+            MovementEnvironmentFacts environment = null, EnvironmentSemanticBindings environmentBindings = null,
+            IReadOnlyList<ObstacleContentProfile> obstacleContents = null,
             WallBlockingSpec wallBlocking = null)
         {
-            if (initialStageGold < 0)
-                throw new ArgumentOutOfRangeException(nameof(initialStageGold));
             if (boardWidth < 1)
                 throw new ArgumentOutOfRangeException(nameof(boardWidth));
             if (boardHeight < 1)
                 throw new ArgumentOutOfRangeException(nameof(boardHeight));
             if (reserveCapacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(reserveCapacity));
-            if (nightLength < 1)
-                throw new ArgumentOutOfRangeException(nameof(nightLength));
             if (initialPhase != CombatFlowPhase.PlayerInput &&
                 initialPhase != CombatFlowPhase.Automatic)
                 throw new ArgumentOutOfRangeException(nameof(initialPhase));
@@ -57,9 +77,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(drawOrder));
             if (drawCursor < 0 || drawCursor > drawOrder.Count)
                 throw new ArgumentOutOfRangeException(nameof(drawCursor));
-            if (playerDeploymentDepth < 0 || enemyDeploymentDepth < 0 ||
-                (long)playerDeploymentDepth + enemyDeploymentDepth >= boardHeight)
-                throw new ArgumentOutOfRangeException(nameof(playerDeploymentDepth));
+            if (playerZone == null)
+                throw new ArgumentNullException(nameof(playerZone));
+            if (playerZone.FitsBoard(boardWidth, boardHeight) == false)
+                throw new ArgumentOutOfRangeException(nameof(playerZone));
+            TraitSettings = traitSettings ?? throw new ArgumentNullException(nameof(traitSettings));
 
             var copy = new CharacterInstanceId[drawOrder.Count];
             var ids = new HashSet<CharacterInstanceId>();
@@ -75,9 +97,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             }
 
             BoardWidth = boardWidth;
-            if (manualDrawGoldCost < 0) throw new ArgumentOutOfRangeException(nameof(manualDrawGoldCost));
-            ManualDrawGoldCost = manualDrawGoldCost;
-            InitialStageGold = initialStageGold;
             Environment = environment ?? MovementEnvironmentFacts.Empty;
             EnvironmentBindings = environmentBindings ?? EnvironmentSemanticBindings.Empty;
             WallBlocking = wallBlocking ?? WallBlockingSpec.Default;
@@ -87,13 +106,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ObstacleContents = Array.AsReadOnly(obstacleCopy);
             BoardHeight = boardHeight;
             ReserveCapacity = reserveCapacity;
-            NightLength = nightLength;
             TimelineSeed = timelineSeed;
             InitialPhase = initialPhase;
             DrawOrder = Array.AsReadOnly(copy);
             DrawCursor = drawCursor;
-            PlayerDeploymentDepth = playerDeploymentDepth;
-            EnemyDeploymentDepth = enemyDeploymentDepth;
+            PlayerZone = playerZone;
             RailCells = Array.AsReadOnly((CellCoord[])(railCells ?? Array.Empty<CellCoord>()).Clone());
             StageGimmicks = Array.AsReadOnly((StageGimmickSpec[])(stageGimmicks ?? Array.Empty<StageGimmickSpec>()).Clone());
         }
@@ -101,15 +118,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
     public sealed class BattlePreparation
     {
+        public RunDeckSnapshot Membership { get; }
+        public long RosterRevision { get; }
         public IReadOnlyList<CharacterCombatFacts> Characters { get; }
         public CombatPreparation Combat { get; }
         public IReadOnlyList<StructureCombatFacts> Structures { get; }
-        public long NextEntityId { get; }
+        /// <summary>초기 명령 상태다. 다음 EntityId의 원본은 CommandState.Allocation 한 곳이다.</summary>
         public CombatCommandState CommandState { get; }
 
+        /// <param name="environmentProgress">
+        /// 준비가 정한 초기 환경 진행값이다(최초 무작위 배치 뒤 난수 포함). 생략하면 환경에서 계산한 기본값이다.
+        /// 명령 상태를 함께 넘기면 그 상태의 진행값과 같아야 한다.
+        /// </param>
         public BattlePreparation(IReadOnlyList<CharacterCombatFacts> characters,
             CombatPreparation combat, IReadOnlyList<StructureCombatFacts> structures = null,
-            long? nextEntityId = null, CombatCommandState commandState = null)
+            long? nextEntityId = null, CombatCommandState commandState = null, BattleObjective objective = null,
+            EnvironmentProgressFacts environmentProgress = null, RunDeckSnapshot membership = null, long rosterRevision = 0)
         {
             if (characters == null)
                 throw new ArgumentNullException(nameof(characters));
@@ -121,6 +145,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 copy[i] = characters[i] ?? throw new ArgumentException(
                     "전투 준비 캐릭터에는 null을 넣을 수 없습니다.", nameof(characters));
 
+            Membership = membership;
+            RosterRevision = rosterRevision;
             Characters = Array.AsReadOnly(copy);
             Combat = combat ?? throw new ArgumentNullException(nameof(combat));
 
@@ -136,19 +162,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             }
 
             Structures = Array.AsReadOnly(structureCopy);
-            NextEntityId = nextEntityId ?? maximumId + 1;
-            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth, combat.BoardHeight,
-                combat.InitialPhase, EntityId.Empty, false, Structures,
-                Array.Empty<ThornFieldCellSnapshot>(), Array.Empty<CombatTimelineEntrySnapshot>(),
-                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
-                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray(),
-                    gimmicks: combat.StageGimmicks.Select((g, index) => g is RailwayGimmickSpec r
-                        ? new CombatGimmickFacts(new StageGimmickId(index + 1), r.FirstActivationAfterUnitTurns)
-                        : throw new InvalidOperationException("지원하지 않는 초기 기믹 정의입니다.")).ToArray()), combat.Environment,
-                wallBlocking: combat.WallBlocking);
-            var expected = new CombatCommandState(combat.BoardWidth, combat.BoardHeight, combat.InitialPhase,
-                CommandState.ActiveActorId, CommandState.IsNight, Structures, CommandState.ThornFields, CommandState.Timeline,
-                CommandState.Turn, combat.Environment, CommandState.EnvironmentProgress, combat.WallBlocking);
+            // 초기 할당은 준비가 정한다(운영 경로는 commandState를 넘기지 않는다).
+            // 직접 넘긴 상태는 그대로 저장한다. 할당이 없으면 그 전투는 개체를 만들 수 없고, 할당이 있으면 준비 값과 같아야 한다.
+            var computed = new CombatAllocationFacts(nextEntityId ?? maximumId + 1, CombatAllocationFacts.InitialSummonRandomState);
+            if (commandState != null && commandState.Allocation.IsAvailable && !commandState.Allocation.SameValues(computed))
+                throw new ArgumentException("전투 준비의 초기 할당과 명령 상태의 할당이 다릅니다.", nameof(commandState));
+            var allocation = commandState?.Allocation ?? computed;
+            if (commandState != null && environmentProgress != null && !commandState.EnvironmentProgress.SameValues(environmentProgress))
+                throw new ArgumentException("전투 준비의 초기 환경 진행값과 명령 상태의 진행값이 다릅니다.", nameof(commandState));
+            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth,combat.BoardHeight,                combat.InitialPhase,false,Structures,                Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
+                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray()),combat.Environment,                environmentProgress: environmentProgress,wallBlocking: combat.WallBlocking,objective: objective,allocation: allocation,itemRandomState: unchecked((uint)combat.TimelineSeed));
+            var expected = new CombatCommandState(combat.BoardWidth,combat.BoardHeight,combat.InitialPhase,CommandState.IsNight,Structures,CommandState.ThornFields,                CommandState.Turn,combat.Environment,CommandState.EnvironmentProgress,combat.WallBlocking,objective,allocation,CommandState.ItemRandomState,gimmicks: CommandState.Gimmicks);
             if (!expected.SameValues(CommandState))
                 throw new ArgumentException("전투 준비와 명령 조회값이 다릅니다.", nameof(commandState));
         }

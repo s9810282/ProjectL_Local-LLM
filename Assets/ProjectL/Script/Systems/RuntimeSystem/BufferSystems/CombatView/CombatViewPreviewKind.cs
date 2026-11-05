@@ -17,6 +17,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         AttackRange = 5,
         /// <summary>그 조준으로 공격했을 때의 예상 결과.</summary>
         Attack = 6,
-        ReturnToCheckpoint = 7
+        /// <summary>필드 유닛 하나의 공격 범위 칸 조회. 차례·국면과 무관하고 지형은 플레이어 시점입니다(호버 공격 범위 설계 UR2).</summary>
+        UnitAttackRange = 8,
+        /// <summary>현재 진영·예산·행동 사용 상태에 따른 일반 행동 가능 여부.</summary>
+        ActionAvailability = 9
     }
 }

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">FBX 맵 작업실 화면 구성</title>
+  <desc id="desc">왼쪽 카탈로그, 가운데 작업 패널, 오른쪽 맵 미리보기와 두 개의 드래그 가능한 분할선을 표시합니다.</desc>
+  <rect width="1200" height="650" fill="#20242b"/>
+  <rect x="0" y="0" width="1200" height="58" fill="#303844"/>
+  <text x="22" y="36" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="23" font-weight="700">FBX 맵 작업실</text>
+  <rect x="18" y="15" width="122" height="28" rx="5" fill="#566273"/>
+  <text x="38" y="35" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="14">배치 · 라이트 · 베이크 · 볼륨</text>
+  <rect x="0" y="58" width="256" height="592" fill="#252a32"/>
+  <rect x="264" y="58" width="332" height="592" fill="#2b3039"/>
+  <rect x="604" y="58" width="596" height="592" fill="#566d78"/>
+  <rect x="256" y="58" width="8" height="592" fill="#73c8d4"/>
+  <rect x="596" y="58" width="8" height="592" fill="#73c8d4"/>
+  <text x="22" y="92" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="20" font-weight="700">1. 카탈로그</text>
+  <text x="22" y="121" fill="#c6d0dc" font-family="Arial, sans-serif" font-size="15">배치할 FBX·프리팹을 찾습니다.</text>
+  <rect x="20" y="145" width="216" height="44" rx="4" fill="#3b4451"/>
+  <text x="35" y="173" fill="#e7edf3" font-family="Arial, sans-serif" font-size="15">맵 폴더 / 선택 폴더</text>
+  <rect x="20" y="205" width="216" height="74" rx="4" fill="#343c48"/>
+  <text x="35" y="233" fill="#e7edf3" font-family="Arial, sans-serif" font-size="15">FBX·프리팹 목록</text>
+  <text x="35" y="258" fill="#aebaca" font-family="Arial, sans-serif" font-size="13">더블클릭 또는 드래그로 배치</text>
+  <text x="284" y="92" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="20" font-weight="700">2. 작업 패널</text>
+  <text x="284" y="121" fill="#c6d0dc" font-family="Arial, sans-serif" font-size="15">저장 · 오브젝트 목록 · 선택한 오브젝트 설정</text>
+  <rect x="284" y="145" width="292" height="36" rx="4" fill="#566273"/>
+  <text x="300" y="169" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="14">새 맵   맵 SO 저장   불러오기…</text>
+  <rect x="284" y="198" width="292" height="120" rx="4" fill="#343c48"/>
+  <text x="300" y="226" fill="#e7edf3" font-family="Arial, sans-serif" font-size="15">오브젝트 목록</text>
+  <text x="300" y="253" fill="#aebaca" font-family="Arial, sans-serif" font-size="13">레이어와 배치한 오브젝트를 선택</text>
+  <text x="300" y="278" fill="#aebaca" font-family="Arial, sans-serif" font-size="13">위치 · 회전 · 크기 · 활성 여부를 수정</text>
+  <text x="624" y="92" fill="#f2f5f8" font-family="Arial, sans-serif" font-size="20" font-weight="700">3. 맵 미리보기</text>
+  <text x="624" y="121" fill="#e4edf0" font-family="Arial, sans-serif" font-size="15">배치 결과를 보며 이동·회전·크기를 조절합니다.</text>
+  <path d="M720 520 L850 285 L965 525 Z" fill="#758c71"/>
+  <path d="M850 285 L885 365 L818 365 Z" fill="#92a78e"/>
+  <rect x="735" y="435" width="88" height="58" fill="#a27655"/>
+  <polygon points="725,435 779,400 833,435" fill="#d09a68"/>
+  <rect x="910" y="430" width="92" height="67" fill="#8c6751"/>
+  <polygon points="900,430 956,392 1012,430" fill="#c28b62"/>
+  <circle cx="1060" cy="286" r="48" fill="#f4d779" opacity=".9"/>
+  <text x="1022" y="292" fill="#3f3b2d" font-family="Arial, sans-serif" font-size="14">라이트</text>
+  <text x="215" y="530" fill="#73c8d4" font-family="Arial, sans-serif" font-size="15" font-weight="700">↔ 드래그</text>
+  <text x="555" y="530" fill="#73c8d4" font-family="Arial, sans-serif" font-size="15" font-weight="700">↔ 드래그</text>
+  <text x="18" y="624" fill="#c6d0dc" font-family="Arial, sans-serif" font-size="14">파란 분할선을 드래그하면 카탈로그와 작업 패널 폭을 조절할 수 있습니다.</text>
+</svg>

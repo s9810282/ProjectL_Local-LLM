@@ -42,6 +42,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         nameof(registrations));
                 }
 
+                if (DeferredCombatFeatures.IsTraitRetired(registration.TraitKey))
+                    throw new ArgumentException($"TraitKey {registration.TraitKey}: Retired.", nameof(registrations));
+
                 if (registration.TraitKey != registration.Rule.Key)
                 {
                     throw new ArgumentException(
@@ -115,6 +118,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (key == TraitKey.None || Enum.IsDefined(typeof(TraitKey), key) == false)
                 throw new ArgumentOutOfRangeException(nameof(key));
 
+            if (DeferredCombatFeatures.IsTraitRetired(key))
+                throw new InvalidOperationException($"TraitKey {key}: Retired.");
+
+            if (DeferredCombatFeatures.IsImplementationPending(key))
+                throw new InvalidOperationException($"TraitKey {key}: ImplementationPending.");
+
             if (_registrations.TryGetValue(key, out TraitRegistration registration) == false)
             {
                 throw new InvalidOperationException(
@@ -122,6 +131,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             return registration;
+        }
+
+        internal TraitDefinition BuildDefinition(TraitSpec spec)
+        {
+            if (spec == null) throw new ArgumentNullException(nameof(spec));
+            return GetRequiredRegistration(spec.TraitKey).TraitDefinitionFactory.BuildDefinition(spec);
         }
 
         internal static TraitRegistry CreateDefault()
@@ -136,19 +151,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new FocusRuntimeStateFactory(),
                 focusRule,
                 definition => new FocusEffectRule((FocusTraitDefinition)definition, focusRule));
-
-            var discountRule = new MoveAttackDiscountTraitRule();
-            TraitRegistration moveAttackDiscountRegistration = new TraitRegistration(
-                TraitKey.MoveAttackDiscount,
-                typeof(MoveAttackDiscountTraitSpec),
-                typeof(MoveAttackDiscountTraitDefinition),
-                typeof(MoveAttackDiscountRuntimeState),
-                new MoveAttackDiscountTraitDefinitionFactory(),
-                new MoveAttackDiscountRuntimeStateFactory(),
-                discountRule,
-                definition => new MoveAttackDiscountEffectRule(
-                    (MoveAttackDiscountTraitDefinition)definition,
-                    discountRule));
 
             var falloffRule = new PiercingFalloffTraitRule();
             TraitRegistration piercingFalloffRegistration = new TraitRegistration(
@@ -215,15 +217,152 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     (KillChainAttackTraitDefinition)definition,
                     killChainAttackRule));
 
+            var necromancyRule = new NecromancyTraitRule();
+            TraitRegistration necromancyRegistration = new TraitRegistration(
+                TraitKey.Necromancy,
+                typeof(NecromancyTraitSpec),
+                typeof(NecromancyTraitDefinition),
+                typeof(NecromancyRuntimeState),
+                new NecromancyTraitDefinitionFactory(),
+                new NecromancyRuntimeStateFactory(),
+                necromancyRule,
+                definition => new NecromancyEffectRule(
+                    (NecromancyTraitDefinition)definition,
+                    necromancyRule));
+
+            var roarRule = new RoarTraitRule();
+            TraitRegistration roarRegistration = new TraitRegistration(
+                TraitKey.Roar,
+                typeof(RoarTraitSpec),
+                typeof(RoarTraitDefinition),
+                typeof(RoarRuntimeState),
+                new RoarTraitDefinitionFactory(),
+                new RoarRuntimeStateFactory(),
+                roarRule,
+                definition => new RoarEffectRule(
+                    (RoarTraitDefinition)definition,
+                    roarRule));
+
+            var regenerationRule = new RegenerationTraitRule();
+            TraitRegistration regenerationRegistration = new TraitRegistration(
+                TraitKey.Regeneration,
+                typeof(RegenerationTraitSpec),
+                typeof(RegenerationTraitDefinition),
+                typeof(RegenerationRuntimeState),
+                new RegenerationTraitDefinitionFactory(),
+                new RegenerationRuntimeStateFactory(),
+                regenerationRule,
+                definition => new RegenerationEffectRule(
+                    (RegenerationTraitDefinition)definition,
+                    regenerationRule));
+
+            var intimidationRule = new IntimidationTraitRule();
+            TraitRegistration intimidationRegistration = new TraitRegistration(
+                TraitKey.Intimidation,
+                typeof(IntimidationTraitSpec),
+                typeof(IntimidationTraitDefinition),
+                typeof(IntimidationRuntimeState),
+                new IntimidationTraitDefinitionFactory(),
+                new IntimidationRuntimeStateFactory(),
+                intimidationRule,
+                definition => new IntimidationEffectRule(
+                    (IntimidationTraitDefinition)definition,
+                    intimidationRule));
+
             TraitRegistration[] traitRegistrations =
             {
+                new TraitRegistration(TraitKey.Vanguard, typeof(VanguardTraitSpec), typeof(VanguardTraitDefinition),
+                    typeof(VanguardRuntimeState), new VanguardTraitDefinitionFactory(), new VanguardRuntimeStateFactory(),
+                    new VanguardTraitRule(), definition => new VanguardEffectRule((VanguardTraitDefinition)definition, new VanguardTraitRule())),
+                new TraitRegistration(TraitKey.CleanSweep, typeof(CleanSweepTraitSpec), typeof(CleanSweepTraitDefinition),
+                    typeof(CleanSweepRuntimeState), new CleanSweepTraitDefinitionFactory(), new CleanSweepRuntimeStateFactory(),
+                    new CleanSweepTraitRule(), definition => new CleanSweepEffectRule((CleanSweepTraitDefinition)definition, new CleanSweepTraitRule())),
+                new TraitRegistration(TraitKey.CallOfBlood, typeof(CallOfBloodTraitSpec), typeof(CallOfBloodTraitDefinition),
+                    typeof(CallOfBloodRuntimeState), new CallOfBloodTraitDefinitionFactory(), new CallOfBloodRuntimeStateFactory(),
+                    new CallOfBloodTraitRule(), definition => new CallOfBloodEffectRule((CallOfBloodTraitDefinition)definition, new CallOfBloodTraitRule())),
+                new TraitRegistration(TraitKey.MoraleBoost, typeof(MoraleBoostTraitSpec), typeof(MoraleBoostTraitDefinition),
+                    typeof(MoraleBoostRuntimeState), new MoraleBoostTraitDefinitionFactory(), new MoraleBoostRuntimeStateFactory(),
+                    new MoraleBoostTraitRule(), definition => new MoraleBoostEffectRule((MoraleBoostTraitDefinition)definition, new MoraleBoostTraitRule())),
+                new TraitRegistration(TraitKey.Disarm, typeof(DisarmTraitSpec), typeof(DisarmTraitDefinition),
+                    typeof(DisarmRuntimeState), new DisarmTraitDefinitionFactory(), new DisarmRuntimeStateFactory(),
+                    new DisarmTraitRule(), definition => new DisarmEffectRule((DisarmTraitDefinition)definition, new DisarmTraitRule())),
+                new TraitRegistration(TraitKey.AnkleBreaker, typeof(AnkleBreakerTraitSpec), typeof(AnkleBreakerTraitDefinition),
+                    typeof(AnkleBreakerRuntimeState), new AnkleBreakerTraitDefinitionFactory(), new AnkleBreakerRuntimeStateFactory(),
+                    new AnkleBreakerTraitRule(), definition => new AnkleBreakerEffectRule((AnkleBreakerTraitDefinition)definition, new AnkleBreakerTraitRule())),
+                new TraitRegistration(TraitKey.SoloAction, typeof(SoloActionTraitSpec), typeof(SoloActionTraitDefinition),
+                    typeof(SoloActionRuntimeState), new SoloActionTraitDefinitionFactory(), new SoloActionRuntimeStateFactory(),
+                    new SoloActionTraitRule(), definition => new SoloActionEffectRule((SoloActionTraitDefinition)definition, new SoloActionTraitRule())),
+                new TraitRegistration(TraitKey.Cohesion, typeof(CohesionTraitSpec), typeof(CohesionTraitDefinition),
+                    typeof(CohesionRuntimeState), new CohesionTraitDefinitionFactory(), new CohesionRuntimeStateFactory(),
+                    new CohesionTraitRule(), definition => new CohesionEffectRule((CohesionTraitDefinition)definition, new CohesionTraitRule())),
+                new TraitRegistration(TraitKey.Entrenchment, typeof(EntrenchmentTraitSpec), typeof(EntrenchmentTraitDefinition),
+                    typeof(EntrenchmentRuntimeState), new EntrenchmentTraitDefinitionFactory(), new EntrenchmentRuntimeStateFactory(),
+                    new EntrenchmentTraitRule(), definition => new EntrenchmentEffectRule((EntrenchmentTraitDefinition)definition, new EntrenchmentTraitRule())),
+                new TraitRegistration(TraitKey.Sacrifice, typeof(SacrificeTraitSpec), typeof(SacrificeTraitDefinition),
+                    typeof(SacrificeRuntimeState), new SacrificeTraitDefinitionFactory(), new SacrificeRuntimeStateFactory(),
+                    new SacrificeTraitRule(), definition => new SacrificeEffectRule((SacrificeTraitDefinition)definition, new SacrificeTraitRule())),
+                new TraitRegistration(TraitKey.Taunt, typeof(TauntTraitSpec), typeof(TauntTraitDefinition),
+                    typeof(TauntRuntimeState), new TauntTraitDefinitionFactory(), new TauntRuntimeStateFactory(),
+                    new TauntTraitRule(), definition => new TauntEffectRule((TauntTraitDefinition)definition, new TauntTraitRule())),
+                new TraitRegistration(TraitKey.SteadfastWill, typeof(SteadfastWillTraitSpec), typeof(SteadfastWillTraitDefinition),
+                    typeof(SteadfastWillRuntimeState), new SteadfastWillTraitDefinitionFactory(), new SteadfastWillRuntimeStateFactory(),
+                    new SteadfastWillTraitRule(), definition => new SteadfastWillEffectRule((SteadfastWillTraitDefinition)definition, new SteadfastWillTraitRule())),
+                new TraitRegistration(TraitKey.GroundCompaction, typeof(GroundCompactionTraitSpec), typeof(GroundCompactionTraitDefinition),
+                    typeof(GroundCompactionRuntimeState), new GroundCompactionTraitDefinitionFactory(), new GroundCompactionRuntimeStateFactory(),
+                    new GroundCompactionTraitRule(), definition => new GroundCompactionEffectRule((GroundCompactionTraitDefinition)definition, new GroundCompactionTraitRule())),
+                new TraitRegistration(TraitKey.ReconSquad, typeof(ReconSquadTraitSpec), typeof(ReconSquadTraitDefinition),
+                    typeof(ReconSquadRuntimeState), new ReconSquadTraitDefinitionFactory(), new ReconSquadRuntimeStateFactory(),
+                    new ReconSquadTraitRule(), definition => new ReconSquadEffectRule((ReconSquadTraitDefinition)definition, new ReconSquadTraitRule())),
+                new TraitRegistration(TraitKey.DustScreen, typeof(DustScreenTraitSpec), typeof(DustScreenTraitDefinition),
+                    typeof(DustScreenRuntimeState), new DustScreenTraitDefinitionFactory(), new DustScreenRuntimeStateFactory(),
+                    new DustScreenTraitRule(), definition => new DustScreenEffectRule((DustScreenTraitDefinition)definition, new DustScreenTraitRule())),
+                new TraitRegistration(TraitKey.PositionSwap, typeof(PositionSwapTraitSpec), typeof(PositionSwapTraitDefinition),
+                    typeof(PositionSwapRuntimeState), new PositionSwapTraitDefinitionFactory(), new PositionSwapRuntimeStateFactory(),
+                    new PositionSwapTraitRule(), definition => new PositionSwapEffectRule((PositionSwapTraitDefinition)definition, new PositionSwapTraitRule())),
+                new TraitRegistration(TraitKey.Leap, typeof(LeapTraitSpec), typeof(LeapTraitDefinition),
+                    typeof(LeapRuntimeState), new LeapTraitDefinitionFactory(), new LeapRuntimeStateFactory(),
+                    new LeapTraitRule(), definition => new LeapEffectRule((LeapTraitDefinition)definition, new LeapTraitRule())),
+                new TraitRegistration(TraitKey.Acceleration, typeof(AccelerationTraitSpec), typeof(AccelerationTraitDefinition),
+                    typeof(AccelerationRuntimeState), new AccelerationTraitDefinitionFactory(), new AccelerationRuntimeStateFactory(),
+                    new AccelerationTraitRule(), definition => new AccelerationEffectRule((AccelerationTraitDefinition)definition, new AccelerationTraitRule())),
+                new TraitRegistration(TraitKey.StationaryFire, typeof(StationaryFireTraitSpec), typeof(StationaryFireTraitDefinition),
+                    typeof(StationaryFireRuntimeState), new StationaryFireTraitDefinitionFactory(), new StationaryFireRuntimeStateFactory(),
+                    new StationaryFireTraitRule(), definition => new StationaryFireEffectRule((StationaryFireTraitDefinition)definition, new StationaryFireTraitRule())),
+                new TraitRegistration(TraitKey.ArmorBreaker, typeof(ArmorBreakerTraitSpec), typeof(ArmorBreakerTraitDefinition),
+                    typeof(ArmorBreakerRuntimeState), new ArmorBreakerTraitDefinitionFactory(), new ArmorBreakerRuntimeStateFactory(),
+                    new ArmorBreakerTraitRule(), definition => new ArmorBreakerEffectRule((ArmorBreakerTraitDefinition)definition, new ArmorBreakerTraitRule())),
+                new TraitRegistration(TraitKey.FinishingShot, typeof(FinishingShotTraitSpec), typeof(FinishingShotTraitDefinition),
+                    typeof(FinishingShotRuntimeState), new FinishingShotTraitDefinitionFactory(), new FinishingShotRuntimeStateFactory(),
+                    new FinishingShotTraitRule(), definition => new FinishingShotEffectRule((FinishingShotTraitDefinition)definition, new FinishingShotTraitRule())),
+                new TraitRegistration(TraitKey.TrackingShot, typeof(TrackingShotTraitSpec), typeof(TrackingShotTraitDefinition),
+                    typeof(TrackingShotRuntimeState), new TrackingShotTraitDefinitionFactory(), new TrackingShotRuntimeStateFactory(),
+                    new TrackingShotTraitRule(), definition => new TrackingShotEffectRule((TrackingShotTraitDefinition)definition, new TrackingShotTraitRule())),
+                new TraitRegistration(TraitKey.FocusedBombardment, typeof(FocusedBombardmentTraitSpec), typeof(FocusedBombardmentTraitDefinition),
+                    typeof(FocusedBombardmentRuntimeState), new FocusedBombardmentTraitDefinitionFactory(), new FocusedBombardmentRuntimeStateFactory(),
+                    new FocusedBombardmentTraitRule(), definition => new FocusedBombardmentEffectRule((FocusedBombardmentTraitDefinition)definition, new FocusedBombardmentTraitRule())),
+                new TraitRegistration(TraitKey.Hunter, typeof(HunterTraitSpec), typeof(HunterTraitDefinition),
+                    typeof(HunterRuntimeState), new HunterTraitDefinitionFactory(), new HunterRuntimeStateFactory(),
+                    new HunterTraitRule(), definition => new HunterEffectRule((HunterTraitDefinition)definition, new HunterTraitRule())),
                 focusRegistration,
-                moveAttackDiscountRegistration,
                 piercingFalloffRegistration,
                 thornFieldRegistration,
                 knockbackRegistration,
                 distanceDamageScaleRegistration,
                 killChainAttackRegistration,
+                necromancyRegistration,
+                roarRegistration,
+                regenerationRegistration,
+                intimidationRegistration,
+                new TraitRegistration(TraitKey.ImpactBolt, typeof(ImpactBoltTraitSpec), typeof(ImpactBoltTraitDefinition),
+                    typeof(ImpactBoltRuntimeState), new ImpactBoltTraitDefinitionFactory(), new ImpactBoltRuntimeStateFactory(),
+                    new ImpactBoltTraitRule(), definition => new ImpactBoltEffectRule((ImpactBoltTraitDefinition)definition, new ImpactBoltTraitRule())),
+                new TraitRegistration(TraitKey.Pull, typeof(PullTraitSpec), typeof(PullTraitDefinition),
+                    typeof(PullRuntimeState), new PullTraitDefinitionFactory(), new PullRuntimeStateFactory(),
+                    new PullTraitRule(), definition => new PullEffectRule((PullTraitDefinition)definition, new PullTraitRule())),
+                new TraitRegistration(TraitKey.HuntersMark, typeof(HuntersMarkTraitSpec), typeof(HuntersMarkTraitDefinition),
+                    typeof(HuntersMarkRuntimeState), new HuntersMarkTraitDefinitionFactory(), new HuntersMarkRuntimeStateFactory(),
+                    new HuntersMarkTraitRule(), definition => new HuntersMarkEffectRule((HuntersMarkTraitDefinition)definition,
+                        new HuntersMarkTraitRule())),
             };
 
             return new TraitRegistry(traitRegistrations);

@@ -1,9 +1,10 @@
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup
 {
     /// <summary>
     /// 아티팩트 팝업의 3D 보드를 그리는 쪽의 좁은 계약입니다. 받은 값으로 그리기만 하고 DB·Buffer·Core를 읽지 않습니다.
     /// </summary>
-    /// <remarks>구현: <see cref="ArtifactPopupView"/>(씬), 테스트 가짜. UI 목록·문구는 <see cref="IArtifactPopupScreen"/>이 맡습니다.</remarks>
+    /// <remarks>구현: <see cref="ArtifactPopupView"/>(씬), 현재 호스트만 감싸는 컨트롤러 안의 OwnedPresenter. UI 목록·문구는 <see cref="IArtifactPopupDisplay"/>이 맡습니다.</remarks>
     internal interface IArtifactPopupPresenter
     {
         /// <summary>3D 보드와 배경을 켭니다. SceneRoot는 항상 켜져 있습니다(D13).</summary>

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_StageBoss1
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 18
+    prefab: {fileID: 8415075064519800049, guid: 399b5462804546041ad766ce24ec300d, type: 3}
+    displayName: "\uBCF4\uC2A4"
+    description: 
+    timelineIcon: {fileID: -957929834, guid: 29c14724a50ea98428ef0fb8fe19dd6e, type: 3}
+    infoIcon: {fileID: 21300000, guid: 52cc6cfecc8f367469096b0690e7ad12, type: 3}
+    attackPresentation: {fileID: 11400000, guid: 3ce031ca2bd64fbfaedaab95933f0636, type: 2}
+    reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
+    animationPresentation: {fileID: 11400000, guid: 7a40457783d7bf5b44deab016f974d5b, type: 2}
+    unitSoundPreset: -1
+    attackSoundPreset: 15
+    obstacleHitCues:
+      effects: []
+      shakes: []
+    structureHitCues:
+      effects: []
+      shakes: []
+    obstacleDestroyedCues:
+      effects: []
+      shakes: []

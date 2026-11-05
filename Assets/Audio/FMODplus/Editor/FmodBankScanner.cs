@@ -9,7 +9,7 @@ using FMOD.Studio;
 
 public static class FmodBankScanner
 {
-    public static void ScanIntoCatalog(FmodEventCatalog catalog)
+    public static void ScanIntoCatalog(FmodEventCatalog catalog, bool recordScanTime = true)
     {
         if (catalog == null)
         {
@@ -52,7 +52,8 @@ public static class FmodBankScanner
         catalog.Clear();
         catalog.lastScannedFolder = bankRoot;
         catalog.lastBankFileCount = bankFiles.Length;
-        catalog.lastScanTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        if (recordScanTime)
+            catalog.lastScanTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
         if (bankFiles.Length == 0)
         {
@@ -793,6 +794,7 @@ internal static class FmodBusCatalogAutoSync
 
     private static bool syncQueued;
     private static bool syncInProgress;
+    private static bool queuedRecordScanTime;
 
     static FmodBusCatalogAutoSync()
     {
@@ -806,7 +808,7 @@ internal static class FmodBusCatalogAutoSync
     [MenuItem("FMOD/Plus/Scan All Catalogs")]
     public static void ScanAllCatalogsMenu()
     {
-        QueueSync();
+        QueueSync(recordScanTime: true);
     }
 
     public static void NotifyBankAssetsChanged()
@@ -814,9 +816,14 @@ internal static class FmodBusCatalogAutoSync
         QueueSync();
     }
 
-    private static void QueueSync()
+    private static void QueueSync(bool recordScanTime = false)
     {
-        if (syncQueued || syncInProgress)
+        if (syncInProgress)
+            return;
+
+        // 자동 동기화가 이미 대기 중이어도 수동 스캔 요청의 일시 기록은 유지한다.
+        queuedRecordScanTime |= recordScanTime;
+        if (syncQueued)
             return;
 
         syncQueued = true;
@@ -835,6 +842,8 @@ internal static class FmodBusCatalogAutoSync
         if (syncInProgress)
             return;
 
+        bool recordScanTime = queuedRecordScanTime;
+        queuedRecordScanTime = false;
         syncInProgress = true;
         try
         {
@@ -846,7 +855,7 @@ internal static class FmodBusCatalogAutoSync
                     AssetDatabase.LoadAssetAtPath<FmodEventCatalog>(assetPath);
 
                 if (catalog != null)
-                    FmodBankScanner.ScanIntoCatalog(catalog);
+                    FmodBankScanner.ScanIntoCatalog(catalog, recordScanTime: recordScanTime);
             }
 
             if (catalogGuids.Length > 0)

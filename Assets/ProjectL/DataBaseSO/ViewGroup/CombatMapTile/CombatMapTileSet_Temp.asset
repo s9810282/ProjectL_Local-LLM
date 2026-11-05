@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 304a6597dbb5bf200f8f3cc8c058e959, type: 3}
+  m_Name: CombatMapTileSet_Temp
+  m_EditorClassIdentifier: 
+  tiles:
+  - kind: 0
+    prefabs:
+    - {fileID: 3058016683802505540, guid: 6a145a5049bbf3b4bbad221203d5df7d, type: 3}
+    surfaceHeight: 0
+  - kind: 1
+    prefabs:
+    - {fileID: 7672016859993614370, guid: b3e2fc9407ce8354fbbb2f29eb9d0f38, type: 3}
+    surfaceHeight: 0
+  - kind: 2
+    prefabs:
+    - {fileID: 7801156055224488034, guid: c523fd93c058aad4db960ea31add813d, type: 3}
+    surfaceHeight: 0
+  - kind: 3
+    prefabs:
+    - {fileID: 6772888728605866979, guid: 4a969dc3235ffbe4587f4f68305a4b19, type: 3}
+    surfaceHeight: 0
+  - kind: 7
+    prefabs:
+    - {fileID: 3058016683802505540, guid: 6a145a5049bbf3b4bbad221203d5df7d, type: 3}
+    - {fileID: 7672016859993614370, guid: b3e2fc9407ce8354fbbb2f29eb9d0f38, type: 3}
+    - {fileID: 7801156055224488034, guid: c523fd93c058aad4db960ea31add813d, type: 3}
+    - {fileID: 6772888728605866979, guid: 4a969dc3235ffbe4587f4f68305a4b19, type: 3}
+    surfaceHeight: 0
+  - kind: 4
+    prefabs:
+    - {fileID: 1099562140810332499, guid: c2795de48348bf64f851930def274c36, type: 3}
+    surfaceHeight: -0.1
+  - kind: 5
+    prefabs:
+    - {fileID: 6758006774097699589, guid: fad01c2ed7e4cc4449e4a18a6cf098fc, type: 3}
+    surfaceHeight: 0
+  - kind: 6
+    prefabs:
+    - {fileID: 2053469446578885724, guid: 16584a18e085b52448f4ea9ab41340f7, type: 3}
+    surfaceHeight: 0

@@ -1,11 +1,14 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Rules;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Summoning;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Placement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 
@@ -26,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (profile.Definition.FootprintLocalCells.Length != 1) return new CombatPlacementPreview(false, Array.Empty<CellCoord>());
             var cell = input.TargetCell;
             bool valid = input.State.IsInside(cell) && Zones(input).CanDeploy(actor.Owner, new[] { cell }) &&
-                !EnvironmentTerrainRules.IsWallOccupied(input.State.Environment, input.EnvironmentBindings, cell) &&
+                !EnvironmentTerrainRules.BlocksVoluntaryEntry(input.State.Environment, input.EnvironmentBindings, cell) &&
                 !input.Characters.Any(c => c.EntityId != actor.EntityId && c.OccupiedCells.Contains(cell)) &&
                 !input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell));
             return new CombatPlacementPreview(valid, new[] { cell });
@@ -65,21 +68,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 actor.OwnershipRole == CharacterOwnershipRole.Main) return CombatCommandCalculator.Reject(input, "InvalidReturn");
             int slot = EmptySlot(input, input.Characters);
             if (slot < 0) return CombatCommandCalculator.Reject(input, "ReserveFull");
-            var final = Location(actor, CharacterRuntimeArea.Hand, slot, null, null);
             var events = new List<CombatEvent>();
-            PositionTileModifierCalculator.RecordNormalization(events, actor, final);
-            events.Add(new CombatCharacterEvent(CombatEventKind.Returned, actor, final));
-            return CombatTurnCalculator.Changed(input, new Dictionary<EntityId, CharacterCombatFacts> { [actor.EntityId] = final }, input.State, events);
+            // 배치 단계 손 복귀는 자리 바꾸기라 방어막 예산을 남긴다. 다시 놓으면 끌어서 옮긴 것과 같다(밤 종료 회수는 0 그대로).
+            var final = Location(actor, CharacterRuntimeArea.Hand, slot, null, null, events, keepShieldBudget: true);
+            return TraitPresenceReconciler.AfterTransition(Items.ItemEquipmentCalculator.RefundReturn(input, actor, final, events));
         }
 
         private static CharacterCombatFacts Actor(CombatCommandInput input) => input.Kind == CombatCommandKind.PlaceMainCharacter
             ? input.Characters.SingleOrDefault(c => c.OwnershipRole == CharacterOwnershipRole.Main)
             : input.Characters.SingleOrDefault(c => c.EntityId == input.ActorId);
-        private static DeploymentZonePolicy Zones(CombatCommandInput input)
-        {
-            var battle = CombatTurnCalculator.RequiredBattle(input);
-            return new DeploymentZonePolicy(battle.PlayerDeploymentDepth, battle.EnemyDeploymentDepth, input.State.BoardHeight);
-        }
+        private static DeploymentZonePolicy Zones(CombatCommandInput input) =>
+            new DeploymentZonePolicy(CombatTurnCalculator.RequiredBattle(input).PlayerZone);
 
         internal static int EmptySlot(CombatCommandInput input, IEnumerable<CharacterCombatFacts> characters)
         {
@@ -89,19 +88,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return -1;
         }
 
+        /// <param name="keepShieldBudget">예비 구역 진입 때 방어막 예산을 남길지. 배치 단계 손 복귀(`Return`)만 참.</param>
         internal static CharacterCombatFacts Location(CharacterCombatFacts c, CharacterRuntimeArea area, int? slot,
-            CellCoord? anchor, Rotation4? rotation)
+            CellCoord? anchor, Rotation4? rotation, List<CombatEvent> events = null, bool keepShieldBudget = false)
         {
+            bool returning = c.Area != area && (area == CharacterRuntimeArea.Hand || area == CharacterRuntimeArea.EnemyWaiting);
             if (area != CharacterRuntimeArea.Field || anchor != c.Anchor)
-                c = PositionTileModifierCalculator.Replace(c, PositionTileModifier.None);
-            return new(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner, c.OwnershipRole,
-                area, c.Health, c.Stats, slot, anchor, rotation, anchor.HasValue ? new[] { anchor.Value } : Array.Empty<CellCoord>(),
-                anchor ?? c.MovementCheckpointAnchor, c.CommittedMoveDistance, c.PendingMoveActionCost,
-                c.TemporaryAttackBonus, c.TemporaryMaxHealthBonus,
-                c.PendingMoveDistance, c.AttackRefundEligibleMoveCost, c.PositionModifier, c.HeldEnvironment);
+            {
+                var normalized = PositionTileModifierCalculator.Replace(c, PositionTileModifier.None);
+                if (returning && events != null) PositionTileModifierCalculator.RecordNormalization(events, c, normalized);
+                c = normalized;
+            }
+            var relocated = c.WithPlacement(area: area, reserveSlotIndex: slot, anchor: anchor, rotation: rotation,
+                occupiedCells: anchor.HasValue ? new[] { anchor.Value } : Array.Empty<CellCoord>(), actionUse: UnitActionUse.Deferred);
+            if (returning)
+            {
+                events?.Add(new CombatCharacterEvent(CombatEventKind.Returned, c, relocated));
+                return CombatReserveReturnCleanup.Clear(relocated, events, keepShieldBudget);
+            }
+            return c.Area != CharacterRuntimeArea.Field || area != CharacterRuntimeArea.Field
+                ? RegenerationTurnApplication.Reset(relocated) : relocated;
         }
 
-        internal static void RecallForNight(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> projected)
+        internal static void RecallForNight(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> projected, List<CombatEvent> events = null)
         {
             foreach (var c in projected.Values.OrderBy(c => c.EntityId).ToArray())
             {
@@ -109,21 +118,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 int? slot = c.Owner == Owner.Player ? EmptySlot(input, projected.Values) : null;
                 if (slot < 0) throw new InvalidOperationException("밤 종료 회수 공간이 부족합니다.");
                 projected[c.EntityId] = Location(c, c.Owner == Owner.Player ? CharacterRuntimeArea.Hand : CharacterRuntimeArea.EnemyWaiting,
-                    slot, null, null);
+                    slot, null, null, events);
             }
         }
 
+        /// <param name="allocation">소환수 복귀 추첨이 소비한 소환 난수를 돌려준다. 개체 ID는 바꾸지 않는다.</param>
         internal static bool RedeployEnemies(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> projected,
-            MovementProjection projection, IReadOnlyList<IMovementTileRule> rules)
+            MovementProjection projection, IReadOnlyList<IMovementTileRule> rules, ref CombatAllocationFacts allocation)
         {
+            var summons = input.State.Turn.Summons.ToDictionary(r => r.SummonedId);
             var enemies = projected.Values.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.EnemyWaiting && !c.Health.IsDead)
                 .OrderBy(c => c.EntityId).ToArray();
             var pending = new List<(CharacterCombatFacts Actor, CombatEnemyOrigin Origin)>();
-            foreach (var actor in enemies)
+            // 초기 배치 적(보스 포함)을 먼저 원위치로 둔다. 소환수는 원위치가 없으므로 이 경로로 보내지 않는다.
+            foreach (var actor in enemies.Where(e => !summons.ContainsKey(e.EntityId)))
             {
                 if (projection.Terminal) return true;
                 var origin = input.State.Turn.EnemyOrigins.Single(o => o.EntityId == actor.EntityId);
-                if (Available(origin.Anchor)) Place(actor, origin, origin.Anchor); else pending.Add((actor, origin));
+                if (Available(origin.Anchor)) Place(actor, origin.Anchor, origin.Rotation); else pending.Add((actor, origin));
             }
             foreach (var entry in pending)
             {
@@ -134,17 +146,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         if (Available(new CellCoord(x, y))) candidates.Add(new CellCoord(x, y));
                 if (candidates.Count == 0) return false;
                 var cell = candidates.OrderBy(c => CombatMovementCalculator.Distance(c, entry.Origin.Anchor)).ThenBy(c => c.Y).ThenBy(c => c.X).First();
-                Place(entry.Actor, entry.Origin, cell);
+                Place(entry.Actor, cell, entry.Origin.Rotation);
+            }
+            // 같은 개체의 소환수는 소환자가 자리를 잡은 뒤 그 주변 8칸에서 다시 추첨한다(G4).
+            // 자리가 없거나 소환자가 필드에 없으면 다음 밤까지 대기하며, 전투 진입은 막지 않는다.
+            foreach (var actor in enemies.Where(e => summons.ContainsKey(e.EntityId)))
+            {
+                if (projection.Terminal) return true;
+                if (!projected.TryGetValue(summons[actor.EntityId].SummonerId, out var summoner) ||
+                    summoner.Health.IsDead || summoner.Area != CharacterRuntimeArea.Field) continue;
+                var candidates = CombatSummonCalculator.Candidates(projection.CurrentInput().State, projected.Values,
+                    projection.Environment, projection.Bindings, summoner.Anchor.Value);
+                if (candidates.Count == 0) continue;
+                if (!allocation.IsAvailable)
+                    throw new InvalidOperationException("소환 기록이 있는 전투에는 할당 진행값이 필요합니다.");
+                uint random = allocation.SummonRandomState;
+                var cell = candidates[EnvironmentRandom.Choose(ref random, candidates.Count)];
+                allocation = new CombatAllocationFacts(allocation.NextEntityId, random);
+                Place(actor, cell, summoner.Rotation.Value);
             }
             return true;
             bool Available(CellCoord c) => input.State.IsInside(c) &&
-                !EnvironmentTerrainRules.IsWallOccupied(projection.Environment, projection.Bindings, c) &&
+                !EnvironmentTerrainRules.BlocksVoluntaryEntry(projection.Environment, projection.Bindings, c) &&
                 !projected.Values.Any(actor => !actor.Health.IsDead && actor.OccupiedCells.Contains(c)) &&
                 !projection.CurrentInput().State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(c)) &&
                 Zones(input).CanDeploy(Owner.Enemy, new[] { c });
-            void Place(CharacterCombatFacts actor, CombatEnemyOrigin origin, CellCoord cell)
+            void Place(CharacterCombatFacts actor, CellCoord cell, Rotation4 rotation)
             {
-                var placed = Location(actor, CharacterRuntimeArea.Field, null, cell, origin.Rotation);
+                var placed = Location(actor, CharacterRuntimeArea.Field, null, cell, rotation);
                 projected[actor.EntityId] = placed;
                 projection.Events.Add(new CombatCharacterEvent(CombatEventKind.Placed, actor, placed));
                 MovementEnvironmentCalculator.ResolveObjectsAt(projection, actor.EntityId, cell, rules);

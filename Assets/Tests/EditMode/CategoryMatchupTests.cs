@@ -19,7 +19,7 @@ namespace ProjectL.Tests.Core
         [TestCase(CategoryKey.Heavy, CategoryKey.Cannon, 9)]
         [TestCase(CategoryKey.Rider, CategoryKey.Cannon, 12)]
         [TestCase(CategoryKey.Cannon, CategoryKey.Rider, 9)]
-        [TestCase(CategoryKey.Base, CategoryKey.Heavy, 10)]
+        [TestCase(CategoryKey.Main, CategoryKey.Heavy, 10)]
         public void GetMultiplier_PreservesDirectionalAsymmetry(
             CategoryKey attacker, CategoryKey defender, int expectedNumerator)
         {
@@ -35,20 +35,20 @@ namespace ProjectL.Tests.Core
         [Test]
         public void Spec_RejectsInvalidEntries()
         {
-            var valid = new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Base, 10, 10);
+            var valid = new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Main, 10, 10);
 
             // 16개가 모두 있어야 한다.
             Assert.Throws<ArgumentException>(() => new CategoryMatchupSpec(new[] { valid }));
 
             // 음수 분자와 0 분모는 항목 자체가 거부된다.
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Base, -1, 10));
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Main, -1, 10));
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Base, 10, 0));
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Main, 10, 0));
 
             // None은 유효한 Category가 아니다.
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new CategoryMatchupEntry(CategoryKey.None, CategoryKey.Base, 10, 10));
+                new CategoryMatchupEntry(CategoryKey.None, CategoryKey.Main, 10, 10));
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace ProjectL.Tests.Core
             var resolver = new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault());
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                resolver.GetMultiplier(CategoryKey.None, CategoryKey.Base));
+                resolver.GetMultiplier(CategoryKey.None, CategoryKey.Main));
         }
 
         // [사용자 확정] 비음수 피해의 half-up 반올림. banker's rounding을 쓰지 않는다.

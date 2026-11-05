@@ -7,5 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Trait = 1,
         Category = 2,
         Artifact = 3,
+        Item = 4,
+        StageGimmick = 5,
     }
 }

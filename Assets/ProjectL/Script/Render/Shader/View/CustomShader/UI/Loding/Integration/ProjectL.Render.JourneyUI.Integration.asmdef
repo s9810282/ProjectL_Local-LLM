@@ -1,0 +1,7 @@
+{
+  "name": "ProjectL.Render.JourneyUI.Integration",
+  "rootNamespace": "ProjectL.Render.Shader.View.CustomShader.UI.Integration",
+  "references": ["ProjectL.Render.JourneyUI", "ProjectL.Systems", "Framework"],
+  "autoReferenced": true,
+  "noEngineReferences": false
+}

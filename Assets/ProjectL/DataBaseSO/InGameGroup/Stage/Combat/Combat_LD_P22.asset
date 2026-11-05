@@ -1,0 +1,634 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c4af9bd96934e3cae5ae59f1998d613, type: 3}
+  m_Name: Combat_LD_P22
+  m_EditorClassIdentifier:
+  timelineSeed: 1
+  fieldDefinition: {fileID: 11400000, guid: 90c60db25ec6e3562929e913a4126623, type: 2}
+  unitRoster: {fileID: 11400000, guid: 8d7a8a554bd442a1a1e4aee5a492bb78, type: 2}
+  economy: {fileID: 11400000, guid: fcf75043588945418c434ee40d9ece82, type: 2}
+  objectiveKind: 1
+  initialEnemyPlacements:
+  - unitDefinition: {fileID: 11400000, guid: 979cda7d873f49fe8c96a6972ea60112, type: 2}
+    anchor:
+      x: 2
+      y: 7
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 9
+      y: 7
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 11
+      y: 7
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: e3fff6ce2cc044c7a30d09eb7b151c36, type: 2}
+    anchor:
+      x: 8
+      y: 9
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 1a8ba5b811a74fb4aab4e875c12b2dcc, type: 2}
+    anchor:
+      x: 3
+      y: 11
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 1a8ba5b811a74fb4aab4e875c12b2dcc, type: 2}
+    anchor:
+      x: 5
+      y: 11
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  enemyLoadout: {fileID: 0}
+  enemyLevel: 1
+  structureCatalog: []
+  initialEnemyStructurePlacements: []
+  playerDeploymentCells:
+  - x: 0
+    y: 0
+  - x: 1
+    y: 0
+  - x: 2
+    y: 0
+  - x: 3
+    y: 0
+  - x: 4
+    y: 0
+  - x: 9
+    y: 0
+  - x: 10
+    y: 0
+  - x: 11
+    y: 0
+  - x: 12
+    y: 0
+  - x: 0
+    y: 1
+  - x: 1
+    y: 1
+  - x: 2
+    y: 1
+  - x: 3
+    y: 1
+  - x: 4
+    y: 1
+  - x: 8
+    y: 1
+  - x: 9
+    y: 1
+  - x: 10
+    y: 1
+  - x: 11
+    y: 1
+  - x: 12
+    y: 1
+  - x: 0
+    y: 2
+  - x: 1
+    y: 2
+  - x: 2
+    y: 2
+  - x: 3
+    y: 2
+  - x: 8
+    y: 2
+  - x: 9
+    y: 2
+  - x: 10
+    y: 2
+  - x: 11
+    y: 2
+  - x: 12
+    y: 2
+  mainCharacterAnchor:
+    x: 0
+    y: 0
+  mainCharacterRotation: 0
+  headquarters: {fileID: 11400000, guid: 6719927199564b8f8f0d29d1fb5e25f4, type: 2}
+  enemyHeadquartersAnchor:
+    x: 0
+    y: 11
+  enemyHeadquartersRotation: 0
+  environment:
+    terrainPlacements:
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 1
+      cell:
+        x: 5
+        y: 0
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 2
+      cell:
+        x: 6
+        y: 0
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 3
+      cell:
+        x: 7
+        y: 0
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 4
+      cell:
+        x: 8
+        y: 0
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 5
+      cell:
+        x: 5
+        y: 1
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 6
+      cell:
+        x: 6
+        y: 1
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 7
+      cell:
+        x: 7
+        y: 1
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 8
+      cell:
+        x: 4
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 9
+      cell:
+        x: 5
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 10
+      cell:
+        x: 6
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 11
+      cell:
+        x: 7
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 12
+      cell:
+        x: 4
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 13
+      cell:
+        x: 5
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 14
+      cell:
+        x: 6
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 15
+      cell:
+        x: 7
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 16
+      cell:
+        x: 5
+        y: 4
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 17
+      cell:
+        x: 6
+        y: 4
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 18
+      cell:
+        x: 7
+        y: 4
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 1762ad15431f453185f60d628b9ec363, type: 2}
+      sourceId: 19
+      cell:
+        x: 1
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 20
+      cell:
+        x: 5
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 21
+      cell:
+        x: 6
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 22
+      cell:
+        x: 7
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 1762ad15431f453185f60d628b9ec363, type: 2}
+      sourceId: 23
+      cell:
+        x: 8
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 9de13ae14fa848b5b3d0db6799a014d5, type: 2}
+      sourceId: 24
+      cell:
+        x: 5
+        y: 7
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 9de13ae14fa848b5b3d0db6799a014d5, type: 2}
+      sourceId: 25
+      cell:
+        x: 6
+        y: 7
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 26
+      cell:
+        x: 0
+        y: 8
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 9de13ae14fa848b5b3d0db6799a014d5, type: 2}
+      sourceId: 27
+      cell:
+        x: 5
+        y: 8
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 9de13ae14fa848b5b3d0db6799a014d5, type: 2}
+      sourceId: 28
+      cell:
+        x: 6
+        y: 8
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 29
+      cell:
+        x: 0
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 30
+      cell:
+        x: 1
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 31
+      cell:
+        x: 2
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 32
+      cell:
+        x: 3
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 33
+      cell:
+        x: 4
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 34
+      cell:
+        x: 5
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 35
+      cell:
+        x: 6
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 36
+      cell:
+        x: 11
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 37
+      cell:
+        x: 12
+        y: 9
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 38
+      cell:
+        x: 0
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 39
+      cell:
+        x: 1
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 40
+      cell:
+        x: 2
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 41
+      cell:
+        x: 3
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 42
+      cell:
+        x: 4
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 43
+      cell:
+        x: 5
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 44
+      cell:
+        x: 6
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 45
+      cell:
+        x: 10
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 46
+      cell:
+        x: 11
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 47
+      cell:
+        x: 12
+        y: 10
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 48
+      cell:
+        x: 10
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 49
+      cell:
+        x: 11
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 50
+      cell:
+        x: 12
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 51
+      cell:
+        x: 10
+        y: 12
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 52
+      cell:
+        x: 11
+        y: 12
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 53
+      cell:
+        x: 12
+        y: 12
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    obstaclePlacements: []
+    objectPlacements: []
+  cornerCutTicks: 128
+  railwayEnabled: 1
+  railway:
+    railCells:
+    - x: 0
+      y: 6
+    - x: 1
+      y: 6
+    - x: 2
+      y: 6
+    - x: 3
+      y: 6
+    - x: 4
+      y: 6
+    - x: 5
+      y: 6
+    - x: 6
+      y: 6
+    - x: 7
+      y: 6
+    - x: 8
+      y: 6
+    - x: 9
+      y: 6
+    - x: 10
+      y: 6
+    - x: 11
+      y: 6
+    - x: 12
+      y: 6
+    firstActivationAfterControllerTurns: 3
+    repeatIntervalControllerTurns: 3
+  rockfall:
+    enabled: 0
+    cooldownControllerTurns: 2
+    warningControllerTurns: 2
+    minimumRockCount: 3
+    maximumRockCount: 5
+    maximumHealthLossPercent: 20
+    bindAffectedSideTurns: 1
+    footprintOffsets:
+    - x: 0
+      y: 0
+  haboob:
+    enabled: 0
+    relocationIntervalControllerTurns: 2
+    warningLeadControllerTurns: 1
+    footprintOffsets:
+    - x: 1
+      y: 0
+    - x: 2
+      y: 0
+    - x: 0
+      y: 1
+    - x: 1
+      y: 1
+    - x: 2
+      y: 1
+    - x: 3
+      y: 1
+    - x: 0
+      y: 2
+    - x: 1
+      y: 2
+    - x: 2
+      y: 2
+    - x: 3
+      y: 2
+    - x: 1
+      y: 3
+    - x: 2
+      y: 3
+  initialWallCells: []
+  staticTerrainPlacements: []

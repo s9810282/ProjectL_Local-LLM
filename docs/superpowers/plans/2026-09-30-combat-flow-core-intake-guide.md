@@ -7,7 +7,7 @@
 - 함께 볼 문서
   - 우리 [구현 계획](2026-09-30-combat-flow-skeleton-plan.md): Phase 4~7의 Task 목록과 §3.1 인수 표
   - 우리 [설계 8차](../specs/2026-09-30-combat-flow-skeleton-design.md): 진입 계약(§6.3), Flow 분기(§4), Completion 기반 이탈(§6.1·§6.2)
-  - [Core 이전 계획](2026-09-29-character-buffer-effect-migration-plan.md) §4.1, [Task 7 계약](2026-10-01-combat-buffer-command-task7-contract.md): 제공 API 기록. 현재 실행 순서·검증 상태는 우리 계획 §0.1·§6.8
+  - Core 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) §4.1, Task 7 계약 (Git history: `2026-10-01-combat-buffer-command-task7-contract.md`): 제공 API 기록. 현재 실행 순서·검증 상태는 우리 계획 §0.1·§6.8
   - [Core 답변](../handoffs/2026-09-30-combat-core-response-to-view.md)
 
 ## 0. 한눈에

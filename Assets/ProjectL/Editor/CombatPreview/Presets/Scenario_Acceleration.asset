@@ -1,0 +1,272 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_Acceleration
+  m_EditorClassIdentifier:
+  input:
+    version: 1
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 1
+    repeatInterval: 0.5
+    units:
+    - id: "owner"
+      name: "가속 보유자"
+      unit:
+        key: 10
+        enemy: 0
+        cell: {x: 2, y: 3}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 1
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    - id: "enemy"
+      name: "공격 대상"
+      unit:
+        key: 13
+        enemy: 1
+        cell: {x: 4, y: 4}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    entries:
+    - id: "initial"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 1
+      blocks: []
+    - id: "gain_packet"
+      name: "가속 획득"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: "move"
+        name: "먼저 이동"
+        kind: 0
+        relation: 0
+        movement:
+          unitId: "owner"
+          path:
+          - x: 2
+            y: 4
+          - x: 3
+            y: 4
+          direction: 0
+        attack:
+          attackerId: ""
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "move_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: ""
+          targetIds: []
+          cells: []
+          magnitude: 5
+      - id: "gained"
+        name: "특성 발동"
+        kind: 3
+        relation: 0
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: ""
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "gained_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 11400000, guid: 4b3ba3ac09dc488f8dfa4f1975a26be3, type: 2}
+          kind: 90
+          sourceId: "owner"
+          targetIds:
+          - "owner"
+          cells: []
+          magnitude: 10
+      - id: "gain"
+        name: "가속 +10"
+        kind: 2
+        relation: 0
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: ""
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: "owner"
+          kind: 0
+          operation: 0
+          acceleration: 10
+          grant:
+            id: "gain_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: ""
+          targetIds: []
+          cells: []
+          magnitude: 10
+    - id: "observe"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 2
+      blocks: []
+    - id: "attack_packet"
+      name: "공격과 가속 소모"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: "attack"
+        name: "공격"
+        kind: 1
+        relation: 0
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: "owner"
+          direction: 0
+          targetCell: {x: 4, y: 4}
+          hits:
+          - targetId: "enemy"
+            finalHealth: 90
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "attack_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: ""
+          targetIds: []
+          cells: []
+          magnitude: 5
+      - id: "consume"
+        name: "가속 소모"
+        kind: 2
+        relation: 1
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: ""
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: "owner"
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "consume_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: ""
+          targetIds: []
+          cells: []
+          magnitude: 5
+      - id: "consumed"
+        name: "특성 발동"
+        kind: 3
+        relation: 1
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: ""
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "consumed_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 11400000, guid: 4b3ba3ac09dc488f8dfa4f1975a26be3, type: 2}
+          kind: 170
+          sourceId: "owner"
+          targetIds:
+          - "owner"
+          cells: []
+          magnitude: 5
+    - id: "end"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 1
+      blocks: []

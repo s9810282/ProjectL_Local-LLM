@@ -36,7 +36,7 @@ namespace ProjectL.Tests.Core
         [Test]
         public void MovementContext_RejectsChangedHeldState_IntentRetainsIt()
         {
-            var i = MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right);
+            var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             i = ObstacleReactionTests.Copy(i);
             var rules = Array.Empty<IMovementTileRule>();
             var captured = MovementContextCalculator.Capture(i, Owner.Player, rules);
@@ -99,7 +99,7 @@ namespace ProjectL.Tests.Core
             Assert.That(firstActor.HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(2));
             Assert.That(firstActor.HeldEnvironment.BadgeAvailable, Is.True);
             Assert.That(first.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(10));
-            var nextInput = CombatCommandComposition.Project(first);
+            var nextInput = CombatCommandTestData.NextPlayerTurn(CombatCommandComposition.Project(first));
             Assert.That(CombatCommandCalculator.Preview(nextInput, Array.Empty<IMovementTileRule>()).Targets.ToArray()
                 .Single(t => t.TargetId == supply.EntityId).ExpectedDamage, Is.EqualTo(22));
             var second = CombatCommandCalculator.Calculate(nextInput, Array.Empty<IMovementTileRule>());
@@ -119,7 +119,8 @@ namespace ProjectL.Tests.Core
             if (deadCredit) characters[input.ActorId] = CombatCommandCalculator.Hurt(characters[input.ActorId], 100);
             var structures = input.State.Structures.ToDictionary(s => s.EntityId);
             var events = new System.Collections.Generic.List<CombatEvent>();
-            var calc = new ObstacleReactionCalculator(input, input.State.Environment, characters, structures, events,
+            var calc = new ObstacleReactionCalculator(input, input.State.Environment,
+                CombatDamageApplication.For(input, characters, events), structures,
                 new System.Collections.Generic.Dictionary<EntityId, CellCoord>());
             var origin = new CombatDamageOrigin(new CellCoord(1, 3), input.ActorId, 1);
             calc.DamageStructure(supply.EntityId, 0, origin);
@@ -177,13 +178,10 @@ namespace ProjectL.Tests.Core
         [Test]
         public void Badge_ThornsInOneRouteAreIndependentAttacks_AndPreventReturn()
         {
-            var i = MovementTestData.SafeRoute(8, 2, 2, CellCoord.Zero, CellCoord.Right, new CellCoord(2, 0));
+            var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0));
             var chars = i.Characters.Select(c => c.EntityId == i.ActorId ? HeldEnvironmentEffects.AcquireBadge(c, 41) : c).ToArray();
             var s = i.State;
-            var input = CombatCommandTestData.With(i, chars, new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures,
-                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 2, 7), new ThornFieldCellSnapshot(new CellCoord(2, 0), 2, 7) },
-                s.Timeline, s.Turn, s.Environment));
+            var input = CombatCommandTestData.With(i, chars, new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 2, 7), new ThornFieldCellSnapshot(new CellCoord(2, 0), 2, 7) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -192,7 +190,7 @@ namespace ProjectL.Tests.Core
             Assert.That(preview.ProjectedActor.Health.CurrentHealth, Is.EqualTo(93));
             Assert.That(MovementTestData.Actor(result).HeldEnvironment.BadgeAvailable, Is.False);
             Assert.That(result.Events.OfType<CombatHeldEnvironmentEvent>().Count(), Is.EqualTo(1));
-            Assert.That(MovementTestData.Actor(result).MovementCheckpointAnchor, Is.EqualTo(new CellCoord(2, 0)));
+            Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(new CellCoord(2, 0)));
             Assert.That(result.FinalState.ThornFields, Is.Empty);
         }
 
@@ -229,7 +227,7 @@ namespace ProjectL.Tests.Core
             Assert.That(spent.HeldEnvironment.BadgeAvailable, Is.False);
             Assert.That(victim.HeldEnvironment.BadgeAvailable, Is.True);
             Assert.That(result.Events.OfType<CombatHeldEnvironmentEvent>().Count(), Is.EqualTo(1));
-            var next = CombatCommandCalculator.Calculate(CombatCommandComposition.Project(result), Array.Empty<IMovementTileRule>());
+            var next = CombatCommandTestData.Reaction(CombatCommandComposition.Project(result), Array.Empty<IMovementTileRule>());
             Assert.That(next.Characters.Characters.Single(c => c.Final.EntityId == victim.EntityId).Final.Health.CurrentHealth,
                 Is.EqualTo(80));
             var merged = CombatCommandComposition.Merge(input, new[] { result, next });
@@ -263,16 +261,17 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void CopyAndRecall_DoNotRechargeBadge()
+        public void CopyPreservesSpentBadge_RecallRemovesItWithoutRecharging()
         {
             var c = HeldEnvironmentEffects.AcquireBadge(CombatCommandTestData.Input().Characters[0], 41);
             HeldEnvironmentEffects.Protect(new CommandAttackGroups(), c, 5, 1, out c);
             c = CharacterSettlementCalculator.Copy(c, c.Health, c.Stats);
-            c = CombatMovementCalculator.CopyMovement(c, c.Stats, c.Anchor, 0, 0, 0, 0, c.MovementCheckpointAnchor);
+            c = c.With(actionUse: UnitActionUse.Moved);
+            Assert.That(c.HeldEnvironment.BadgeSourceId, Is.EqualTo(41));
+            Assert.That(c.HeldEnvironment.BadgeAvailable, Is.False);
             c = CombatPlacementCalculator.Location(c, CharacterRuntimeArea.Hand, 0, null, null);
             c = CombatPlacementCalculator.Location(c, CharacterRuntimeArea.Field, null, new CellCoord(2, 3), c.Rotation ?? Rotation4.R0);
-            Assert.That(c.HeldEnvironment.BadgeAvailable, Is.False);
-            Assert.That(c.HeldEnvironment.BadgeSourceId, Is.EqualTo(41));
+            Assert.That(c.HeldEnvironment.SameValues(CharacterHeldEnvironmentState.Empty), Is.True);
         }
 
         [Test]
@@ -288,29 +287,31 @@ namespace ProjectL.Tests.Core
             Assert.That(expired.Stats.EffectiveAttackPower, Is.EqualTo(c.Stats.EffectiveAttackPower));
         }
 
-        [TestCase(10, true)]
-        [TestCase(100, false)]
-        public void NightEnd_ExpiresSuppliesBeforeRecallIncludingMain(long nightLength, bool expires)
+        [TestCase(8, true)]
+        [TestCase(1, false)]
+        public void NightEnd_ExpiresSuppliesBeforeRecallIncludingMain(long completedPlayerTurns, bool expires)
         {
             var i = CombatCommandTestData.Input(empty: true);
             var characters = i.Characters.Select(c => HeldEnvironmentEffects.WithHeldState(c,
                 new CharacterHeldEnvironmentState(41, true, 7))).ToArray();
-            var turn = new CombatTurnFacts(StagePhase.Combat, participants: characters.Select(c =>
-                new CombatTurnParticipant(c.EntityId, c.Stats.Priority, c.Stats.Delay)).ToArray());
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, i.ActorId, true,
-                i.State.Structures, i.State.ThornFields, i.State.Timeline, turn);
-            var battle = new CombatBattleFacts(4, nightLength, 1, 8, 8,
-                Array.Empty<CharacterInstanceId>(), 0, 100, 0, null);
-            var input = new CombatCommandInput(i.Number, CombatCommandKind.EndUnitTurn, i.ActorId, i.Aim,
-                state, characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, battle: battle);
-            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+            var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: completedPlayerTurns);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,true,                i.State.Structures,i.State.ThornFields,turn);
+            var battle = new CombatBattleFacts(4, 1, 8, 8,
+                Array.Empty<CharacterInstanceId>(), 0);
+            var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, i.ActorId, i.Aim,
+                state, characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, battle: battle, processingKind: CombatProcessingKind.Advance,
+                expectedBattleInstanceId: i.ExpectedBattleInstanceId, expectedControllerTurnSequence: i.ExpectedControllerTurnSequence,
+                battleInstanceId: i.BattleInstanceId);
+            var result = CombatTurnCalculator.EndEnemyPhase(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             var main = result.Characters.Characters.SingleOrDefault(c => c.Final.EntityId == new EntityId(10))?.Final ?? characters.Single(c => c.EntityId == new EntityId(10));
-            var actor = result.Characters.Characters.Single(c => c.Final.EntityId == i.ActorId).Final;
+            var actor = CombatCommandComposition.Project(result).Characters.Single(c => c.EntityId == i.ActorId);
             Assert.That(main.Area, Is.EqualTo(CharacterRuntimeArea.Field));
             Assert.That(main.HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(expires ? 0 : 7));
             Assert.That(actor.HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(expires ? 0 : 7));
-            Assert.That(main.HeldEnvironment.BadgeAvailable && actor.HeldEnvironment.BadgeAvailable, Is.True);
+            Assert.That(main.HeldEnvironment.BadgeAvailable, Is.True);
+            Assert.That(actor.HeldEnvironment.BadgeAvailable, Is.EqualTo(!expires));
+            if (expires) Assert.That(actor.HeldEnvironment.BadgeSourceId, Is.Null);
             if (expires)
             {
                 var returned = result.Events.OfType<CombatCharacterEvent>().Single(e => e.Kind == CombatEventKind.Returned);

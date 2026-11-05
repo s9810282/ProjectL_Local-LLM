@@ -14,8 +14,6 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
         bool TryGetArtifactView(
             int artifactId,
             out ArtifactViewData data);
-
-        IReadOnlyCollection<ArtifactViewData> GetAllArtifactViews();
     }
 
     /// <summary>
@@ -73,12 +71,6 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
             out ArtifactViewData data)
         {
             return _dataById.TryGetValue(artifactId, out data);
-        }
-
-        public IReadOnlyCollection<ArtifactViewData>
-            GetAllArtifactViews()
-        {
-            return _dataById.Values;
         }
 
         public void ExportServices(ISystemWriteSink sink)

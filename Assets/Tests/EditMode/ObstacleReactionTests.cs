@@ -17,7 +17,7 @@ namespace ProjectL.Tests.Core
     public sealed class ObstacleReactionTests
     {
         [Test]
-        public void PierceAndBlast_PreserveRaySubtotalAndCombinedDamage()
+        public void PierceStopsAtFirstBarrel_AndBlastAloneReachesNextStructure()
         {
             var input = Barrels(Barrel(51, new CellCoord(4, 0), 100, 7,
                 new[] { CellCoord.Zero, new CellCoord(0, 3), new CellCoord(0, 6) }),
@@ -28,19 +28,17 @@ namespace ProjectL.Tests.Core
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(chars[0].CharacterKey, 20,
                 CategoryKey.Cannon, new PiercingFalloffTraitSpec(30, 99)),
-                new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0));
+                new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0));
             input = CombatAttackQueries.WithAim(CombatCommandTestData.With(input, chars, profiles: profiles),
-                AttackAim.ForDirection(AttackDirection.Right));
+                AttackAim.ForCell(new CellCoord(4, 3)));
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
-            var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>());
-            var target = preview.Targets.ToArray().Single(t => t.TargetId == new EntityId(51));
-            Assert.That(target.RayHits.Length, Is.EqualTo(2));
-            Assert.That(target.RayHits.ToArray().Sum(h => h.FinalDamage), Is.EqualTo(40));
-            Assert.That(target.ExpectedDamage, Is.EqualTo(47));
-            Assert.That(target.SecondaryDamage, Is.EqualTo(7));
-            Assert.That(target.TargetHealthAfter, Is.EqualTo(53));
-            Assert.That(result.FinalState.Structures.Single(s => s.EntityId == target.TargetId).Health.CurrentHealth,
-                Is.EqualTo(target.TargetHealthAfter));
+            var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>(), out var projection);
+            Assert.That(preview.Targets.ToArray().Select(t => t.TargetId.Value), Is.EqualTo(new[] { 52 }));
+            Assert.That(preview.PiercingShot.Encounters.ToArray().Select(e => e.TargetId.Value), Is.EqualTo(new[] { 52 }));
+            Assert.That(result.FinalState.Structures.Single(s => s.EntityId.Value == 51).Health.CurrentHealth, Is.EqualTo(93));
+            Assert.That(projection.FinalState.Structures.Single(s => s.EntityId.Value == 51).Health.CurrentHealth, Is.EqualTo(93));
+            Assert.That(result.Events.OfType<CombatStructureEvent>().Single(e => e.Final.EntityId.Value == 51)
+                .Expected.Health.CurrentHealth, Is.EqualTo(100));
         }
 
         [Test]
@@ -79,13 +77,11 @@ namespace ProjectL.Tests.Core
         [Test]
         public void EnvironmentalStructureDamage_ResolvesBarrelInCurrentMovementProjection()
         {
-            var route = MovementTestData.SafeRoute(8, 2, 1, CellCoord.Zero, CellCoord.Right);
+            var route = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var barrel = Barrel(51, new CellCoord(2, 0), 1, 7);
             var input = Copy(route, structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn,
-                new MovementEnvironmentFacts(new MovementTileFact[] { new BarrelTriggerFact() })));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { new BarrelTriggerFact() })));
             var rules = new IMovementTileRule[] { new BarrelTriggerRule() };
             Assert.That(CombatMovementCalculator.Preview(input, rules).ProjectedActor.Health.CurrentHealth, Is.EqualTo(93));
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -114,11 +110,11 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Pierce_ReactPerHitAndDoNotReactAfterDestruction()
+        public void Pierce_ReactsOnceAndReleasesFootprintAfterDestruction()
         {
-            var input = Barrels(Barrel(51, new CellCoord(4, 0), 30, 7,
+            var input = Barrels(Barrel(51, new CellCoord(4, 0), 10, 7,
                 new[] { CellCoord.Zero, new CellCoord(0, 3), new CellCoord(0, 6) }));
-            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
+            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
             var chars = input.Characters.Where(c => c.EntityId == input.ActorId || c.EntityId == new EntityId(10)).ToArray();
             chars[0] = CombatCommandTestData.With(chars[0], category: CategorySnapshot.CreateStateless(CategoryKey.Cannon),
                 traits: new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) });
@@ -126,13 +122,13 @@ namespace ProjectL.Tests.Core
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(chars[0].CharacterKey, 20,
                 CategoryKey.Cannon, new PiercingFalloffTraitSpec(30, 99)), method);
             input = CombatCommandTestData.With(input, chars, profiles: profiles);
-            input = CombatAttackQueries.WithAim(input, AttackAim.ForDirection(AttackDirection.Right));
+            input = CombatAttackQueries.WithAim(input, AttackAim.ForCell(new CellCoord(4, 3)));
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.Events.OfType<CombatObstacleReactionEvent>().Select(e => e.Reaction),
-                Is.EqualTo(new[] { ObstacleReactionKind.Hit, ObstacleReactionKind.Destroyed }));
+                Is.EqualTo(new[] { ObstacleReactionKind.Destroyed }));
             Assert.That(result.Events.OfType<CombatStructureEvent>().Where(e => e.Final.EntityId == new EntityId(51))
-                .Select(e => e.Final.Health.CurrentHealth), Is.EqualTo(new[] { 10, 0 }));
+                .Select(e => e.Final.Health.CurrentHealth), Is.EqualTo(new[] { 0 }));
             var projected = CombatCommandComposition.Project(result);
             foreach (var cell in result.FinalState.Structures.Single().OccupiedCells)
                 Assert.That(CellEnvironmentQuery.Read(result.FinalState, projected.Characters,
@@ -177,7 +173,8 @@ namespace ProjectL.Tests.Core
             var characters = input.Characters.ToDictionary(c => c.EntityId);
             var structures = input.State.Structures.ToDictionary(s => s.EntityId);
             var events = new System.Collections.Generic.List<CombatEvent>();
-            var calculator = new ObstacleReactionCalculator(input, input.State.Environment, characters, structures, events,
+            var calculator = new ObstacleReactionCalculator(input, input.State.Environment,
+                CombatDamageApplication.For(input, characters, events), structures,
                 new System.Collections.Generic.Dictionary<EntityId, CellCoord>());
             calculator.DamageStructure(new EntityId(51), 0, new CombatDamageOrigin(input.Characters[0].Anchor, input.ActorId));
             calculator.ResolveExplosions();
@@ -193,10 +190,11 @@ namespace ProjectL.Tests.Core
             var c = characters[new EntityId(3)];
             var cells = new[] { new CellCoord(4, 4), new CellCoord(5, 4) };
             characters[c.EntityId] = new CharacterCombatFacts(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner, c.OwnershipRole,
-                c.Area, c.Health, c.Stats, c.ReserveSlotIndex, c.Anchor, c.Rotation, cells, c.MovementCheckpointAnchor, 0, 0);
+                c.Area, c.Health, c.Stats, c.ReserveSlotIndex, c.Anchor, c.Rotation, cells, c.ActionUse);
             var structures = input.State.Structures.ToDictionary(s => s.EntityId);
             var events = new System.Collections.Generic.List<CombatEvent>();
-            var calculator = new ObstacleReactionCalculator(input, input.State.Environment, characters, structures, events,
+            var calculator = new ObstacleReactionCalculator(input, input.State.Environment,
+                CombatDamageApplication.For(input, characters, events), structures,
                 new System.Collections.Generic.Dictionary<EntityId, CellCoord>());
             calculator.DamageStructure(new EntityId(51), 10, new CombatDamageOrigin(input.Characters[0].Anchor, input.ActorId));
             calculator.ResolveExplosions();
@@ -221,12 +219,13 @@ namespace ProjectL.Tests.Core
             var input = Barrels(Barrel(51, new CellCoord(4, 3), 10, 10));
             var s = input.State;
             var terrain = new StaticTerrainFact(71, new CellCoord(5, 3), StaticTerrainKind.HighGround, true, new[] { Owner.Player });
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                s.Structures, s.ThornFields, s.Timeline, s.Turn, new MovementEnvironmentFacts(new MovementTileFact[] { terrain }));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(new MovementTileFact[] { terrain }));
             input = new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
                 environmentBindings: new EnvironmentSemanticBindings(new[] { 71L }, Array.Empty<long>(), input.EnvironmentBindings.ObstacleEntityIds),
-                obstacleContents: input.ObstacleContents);
+                obstacleContents: input.ObstacleContents,
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence,
+                battleInstanceId: input.BattleInstanceId);
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Characters.Characters.Single(c => c.Final.EntityId == new EntityId(4)).Final.Health.CurrentHealth, Is.EqualTo(93));
             Assert.That(result.FinalState.Environment.SameValues(state.Environment), Is.True);
@@ -309,23 +308,94 @@ namespace ProjectL.Tests.Core
             StructureCombatFacts[] structures = null, ObstacleContentProfile[] profiles = null)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                structures ?? s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                structures ?? s.Structures,s.ThornFields,s.Turn,s.Environment);
             profiles ??= input.ObstacleContents.ToArray();
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, characters ?? input.Characters.ToArray(),
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell, input.Rotation,
                 input.Battle, input.ProcessingKind, input.Path, input.MovementContext, input.BattleInstanceId == 0 ? 1 : input.BattleInstanceId, input.ArtifactItems,
                 new EnvironmentSemanticBindings(input.EnvironmentBindings.TerrainSourceIds, input.EnvironmentBindings.ObjectSourceIds,
-                    profiles.Select(p => p.EntityId).ToArray()), profiles);
+                    profiles.Select(p => p.EntityId).ToArray()), profiles,
+                expectedBattleInstanceId: input.BattleInstanceId == 0 ? 1 : input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence);
         }
 
         [Test]
         public void LethalUnit_EmitsDestructionOnly() =>
             Assert.That(ObstacleReactionCalculator.Select(10, 0), Is.EqualTo(ObstacleReactionKind.Destroyed));
 
+        [TestCase(StaticTerrainKind.Cliff)]
+        [TestCase(StaticTerrainKind.WeakGround)]
+        public void Knockback_SurvivingObstacleMovesWithoutGroundCount_CliffDoesNotExplode(StaticTerrainKind kind)
+        {
+            var seed = CliffFallTests.Knockback();
+            var barrel = Barrel(51, new CellCoord(4, 3), 100, 1000);
+            var input = Copy(seed, characters: seed.Characters.Where(c => c.EntityId.Value != 2 && c.EntityId.Value != 3).ToArray(),
+                structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
+            input = CliffFallTests.WithEnvironment(input, CliffFallTests.Ground(kind, cell: new CellCoord(5, 3)));
+            var attackPreview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>(), out var preview);
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            var final = result.FinalState.Structures.Single();
+            Assert.That(final.Anchor, Is.EqualTo(new CellCoord(5, 3)));
+            Assert.That(final.Health.IsDead, Is.EqualTo(kind == StaticTerrainKind.Cliff));
+            Assert.That(preview.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(final.Health.CurrentHealth));
+            Assert.That(attackPreview.Targets.ToArray().Single(t => t.TargetId == final.EntityId).TargetHealthAfter,
+                Is.EqualTo(final.Health.CurrentHealth));
+            Assert.That(result.FinalState.Environment.Tiles.OfType<StaticTerrainFact>().Single().EntryCount, Is.Zero);
+            Assert.That(result.Events.OfType<CombatObstacleReactionEvent>().Select(e => e.Reaction), Is.EqualTo(new[] { ObstacleReactionKind.Hit }));
+            Assert.That(result.Events.OfType<CombatFallEvent>().Count(), Is.EqualTo(kind == StaticTerrainKind.Cliff ? 1 : 0));
+            Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(100));
+        }
+
         [Test]
         public void NonlethalUnit_EmitsHitOnly() =>
             Assert.That(ObstacleReactionCalculator.Select(10, 3), Is.EqualTo(ObstacleReactionKind.Hit));
+
+        [TestCase(StaticTerrainKind.Wall)]
+        [TestCase(StaticTerrainKind.HighGround)]
+        public void ObstacleKnockback_ChecksEveryFootprintCellForTerrainBlockers(StaticTerrainKind kind)
+        {
+            var seed = CliffFallTests.Knockback();
+            var barrel = Barrel(51, new CellCoord(4, 3), 100, 7, new[] { CellCoord.Zero, CellCoord.Up });
+            var input = Copy(seed, characters: seed.Characters.Where(c => c.EntityId.Value != 2 && c.EntityId.Value != 3).ToArray(),
+                structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
+            input = CliffFallTests.WithEnvironment(input, new StaticTerrainFact(71, new CellCoord(5, 4), kind, true, new[] { Owner.Player, Owner.Enemy }));
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.FinalState.Structures.Single().Anchor, Is.EqualTo(barrel.Structure.Anchor));
+            Assert.That(result.Events.OfType<CombatFallEvent>(), Is.Empty);
+        }
+
+        [Test]
+        public void ObstacleKnockback_AnyFootprintCliffRemovesWholeObstacleOnce()
+        {
+            var seed = CliffFallTests.Knockback();
+            var barrel = Barrel(51, new CellCoord(4, 3), 100, 7, new[] { CellCoord.Zero, CellCoord.Up });
+            var input = Copy(seed, characters: seed.Characters.Where(c => c.EntityId.Value != 2 && c.EntityId.Value != 3).ToArray(),
+                structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
+            input = CliffFallTests.WithEnvironment(input, CliffFallTests.Ground(cell: new CellCoord(5, 4)));
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.FinalState.Structures.Single().Health.IsDead, Is.True);
+            Assert.That(result.Events.OfType<CombatFallEvent>().Single().Cell, Is.EqualTo(new CellCoord(5, 4)));
+            foreach (var cell in result.FinalState.Structures.Single().OccupiedCells)
+                Assert.That(CellEnvironmentQuery.Read(result.FinalState, CombatCommandComposition.Project(result).Characters,
+                    input.EnvironmentBindings, cell).ObstacleIds, Is.Empty);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AttackKnockback_DeadObstacleOrUnclassifiedStructureIsNotPushed(bool unclassified)
+        {
+            var seed = CliffFallTests.Knockback();
+            var barrel = Barrel(51, new CellCoord(4, 3), unclassified ? 100 : 1, 0);
+            var structure = unclassified ? new StructureCombatFacts(barrel.Structure.EntityId,
+                new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
+                barrel.Structure.Health, barrel.Structure.Anchor, Rotation4.R0, barrel.Structure.OccupiedCells) : barrel.Structure;
+            var input = Copy(seed, characters: seed.Characters.Where(c => c.EntityId.Value != 2 && c.EntityId.Value != 3).ToArray(),
+                structures: new[] { structure }, profiles: unclassified ? Array.Empty<ObstacleContentProfile>() : new[] { barrel.Profile });
+            input = CliffFallTests.WithEnvironment(input, CliffFallTests.Ground(cell: new CellCoord(5, 3)));
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.FinalState.Structures.Single().Anchor, Is.EqualTo(structure.Anchor));
+            Assert.That(result.Events.OfType<CombatFallEvent>(), Is.Empty);
+        }
 
         [Test]
         public void AlreadyDestroyed_DoesNotReact() =>

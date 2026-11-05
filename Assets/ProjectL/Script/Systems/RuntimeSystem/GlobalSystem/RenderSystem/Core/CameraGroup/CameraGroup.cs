@@ -1,14 +1,16 @@
+using ProjectL.Systems.ServiceKeys.Runtime.Global.Render;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
-using ProjectL.Systems.ServiceKeys;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup.CameraCatalogSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup.CameraEffectSystem;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup.UnityCameraCatalogSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup
 {
     public interface ICameraGroupServiceContext : IServiceModule
     {
         ICameraCatalogService CameraCatalogSystem { get; }
+        IUnityCameraCatalogService UnityCameraCatalogSystem { get; }
         ICameraEffectService CameraEffectSystem { get; }
     }
 
@@ -17,10 +19,12 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
         ISystemBindScene, ISystemPostBindService, ISystemShutdown
     {
         public ICameraCatalogService CameraCatalogSystem { get; }
+        public IUnityCameraCatalogService UnityCameraCatalogSystem { get; }
         public ICameraEffectService CameraEffectSystem { get; }
 
         internal CameraGroup(ISystemReader reader) : base(reader)
         {
+            UnityCameraCatalogSystem = reader.ServiceStoreReader.GetService(CameraSystemServiceKey.UnityCatalog);
             CameraCatalogSystem = reader.ServiceStoreReader.GetService(CameraSystemServiceKey.Catalog);
             CameraEffectSystem = reader.ServiceStoreReader.GetService(CameraSystemServiceKey.Effect);
         }

@@ -5,8 +5,8 @@ This records the T01–T12 implementation snapshot before the Stage merge. For t
 ## Scope and baseline
 
 - Initial authorized scope: T01; subsequent task-specific authorizations and evidence are recorded below. Current managed implementation/verification scope is T01-T12; production content/scene/entry-exit acceptance remains gated. No commit or push is authorized.
-- Plan: [implementation plan](../plans/2026-10-04-drag-path-movement.md).
-- Spec: [confirmed design](../specs/2026-10-04-drag-path-movement-design.md).
+- Plan: implementation plan (Git history: `2026-10-04-drag-path-movement.md`).
+- Spec: confirmed design (Git history: `2026-10-04-drag-path-movement-design.md`).
 - HEAD: `7c9f724a3e20a3ff0c7c172175b34003d9a2c0ab`.
 - Branch: `feature/Cheon/refactor/core-system`.
 - Initial working tree: only the incoming plan and spec were untracked; runtime/test files were clean.

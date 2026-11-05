@@ -1,0 +1,184 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_ReserveCleanup
+  m_EditorClassIdentifier:
+  input:
+    version: 3
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 1
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "a"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+      - id: "target"
+        name: "target"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "attack"
+            key: 1
+            ownerKind: 1
+            sourceId: "a"
+            trait: 230
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "recon"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 450
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 2
+            hasMovement: 1
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "shield"
+            key: 7
+            ownerKind: 1
+            sourceId: "a"
+            trait: 240
+            amount: 0
+            percent: 20
+            remainingTurns: 2
+            eligible: 0
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+        actionUse: 1
+        distanceMoved: 0
+        ownsAcceleration: 1
+        acceleration: 10
+        ownsRegeneration: 1
+        healAmount: 10
+        healEveryOwnSideTurnEnds: 2
+        completedEligibleTurnEnds: 1
+    entries:
+      - id: "e52cddcc6ba144b99c2bafea8e5341d6"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "0c80666a4bc941478a010071fd97679d"
+        name: "Returned 후 명시 cleanup 사실"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "5836bfdca845445f8bde6a472ebe7e65"
+            name: "대상 손패 귀환"
+            kind: 7
+            relation: 0
+            returned:
+              unitId: "target"
+              area: 0
+              reserveSlot: 0
+          - id: "7d883094c7db4829a98f419af75e595d"
+            name: "명시 출처 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "attack"
+                key: 1
+                ownerKind: 1
+                sourceId: "a"
+                trait: 230
+                amount: 5
+                percent: 20
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 1
+                hasMovement: 0
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1
+          - id: "a67b4731d6414312ab765dd5e1e48a4a"
+            name: "명시 출처 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "recon"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 450
+                amount: 5
+                percent: 20
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 2
+                hasMovement: 1
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1
+          - id: "933aadc155054f0ba2332545777f1613"
+            name: "가속 보유분 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 0
+              operation: 1
+          - id: "1b88d7b0afca40f5926bee76b07de8c3"
+            name: "재생 진행 초기화"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 4
+              operation: 1

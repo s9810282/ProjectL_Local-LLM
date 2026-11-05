@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.DataBase;
@@ -6,7 +7,6 @@ using ProjectL.Systems.Factory.DBFactory;
 using ProjectL.Systems.Factory.Runtime;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutlineSystem;
-using ProjectL.Systems.ServiceKeys;
 using UnityEngine;
 
 namespace ProjectL.Systems
@@ -17,6 +17,7 @@ namespace ProjectL.Systems
     public sealed partial class TestRuner : MonoBehaviour
     {
         [SerializeField] private DatabaseCatalogSO databaseCatalog;
+        [SerializeField] private bool areaOutlineTestsEnabled = true;
         [SerializeField] private Vector2Int[] cells = { Vector2Int.zero, Vector2Int.right };
         [SerializeField] private Vector3 gridOrigin;
         [SerializeField] private Vector2 cellSize = Vector2.one;
@@ -46,11 +47,19 @@ namespace ProjectL.Systems
             if (!isRunning)
                 return;
 
-            runtime.Tick(Time.deltaTime);
-            UpdateCameraTests();
+            try
+            {
+                runtime.Tick(Time.deltaTime);
+                UpdateScreenTransitionTests();
 
-            if (updateEveryFrame)
-                ApplyOutline();
+                if (updateEveryFrame)
+                    ApplyOutline();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+                StopRunner();
+            }
         }
 
         private void OnDisable()
@@ -86,14 +95,16 @@ namespace ProjectL.Systems
                 runtime.Initialize();
 
                 IGlobalSystemGroupService global = runtime.GetService(SystemGroupsService.Global);
-                areaOutlineSystem = global.RenderServiceCommand.ViewGroup.AreaOutlineSystemServices;
-
-                areaOutlineHandle = areaOutlineSystem.Create();
+                if (areaOutlineTestsEnabled)
+                {
+                    areaOutlineSystem = global.RenderServiceCommand.ViewGroup.AreaOutlineSystemServices;
+                    areaOutlineHandle = areaOutlineSystem.Create();
+                }
 
                 isRunning = true;
-                InitializeCameraTests(global);
+                InitializeScreenTransitionTests(global);
                 ApplyOutline();
-                Debug.Log("[TestRuner] AreaOutline created through FrameworkRuntime.", this);
+                Debug.Log("[TestRuner] Framework tests ready.", this);
             }
             catch (Exception exception)
             {
@@ -149,7 +160,7 @@ namespace ProjectL.Systems
         public void StopRunner()
         {
             isRunning = false;
-            StopCameraTests();
+            StopScreenTransitionTests();
 
             areaOutlineHandle?.Dispose();
             areaOutlineHandle = null;

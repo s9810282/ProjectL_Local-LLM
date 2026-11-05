@@ -17,3 +17,4 @@ MonoBehaviour:
   choiceMode: 2
   splash: 0
   splashPercent: 0
+  choiceAngle: 0

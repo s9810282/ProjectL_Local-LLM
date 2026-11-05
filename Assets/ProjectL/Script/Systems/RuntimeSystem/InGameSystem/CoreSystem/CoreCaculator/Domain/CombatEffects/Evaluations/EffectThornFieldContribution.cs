@@ -9,6 +9,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     {
         public EffectOriginKey Origin { get; }
         public int ThornDamage { get; }
+        public int DefenseReductionPercent { get; }
+        public UnitTurnTickPhase TickPhase { get; }
         public int LifetimeUnitTurns { get; }
         public IReadOnlyList<CellCoord> ApplicationCells { get; }
 
@@ -16,7 +18,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             EffectOriginKey origin,
             int thornDamage,
             int lifetimeUnitTurns,
-            CellCoord[] applicationCells)
+            CellCoord[] applicationCells,
+            int defenseReductionPercent = 0, UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended)
         {
             if (origin.IsValid == false)
                 throw new ArgumentException(nameof(origin));
@@ -40,6 +43,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
 
             Origin = origin;
+            if (defenseReductionPercent < 0 || defenseReductionPercent > 100)
+                throw new ArgumentOutOfRangeException(nameof(defenseReductionPercent));
+            if (!Enum.IsDefined(typeof(UnitTurnTickPhase), tickPhase))
+                throw new ArgumentOutOfRangeException(nameof(tickPhase));
+            DefenseReductionPercent = defenseReductionPercent;
+            TickPhase = tickPhase;
             ThornDamage = thornDamage;
             LifetimeUnitTurns = lifetimeUnitTurns;
             ApplicationCells = Array.AsReadOnly(copiedCells);

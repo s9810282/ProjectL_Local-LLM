@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42ef496f6dc944899de2099e5ff015c8, type: 3}
+  m_Name: Map_Map
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 979111894792262480, guid: 05ce11edbc16d7d41aa9cad23949884c, type: 3}
+  bakedLighting: {fileID: 11400000, guid: 9f1db28c98bb9d541b94ebbe9c0eb4a3, type: 2}

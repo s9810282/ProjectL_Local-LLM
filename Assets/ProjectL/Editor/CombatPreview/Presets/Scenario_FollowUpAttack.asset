@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_FollowUpAttack
+  m_EditorClassIdentifier:
+  input:
+    version: 1
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 1
+    repeatInterval: 0.5
+    units:
+    - id: "owner"
+      name: "공격자"
+      unit:
+        key: 10
+        enemy: 0
+        cell: {x: 2, y: 3}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    - id: "enemy"
+      name: "공격 대상"
+      unit:
+        key: 13
+        enemy: 1
+        cell: {x: 3, y: 3}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    entries:
+    - id: "initial"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 1
+      blocks: []
+    - id: "first"
+      name: "첫 일반 공격"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: "first_attack"
+        name: "공격"
+        kind: 1
+        relation: 0
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: "owner"
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits:
+          - targetId: "enemy"
+            finalHealth: 90
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "first_attack_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: ""
+          targetIds: []
+          cells: []
+          magnitude: 5
+    - id: "gap"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 1
+      blocks: []
+    - id: "second"
+      name: "추가 공격"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: "followup"
+        name: "추가 공격 발동 (합성)"
+        kind: 4
+        relation: 0
+        movement:
+          unitId: ""
+          path: []
+          direction: 0
+        attack:
+          attackerId: "owner"
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits:
+          - targetId: "enemy"
+            finalHealth: 80
+        state:
+          unitId: ""
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: "followup_grant"
+            sourceId: ""
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 11400000, guid: e76ae27ba9394163aa6a171e512e3bad, type: 2}
+          kind: 80
+          sourceId: "owner"
+          targetIds:
+          - "enemy"
+          cells: []
+          magnitude: 5
+    - id: "end"
+      name: "관찰 대기"
+      kind: 1
+      seconds: 1
+      blocks: []

@@ -27,7 +27,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 
             input.Press(StageInputNames.Combat.Cancel, _receiver.Cancel);
             input.Press(StageInputNames.Combat.EndTurn, _receiver.EndTurnRequested);
-            input.Press(StageInputNames.Combat.MoveMode, _receiver.MoveModeRequested);
             input.Press(StageInputNames.Combat.AttackMode, _receiver.AttackModeRequested);
             input.Press(StageInputNames.Combat.Return, _receiver.RequestReturn);
         }

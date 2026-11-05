@@ -31,6 +31,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
     internal sealed class StageSelectionReceiverSlot :
         IStageSelectionReceiverSlot,
         IStageSelectionInputReceiver,
+#if UNITY_EDITOR
+        IStageCameraFramingInputReceiver,
+#endif
         IExportSystemServices
     {
         private IStageSelectionInputReceiver _receiver;
@@ -58,6 +61,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
             // 콜백 안에서 새로 연결한 대상의 상태를 덮어쓰지 않도록 상태를 먼저 비웁니다.
             _receiver = null;
             _selectOwner = null;
+
+#if UNITY_EDITOR
+            if (receiver is IStageCameraFramingInputReceiver framing)
+                framing.CameraModifierChanged(false);
+#endif
 
             if (hadSelection)
                 receiver.SelectCanceled();
@@ -91,6 +99,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
         public void ConfirmRequested() => _receiver?.ConfirmRequested();
 
         public void CancelRequested() => _receiver?.CancelRequested();
+
+#if UNITY_EDITOR
+        public void CameraModifierChanged(bool pressed) =>
+            (_receiver as IStageCameraFramingInputReceiver)?.CameraModifierChanged(pressed);
+
+        public void CameraRotateChanged(bool pressed, float screenX, float screenY) =>
+            (_receiver as IStageCameraFramingInputReceiver)?.CameraRotateChanged(pressed, screenX, screenY);
+
+        public void CameraDollyChanged(bool pressed, float screenX, float screenY) =>
+            (_receiver as IStageCameraFramingInputReceiver)?.CameraDollyChanged(pressed, screenX, screenY);
+
+        public void CameraZoomRequested(float scrollY, float screenX, float screenY) =>
+            (_receiver as IStageCameraFramingInputReceiver)?.CameraZoomRequested(scrollY, screenX, screenY);
+#endif
 
         public void ExportServices(ISystemWriteSink sink)
         {

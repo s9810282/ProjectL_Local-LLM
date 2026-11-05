@@ -14,31 +14,27 @@ namespace ProjectL.Tests.Core
     public sealed class CombatEffectEngineTests
     {
         [Test]
-        public void Cost_IgnoresZeroContributionMinimumAndSortsOrigins()
+        public void IncomingDamage_CapsCombinedContributionsAtIncomingDamage()
         {
-            EffectOriginKey first = Origin(EffectOwnerKind.Artifact, 0, 10, "a");
-            EffectOriginKey second = Origin(EffectOwnerKind.Category, 9, 20, "b");
             var bindings = new[]
             {
-                Binding(first, new FixedCostRule(1, 1, true)),
-                Binding(second, new FixedCostRule(0, 5, true)),
+                Binding(Origin(EffectOwnerKind.Trait, 1, 1, "a"), new FixedIncomingRule(3)),
+                Binding(Origin(EffectOwnerKind.Trait, 2, 1, "b"), new FixedIncomingRule(3)),
+                Binding(Origin(EffectOwnerKind.Trait, 3, 1, "c"), new FixedIncomingRule(3))
             };
-            var engine = new CombatEffectEngine();
+            var result = new CombatEffectEngine().EvaluateIncomingDamage(bindings, new IncomingDamageEffectContext(6));
+            Assert.That(result.EffectiveReduction, Is.EqualTo(6));
+            Assert.That(result.FinalDamage, Is.Zero);
+            Assert.That(System.Linq.Enumerable.Select(result.AllocatedReductions, a => a.FlatReduction),
+                Is.EqualTo(new[] { 3, 3, 0 }));
+        }
 
-            EffectAttackCostEvaluation forward = engine.EvaluateAttackCost(
-                bindings,
-                new AttackCostEffectContext(5));
-            Array.Reverse(bindings);
-            EffectAttackCostEvaluation reversed = engine.EvaluateAttackCost(
-                bindings,
-                new AttackCostEffectContext(5));
-
-            Assert.That(forward.EffectiveCost, Is.EqualTo(4));
-            Assert.That(reversed.EffectiveCost, Is.EqualTo(4));
-            Assert.That(forward.Contributions[0].Origin, Is.EqualTo(second));
-            Assert.That(reversed.Contributions[0].Origin, Is.EqualTo(second));
-            Assert.That(forward.PositiveCostContributors, Is.EqualTo(new[] { first }));
-            Assert.That(forward.Expectations.Count, Is.EqualTo(2));
+        private sealed class FixedIncomingRule : IEffectIncomingDamageRule
+        {
+            private readonly int _reduction;
+            internal FixedIncomingRule(int reduction) => _reduction = reduction;
+            public EffectIncomingDamageContribution EvaluateIncomingDamage(in EffectRuleInput input,
+                in IncomingDamageEffectContext context) => new EffectIncomingDamageContribution(input.Origin, _reduction);
         }
 
         [Test]
@@ -49,7 +45,7 @@ namespace ProjectL.Tests.Core
             EffectOriginKey artifact = Origin(EffectOwnerKind.Artifact, 0, 3, "entry");
             var bindings = new[]
             {
-                Binding(artifact, new ThrowingCostOnlyRule()),
+                Binding(artifact, new ThrowingIncomingOnlyRule()),
                 Binding(trait, new FixedDamageRule(2)),
                 Binding(category, new FixedDamageRule(3)),
             };
@@ -75,10 +71,10 @@ namespace ProjectL.Tests.Core
 
             CombatEffectPlan move = engine.PlanMoveSucceeded(
                 bindings,
-                new MoveSucceededEffectContext(2, true, 1));
+                new MoveSucceededEffectContext(2,true));
             CombatEffectPlan attack = engine.PlanAttackSucceeded(
                 bindings,
-                new AttackSucceededEffectContext(Array.Empty<EffectOriginKey>()));
+                new AttackSucceededEffectContext());
             CombatEffectPlan turnStarted = engine.PlanTurnStarted(bindings);
             CombatEffectPlan turnEnded = engine.PlanTurnEnded(bindings);
 
@@ -149,20 +145,16 @@ namespace ProjectL.Tests.Core
             var duplicateBindings = new[] { secondBinding, firstBinding, firstBinding };
             var engine = new CombatEffectEngine();
 
-            Assert.Throws<ArgumentException>(() => engine.EvaluateAttackCost(
+            Assert.Throws<ArgumentException>(() => engine.PlanAttackSucceeded(
                 duplicateBindings,
-                new AttackCostEffectContext(5)));
+                default));
             Assert.That(rule.Calls, Is.Zero);
             Assert.That(duplicateBindings[0].Origin, Is.EqualTo(second));
             Assert.That(duplicateBindings[1].Origin, Is.EqualTo(first));
 
-            Assert.Throws<ArgumentNullException>(() => engine.EvaluateAttackCost(null, default));
-            Assert.Throws<ArgumentOutOfRangeException>(() => engine.EvaluateAttackCost(
-                new[] { firstBinding },
-                default));
-            Assert.Throws<ArgumentException>(() => engine.PlanAttackSucceeded(
-                new[] { firstBinding },
-                default));
+            Assert.Throws<ArgumentNullException>(() => engine.PlanAttackSucceeded(null, default));
+            Assert.Throws<ArgumentOutOfRangeException>(() => engine.PlanAttackSucceeded(
+                new[] { firstBinding }, new AttackSucceededEffectContext((ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.Rotation4)255)));
             Assert.That(rule.Calls, Is.Zero);
         }
 
@@ -173,13 +165,6 @@ namespace ProjectL.Tests.Core
             EffectOriginKey first = Origin(EffectOwnerKind.Trait, 7, 1, "first");
             EffectOriginKey second = Origin(EffectOwnerKind.Category, 2, 2, "second");
 
-            Assert.Throws<OverflowException>(() => engine.EvaluateAttackCost(
-                new[]
-                {
-                    Binding(first, new FixedCostRule(int.MaxValue, 1, false)),
-                    Binding(second, new FixedCostRule(1, 1, false)),
-                },
-                new AttackCostEffectContext(5)));
             Assert.Throws<OverflowException>(() => engine.EvaluateAttackDamage(
                 new[]
                 {
@@ -196,9 +181,6 @@ namespace ProjectL.Tests.Core
             EffectOriginKey foreign = Origin(EffectOwnerKind.Artifact, 0, 2, "entry");
             var engine = new CombatEffectEngine();
 
-            Assert.Throws<InvalidOperationException>(() => engine.EvaluateAttackCost(
-                new[] { Binding(bound, new FixedCostRule(1, 1, true, foreign)) },
-                new AttackCostEffectContext(5)));
             Assert.Throws<InvalidOperationException>(() => engine.EvaluateAttackDamage(
                 new[] { Binding(bound, new FixedDamageRule(1, foreign)) },
                 new AttackDamageEffectContext(5)));
@@ -239,37 +221,6 @@ namespace ProjectL.Tests.Core
             return new EffectOriginKey(kind, ownerInstanceId, definitionKey, ruleKey);
         }
 
-        private sealed class FixedCostRule : IEffectAttackCostRule
-        {
-            private readonly int _reduction;
-            private readonly int _minimum;
-            private readonly bool _consume;
-            private readonly EffectOriginKey? _originOverride;
-
-            public FixedCostRule(
-                int reduction,
-                int minimum,
-                bool consume,
-                EffectOriginKey? originOverride = null)
-            {
-                _reduction = reduction;
-                _minimum = minimum;
-                _consume = consume;
-                _originOverride = originOverride;
-            }
-
-            public EffectAttackCostContribution EvaluateAttackCost(
-                in EffectRuleInput input,
-                in AttackCostEffectContext context)
-            {
-                return new EffectAttackCostContribution(
-                    _originOverride ?? input.Origin,
-                    _reduction,
-                    _minimum,
-                    _consume);
-            }
-        }
-
         private sealed class FixedDamageRule : IEffectAttackDamageRule
         {
             private readonly int _bonus;
@@ -291,13 +242,13 @@ namespace ProjectL.Tests.Core
             }
         }
 
-        private sealed class ThrowingCostOnlyRule : IEffectAttackCostRule
+        private sealed class ThrowingIncomingOnlyRule : IEffectIncomingDamageRule
         {
-            public EffectAttackCostContribution EvaluateAttackCost(
+            public EffectIncomingDamageContribution EvaluateIncomingDamage(
                 in EffectRuleInput input,
-                in AttackCostEffectContext context)
+                in IncomingDamageEffectContext context)
             {
-                throw new AssertionException("Damage evaluation invoked the cost capability.");
+                throw new AssertionException("Damage evaluation invoked the incoming-damage capability.");
             }
         }
 
@@ -372,17 +323,9 @@ namespace ProjectL.Tests.Core
             }
         }
 
-        private sealed class CountingRule : IEffectAttackCostRule, IEffectAttackSucceededRule
+        private sealed class CountingRule : IEffectAttackSucceededRule
         {
             public int Calls { get; private set; }
-
-            public EffectAttackCostContribution EvaluateAttackCost(
-                in EffectRuleInput input,
-                in AttackCostEffectContext context)
-            {
-                Calls++;
-                return new EffectAttackCostContribution(input.Origin, 1, 1, false);
-            }
 
             public EffectRuleResult PlanAttackSucceeded(
                 in EffectRuleInput input,

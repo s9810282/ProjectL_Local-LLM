@@ -8,7 +8,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </summary>
     /// <remarks>
     /// 보관하는 것은 확인한 미리보기 응답 번호뿐입니다. 같은 의미의 결과 완료 카운터를 만들지 않습니다.
-    /// 전투 설치·정리는 관측하지 않습니다: 첫 그리기는 Attach가 하고(개선 설계 D13), 전투가 사라지면 조정자가 Detach합니다(D9).
+    /// 전투 설치·정리는 관측하지 않습니다: 첫 그리기는 Attach가 하고(개선 설계 D13), 전투가 사라지거나 바뀌면 조정자가 직접 봅니다
+    /// (이 전투의 완료를 보이는 중이면 마지막 화면 유지, 아니면 F1로 보고한 뒤 Detach, D9·C 단계 설계 C-5).
     /// </remarks>
     internal sealed class CombatViewRefresh
     {

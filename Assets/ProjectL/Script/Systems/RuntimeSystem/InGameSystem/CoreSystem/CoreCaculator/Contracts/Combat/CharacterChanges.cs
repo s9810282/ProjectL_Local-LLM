@@ -23,15 +23,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
     public sealed class MainCharacterPersistentChange
     {
+        public CharacterInstanceId Id { get; }
         public MainCharacterPersistentState Expected { get; }
         public MainCharacterPersistentState Final { get; }
 
-        public MainCharacterPersistentChange(MainCharacterPersistentState expected,
+        public MainCharacterPersistentChange(CharacterInstanceId id, MainCharacterPersistentState expected,
             MainCharacterPersistentState final)
         {
+            if (id.IsEmpty) throw new ArgumentException("메인 보유 ID가 필요합니다.", nameof(id));
+            Id = id;
             Expected = expected ?? throw new ArgumentNullException(nameof(expected));
             Final = final ?? throw new ArgumentNullException(nameof(final));
         }
+
     }
 
     /// <summary>한 명령에서 검증 후 함께 반영할 캐릭터 변경 제안이다.</summary>
@@ -41,10 +45,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyList<SoulCountChange> Souls { get; }
         public MainCharacterPersistentChange Main { get; }
         public IReadOnlyList<CharacterCombatFacts> Created { get; }
+        /// <summary>보유 기록(레벨·진행 경험치) 변경이다. Buffer는 명령 게시 경로에서만 받는다.</summary>
+        public IReadOnlyList<OwnedCharacterChange> Owned { get; }
 
         public CharacterChanges(IReadOnlyList<CharacterStateChange> characters,
             IReadOnlyList<SoulCountChange> souls,
-            MainCharacterPersistentChange main = null, IReadOnlyList<CharacterCombatFacts> created = null)
+            MainCharacterPersistentChange main = null, IReadOnlyList<CharacterCombatFacts> created = null,
+            IReadOnlyList<OwnedCharacterChange> owned = null)
         {
             if (characters == null)
                 throw new ArgumentNullException(nameof(characters));
@@ -76,6 +83,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Main = main;
             Created = Array.AsReadOnly((created ?? Array.Empty<CharacterCombatFacts>()).ToArray());
             if (Created.Any(c => c == null)) throw new ArgumentException("생성할 캐릭터는 null일 수 없습니다.");
+            Owned = Array.AsReadOnly((owned ?? Array.Empty<OwnedCharacterChange>()).ToArray());
+            if (Owned.Any(c => c == null)) throw new ArgumentException("보유 기록 변경에는 null을 넣을 수 없습니다.", nameof(owned));
+            if (Owned.Select(c => c.Expected.Id).Distinct().Count() != Owned.Count)
+                throw new ArgumentException("한 배치에서 같은 보유 기록을 두 번 바꿀 수 없습니다.", nameof(owned));
         }
     }
 }

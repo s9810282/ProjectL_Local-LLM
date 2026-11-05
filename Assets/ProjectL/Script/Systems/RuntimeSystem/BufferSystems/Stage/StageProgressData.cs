@@ -10,12 +10,14 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Stage
     {
         public int NodeId { get; }
         public int StageKey { get; }
+        /// <summary>맵의 시작 노드인지입니다. 시작 노드는 실제 스테이지가 없어 StageKey가 0입니다. 소비자는 StageKey를 0과 비교하지 않고 이것을 읽습니다.</summary>
+        public bool IsStart => StageKey == 0;
         public bool IsClear { get; }
         public int Depth { get; }
         public int WidthIndex { get; }
-        /// <summary>노드가 가리키는 스테이지의 종류입니다. 시작 노드(StageKey 0)는 기본값이며 의미가 없습니다.</summary>
+        /// <summary>노드가 가리키는 스테이지의 종류입니다. 시작 노드(<see cref="IsStart"/>)는 기본값이며 의미가 없습니다.</summary>
         public StageType StageType { get; }
-        /// <summary>노드가 가리키는 스테이지의 맵 역할입니다. 시작 노드(StageKey 0)는 기본값이며 의미가 없습니다.</summary>
+        /// <summary>노드가 가리키는 스테이지의 맵 역할입니다. 시작 노드(<see cref="IsStart"/>)는 기본값이며 의미가 없습니다.</summary>
         public StageMapRole MapRole { get; }
         private readonly IReadOnlyList<int> nextNodeIds;
         public IReadOnlyList<int> NextNodeIds => nextNodeIds ?? Array.Empty<int>();

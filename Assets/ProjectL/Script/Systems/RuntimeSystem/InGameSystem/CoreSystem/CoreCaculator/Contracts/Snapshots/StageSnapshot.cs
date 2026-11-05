@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -16,14 +17,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public StagePhase CurrentPhase { get; }
         public ReadOnlyMemory<EntitySnapshot> Entities { get; }
         public ReadOnlyMemory<ReserveSlotSnapshot> ReserveSlots { get; }
-        public CombatTurnSnapshot CombatTurn { get; }
+        public CombatTurnFacts CombatTurn { get; }
         public StageOutcomeSnapshot Outcome { get; }
-        public StageNightSnapshot Night { get; }
         public EntityId MainCharacterId { get; }
         public bool MainCharacterPlacementLocked { get; }
         public int PreparationIndex { get; }
-        public StageDrawSnapshot Draw { get; }
-        public StageEconomySnapshot Economy { get; }
         public ReadOnlyMemory<ThornFieldCellSnapshot> ThornFields { get; }
         public ReadOnlyMemory<ArtifactActivationSnapshot> ArtifactActivations { get; }
 
@@ -33,16 +31,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StagePhase currentPhase,
             EntitySnapshot[] entities,
             ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnSnapshot combatTurnSnapshot,
+            CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
-            StageNightSnapshot night,
             EntityId mainCharacterId = default,
             bool mainCharacterPlacementLocked = false)
             : this(mapWidth, mapHeight, currentPhase, entities, reserveSlots, combatTurnSnapshot,
-                outcome, night, mainCharacterId, mainCharacterPlacementLocked, 1,
-                new StageDrawSnapshot(0, false, outcome.IsStageEnded ? CharacterDrawFailureReason.StageEnded :
-                    currentPhase == StagePhase.Combat ? CharacterDrawFailureReason.WrongPhase : CharacterDrawFailureReason.FirstPreparation),
-                new StageEconomySnapshot(0, 0))
+                outcome, mainCharacterId, mainCharacterPlacementLocked, 1)
         {
         }
 
@@ -52,14 +46,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StagePhase currentPhase,
             EntitySnapshot[] entities,
             ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnSnapshot combatTurnSnapshot,
+            CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
-            StageNightSnapshot night,
             EntityId mainCharacterId,
             bool mainCharacterPlacementLocked,
-            int preparationIndex,
-            StageDrawSnapshot draw,
-            StageEconomySnapshot economy)
+            int preparationIndex)
             : this(
                 mapWidth,
                 mapHeight,
@@ -68,12 +59,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 reserveSlots,
                 combatTurnSnapshot,
                 outcome,
-                night,
                 mainCharacterId,
                 mainCharacterPlacementLocked,
                 preparationIndex,
-                draw,
-                economy,
                 Array.Empty<ThornFieldCellSnapshot>())
         {
         }
@@ -84,14 +72,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StagePhase currentPhase,
             EntitySnapshot[] entities,
             ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnSnapshot combatTurnSnapshot,
+            CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
-            StageNightSnapshot night,
             EntityId mainCharacterId,
             bool mainCharacterPlacementLocked,
             int preparationIndex,
-            StageDrawSnapshot draw,
-            StageEconomySnapshot economy,
             ThornFieldCellSnapshot[] thornFields,
             ArtifactActivationSnapshot[] artifactActivations = null)
         {
@@ -109,8 +94,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(thornFields));
             if (preparationIndex < 1)
                 throw new ArgumentOutOfRangeException(nameof(preparationIndex));
-            Draw = draw ?? throw new ArgumentNullException(nameof(draw));
-            Economy = economy ?? throw new ArgumentNullException(nameof(economy));
             PreparationIndex = preparationIndex;
 
             EntitySnapshot[] copiedEntities = new EntitySnapshot[entities.Length];
@@ -161,7 +144,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ArtifactActivations = copiedArtifactActivations;
             CombatTurn = combatTurnSnapshot;
             Outcome = outcome;
-            Night = night;
             MainCharacterId = mainCharacterId;
             MainCharacterPlacementLocked = mainCharacterPlacementLocked;
         }
@@ -173,7 +155,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StagePhase currentPhase,
             EntitySnapshot[] entities,
             ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnSnapshot combatTurnSnapshot)
+            CombatTurnFacts combatTurnSnapshot)
             : this(
                 mapWidth,
                 mapHeight,
@@ -181,8 +163,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 entities,
                 reserveSlots,
                 combatTurnSnapshot,
-                new StageOutcomeSnapshot(StageOutcome.InProgress, global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.StageOutcomeReason.None),
-                new StageNightSnapshot(1000, 0))
+                new StageOutcomeSnapshot(StageOutcome.InProgress, global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.StageOutcomeReason.None))
         {
         }
 
@@ -199,7 +180,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 currentPhase,
                 entities,
                 reserveSlots,
-                new CombatTurnSnapshot(false, null))
+                new CombatTurnFacts(currentPhase, controllerPhase: currentPhase == StagePhase.Combat
+                    ? CombatControllerPhase.StartingPlayer : CombatControllerPhase.None))
         {
         }
     }

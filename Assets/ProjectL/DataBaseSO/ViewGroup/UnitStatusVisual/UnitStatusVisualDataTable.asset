@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed998e9d3c6044223903460494d0b2c, type: 3}
+  m_Name: UnitStatusVisualDataTable
+  m_EditorClassIdentifier: 
+  databaseItems:
+  - {fileID: 11400000, guid: 52f83257e68015bbd2a141a942e321c3, type: 2}
+  - {fileID: 11400000, guid: 06ba47e40211be01ec0d62f9fb6fc8ea, type: 2}
+  - {fileID: 11400000, guid: 392d2f531a41cb0f30b7b1682ea896b0, type: 2}
+  - {fileID: 11400000, guid: 768cd41319c921d8e70fb0ed4fc7331e, type: 2}
+  - {fileID: 11400000, guid: 63bc508e98183b6562af93485401379f, type: 2}
+  - {fileID: 11400000, guid: acd5236f0a00281b30ddf2b4c5a93ee4, type: 2}
+  - {fileID: 11400000, guid: d4034a0bada1cc7d84ea018aa9954744, type: 2}
+  - {fileID: 11400000, guid: ad03e563771042f6b64d33af43b73a27, type: 2}
+  - {fileID: 11400000, guid: 65bc2a764f65430b8083e02ceb82dea5, type: 2}

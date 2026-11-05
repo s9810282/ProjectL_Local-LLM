@@ -58,6 +58,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
     internal static class SoulGrowthMath
     {
+        /// <summary>
+        /// 전투 중 최대 체력에서 영혼·임시·위치 기여분을 뺀 기준 최대 체력이다. 아래 Collect가 쓰는 구성(기준 + 영혼 + 임시 + 위치)의 역이다.
+        /// 최대 체력에 새 기여분이 생기면 두 식을 함께 고친다.
+        /// </summary>
+        internal static int BaseMaxHealth(HealthStateSnapshot health, int soulMaxHealthBonus, int temporaryMaxHealth,
+            int positionMaxHealth) =>
+            checked(health.MaxHealth - soulMaxHealthBonus - temporaryMaxHealth - positionMaxHealth);
+
         internal static (HealthStateSnapshot Health, int Count) Collect(
             HealthStateSnapshot health, int count, int baseMaxHealth, int temporaryMaxHealth,
             int healAmount, int positionMaxHealth = 0)

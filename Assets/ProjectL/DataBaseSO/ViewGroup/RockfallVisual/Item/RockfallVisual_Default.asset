@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e20067f932e4f38a91779236c130973, type: 3}
+  m_Name: RockfallVisual_Default
+  m_EditorClassIdentifier: 
+  stonePrefab: {fileID: 8194549770389668206, guid: f639fa6fd062098449b26a3d715adc41, type: 3}
+  dropHeight: 20
+  dropSeconds: 1
+  dropIntervalSeconds: 0.3
+  dropStartScatter: 1.5
+  stoneScaleMin: 0.7
+  stoneScaleMax: 1.3
+  spinDegreesMin: 180
+  spinDegreesMax: 540
+  warningMarkPrefab: {fileID: 6193402875516620471, guid: 85754e8091324c6598440cea04041ab6, type: 3}
+  warningMarkSize: 0.9
+  warningMarkLift: 0.01
+  warningCues:
+    effects:
+    - effect: 2
+      anchor: 1
+      delay: 0
+      point: 6
+      actorPoint: 0
+      stayInPlace: 0
+      positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 1
+      endSeconds: 1
+    - effect: 2
+      anchor: 1
+      delay: 0.1
+      point: 6
+      actorPoint: 0
+      stayInPlace: 0
+      positionOffset: {x: 1, y: 0.5, z: 0.5}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 1
+      endSeconds: 1
+    - effect: 2
+      anchor: 1
+      delay: 0.2
+      point: 6
+      actorPoint: 0
+      stayInPlace: 0
+      positionOffset: {x: -1, y: -0.3, z: 1}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 1
+      endSeconds: 1
+    shakes:
+    - strength: 0.8
+      seconds: 1
+      shape: 2
+      anchor: 1
+      delay: 0
+  impactCues:
+    effects:
+    - effect: 15
+      anchor: 5
+      delay: 0
+      point: 6
+      actorPoint: 0
+      stayInPlace: 0
+      positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 0
+      endSeconds: 0
+    shakes:
+    - strength: 0.3
+      seconds: 0.15
+      shape: 2
+      anchor: 5
+      delay: 0
+  warningSoundPreset: -1
+  impactSoundPreset: -1
+  displayName: "\uB099\uC11D"
+  description: "\uACE7 \uB3CC\uC774 \uB5A8\uC5B4\uC9C8 \uCE78\uC785\uB2C8\uB2E4.
+    \uB9DE\uC73C\uBA74 \uCD5C\uB300 \uCCB4\uB825\uC758 {\uCD5C\uB300\uCCB4\uB825\uC190\uC2E4\uB960}%\uB97C
+    \uC783\uACE0 \uC774\uB3D9\uD560 \uC218 \uC5C6\uAC8C \uB429\uB2C8\uB2E4."

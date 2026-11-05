@@ -1,11 +1,27 @@
+using ProjectL.Systems.ServiceKeys.DBFactory.Group;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable;
-using ProjectL.Systems.ServiceKeys;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
 
 namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
 {
+    internal interface IHasTraitGrowthTables : IServiceModule
+    {
+        ICategoryTraitProgressionTableQuery CategoryTraitProgressions { get; }
+        ITraitGrowthDefinitionTableQuery TraitGrowthDefinitions { get; }
+    }
+
+    internal interface IHasEnhancementTable : IServiceModule
+    {
+        IEnhancementTableQuery Enhancements { get; }
+    }
+
+    internal interface IHasConsumableItemTable : IServiceModule
+    {
+        IConsumableItemTableQuery ConsumableItems { get; }
+    }
+
     #region 서비스
 
     internal interface IInGameQuery : IServiceModule
@@ -29,8 +45,12 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
 
     #region 시스템 모듈
 
-    internal sealed class InGameDataBase : SystemGroup, IInGameQuery, IHasArtifactBoardConfig
+    internal sealed class InGameDataBase : SystemGroup, IInGameQuery, IHasArtifactBoardConfig, IHasConsumableItemTable, IHasEnhancementTable, IHasTraitGrowthTables
     {
+        public ICategoryTraitProgressionTableQuery CategoryTraitProgressions { get; }
+        public ITraitGrowthDefinitionTableQuery TraitGrowthDefinitions { get; }
+        public IEnhancementTableQuery Enhancements { get; }
+        public IConsumableItemTableQuery ConsumableItems { get; }
         public IStageMapTableQuery StageMapTableQuery { get; }
         public IStageTableQuery StageTableQuery { get; }
         public IFieldTableQuery FieldTableQuery { get; }
@@ -47,8 +67,12 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
         /// <summary>IInGameQuery와 분리한 설정 조회입니다. 테스트용 InGame 조회 구현체를 바꾸지 않기 위해 따로 노출합니다.</summary>
         public IArtifactBoardConfigTableQuery ArtifactBoardConfig { get; }
 
-        public InGameDataBase(ISystemReader systemReader) : base(systemReader)
+        public InGameDataBase(ISystemReader systemReader, bool hasEnhancements = false, bool hasTraitGrowth = false) : base(systemReader)
         {
+            CategoryTraitProgressions = hasTraitGrowth ? systemReader.ServiceStoreReader.GetService(InGameTableKey.CategoryTraitProgression) : null;
+            TraitGrowthDefinitions = hasTraitGrowth ? systemReader.ServiceStoreReader.GetService(InGameTableKey.TraitGrowthDefinition) : null;
+            Enhancements = hasEnhancements ? systemReader.ServiceStoreReader.GetService(InGameTableKey.Enhancement) : null;
+            ConsumableItems = systemReader.ServiceStoreReader.GetService(InGameTableKey.ConsumableItem);
             StageMapTableQuery = systemReader.ServiceStoreReader.GetService(InGameTableKey.StageMap);
             StageTableQuery = systemReader.ServiceStoreReader.GetService(InGameTableKey.Stage);
             FieldTableQuery = systemReader.ServiceStoreReader.GetService(InGameTableKey.Field);
@@ -69,6 +93,8 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
         {
             sink.AddService<IInGameQuery>(this);
             sink.AddService<IHasArtifactBoardConfig>(this);
+            sink.AddService<IHasConsumableItemTable>(this);
+            sink.AddService<IHasEnhancementTable>(this);
         }
     }
 

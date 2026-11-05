@@ -27,8 +27,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.StageView
         /// <summary>요청을 목록에 보관하고 번호를 반환합니다. Core를 직접 호출하지 않습니다.</summary>
         int Submit(StageViewCommandData command);
 
-        /// <summary>결과를 확인한 요청 하나를 삭제합니다. 이미 없으면 false입니다.</summary>
-        bool RemoveCommand(int number);
+        /// <summary>결과를 확인한 번호까지 입력을 삭제합니다. 발급 번호는 유지합니다.</summary>
+        void RemoveCommandsThrough(int handledNumber);
+        void Clear();
     }
 
     #endregion
@@ -81,22 +82,16 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.StageView
             return false;
         }
 
-        public bool RemoveCommand(int number)
+        public void RemoveCommandsThrough(int handledNumber)
         {
-            if (number <= 0)
-                throw new ArgumentOutOfRangeException(nameof(number));
-
-            for (int index = 0; index < _commands.Count; index++)
-            {
-                if (_commands[index].Number == number)
-                {
-                    _commands.RemoveAt(index);
-                    return true;
-                }
-            }
-
-            return false;
+            if (handledNumber < 0 || handledNumber > _lastIssuedNumber)
+                throw new ArgumentOutOfRangeException(nameof(handledNumber));
+            int count = 0;
+            while (count < _commands.Count && _commands[count].Number <= handledNumber) count++;
+            _commands.RemoveRange(0, count);
         }
+
+        public void Clear() => _commands.Clear();
 
         public void ExportServices(ISystemWriteSink sink)
         {

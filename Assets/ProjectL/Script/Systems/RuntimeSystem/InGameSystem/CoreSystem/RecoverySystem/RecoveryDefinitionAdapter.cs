@@ -3,6 +3,7 @@ using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.DataBaseSystem.Data.Common;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Event;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RecoverySystem
@@ -43,8 +44,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RecoverySystem
                 data.Validate();
                 if (data.OptionId != key)
                     throw new InvalidOperationException("조회한 회복 선택지의 키가 요청과 다릅니다.");
-                options[i] = new RecoveryOptionSpec(new RecoveryOptionId(data.OptionId), data.Cost,
-                    new RecoveryHealSpec(data.HealMode, data.HealValue));
+                options[i] = data.EffectKind == RecoveryEffectKind.MaxHealthGrowth
+                    ? new RecoveryOptionSpec(new RecoveryOptionId(data.OptionId), data.Cost, data.MaxHealthIncrease)
+                    : new RecoveryOptionSpec(new RecoveryOptionId(data.OptionId), data.Cost, new RecoveryHealSpec(data.HealMode, data.HealValue));
             }
             return new RecoveryStageSpec(stageKey, options);
         }

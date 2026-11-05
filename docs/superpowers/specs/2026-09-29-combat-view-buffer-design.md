@@ -31,7 +31,7 @@
 | 출처 | 내용 |
 |---|---|
 | 천명님 [View 입력 Buffer 제안](../handoffs/2026-09-29-view-input-buffer-core-contract-ko.md) | Core는 입력을 읽기만 한다. 입력 제거는 View/Framework가 한다. 입력 번호로 결과를 대응시킨다(제안). 기존 ReadSink/WriteSink·PostBindService·Plan/Job을 재사용한다 |
-| 천명님 [캐릭터 Buffer 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md) Task 7·8 | Core는 명령마다 Buffer에서 상태를 복원해 처리하고, "다음 기록 + 결과"를 한 번에 쓴다. 손패·필드 명령은 `EntityId`를 쓴다 |
+| 천명님 캐릭터 Buffer 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) Task 7·8 | Core는 명령마다 Buffer에서 상태를 복원해 처리하고, "다음 기록 + 결과"를 한 번에 쓴다. 손패·필드 명령은 `EntityId`를 쓴다 |
 | 기존 Buffer 코드 | `XxxBuffer : IXxxReadSink, IXxxWriteSink, IExportSystemServices`로 만들고 `BufferSystemFactory`에서 생성한다. 외부에는 `IBufferQuery`로 노출한다. 서비스 저장소는 **인터페이스 타입**으로 등록하므로 키 이름이 `Read`/`Write`로 같아도 충돌하지 않는다 |
 | CLAUDE.md P4 | 공용 타입은 Core.Contracts 것을 재사용한다(`EntityId`, `CellCoord`, `Rotation4`, `AttackAim`) |
 

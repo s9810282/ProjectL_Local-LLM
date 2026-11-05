@@ -109,4 +109,4 @@ A fresh independent read-only reviewer approved scoped P3 delivery and P1–P3 c
 
 Core service acceptance is separate from authored production-data acceptance and actual Job/Flow/View/scene integration. These tests use an HQ-only temporary opponent; they do not establish enemy AI, authored difficulty, scene playability, total framework migration or final Run completion.
 
-References: [design](../specs/2026-10-03-shop-stage-core-connection-design.md), [implementation plan](../plans/2026-10-03-shop-stage-core-connection-implementation-plan.md), [P1 verification](2026-10-03-shop-stage-core-connection-p1-verification.md), [P2 verification](2026-10-03-shop-stage-core-connection-p2-verification.md), [temporary runtime](2026-10-03-temporary-core-runtime.md).
+References: design (Git history: `2026-10-03-shop-stage-core-connection-design.md`), implementation plan (Git history: `2026-10-03-shop-stage-core-connection-implementation-plan.md`), [P1 verification](2026-10-03-shop-stage-core-connection-p1-verification.md), [P2 verification](2026-10-03-shop-stage-core-connection-p2-verification.md), [temporary runtime](2026-10-03-temporary-core-runtime.md).

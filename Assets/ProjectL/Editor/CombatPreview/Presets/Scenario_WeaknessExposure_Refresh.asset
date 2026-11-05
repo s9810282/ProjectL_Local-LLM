@@ -1,0 +1,160 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_WeaknessExposure_Refresh
+  m_EditorClassIdentifier:
+  input:
+    version: 2
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "출처 A"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "b"
+        name: "출처 B"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "target"
+        name: "수신자"
+        unit:
+          key: 13
+          enemy: 1
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "exposure-a"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 190
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "exposure-b"
+            key: 13
+            ownerKind: 1
+            sourceId: "b"
+            trait: 190
+            amount: 5
+            percent: 30
+            remainingTurns: 1
+            eligible: 1
+            lastResetControllerTurnCount: 0
+    entries:
+      - id: "ee5a74f3449e4a91bab68dcabc2cb6cf"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "f397fe80975949cabe8f9fb8e48337c1"
+        name: "적중 후 약점 노출"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "9f798d9bd3f8495da6a8a5ef5caa830b"
+            name: "명시 피해"
+            kind: 1
+            relation: 0
+            attack:
+              attackerId: "a"
+              direction: 0
+              targetCell: {x: 4, y: 4}
+              hits:
+                - targetId: "target"
+                  finalHealth: 80
+          - id: "6e8a3b3ce6b84910881c72059c80dfe4"
+            name: "표식 발동 (부여 건수 1)"
+            kind: 3
+            relation: 1
+            trait:
+              asset: {fileID: 11400000, guid: e3972eb96fd541fb84f7363afbf37127, type: 2}
+              kind: 160
+              sourceId: "a"
+              targetIds:
+                - "target"
+              cells: []
+              magnitude: 1
+          - id: "22301808e39c4dad812f6244c12dd3e8"
+            name: "출처별 약점 노출"
+            kind: 2
+            relation: 1
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "exposure-a"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 190
+                amount: 5
+                percent: 10
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0
+      - id: "642ba527628c4f49868f8f07eb3179c7"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "8ddd573682da4e02b223652ebed4e026"
+        name: "B 제거 후 A 10%"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "dec96d8e108646c5a453289b91d88b4e"
+            name: "B 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "exposure-b"
+                key: 13
+                ownerKind: 1
+                sourceId: "b"
+                trait: 190
+                amount: 5
+                percent: 30
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0

@@ -1,0 +1,198 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_WeaknessExposure
+  m_EditorClassIdentifier:
+  input:
+    version: 2
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "출처 A"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "b"
+        name: "출처 B"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "target"
+        name: "수신자"
+        unit:
+          key: 13
+          enemy: 1
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "exposure-a"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 190
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+    entries:
+      - id: "9c3983dfe682458fb8045682606f9788"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "9a35048439d04835b5a0d185693e8428"
+        name: "적중 후 약점 노출"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "0bad5381e0934b81981f8a30fa641211"
+            name: "명시 피해"
+            kind: 1
+            relation: 0
+            attack:
+              attackerId: "b"
+              direction: 0
+              targetCell: {x: 4, y: 4}
+              hits:
+                - targetId: "target"
+                  finalHealth: 80
+          - id: "8b3cf86126df481f910946f3e0156b8f"
+            name: "표식 발동 (부여 건수 1)"
+            kind: 3
+            relation: 1
+            trait:
+              asset: {fileID: 11400000, guid: e3972eb96fd541fb84f7363afbf37127, type: 2}
+              kind: 160
+              sourceId: "b"
+              targetIds:
+                - "target"
+              cells: []
+              magnitude: 1
+          - id: "c617f2ca851a47b49acf11adc98b12bb"
+            name: "출처별 약점 노출"
+            kind: 2
+            relation: 1
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "exposure-b"
+                key: 13
+                ownerKind: 1
+                sourceId: "b"
+                trait: 190
+                amount: 5
+                percent: 30
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0
+      - id: "5f223ecf155f4d07b0c95dbb3738979c"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "de4ca3290b3949a2b585be6531ffee3a"
+        name: "대상 진영 종료 후 명시 값"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "53ea0e5c5dcc43b7b51323aacdf9ae49"
+            name: "A 잔여 1"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "exposure-a"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 190
+                amount: 5
+                percent: 20
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0
+          - id: "fe0b6dbd6ffb4484a098821260c438c1"
+            name: "B 만료"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "exposure-b"
+                key: 13
+                ownerKind: 1
+                sourceId: "b"
+                trait: 190
+                amount: 5
+                percent: 30
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0
+      - id: "5a4ddaa1e68d4cdbaf02c7b78b00aa37"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "4733e5ed269040069b115835050453b4"
+        name: "A 만료"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "a3dd16e0d36344e693a47d6286bd5de0"
+            name: "A 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "exposure-a"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 190
+                amount: 5
+                percent: 20
+                remainingTurns: 1
+                eligible: 1
+                lastResetControllerTurnCount: 0

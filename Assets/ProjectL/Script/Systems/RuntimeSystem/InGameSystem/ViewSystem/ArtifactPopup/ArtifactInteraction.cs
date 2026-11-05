@@ -1,5 +1,5 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
-using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Artifact;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup
 {
@@ -51,31 +51,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup
             InvalidateCandidate();
         }
 
-        internal void InvalidateCandidate()
+        private void InvalidateCandidate()
         {
             Revision++;
             _previewDirty = true;
         }
 
-        internal bool TryTakePreview(out ArtifactPreviewRequest request)
+        internal bool TryTakePreview(out ArtifactViewPreviewData request)
         {
-            request = null;
+            request = default;
             if (!IsDragging || !HasCandidate || !_previewDirty) return false;
             _previewDirty = false;
             request = IsPlaced
-                ? ArtifactPreviewRequest.Move(InstanceId, Anchor, Rotation)
-                : ArtifactPreviewRequest.Place(ArtifactId, Anchor, Rotation);
+                ? ArtifactViewPreviewData.Move(InstanceId, Anchor, Rotation)
+                : ArtifactViewPreviewData.Place(ArtifactId, Anchor, Rotation);
             return true;
         }
 
-        internal ArtifactEditRequest Release(bool overBoard, bool overReturnArea)
+        internal ArtifactViewCommandData? Release(bool overBoard, bool overReturnArea)
         {
             if (!IsDragging) return null;
-            ArtifactEditRequest request = null;
-            if (overReturnArea && IsPlaced) request = ArtifactEditRequest.Return(InstanceId);
+            ArtifactViewCommandData? request = null;
+            if (overReturnArea && IsPlaced) request = ArtifactViewCommandData.Return(InstanceId);
             else if (overBoard && HasCandidate)
-                request = IsPlaced ? ArtifactEditRequest.Move(InstanceId, Anchor, Rotation)
-                    : ArtifactEditRequest.Place(ArtifactId, Anchor, Rotation);
+                request = IsPlaced ? ArtifactViewCommandData.Move(InstanceId, Anchor, Rotation)
+                    : ArtifactViewCommandData.Place(ArtifactId, Anchor, Rotation);
             Cancel();
             return request;
         }

@@ -19,8 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (held == null) throw new ArgumentNullException(nameof(held));
             if (flag == null) throw new ArgumentNullException(nameof(flag));
-            return held.Flag != null ? held : new CharacterHeldEnvironmentState(held.BadgeSourceId, held.BadgeAvailable,
-                held.SuppliesAttackBonus, flag);
+            return held;
         }
 
         public static CharacterCombatFacts AcquireFlag(CharacterCombatFacts character, FlagSourceFact flag)
@@ -77,10 +76,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 WithHeldState(character, CharacterHeldEnvironmentState.Empty);
 
         public static CharacterCombatFacts WithHeldState(CharacterCombatFacts c, CharacterHeldEnvironmentState held) =>
-            new(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner, c.OwnershipRole, c.Area, c.Health, c.Stats,
-                c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells, c.MovementCheckpointAnchor,
-                c.CommittedMoveDistance, c.PendingMoveActionCost, c.TemporaryAttackBonus, c.TemporaryMaxHealthBonus,
-                c.PendingMoveDistance, c.AttackRefundEligibleMoveCost, c.PositionModifier, held);
+            // null을 넘기면 예전처럼 생성자 기본값(Empty)이 된다. With의 null은 "그대로"라서 여기서 Empty를 넘긴다.
+            c.With(heldEnvironment: held ?? CharacterHeldEnvironmentState.Empty);
 
         // 변경이 없으면 같은 사실을 돌려주어 호출자가 참조 비교로 변경 여부를 판단하게 한다.
         private static CharacterCombatFacts Apply(CharacterCombatFacts character, CharacterHeldEnvironmentState held) =>

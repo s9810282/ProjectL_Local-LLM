@@ -15,9 +15,7 @@ namespace ProjectL.Tests.Core
 
         internal static CombatCommandState State(MovementEnvironmentFacts environment,
             params StructureCombatFacts[] structures) =>
-            new(4, 5, CombatFlowPhase.PlayerInput, EntityId.Empty, false, structures,
-                Array.Empty<ThornFieldCellSnapshot>(), Array.Empty<CombatTimelineEntrySnapshot>(),
-                environment: environment);
+            new(4,5,CombatFlowPhase.PlayerInput,false,structures,                Array.Empty<ThornFieldCellSnapshot>(),                environment: environment);
 
         internal static MovementEnvironmentFacts Environment(params MovementTileFact[] sources) => new(sources);
 
@@ -30,9 +28,7 @@ namespace ProjectL.Tests.Core
         internal static CharacterCombatFacts Character(int id = 11, int hp = 10,
             CharacterRuntimeArea area = CharacterRuntimeArea.Field, params CellCoord[] cells)
         {
-            var stats = new UnitStatsSnapshot(MoveMethod.LiftAndPlace, 4, 1,
-                1, 2, 0, 5, 1, 4, 5, 0, 0,
-                Array.Empty<TraitStatusSnapshot>(), CategorySnapshot.CreateStateless(CategoryKey.Base));
+            var stats = new UnitStatsSnapshot(MoveMethod.LiftAndPlace,4,                1,2,0,0,                Array.Empty<TraitStatusSnapshot>(),CategorySnapshot.CreateStateless(CategoryKey.Main));
             bool field = area == CharacterRuntimeArea.Field;
             var occupied = field ? (cells.Length == 0 ? new[] { Cell } : cells) : Array.Empty<CellCoord>();
             return new CharacterCombatFacts(new EntityId(id), null, EntityKey.Unit_Akimbo,
@@ -40,7 +36,7 @@ namespace ProjectL.Tests.Core
                 null, area, new HealthStateSnapshot(hp, 10), stats,
                 area == CharacterRuntimeArea.Hand ? 0 : null,
                 field ? occupied[0] : null, field ? Rotation4.R0 : null,
-                occupied, field ? occupied[0] : CellCoord.Zero, 0, 0);
+                occupied, UnitActionUse.Available);
         }
 
         internal static StructureCombatFacts Structure(int id = 21, int hp = 10,

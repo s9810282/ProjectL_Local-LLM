@@ -2,7 +2,7 @@
 
 Date: 2026-10-03.
 
-Scope: P2A and P2B of the [implementation plan](../plans/2026-10-03-stage-entry-battle-preparation-implementation-plan.md), following the [approved design](../specs/2026-10-03-stage-entry-battle-preparation-contract-design.md) and [P1 publication contract](2026-10-03-stage-entry-battle-preparation-p1-verification.md). Implemented in the existing `feature/Cheon/refactor/core-system` checkout, based on `a9db1e5a24f7b6431b36fc2da39807943abaa83c`. P1 and P2 remain uncommitted. No push or production caller migration was performed.
+Scope: P2A and P2B of the implementation plan (Git history: `2026-10-03-stage-entry-battle-preparation-implementation-plan.md`), following the approved design (Git history: `2026-10-03-stage-entry-battle-preparation-contract-design.md`) and [P1 publication contract](2026-10-03-stage-entry-battle-preparation-p1-verification.md). Implemented in the existing `feature/Cheon/refactor/core-system` checkout, based on `a9db1e5a24f7b6431b36fc2da39807943abaa83c`. P1 and P2 remain uncommitted. No push or production caller migration was performed.
 
 ## Delivered contract
 

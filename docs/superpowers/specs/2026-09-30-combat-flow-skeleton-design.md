@@ -1,4 +1,8 @@
+> **상대방 기록 보존(코드 미병합):** 상대 커밋 `c1b9b0a`의 문서 내용을 보존했다. 본문의 완료·검증은 당시 브랜치 범위이며 현재 코드의 병합 후 검증을 뜻하지 않는다. 현재 코드에는 아직 상대 변경을 적용하지 않았다. [병합 검토·수정 안내](../plans/2026-10-10-stage-map-plan-Hojin.md#4-c1b9b0a-병합-검토-2026-10-11)를 함께 읽는다.
+
 # 전투 진행 골격 설계 — CombatLifeCycle · CombatFlow · CombatPlan · 전투 Job
+
+> **2026-10-10 R4 기준 이전:** §3·§4.1·§6·§6.3 6A.0·§6.4·§6.5 A1·A2의 구조·소유권·실행 경로는 [Job·Plan 재구성 설계](2026-10-10-combat-job-plan-restructure-design.md)로 대체한다. **판단표 원본(K19)은 새 설계 J2**이며, 실행 모드·오류 차단은 J1·J10·J11, 처리 확인은 J3, 진입은 J5·J6, 승패·포기 이탈은 J7~J9를 따른다. 아래 Flow·ExitSequence·guard·옛 공개 API와 예상 UML은 이전 설계 이력이다. 유지되는 계약의 의미는 새 설계 §6, 구현·검증 상태는 [재구성 Task 계획](../plans/2026-10-10-combat-job-plan-restructure-plan.md)의 실행 기록을 따른다.
 
 > **2026-10-05 코드 정렬:** 현재 타입/호출 관계는 [통합 UML](2026-10-05-combat-current-uml.md). Flow §4.1, 진입 §6.3, 이탈 §6.4가 계약 원본이며 초기 가칭 코드·예상 UML은 당시 설계 예시다. 상태는 골격 계획 §6.15를 따른다.
 
@@ -52,7 +56,7 @@
 | 입력 | `ICombatViewBufferReadSink`: `TryGetNextCommand(handledThrough)`, `HasPreview`, `Preview.Number`, `PresentedResultSequence` | `CombatViewBuffer` |
 | LifeCycle 훅 | `OnBindServices(resolver)`, `OnEnter`(로딩 완료 뒤), `OnTick`(활성일 때만), `OnExit`(로딩 종료 단계) | `LifeCycleBase` |
 | 기존 테스트 | 공용 Job 표본은 Lobby다. `CombatPlanTests`는 네 Job의 호출·완료·예외를 검사한다. 실제 Flow→Job→Core→Buffer 통합 테스트를 추가했으며 실행 결과는 계획 §6.8에서 관리한다 | `CombatPlanTests`, `CombatFlowTests`, `CombatFlowIntegrationTests` |
-| 실제 처리 계약 | `IInGameCoreSystemGroupService.Combat`의 `ICombatProcessingService`. 명령 하나 또는 자동 진행 한 단위의 계산·기록은 한 번의 동기 호출에서 끝난다 | [Task 7 계약](../plans/2026-10-01-combat-buffer-command-task7-contract.md) |
+| 실제 처리 계약 | `IInGameCoreSystemGroupService.Combat`의 `ICombatProcessingService`. 명령 하나 또는 자동 진행 한 단위의 계산·기록은 한 번의 동기 호출에서 끝난다 | Task 7 계약 (Git history: `2026-10-01-combat-buffer-command-task7-contract.md`) |
 
 ## 3. 구조
 
@@ -90,7 +94,7 @@ Core 처리 서비스 (천명님: 입력 읽기 → 계산 → Buffer 기록 →
 
 ### 4.1 한 Tick의 판단 (위에서부터 처음 맞는 줄 하나만)
 
-**Flow의 분기·실행 모드·오류 차단 정책은 이 절이 단일 기준이다.** View 설계·계획·UML은 이 절을 참조하며 별도 순서표를 정의하지 않는다. 아래 0행·4a행은 **View B에서 구현할 확장**이다. Phase 5는 현재 Live 분기와 생성자를 유지하고 세 Job 호출·통합 검증만 수행한다.
+**이 절은 재구성 이전 Flow 판단표의 이력이다.** 2026-10-10부터 판단표의 단일 기준(K19)은 [재구성 설계 J2](2026-10-10-combat-job-plan-restructure-design.md#j2-combatplandecide-판단표-위에서부터-처음-맞는-줄-하나)로 옮겼다. 아래 0행·4a행은 당시 **View B에서 구현할 확장**이었으며, Phase 5는 당시 Live 분기와 생성자를 유지하고 세 Job 호출·통합 검증만 수행했다.
 
 | 순서 | 조건 | 할 일 |
 |---|---|---|
@@ -402,6 +406,8 @@ Core 계약 원본은 [전투 진입 인계](../handoffs/2026-10-03-stage-entry-
 - B3 Bootstrap의 Combat 직접 시작은 개발 설정의 명시적 대상이 필요하다. 설정이 없으면 Current 선택/기본 노드를 추측하지 않고 요청 부족 오류를 보고한다. 운영 요청자는 로스터·챕터 준비 후 같은 CombatEntry API를 사용한다. 두 모드 모두 로스터·EnterChapter를 수행한 뒤 요청을 전달하고 Runtime Tick을 시작한다. 정상 진입 거절은 요청 결과로 알리고 Runtime을 오류 정지하지 않는다. 기존 비전투 Change 경로는 유지한다.
 
 ### 6.4 정상 승패 이탈의 구체 계약 (2026-10-05)
+
+> **2026-10-16·10-20 목적지 정정:** 일반 패배·자발적 포기·최종 승리(포기·최종 승리는 10-20 변경)는 새 Run 준비 후 **로비**로 복귀한다. Run이 이어지는 일반 승리는 StageSelect다. 현재 목적지 정책 원본은 [Job·Plan 재구성 설계 J7](2026-10-10-combat-job-plan-restructure-design.md#j7-이탈-연쇄-k21-유지)이며, 이 문서의 K21에 남은 "패배도 임시로 StageSelect" 설명은 변경 전 이력이다. 완료 확인·전투 정리·새 Run 준비 수명은 유지한다.
 
 사용자 지시에 따라 Core 포기 API와 독립적인 정상 종료 부분을 먼저 연결한다. F1 인수와 정상 이탈의 실행 증거는 골격 계획 §6.12~§6.14에 기록한다. 이 절은 Flow Tick 분기를 추가하지 않는다. Flow 규칙의 원본은 계속 §4.1이다.
 

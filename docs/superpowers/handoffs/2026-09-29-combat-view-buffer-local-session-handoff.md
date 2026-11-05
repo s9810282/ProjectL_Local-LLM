@@ -92,7 +92,7 @@ Phase 1~3은 매번 에디터 컴파일 에러 0을 사용자가 확인했다. P
 
 **Core 쪽 방향** (천명님 09-29 문서)
 
-- [캐릭터 Buffer 이전 설계](../specs/2026-09-29-character-buffer-effect-migration-design.md)와 [계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md)에 따르면, Core는 상태를 들고 있지 않게 된다. 명령마다 Buffer에서 상태를 복원해 처리하고 "다음 기록 + 결과"를 한 번에 쓴다(Task 7).
+- 캐릭터 Buffer 이전 설계 (Git history: `2026-09-29-character-buffer-effect-migration-design.md`)와 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)에 따르면, Core는 상태를 들고 있지 않게 된다. 명령마다 Buffer에서 상태를 복원해 처리하고 "다음 기록 + 결과"를 한 번에 쓴다(Task 7).
 - 이 계획에는 G1(전투 상태 Buffer 위치)과 G5(View 입력/결과 계약)가 열려 있다. 우리 작업이 G5의 입력 쪽 답이다.
 - CLAUDE.md는 "GwonCheonmyeong 작성 문서를 기준으로 삼지 않는다"고 한다. 다만 이 두 문서는 **현재 Core 방향을 보여 주는 최신 계획**이라 참고했다. 규칙의 근거로는 쓰지 않는다.
 

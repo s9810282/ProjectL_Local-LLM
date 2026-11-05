@@ -15,5 +15,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
             DistanceCells = distanceCells;
         }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            var otherSpec = (KnockbackTraitSpec)other;
+            return DistanceCells == otherSpec.DistanceCells;
+        }
     }
 }

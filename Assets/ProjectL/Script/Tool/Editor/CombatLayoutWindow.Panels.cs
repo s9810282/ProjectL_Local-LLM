@@ -286,7 +286,7 @@ namespace ProjectL.Tool.Editor
             GUILayout.Space(10);
             EditorGUILayout.LabelField("DT 유닛 정보", EditorStyles.boldLabel);
             DrawCharacterInfo(row);
-            foreach (var pair in new[] { ("레벨", "Level"), ("최대 레벨", "MaxLevel"), ("우선순위", "Priority"), ("딜레이", "Delay"), ("최대 비용", "MaxCost"), ("이동 비용", "MoveCost"), ("공격 비용", "AttackCost") })
+            foreach (var pair in new[] { ("레벨", "Level"), ("최대 레벨", "MaxLevel"), ("우선순위", "Priority"), ("딜레이", "Delay") })
             {
                 string value = document.characters.Value(row, "Character_" + pair.Item2);
                 EditorGUILayout.LabelField(pair.Item1, string.IsNullOrEmpty(value) ? "—" : value);

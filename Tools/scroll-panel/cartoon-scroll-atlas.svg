@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3072" height="2048" viewBox="0 0 3072 2048">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f4dfba"/>
+      <stop offset="0.15" stop-color="#fff0d4"/>
+      <stop offset="0.52" stop-color="#fff2d9"/>
+      <stop offset="0.85" stop-color="#fff0d4"/>
+      <stop offset="1" stop-color="#f1d8b0"/>
+    </linearGradient>
+    <linearGradient id="roll" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d8b48b"/>
+      <stop offset="0.18" stop-color="#e4c59d"/>
+      <stop offset="0.32" stop-color="#fff0d5"/>
+      <stop offset="0.74" stop-color="#fff3dd"/>
+      <stop offset="1" stop-color="#eed0a4"/>
+    </linearGradient>
+    <linearGradient id="end" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4d6a8"/>
+      <stop offset="1" stop-color="#c39a6c"/>
+    </linearGradient>
+    <path id="sheet" d="M18 12 L103 22 Q385 20 742 23 Q1116 25 1427 21 L1517 12 L1522 1008 L1423 1001 Q1055 1006 752 1003 Q382 1005 117 1003 L16 1011 Z"/>
+    <clipPath id="sheetClip"><use href="#sheet"/></clipPath>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.43" numOctaves="2" seed="47"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+  <g transform="scale(1.5 2)">
+    <use href="#sheet" fill="url(#paper)"/>
+    <g clip-path="url(#sheetClip)">
+      <path d="M18 12 L102 22 L72 139 L64 748 L83 919 L132 1005 L16 1011 Z" fill="#e8c89c"/>
+      <path d="M18 12 L66 20 L50 142 L48 822 L65 950 L16 1011 Z" fill="#d3ac7f" opacity="0.55"/>
+      <path d="M1517 12 L1433 21 L1458 199 L1451 269 L1476 326 L1470 756 L1455 924 L1408 1002 L1522 1008 Z" fill="#e5c297"/>
+      <path d="M1517 12 L1477 23 L1491 187 L1485 282 L1500 350 L1493 812 L1480 958 L1522 1008 Z" fill="#d7ae7d" opacity="0.62"/>
+      <path d="M62 935 L88 927 L132 1005 L74 1008 L39 992 Z" fill="#d5b084"/>
+      <path d="M1455 921 L1482 947 L1498 988 L1456 1003 L1408 1002 Z" fill="#d0a679"/>
+      <path d="M104 22 Q400 20 746 23 Q1094 24 1427 21" fill="none" stroke="#e6c9a0" stroke-width="2.5"/>
+      <path d="M119 998 Q404 999 752 997 Q1079 1000 1423 996" fill="none" stroke="#c6a376" stroke-width="2.5" opacity="0.45"/>
+      <rect x="16" y="10" width="1510" height="1006" filter="url(#grain)" opacity="0.018"/>
+    </g>
+    <use href="#sheet" fill="none" stroke="#503019" stroke-width="9" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(2304 0) scale(1.5 2)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M155 54 L155 34 Q248 6 301 18 L386 39 L384 82 L173 100 Z" fill="#dfb786" stroke="#4e2e18" stroke-width="10"/>
+    <path d="M161 35 Q249 12 301 24 L369 42 L193 68 L158 58 Z" fill="#f6d5a5"/>
+    <path d="M194 68 L374 43 L370 80 L177 100 Z" fill="#b98d5e"/>
+    <path d="M150 948 L158 1002 Q265 1030 385 1000 L381 946 Z" fill="url(#end)" stroke="#513019" stroke-width="10"/>
+    <path d="M169 978 L170 999 Q274 1019 369 997 L366 974 Q273 991 169 978 Z" fill="#b4885b"/>
+    <path d="M201 995 Q254 984 302 995 L323 1006 Q259 1009 202 1001 Z" fill="#714a2b"/>
+    <path d="M101 81 Q164 65 263 66 Q361 64 430 79 L421 214 Q415 497 424 774 L438 942 Q396 969 269 980 Q138 980 85 950 L97 792 Q107 535 100 331 Z" fill="url(#roll)" stroke="#4c2b16" stroke-width="11"/>
+    <path d="M102 84 L151 100 L162 362 L161 723 L146 955 L91 948 L102 786 Q109 540 103 334 Z" fill="#d8b78f" opacity="0.7"/>
+    <path d="M153 104 L173 112 L182 373 L181 715 L165 950 L147 955 L160 723 L161 363 Z" fill="#f3dcba" opacity="0.84"/>
+    <path d="M393 93 L425 84 L417 212 Q411 501 420 778 L432 941 L402 953 L394 777 Q387 482 393 93 Z" fill="#ebcba2" opacity="0.68"/>
+    <path d="M101 81 Q143 48 185 49 L263 50 Q359 49 430 79 L397 97 Q273 78 153 105 Z" fill="#f9e2be" stroke="#8a5d36" stroke-width="6"/>
+    <path d="M105 81 L155 103 L202 89 L177 64 Z" fill="#e9c89d"/>
+    <path d="M154 104 Q280 77 397 96" fill="none" stroke="#b48658" stroke-width="3.5"/>
+    <path d="M86 950 Q154 919 264 923 Q373 923 438 942 L410 966 Q277 943 112 978 Z" fill="#e4c298" stroke="#8e603a" stroke-width="6"/>
+    <path d="M113 976 L143 948 Q166 937 190 935 L172 966 Z" fill="#f7e4c8"/>
+    <path d="M174 966 Q281 951 410 967" fill="none" stroke="#ad7f50" stroke-width="3.5"/>
+    <path d="M103 83 Q161 64 263 66 Q363 64 430 79" fill="none" stroke="#54321b" stroke-width="7"/>
+    <path d="M86 950 Q152 922 264 923 Q374 924 438 942" fill="none" stroke="#ac8155" stroke-width="4"/>
+  </g>
+</svg>

@@ -15,8 +15,8 @@ MonoBehaviour:
   traitVisualData:
     key: 10
     displayName: "\uC9D1\uC911"
-    icon: {fileID: 21300000, guid: be6d11a183ea8d144b372a1480c72390, type: 3}
-    description: "\uC774\uB3D9\uD558\uC9C0 \uC54A\uACE0 \uACF5\uACA9 \uC2DC \uACF5\uACA9\uB825\uC774
-      10 \uC99D\uAC00\uD569\uB2C8\uB2E4. \\n\uC9D1\uC911\uC740 \uC911\uCCA9\uB420
-      \uC218 \uC788\uC2B5\uB2C8\uB2E4. \\n\uC774\uB3D9 \uC2DC \uC9D1\uC911 \uC911\uCCA9\uC774
-      \uCD08\uAE30\uD654\uB429\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: e0ee2c47f1947fb40b1de0658f1640ec, type: 3}
+    description: "이동하지 않고 공격 시 공격력이 10 증가합니다. \\n집중은 중첩될 수 있습니다. \\n이동 시 집중 중첩이 초기화됩니다.\n폐기."
+    activations: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 #nullable enable
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,6 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
-using ProjectL.Systems.ServiceKeys;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ArtifactSystem
 {
@@ -27,7 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ArtifactSystem
     }
 
     /// <summary>현재 사실을 계산 포트에 전달하고 완성된 제안을 Buffer에 게시한다.</summary>
-    internal sealed class ArtifactEditingService : IArtifactEditingService,
+    internal sealed partial class ArtifactEditingService : IArtifactEditingService,
         ISystemInitData<IDataBaseQueryContext>, ISystemPostBindService, IExportSystemServices
     {
         private readonly IArtifactEditCalculation _calculation;
@@ -58,6 +58,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ArtifactSystem
             _edits = buffers.ArtifactEditWriteSink;
             _previews = buffers.ArtifactPreviewWriteSink;
             _combat = buffers.CombatStateReadSink;
+            _commandResults = buffers.ArtifactCommandResults;
+            _commandStore = buffers.ArtifactCommandResultStore;
+            _commandInput = buffers.ArtifactViewReadSink;
         }
 
         public bool InitializeBoard(int width, int height)
@@ -168,6 +171,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ArtifactSystem
         public void ExportServices(ISystemWriteSink sink)
         {
             sink.AddService<IArtifactEditingService>(this);
+            sink.AddService<IArtifactCommandProcessingService>(this);
             sink.AddModule<ISystemModule>(this);
         }
     }

@@ -11,6 +11,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Unit_Ballista = 15,
         Unit_CactusCannon = 16,
         Unit_Gravekeeper = 17,
+        Unit_Stage1Boss = 18,
+        Unit_Cowboy = 19,
+        Unit_Shielder = 23,
+        Unit_DynamiteHammer = 24,
+        Unit_UndeadCannonCart = 25,
+        Unit_UndeadHeavy = 26,
 
         Structure_Headquarters = 20,
         Structure_PowderBarrel = 21,

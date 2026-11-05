@@ -1,4 +1,6 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
+using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -13,25 +15,43 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             EnvironmentSemanticBindings bindings, CellCoord cell) =>
             HasTerrain(environment, bindings, cell, StaticTerrainKind.Wall);
 
+        internal static bool IsCliffOccupied(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, CellCoord cell) =>
+            HasTerrain(environment, bindings, cell, StaticTerrainKind.Cliff);
+
+        /// <summary>일반 이동·배치가 공유하는 지형 진입 제한이다. 강제 이동은 별도 규칙을 쓴다.</summary>
+        internal static bool BlocksVoluntaryEntry(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, CellCoord cell) =>
+            IsWallOccupied(environment, bindings, cell) || IsCliffOccupied(environment, bindings, cell);
+
         internal static bool HasTerrain(MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, CellCoord cell, StaticTerrainKind kind)
+        {
+            ValidateTerrainQuery(environment, bindings, kind);
+            return environment.Tiles.OfType<StaticTerrainFact>().Any(t => t.Cell == cell && IsTerrain(t, bindings, kind));
+        }
+
+        /// <summary><paramref name="kind"/> 지형이 있는 칸 전체다. <see cref="HasTerrain"/>와 같은 판정을 쓴다.</summary>
+        internal static IReadOnlyCollection<CellCoord> TerrainCells(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, StaticTerrainKind kind)
+        {
+            ValidateTerrainQuery(environment, bindings, kind);
+            return environment.Tiles.OfType<StaticTerrainFact>().Where(t => IsTerrain(t, bindings, kind))
+                .Select(t => t.Cell).Distinct().ToArray();
+        }
+
+        private static void ValidateTerrainQuery(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, StaticTerrainKind kind)
         {
             if (environment == null) throw new ArgumentNullException(nameof(environment));
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (!Enum.IsDefined(typeof(StaticTerrainKind), kind))
                 throw new ArgumentOutOfRangeException(nameof(kind));
-            return environment.Tiles.OfType<StaticTerrainFact>().Any(t =>
-                t.Active && t.Cell == cell && t.Kind == kind && bindings.TerrainSourceIds.Contains(t.Id));
         }
 
-        internal static int EdgeActionCost(MovementEnvironmentFacts environment,
-            EnvironmentSemanticBindings bindings, CellCoord from, CellCoord to, int baseCost)
-        {
-            if (baseCost < 0) throw new ArgumentOutOfRangeException(nameof(baseCost));
-            bool fromHigh = HasTerrain(environment, bindings, from, StaticTerrainKind.HighGround);
-            bool toHigh = HasTerrain(environment, bindings, to, StaticTerrainKind.HighGround);
-            return checked(baseCost + (!fromHigh && toHigh ? 2 : 0));
-        }
+        /// <summary>"이 원본이 그 종류의 지형인가"의 유일한 판정이다: 활성 + 종류 + 지형 의미 분류 포함.</summary>
+        private static bool IsTerrain(StaticTerrainFact terrain, EnvironmentSemanticBindings bindings, StaticTerrainKind kind) =>
+            terrain.Active && terrain.Kind == kind && bindings.TerrainSourceIds.Contains(terrain.Id);
 
         internal static int SandstormRange(int inputRange)
         {
@@ -40,9 +60,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         }
 
         internal static int AppointRange(CombatCommandInput input, CharacterCombatFacts actor,
-            MovementEnvironmentFacts environment = null) => actor.Anchor.HasValue && HasTerrain(environment ?? input.State.Environment,
-                input.EnvironmentBindings, actor.Anchor.Value, StaticTerrainKind.Sandstorm)
-                ? SandstormRange(actor.Stats.AppointRange) : actor.Stats.AppointRange;
+            MovementEnvironmentFacts environment = null)
+        {
+            environment ??= input.State.Environment;
+            int range = actor.Stats.AppointRange;
+            if (!actor.Anchor.HasValue) return range;
+            if (HasTerrain(environment, input.EnvironmentBindings, actor.Anchor.Value, StaticTerrainKind.Sandstorm)) range = SandstormRange(range);
+            return Math.Max(0, range - DustScreenTraitRule.RangeReductionAt(actor.Anchor.Value, environment));
+        }
 
         internal static int RemainingDamagePercent(MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings,
             CellCoord? physicalOrigin, CellCoord receiver)

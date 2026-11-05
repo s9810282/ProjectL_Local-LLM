@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
 {
@@ -35,27 +36,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         }
     }
 
-    /// <summary>그 턴 첫 이동 성공 시 다음 공격 비용을 깎습니다.</summary>
-    public sealed class MoveAttackDiscountTraitData : UnitTraitData
-    {
-        public override TraitKey TraitKey => TraitKey.MoveAttackDiscount;
-        public int DiscountAmount { get; }
-        public int MinimumAttackCost { get; }
-
-        public MoveAttackDiscountTraitData(int discountAmount, int minimumAttackCost)
-        {
-            DiscountAmount = discountAmount;
-            MinimumAttackCost = minimumAttackCost;
-        }
-
-        public override void Validate()
-        {
-            if (DiscountAmount <= 0 || MinimumAttackCost <= 0)
-                throw new InvalidOperationException(
-                    "[MoveAttackDiscountTraitData] DiscountAmount and MinimumAttackCost must be positive.");
-        }
-    }
-
     /// <summary>관통 공격에서 대상마다 피해가 줄어드는 비율입니다.</summary>
     public sealed class PiercingFalloffTraitData : UnitTraitData
     {
@@ -86,17 +66,24 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         public int ThornDamage { get; }
         public int LifetimeUnitTurns { get; }
 
-        public ThornFieldTraitData(int thornDamage, int lifetimeUnitTurns)
+        public int DefenseReductionPercent { get; }
+        public UnitTurnTickPhase TickPhase { get; }
+
+        public ThornFieldTraitData(int thornDamage, int lifetimeUnitTurns,
+            int defenseReductionPercent = 0, UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended)
         {
             ThornDamage = thornDamage;
+            DefenseReductionPercent = defenseReductionPercent;
+            TickPhase = tickPhase;
             LifetimeUnitTurns = lifetimeUnitTurns;
         }
 
         public override void Validate()
         {
-            if (ThornDamage < 1 || LifetimeUnitTurns < 1)
+            if (ThornDamage < 1 || LifetimeUnitTurns < 1 || DefenseReductionPercent < 0 || DefenseReductionPercent > 100 ||
+                !System.Enum.IsDefined(typeof(UnitTurnTickPhase), TickPhase))
                 throw new InvalidOperationException(
-                    "[ThornFieldTraitData] ThornDamage and LifetimeUnitTurns must be at least 1.");
+                    "[ThornFieldTraitData] 피해와 수명은 양수, 방어력 감소율은 0~100, 턴 시계는 유효한 값이어야 합니다.");
         }
     }
 
@@ -123,21 +110,21 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
     /// </summary>
     public sealed class DistanceDamageScaleTraitData : UnitTraitData
     {
-        private readonly int[] _percentByDistance;
+        private readonly IReadOnlyList<int> _percentByDistance;
 
         public override TraitKey TraitKey => TraitKey.DistanceDamageScale;
 
-        /// <summary>입력 배열의 사본입니다. 입력이 null이면 null이며 Validate가 거부합니다.</summary>
+        /// <summary>입력 목록을 복사한 읽기 전용 값입니다. 입력이 null이면 null이며 Validate가 거부합니다.</summary>
         public IReadOnlyList<int> PercentByDistance => _percentByDistance;
 
         public DistanceDamageScaleTraitData(IReadOnlyList<int> percentByDistance)
         {
-            _percentByDistance = percentByDistance?.ToArray();
+            _percentByDistance = percentByDistance == null ? null : Array.AsReadOnly(percentByDistance.ToArray());
         }
 
         public override void Validate()
         {
-            if (_percentByDistance == null || _percentByDistance.Length == 0)
+            if (_percentByDistance == null || _percentByDistance.Count == 0)
                 throw new InvalidOperationException(
                     "[DistanceDamageScaleTraitData] PercentByDistance must have at least one entry.");
             if (_percentByDistance.Any(percent => percent < 0))
@@ -153,6 +140,54 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
 
         public override void Validate()
         {
+        }
+    }
+
+    /// <summary>사령술의 소환 유닛 키, 생존 상한과 첫 행동 지연입니다. 런타임 소환 기록은 보관하지 않습니다.</summary>
+    public sealed class NecromancyTraitData : UnitTraitData
+    {
+        public override TraitKey TraitKey => TraitKey.Necromancy;
+        public EntityKey SummonedUnitKey { get; }
+        public int MaxLivingSummons { get; }
+        public long FirstActionDelay { get; }
+
+        public NecromancyTraitData(EntityKey summonedUnitKey, int maxLivingSummons, long firstActionDelay)
+        {
+            SummonedUnitKey = summonedUnitKey;
+            MaxLivingSummons = maxLivingSummons;
+            FirstActionDelay = firstActionDelay;
+        }
+
+        public override void Validate()
+        {
+            if (SummonedUnitKey == EntityKey.None || !System.Enum.IsDefined(typeof(EntityKey), SummonedUnitKey))
+            {
+                throw new InvalidOperationException("[NecromancyTraitData] SummonedUnitKey must be a defined, non-None key.");
+            }
+            if (MaxLivingSummons < 1 || FirstActionDelay < 0)
+            {
+                throw new InvalidOperationException("[NecromancyTraitData] MaxLivingSummons must be positive and FirstActionDelay must not be negative.");
+            }
+        }
+    }
+
+    /// <summary>포효 발동에 필요한 밤 피격 횟수입니다. 현재 피격 횟수는 런타임 상태가 소유합니다.</summary>
+    public sealed class RoarTraitData : UnitTraitData
+    {
+        public override TraitKey TraitKey => TraitKey.Roar;
+        public int HitThreshold { get; }
+
+        public RoarTraitData(int hitThreshold)
+        {
+            HitThreshold = hitThreshold;
+        }
+
+        public override void Validate()
+        {
+            if (HitThreshold < 1)
+            {
+                throw new InvalidOperationException("[RoarTraitData] HitThreshold must be positive.");
+            }
         }
     }
 }

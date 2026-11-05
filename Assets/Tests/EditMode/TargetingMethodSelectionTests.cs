@@ -75,9 +75,8 @@ namespace ProjectL.Tests.Core
         [Test]
         public void OrdinaryTargets_DeduplicateFootprintsAndPrimaryWins()
         {
-            var geometry = new AttackGeometryCalculator(new AppointRangeCalculator());
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.Cross, 50);
-            var selection = geometry.CalculateCells(method, 2, CellCoord.Zero, AttackAim.ForCell(new CellCoord(-1,2)));
+            var selection = CombatCommandTestData.ResolvedCells(method, 2, CellCoord.Zero, AttackAim.ForCell(new CellCoord(-1,2)));
             var primary = Facts(9, new CellCoord(-1,2), new CellCoord(-1,3));
             var additional = Facts(2, new CellCoord(-2,2), new CellCoord(-1,3));
             var miss = Facts(3, new CellCoord(9,9));
@@ -96,7 +95,7 @@ namespace ProjectL.Tests.Core
         {
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, choice, TargetingSplash.None, 0);
             var aim = choice == TargetingChoiceMode.Direction ? AttackAim.ForDirection(AttackDirection.Left) : AttackAim.ForAll();
-            var selection = new AttackGeometryCalculator(new AppointRangeCalculator()).CalculateCells(method, 2, CellCoord.Zero, aim);
+            var selection = CombatCommandTestData.ResolvedCells(method, 2, CellCoord.Zero, aim);
             var result = new AttackTargetResolver().CollectCandidates(selection,
                 new[] { Facts(5, new CellCoord(9,9), new CellCoord(-2,-2), new CellCoord(-1,1)) },
                 Array.Empty<StructureCombatFacts>());
@@ -127,7 +126,7 @@ namespace ProjectL.Tests.Core
         {
             return new CharacterCombatFacts(new EntityId(id), null, EntityKey.Unit_Demon, Owner.Enemy,
                 null, CharacterRuntimeArea.Field, new HealthStateSnapshot(10,10), default, null,
-                cells[0], Rotation4.R0, cells, cells[0], 0, 0);
+                cells[0], Rotation4.R0, cells, UnitActionUse.Available);
         }
 
         private static AttackAim WithField(AttackAim aim, string name, object value)
@@ -146,8 +145,6 @@ namespace ProjectL.Tests.Core
                 out var selection, out var failure), Is.False);
             Assert.That(selection, Is.Null);
             Assert.That(failure, Is.EqualTo(expected));
-            Assert.Throws<ArgumentException>(() => new AttackGeometryCalculator(new AppointRangeCalculator())
-                .CalculateCells(method, 3, CellCoord.Zero, aim));
         }
     }
 }

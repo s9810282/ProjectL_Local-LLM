@@ -146,7 +146,7 @@ Flow의 판단 순서, 상태, 훅 동작은 [현재 구조 UML](../specs/2026-0
 | [Core 답변](2026-09-30-combat-core-response-to-view.md) | 천명님 답변 원문(`c89caecc` 판) |
 | [전투 Core 요청 총정리](2026-09-30-combat-core-requests-consolidated.md) | 보낸 요청 원문과 §8 답변 기록 |
 | [Framework 공유 문서](2026-09-30-combat-flow-framework-share.md) | 공용 변경, F1·F2 요청(민형님 답변 대기) |
-| 천명님 [Core 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md) | §4.1 Core API 기록 표, Task 4A~8 |
+| 천명님 Core 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) | §4.1 Core API 기록 표, Task 4A~8 |
 | [중간 인계](2026-09-30-combat-flow-local-session-handoff.md) | Phase 0~3 시점 인계(이 문서가 이어받음) |
 | [전투 View 설계 세션 인계](2026-09-30-combat-view-design-session-handoff.md) | 전투 View 설계의 출발점: 원칙(§4), 결정 대기(§6), Buffer 점검(§10.1) |
 

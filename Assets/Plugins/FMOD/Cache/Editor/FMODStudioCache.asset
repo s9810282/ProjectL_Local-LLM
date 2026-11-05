@@ -1,0 +1,2914 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-9037488644048646256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Movement
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Movement
+  Guid:
+    Data1: -990917590
+    Data2: 1145355145
+    Data3: -1096032073
+    Data4: 865750144
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -3841691403712172742}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-8999764721284052752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Boss/TrainBell
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Boss/TrainBell
+  Guid:
+    Data1: -1839360262
+    Data2: 1129616233
+    Data3: -2115920746
+    Data4: -1513439280
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 5458
+--- !u!114 &-8876163261776704752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Pick
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Pick
+  Guid:
+    Data1: 288708550
+    Data2: 1239212618
+    Data3: 937072778
+    Data4: 1761414334
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -6888593867214341301}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-8782627117076000905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Sheld
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Sheld
+  Guid:
+    Data1: 51153256
+    Data2: 1225915506
+    Data3: -1641719164
+    Data4: 98607048
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2613
+--- !u!114 &-8240544113140762811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Object/ObjectActive
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Object/ObjectActive
+  Guid:
+    Data1: -1131062572
+    Data2: 1186821245
+    Data3: -691480957
+    Data4: 1505215527
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -1926190791241363790}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-8080925065098159179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/AMB/SelectScreen
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/AMB/SelectScreen
+  Guid:
+    Data1: -185617000
+    Data2: 1080275627
+    Data3: -396008311
+    Data4: -1152119708
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 60807
+--- !u!114 &-8024616427893389044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/PostFX.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/PostFX.bank
+  Name: PostFX
+  StudioPath: bank:/PostFX
+  lastModified: 639292555543782860
+  FileSizes:
+  - Name: Desktop
+    Value: 2155488
+  Exists: 1
+--- !u!114 &-7279661322049105677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Stage/BGM
+  m_EditorClassIdentifier: 
+  Name: BGM
+  StudioPath: 
+  Min: 0
+  Max: 3
+  Default: 0
+  ID:
+    data1: 3971289681
+    data2: 440833136
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Title
+  - StageSelect
+  - Day
+  - Night
+  Exists: 1
+--- !u!114 &-7119102162452024056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Stage
+  m_EditorClassIdentifier: 
+  Path: event:/BGM/Stage
+  Guid:
+    Data1: 831242093
+    Data2: 1124650101
+    Data3: 700349578
+    Data4: -1315276284
+  Banks:
+  - {fileID: -5640185113733970537}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters:
+  - {fileID: 1931750535035533292}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 132063
+--- !u!114 &-6888593867214341301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Pick/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 4
+  Default: 0
+  ID:
+    data1: 2198871359
+    data2: 2723693367
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Police_A
+  - Akimbo
+  - Shotgun
+  - Sniper
+  - Building
+  Exists: 1
+--- !u!114 &-6574779219677223825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/Tornado
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/Tornado
+  Guid:
+    Data1: -777161113
+    Data2: 1157241197
+    Data3: -215454835
+    Data4: -1888232519
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 5351
+--- !u!114 &-6264969558389463994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/Reward
+  m_EditorClassIdentifier: 
+  Path: event:/UI/Reward
+  Guid:
+    Data1: 330559847
+    Data2: 1147179221
+    Data3: -1340901471
+    Data4: -151202763
+  Banks:
+  - {fileID: 1229220016525466845}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1102
+--- !u!114 &-6259538783478418261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/PostFX.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/PostFX.bank
+  Name: PostFX
+  StudioPath: bank:/PostFX
+  lastModified: 639250707600524037
+  FileSizes:
+  - Name: Desktop
+    Value: 830144
+  Exists: 1
+--- !u!114 &-6131237967773216249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Pick/Tile
+  m_EditorClassIdentifier: 
+  Name: Tile
+  StudioPath: 
+  Min: 0
+  Max: 6
+  Default: 0
+  ID:
+    data1: 3761801636
+    data2: 2059815316
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Field
+  - Forest
+  - Mountain
+  - Main
+  - Brewery
+  - Factory
+  - Unit
+  Exists: 1
+--- !u!114 &-6044438110350753004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Boss/Train
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Boss/Train
+  Guid:
+    Data1: 894041832
+    Data2: 1110955562
+    Data3: 455360897
+    Data4: 331790278
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 10645
+--- !u!114 &-5820204297808371285
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/TimeChange/DayNight
+  m_EditorClassIdentifier: 
+  Name: DayNight
+  StudioPath: 
+  Min: 0
+  Max: 1
+  Default: 0
+  ID:
+    data1: 3971289681
+    data2: 440833136
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Day
+  - Night
+  Exists: 1
+--- !u!114 &-5640185113733970537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/BGM.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/BGM.bank
+  Name: BGM
+  StudioPath: bank:/BGM
+  lastModified: 639250707600244705
+  FileSizes:
+  - Name: Desktop
+    Value: 2020320
+  Exists: 1
+--- !u!114 &-5363966134633030534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Damaged
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Damaged
+  Guid:
+    Data1: 526055333
+    Data2: 1112391527
+    Data3: -508482890
+    Data4: -1885244684
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 6220112772682003480}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-5342178390696531228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Cancel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Cancel
+  Guid:
+    Data1: -1478436944
+    Data2: 1179055767
+    Data3: -1336058950
+    Data4: 870669635
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-4802783243108751405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Artifact/Placement
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Artifact/Placement
+  Guid:
+    Data1: -1306447700
+    Data2: 1091396187
+    Data3: 1006103956
+    Data4: 2032078648
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 669
+--- !u!114 &-4466027389651480451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Movement/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 4
+  Default: 0
+  ID:
+    data1: 2198871359
+    data2: 2723693367
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Police_A
+  - Akimbo
+  - Shotgun
+  - Sniper
+  - Building
+  Exists: 1
+--- !u!114 &-4433164111887622384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/D_Buff/Mark
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/D_Buff/Mark
+  Guid:
+    Data1: -1707975583
+    Data2: 1179306295
+    Data3: 975678864
+    Data4: 2023197210
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1393
+--- !u!114 &-4411338702709490378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Damaged/Category
+  m_EditorClassIdentifier: 
+  Name: Category
+  StudioPath: 
+  Min: 0
+  Max: 5
+  Default: 1
+  ID:
+    data1: 584323627
+    data2: 900261421
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - None
+  - Base
+  - Rider
+  - Heavy
+  - Cannon
+  - Enemy
+  Exists: 1
+--- !u!114 &-4382098793687906155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Artifact/Pick
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Artifact/Pick
+  Guid:
+    Data1: -1494168328
+    Data2: 1093015748
+    Data3: 263750800
+    Data4: -791561119
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1156
+--- !u!114 &-4241154451725048785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Dead/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 4
+  Default: 0
+  ID:
+    data1: 2198871359
+    data2: 2723693367
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Police_A
+  - Akimbo
+  - Shotgun
+  - Sniper
+  - Building
+  Exists: 1
+--- !u!114 &-4224161132349067667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Cancel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Cancel
+  Guid:
+    Data1: 1539819511
+    Data2: 1240268187
+    Data3: 449082279
+    Data4: -232244458
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 1045991021762914072}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-4171510023563812536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/UI.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/UI.bank
+  Name: UI
+  StudioPath: bank:/UI
+  lastModified: 639250707600543974
+  FileSizes:
+  - Name: Desktop
+    Value: 78464
+  Exists: 1
+--- !u!114 &-4142215881415126714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/Click
+  m_EditorClassIdentifier: 
+  Path: event:/UI/Click
+  Guid:
+    Data1: 3771557
+    Data2: 1121912010
+    Data3: 417073288
+    Data4: -1928104304
+  Banks:
+  - {fileID: -4171510023563812536}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-4089333210901183703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Boss/Train
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Boss/Train
+  Guid:
+    Data1: 894041832
+    Data2: 1110955562
+    Data3: 455360897
+    Data4: 331790278
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 4119
+--- !u!114 &-4079348778139520557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/MineExplosion
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/MineExplosion
+  Guid:
+    Data1: 1788027354
+    Data2: 1310809292
+    Data3: -1801418821
+    Data4: -522680342
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 6757
+--- !u!114 &-4035646429568971671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Movement
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Movement
+  Guid:
+    Data1: -990917590
+    Data2: 1145355145
+    Data3: -1096032073
+    Data4: 865750144
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -4466027389651480451}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-3841691403712172742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Movement/Category
+  m_EditorClassIdentifier: 
+  Name: Category
+  StudioPath: 
+  Min: 0
+  Max: 5
+  Default: 1
+  ID:
+    data1: 584323627
+    data2: 900261421
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - None
+  - Base
+  - Rider
+  - Heavy
+  - Cannon
+  - Enemy
+  Exists: 1
+--- !u!114 &-3281575160129042532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/StageChanger
+  m_EditorClassIdentifier: 
+  Path: event:/BGM/StageChanger
+  Guid:
+    Data1: 2022219215
+    Data2: 1117520838
+    Data3: 398110624
+    Data4: -1544615572
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3562
+--- !u!114 &-2903691761294926403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/WeakTerrian
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/WeakTerrian
+  Guid:
+    Data1: -1310077126
+    Data2: 1280209785
+    Data3: 232855682
+    Data4: -1017980404
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 875571533549366641}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-2828810499104879116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/Haboob
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/Haboob
+  Guid:
+    Data1: 1469908538
+    Data2: 1336822486
+    Data3: -926533974
+    Data4: 2093245255
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2875
+--- !u!114 &-2809404640219122781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Damaged
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Damaged
+  Guid:
+    Data1: 1489068453
+    Data2: 1217372947
+    Data3: 1270556044
+    Data4: -548318984
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -4411338702709490378}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-2511279654565585986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/E_Cannon
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/E_Cannon
+  Guid:
+    Data1: 1133521410
+    Data2: 1258198429
+    Data3: 1497165441
+    Data4: -340409966
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 4746
+--- !u!114 &-2377991333438151459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Attack/AbilityActive
+  m_EditorClassIdentifier: 
+  Name: AbilityActive
+  StudioPath: 
+  Min: 0
+  Max: 1
+  Default: 0
+  ID:
+    data1: 1342662476
+    data2: 929127323
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - False
+  - True
+  Exists: 1
+--- !u!114 &-2373405166392376192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Pick
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Pick
+  Guid:
+    Data1: -776224322
+    Data2: 1137874032
+    Data3: -1906309498
+    Data4: 911590087
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -6131237967773216249}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1926190791241363790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/ObjectActive/Object
+  m_EditorClassIdentifier: 
+  Name: Object
+  StudioPath: 
+  Min: 0
+  Max: 2
+  Default: 0
+  ID:
+    data1: 3920689037
+    data2: 999423724
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Mine
+  - Badge
+  - Flag
+  Exists: 1
+--- !u!114 &-1820619455238702841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Bullets/Parameter 1
+  m_EditorClassIdentifier: 
+  Name: Parameter 1
+  StudioPath: 
+  Min: 0
+  Max: 2
+  Default: 0
+  ID:
+    data1: 4264485949
+    data2: 2808170142
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Bullet
+  - Arrow
+  - Bomb
+  Exists: 1
+--- !u!114 &-1780785231358061003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Spin
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Spin
+  Guid:
+    Data1: 83701669
+    Data2: 1230946360
+    Data3: -880343133
+    Data4: 1135489424
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1740432588647631346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/WeakTerrian
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/WeakTerrian
+  Guid:
+    Data1: -1310077126
+    Data2: 1280209785
+    Data3: 232855682
+    Data4: -1017980404
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 8450088596423452338}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1651646138109321468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Pick
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Pick
+  Guid:
+    Data1: -776224322
+    Data2: 1137874032
+    Data3: -1906309498
+    Data4: 911590087
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 1052859786926313372}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1646012345185045994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Spin
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Spin
+  Guid:
+    Data1: 83701669
+    Data2: 1230946360
+    Data3: -880343133
+    Data4: 1135489424
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1433844125460875758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Stage
+  m_EditorClassIdentifier: 
+  Path: event:/BGM/Stage
+  Guid:
+    Data1: 831242093
+    Data2: 1124650101
+    Data3: 700349578
+    Data4: -1315276284
+  Banks:
+  - {fileID: 9101120274987374575}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters:
+  - {fileID: -7279661322049105677}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 248067
+--- !u!114 &-1299702663661496406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Attack/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 15
+  Default: 0
+  ID:
+    data1: 3541570850
+    data2: 1740262346
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Akimbo
+  - Sniper
+  - Batender
+  - Cowboy
+  - Hammer
+  - Shotgun
+  - GraveKeeper
+  - Umbrella
+  - Catus
+  - Minecart
+  - Balistar
+  - Pickel
+  - Shovel
+  - E_Cannon
+  - Boss_1
+  - Shield
+  Exists: 1
+--- !u!114 &-1151397241832829864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/FallStone
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/FallStone
+  Guid:
+    Data1: 969395040
+    Data2: 1147974564
+    Data3: -1231496291
+    Data4: 1398492764
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2659
+--- !u!114 &-1102522286870548220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Place
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Place
+  Guid:
+    Data1: 339403359
+    Data2: 1252545254
+    Data3: 1112474541
+    Data4: -228551454
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 2004075999688018887}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-951958618302024214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Place/Tile
+  m_EditorClassIdentifier: 
+  Name: Tile
+  StudioPath: 
+  Min: 0
+  Max: 6
+  Default: 0
+  ID:
+    data1: 3761801636
+    data2: 2059815316
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Field
+  - Forest
+  - Mountain
+  - Main
+  - Brewery
+  - Factory
+  - Unit
+  Exists: 1
+--- !u!114 &-587261679943030144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.strings.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/Master.strings.bank
+  Name: Master.strings
+  StudioPath: bank:/Master.strings
+  lastModified: 639250707600463987
+  FileSizes:
+  - Name: Desktop
+    Value: 2248
+  Exists: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
+  m_Name: FMODStudioCache
+  m_EditorClassIdentifier: 
+  EditorBanks:
+  - {fileID: 2654460087376359559}
+  - {fileID: 9101120274987374575}
+  - {fileID: 3524224707661169111}
+  - {fileID: -8024616427893389044}
+  - {fileID: 1229220016525466845}
+  EditorEvents:
+  - {fileID: -1433844125460875758}
+  - {fileID: 3804595482672875193}
+  - {fileID: 665541425799799211}
+  - {fileID: -9037488644048646256}
+  - {fileID: -1102522286870548220}
+  - {fileID: -8080925065098159179}
+  - {fileID: -1646012345185045994}
+  - {fileID: -5342178390696531228}
+  - {fileID: 734491527936041285}
+  - {fileID: 3674059900938967916}
+  - {fileID: -2373405166392376192}
+  - {fileID: 3459907743191613025}
+  - {fileID: -6044438110350753004}
+  - {fileID: -8999764721284052752}
+  - {fileID: -6264969558389463994}
+  - {fileID: 4609701275147865269}
+  - {fileID: 4200067479011146480}
+  - {fileID: -4224161132349067667}
+  - {fileID: 3657899748837222418}
+  - {fileID: 5269252245736704849}
+  - {fileID: -4382098793687906155}
+  - {fileID: -4802783243108751405}
+  - {fileID: 7113402111003844398}
+  - {fileID: -2511279654565585986}
+  - {fileID: 5649339094624778572}
+  - {fileID: 7010502025717791431}
+  - {fileID: 5088468505905796619}
+  - {fileID: 1325598440081619121}
+  - {fileID: -3281575160129042532}
+  - {fileID: -8782627117076000905}
+  - {fileID: 958713946665026221}
+  - {fileID: -6574779219677223825}
+  - {fileID: -8240544113140762811}
+  - {fileID: -2809404640219122781}
+  - {fileID: 6760767758763189573}
+  - {fileID: 7353160307898948965}
+  - {fileID: -1740432588647631346}
+  - {fileID: 6938780345360477160}
+  - {fileID: 3248158126960437698}
+  - {fileID: 5038189204891657575}
+  - {fileID: 8083703649482612461}
+  EditorParameters: []
+  MasterBanks:
+  - {fileID: 3524224707661169111}
+  StringsBanks:
+  - {fileID: 2654460087376359559}
+  cacheVersion: 131860
+  cacheTime: 639292555543782860
+  SerializableEventsDict:
+  - key: event:/BGM/Stage
+    index: 0
+  - key: event:/BGM/Title
+    index: 1
+  - key: event:/PostFX/AMB/TimeChange
+    index: 2
+  - key: event:/PostFX/SFX/Unit/Movement
+    index: 3
+  - key: event:/PostFX/SFX/Tile/Place
+    index: 4
+  - key: event:/PostFX/AMB/SelectScreen
+    index: 5
+  - key: event:/PostFX/SFX/Tile/Spin
+    index: 6
+  - key: event:/PostFX/SFX/Tile/Cancel
+    index: 7
+  - key: event:/PostFX/SFX/Unit/Dead
+    index: 8
+  - key: event:/PostFX/SFX/Tile/Reward
+    index: 9
+  - key: event:/PostFX/SFX/Tile/Pick
+    index: 10
+  - key: event:/PostFX/SFX/Unit/Pick
+    index: 11
+  - key: event:/PostFX/SFX/Boss/Train
+    index: 12
+  - key: event:/PostFX/SFX/Boss/TrainBell
+    index: 13
+  - key: event:/UI/Reward
+    index: 14
+  - key: event:/UI/Click
+    index: 15
+  - key: event:/PostFX/SFX/Unit/AttackEvents/Attack
+    index: 16
+  - key: event:/PostFX/SFX/Unit/Cancel
+    index: 17
+  - key: event:/PostFX/SFX/Obstacle/Damaged
+    index: 18
+  - key: event:/PostFX/SFX/Obstacle/Broken
+    index: 19
+  - key: event:/PostFX/SFX/Artifact/Pick
+    index: 20
+  - key: event:/PostFX/SFX/Artifact/Placement
+    index: 21
+  - key: event:/UI/Hover
+    index: 22
+  - key: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/E_Cannon
+    index: 23
+  - key: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Shovel
+    index: 24
+  - key: event:/PostFX/SFX/Artifact/Cancel
+    index: 25
+  - key: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Pickel
+    index: 26
+  - key: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Boss_Stage1
+    index: 27
+  - key: event:/BGM/StageChanger
+    index: 28
+  - key: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Sheld
+    index: 29
+  - key: event:/UI/GameStart
+    index: 30
+  - key: event:/PostFX/SFX/Terrain/Tornado
+    index: 31
+  - key: event:/PostFX/SFX/Object/ObjectActive
+    index: 32
+  - key: event:/PostFX/SFX/Unit/Damaged
+    index: 33
+  - key: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+    index: 34
+  - key: event:/PostFX/SFX/Terrain/Haboob
+    index: 35
+  - key: event:/PostFX/SFX/Terrain/WeakTerrian
+    index: 36
+  - key: event:/PostFX/SFX/Terrain/FallStone
+    index: 37
+  - key: event:/PostFX/SFX/Unit/D_Buff/Mark
+    index: 38
+  - key: event:/PostFX/SFX/Terrain/Tornado_Ended
+    index: 39
+  - key: event:/PostFX/SFX/Terrain/MineExplosion
+    index: 40
+--- !u!114 &110853906457886093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Dead/Category
+  m_EditorClassIdentifier: 
+  Name: Category
+  StudioPath: 
+  Min: 0
+  Max: 5
+  Default: 1
+  ID:
+    data1: 584323627
+    data2: 900261421
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - None
+  - Base
+  - Rider
+  - Heavy
+  - Cannon
+  - Enemy
+  Exists: 1
+--- !u!114 &363698828093600588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/TimeChange/BGM
+  m_EditorClassIdentifier: 
+  Name: BGM
+  StudioPath: 
+  Min: 0
+  Max: 3
+  Default: 0
+  ID:
+    data1: 3971289681
+    data2: 440833136
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Title
+  - StageSelect
+  - Day
+  - Night
+  Exists: 1
+--- !u!114 &570800964405763660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Dead
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Dead
+  Guid:
+    Data1: 470702515
+    Data2: 1225421855
+    Data3: -117177933
+    Data4: 1440782997
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -4241154451725048785}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &665541425799799211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/AMB/TimeChange
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/AMB/TimeChange
+  Guid:
+    Data1: 1902326129
+    Data2: 1292809233
+    Data3: 485394321
+    Data4: -760649438
+  Banks:
+  - {fileID: 3524224707661169111}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters:
+  - {fileID: 363698828093600588}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 190481
+--- !u!114 &694106788356756261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Attack
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Attack
+  Guid:
+    Data1: 2095920811
+    Data2: 1321628396
+    Data3: -1479324759
+    Data4: 1598722520
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 4471656473222524707}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &734491527936041285
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Dead
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Dead
+  Guid:
+    Data1: 470702515
+    Data2: 1225421855
+    Data3: -117177933
+    Data4: 1440782997
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 110853906457886093}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &875571533549366641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/WeakTerrian/CrackLv
+  m_EditorClassIdentifier: 
+  Name: CrackLv
+  StudioPath: 
+  Min: 0
+  Max: 2
+  Default: 0
+  ID:
+    data1: 2801227969
+    data2: 53620063
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - 0
+  - 1
+  - 2
+  Exists: 1
+--- !u!114 &958713946665026221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/GameStart
+  m_EditorClassIdentifier: 
+  Path: event:/UI/GameStart
+  Guid:
+    Data1: -372384581
+    Data2: 1082793909
+    Data3: 747833506
+    Data4: 857905088
+  Banks:
+  - {fileID: 1229220016525466845}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2958
+--- !u!114 &1045991021762914072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Cancel/Category
+  m_EditorClassIdentifier: 
+  Name: Category
+  StudioPath: 
+  Min: 0
+  Max: 5
+  Default: 1
+  ID:
+    data1: 584323627
+    data2: 900261421
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - None
+  - Base
+  - Rider
+  - Heavy
+  - Cannon
+  - Enemy
+  Exists: 1
+--- !u!114 &1052859786926313372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Pick/Tile
+  m_EditorClassIdentifier: 
+  Name: Tile
+  StudioPath: 
+  Min: 0
+  Max: 6
+  Default: 0
+  ID:
+    data1: 3761801636
+    data2: 2059815316
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Field
+  - Forest
+  - Mountain
+  - Main
+  - Brewery
+  - Factory
+  - Unit
+  Exists: 1
+--- !u!114 &1229220016525466845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/UI.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/UI.bank
+  Name: UI
+  StudioPath: bank:/UI
+  lastModified: 639280779231341410
+  FileSizes:
+  - Name: Desktop
+    Value: 125536
+  Exists: 1
+--- !u!114 &1325598440081619121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Boss_Stage1
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Boss_Stage1
+  Guid:
+    Data1: -160674325
+    Data2: 1332630722
+    Data3: -2129352292
+    Data4: 1613003245
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 937
+--- !u!114 &1822117436614932252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/Master.bank
+  Name: Master
+  StudioPath: bank:/Master
+  lastModified: 639250707600443943
+  FileSizes:
+  - Name: Desktop
+    Value: 2236832
+  Exists: 1
+--- !u!114 &1931750535035533292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Stage/DayNight
+  m_EditorClassIdentifier: 
+  Name: DayNight
+  StudioPath: 
+  Min: 0
+  Max: 1
+  Default: 0
+  ID:
+    data1: 3971289681
+    data2: 440833136
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Day
+  - Night
+  Exists: 1
+--- !u!114 &2004075999688018887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Place/Tile
+  m_EditorClassIdentifier: 
+  Name: Tile
+  StudioPath: 
+  Min: 0
+  Max: 6
+  Default: 0
+  ID:
+    data1: 3761801636
+    data2: 2059815316
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Field
+  - Forest
+  - Mountain
+  - Main
+  - Brewery
+  - Factory
+  - Unit
+  Exists: 1
+--- !u!114 &2654460087376359559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.strings.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/Master.strings.bank
+  Name: Master.strings
+  StudioPath: bank:/Master.strings
+  lastModified: 639292501876397272
+  FileSizes:
+  - Name: Desktop
+    Value: 3648
+  Exists: 1
+--- !u!114 &2700985380450207640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Bullets/Parameter 1
+  m_EditorClassIdentifier: 
+  Name: Parameter 1
+  StudioPath: 
+  Min: 0
+  Max: 2
+  Default: 0
+  ID:
+    data1: 4264485949
+    data2: 2808170142
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Bullet
+  - Arrow
+  - Bomb
+  Exists: 1
+--- !u!114 &3248158126960437698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/D_Buff/Mark
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/D_Buff/Mark
+  Guid:
+    Data1: -1707975583
+    Data2: 1179306295
+    Data3: 975678864
+    Data4: 2023197210
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1393
+--- !u!114 &3459907743191613025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/Pick
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/Pick
+  Guid:
+    Data1: 288708550
+    Data2: 1239212618
+    Data3: 937072778
+    Data4: 1761414334
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 6643050625040496593}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &3524224707661169111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/Master.bank
+  Name: Master
+  StudioPath: bank:/Master
+  lastModified: 639292500927493918
+  FileSizes:
+  - Name: Desktop
+    Value: 2237696
+  Exists: 1
+--- !u!114 &3657899748837222418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Obstacle/Damaged
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Obstacle/Damaged
+  Guid:
+    Data1: 788713996
+    Data2: 1125202677
+    Data3: 648577454
+    Data4: 1862442357
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1625
+--- !u!114 &3674059900938967916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Reward
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Reward
+  Guid:
+    Data1: -793080650
+    Data2: 1340033489
+    Data3: -1284117597
+    Data4: 1334593137
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &3737353696675489616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+  Guid:
+    Data1: 24077861
+    Data2: 1331145357
+    Data3: 1110291352
+    Data4: -828188190
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: 2700985380450207640}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &3804595482672875193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Title
+  m_EditorClassIdentifier: 
+  Path: event:/BGM/Title
+  Guid:
+    Data1: 1922675640
+    Data2: 1325287981
+    Data3: 1249051327
+    Data4: -542433715
+  Banks:
+  - {fileID: 9101120274987374575}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 65612
+--- !u!114 &4083943488198787773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Boss/TrainBell
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Boss/TrainBell
+  Guid:
+    Data1: -1839360262
+    Data2: 1129616233
+    Data3: -2115920746
+    Data4: -1513439280
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 5458
+--- !u!114 &4200067479011146480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/Attack
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/Attack
+  Guid:
+    Data1: 2095920811
+    Data2: 1321628396
+    Data3: -1479324759
+    Data4: 1598722520
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -2377991333438151459}
+  - {fileID: -1299702663661496406}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &4203072558778057204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/Reward
+  m_EditorClassIdentifier: 
+  Path: event:/UI/Reward
+  Guid:
+    Data1: 330559847
+    Data2: 1147179221
+    Data3: -1340901471
+    Data4: -151202763
+  Banks:
+  - {fileID: -4171510023563812536}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &4471656473222524707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Attack/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 4
+  Default: 0
+  ID:
+    data1: 2198871359
+    data2: 2723693367
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Police_A
+  - Akimbo
+  - Shotgun
+  - Sniper
+  - Building
+  Exists: 1
+--- !u!114 &4609701275147865269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/Click
+  m_EditorClassIdentifier: 
+  Path: event:/UI/Click
+  Guid:
+    Data1: 3771557
+    Data2: 1121912010
+    Data3: 417073288
+    Data4: -1928104304
+  Banks:
+  - {fileID: 1229220016525466845}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &5010873324442223454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/AMB/TimeChange
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/AMB/TimeChange
+  Guid:
+    Data1: 1902326129
+    Data2: 1292809233
+    Data3: 485394321
+    Data4: -760649438
+  Banks:
+  - {fileID: 1822117436614932252}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters:
+  - {fileID: -5820204297808371285}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 190481
+--- !u!114 &5038189204891657575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/Tornado_Ended
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/Tornado_Ended
+  Guid:
+    Data1: -25196641
+    Data2: 1088191945
+    Data3: 102173879
+    Data4: 386150301
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3500
+--- !u!114 &5088468505905796619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Pickel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Pickel
+  Guid:
+    Data1: -585840935
+    Data2: 1303543820
+    Data3: -316324980
+    Data4: -1023070296
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1728
+--- !u!114 &5269252245736704849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Obstacle/Broken
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Obstacle/Broken
+  Guid:
+    Data1: 130910534
+    Data2: 1280907474
+    Data3: -1871928176
+    Data4: 1839101012
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1875
+--- !u!114 &5460343679379376023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/TimeClock
+  m_EditorClassIdentifier: 
+  Path: event:/UI/TimeClock
+  Guid:
+    Data1: 1593230640
+    Data2: 1243994111
+    Data3: -1559587177
+    Data4: -663467003
+  Banks:
+  - {fileID: -4171510023563812536}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &5649339094624778572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Shovel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Shovel
+  Guid:
+    Data1: 1071080229
+    Data2: 1309515081
+    Data3: 2044023682
+    Data4: 471780072
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1375
+--- !u!114 &6220112772682003480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Damaged/UnitDetailType
+  m_EditorClassIdentifier: 
+  Name: UnitDetailType
+  StudioPath: 
+  Min: 0
+  Max: 4
+  Default: 0
+  ID:
+    data1: 2198871359
+    data2: 2723693367
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - Police_A
+  - Akimbo
+  - Shotgun
+  - Sniper
+  - Building
+  Exists: 1
+--- !u!114 &6439952430278633922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/Tornado_Ended
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/Tornado_Ended
+  Guid:
+    Data1: -25196641
+    Data2: 1088191945
+    Data3: 102173879
+    Data4: 386150301
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3500
+--- !u!114 &6643050625040496593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/Pick/Category
+  m_EditorClassIdentifier: 
+  Name: Category
+  StudioPath: 
+  Min: 0
+  Max: 5
+  Default: 1
+  ID:
+    data1: 584323627
+    data2: 900261421
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - None
+  - Base
+  - Rider
+  - Heavy
+  - Cannon
+  - Enemy
+  Exists: 1
+--- !u!114 &6760767758763189573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Unit/AttackEvents/Bullets
+  Guid:
+    Data1: 24077861
+    Data2: 1331145357
+    Data3: 1110291352
+    Data4: -828188190
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -1820619455238702841}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &6920486243770090686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/AMB/SelectScreen
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/AMB/SelectScreen
+  Guid:
+    Data1: -185617000
+    Data2: 1080275627
+    Data3: -396008311
+    Data4: -1152119708
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 20000
+--- !u!114 &6938780345360477160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/FallStone
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/FallStone
+  Guid:
+    Data1: 969395040
+    Data2: 1147974564
+    Data3: -1231496291
+    Data4: 1398492764
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2659
+--- !u!114 &7010502025717791431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Artifact/Cancel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Artifact/Cancel
+  Guid:
+    Data1: -1334662059
+    Data2: 1138167588
+    Data3: -1570969467
+    Data4: 454764614
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 643
+--- !u!114 &7064946771259340766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/BGM/Title
+  m_EditorClassIdentifier: 
+  Path: event:/BGM/Title
+  Guid:
+    Data1: 1922675640
+    Data2: 1325287981
+    Data3: 1249051327
+    Data4: -542433715
+  Banks:
+  - {fileID: -5640185113733970537}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 57678
+--- !u!114 &7113402111003844398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/UI/Hover
+  m_EditorClassIdentifier: 
+  Path: event:/UI/Hover
+  Guid:
+    Data1: -535006135
+    Data2: 1332808004
+    Data3: 1384749967
+    Data4: 1827827276
+  Banks:
+  - {fileID: 1229220016525466845}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1206
+--- !u!114 &7353160307898948965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/Haboob
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/Haboob
+  Guid:
+    Data1: 1469908538
+    Data2: 1336822486
+    Data3: -926533974
+    Data4: 2093245255
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2875
+--- !u!114 &8083703649482612461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Terrain/MineExplosion
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Terrain/MineExplosion
+  Guid:
+    Data1: 1788027354
+    Data2: 1310809292
+    Data3: -1801418821
+    Data4: -522680342
+  Banks:
+  - {fileID: -8024616427893389044}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 6757
+--- !u!114 &8095387368323825266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Reward
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Reward
+  Guid:
+    Data1: -793080650
+    Data2: 1340033489
+    Data3: -1284117597
+    Data4: 1334593137
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &8450088596423452338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb8ef7f94ca804a8ab72049b86782e, type: 3}
+  m_Name: parameter:/WeakTerrian/CrackLv
+  m_EditorClassIdentifier: 
+  Name: CrackLv
+  StudioPath: 
+  Min: 0
+  Max: 2
+  Default: 0
+  ID:
+    data1: 2801227969
+    data2: 53620063
+  Type: 2
+  IsGlobal: 0
+  Labels:
+  - 0
+  - 1
+  - 2
+  Exists: 1
+--- !u!114 &8590500662762388534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Cancel
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Cancel
+  Guid:
+    Data1: -1478436944
+    Data2: 1179055767
+    Data3: -1336058950
+    Data4: 870669635
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &9101120274987374575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/BGM.bank
+  m_EditorClassIdentifier: 
+  Path: Assets/Audio/FMODplus/ProjectL/Build/Desktop/BGM.bank
+  Name: BGM
+  StudioPath: bank:/BGM
+  lastModified: 639280834876720411
+  FileSizes:
+  - Name: Desktop
+    Value: 3545952
+  Exists: 1
+--- !u!114 &9198173392737300964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/PostFX/SFX/Tile/Place
+  m_EditorClassIdentifier: 
+  Path: event:/PostFX/SFX/Tile/Place
+  Guid:
+    Data1: 339403359
+    Data2: 1252545254
+    Data3: 1112474541
+    Data4: -228551454
+  Banks:
+  - {fileID: -6259538783478418261}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters:
+  - {fileID: -951958618302024214}
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0

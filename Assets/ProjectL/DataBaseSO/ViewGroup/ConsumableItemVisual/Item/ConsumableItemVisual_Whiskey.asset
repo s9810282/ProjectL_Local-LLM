@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0673b4fb0ebe160be586f71a90eb2a0f, type: 3}
+  m_Name: ConsumableItemVisual_Whiskey
+  m_EditorClassIdentifier: 
+  consumableItemVisualData:
+    itemKey: 1
+    displayName: "\uC704\uC2A4\uD0A4"
+    icon: {fileID: -223225223, guid: 1abf528c0e6b33649bba9f52de40f3fe, type: 3}
+    description: "\uD2B8\uB808\uC800\uD5CC\uD130\uB4E4\uC774 \uB4E4\uACE0 \uB2E4\uB2C8\uB294
+      \uAC00\uC7A5 \uAE30\uBCF8\uC801\uC778 \uC18C\uC9C0\uD488\uC774\uB2E4."

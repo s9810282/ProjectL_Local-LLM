@@ -6,24 +6,6 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat
 {
-    public readonly struct CombatTurnParticipant
-    {
-        public EntityId EntityId { get; }
-        public int Priority { get; }
-        public int Delay { get; }
-        public long NextActionTime { get; }
-        public bool OpeningTurnPending { get; }
-        public int CompletedTurnCount { get; }
-        public CombatTurnParticipant(EntityId id, int priority, int delay, long nextActionTime = 0,
-            bool openingTurnPending = true, int completedTurnCount = 0)
-        {
-            if (id.IsEmpty || priority < 1 || delay < 1 || nextActionTime < 0 || completedTurnCount < 0)
-                throw new ArgumentException("타임라인 참가자 값이 잘못되었습니다.");
-            EntityId = id; Priority = priority; Delay = delay; NextActionTime = nextActionTime;
-            OpeningTurnPending = openingTurnPending; CompletedTurnCount = completedTurnCount;
-        }
-    }
-
     public readonly struct CombatEnemyOrigin
     {
         public EntityId EntityId { get; }
@@ -33,51 +15,61 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         { EntityId = id; Anchor = anchor; Rotation = rotation; }
     }
 
-    public readonly struct CombatGimmickFacts
-    {
-        public StageGimmickId Id { get; }
-        public long NextActivationTurn { get; }
-        public int ActivationCount { get; }
-        public CombatGimmickFacts(StageGimmickId id, long nextActivationTurn, int activationCount = 0)
-        {
-            if (nextActivationTurn < 1 || activationCount < 0) throw new ArgumentOutOfRangeException(nameof(nextActivationTurn));
-            Id = id; NextActivationTurn = nextActivationTurn; ActivationCount = activationCount;
-        }
-    }
-
     /// <summary>기존 전투 Buffer가 보관하는 실제 턴·밤 값이다. Core는 호출 동안만 읽는다.</summary>
     public sealed class CombatTurnFacts
     {
         public StagePhase StagePhase { get; }
         public int PreparationIndex { get; }
         public bool MainPlacementLocked { get; }
-        public long CurrentTime { get; }
-        public long CurrentNightTime { get; }
-        public long CompletedUnitTurnCount { get; }
-        public IReadOnlyList<CombatTurnParticipant> Participants { get; }
+        public CombatControllerPhase ControllerPhase { get; }
+        public long ControllerTurnSequence { get; }
+        public long CompletedPlayerTurnCount { get; }
+        /// <summary>플레이어·적 진영의 수락된 종료 누계다. 밤 사이에 유지하며 새 전투에서 0으로 시작한다.</summary>
+        public long CompletedControllerTurnCount { get; }
+        public long NightStartPlayerTurnCount { get; }
+        public long CompletedPlayerTurnsThisNight => CompletedPlayerTurnCount - NightStartPlayerTurnCount;
+        /// <summary>Core가 턴 사실을 만들 때 함께 게시하는 밤의 전체 아군 턴 수다.</summary>
+        public int PlayerTurnsPerNight { get; }
+        public Owner? Controller => ControllerPhase == CombatControllerPhase.Player || ControllerPhase == CombatControllerPhase.StartingPlayer
+            ? Owner.Player : ControllerPhase == CombatControllerPhase.Enemy || ControllerPhase == CombatControllerPhase.StartingEnemy
+                ? Owner.Enemy : (Owner?)null;
         public IReadOnlyList<CombatEnemyOrigin> EnemyOrigins { get; }
-        public IReadOnlyList<CombatGimmickFacts> Gimmicks { get; }
+        /// <summary>전투 중 소환으로 만든 개체의 출처다. 전투 동안 추가만 하며 Buffer가 삭제·변경을 거절한다.</summary>
+        public IReadOnlyList<CombatSummonRecord> Summons { get; }
+
+        /// <param name="summons">생략하면 빈 목록이다. 운영 생성 지점은 원본 기록을 그대로 넘긴다.</param>
         public CombatTurnFacts(StagePhase stagePhase, int preparationIndex = 1, bool mainPlacementLocked = false,
-            long currentTime = 0, long currentNightTime = 0, long completedUnitTurnCount = 0,
-            IReadOnlyList<CombatTurnParticipant> participants = null, IReadOnlyList<CombatEnemyOrigin> enemyOrigins = null,
-            IReadOnlyList<CombatGimmickFacts> gimmicks = null)
+            CombatControllerPhase controllerPhase = CombatControllerPhase.None, long controllerTurnSequence = 0,
+            long completedPlayerTurnCount = 0, long nightStartPlayerTurnCount = 0,
+            IReadOnlyList<CombatEnemyOrigin> enemyOrigins = null, IReadOnlyList<CombatSummonRecord> summons = null,
+            long completedControllerTurnCount = 0)
         {
-            if (!Enum.IsDefined(typeof(StagePhase), stagePhase) || preparationIndex < 1 || currentTime < 0 ||
-                currentNightTime < 0 || completedUnitTurnCount < 0) throw new ArgumentException("턴·밤 사실 값이 잘못되었습니다.");
+            if (!Enum.IsDefined(typeof(StagePhase), stagePhase) || preparationIndex < 1 ||
+                !Enum.IsDefined(typeof(CombatControllerPhase), controllerPhase) || controllerTurnSequence < 0 || completedControllerTurnCount < 0 ||
+                nightStartPlayerTurnCount < 0 || completedPlayerTurnCount < nightStartPlayerTurnCount ||
+                completedPlayerTurnCount - nightStartPlayerTurnCount > PlayerTurnRules.PlayerTurnsPerNight)
+                throw new ArgumentException("턴·밤 사실 값이 잘못되었습니다.");
+            if (stagePhase == StagePhase.Deployment && controllerPhase != CombatControllerPhase.None ||
+                stagePhase == StagePhase.Combat && controllerPhase == CombatControllerPhase.None)
+                throw new ArgumentException("배치·전투 국면과 제어자 단계가 일치해야 합니다.");
             StagePhase = stagePhase; PreparationIndex = preparationIndex; MainPlacementLocked = mainPlacementLocked;
-            CurrentTime = currentTime; CurrentNightTime = currentNightTime; CompletedUnitTurnCount = completedUnitTurnCount;
-            Participants = Array.AsReadOnly((participants ?? Array.Empty<CombatTurnParticipant>()).ToArray());
+            ControllerPhase = controllerPhase; ControllerTurnSequence = controllerTurnSequence;
+            CompletedPlayerTurnCount = completedPlayerTurnCount; NightStartPlayerTurnCount = nightStartPlayerTurnCount;
+            CompletedControllerTurnCount = completedControllerTurnCount;
+            PlayerTurnsPerNight = PlayerTurnRules.PlayerTurnsPerNight;
             EnemyOrigins = Array.AsReadOnly((enemyOrigins ?? Array.Empty<CombatEnemyOrigin>()).ToArray());
-            Gimmicks = Array.AsReadOnly((gimmicks ?? Array.Empty<CombatGimmickFacts>()).ToArray());
-            if (Participants.Select(p => p.EntityId).Distinct().Count() != Participants.Count ||
-                EnemyOrigins.Select(p => p.EntityId).Distinct().Count() != EnemyOrigins.Count ||
-                Gimmicks.Select(g => g.Id).Distinct().Count() != Gimmicks.Count)
-                throw new ArgumentException("턴 참가자·적 원본·기믹 식별자가 중복됩니다.");
+            Summons = Array.AsReadOnly((summons ?? Array.Empty<CombatSummonRecord>()).ToArray());
+            if (EnemyOrigins.Select(p => p.EntityId).Distinct().Count() != EnemyOrigins.Count ||
+                Summons.Select(s => s.SummonedId).Distinct().Count() != Summons.Count ||
+                Summons.Any(s => EnemyOrigins.Any(o => o.EntityId == s.SummonedId)))
+                throw new ArgumentException("적 원본·소환 기록이 중복되었거나 겹칩니다.");
         }
         public bool SameValues(CombatTurnFacts other) => other != null && StagePhase == other.StagePhase &&
             PreparationIndex == other.PreparationIndex && MainPlacementLocked == other.MainPlacementLocked &&
-            CurrentTime == other.CurrentTime && CurrentNightTime == other.CurrentNightTime &&
-            CompletedUnitTurnCount == other.CompletedUnitTurnCount && Participants.SequenceEqual(other.Participants) &&
-            EnemyOrigins.SequenceEqual(other.EnemyOrigins) && Gimmicks.SequenceEqual(other.Gimmicks);
+            ControllerPhase == other.ControllerPhase && ControllerTurnSequence == other.ControllerTurnSequence &&
+            CompletedPlayerTurnCount == other.CompletedPlayerTurnCount && NightStartPlayerTurnCount == other.NightStartPlayerTurnCount &&
+            CompletedControllerTurnCount == other.CompletedControllerTurnCount &&
+            PlayerTurnsPerNight == other.PlayerTurnsPerNight &&
+            EnemyOrigins.SequenceEqual(other.EnemyOrigins) && Summons.SequenceEqual(other.Summons);
     }
 }

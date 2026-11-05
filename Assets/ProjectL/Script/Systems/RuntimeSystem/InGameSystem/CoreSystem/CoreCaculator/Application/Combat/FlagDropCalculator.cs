@@ -15,25 +15,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static void ResolveDeaths(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> characters, IReadOnlyList<StructureCombatFacts> structures,
             IReadOnlyDictionary<EntityId, CellCoord> deathAnchors, ref MovementEnvironmentFacts environment,
-            ref EnvironmentSemanticBindings bindings, ref EnvironmentProgressFacts progress, List<CombatEvent> events)
+            ref EnvironmentSemanticBindings bindings, ref EnvironmentProgressFacts progress, List<CombatEvent> events,
+            IReadOnlyCollection<EntityId> fallenEntityIds = null)
         {
-            if (BattleOutcomeCalculator.Resolve(characters.Values.ToArray(), structures).IsStageEnded) return;
-            foreach (var dead in characters.Values.Where(c => c.Health.IsDead && c.HeldEnvironment.Flag != null &&
-                input.Characters.Any(before => before.EntityId == c.EntityId && !before.Health.IsDead)).OrderBy(c => c.EntityId).ToArray())
-            {
-                var held = dead.HeldEnvironment.Flag;
-                var cleared = HeldEnvironmentEffects.ClearFlag(dead);
-                characters[dead.EntityId] = cleared;
-                events.Add(new CombatHeldEnvironmentEvent(dead, cleared));
-                var before = input.Characters.Single(c => c.EntityId == dead.EntityId);
-                var anchor = deathAnchors.GetValueOrDefault(dead.EntityId, before.Anchor ?? before.MovementCheckpointAnchor);
-                var candidates = NearestCells(input.State, characters.Values.ToArray(), structures, anchor, bindings);
-                if (candidates.Count == 0) continue;
-                uint random = progress.RandomState;
-                int index = EnvironmentRandom.Choose(ref random, candidates.Count);
-                progress = new EnvironmentProgressFacts(progress.NextObjectEntryOrdinal, progress.NextSourceId, random);
-                CreateAt(held, candidates[index], characters, ref environment, ref bindings, ref progress, events);
-            }
+            if (input == null) throw new ArgumentNullException(nameof(input));
         }
 
         internal static IReadOnlyList<CellCoord> NearestCells(CombatCommandState state,
@@ -64,26 +49,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Dictionary<EntityId, CharacterCombatFacts> characters, ref MovementEnvironmentFacts environment,
             ref EnvironmentSemanticBindings bindings, ref EnvironmentProgressFacts progress, List<CombatEvent> events)
         {
-            var source = new FlagSourceFact(progress.NextSourceId, cell, progress.NextObjectEntryOrdinal,
-                payload.PriorityBonus, true, payload.KnownTo);
-            progress = new EnvironmentProgressFacts(checked(progress.NextObjectEntryOrdinal + 1),
-                checked(progress.NextSourceId + 1), progress.RandomState);
-            bindings = new EnvironmentSemanticBindings(bindings.TerrainSourceIds,
-                bindings.ObjectSourceIds.Append(source.Id).ToArray(), bindings.ObstacleEntityIds);
-            events.Add(new CombatObjectCreatedEvent(source));
-            ObjectSourceFact final = source;
-            var occupant = characters.Values.SingleOrDefault(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
-                c.OccupiedCells.Contains(cell));
-            if (occupant != null && occupant.HeldEnvironment.Flag == null)
-            {
-                var acquired = HeldEnvironmentEffects.AcquireFlag(occupant, source);
-                characters[occupant.EntityId] = acquired;
-                events.Add(new CombatObjectActivationEvent(source, occupant.EntityId));
-                events.Add(new CombatHeldEnvironmentEvent(occupant, acquired));
-                final = source.WithActive(false);
-                events.Add(new CombatMovementSourceEvent(source, final));
-            }
-            environment = new MovementEnvironmentFacts(environment.Tiles.Append(final).ToArray());
+            if (payload == null) throw new ArgumentNullException(nameof(payload));
         }
     }
 }

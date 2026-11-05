@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
@@ -29,54 +30,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return new EffectAttackTargetingEvaluation(contributions.ToArray(), expectations.ToArray());
         }
 
-        public EffectAttackCostEvaluation EvaluateAttackCost(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in AttackCostEffectContext context)
-        {
-            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
-            if (context.BaseAttackCost < 1)
-                throw new ArgumentOutOfRangeException(nameof(context));
-
-            int reduction = 0;
-            int minimum = 1;
-            var contributions = new List<EffectAttackCostContribution>();
-            var positive = new List<EffectOriginKey>();
-            var expectations = new List<EffectStateExpectation>();
-
-            foreach (EffectRuleBinding binding in ordered)
-            {
-                if (binding.Rule is not IEffectAttackCostRule rule) continue;
-
-                var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);
-                EffectAttackCostContribution contribution = rule.EvaluateAttackCost(input, context);
-                if (contribution.Origin != binding.Origin ||
-                    contribution.FlatReduction < 0 ||
-                    contribution.MinimumCost < 1)
-                {
-                    throw new InvalidOperationException("Invalid cost contribution");
-                }
-
-                reduction = checked(reduction + contribution.FlatReduction);
-                if (contribution.FlatReduction > 0)
-                {
-                    minimum = Math.Max(minimum, contribution.MinimumCost);
-                    if (contribution.ConsumeOnSuccessfulAttack)
-                        positive.Add(binding.Origin);
-                }
-
-                contributions.Add(contribution);
-                expectations.Add(new EffectStateExpectation(binding.Origin, binding.ExpectedState));
-            }
-
-            int effectiveCost = Math.Max(
-                minimum,
-                checked(context.BaseAttackCost - reduction));
-            return new EffectAttackCostEvaluation(
-                effectiveCost,
-                contributions.ToArray(),
-                positive.ToArray(),
-                expectations.ToArray());
-        }
 
         public EffectAttackDamageEvaluation EvaluateAttackDamage(
             IReadOnlyList<EffectRuleBinding> bindings,
@@ -194,6 +147,41 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 expectations.ToArray());
         }
 
+        public EffectTargetDamageEvaluation EvaluateTargetDamage(
+            IReadOnlyList<EffectRuleBinding> bindings,
+            in TargetDamageEffectContext context)
+        {
+            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
+            if (context.Distance < 0 || context.ActorAttack < 0 || context.RecipientAttack < 0 || context.ActualRecipientIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(context));
+
+            var contributions = new List<EffectTargetDamageContribution>();
+            var expectations = new List<EffectStateExpectation>();
+
+            foreach (EffectRuleBinding binding in ordered)
+            {
+                if (binding.Rule is not IEffectTargetDamageRule rule) continue;
+
+                var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);
+                EffectTargetDamageContribution contribution =
+                    rule.EvaluateTargetDamage(input, context);
+                if (contribution.Origin != binding.Origin || contribution.Numerator < 1 || contribution.Denominator < 1)
+                {
+                    throw new InvalidOperationException(
+                        "Invalid target distance damage contribution.");
+                }
+
+                contributions.Add(contribution);
+                expectations.Add(new EffectStateExpectation(
+                    binding.Origin,
+                    binding.ExpectedState));
+            }
+
+            return new EffectTargetDamageEvaluation(
+                contributions.ToArray(),
+                expectations.ToArray());
+        }
+
         public EffectThornFieldEvaluation EvaluateThornFieldApplication(
             IReadOnlyList<EffectRuleBinding> bindings,
             in ThornFieldApplicationEffectContext context)
@@ -240,7 +228,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);
                 EffectKnockbackContribution contribution = rule.EvaluateKnockback(input);
                 if (contribution.Origin != binding.Origin ||
-                    contribution.DistanceCells < 1)
+                    contribution.DistanceCells < 1 ||
+                    !Enum.IsDefined(typeof(EffectKnockbackMode), contribution.Mode))
                 {
                     throw new InvalidOperationException(
                         "Invalid Knockback contribution.");
@@ -288,76 +277,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         }
 
         /// <summary>
-        /// 환급 요청을 EffectOriginKey 순으로 모아 상한까지 배분합니다. 상태는 변경하지 않습니다.
-        /// </summary>
-        public EffectAttackCostRefundEvaluation EvaluateAttackCostRefund(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in AttackActionCostRefundEffectContext context,
-            int refundCapacity)
-        {
-            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
-            if (refundCapacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(refundCapacity));
-
-            int remaining = refundCapacity;
-            int allocatedTotal = 0;
-            var allocations = new List<EffectAttackCostRefundContribution>();
-            var expectations = new List<EffectStateExpectation>();
-
-            foreach (EffectRuleBinding binding in ordered)
-            {
-                if (binding.Rule is not IEffectAttackCostRefundRule rule) continue;
-
-                var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);
-                EffectAttackCostRefundContribution contribution =
-                    rule.EvaluateAttackCostRefund(input, context);
-                if (contribution.Origin != binding.Origin || contribution.RequestedRefund < 0)
-                    throw new InvalidOperationException("Invalid refund contribution");
-
-                int granted = Math.Min(contribution.RequestedRefund, remaining);
-                remaining = checked(remaining - granted);
-                allocatedTotal = checked(allocatedTotal + granted);
-
-                allocations.Add(new EffectAttackCostRefundContribution(binding.Origin, granted));
-                expectations.Add(new EffectStateExpectation(binding.Origin, binding.ExpectedState));
-            }
-
-            return new EffectAttackCostRefundEvaluation(
-                allocatedTotal,
-                allocations.ToArray(),
-                expectations.ToArray());
-        }
-
-        public CombatEffectPlan PlanAttackCostRefundApplied(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            EffectAttackCostRefundEvaluation evaluation)
-        {
-            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
-            if (evaluation == null) throw new ArgumentNullException(nameof(evaluation));
-
-            var allocatedByOrigin = new Dictionary<EffectOriginKey, int>();
-            foreach (EffectAttackCostRefundContribution allocation in evaluation.AllocatedRefunds)
-                allocatedByOrigin.Add(allocation.Origin, allocation.RequestedRefund);
-
-            var expectations = new List<EffectStateExpectation>();
-            var changes = new List<EffectStateChange>();
-            var activations = new List<EffectActivation>();
-            foreach (EffectRuleBinding binding in ordered)
-            {
-                if (binding.Rule is not IEffectAttackCostRefundRule rule) continue;
-                int actualRefund = allocatedByOrigin.TryGetValue(binding.Origin, out int value)
-                    ? value
-                    : 0;
-                EffectRuleResult result = rule.PlanAttackCostRefundApplied(
-                    new EffectRuleInput(binding.Origin, binding.ExpectedState),
-                    actualRefund);
-                AppendValidatedResult(binding, result, expectations, changes, activations);
-            }
-
-            return CreatePlan(expectations, changes, activations);
-        }
-
-        /// <summary>
         /// 경감 기여를 EffectOriginKey 순으로 모아 피해량을 넘지 않게 배분합니다.
         /// </summary>
         public EffectIncomingDamageEvaluation EvaluateIncomingDamage(
@@ -384,7 +303,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 remaining = checked(remaining - granted);
                 allocatedTotal = checked(allocatedTotal + granted);
 
-                allocations.Add(new EffectIncomingDamageContribution(binding.Origin, granted));
+                allocations.Add(new EffectIncomingDamageContribution(binding.Origin, granted, contribution.RemainingDamagePercent));
                 expectations.Add(new EffectStateExpectation(binding.Origin, binding.ExpectedState));
             }
 
@@ -401,7 +320,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
             if (context.Distance < 0) throw new ArgumentOutOfRangeException(nameof(context));
-            if (context.ActionCostSpent < 0) throw new ArgumentOutOfRangeException(nameof(context));
 
             var expectations = new List<EffectStateExpectation>();
             var changes = new List<EffectStateChange>();
@@ -548,17 +466,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         private static void ValidateAttackSucceededContext(
             in AttackSucceededEffectContext context)
         {
-            if (context.PositiveCostContributors == null)
-                throw new ArgumentException("Missing positive cost contributors", nameof(context));
-
-            var seen = new HashSet<EffectOriginKey>();
-            foreach (EffectOriginKey origin in context.PositiveCostContributors)
-            {
-                if (origin.IsValid == false)
-                    throw new ArgumentException("Invalid positive cost contributor", nameof(context));
-                if (seen.Add(origin) == false)
-                    throw new ArgumentException("Duplicate positive cost contributor", nameof(context));
-            }
+            if (!Enum.IsDefined(typeof(Rotation4), context.AttackDirection))
+                throw new ArgumentException("공격 성공 방향이 잘못되었습니다.", nameof(context));
         }
 
         private static void AppendValidatedResult(

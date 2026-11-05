@@ -19,6 +19,17 @@ namespace ProjectL.Tests.Core
             Assert.That(spec.UnitKey, Is.EqualTo(EntityKey.Unit_Demon));
             Assert.That(spec.Anchor, Is.EqualTo(new CellCoord(4, 7)));
             Assert.That(spec.Rotation, Is.EqualTo(Rotation4.R90));
+            Assert.That(spec.Level, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Spec_HoldsExplicitLevelAndRejectsLevelBelowOne()
+        {
+            var leveled = new InitialEnemyPlacementSpec(EntityKey.Unit_Demon, new CellCoord(4, 7), Rotation4.R0, level: 3);
+
+            Assert.That(leveled.Level, Is.EqualTo(3));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new InitialEnemyPlacementSpec(EntityKey.Unit_Demon, new CellCoord(4, 7), Rotation4.R0, level: 0));
         }
 
         [Test]

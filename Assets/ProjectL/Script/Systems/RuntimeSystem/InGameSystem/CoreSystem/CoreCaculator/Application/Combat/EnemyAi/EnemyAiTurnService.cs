@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
@@ -14,38 +15,53 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
     internal sealed class EnemyAiTurnService
     {
-        /// <summary>한 적 턴을 사실 기반으로 계산하고 최종 변경 하나만 반환한다.</summary>
+        /// <summary>
+        /// 한 적 턴을 사실 기반으로 계산하고 최종 변경 하나만 반환한다.
+        /// 적도 이동 → 공격을 할 수 있으므로, 이동한 적은 다음 계산에서 이 순회가 다시 골라 공격만 시도한다.
+        /// </summary>
         internal static CombatCommandTransition Calculate(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
         {
             if (input.ProcessingKind != CombatProcessingKind.Advance || input.State.Phase != CombatFlowPhase.Automatic ||
-                !input.Characters.Any(c => c.EntityId == input.ActorId && c.Owner == Owner.Enemy))
-                throw new InvalidOperationException("자동 적 턴의 입력이 아닙니다.");
+                input.State.Turn.ControllerPhase != CombatControllerPhase.Enemy)
+                throw new InvalidOperationException("자동 적 진영 턴의 입력이 아닙니다.");
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyTurn);
+            // 대기 반응이 전투를 끝낼 수 있으므로 적 진영 종료·밤 정산보다 먼저 처리한다.
+            var pendingRoars = BossRoarCalculator.PendingBosses(input);
+            if (pendingRoars.Count != 0)
+                return BossRoarCalculator.TryRoar(input, pendingRoars[0], rules);
             var policy = new EnemyAiPolicy(new HostilityPolicy(), rules);
-            var steps = new List<CombatCommandTransition>();
-            var current = CombatCommandComposition.Intent(input, CombatCommandKind.Attack);
-            bool interrupted = false;
-            var range = CombatCommandCalculator.GetAttackRange(current);
-            if (!policy.TrySelectAttackAim(current, range, out var aim))
+            foreach (var actor in input.Characters.Where(c => c.Owner == Owner.Enemy &&
+                c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead && UnitActionUseRules.CanStartAttack(c.ActionUse)).OrderBy(c => c.EntityId))
             {
-                if (policy.TrySelectPursuitTarget(current, out var target) &&
+                var current = CombatCommandComposition.Intent(input.WithActor(actor.EntityId), CombatCommandKind.Attack);
+                var range = CombatCommandCalculator.GetAttackRange(current);
+                if (policy.TrySelectAttackAim(current, range, out var aim, out var tauntSource))
+                {
+                    var attack = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(current, CombatCommandKind.Attack, aim), rules);
+                    if (attack.Accepted) return CombatCommandComposition.Merge(input, new[] { RecordTaunt(attack, actor, tauntSource) });
+                    // 적이 볼 수 있는 사실로 고른 공격이 숨은 사실 때문에 거절되면 다른 조준을 더 찾지 않고 추격 이동을 시도한다.
+                }
+                // 이미 이동한 적은 공격만 남는다. 다시 이동하지 않는다.
+                if (!UnitActionUseRules.CanStartMove(actor.ActionUse)) continue;
+                if (policy.TrySelectPursuitTarget(current, out var target, out var pursuitTaunt) &&
                     EnemyMovementPathfinder.TryFind(current, target, out var path))
                 {
                     var movement = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(current, CombatCommandKind.Move, path: path), rules);
-                    steps.Add(movement); current = CombatCommandComposition.Project(movement);
-                    interrupted = movement.PathMovement.StopReason != MovementStopReason.Completed;
-                    range = CombatCommandCalculator.GetAttackRange(CombatCommandComposition.Intent(current, CombatCommandKind.Attack));
+                    // 계산 한 번에 수락된 행동 하나만 돌려준다. 숨은 환경에 의해 거절된 후보는 현재 계산에서만 건너뛴다.
+                    if (movement.Accepted) return CombatCommandComposition.Merge(input, new[] { RecordTaunt(movement, actor, pursuitTaunt) });
                 }
             }
-            if (!interrupted && current.State.Phase != CombatFlowPhase.Finished &&
-                policy.TrySelectAttackAim(CombatCommandComposition.Intent(current, CombatCommandKind.Attack), range, out aim))
-            {
-                var attack = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(current, CombatCommandKind.Attack, aim), rules);
-                steps.Add(attack); current = CombatCommandComposition.Project(attack);
-            }
-            if (current.State.Phase != CombatFlowPhase.Finished && current.State.ActiveActorId == input.ActorId &&
-                current.Characters.Any(c => c.EntityId == input.ActorId && c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead))
-                steps.Add(CombatTurnCalculator.EndTurn(CombatCommandComposition.Intent(current, CombatCommandKind.EndUnitTurn), rules));
-            return CombatCommandComposition.Merge(input, steps);
+            return CombatTurnCalculator.EndEnemyPhase(input, rules);
+        }
+
+        private static CombatCommandTransition RecordTaunt(CombatCommandTransition transition, CharacterCombatFacts actor, EntityId source)
+        {
+            if (source.IsEmpty) return transition;
+            var events = new List<CombatEvent>();
+            CombatCommandEvents.Trait(events, source, TraitKey.Taunt, TraitActivationKind.TauntSelected, 0,
+                new[] { actor.EntityId }, actor.OccupiedCells, CombatCommandEvents.FindOrigin(transition.Events, actor.EntityId));
+            events.AddRange(transition.Events);
+            return CombatCommandComposition.WithEvents(transition, events);
         }
     }
 }

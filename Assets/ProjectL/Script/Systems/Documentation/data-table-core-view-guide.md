@@ -334,5 +334,5 @@ Core의 `StageKey`와 View 전투 SO의 `StageKey`로 연결한다. 배치 목�
 - [InGame 테이블 조립](../Factory/DBFactory/Group/InGameDataBaseFactory.cs)
 - [최상위 DB 조립](../Factory/DBFactory/DataBaseFactory.cs)
 - [DB 조회 Context](../DataBaseSystem/DataBaseGroupSystem.cs)
-- [DB·테이블 서비스 키](../ServiceKeys/DataBaseGroupServiceKey.cs)
+- [DB 그룹 서비스 키](../ServiceKeys/DBFactory/DataBaseGroupKey.cs), [설정 조회 키](../ServiceKeys/DBFactory/DataBaseServiceKey.cs), [테이블 서비스 키](../ServiceKeys/DBFactory/Group)
 - [기존 Render 조회](../DataBaseSystem/Queries/RenderDataBase/RenderDataBase.cs)

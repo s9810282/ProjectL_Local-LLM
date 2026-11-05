@@ -30,6 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(arrivalKind));
             if ((owned.Role == CharacterOwnershipRole.Main) != (main != null))
                 throw new ArgumentException("메인 수집자에는 지속 원본이 필요합니다.");
+            // 부분 비교(의도 미확인): 지속 값 중 셋만 대조한다. MatchesMainState로 바꾸면 동작이 바뀐다. 설계 Q-B2.
             if (main != null && (main.PersistentMaxHealth != baseMaxHealth ||
                 main.CurrentHealth != character.Health.CurrentHealth ||
                 main.PersistentAttack != character.Stats.AttackPower))

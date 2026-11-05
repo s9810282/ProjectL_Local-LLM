@@ -22,6 +22,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal SoulFieldSnapshot SoulField { get; private set; }
         internal ISet<EntityId> ResolvedDeaths => _resolved;
 
+        internal void DeferUntilCompletion(IEnumerable<EntityId> ids)
+        {
+            foreach (var id in ids)
+                if (!_resolved.Contains(id)) _preexisting.Add(id);
+        }
+
         internal CommandDeathSettlement(Dictionary<CharacterInstanceId, int> counts, SoulFieldSnapshot soulField,
             List<long> consumedSouls, Dictionary<EntityId, CellCoord> deathAnchors, SoulEffectCalculator souls,
             IEnumerable<EntityId> preexistingDeaths)
@@ -36,17 +42,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>명령 시작 때 살아 있었고 아직 정산하지 않은 사망을 사망 위치 기준으로 영혼 필드에 반영한다.</summary>
         internal bool SettleNewDeaths(CombatCommandInput original, IReadOnlyDictionary<EntityId, CharacterCombatFacts> characters,
-            bool isNight, List<CombatEvent> events)
+            bool isNight, List<CombatEvent> events, IReadOnlyCollection<EntityId> fallenEntityIds = null)
         {
             var deaths = characters.Values.Where(c => c.Health.IsDead && !_resolved.Contains(c.EntityId) &&
                     !_preexisting.Contains(c.EntityId) &&
                     !original.Characters.Single(o => o.EntityId == c.EntityId).Health.IsDead)
-                .OrderBy(c => c.EntityId).Select(c => new SoulDeathFacts(
-                    new CharacterStateChange(original.Characters.Single(o => o.EntityId == c.EntityId), c),
-                    DeathAnchors.GetValueOrDefault(c.EntityId, original.Characters.Single(o => o.EntityId == c.EntityId).Anchor ??
-                        c.MovementCheckpointAnchor))).ToArray();
+                .OrderBy(c => c.EntityId).Select(c =>
+                {
+                    // 배치·재배치 직후 죽으면 명령 시작 상태는 손패·대기실입니다. 실제 필드 사망 직전 사실을 사용합니다.
+                    var before = events.OfType<CombatCharacterEvent>().SingleOrDefault(e =>
+                        e.Kind == CombatEventKind.Died && e.Final.EntityId == c.EntityId && !e.Expected.Health.IsDead)?.Expected
+                        ?? original.Characters.Single(o => o.EntityId == c.EntityId);
+                    return new SoulDeathFacts(new CharacterStateChange(before, c),
+                        DeathAnchors.TryGetValue(c.EntityId, out var deathCell) ? deathCell :
+                            before.Anchor ?? c.Anchor ?? throw new InvalidOperationException("사망 위치가 기록되어야 합니다."));
+                }).ToArray();
             if (deaths.Length == 0) return false;
-            var field = Souls.PlanDeaths(SoulField, deaths, isNight, false);
+            var field = Souls.PlanDeaths(SoulField, deaths.Where(d =>
+                fallenEntityIds == null || !fallenEntityIds.Contains(d.Transition.Final.EntityId)).ToArray(), isNight);
             if (!field.Expected.SameValues(field.Final)) events.Add(new CombatSoulEvent(field));
             SoulField = field.Final;
             foreach (var d in deaths) _resolved.Add(d.Transition.Final.EntityId);

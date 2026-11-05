@@ -25,13 +25,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyList<MovementTileFact> SourcesAtCell { get; }
         /// <summary>도착자가 현재 보유한 환경 효과다. 획득 규칙이 중복 여부를 스스로 판단할 때 읽는다.</summary>
         public CharacterHeldEnvironmentState HeldEnvironment { get; }
+        public CharacterDebuffState Debuffs { get; }
+        public bool OwnsControllerTurn { get; }
 
         public MovementStepInput(CellCoord enteredCell, CharacterCombatFacts mover)
             : this(enteredCell, mover, MovementEffectPhase.Hazard,
                 Array.Empty<MovementHealthTarget>(), Array.Empty<MovementTileFact>()) { }
 
         public MovementStepInput(CellCoord enteredCell, CharacterCombatFacts mover, MovementEffectPhase phase,
-            IReadOnlyList<MovementHealthTarget> targets, IReadOnlyList<MovementTileFact> sourcesAtCell)
+            IReadOnlyList<MovementHealthTarget> targets, IReadOnlyList<MovementTileFact> sourcesAtCell, bool ownsControllerTurn = false)
         {
             if (mover == null) throw new ArgumentNullException(nameof(mover));
             EnteredCell = enteredCell;
@@ -43,6 +45,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Rotation = mover.Rotation;
             OccupiedCells = Array.AsReadOnly(mover.OccupiedCells.ToArray());
             HeldEnvironment = mover.HeldEnvironment;
+            Debuffs = mover.Debuffs;
+            OwnsControllerTurn = ownsControllerTurn;
             if (!Enum.IsDefined(typeof(MovementEffectPhase), phase)) throw new ArgumentOutOfRangeException(nameof(phase));
             Phase = phase;
             Targets = Array.AsReadOnly((targets ?? throw new ArgumentNullException(nameof(targets))).ToArray());

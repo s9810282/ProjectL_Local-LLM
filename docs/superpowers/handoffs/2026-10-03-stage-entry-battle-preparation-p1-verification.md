@@ -2,7 +2,7 @@
 
 Date: 2026-10-03.
 
-Scope: P1 of the [implementation plan](../plans/2026-10-03-stage-entry-battle-preparation-implementation-plan.md), following the [approved design](../specs/2026-10-03-stage-entry-battle-preparation-contract-design.md). P1 is implemented and verified in the existing `feature/Cheon/refactor/core-system` checkout. No commit, push or production caller migration was performed.
+Scope: P1 of the implementation plan (Git history: `2026-10-03-stage-entry-battle-preparation-implementation-plan.md`), following the approved design (Git history: `2026-10-03-stage-entry-battle-preparation-contract-design.md`). P1 is implemented and verified in the existing `feature/Cheon/refactor/core-system` checkout. No commit, push or production caller migration was performed.
 
 ## Delivered contract
 

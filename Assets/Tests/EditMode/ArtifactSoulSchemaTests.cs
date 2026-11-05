@@ -26,8 +26,8 @@ namespace ProjectL.Tests.Core
 
             CompiledArtifactLoadout compiled = ArtifactEffectCompiler.Compile(Snapshot(effect));
 
-            Assert.That(compiled.Rules.Length, Is.EqualTo(1));
-            var rule = (SoulAltarRule)compiled.Rules.Span[0].Rule;
+            Assert.That(compiled.Rules.Length, Is.Zero);
+            var rule = new SoulAltarRule(effect.effect.soulGrowth, effect.durationTurns);
             Assert.That(rule.Amounts.AttackBonus, Is.EqualTo(attackBonus));
             Assert.That(rule.Amounts.MaxHealthBonus, Is.EqualTo(maxHealthBonus));
             Assert.That(rule.Amounts.HealAmount, Is.EqualTo(healAmount));

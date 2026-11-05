@@ -1,0 +1,7 @@
+{
+  "name": "ProjectL.Render.JourneyUI",
+  "rootNamespace": "ProjectL.Render.Shader.View.CustomShader.UI.Runtime",
+  "references": ["UnityEngine.UI"],
+  "autoReferenced": true,
+  "noEngineReferences": false
+}

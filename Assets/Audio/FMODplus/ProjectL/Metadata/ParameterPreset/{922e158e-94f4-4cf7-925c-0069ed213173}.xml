@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{922e158e-94f4-4cf7-925c-0069ed213173}">
 		<property name="name">
-			<value>UnitType</value>
+			<value>Category</value>
 		</property>
 		<relationship name="folder">
 			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
@@ -19,7 +19,7 @@
 			<value>6</value>
 		</property>
 		<property name="enumerationLabels">
-			<value>MainCharactor</value>
+			<value>None</value>
 			<value>Base</value>
 			<value>Rider</value>
 			<value>Heavy</value>

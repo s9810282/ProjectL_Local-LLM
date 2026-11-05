@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02cd36963ad840ee8b87036c6b357004, type: 3}
+  m_Name: LobbyBoard_Default
+  m_EditorClassIdentifier: 
+  boardColumns: 4
+  boardRows: 4
+  cellSize: {x: 4.25, y: 3.85}
+  boardCenter: {x: 0, y: 0.1, z: -0.98}
+  startCell: {x: 1, y: 2}
+  startFacing: 0
+  facilityArrivals:
+  - kind: 0
+    cell: {x: 0, y: 2}
+    facing: 3
+  - kind: 1
+    cell: {x: 1, y: 3}
+    facing: 0
+  - kind: 2
+    cell: {x: 2, y: 2}
+    facing: 1

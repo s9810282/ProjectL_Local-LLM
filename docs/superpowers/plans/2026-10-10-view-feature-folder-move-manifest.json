@@ -1,0 +1,883 @@
+{
+  "manifest": [
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactInput/ArtifactInputController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Input/ArtifactInputController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Input",
+      "guid": "513e6c7d73d54e579bf8359e35d26b62",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactInput/ArtifactInputLayers.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Input/ArtifactInputLayers.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Input",
+      "guid": "706aacfd70d146b0b7719203562a627b",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactInput/ArtifactInputNames.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Input/ArtifactInputNames.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Input",
+      "guid": "61cc4f89c57248fab4bd017f7d237c22",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactInput/ArtifactInputSlot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Input/ArtifactInputSlot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Input",
+      "guid": "71b54b201e394482bad941e2d2061e02",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactInput/IArtifactInputReceiver.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Input/IArtifactInputReceiver.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Input",
+      "guid": "0d7140315e30421eb1dafbeb4e5e7b13",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactBackgroundLayout.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Board/ArtifactBackgroundLayout.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Board",
+      "guid": "7ab6d7f3add1406f85a9735125ea93e5",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactBoardMapper.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Board/ArtifactBoardMapper.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Board",
+      "guid": "44116ca5818949af8d1e97d8eefc99e3",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactDragDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactDragDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "18465b1913a54c33aaa1190b1f40a80f",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Interaction/ArtifactInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Interaction",
+      "guid": "ab1e9e5ad3574bb9be810801dafe1f73",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactPoolItemView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactPoolItemView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "cea082a119634346b0d70ddb2ad1fc7b",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactPopupDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactPopupDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "d94dab99c60c48f98f0e13782560e360",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactPopupText.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactPopupText.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "7180aa1eaf9c497c8792e4a858f6b404",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactPopupView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactPopupView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "00fc045c336343acad7431e0efa91fa9",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactSceneRoot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/ArtifactSceneRoot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "a97a71edd3b64d5f84e4dccb02c432da",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactViewSystem.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/ArtifactViewSystem.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "guid": "b7cd6382cf6a45e7bf5ce5c7a9a2931a",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/IArtifactPopupHost.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/IArtifactPopupHost.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "8662028ef24f8a5d1421ae101103d988",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/IArtifactPopupPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/IArtifactPopupPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "8d8235e4ccdf4310911b9a0deee4736d",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/IArtifactPopupScreen.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/ArtifactPopup/Display/IArtifactPopupScreen.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup.Display",
+      "guid": "6b49186e8f917158f4522882fb821245",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot",
+      "guid": "89b5d59e5f0f41e0aeec29ea90c1dd20",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrapEditorOverrides.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrapEditorOverrides.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot",
+      "guid": "a434cdb9d3014c5987f9407512159a34",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/AttackTargetingInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Attack/AttackTargetingInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Attack",
+      "guid": "3b77b5dce5694a51bbaf7b3bf7755c38",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatAbandonController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Abandon/CombatAbandonController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Abandon",
+      "guid": "3097b7d624894e35815260d8f39fda9a",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatCharacterQueries.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatCharacterQueries.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "2649fecf109842e698e47c2f085d1557",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatCommandGate.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatCommandGate.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "1564767b047d4a5da8e0f11cdd2d0980",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatDevLayerController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Development/CombatDevLayerController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Development",
+      "guid": "b6577f210e26452fbf91cb24f3b75ea2",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatDisplayValues.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Scene/CombatDisplayValues.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Scene",
+      "guid": "7336271a0ba64a5eb9a9178d0552fb6b",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatHoverState.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/CombatHoverState.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "ade8f6e3d7bb425d856093557df8dba5",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatHoverTracker.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatHoverTracker.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "2fc6ad2b6f28482caef440b6447d5d8f",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatInputFacts.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInputFacts.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "5a0725ad46ee4dfb8970041035f3d908",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatInputPolicy.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInputPolicy.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "a3bc3238bb0b4d31ba8d09109f61c0bd",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatInputReceiver.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInputReceiver.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "d07943bc97d04fa48bec3711869c86bc",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatInputRouter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInputRouter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "92ffa018baa44a9393b9e7b37d878033",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "99bf52627f8e45fa9cef679df982a213",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatMovementInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/CombatMovementInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "e1255ecb4d2694341b3c03520e2ea032",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatMovementPlayback.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/CombatMovementPlayback.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "bc93d6004ead1154c848c23f63ed564b",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatPathInput.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/CombatPathInput.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "c000ef9b92bfa34418f949afa6bfa70c",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatPlaybackToken.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatPlaybackToken.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "559d1f75aad84c40abd7aa9765effa77",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatPointerMapper.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatPointerMapper.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "7c682236883c46a0abc4bab033991f34",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatPresentationOutcome.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatPresentationOutcome.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "8879f8bd54c34340b0f9de32a9177a92",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatRefreshSignal.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatRefreshSignal.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "46001562511841fd92d61266a5989fa1",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatResultPlayback.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatResultPlayback.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "2de6fcebe65a4d57bf2d34c9e4fe1287",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatSceneDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Scene/CombatSceneDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Scene",
+      "guid": "47cd1fa60bb8467db7373d18715ffe15",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatSceneEventPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatSceneEventPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "e240c6762e36472bb722a6cbb53900ae",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatSceneRoot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Scene/CombatSceneRoot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Scene",
+      "guid": "d48005bb70534aa298698c4778d90afb",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatViewRefresh.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/CombatViewRefresh.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "c93b8af0b26d4b508b3fa2ec17517a20",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatViewSystem.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/CombatViewSystem.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "guid": "cfcc098ab881469493708e11c558e783",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/CombatAbandonPanel.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Abandon/CombatAbandonPanel.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Abandon",
+      "guid": "d7d223788a7e4a29a74314e2086114df",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/CombatHud.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Hud/CombatHud.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Hud",
+      "guid": "6fc3bb86b3844439a4d3f5da81c57ec3",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/EntityViewSet.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Common/EntityViewSet.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Common",
+      "guid": "ff173991353248de88d9217cb28b0419",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldCellColorRenderer.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldCellColorRenderer.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "ddbecae88a1249b19cfbd4bf5b5461ba",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldCellHandle.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldCellHandle.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "cd27b3d9e6b74d668bc4220e6264c5a1",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldCellPool.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldCellPool.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "0644e506cd1841b88a7b2e756b4d8acf",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldCellSpacing.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldCellSpacing.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "f76ab5e6e1d542cd9a840a0d33581edd",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldGridDecal.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldGridDecal.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "034781366133413ca53617565c9e72ac",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldGridMapper.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldGridMapper.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "197254a9887e48f0a8360e5cdda541f8",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldHighlightLayers.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldHighlightLayers.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "f3bb26c5d7544b7db28d1da4f80429f0",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldHighlightPalette.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldHighlightPalette.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "d0d3b8648ff64899a39e0a5df7667aec",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldHighlightState.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldHighlightState.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "379c0a80edee4219bf9f14db9d1d3f7d",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldOutlineRenderer.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldOutlineRenderer.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "22c84ca5e9c643af85d8472c47beab0e",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldUnitPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Units/FieldUnitPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Units",
+      "guid": "efb394a4e50b424b9a5e11522b65bb94",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldUnitView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Units/FieldUnitView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Units",
+      "guid": "d8f99e308ee04644bdba6c499bb8e5f6",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/FieldView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/FieldView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "afefb050b44a45c080bd5d6b6eb3829e",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/HandPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Hand/HandPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Hand",
+      "guid": "a59333496d68468fa606c52ab5931dd1",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/IFieldHighlightRenderer.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/IFieldHighlightRenderer.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "a025073704954a90a8883c42c5a631fc",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/IFieldHighlightStateReader.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/IFieldHighlightStateReader.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "75e4cebbef1c49f184ea02a220fff585",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/PlacementGhost.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Placement/PlacementGhost.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Placement",
+      "guid": "3bc9fa65480448dbb3f70b13120dfb6b",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Display/StageViewPropPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Field/StageViewPropPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Field",
+      "guid": "5bfd60e19cdd4a2da544f4797adc712c",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatAbandonDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Abandon/ICombatAbandonDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Abandon",
+      "guid": "c29c69424155443c817b4017bd5f6293",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatBattleDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Scene/ICombatBattleDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Scene",
+      "guid": "cf37d925b08147e9bca60293448b25f7",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatDevLayerDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Development/ICombatDevLayerDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Development",
+      "guid": "19e6963dc9474ca8804b21c9a482d668",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatInteractionFeedback.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/ICombatInteractionFeedback.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "b9ef8caed2204f21900f6a5a465237f6",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatMovementFeedback.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/ICombatMovementFeedback.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "06c8ad255fa1470a93454d5c55c5d4e3",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatMovementPlaybackPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/ICombatMovementPlaybackPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "d89f8dd9b8a3442fad4a794061ac0bea",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatMovementPresenter.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/ICombatMovementPresenter.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "3139cac248822594eb2c6efc7222d18a",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatPointerPicker.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/ICombatPointerPicker.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "315a0d0ed355414a8a8f3098a4867f49",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatPresentation.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/ICombatPresentation.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "e7c51ce630ac4839a1f6db85a9f00d1d",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatPresentationControl.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/ICombatPresentationControl.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "62fa80c775fe415b84d1fa80dd6ad9e4",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatViewService.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/ICombatViewService.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "guid": "07cce55e4a4ead449bd2e31ab9bc37dc",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/OrderedCombatPresentation.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/OrderedCombatPresentation.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback",
+      "guid": "a40cd5a1b590d444093c79287956950d",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/PendingInputCommand.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/PendingInputCommand.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "32d1b17091654de6a7041e5737704188",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/PlacementDragInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Placement/PlacementDragInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Placement",
+      "guid": "b6d8c0bdcbfa485988be809a9845eb5f",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Dev/DevBattleInitializationSource.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Dev/DevBattleInitializationSource.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev",
+      "guid": "b3a6f7640a0e45df8ff591b988dfb12e",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/InGameViewSystemGroup.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/InGameViewSystemGroup.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem",
+      "guid": "1d4d826d8ccdf8d4090ec405fa99aef3",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/CombatInputController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/CombatInputController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "b58472beefc85ee48a2e3db978174052",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/DeploymentInputController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/DeploymentInputController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "8468a2d802bddd542810622b165d0385",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/IStageInputReceiver.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/IStageInputReceiver.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "ef93647ecbbb4844dbde3d6338fd376d",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/MovementDraft.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/MovementDraft.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "2a081fe3e7e1e2b48b779446553f8fcb",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/MovementPointerSampler.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Movement/MovementPointerSampler.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Movement",
+      "guid": "7d5755ccb91862f46b3d395901d49e28",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/StageInputLayers.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/StageInputLayers.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "6d3a55712fde3a343a2ac8926c658178",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/StageInputNames.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/StageInputNames.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "ecf8972e07fc40044b4ec707a804c222",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/StageInputReceiverSlot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/StageInputReceiverSlot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "9666a3ddf991b5d4eafb35423bd90923",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageInput/StageSelectInput.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Input/StageSelectInput.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input",
+      "guid": "a6f1b167b8a3ec24f9c99a1c9f1780d2",
+      "phase": 1
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapInteractionFeedback.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Interaction/IStageMapInteractionFeedback.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Interaction",
+      "guid": "3f8d7fdbc226472380ec05761cba8d92",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageNodePicker.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Picking/IStageNodePicker.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Picking",
+      "guid": "7e29837b0281495780db720c7ae5f065",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageLinkView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Display/StageLinkView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Display",
+      "guid": "c5aa8f47df3b4ea99eadb1ae9c656180",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapEntryFlow.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Entry/StageMapEntryFlow.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Entry",
+      "guid": "b432af316d49452fab8edf0e0675ee46",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapInteraction.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Interaction/StageMapInteraction.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Interaction",
+      "guid": "9b47d345380e4e8abf2c3f79860cab21",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapInteractionLog.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Interaction/StageMapInteractionLog.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Interaction",
+      "guid": "304dba0a97544475b7a48a7c8f68e785",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapSceneRoot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Display/StageMapSceneRoot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Display",
+      "guid": "1fb54e26256f473ba7dea05527d33544",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewDisplay.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Display/StageMapViewDisplay.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Display",
+      "guid": "49cfd7e538bb4c3ea5cad7f4d224da83",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewReader.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Reading/StageMapViewReader.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Reading",
+      "guid": "b08d157336c749fc9bcabc3a73175e0c",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewSystem.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewSystem.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "guid": "087252c0a2024ef282f09901dd3df1a0",
+      "phase": 0
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodePicker.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Picking/StageNodePicker.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Picking",
+      "guid": "5053671f8c0a4c6ca0e3c0ec31c4d01c",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodeView.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Display/StageNodeView.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Display",
+      "guid": "b4cc1d626aef44e39f7665f079ad1c3d",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/IStageSelectionInputReceiver.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Input/IStageSelectionInputReceiver.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Input",
+      "guid": "7c97e440ad2945b9b2fa4665284a97ac",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputController.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Input/StageSelectionInputController.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Input",
+      "guid": "80348f8af4f64e2593187c99f648c670",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputLayers.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Input/StageSelectionInputLayers.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Input",
+      "guid": "a518fd5a5a914bec9a092161b56b8f22",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputNames.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Input/StageSelectionInputNames.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Input",
+      "guid": "ce235c1d24424847ac300761e8a59780",
+      "phase": 2
+    },
+    {
+      "source": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionReceiverSlot.cs",
+      "destination": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/StageMap/Input/StageSelectionReceiverSlot.cs",
+      "oldNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput",
+      "newNamespace": "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Input",
+      "guid": "f85d1170bd594add9d3a6d1d97d2c432",
+      "phase": 2
+    }
+  ],
+  "counts": {
+    "total": 109,
+    "phase1": 68,
+    "phase2": 33,
+    "unchanged": 8
+  },
+  "missingMeta": []
+}

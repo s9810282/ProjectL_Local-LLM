@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e369643b520042d0957eb4a6535ed69b, type: 3}
+  m_Name: CombatCameraSettings_Default
+  m_EditorClassIdentifier: 
+  keyPanSpeed: 10
+  edgePanSpeed: 10
+  edgeThickness: 0.02
+  panMin: {x: -12, y: -8}
+  panMax: {x: 12, y: 8}
+  zoomMin: 4
+  zoomMax: 12
+  zoomStep: 1
+  zoomSeconds: 0.2
+  useZoomPose: 1
+  zoomOutPositionOffset: {x: 0, y: 0, z: 0}
+  zoomOutRotationOffset: {x: 0, y: 0, z: 0}
+  zoomInPositionOffset: {x: 0, y: -3, z: 0.1}
+  zoomInRotationOffset: {x: -10, y: 0, z: 0}

@@ -1,0 +1,6 @@
+{
+    "name": "ProjectL.Render.EffectOcclusionOutline",
+    "rootNamespace": "ProjectL.Render.RendererFeatures.Systems.EffectOcclusionOutline",
+    "references": ["Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+    "autoReferenced": true
+}

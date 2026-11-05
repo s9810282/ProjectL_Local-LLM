@@ -29,19 +29,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
         /// <summary>배치 단계: 전투 시작을 요청했습니다.</summary>
         void EnterCombatRequested();
 
-        /// <summary>배치 단계: 수동 드로우를 요청했습니다.</summary>
-        void DrawRequested();
 
         /// <summary>전투 단계: 현재 유닛의 턴 종료를 요청했습니다.</summary>
         void EndTurnRequested();
-
-        /// <summary>전투 단계: 이동 대상 선택으로 전환을 요청했습니다.</summary>
-        void MoveModeRequested();
 
         /// <summary>전투 단계: 공격 대상 선택으로 전환을 요청했습니다.</summary>
         void AttackModeRequested();
 
         /// <summary>전투 단계: 체크포인트 복귀를 요청했습니다.</summary>
         void RequestReturn();
+
+        /// <summary>
+        /// 배치·전투 단계: 카메라 이동 키의 방향이 바뀌었습니다(x = 오른쪽, y = 위, 각 −1~1). 모두 떼면 (0, 0)이 옵니다(카메라 조작 설계 CC2).
+        /// 누르고 있는 동안 반복해서 오지 않으므로 받는 View가 마지막 값을 기억합니다.
+        /// </summary>
+        void CameraPanChanged(float x, float y);
+
+        /// <summary>배치·전투 단계: 마우스 휠을 굴렸습니다. 위로 굴리면 양수입니다. 값의 크기는 기기마다 다르므로 부호만 봅니다(카메라 조작 계획 P1).</summary>
+        void CameraZoomScrolled(float delta);
     }
 }

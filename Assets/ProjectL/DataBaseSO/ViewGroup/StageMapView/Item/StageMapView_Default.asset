@@ -13,25 +13,19 @@ MonoBehaviour:
   m_Name: StageMapView_Default
   m_EditorClassIdentifier: 
   stageMapViewData:
-    depthSpacing: 4
-    widthSpacing: 4
+    depthSpacing: 5
+    widthSpacing: 3
     nodeScale: 1
+    buildingHeight: 0.05
     lineHeight: 0.05
     lineWidth: 0.12
-    currentColor: {r: 0.15, g: 0.8, b: 1, a: 1}
-    selectableColor: {r: 1, g: 1, b: 1, a: 1}
-    hoveredColor: {r: 1, g: 0.9, b: 0.4, a: 1}
-    candidateColor: {r: 0.3, g: 1, b: 0.5, a: 1}
-    unavailableColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
-    hoverEffect: 0
-    selectEffect: 0
-    nodePrefab: {fileID: 6496193282617364774, guid: 9c0ec12fe10960f468920bc07b96dbc3, type: 3}
+    lineColor: {r: 0, g: 0, b: 0, a: 1}
     connectionPrefab: {fileID: 503761410003762905, guid: 049f22bbdc1aac64ebe98686d1295927, type: 3}
     startVisualPrefab: {fileID: 0}
-    currentMarkerPrefab: {fileID: 4459212197141883090, guid: bcc3f48a8cb84f70bd886adc2b3b0d13, type: 3}
+    currentMarkerPrefab: {fileID: 3128168286096294635, guid: 836049dcf6ea66245ae56c7a5419936f, type: 3}
+    markerOffset: {x: 0, y: 0.12890838, z: 0}
+    markerYaw: 0
+    markerScale: 1.073429
     markerMoveDuration: 0.6
     markerJumpHeight: 0.8
-    nodeMask:
-      serializedVersion: 2
-      m_Bits: 1
     pickDistance: 1000

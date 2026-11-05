@@ -392,12 +392,8 @@ namespace ProjectL.Tests.Core
                 footprintLocalCells: new[] { CellCoord.Zero },
                 maxHealth: 10,
                 MoveMethod.LiftAndPlace,
-                moveRange: 3,
-                moveCost: 1,
                 1,
-                attackPower: 2,
-                maxActionCost: 10,
-                attackCost: 1);
+                attackPower: 2);
         }
 
         private static StructureSpec CreateStructureSpec()
@@ -462,9 +458,8 @@ namespace ProjectL.Tests.Core
                 currentPhase: StagePhase.Deployment,
                 entities: Array.Empty<EntitySnapshot>(),
                 reserveSlots: Array.Empty<ReserveSlotSnapshot>(),
-                combatTurnSnapshot: new CombatTurnSnapshot(false, null),
-                outcome: new StageOutcomeSnapshot(outcome, reason),
-                night: new StageNightSnapshot(1000, 0));
+                combatTurnSnapshot: new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatTurnFacts(StagePhase.Deployment),
+                outcome: new StageOutcomeSnapshot(outcome, reason));
         }
     }
 }

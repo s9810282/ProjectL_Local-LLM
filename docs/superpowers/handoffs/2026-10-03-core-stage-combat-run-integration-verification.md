@@ -1,6 +1,6 @@
 # Core Stage, Combat and Run Integration Verification — C1-C5
 
-Date: 2026-10-03. Scope: C1-C5 in the [verification plan](../plans/2026-10-03-core-stage-combat-run-integration-verification-plan.md), now complete within the stated Core boundary. The C1 matrix and C2-C4 sections retain their historical results and setup classifications; the final C5 section records closure and remaining external obligations.
+Date: 2026-10-03. Scope: C1-C5 in the verification plan (Git history: `2026-10-03-core-stage-combat-run-integration-verification-plan.md`), now complete within the stated Core boundary. The C1 matrix and C2-C4 sections retain their historical results and setup classifications; the final C5 section records closure and remaining external obligations.
 
 ## Result
 

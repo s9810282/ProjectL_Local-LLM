@@ -2,7 +2,7 @@
 
 Date: 2026-10-03.
 
-Scope: P1-P3 of the [implementation plan](../plans/2026-10-03-stage-entry-battle-preparation-implementation-plan.md), following the [approved design](../specs/2026-10-03-stage-entry-battle-preparation-contract-design.md). P1/P2 implementation evidence is recorded in the [P1 report](2026-10-03-stage-entry-battle-preparation-p1-verification.md) and [P2 report](2026-10-03-stage-entry-battle-preparation-p2-verification.md).
+Scope: P1-P3 of the implementation plan (Git history: `2026-10-03-stage-entry-battle-preparation-implementation-plan.md`), following the approved design (Git history: `2026-10-03-stage-entry-battle-preparation-contract-design.md`). P1/P2 implementation evidence is recorded in the [P1 report](2026-10-03-stage-entry-battle-preparation-p1-verification.md) and [P2 report](2026-10-03-stage-entry-battle-preparation-p2-verification.md).
 
 Status: P1-P3 and gate C are complete: the fixture-backed Core/Buffer entry and publication contract is implemented and verified. View/Flow caller migration (V), authored DB readiness (D) and production activation (A) remain independently pending. Verification was performed on the uncommitted package in `feature/Cheon/refactor/core-system`, based on HEAD `a9db1e5a24f7b6431b36fc2da39807943abaa83c`. Subsequent commit/push delivery is recorded in Git history and is not production activation.
 

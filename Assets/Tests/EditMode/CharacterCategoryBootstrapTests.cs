@@ -23,14 +23,51 @@ namespace ProjectL.Tests.Core
 {
     public sealed class CharacterCategoryBootstrapTests
     {
+        [TestCase(-1)]
+        public void CategoryDefinition_RejectsNegativeMovement(int allowance)
+        {
+            Assert.That(Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new CategoryDefinition(CategoryKey.Main, Array.Empty<CategoryRuleDefinition>(), default, allowance)).ParamName,
+                Is.EqualTo("movementAllowance"));
+        }
+
+        [TestCase(5)]
+        [TestCase(0)]
+        public void Registry_UnitDefinitionUsesSuppliedMovement(int allowance)
+        {
+            CategorySpec[] specs = CreateCompleteSpecs();
+            specs[1] = new CategorySpec(CategoryKey.Rider,                Array.Empty<CategoryRuleSpec>(),allowance);
+            var registry = new CategoryRegistry(specs);
+            var unit = UnitSpecTestFactory.Create(EntityKey.Unit_Akimbo, 1, 1, new[] { CellCoord.Zero },
+                10, MoveMethod.LiftAndPlace, 1, 5, 0, Array.Empty<TraitSpec>(), categoryKey: CategoryKey.Rider);
+            var catalog = new UnitCatalog(new[] { unit }, TraitRegistry.CreateDefault(), registry);
+            UnitDefinition definition = catalog.GetRequired(EntityKey.Unit_Akimbo);
+
+            Assert.That(definition.Category.MovementAllowance, Is.EqualTo(allowance));
+            Assert.That(definition.MoveRange, Is.EqualTo(allowance));
+            Assert.That(registry.GetRequired(CategoryKey.Main).MovementAllowance, Is.EqualTo(3));
+            Assert.DoesNotThrow(catalog.ValidateCombatReady);
+        }
+
+        [TestCase(CategoryKey.Main, 3)]
+        [TestCase(CategoryKey.Rider, 4)]
+        [TestCase(CategoryKey.Heavy, 3)]
+        [TestCase(CategoryKey.Cannon, 2)]
+        [TestCase(CategoryKey.Boss, 0)]
+        public void DefaultRegistry_PreservesMovement(CategoryKey key, int allowance)
+        {
+            var definition = CategoryRegistry.CreateDefault().GetRequired(key);
+            Assert.That(definition.MovementAllowance, Is.EqualTo(allowance));
+        }
+
         [Test]
         public void DefaultRegistry_ContainsExactlyTheRequiredCategoryRules()
         {
             CategoryRegistry registry = CategoryRegistry.CreateDefault();
 
-            Assert.That(registry.GetRequired(CategoryKey.Base).RuleDefinitions.Length, Is.Zero);
-            AssertRuleKeys(registry.GetRequired(CategoryKey.Rider), CategoryRuleKey.ManeuverRefund);
-            AssertRuleKeys(registry.GetRequired(CategoryKey.Heavy), CategoryRuleKey.DirectionalArmor);
+            Assert.That(registry.GetRequired(CategoryKey.Main).RuleDefinitions.Length, Is.Zero);
+            AssertRuleKeys(registry.GetRequired(CategoryKey.Rider));
+            AssertRuleKeys(registry.GetRequired(CategoryKey.Heavy));
             AssertRuleKeys(registry.GetRequired(CategoryKey.Cannon), CategoryRuleKey.SafeBombardment);
         }
 
@@ -50,14 +87,13 @@ namespace ProjectL.Tests.Core
             }));
         }
 
-        [TestCase(CategoryKey.Base, CategoryRuleKey.ManeuverRefund)]
-        [TestCase(CategoryKey.Rider, CategoryRuleKey.DirectionalArmor)]
-        [TestCase(CategoryKey.Heavy, CategoryRuleKey.SafeBombardment)]
-        [TestCase(CategoryKey.Cannon, CategoryRuleKey.ManeuverRefund)]
-        public void Registry_RejectsMismatchedCategoryRule(CategoryKey category, CategoryRuleKey rule)
+        [TestCase(CategoryKey.Main)]
+        [TestCase(CategoryKey.Rider)]
+        [TestCase(CategoryKey.Heavy)]
+        public void Registry_RejectsMismatchedCategoryRule(CategoryKey category)
         {
             CategorySpec[] specs = CreateCompleteSpecs();
-            specs[CategoryIndex(category)] = new CategorySpec(category, new[] { CreateRuleSpec(rule) });
+            specs[CategoryIndex(category)] = new CategorySpec(category,                new CategoryRuleSpec[] { new SafeBombardmentCategoryRuleSpec() },3);
 
             Assert.Throws<ArgumentException>(() => new CategoryRegistry(specs));
         }
@@ -65,21 +101,11 @@ namespace ProjectL.Tests.Core
         [Test]
         public void RuleFactories_CreateOnlyTheRegisteredDefinitionRuleAndStateTypes()
         {
-            CategoryRuleDefinition riderDefinition = CategoryRuleFactories.CreateDefinition(
-                new ManeuverRefundCategoryRuleSpec());
-            CategoryRuleDefinition heavyDefinition = CategoryRuleFactories.CreateDefinition(
-                new DirectionalArmorCategoryRuleSpec(50, Rotation4.R90));
             CategoryRuleDefinition cannonDefinition = CategoryRuleFactories.CreateDefinition(
                 new SafeBombardmentCategoryRuleSpec());
 
-            Assert.That(riderDefinition, Is.TypeOf<ManeuverRefundCategoryRuleDefinition>());
-            Assert.That(heavyDefinition, Is.TypeOf<DirectionalArmorCategoryRuleDefinition>());
             Assert.That(cannonDefinition, Is.TypeOf<SafeBombardmentCategoryRuleDefinition>());
-            Assert.That(CategoryRuleFactories.CreateRule(riderDefinition), Is.TypeOf<ManeuverRefundCategoryRule>());
-            Assert.That(CategoryRuleFactories.CreateRule(heavyDefinition), Is.TypeOf<DirectionalArmorCategoryRule>());
             Assert.That(CategoryRuleFactories.CreateRule(cannonDefinition), Is.TypeOf<SafeBombardmentCategoryRule>());
-            Assert.That(CategoryRuleFactories.CreateInitialState(riderDefinition), Is.TypeOf<ManeuverRefundRuntimeState>());
-            Assert.That(CategoryRuleFactories.CreateInitialState(heavyDefinition), Is.TypeOf<DirectionalArmorRuntimeState>());
             Assert.That(CategoryRuleFactories.CreateInitialState(cannonDefinition), Is.Null);
         }
 
@@ -99,22 +125,22 @@ namespace ProjectL.Tests.Core
         {
             var first = new UnitCategoryState(new CategoryRuntimeState[]
             {
-                new ManeuverRefundRuntimeState(false),
+                new TestCategoryState(false),
             });
             UnitCategoryState second = first.Clone();
             var changes = new CategoryTransitionBatch(new[]
             {
                 CategoryStateChange.Change(
-                    CategoryRuleKey.ManeuverRefund,
-                    new ManeuverRefundRuntimeState(true)),
+                    CategoryRuleKey.SafeBombardment,
+                    new TestCategoryState(true)),
             });
 
             first.Apply(changes);
 
-            Assert.That(first.GetRequired<ManeuverRefundRuntimeState>(
-                CategoryRuleKey.ManeuverRefund).RefundUsedThisTurn, Is.True);
-            Assert.That(second.GetRequired<ManeuverRefundRuntimeState>(
-                CategoryRuleKey.ManeuverRefund).RefundUsedThisTurn, Is.False);
+            Assert.That(first.GetRequired<TestCategoryState>(
+                CategoryRuleKey.SafeBombardment).Value, Is.True);
+            Assert.That(second.GetRequired<TestCategoryState>(
+                CategoryRuleKey.SafeBombardment).Value, Is.False);
         }
 
         [Test]
@@ -125,28 +151,25 @@ namespace ProjectL.Tests.Core
 
             CategorySnapshot rider = builder.CreateSnapshot(
                 registry.GetRequired(CategoryKey.Rider),
-                new UnitCategoryState(new CategoryRuntimeState[]
-                {
-                    new ManeuverRefundRuntimeState(true),
-                }));
+                new UnitCategoryState(Array.Empty<CategoryRuntimeState>()));
             CategorySnapshot heavy = builder.CreateSnapshot(
                 registry.GetRequired(CategoryKey.Heavy),
-                new UnitCategoryState(new CategoryRuntimeState[]
-                {
-                    new DirectionalArmorRuntimeState(Rotation4.R270, true),
-                }));
+                new UnitCategoryState(Array.Empty<CategoryRuntimeState>()));
             CategorySnapshot cannon = builder.CreateSnapshot(
                 registry.GetRequired(CategoryKey.Cannon),
                 new UnitCategoryState(Array.Empty<CategoryRuntimeState>()));
 
             Assert.That(rider.Key, Is.EqualTo(CategoryKey.Rider));
-            Assert.That(rider.RefundUsedThisTurn, Is.True);
-            Assert.That(rider.DefenseFacing, Is.Null);
-            Assert.That(heavy.DefenseFacing, Is.EqualTo(Rotation4.R270));
-            Assert.That(heavy.MovedThisTurn, Is.True);
-            Assert.That(heavy.DamageReductionPercent, Is.EqualTo(50));
-            Assert.That(cannon.RefundUsedThisTurn, Is.Null);
-            Assert.That(cannon.DefenseFacing, Is.Null);
+            Assert.That(heavy.Key, Is.EqualTo(CategoryKey.Heavy));
+            Assert.That(cannon.Key, Is.EqualTo(CategoryKey.Cannon));
+        }
+
+        [Test]
+        public void Registry_CannonStillRequiresItsRule()
+        {
+            var specs = CreateCompleteSpecs();
+            specs[3] = new CategorySpec(CategoryKey.Cannon,Array.Empty<CategoryRuleSpec>(),2);
+            Assert.Throws<ArgumentException>(() => new CategoryRegistry(specs));
         }
 
         private static void AssertRuleKeys(CategoryDefinition definition, params CategoryRuleKey[] expected)
@@ -160,19 +183,13 @@ namespace ProjectL.Tests.Core
         {
             return new[]
             {
-                new CategorySpec(CategoryKey.Base, Array.Empty<CategoryRuleSpec>()),
-                new CategorySpec(CategoryKey.Rider, new CategoryRuleSpec[]
-                {
-                    new ManeuverRefundCategoryRuleSpec(),
-                }),
-                new CategorySpec(CategoryKey.Heavy, new CategoryRuleSpec[]
-                {
-                    new DirectionalArmorCategoryRuleSpec(50, Rotation4.R0),
-                }),
-                new CategorySpec(CategoryKey.Cannon, new CategoryRuleSpec[]
+                new CategorySpec(CategoryKey.Main,Array.Empty<CategoryRuleSpec>(),3),
+                new CategorySpec(CategoryKey.Rider,Array.Empty<CategoryRuleSpec>(),4),
+                new CategorySpec(CategoryKey.Heavy,Array.Empty<CategoryRuleSpec>(),3),
+                new CategorySpec(CategoryKey.Cannon,new CategoryRuleSpec[]
                 {
                     new SafeBombardmentCategoryRuleSpec(),
-                }),
+                },2),
             };
         }
 
@@ -180,7 +197,7 @@ namespace ProjectL.Tests.Core
         {
             return category switch
             {
-                CategoryKey.Base => 0,
+                CategoryKey.Main => 0,
                 CategoryKey.Rider => 1,
                 CategoryKey.Heavy => 2,
                 CategoryKey.Cannon => 3,
@@ -188,25 +205,24 @@ namespace ProjectL.Tests.Core
             };
         }
 
-        private static CategoryRuleSpec CreateRuleSpec(CategoryRuleKey key)
-        {
-            return key switch
-            {
-                CategoryRuleKey.ManeuverRefund => new ManeuverRefundCategoryRuleSpec(),
-                CategoryRuleKey.DirectionalArmor => new DirectionalArmorCategoryRuleSpec(50, Rotation4.R0),
-                CategoryRuleKey.SafeBombardment => new SafeBombardmentCategoryRuleSpec(),
-                _ => throw new ArgumentOutOfRangeException(nameof(key)),
-            };
-        }
-
         private sealed class UnknownCategoryRuleSpec : CategoryRuleSpec
         {
-            internal UnknownCategoryRuleSpec() : base(CategoryRuleKey.ManeuverRefund) { }
+            internal UnknownCategoryRuleSpec() : base(CategoryRuleKey.SafeBombardment) { }
         }
 
         private sealed class UnknownCategoryRuleDefinition : CategoryRuleDefinition
         {
-            internal UnknownCategoryRuleDefinition() : base(CategoryRuleKey.ManeuverRefund) { }
+            internal UnknownCategoryRuleDefinition() : base(CategoryRuleKey.SafeBombardment) { }
+        }
+
+        private sealed class TestCategoryState : CategoryRuntimeState
+        {
+            internal bool Value { get; private set; }
+            internal TestCategoryState(bool value) : base(CategoryRuleKey.SafeBombardment) => Value = value;
+            public override CategoryRuntimeState Clone() => new TestCategoryState(Value);
+            public override IEffectStateSnapshot Capture() => StatelessEffectStateSnapshot.Instance;
+            internal override void CopyFinalValuesFrom(CategoryRuntimeState source) =>
+                Value = ((TestCategoryState)source).Value;
         }
     }
 }

@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_ReconMoveRemoval
+  m_EditorClassIdentifier:
+  input:
+    version: 3
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 1
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "a"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+        ownsReconSquad: 1
+      - id: "b"
+        name: "b"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+        ownsReconSquad: 1
+      - id: "hunter"
+        name: "hunter"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 3, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+      - id: "target"
+        name: "target"
+        unit:
+          key: 13
+          enemy: 1
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 80
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "move-one"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 450
+            amount: 5
+            percent: 10
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 2
+            hasMovement: 1
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "move-two"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 450
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 2
+            hasMovement: 1
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 2
+          - id: "independent"
+            key: 2
+            ownerKind: 1
+            sourceId: "b"
+            trait: 110
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+        actionUse: 1
+        distanceMoved: 0
+    entries:
+      - id: "94516ff547e74a5eafba58d43f28fd6f"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "dac2a0e6d1ad470288fdaab28658fe6e"
+        name: "독립 HP 사실"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "ca0c6587dff747d599cb6da1845e2165"
+            name: "HP70"
+            kind: 6
+            relation: 0
+            health:
+              unitId: "target"
+              finalHealth: 70
+      - id: "19845fe98f8c4a64b07ddc9e8fae2a5b"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "483a48acf5704e06852f1a3aed3229aa"
+        name: "첫 이동 출처만 제거"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "bcbcfbc3a34b42078b384096d14cbb27"
+            name: "명시 출처 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "move-one"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 450
+                amount: 5
+                percent: 10
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 2
+                hasMovement: 1
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1
+      - id: "3c52bd77dc4c4846a44f132d65a74a27"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "8cdc2bef2d4e4963bd1992e29e5f3f38"
+        name: "두 번째 이동 출처만 제거"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "db9ccb11bb5441b6a28b67d37cabfc0c"
+            name: "명시 출처 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "move-two"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 450
+                amount: 5
+                percent: 20
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 2
+                hasMovement: 1
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 2

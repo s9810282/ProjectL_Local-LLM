@@ -1,0 +1,148 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_RegenerationCadence
+  m_EditorClassIdentifier:
+  input:
+    version: 2
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "owner"
+        name: "재생 보유자"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 95
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        ownsRegeneration: 1
+        healAmount: 10
+        healEveryOwnSideTurnEnds: 2
+      - id: "target"
+        name: "관찰용 적"
+        unit:
+          key: 13
+          enemy: 1
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+    entries:
+      - id: "ae79c8673ac54135ad2ffb609a254038"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "536af6ba30804f2d8eb12cd0ab36cbe6"
+        name: "첫 자기 진영 종료"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "966fa1a40b0d41138bd84299da9321d9"
+            name: "재생 진행값 1"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "owner"
+              kind: 4
+              operation: 0
+              healAmount: 10
+              healEveryOwnSideTurnEnds: 2
+              completedEligibleTurnEnds: 1
+      - id: "3380ab7549d042968bab06f4d29f4e58"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "4eb4dd38e4d541309c2f208a457e787d"
+        name: "두 번째 종료·명시 회복"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "ecd3f0dab6c64bc983ea84cb4f0fa210"
+            name: "재생 진행값 0"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "owner"
+              kind: 4
+              operation: 0
+              healAmount: 10
+              healEveryOwnSideTurnEnds: 2
+              completedEligibleTurnEnds: 0
+          - id: "0b8d240ca2704e8eb414d234b44e39a5"
+            name: "실제 회복량 5"
+            kind: 3
+            relation: 0
+            trait:
+              asset: {fileID: 11400000, guid: 69c0fd186734e6441983a54b9e1d2ac7, type: 2}
+              kind: 100
+              sourceId: "owner"
+              targetIds:
+                - "owner"
+              cells: []
+              magnitude: 5
+          - id: "f184352eb58d43dea32680ee519adc9c"
+            name: "최종 HP 100"
+            kind: 6
+            relation: 0
+            health:
+              unitId: "owner"
+              finalHealth: 100
+      - id: "fd4f43d7f820404da340cbd97a86e0c2"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "8c76ac54d7bd4af0b94ade9f3dd989b0"
+        name: "만피 다음 주기 시작"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "20c0184487f54053834a9fd0e4aafdff"
+            name: "재생 진행값 1"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "owner"
+              kind: 4
+              operation: 0
+              healAmount: 10
+              healEveryOwnSideTurnEnds: 2
+              completedEligibleTurnEnds: 1
+      - id: "d96018c1376349a58925582935453da1"
+        name: "만피 회복 기회 소비·HP 사건 없음"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "939078d7145e445bad25a33f49583d2e"
+            name: "재생 진행값 0"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "owner"
+              kind: 4
+              operation: 0
+              healAmount: 10
+              healEveryOwnSideTurnEnds: 2
+              completedEligibleTurnEnds: 0

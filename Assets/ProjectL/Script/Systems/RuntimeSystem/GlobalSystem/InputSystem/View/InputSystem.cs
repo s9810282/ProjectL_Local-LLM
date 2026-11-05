@@ -30,9 +30,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
     {
         InputLayer CurrentLayer { get; }
 
+        /// <summary>입력 독점 중에는 복귀할 Layer만 갱신하고, 그 외에는 즉시 전환합니다.</summary>
         void ChangeLayer(InputLayer nextLayer);
 
-        /// <summary>현재 Layer를 해제하여 모든 입력을 받지 않는 상태로 둡니다.</summary>
+        /// <summary>일반 입력을 해제합니다. 독점 중에는 독점 Layer를 유지하고, 독점 해제 후 default로 복귀합니다.</summary>
         void ClearLayer();
     }
 
@@ -59,6 +60,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
 
     internal sealed class InputSystem :
         IInputSystemService,
+        IInputLayerOverrideService,
         ISystemShutdown,
         IExportSystemServices
     {
@@ -67,6 +69,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
 
         private bool _isConfigured;
         private bool _isShutdown;
+        private LayerOverride _layerOverride;
+        private InputLayer _requestedLayer;
 
         #region System Service
 
@@ -96,15 +100,60 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
                     nameof(nextLayer));
             }
 
-            _layerRuntime.ChangeLayer(
-                nextLayer);
+            _requestedLayer = nextLayer;
+            if (_layerOverride == null)
+                _layerRuntime.ChangeLayer(nextLayer);
         }
 
         public void ClearLayer()
         {
             EnsureAvailable();
 
-            _layerRuntime.ClearLayer();
+            _requestedLayer = default;
+            if (_layerOverride == null)
+                _layerRuntime.ClearLayer();
+        }
+
+        public IDisposable OverrideLayer(InputLayer layer)
+        {
+            EnsureAvailable();
+            if (!layer.IsValid) throw new ArgumentException("입력 Layer가 유효하지 않습니다.", nameof(layer));
+            if (_layerOverride != null) throw new InvalidOperationException("입력 Layer가 이미 독점 중입니다.");
+            _requestedLayer = _layerRuntime.CurrentLayer;
+            var scope = new LayerOverride(this);
+            _layerOverride = scope;
+            try
+            {
+                _layerRuntime.ChangeLayer(layer);
+                return scope;
+            }
+            catch
+            {
+                ReleaseOverride(scope);
+                throw;
+            }
+        }
+
+        private void ReleaseOverride(LayerOverride scope)
+        {
+            if (!ReferenceEquals(_layerOverride, scope)) return;
+            _layerOverride = null;
+            if (_requestedLayer.IsValid) _layerRuntime.ChangeLayer(_requestedLayer);
+            else _layerRuntime.ClearLayer();
+        }
+
+        private sealed class LayerOverride : IDisposable
+        {
+            private InputSystem _owner;
+
+            internal LayerOverride(InputSystem owner) => _owner = owner;
+
+            public void Dispose()
+            {
+                InputSystem owner = _owner;
+                _owner = null;
+                owner?.ReleaseOverride(this);
+            }
         }
 
         public void Submit(
@@ -198,6 +247,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
 
             _isShutdown = true;
             _isConfigured = false;
+            _layerOverride = null;
+            _requestedLayer = default;
 
             _routeTable = null;
             _layerRuntime = null;
@@ -213,6 +264,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View
             }
 
             sink.AddService<IInputSystemService>(this);
+            sink.AddService<IInputLayerOverrideService>(this);
             sink.AddModule<ISystemModule>(this);
         }
 

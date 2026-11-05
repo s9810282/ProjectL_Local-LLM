@@ -17,20 +17,27 @@ namespace ProjectL.Tests.Core
 {
     public sealed class EnvironmentDamageTests
     {
-        [TestCase(AttackTargetRole.Primary, false, false, 11, 10, 11, 0, 11)]
-        [TestCase(AttackTargetRole.Additional, false, false, 7, 10, 7, 0, 7)]
-        [TestCase(AttackTargetRole.Primary, true, false, 11, 7, 8, 4, 4)]
-        [TestCase(AttackTargetRole.Additional, true, false, 7, 7, 5, 2, 3)]
-        [TestCase(AttackTargetRole.Primary, true, true, 11, 1, 11, 0, 11)]
-        [TestCase(AttackTargetRole.Additional, true, true, 7, 1, 7, 0, 7)]
-        public void ExtractedAttackDamage_MatchesExistingBreakdown(AttackTargetRole role, bool heavy,
-            bool structure, int before, int numerator, int after, int reduction, int final)
+        [TestCase(AttackTargetRole.Primary, false, false, 11, 10, 11, 11)]
+        [TestCase(AttackTargetRole.Additional, false, false, 7, 10, 7, 7)]
+        [TestCase(AttackTargetRole.Primary, true, false, 11, 7, 8, 8)]
+        [TestCase(AttackTargetRole.Additional, true, false, 7, 7, 5, 5)]
+        [TestCase(AttackTargetRole.Primary, true, true, 11, 1, 11, 11)]
+        [TestCase(AttackTargetRole.Additional, true, true, 7, 1, 7, 7)]
+        [TestCase(AttackTargetRole.Primary, true, false, 11, 7, 8, 7, 5, 7)]
+        [TestCase(AttackTargetRole.Additional, true, false, 7, 7, 5, 4, 5, 4)]
+        [TestCase(AttackTargetRole.Additional, false, false, 0, 10, 0, 0, 0, 0, 1)]
+        public void Attack_PreservesMatchupAndPhysicalDefense_BeforeFinalMinimum(AttackTargetRole role, bool heavy,
+            bool structure, int before, int numerator, int after, int final,
+            int defense = 0, int? afterDefense = null, int splashPercent = 70)
         {
             var input = CombatCommandTestData.Input();
             var actor = CombatCommandTestData.With(input.Characters[0], category:
-                heavy ? CategorySnapshot.CreateRider(false) : CategorySnapshot.CreateStateless(CategoryKey.Base));
+                heavy ? CategorySnapshot.CreateStateless(CategoryKey.Rider) : CategorySnapshot.CreateStateless(CategoryKey.Main));
             var victim = CombatCommandTestData.With(input.Characters[2], category:
-                heavy ? CategorySnapshot.CreateHeavy(Rotation4.R270, false, 50) : CategorySnapshot.CreateStateless(CategoryKey.Base));
+                heavy ? CategorySnapshot.CreateStateless(CategoryKey.Heavy) : CategorySnapshot.CreateStateless(CategoryKey.Main));
+            var stats = victim.Stats;
+            victim = CombatCommandCalculator.Copy(victim, victim.Health, new UnitStatsSnapshot(
+                stats.MoveMethod,stats.MoveRange,stats.AppointRange,stats.AttackPower,defense,stats.Priority,stats.TraitStatuses.ToArray(),stats.Category));
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20,
                 actor.Stats.Category.Key), profiles[0].Method);
@@ -39,22 +46,23 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input, profiles: profiles);
             var result = CombatDamageCalculator.Attack(input, new CombatEffectEngine(), new TargetDamagePipeline(
                 new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())), actor, structure ? null : victim,
-                11, role, 70, actor.Anchor, null);
+                11, role, splashPercent, actor.Anchor, null);
             Assert.That(result.DamageBeforeMatchup, Is.EqualTo(before));
             Assert.That(result.MatchupNumerator, Is.EqualTo(numerator));
             Assert.That(result.MatchupDenominator, Is.EqualTo(structure ? 1 : 10));
             Assert.That(result.DamageAfterMatchup, Is.EqualTo(after));
-            Assert.That(result.DamageAfterPhysicalDefense, Is.EqualTo(after));
-            Assert.That(result.IncomingReduction, Is.EqualTo(reduction));
+            Assert.That(result.DamageAfterPhysicalDefense, Is.EqualTo(afterDefense ?? after));
+            Assert.That(result.IncomingReduction, Is.Zero);
             Assert.That(result.FinalDamage, Is.EqualTo(final));
+            Assert.That(result.DamageAfterReceivedPercentages, Is.EqualTo((decimal)(afterDefense ?? after)));
         }
 
         [Test]
         public void LegacyThorn_DoesNotGainCategoryOrHeavyRules()
         {
-            var input = MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right);
+            var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var actor = CombatCommandTestData.With(input.Characters[0],
-                category: CategorySnapshot.CreateHeavy(Rotation4.R270, false, 50));
+                category: CategorySnapshot.CreateStateless(CategoryKey.Heavy));
             var s = input.State;
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20,
@@ -62,8 +70,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input,
                 characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray(),
                 profiles: profiles,
-                state: new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                    s.Structures, new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 7) }, s.Timeline, s.Turn, s.Environment));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 7) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -81,13 +88,11 @@ namespace ProjectL.Tests.Core
         [TestCase(true)]
         public void PhysicalOrigin_IsIndependentOfCredit_AfterSourceConsumption(bool lethal)
         {
-            var input = MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right);
+            var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var s = input.State;
             var credit = input.Characters.Single(c => c.EntityId != input.ActorId).EntityId;
             var source = new DamageTile(71, CellCoord.Right, true, lethal ? 100 : 7, credit);
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn,
-                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.FinalState.Environment.Tiles.Single().Active, Is.False);
@@ -135,13 +140,13 @@ namespace ProjectL.Tests.Core
         {
             internal int Damage { get; }
             internal EntityId Credit { get; }
-            internal DamageTile(long id, CellCoord cell, bool active, int damage, EntityId credit)
-                : base(id, cell, "origin-fixture", 0, active, new[] { Owner.Player })
+            internal DamageTile(long id, CellCoord cell, bool active, int damage, EntityId credit, IReadOnlyList<Owner> knownTo = null)
+                : base(id, cell, "origin-fixture", 0, active, knownTo ?? new[] { Owner.Player })
             { Damage = damage; Credit = credit; }
             public override bool SameValues(MovementTileFact other) => SameSourceValues(other) &&
                 other is DamageTile tile && Damage == tile.Damage && Credit == tile.Credit;
             public override MovementTileFact WithKnownTo(IReadOnlyList<Owner> knownTo) =>
-                throw new NotSupportedException();
+                new DamageTile(Id, Cell, Active, Damage, Credit, knownTo);
         }
 
         private sealed class DamageRule : IMovementTileRule

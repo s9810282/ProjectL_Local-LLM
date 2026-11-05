@@ -16,11 +16,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             return spec switch
             {
-                ManeuverRefundCategoryRuleSpec => new ManeuverRefundCategoryRuleDefinition(),
-                DirectionalArmorCategoryRuleSpec armor =>
-                    new DirectionalArmorCategoryRuleDefinition(
-                        armor.DamageReductionPercent,
-                        armor.InitialFacing),
                 SafeBombardmentCategoryRuleSpec => new SafeBombardmentCategoryRuleDefinition(),
                 _ => throw new InvalidOperationException(
                     $"Category rule spec type {spec.GetType().Name} is not registered."),
@@ -33,10 +28,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             return definition switch
             {
-                ManeuverRefundCategoryRuleDefinition refund =>
-                    new ManeuverRefundCategoryRule(refund),
-                DirectionalArmorCategoryRuleDefinition armor =>
-                    new DirectionalArmorCategoryRule(armor),
                 SafeBombardmentCategoryRuleDefinition bombardment =>
                     new SafeBombardmentCategoryRule(bombardment),
                 _ => throw new InvalidOperationException(
@@ -50,32 +41,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             return definition switch
             {
-                ManeuverRefundCategoryRuleDefinition => new ManeuverRefundRuntimeState(),
-                DirectionalArmorCategoryRuleDefinition armor =>
-                    new DirectionalArmorRuntimeState(armor.InitialFacing),
                 SafeBombardmentCategoryRuleDefinition => null,
                 _ => throw new InvalidOperationException(
                     $"Category rule definition type {definition.GetType().Name} is not registered."),
             };
         }
 
-        internal static CategoryRuntimeState RestoreState(
-            CategoryRuleDefinition definition,
-            IEffectStateSnapshot snapshot)
-        {
-            if (definition == null) throw new ArgumentNullException(nameof(definition));
-            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
-
-            if (definition is ManeuverRefundCategoryRuleDefinition &&
-                snapshot is ManeuverRefundEffectStateSnapshot refund)
-                return new ManeuverRefundRuntimeState(refund.RefundUsedThisTurn);
-
-            if (definition is DirectionalArmorCategoryRuleDefinition &&
-                snapshot is DirectionalArmorEffectStateSnapshot armor)
-                return new DirectionalArmorRuntimeState(armor.DefenseFacing, armor.MovedThisTurn);
-
-            throw new InvalidOperationException(
-                $"Snapshot {snapshot.GetType().Name} does not match Category rule {definition.Key}.");
-        }
     }
 }

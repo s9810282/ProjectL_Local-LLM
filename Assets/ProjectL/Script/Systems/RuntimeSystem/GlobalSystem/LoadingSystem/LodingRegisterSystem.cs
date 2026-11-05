@@ -12,6 +12,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem
         void RegisterSceneExitLoaded(int sceneIndex, LodingNode node);
         void RegisterSceneEnterLoaded(int sceneIndex, LodingNode node);
         void RegisterAfterLoad(LodingNode node);
+        void RegisterScenePreparation(int sceneIndex, LodingPreparationNode node);
     }
 
     /// <summary>
@@ -24,6 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem
         IReadOnlyList<LodingNode> GetSceneExitLoadedNodes(int sceneIndex);
         IReadOnlyList<LodingNode> GetSceneEnterLoadedNodes(int sceneIndex);
         IReadOnlyList<LodingNode> GetAfterLoadNodes();
+        IReadOnlyList<LodingPreparationNode> GetScenePreparations(int sceneIndex);
     }
 
     /// <summary>
@@ -61,6 +63,17 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem
         {
             _afterLoadNodes.Register(node);
         }
+
+        public void RegisterScenePreparation(int sceneIndex, LodingPreparationNode node)
+        {
+            if (node == null) throw new ArgumentNullException(nameof(node));
+            GetStateNodes(sceneIndex).Preparations.Add(node);
+        }
+
+        public IReadOnlyList<LodingPreparationNode> GetScenePreparations(int sceneIndex) =>
+            TryGetStateNodes(sceneIndex, out LodingStateNodes nodes)
+                ? nodes.Preparations.ToArray()
+                : Array.Empty<LodingPreparationNode>();
 
         #endregion
 
@@ -148,6 +161,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem
         {
             internal LodingNodeQueue SceneExitLoaded { get; } = new();
             internal LodingNodeQueue SceneEnterLoaded { get; } = new();
+            internal List<LodingPreparationNode> Preparations { get; } = new();
         }
     }
 }

@@ -1,0 +1,6 @@
+씬: Assets/Scenes/JMHTest/JMHTest.unity
+소유자: LodingCanvas / UIId.Loading / Parallel
+위젯: SandstormJourney (prefab instance)
+기존 흰 이미지: 보존·비활성
+자동 unscaled 시간원, Canvas 정렬 32000, 씬 저장 완료
+적용 전 사본: Assets/ProjectL/Script/Render/Shader/View/CustomShader/UI/Verification/JMHTest-before-apply.unity

@@ -24,8 +24,54 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
             input.Raw(StageSelectionInputNames.PointerPosition, InputValueKind.Vector2, OnPointer);
             input.Raw(StageSelectionInputNames.Select, InputValueKind.Button, OnSelect);
             input.Press(StageSelectionInputNames.Confirm, _receiver.ConfirmRequested);
+#if UNITY_EDITOR
+            input.Raw(StageSelectionInputNames.CameraModifier, InputValueKind.Button, OnCameraModifier);
+            input.Raw(StageSelectionInputNames.CameraDolly, InputValueKind.Button, OnCameraDolly);
+            input.Raw(StageSelectionInputNames.CameraZoom, InputValueKind.Vector2, OnCameraZoom);
+            input.Raw(StageSelectionInputNames.Cancel, InputValueKind.Button, OnCameraRotate);
+#else
             input.Press(StageSelectionInputNames.Cancel, _receiver.CancelRequested);
+#endif
         }
+
+#if UNITY_EDITOR
+        private bool _cameraRotatePressed;
+        private bool _cameraDollyPressed;
+
+        private void OnCameraZoom(InputSnapshot snapshot)
+        {
+            if (snapshot.Phase != InputPhase.Performed || snapshot.Value.Y == 0f) return;
+            if (_receiver is IStageCameraFramingInputReceiver framing)
+                framing.CameraZoomRequested(snapshot.Value.Y, _pointerX, _pointerY);
+        }
+
+        private void OnCameraDolly(InputSnapshot snapshot)
+        {
+            bool pressed = snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue;
+            if (pressed == _cameraDollyPressed) return;
+            _cameraDollyPressed = pressed;
+            if (_receiver is IStageCameraFramingInputReceiver framing)
+                framing.CameraDollyChanged(pressed, _pointerX, _pointerY);
+        }
+
+        private void OnCameraModifier(InputSnapshot snapshot)
+        {
+            if (_receiver is IStageCameraFramingInputReceiver framing)
+                framing.CameraModifierChanged(snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue);
+        }
+
+        private void OnCameraRotate(InputSnapshot snapshot)
+        {
+            bool pressed = snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue;
+            if (pressed != _cameraRotatePressed)
+            {
+                _cameraRotatePressed = pressed;
+                if (_receiver is IStageCameraFramingInputReceiver framing)
+                    framing.CameraRotateChanged(pressed, _pointerX, _pointerY);
+            }
+            if (snapshot.Phase == InputPhase.Performed) _receiver.CancelRequested();
+        }
+#endif
 
         private void OnPointer(InputSnapshot snapshot)
         {

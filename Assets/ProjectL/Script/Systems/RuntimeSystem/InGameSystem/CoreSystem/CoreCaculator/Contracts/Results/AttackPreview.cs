@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
@@ -15,11 +17,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public AttackFailureReason FailureReason { get; }
         public EntityId AttackerId { get; }
         public EntityId PrimaryTargetId { get; }
+        public PiercingShotDelivery PiercingShot { get; }
+        public AttackPullSnapshot Pull { get; }
+        private readonly IReadOnlyList<AttackKnockbackSnapshot> _knockbacks;
+        /// <summary>공격 결과의 넉백 요약과 같습니다. 칸 단위 재생은 Moved 사건을 씁니다.</summary>
+        public IReadOnlyList<AttackKnockbackSnapshot> Knockbacks => _knockbacks ?? Array.Empty<AttackKnockbackSnapshot>();
         public Rotation4 AttackDirection { get; }
-        public ActionCostSettlementSnapshot ActionCostSettlement { get; }
-        public int AttackCost => ActionCostSettlement?.Spent ?? 0;
-        public int ActionCostRefunded => ActionCostSettlement?.Refunded ?? 0;
-        public int FinalActionCost => ActionCostSettlement?.Final ?? 0;
+        public UnitActionUseSettlementSnapshot ActionUseSettlement { get; }
         public ReadOnlyMemory<CellCoord> AffectedCells { get; }
         public ReadOnlyMemory<AttackTargetPreview> Targets { get; }
         public ReadOnlyMemory<TraitStatusSnapshot> ProjectedTraitStatuses { get; }
@@ -41,12 +45,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             EntityId primaryTargetId,
             CellCoord? targetCell,
             Rotation4 attackDirection,
-            ActionCostSettlementSnapshot actionCostSettlement,
+            UnitActionUseSettlementSnapshot actionCostSettlement,
             CellCoord[] affectedCells,
             AttackTargetPreview[] targets,
             TraitStatusSnapshot[] projectedTraitStatuses,
             CategorySnapshot projectedCategory,
-            AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null)
+            AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
+            PiercingShotDelivery piercingShot = null, AttackPullSnapshot pull = null,
+            IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null)
         {
             CellCoord[] copiedCells = (CellCoord[])affectedCells.Clone();
             AttackTargetPreview[] copiedTargets = (AttackTargetPreview[])targets.Clone();
@@ -66,9 +72,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             FailureReason = failureReason;
             AttackerId = attackerId;
             PrimaryTargetId = primaryTargetId;
+            PiercingShot = piercingShot;
+            Pull = pull;
+            // 결과가 이미 복사한 읽기 전용 목록을 그대로 공유합니다.
+            _knockbacks = knockbacks == null || knockbacks.Count == 0 ? null : knockbacks;
             TargetCell = targetCell;
             AttackDirection = attackDirection;
-            ActionCostSettlement = actionCostSettlement;
+            ActionUseSettlement = actionCostSettlement;
             AffectedCells = copiedCells;
             Targets = copiedTargets;
             ProjectedTraitStatuses = copiedTraitStatuses;
@@ -83,77 +93,84 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (result.FailureReason != AttackFailureReason.None)
                 return Failure(result.FailureReason, result.AttackerId, result.PrimaryTargetId, result.BlockedContacts);
-            ValidateSuccess(result.AttackerId, result.AttackDirection, result.ActionCostSettlement,
-                result.AffectedCells.ToArray(), targets, traits, category);
-            foreach (var target in targets)
-            {
-                bool valid = result.PrimaryCell.HasValue
-                    ? (target.Role == AttackTargetRole.Primary || target.Role == AttackTargetRole.Additional) &&
-                      (target.Role == AttackTargetRole.Primary) == (target.TargetId == result.PrimaryTargetId)
-                    : target.Role == AttackTargetRole.Designated;
-                if (!valid) throw new ArgumentException("예상 피해의 역할이 지정 결과와 다릅니다.", nameof(targets));
-            }
+            CellCoord[] affectedCells = result.AffectedCells.ToArray();
+            ValidateSuccess(result.AttackerId, result.AttackDirection, result.ActionUseSettlement,
+                affectedCells, targets, traits, category);
+            PiercingShotDelivery.ValidateCorrespondence(result.PiercingShot, result.AttackerId, result.PrimaryTargetId,
+                result.PrimaryCell, result.AdditionalCells, affectedCells, targets,
+                target => target.TargetId, target => target.Role, target => target.Contacts);
+            if (result.PiercingShot == null)
+                AttackTargetRoleValidation.ValidateOrdinary(result.PrimaryCell, result.PrimaryTargetId, targets,
+                    target => target.TargetId, target => target.Role, nameof(targets), target => target.Contacts);
+            // 미리보기 대상은 결과와 따로 받으므로 넉백 대상이 그 안에 있는지 확인합니다. 경로·중복은 결과가 검사했습니다.
+            foreach (var knockback in result.Knockbacks)
+                if (!Array.Exists(targets, target => target.TargetId == knockback.TargetId))
+                    throw new ArgumentException("넉백 기록의 대상이 미리보기 대상에 없습니다.", nameof(targets));
             return new AttackPreview(true, AttackFailureReason.None, result.AttackerId, result.PrimaryTargetId,
-                result.PrimaryCell, result.AttackDirection, result.ActionCostSettlement, result.AffectedCells.ToArray(),
+                result.PrimaryCell, result.AttackDirection, result.ActionUseSettlement, affectedCells,
                 targets, traits, category, new AttackCellSelection(result.PrimaryCell,
-                    result.DesignatedCells.ToArray(), result.AdditionalCells.ToArray()), result.BlockedContacts);
+                    result.DesignatedCells.ToArray(), result.AdditionalCells.ToArray()), result.BlockedContacts, result.PiercingShot, result.Pull,
+                result.Knockbacks);
         }
 
         public static AttackPreview Success(
             EntityId attackerId,
             EntityId primaryTargetId,
             Rotation4 attackDirection,
-            ActionCostSettlementSnapshot actionCostSettlement,
+            UnitActionUseSettlementSnapshot actionCostSettlement,
             CellCoord[] affectedCells,
             AttackTargetPreview[] targets,
             TraitStatusSnapshot[] projectedTraitStatuses,
             CategorySnapshot projectedCategory,
-            AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null)
+            AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
+            PiercingShotDelivery piercingShot = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells,
                 targets, projectedTraitStatuses, projectedCategory);
+            PiercingShotDelivery.ValidateCorrespondence(piercingShot, attackerId, primaryTargetId,
+                cellSelection?.PrimaryCell, cellSelection?.AdditionalCells ?? ReadOnlyMemory<CellCoord>.Empty,
+                affectedCells, targets, target => target.TargetId, target => target.Role, target => target.Contacts);
             if (cellSelection == null && primaryTargetId.IsEmpty)
                 throw new ArgumentException("주요 대상의 아이디는 Empty일 수 없습니다.", nameof(primaryTargetId));
             if (cellSelection != null)
             {
-                if (cellSelection.PrimaryCell.HasValue == primaryTargetId.IsEmpty)
-                    throw new ArgumentException("주 셀과 주 대상 ID의 유무가 일치해야 합니다.", nameof(primaryTargetId));
-                foreach (AttackTargetPreview target in targets)
-                {
-                    bool validRole = cellSelection.PrimaryCell.HasValue
-                        ? (target.Role == AttackTargetRole.Primary || target.Role == AttackTargetRole.Additional) &&
-                          (target.Role == AttackTargetRole.Primary) == (target.TargetId == primaryTargetId)
-                        : target.Role == AttackTargetRole.Designated;
-                    if (validRole == false)
-                        throw new ArgumentException("대상 역할이 지정 결과와 일치하지 않습니다.", nameof(targets));
-                }
+                if (!cellSelection.PrimaryCell.HasValue && !primaryTargetId.IsEmpty)
+                    throw new ArgumentException("방향 공격에는 주 대상 ID를 만들 수 없습니다.", nameof(primaryTargetId));
+                if (piercingShot == null)
+                    AttackTargetRoleValidation.ValidateOrdinary(cellSelection.PrimaryCell, primaryTargetId, targets,
+                        target => target.TargetId, target => target.Role, nameof(targets), target => target.Contacts);
             }
 
             return new AttackPreview(
                 true, AttackFailureReason.None, attackerId, primaryTargetId, cellSelection?.PrimaryCell,
                 attackDirection, actionCostSettlement, affectedCells, targets,
-                projectedTraitStatuses, projectedCategory, cellSelection, blockedContacts);
+                projectedTraitStatuses, projectedCategory, cellSelection, blockedContacts, piercingShot);
         }
 
         public static AttackPreview SuccessForCell(
             EntityId attackerId,
             CellCoord targetCell,
             Rotation4 attackDirection,
-            ActionCostSettlementSnapshot actionCostSettlement,
+            UnitActionUseSettlementSnapshot actionCostSettlement,
             CellCoord[] affectedCells,
             AttackTargetPreview[] targets,
             TraitStatusSnapshot[] projectedTraitStatuses,
-            CategorySnapshot projectedCategory, IReadOnlyList<AttackBlockedContact> blockedContacts = null)
+            CategorySnapshot projectedCategory, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
+            PiercingShotDelivery piercingShot = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells,
                 targets, projectedTraitStatuses, projectedCategory);
+            PiercingShotDelivery.ValidateCorrespondence(piercingShot, attackerId, EntityId.Empty,
+                targetCell, ReadOnlyMemory<CellCoord>.Empty, affectedCells, targets, target => target.TargetId, target => target.Role, target => target.Contacts);
+            var selection = piercingShot == null ? null :
+                new AttackCellSelection(targetCell, new[] { targetCell }, Array.Empty<CellCoord>());
 
             return new AttackPreview(
                 true, AttackFailureReason.None, attackerId, EntityId.Empty, targetCell,
                 attackDirection, actionCostSettlement, affectedCells, targets,
-                projectedTraitStatuses, projectedCategory, blockedContacts: blockedContacts);
+                projectedTraitStatuses, projectedCategory, selection, blockedContacts, piercingShot);
         }
 
         public static AttackPreview Failure(
@@ -175,7 +192,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         private static void ValidateSuccess(
             EntityId attackerId,
             Rotation4 attackDirection,
-            ActionCostSettlementSnapshot actionCostSettlement,
+            UnitActionUseSettlementSnapshot actionCostSettlement,
             CellCoord[] affectedCells,
             AttackTargetPreview[] targets,
             TraitStatusSnapshot[] projectedTraitStatuses,
@@ -187,10 +204,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(attackDirection));
             if (actionCostSettlement == null)
                 throw new ArgumentNullException(nameof(actionCostSettlement));
-            if (actionCostSettlement.Spent <= 0)
+            if (actionCostSettlement.ActorId != attackerId)
                 throw new ArgumentOutOfRangeException(nameof(actionCostSettlement));
             if (affectedCells == null) throw new ArgumentNullException(nameof(affectedCells));
             if (targets == null) throw new ArgumentNullException(nameof(targets));
+            if (targets.Any(t => t.Contacts != null))
+            {
+                if (targets.Any(t => t.Contacts == null) || targets.Select(t => t.TargetId).Distinct().Count() != targets.Length)
+                    throw new ArgumentException("신규 미리보기에는 중복 없는 실제 수신자와 접촉이 필요합니다.", nameof(targets));
+                var contacts = targets.SelectMany(t => t.Contacts).ToArray();
+                if (contacts.Select(c => c.DeliveryIndex).Distinct().Count() != contacts.Length ||
+                    contacts.Any(c => c.Origin.CreditedCharacterId != attackerId) || contacts.Select(c => c.Origin.AttackGroup).Distinct().Count() > 1 ||
+                    targets.Any(t => t.IsDirectHit != (t.Contacts.Count > 0)))
+                    throw new ArgumentException("미리보기 접촉과 공격 출처가 일치하지 않습니다.", nameof(targets));
+            }
             if (projectedTraitStatuses == null)
                 throw new ArgumentNullException(nameof(projectedTraitStatuses));
             if (projectedCategory == null)

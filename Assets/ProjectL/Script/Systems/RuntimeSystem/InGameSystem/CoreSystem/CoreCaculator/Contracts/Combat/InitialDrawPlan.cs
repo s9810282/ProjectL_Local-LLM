@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// </summary>
     public sealed class InitialDrawPlan
     {
-        /// <summary>메인을 포함한 기본 첫 손패 수(메인 1 + 서브 3). 시작 로드아웃 설정이 없는 Run(개발·테스트 로스터)에서 쓴다.</summary>
+        /// <summary>메인을 포함한 기본 첫 손패 수(메인 1 + 서브 최대 3). 시작 로드아웃 설정이 없는 Run(개발·테스트 로스터)에서 쓴다.</summary>
         public const int DefaultStartingHandSize = 4;
 
         public IReadOnlyList<CharacterInstanceId> Order { get; }

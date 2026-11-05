@@ -59,5 +59,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSys
 
         public static readonly TypeSettingKey<float> AreaOutlineFlowSpeed =
             new TypeSettingKey<float>("_FlowSpeed");
+
+        /// <summary>EntityCartoon의 사망 디졸브 진행값입니다.</summary>
+        public static readonly TypeSettingKey<float> DissolveAmount =
+            new TypeSettingKey<float>("_DissolveAmount");
     }
 }

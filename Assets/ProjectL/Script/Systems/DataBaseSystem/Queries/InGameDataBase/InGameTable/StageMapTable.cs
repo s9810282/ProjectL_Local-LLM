@@ -39,6 +39,10 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable
                 dataByKey.Add(data.MapKey, data);
                 entries.Add(data);
             }
+            foreach (var data in entries)
+                if (data.NextChapterKey > 0 && !dataByKey.ContainsKey(data.NextChapterKey))
+                    throw new InvalidOperationException(
+                        $"MapKey {data.MapKey}의 다음 챕터 {data.NextChapterKey}가 등록되지 않았습니다.");
             allData = entries.AsReadOnly();
         }
 

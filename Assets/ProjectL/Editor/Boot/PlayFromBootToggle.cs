@@ -48,6 +48,11 @@ namespace ProjectL.Tool.Editor
 
         internal static void Apply()
         {
+            if (PreviewPlayStartScene.IsActive)
+            {
+                PreviewPlayStartScene.Apply();
+                return;
+            }
             if (!IsEnabled)
             {
                 EditorSceneManager.playModeStartScene = null;

@@ -1,0 +1,206 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_ReconExposureGroups
+  m_EditorClassIdentifier:
+  input:
+    version: 3
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 1
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "a"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+        ownsReconSquad: 1
+      - id: "b"
+        name: "b"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+        ownsReconSquad: 1
+      - id: "hunter"
+        name: "hunter"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 3, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+      - id: "target"
+        name: "target"
+        unit:
+          key: 13
+          enemy: 1
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "recon-a"
+            key: 13
+            ownerKind: 1
+            sourceId: "a"
+            trait: 450
+            amount: 5
+            percent: 10
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 2
+            hasMovement: 1
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "recon-b"
+            key: 13
+            ownerKind: 1
+            sourceId: "b"
+            trait: 450
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 2
+            hasMovement: 1
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "hunter"
+            key: 13
+            ownerKind: 1
+            sourceId: "hunter"
+            trait: 190
+            amount: 5
+            percent: 30
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+        actionUse: 1
+        distanceMoved: 0
+    entries:
+      - id: "6fa30584c99b473f8f8a0caf8b925fc4"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "e3180a34549c4f2ea93c6f863ff33bfd"
+        name: "유효50 유지·억제 출처 신규 부여"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "896e9c32091e4bc5a730cd9b7e2beae3"
+            name: "명시 발동 ReconSquad"
+            kind: 3
+            relation: 0
+            trait:
+              asset: {fileID: 11400000, guid: 7cced4ec7edc4b55bb16eff6b056f8da, type: 2}
+              kind: 160
+              sourceId: "a"
+              targetIds:
+                - "target"
+              cells: []
+              magnitude: 15
+          - id: "ef283a1fcdec4f1e94a0a331684244c8"
+            name: "명시 출처 설정"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "recon-a-move2"
+                key: 13
+                ownerKind: 1
+                sourceId: "a"
+                trait: 450
+                amount: 5
+                percent: 15
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 2
+                hasMovement: 1
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 2
+      - id: "d012f49459df4253a3f661f95858e84c"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "65a9f656604f43ca87b65004ef6572f4"
+        name: "B 제거 후 유효45"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "59f3246ffa774081820d73e297a86e46"
+            name: "명시 출처 제거"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 1
+              effect:
+                id: "recon-b"
+                key: 13
+                ownerKind: 1
+                sourceId: "b"
+                trait: 450
+                amount: 5
+                percent: 20
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 0
+                lifetime: 2
+                hasMovement: 1
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1

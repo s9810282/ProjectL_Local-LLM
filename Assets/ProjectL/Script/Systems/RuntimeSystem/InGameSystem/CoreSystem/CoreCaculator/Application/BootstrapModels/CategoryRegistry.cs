@@ -12,10 +12,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         private static readonly CategoryKey[] RequiredKeys =
         {
-            CategoryKey.Base,
+            CategoryKey.Main,
             CategoryKey.Rider,
             CategoryKey.Heavy,
             CategoryKey.Cannon,
+        };
+
+        /// <summary>전투 규칙이 없는 선택 분류다. 등록하지 않은 정의에서 쓰면 GetRequired가 거절한다.</summary>
+        private static readonly CategoryKey[] OptionalKeys =
+        {
+            CategoryKey.Boss,
         };
 
         private readonly Dictionary<CategoryKey, CategoryDefinition> _definitions;
@@ -40,7 +46,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
                 try
                 {
-                    _definitions.Add(spec.Key, new CategoryDefinition(spec.Key, definitions));
+                    _definitions.Add(spec.Key, new CategoryDefinition(spec.Key,definitions,spec.LevelGrowth,                        spec.MovementAllowance));
                 }
                 catch (ArgumentException exception)
                 {
@@ -57,8 +63,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     throw new ArgumentException($"Missing Category key: {RequiredKeys[i]}.", nameof(specs));
             }
 
-            if (_definitions.Count != RequiredKeys.Length)
-                throw new ArgumentException("Category registry contains an unsupported key.", nameof(specs));
+            foreach (CategoryKey key in _definitions.Keys)
+            {
+                if (Array.IndexOf(RequiredKeys, key) < 0 && Array.IndexOf(OptionalKeys, key) < 0)
+                    throw new ArgumentException("Category registry contains an unsupported key.", nameof(specs));
+            }
         }
 
         internal CategoryDefinition GetRequired(CategoryKey key)
@@ -74,19 +83,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             return new CategoryRegistry(new[]
             {
-                new CategorySpec(CategoryKey.Base, Array.Empty<CategoryRuleSpec>()),
-                new CategorySpec(CategoryKey.Rider, new CategoryRuleSpec[]
-                {
-                    new ManeuverRefundCategoryRuleSpec(),
-                }),
-                new CategorySpec(CategoryKey.Heavy, new CategoryRuleSpec[]
-                {
-                    new DirectionalArmorCategoryRuleSpec(50, Rotation4.R0),
-                }),
-                new CategorySpec(CategoryKey.Cannon, new CategoryRuleSpec[]
+                new CategorySpec(CategoryKey.Main,Array.Empty<CategoryRuleSpec>(),3),
+                new CategorySpec(CategoryKey.Rider,Array.Empty<CategoryRuleSpec>(),4),
+                new CategorySpec(CategoryKey.Heavy,Array.Empty<CategoryRuleSpec>(),3),
+                new CategorySpec(CategoryKey.Cannon,new CategoryRuleSpec[]
                 {
                     new SafeBombardmentCategoryRuleSpec(),
-                }),
+                },2),
+                new CategorySpec(CategoryKey.Boss,Array.Empty<CategoryRuleSpec>(),0),
             });
         }
     }

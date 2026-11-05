@@ -1,4 +1,5 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 {
@@ -7,7 +8,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
     /// <see cref="CombatProgressReader"/>가 호출할 때마다 Buffer·View에서 새로 읽어 만들며, 저장하지 않습니다.
     /// </summary>
     /// <remarks>
-    /// 판단 시점의 일시적 사본입니다. 원본은 Core Buffer(국면·번호·Completion·결과), CombatViewBuffer(명령·미리보기·P),
+    /// 판단 시점의 일시적 사본입니다. 원본은 Core Buffer(국면·번호·Completion·결과·Run 결과), CombatViewBuffer(명령·미리보기·P),
     /// View(재생·제출·완료 표시·포기 요청)입니다. 판단 테스트는 이 묶음을 직접 만들어 넣습니다.
     /// </remarks>
     public readonly struct CombatProgressFacts
@@ -25,10 +26,11 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             int previewNumber = 0,
             int presentedResultSequence = 0,
             bool isViewAttached = false,
-            bool isPlaybackBusy = false,
             bool isSubmissionSuspended = false,
             CombatCompletionDisplay completionDisplay = CombatCompletionDisplay.None,
-            bool isAbandonRequested = false)
+            bool isAbandonRequested = false,
+            RunOutcome runOutcome = RunOutcome.InProgress,
+            bool isEntryPresentationPending = false)
         {
             HasBattle = hasBattle;
             BattleInstanceId = battleInstanceId;
@@ -42,10 +44,11 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             PreviewNumber = previewNumber;
             PresentedResultSequence = presentedResultSequence;
             IsViewAttached = isViewAttached;
-            IsPlaybackBusy = isPlaybackBusy;
             IsSubmissionSuspended = isSubmissionSuspended;
             CompletionDisplay = completionDisplay;
             IsAbandonRequested = isAbandonRequested;
+            RunOutcome = runOutcome;
+            IsEntryPresentationPending = isEntryPresentationPending;
         }
 
         public bool HasBattle { get; }
@@ -81,8 +84,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 
         public bool IsViewAttached { get; }
 
-        /// <summary>View가 결과를 재생·후처리하는 중인지입니다.</summary>
-        public bool IsPlaybackBusy { get; }
+        /// <summary>View 진입 연출의 대기입니다. Core 결과 재생(P &lt; S)과 독립적입니다.</summary>
+        public bool IsEntryPresentationPending { get; }
 
         public bool IsSubmissionSuspended { get; }
 
@@ -90,14 +93,26 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 
         public bool IsAbandonRequested { get; }
 
+        /// <summary>Core Run 진행의 결과입니다. Run이 이어지면 <c>InProgress</c>입니다(떠날 목적지를 정함).</summary>
+        public RunOutcome RunOutcome { get; }
+
         public bool HasCompletion => Completion != null;
 
         public bool HasNextCommand => NextCommandNumber > 0;
 
         /// <summary>확인하지 않은 결과가 남았는지(P &lt; S)입니다.</summary>
-        public bool HasUnpresentedResult => PresentedResultSequence < LatestResultSequence;
+        public bool HasUnpresentedResult => IsUnpresented(PresentedResultSequence, LatestResultSequence);
 
-        /// <summary>재생 중이거나 확인하지 않은 결과가 남았는지입니다(재구성 설계 J2의 "재생 중").</summary>
-        public bool IsPresenting => IsPlaybackBusy || HasUnpresentedResult;
+        /// <summary>
+        /// 확인하지 않은 결과가 남았는지(P &lt; S)의 규칙 원본입니다. 골격(이 사실 묶음·Plan 튜토리얼 판정)과 전투 View가 이것을 부릅니다(C 단계 설계 C-3).
+        /// 정리(EndBattle) 뒤에도 Core가 결과 순번을 남기므로 전투가 없을 때도 같은 뜻입니다.
+        /// </summary>
+        internal static bool IsUnpresented(int presentedResultSequence, int latestResultSequence) =>
+            presentedResultSequence < latestResultSequence;
+
+        /// <summary>
+        /// 연출이 남았는지입니다(재구성 설계 J2의 "재생 중"). 재생은 확인하지 않은 결과가 있을 때만 하므로 P &lt; S와 같습니다(개선 설계 §7.1 D4).
+        /// </summary>
+        public bool IsPresenting => HasUnpresentedResult;
     }
 }

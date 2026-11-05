@@ -116,9 +116,6 @@ namespace ProjectL.Tests.Core
 
         private static IEnumerable InvalidTopologies()
         {
-            yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(3, 2), new CellCoord(3, 3) }).SetName("BentRun");
-            yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(3, 2), new CellCoord(4, 2), new CellCoord(3, 3) }).SetName("BranchedRun");
-            yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(3, 2), new CellCoord(2, 3), new CellCoord(3, 3) }).SetName("ThickRun");
             yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(3, 3) }).SetName("DiagonalContact");
             yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(2, 2) }).SetName("DuplicateWallCell");
         }

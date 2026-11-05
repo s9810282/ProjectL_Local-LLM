@@ -1,4 +1,8 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using System.Collections.Generic;
+using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat
 {
@@ -23,17 +27,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
         /// <summary>
         /// PhysicalDefense 단계를 통과한 뒤의 피해입니다.
-        /// 실제 방어 공식은 아직 미정이므로 현재는 통과 값이며, 단계 위치만 고정합니다.
+        /// 실효 방어력 1당 1% 감소하고 소수점을 버린 값이며, 최종 최소 피해 보정 전입니다.
         /// </summary>
         public int DamageAfterPhysicalDefense { get; }
 
         /// <summary>Heavy 등 피격 경감이 실제로 깎은 양입니다.</summary>
         public int IncomingReduction { get; }
 
-        /// <summary>모든 단계를 통과한 최종 피해입니다.</summary>
+        /// <summary>현재 계산 단계의 결과입니다. 공격 최소 피해는 Attack 반환 직전에만 보정하며 보호막 흡수 전입니다.</summary>
         public int FinalDamage { get; }
         /// <summary>기존 피격 경감 뒤의 비율 감소를 적용한 정확한 값이다. 최종 피해만 소수점을 버린다.</summary>
         public decimal DamageAfterReceivedPercentages { get; }
+
+        private readonly IReadOnlyList<TraitTrailFact> _usedDustSources;
+        public IReadOnlyList<TraitTrailFact> UsedDustSources => _usedDustSources ?? Array.Empty<TraitTrailFact>();
+        private readonly IReadOnlyList<TraitActivationSnapshot> _traitContributions;
+        /// <summary>계산에서 나온 불변 기여 근거입니다. 실제 적용자는 같은 근거를 순서 있는 사건으로 옮깁니다.</summary>
+        public IReadOnlyList<TraitActivationSnapshot> TraitContributions => _traitContributions ?? Array.Empty<TraitActivationSnapshot>();
 
         internal TargetDamageBreakdown(
             int damageBeforeMatchup,
@@ -42,7 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             int damageAfterMatchup,
             int damageAfterPhysicalDefense,
             int incomingReduction,
-            int finalDamage, decimal? damageAfterReceivedPercentages = null)
+            int finalDamage, decimal? damageAfterReceivedPercentages = null, IReadOnlyList<TraitActivationSnapshot> traitContributions = null, IReadOnlyList<TraitTrailFact> usedDustSources = null)
         {
             if (damageBeforeMatchup < 0) throw new ArgumentOutOfRangeException(nameof(damageBeforeMatchup));
             if (matchupNumerator < 0) throw new ArgumentOutOfRangeException(nameof(matchupNumerator));
@@ -53,6 +63,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (incomingReduction < 0) throw new ArgumentOutOfRangeException(nameof(incomingReduction));
             if (finalDamage < 0) throw new ArgumentOutOfRangeException(nameof(finalDamage));
 
+            _usedDustSources = Array.AsReadOnly((usedDustSources ?? Array.Empty<TraitTrailFact>()).ToArray());
+            _traitContributions = Array.AsReadOnly((traitContributions ?? Array.Empty<TraitActivationSnapshot>()).ToArray());
             DamageBeforeMatchup = damageBeforeMatchup;
             MatchupNumerator = matchupNumerator;
             MatchupDenominator = matchupDenominator;

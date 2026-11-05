@@ -16,6 +16,11 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Item
         [SerializeField] private StageMapRole mapRole = StageMapRole.Regular;
         [SerializeField] private StageBaseData stageData;
 
+        /// <summary>
+        /// 어떤 상세 SO를 참조하는지 SO 단계에서 맞출 때만 씁니다. GetData는 매번 새 Data를 만들어 상세 SO와 비교할 수 없습니다.
+        /// </summary>
+        internal StageBaseData StageDataInput => stageData;
+
         public override IData GetData()
         {
             IStageData detail = stageData != null ? stageData.GetData() as IStageData : null;

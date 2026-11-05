@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c907719567e420f8ccb06d18e87216d, type: 3}
+  m_Name: TraitGrowth_Vanguard
+  m_EditorClassIdentifier: 
+  normal:
+    rid: 1000
+  enhanced:
+    rid: -2
+  rank2:
+    rid: 1100
+  rank3:
+    rid: 1200
+  displayName: "\uC120\uBD09\uC7A5"
+  description: "\uC544\uAD70\uC758 \uCCAB \uACF5\uACA9\uC744 \uD558\uBA74 \uB2E4\uB978
+    \uBC30\uCE58\uB41C \uC544\uAD70\uC758 \uACF5\uACA9\uB825\uC744 \uC774\uBC88 \uD134
+    \uB3D9\uC548 1 \uC62C\uB9BD\uB2C8\uB2E4."
+  enhancedName: 
+  enhancedDescription: 
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1000
+      type: {class: VanguardTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        attackBonus: 1
+        durationControllerTurnEnds: 1
+    - rid: 1100
+      type: {class: VanguardRankAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item, asm: ProjectL.Systems}
+      data:
+        attackBonus: 4
+    - rid: 1200
+      type: {class: VanguardRankAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item, asm: ProjectL.Systems}
+      data:
+        attackBonus: 9

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.StageGimmicks;
 using ProjectL.Systems.DataBaseSystem.Data.Common;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Item;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -14,15 +15,21 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
     /// <summary>초기 배치 하나입니다. Key는 유닛 또는 구조물의 EntityKey입니다.</summary>
     public readonly struct EntityPlacement
     {
+        public int? StartingItemKey { get; }
         public EntityKey Key { get; }
         public CellCoord Anchor { get; }
         public Rotation4 Rotation { get; }
+        /// <summary>이 유닛 배치를 지정 승리 목표로 삼을지 나타냅니다. 구조물에는 사용할 수 없습니다.</summary>
+        public bool IsVictoryTarget { get; }
 
-        public EntityPlacement(EntityKey key, CellCoord anchor, Rotation4 rotation)
+        public EntityPlacement(EntityKey key, CellCoord anchor, Rotation4 rotation, bool isVictoryTarget = false, int? startingItemKey = null)
         {
+            if (startingItemKey <= 0) throw new ArgumentOutOfRangeException(nameof(startingItemKey));
+            StartingItemKey = startingItemKey;
             Key = key;
             Anchor = anchor;
             Rotation = rotation;
+            IsVictoryTarget = isVictoryTarget;
         }
     }
 
@@ -30,14 +37,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
     public sealed class RailwayData
     {
         public IReadOnlyList<CellCoord> RailCells { get; }
-        public int FirstActivationAfterUnitTurns { get; }
-        public int RepeatIntervalUnitTurns { get; }
+        public int FirstActivationAfterControllerTurns { get; }
+        public int RepeatIntervalControllerTurns { get; }
 
-        public RailwayData(CellCoord[] railCells, int firstActivationAfterUnitTurns, int repeatIntervalUnitTurns)
+        public RailwayData(CellCoord[] railCells, int firstActivationAfterControllerTurns, int repeatIntervalControllerTurns)
         {
             RailCells = new ReadOnlyCollection<CellCoord>(railCells ?? Array.Empty<CellCoord>());
-            FirstActivationAfterUnitTurns = firstActivationAfterUnitTurns;
-            RepeatIntervalUnitTurns = repeatIntervalUnitTurns;
+            FirstActivationAfterControllerTurns = firstActivationAfterControllerTurns;
+            RepeatIntervalControllerTurns = repeatIntervalControllerTurns;
         }
     }
 
@@ -46,22 +53,23 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
     /// 다른 데이터는 키로 가리킵니다(FieldId, RosterKey, LoadoutKey, EconomyKey, EntityKey).
     /// </summary>
     /// <remarks>
-    /// Core 대응: StageConfig(필드 크기·배치 깊이는 FieldTable, TimelineSeed·NightLength·초기 배치·레일웨이는 여기),
+    /// Core 대응: StageConfig(필드 크기·대체용 아군 배치 줄 수는 FieldTable, TimelineSeed·아군 배치 칸·초기 배치·레일웨이는 여기),
     /// StageEconomySpec(EconomyKey), MainCharacterEntrySpec(메인 캐릭터 앵커·회전, 체력은 Run 상태에서).
     /// 플레이어 쪽은 본부 대신 메인 캐릭터가 서고, 본부(HeadquartersKey)는 적 쪽에만 남습니다.
     /// </remarks>
     public sealed class CombatStageDetail : IStageData
     {
         public StageType StageType => StageType.Combat;
+        public BattleObjectiveKind ObjectiveKind { get; }
 
         public int TimelineSeed { get; }
         public string FieldId { get; }
         public int UnitRosterKey { get; }
         /// <summary>0이면 적 구성이 없습니다.</summary>
         public int EnemyLoadoutKey { get; }
+        /// <summary>이 스테이지 적의 레벨입니다. 직접 배치와 로드아웃 출현 적에 적용합니다.</summary>
+        public int EnemyLevel { get; }
         public int EconomyKey { get; }
-        /// <summary>밤 길이입니다. Core StageConfig.NightLength와 같은 단위입니다.</summary>
-        public long NightLength { get; }
         public IReadOnlyList<EntityPlacement> InitialEnemyPlacements { get; }
         public IReadOnlyList<EntityKey> StructureCatalog { get; }
         public IReadOnlyList<EntityPlacement> InitialEnemyStructurePlacements { get; }
@@ -73,12 +81,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         public Rotation4 EnemyHeadquartersRotation { get; }
         /// <summary>레일웨이를 쓰지 않으면 null입니다.</summary>
         public RailwayData Railway { get; }
+        public RockfallGimmickData Rockfall { get; }
+        public HaboobGimmickData Haboob { get; }
+        public TornadoGimmickSpec Tornado { get; }
         public IReadOnlyList<TerrainPresencePlacementData> TerrainPresencePlacements { get; }
         public IReadOnlyList<StaticTerrainPlacementData> StaticTerrainPlacements { get; }
         public IReadOnlyList<InitialObstaclePlacementSpec> ObstaclePlacements { get; }
         public IReadOnlyList<InitialObjectPlacementSpec> ObjectPlacements { get; }
+        public IReadOnlyList<TornadoSourceFact> TornadoPlacements { get; }
+        /// <summary>최초 칸을 전투 준비가 무작위로 정하는 토네이도입니다. 칸이 없으므로 공간 검증에 넣지 않습니다.</summary>
+        public IReadOnlyList<InitialRandomTornadoPlacementSpec> InitialRandomTornadoPlacements { get; }
         public IReadOnlyList<CellCoord> WallCells { get; }
         public WallBlockingSpec WallBlocking { get; }
+        /// <summary>아군 배치 구역 칸입니다. 비어 있으면 필드의 아군 배치 줄 수(아래부터)를 씁니다. 대체 규칙은 BattleDefinitionAdapter가 정합니다.</summary>
+        public IReadOnlyList<CellCoord> PlayerDeploymentCells { get; }
 
         public CombatStageDetail(
             int timelineSeed,
@@ -86,7 +102,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             int unitRosterKey,
             int enemyLoadoutKey,
             int economyKey,
-            long nightLength,
             EntityPlacement[] initialEnemyPlacements,
             EntityKey[] structureCatalog,
             EntityPlacement[] initialEnemyStructurePlacements,
@@ -100,8 +115,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             IReadOnlyList<StaticTerrainPlacementData> staticTerrainPlacements = null,
             IReadOnlyList<InitialObstaclePlacementSpec> obstaclePlacements = null,
             IReadOnlyList<InitialObjectPlacementSpec> objectPlacements = null,
-            IReadOnlyList<CellCoord> wallCells = null, WallBlockingSpec wallBlocking = null)
+            IReadOnlyList<CellCoord> wallCells = null, WallBlockingSpec wallBlocking = null,
+            IReadOnlyList<TornadoSourceFact> tornadoPlacements = null,
+            BattleObjectiveKind objectiveKind = BattleObjectiveKind.EnemyHeadquartersDestroyed,
+            int enemyLevel = 1,
+            IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null,
+            IReadOnlyList<CellCoord> playerDeploymentCells = null, RockfallGimmickData rockfall = null, HaboobGimmickData haboob = null,
+            TornadoGimmickSpec tornado = null)
         {
+            Tornado = tornado;
+            Rockfall = rockfall;
+            Haboob = haboob;
+            ObjectiveKind = objectiveKind;
+            PlayerDeploymentCells = Array.AsReadOnly((playerDeploymentCells ?? Array.Empty<CellCoord>()).ToArray());
+            EnemyLevel = enemyLevel;
             TimelineSeed = timelineSeed;
             WallCells = Array.AsReadOnly((wallCells ?? Array.Empty<CellCoord>()).ToArray());
             WallBlocking = wallBlocking ?? WallBlockingSpec.Default;
@@ -112,7 +139,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             UnitRosterKey = unitRosterKey;
             EnemyLoadoutKey = enemyLoadoutKey;
             EconomyKey = economyKey;
-            NightLength = nightLength;
             InitialEnemyPlacements = new ReadOnlyCollection<EntityPlacement>(
                 initialEnemyPlacements ?? Array.Empty<EntityPlacement>());
             StructureCatalog = new ReadOnlyCollection<EntityKey>(structureCatalog ?? Array.Empty<EntityKey>());
@@ -137,11 +163,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             StaticTerrainPlacements = Array.AsReadOnly(staticTerrain);
             var objects = (objectPlacements ?? Array.Empty<InitialObjectPlacementSpec>()).ToArray();
             if (objects.Any(p => p == null)) throw new ArgumentException("Object 배치는 null을 포함할 수 없습니다.");
+            var tornadoes = (tornadoPlacements ?? Array.Empty<TornadoSourceFact>()).ToArray();
+            if (tornadoes.Any(p => p == null || !p.Active))
+                throw new ArgumentException("초기 토네이도 배치는 null이거나 비활성일 수 없습니다.", nameof(tornadoPlacements));
+            var randomTornadoes = (initialRandomTornadoPlacements ?? Array.Empty<InitialRandomTornadoPlacementSpec>()).ToArray();
+            if (randomTornadoes.Any(p => p == null))
+                throw new ArgumentException("최초 무작위 토네이도 배치는 null일 수 없습니다.", nameof(initialRandomTornadoPlacements));
             var sourceIds = terrain.Select(p => p.SourceId).Concat(staticTerrain.Select(p => p.SourceId))
-                .Concat(objects.Select(p => p.CreateSource(1).Id)).ToArray();
+                .Concat(objects.Select(p => p.CreateSource(1).Id)).Concat(tornadoes.Select(p => p.Id))
+                .Concat(randomTornadoes.Select(p => p.SourceId)).ToArray();
             if (sourceIds.Distinct().Count() != sourceIds.Length)
                 throw new ArgumentException("환경 배치 원본 ID는 중복될 수 없습니다.");
             ObjectPlacements = Array.AsReadOnly(objects);
+            TornadoPlacements = Array.AsReadOnly(tornadoes);
+            InitialRandomTornadoPlacements = Array.AsReadOnly(randomTornadoes);
         }
 
         public void Validate()
@@ -151,13 +186,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 throw new InvalidOperationException("[CombatStageDetail] Combat stage requires Field and Unit Roster.");
             if (EconomyKey < 1)
                 throw new InvalidOperationException("[CombatStageDetail] Combat stage requires Economy.");
-            if (NightLength < 1)
-                throw new InvalidOperationException("[CombatStageDetail] NightLength must be positive.");
             if (EnemyLoadoutKey < 0)
                 throw new InvalidOperationException("[CombatStageDetail] EnemyLoadoutKey must not be negative.");
+            if (EnemyLevel < 1)
+                throw new InvalidOperationException("[CombatStageDetail] EnemyLevel must be at least 1.");
 
             ValidatePlacements(InitialEnemyPlacements, "initial enemy");
             ValidatePlacements(InitialEnemyStructurePlacements, "initial enemy structure");
+            ValidateObjective();
             foreach (EntityKey key in StructureCatalog)
             {
                 if (key == EntityKey.None)
@@ -169,8 +205,29 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 throw new InvalidOperationException("[CombatStageDetail] Main character or headquarters rotation is invalid.");
 
             if (Railway != null &&
-                (Railway.FirstActivationAfterUnitTurns < 1 || Railway.RepeatIntervalUnitTurns < 1))
+                (Railway.FirstActivationAfterControllerTurns < 1 || Railway.RepeatIntervalControllerTurns < 1))
                 throw new InvalidOperationException("[CombatStageDetail] Railway turn values must be at least 1.");
+        }
+
+        private void ValidateObjective()
+        {
+            if (ObjectiveKind == BattleObjectiveKind.None ||
+                !System.Enum.IsDefined(typeof(BattleObjectiveKind), ObjectiveKind))
+            {
+                throw new InvalidOperationException("[CombatStageDetail] Objective kind is invalid.");
+            }
+
+            if (InitialEnemyStructurePlacements.Any(placement => placement.IsVictoryTarget || placement.StartingItemKey.HasValue))
+            {
+                throw new InvalidOperationException("[CombatStageDetail] A structure cannot be a designated victory target.");
+            }
+
+            int targetCount = InitialEnemyPlacements.Count(placement => placement.IsVictoryTarget);
+            int requiredCount = ObjectiveKind == BattleObjectiveKind.DesignatedBossDefeated ? 1 : 0;
+            if (targetCount != requiredCount)
+            {
+                throw new InvalidOperationException($"[CombatStageDetail] Objective {ObjectiveKind} requires {requiredCount} marked enemy placements.");
+            }
         }
 
         private static void ValidatePlacements(IReadOnlyList<EntityPlacement> placements, string label)

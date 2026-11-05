@@ -89,7 +89,7 @@ namespace ProjectL.Tests.Core
             var p = new MovementProjection(i);
             var moved = CombatMovementCalculator.MoveTo(enemy, new CellCoord(4, 2));
             p.MergeCharacter(new CharacterStateChange(enemy, moved));
-            p.Enter(Center, 1);
+            p.Enter(Center);
             MovementEnvironmentCalculator.ResolveObjectsAt(p, i.ActorId, Center, Rules);
             Assert.That(p.Actor.Health.CurrentHealth, Is.EqualTo(90));
             Assert.That(p.Character(enemy.EntityId).Health.CurrentHealth, Is.EqualTo(100));
@@ -129,7 +129,7 @@ namespace ProjectL.Tests.Core
 
         [TestCase(0)]
         [TestCase(10)]
-        public void ConsumedMine_BlocksReturnEvenWhenBadgePreventsAllDamage(int damage)
+        public void ConsumedMine_StillUsesAnActionWhenBadgePreventsDamage(int damage)
         {
             var i = Input(new SheriffBadgeSourceFact(99, Center, 1, true, new[] { Owner.Player }), Mine(11, 2, damage));
             var preview = CombatMovementCalculator.Preview(i, Rules);
@@ -137,9 +137,7 @@ namespace ProjectL.Tests.Core
             Assert.That(r.Accepted, Is.True, r.Reason);
             Assert.That(MovementTestData.Actor(r).Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(MovementTestData.Actor(r).HeldEnvironment.BadgeAvailable, Is.False);
-            Assert.That(preview.CanReturn, Is.False);
-            Assert.That(r.PathMovement.ReturnBarrierOccurred, Is.True);
-            Assert.That(CombatCommandCalculator.Calculate(MovementTestData.Return(CombatCommandComposition.Project(r)), Rules).Accepted, Is.False);
+            Assert.That(MovementTestData.Actor(r).ActionUse, Is.EqualTo(UnitActionUse.Moved));
         }
 
         [Test]
@@ -257,36 +255,37 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void OriginAndCheckpointReturn_DoNotActivateMine()
+        public void OriginAndRejectedSecondMove_DoNotActivateMine()
         {
             var i = Input(Mine(cell: new CellCoord(1, 2)));
             var r = CombatCommandCalculator.Calculate(i, Rules);
             Assert.That(r.Accepted, Is.True, r.Reason);
             Assert.That(MovementTestData.Actor(r).Health.CurrentHealth, Is.EqualTo(100));
-            var returned = CombatCommandCalculator.Calculate(MovementTestData.Return(CombatCommandComposition.Project(r)), Rules);
-            Assert.That(returned.Accepted, Is.True, returned.Reason);
+            var after = CombatCommandComposition.Project(r);
+            var returned = CombatCommandCalculator.Calculate(MovementTestData.Route(after, Center, new CellCoord(1, 2)), Rules);
+            Assert.That(returned.Accepted, Is.False);
+            Assert.That(returned.Reason, Is.EqualTo("ActionAlreadyUsed"));
             Assert.That(returned.FinalState.Environment.Tiles.Single().Active, Is.True);
             Assert.That(returned.Events.OfType<CombatObjectActivationEvent>(), Is.Empty);
         }
 
         [Test]
-        public void PlayerPlacement_ActivatesMineWithoutMovementCharge()
+        public void PlayerPlacement_ActivatesMineAndDefersAction()
         {
             var i = CombatCommonCommandTests.Command(CombatCommandKind.PlaceUnit);
             var hand = CombatPlacementCalculator.Location(i.Characters[0], CharacterRuntimeArea.Hand, 0, null, null);
             var cell = new CellCoord(2, 0);
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, EntityId.Empty, false,
-                i.State.Structures, i.State.ThornFields, i.State.Timeline, new CombatTurnFacts(StagePhase.Deployment),
-                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                i.State.Structures,i.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
             var input = new CombatCommandInput(1, i.Kind, i.ActorId, default, state, new[] { hand, i.Characters[1] },
                 i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, targetCell: cell,
-                battle: new CombatBattleFacts(10, 20, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0, 11, 10, 2),
-                environmentBindings: ObjectArrivalOrderTests.Bindings(11));
+                battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
+                environmentBindings: ObjectArrivalOrderTests.Bindings(11),
+                expectedBattleInstanceId: 0, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
             var r = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(r.Accepted, Is.True, r.Reason);
             var final = r.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final;
             Assert.That(final.Health.CurrentHealth, Is.EqualTo(hand.Health.CurrentHealth - 10));
-            Assert.That(final.Stats.CurrentActionCost, Is.EqualTo(hand.Stats.CurrentActionCost));
+            Assert.That(final.ActionUse, Is.EqualTo(UnitActionUse.Deferred));
             Assert.That(r.FinalState.Environment.Tiles.Single().Active, Is.False);
             Assert.That(r.PathMovement, Is.Null);
         }
@@ -302,19 +301,18 @@ namespace ProjectL.Tests.Core
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), new CellCoord(0, 7), Rotation4.R0, new[] { new CellCoord(0, 7) }, Owner.Enemy);
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, EntityId.Empty, false,
-                new[] { headquarters }, Array.Empty<ThornFieldCellSnapshot>(), Array.Empty<CombatTimelineEntrySnapshot>(), turn,
-                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
             var input = new CombatCommandInput(1, i.Kind, EntityId.Empty, default, state,
                 new[] { i.Characters.Single(c => c.CharacterKey == EntityKey.Unit_MainCharacter), waiting },
                 i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
-                battle: new CombatBattleFacts(10, 20, 37, 1, 1, Array.Empty<CharacterInstanceId>(), 0, 21, 10, 2),
-                environmentBindings: ObjectArrivalOrderTests.Bindings(11));
+                battle: new CombatBattleFacts(10, 37, 1, 1, Array.Empty<CharacterInstanceId>(), 0),
+                environmentBindings: ObjectArrivalOrderTests.Bindings(11),
+                expectedBattleInstanceId: 0, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
             var r = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(r.Accepted, Is.True, r.Reason);
             Assert.That(r.Characters.Characters.Single(c => c.Final.EntityId == enemy.EntityId).Final.Health.CurrentHealth, Is.EqualTo(90));
             Assert.That(r.FinalState.Environment.Tiles.Single().Active, Is.False);
-            Assert.That(r.FinalState.Turn.Participants.Select(p => p.EntityId), Has.Member(enemy.EntityId));
+            Assert.That(CombatCommandComposition.Project(r).Characters.Single(c => c.EntityId == enemy.EntityId).ActionUse, Is.EqualTo(UnitActionUse.Deferred));
         }
 
         [Test]
@@ -336,7 +334,7 @@ namespace ProjectL.Tests.Core
 
         internal static CombatCommandInput Input(params ObjectSourceFact[] sources)
         {
-            var seed = MovementTestData.SafeRoute(5, 2, 1, new CellCoord(1, 2), Center);
+            var seed = MovementTestData.SafeRoute(new CellCoord(1, 2),Center);
             return Copy(seed, environment: new MovementEnvironmentFacts(sources));
         }
 
@@ -349,8 +347,7 @@ namespace ProjectL.Tests.Core
             profiles ??= i.ObstacleContents.ToArray();
             environment ??= i.State.Environment;
             var s = i.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                structures, s.ThornFields, s.Timeline, s.Turn, environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                structures,s.ThornFields,s.Turn,environment);
             var owned = characters.Where(c => c.OwnedId.HasValue).Select(c =>
                 new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray();
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim, state, characters,
@@ -358,7 +355,8 @@ namespace ProjectL.Tests.Core
                 i.Souls, i.Artifacts, i.TargetCell, i.Rotation, i.Battle, i.ProcessingKind, i.Path,
                 i.MovementContext, 1, i.ArtifactItems,
                 new EnvironmentSemanticBindings(terrainIds ?? i.EnvironmentBindings.TerrainSourceIds,
-                    environment.Tiles.OfType<ObjectSourceFact>().Select(o => o.Id).ToArray(), profiles.Select(p => p.EntityId).ToArray()), profiles);
+                    environment.Tiles.OfType<ObjectSourceFact>().Select(o => o.Id).ToArray(), profiles.Select(p => p.EntityId).ToArray()), profiles,
+                expectedBattleInstanceId: i.ExpectedBattleInstanceId, expectedControllerTurnSequence: i.ExpectedControllerTurnSequence);
         }
     }
 }

@@ -1,6 +1,6 @@
 # 옛 공격 지정 방식 필드 제거 — View·DB 작업자 공유 메모
 
-**날짜·상태:** 2026-10-06. Core 작업(천명) 완료분 공유. **미전달.** 설계·실행 기록 원본은 [계획 문서](../plans/2026-10-06-legacy-attack-fields-removal-plan.md)다.
+**날짜·상태:** 2026-10-06. Core 작업(천명) 완료분 공유. **미전달.** 설계·실행 기록 원본은 계획 문서 (Git history: `2026-10-06-legacy-attack-fields-removal-plan.md`)다.
 
 ## 1 요약
 

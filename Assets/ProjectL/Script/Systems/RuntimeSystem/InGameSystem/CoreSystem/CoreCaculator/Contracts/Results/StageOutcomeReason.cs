@@ -8,5 +8,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         NoPlayerUnitsRemaining = 3, // 유저 패배 이유
         PlayerMainCharacterDied = 4,
         VoluntaryAbandonment = 5,
+        DesignatedBossDefeated = 6, // 지정 보스 처치 승리 이유
     }
 }

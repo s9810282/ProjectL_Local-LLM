@@ -15,6 +15,8 @@ MonoBehaviour:
   artifactViewData:
     artifactId: 1003
     displayName: "\uC601\uD63C \uB4DC\uB86D"
-    description: "밤에 적을 처치하면 영혼이 생성됩니다. 영혼을 수집하면 공격력과 최대 체력이 증가합니다."
+    description: "\uC801\uC744 \uCC98\uCE58\uD558\uBA74 \uC601\uD63C\uC774 \uC0DD\uC131\uB429\uB2C8\uB2E4.
+      \uC601\uD63C\uC744 \uC218\uC9D1\uD558\uBA74 \uACF5\uACA9\uB825\uACFC \uCD5C\uB300
+      \uCCB4\uB825\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
     icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
     prefab: {fileID: 1117408295722858690, guid: a87cbe24399d4a34c809e730c5821f93, type: 3}

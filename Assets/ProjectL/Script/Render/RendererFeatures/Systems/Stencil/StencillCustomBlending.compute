@@ -19,6 +19,7 @@ float _LineThickness; // Full width in world units.
 float4 _LineColor;
 float _LineNoiseOffset;
 float2 _LineNoiseTiling;
+float _LineDistortion;
 float4x4 _InverseViewProjection;
 
 [numthreads(8, 8, 1)]
@@ -47,18 +48,38 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float3 worldPos = ComputeWorldSpacePosition(uv, depth, _InverseViewProjection);
     float2 centerOffset = worldPos.xz - _CircleCenter;
     float radius = length(centerOffset);
-    // Polar coordinates keep the spatial tiling independent of animation time.
-    // Whole angular repeats make the atan2 seam join on the repeating texture.
+    // 원 경계로부터의 거리로 UV를 잡아 반경 변화가 노이즈의 흐름을 상쇄하지 않게 한다.
+    // 원 둘레 반복을 정수로 맞춰 atan2 이음새가 반복 텍스처에서 이어지게 한다.
     float angle = radius > 0.000001 ? atan2(centerOffset.y, centerOffset.x) : 0.0;
     float angularRepeats = max(1.0, round(abs(_LineNoiseTiling.x)));
-    float2 noiseUV = float2(
+    float outwardDistance = radius - _CircleRadius;
+    float lineWidth = max(_LineThickness, 0.000001);
+    float distortionBlend = saturate(_LineDistortion);
+    float2 polarUV = float2(
         angle * (1.0 / TWO_PI) * angularRepeats,
-        radius * abs(_LineNoiseTiling.y) - _LineNoiseOffset);
-    float noise = _LineNoiseTexture.SampleLevel(sampler_LinearRepeat, noiseUV, 0).r;
+        outwardDistance * abs(_LineNoiseTiling.y) - _LineNoiseOffset);
+    float noise;
+    if (distortionBlend >= 1.0)
+    {
+        noise = _LineNoiseTexture.SampleLevel(sampler_LinearRepeat, polarUV, 0).r;
+    }
+    else
+    {
+        // 0이면 일반 2D UV와 X/Y 타일링만 사용한다. 각도·반경·띠 폭으로 재매핑하지 않는다.
+        float2 directUV = uv * _LineNoiseTiling;
+        noise = _LineNoiseTexture.SampleLevel(sampler_LinearRepeat, directUV, 0).r;
+        if (distortionBlend > 0.0)
+        {
+            // UV 자체를 보간하면 atan2 이음새가 끊어지므로 두 샘플 결과를 보간한다.
+            float polarNoise = _LineNoiseTexture.SampleLevel(sampler_LinearRepeat, polarUV, 0).r;
+            noise = lerp(noise, polarNoise, distortionBlend);
+        }
+    }
     // Positive distance is inside the radius. Keep the interior solid and put
     // the noisy transition outside the circle so the flame tips point outward.
     float signedDistance = _CircleRadius - radius;
-    float transitionWidth = noise * _TargetRenderTextureThickness;
+    // 경계 변형만 줄인다. 강도가 0이어도 아래 외곽선에서 텍스처 무늬를 표시한다.
+    float transitionWidth = noise * _TargetRenderTextureThickness * _LineDistortion;
     float targetMask = transitionWidth > 0.0
         ? smoothstep(-transitionWidth, 0.0, signedDistance)
         : step(0.0, signedDistance);
@@ -71,7 +92,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float expandedMask = transitionWidth > 0.0
         ? smoothstep(-transitionWidth, 0.0, signedDistance + _LineThickness)
         : step(0.0, signedDistance + _LineThickness);
-    float lineMask = max(0.0, expandedMask - targetMask);
+    float distortedLineMask = max(0.0, expandedMask - targetMask);
+    // 텍스처를 윤곽선으로 변환하지 않고 원형 띠 안에 직접 표시한다. 바깥 끝만 부드럽게 지운다.
+    float directBandMask = step(0.0, outwardDistance)
+        * (1.0 - smoothstep(0.0, 1.0, outwardDistance / lineWidth));
+    float directLineMask = directBandMask * saturate(noise);
+    float lineMask = lerp(directLineMask, distortedLineMask, distortionBlend);
     lineMask *= step(0.000001, _LineThickness) * saturate(_LineColor.a);
 
     color.rgb = lerp(color.rgb, _LineColor.rgb, lineMask);

@@ -2,6 +2,7 @@ using System;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
@@ -27,8 +28,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
         [Tooltip("Role이 MainCharacter인 유닛이어야 합니다.")]
         [SerializeField] private UnitDataSO mainCharacter;
         [SerializeField] private Entry[] entries = new Entry[0];
-        [Tooltip("각 스테이지 첫 손패 수(메인 포함)입니다. 첫 손패에만 적용되며 덱에서 뽑는 서브 수는 이 값 - 1입니다. 기본 4 = 메인 1 + 서브 3.")]
-        [SerializeField, Min(1)] private int startingHandSize = 4;
+        [Tooltip("메인 다음 Entries의 수량 순서로 펼친 grant의 초기 선택 인덱스입니다.")]
+        [SerializeField] private int[] initialDeckGrantIndices = Array.Empty<int>();
+        [Tooltip("각 스테이지 첫 손패 수(메인 포함)입니다. 서브는 이 값 - 1과 보유 수 중 작은 만큼 뽑습니다. 기본 5 = 메인 1 + 서브 최대 4.")]
+        [SerializeField, Min(1)] private int startingHandSize = InitialDrawPlan.DefaultStartingHandSize;
         // 셔플 시드는 스테이지마다 다르게 섞이도록 스테이지 TimelineSeed를 쓰므로 입력 항목이 없다.
         [Tooltip("새 Run 시작 때 지급하는 Run 재화(상점·회복용)입니다. 임시 값이며 Excel DT가 들어오면 그쪽으로 옮깁니다.")]
         [SerializeField, Min(0)] private int startingRunCurrency;
@@ -42,7 +45,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
             for (int i = 0; i < data.Length; i++)
                 data[i] = entries[i].ToData();
             EntityKey mainCharacterKey = mainCharacter != null ? mainCharacter.Key : EntityKey.None;
-            return new PlayerLoadoutData(loadoutKey, mainCharacterKey, data, startingHandSize, startingRunCurrency);
+            return new PlayerLoadoutData(loadoutKey, mainCharacterKey, data, startingHandSize, startingRunCurrency, initialDeckGrantIndices);
         }
     }
 }

@@ -16,16 +16,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly CompiledArtifactLoadout _loadout;
         private readonly CombatEffectEngine _engine = new CombatEffectEngine();
 
+        internal CompiledArtifactLoadout CompiledLoadout => _loadout;
+
         public SoulEffectCalculator(ArtifactLoadoutSnapshot loadout)
         {
             _loadout = ArtifactEffectCompiler.Compile(loadout);
-        }
-
-        internal void RequireSupportedAttackSettlement()
-        {
-            foreach (var rule in _loadout.Rules.Span)
-                if (rule.Rule is ThornHeartRule)
-                    throw new NotSupportedException("반사 Artifact의 공격 정산 순서는 기획 확정 후 연결해야 합니다.");
         }
 
         /// <summary>경로 투영의 최종 생존 도착, 정산된 자발적 도착 또는 강제 도착에서만 호출한다.</summary>
@@ -37,10 +32,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!movementSucceeded || character.Health.IsDead || character.Area != CharacterRuntimeArea.Field)
                 return ArtifactActionProjection.ProjectCollection(input, character, input.SoulCount,
                     new SoulFieldChange(field, field), Array.Empty<long>());
-            if (input.ArrivalKind == SoulArrivalKind.SettledVoluntary && (character.PendingMoveActionCost != 0 ||
-                character.PendingMoveDistance != 0 ||
-                character.MovementCheckpointAnchor != character.Anchor.Value))
-                throw new InvalidOperationException("Soul collection requires settled voluntary movement.");
             if (character.Stats.SoulAttackBonus != input.SoulCount ||
                 character.Stats.SoulMaxHealthBonus != input.SoulCount)
                 throw new InvalidOperationException("Soul bonuses must be derived from the owned count.");
@@ -67,31 +58,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (otherBonus < character.TemporaryAttackBonus)
                 throw new InvalidOperationException("Temporary attack bonus is missing from the source stats.");
             int bonus = checked(count * SoulGrowthRules.AttackBonusPerSoul + otherBonus);
-            var finalStats = new UnitStatsSnapshot(stats.MoveMethod, stats.MoveRange, stats.MoveCost,
-                stats.AppointRange, stats.AttackPower, stats.PhysicalDefense,
-                stats.MaxActionCost, stats.AttackCost, stats.RemainingMoveRange, stats.CurrentActionCost,
-                stats.Priority, stats.Delay, stats.TraitStatuses.ToArray(), stats.Category, bonus,
-                checked(stats.AttackPower + bonus + stats.PositionAttackBonus), count * SoulGrowthRules.AttackBonusPerSoul,
-                count * SoulGrowthRules.MaxHealthBonusPerSoul, stats.PositionAttackBonus);
-            var final = new CharacterCombatFacts(character.EntityId, character.OwnedId, character.CharacterKey,
-                character.Owner, character.OwnershipRole, character.Area, health, finalStats,
-                character.ReserveSlotIndex, character.Anchor, character.Rotation, character.OccupiedCells,
-                character.MovementCheckpointAnchor, character.CommittedMoveDistance, character.PendingMoveActionCost,
-                character.TemporaryAttackBonus, character.TemporaryMaxHealthBonus,
-                character.PendingMoveDistance, character.AttackRefundEligibleMoveCost, character.PositionModifier, character.HeldEnvironment);
+            var finalStats = stats.With(artifactAttackBonus: bonus,
+                effectiveAttackPower: checked(stats.AttackPower + bonus + stats.PositionAttackBonus + stats.TraitAttackBonus),
+                soulAttackBonus: count * SoulGrowthRules.AttackBonusPerSoul,
+                soulMaxHealthBonus: count * SoulGrowthRules.MaxHealthBonusPerSoul);
+            var final = character.With(health: health, stats: finalStats);
             return ArtifactActionProjection.ProjectCollection(input, final, count,
                 new SoulFieldChange(field, new SoulFieldSnapshot(field.NextSoulId, remaining)), consumed);
         }
 
-        /// <summary>Spawn after projected deaths, then optionally apply the existing turn-end countdown.</summary>
+        /// <summary>Spawn after projected deaths.</summary>
         public SoulFieldChange PlanDeaths(SoulFieldSnapshot field,
-            IReadOnlyList<SoulDeathFacts> deaths, bool isNight, bool countdown)
+            IReadOnlyList<SoulDeathFacts> deaths, bool isNight)
         {
-            SoulFieldChange spawned = StageSoulService.PlanDeaths(field, deaths, isNight, _loadout);
-            return countdown ? new SoulFieldChange(field, PlanCountdown(spawned.Final).Final) : spawned;
+            return new SoulFieldChange(field, field);
         }
 
-        public SoulFieldChange PlanCountdown(SoulFieldSnapshot field) => SoulFieldState.PlanCountdown(field);
+        public SoulFieldChange PlanCountdown(SoulFieldSnapshot field) => new SoulFieldChange(field, field);
 
         public int EvaluateAttackPower(CharacterCombatFacts attacker, int soulCount,
             IReadOnlyList<CharacterCombatFacts> characters, List<CombatEvent> events = null) => ArtifactAttackPowerEvaluator.Evaluate(

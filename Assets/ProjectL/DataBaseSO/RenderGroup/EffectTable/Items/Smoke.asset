@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4ef4f98b15b49a4281b373876c9d76c, type: 3}
+  m_Name: Smoke
+  m_EditorClassIdentifier:
+  effectElementData:
+    effectType: 16
+    effectPoolInitializeCount: 0
+    effectPoolMaxCount: 32
+    prefab: {fileID: 6781092038411626975, guid: 4c73cb0ecf78ee546b4da881cf298fd1, type: 3}

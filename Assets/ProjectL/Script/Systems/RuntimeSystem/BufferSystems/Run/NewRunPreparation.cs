@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
@@ -11,18 +12,26 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Run
     /// </summary>
     public sealed class NewRunPreparation
     {
+        public RunId RunId { get; }
+        public IReadOnlyList<int> InitialDeckGrantIndices { get; }
         public IReadOnlyList<RosterAcquireRequest> Roster { get; }
-        public MainCharacterPersistentState InitialMain { get; }
+        /// <summary>새 Run에 설치할 시작 골드다.</summary>
         public int StartingRunCurrency { get; }
         /// <summary>이번 Run의 스테이지 첫 손패 수(메인 포함).</summary>
         public int StartingHandSize { get; }
 
-        public NewRunPreparation(IReadOnlyList<RosterAcquireRequest> roster, MainCharacterPersistentState initialMain,
-            int startingRunCurrency, int startingHandSize)
+        public NewRunPreparation(RunId runId, IReadOnlyList<RosterAcquireRequest> roster,
+            int startingRunCurrency, int startingHandSize, IReadOnlyList<int> initialDeckGrantIndices)
         {
+            if (runId.IsEmpty) throw new ArgumentException("새 Run ID가 필요합니다.", nameof(runId));
+            RunId = runId;
+            // 초기 덱은 Core 덱 규칙이 정규화한 지급 index다. 빈 덱으로 시작하는 Run은 없으므로 항상 받는다.
+            if (initialDeckGrantIndices == null) throw new ArgumentNullException(nameof(initialDeckGrantIndices));
+            var indices = new int[initialDeckGrantIndices.Count];
+            for (int i = 0; i < indices.Length; i++) indices[i] = initialDeckGrantIndices[i];
+            InitialDeckGrantIndices = Array.AsReadOnly(indices);
             if (startingHandSize < 1) throw new ArgumentOutOfRangeException(nameof(startingHandSize));
             if (roster == null) throw new ArgumentNullException(nameof(roster));
-            if (initialMain == null) throw new ArgumentNullException(nameof(initialMain));
             if (startingRunCurrency < 0) throw new ArgumentOutOfRangeException(nameof(startingRunCurrency));
             var copy = new RosterAcquireRequest[roster.Count];
             int mains = 0;
@@ -35,7 +44,6 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Run
             if (mains != 1) throw new ArgumentException("새 Run 로스터에는 메인 캐릭터가 정확히 하나 필요합니다.", nameof(roster));
 
             Roster = Array.AsReadOnly(copy);
-            InitialMain = initialMain;
             StartingRunCurrency = startingRunCurrency;
             StartingHandSize = startingHandSize;
         }

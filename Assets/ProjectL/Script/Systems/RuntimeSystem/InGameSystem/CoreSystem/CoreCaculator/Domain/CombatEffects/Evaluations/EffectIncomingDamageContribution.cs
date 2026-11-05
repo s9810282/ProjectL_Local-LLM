@@ -9,13 +9,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     internal readonly struct EffectIncomingDamageContribution
     {
         public EffectOriginKey Origin { get; }
+        public StatusEffectKey? EffectKey => FlatReduction > 0 || RemainingDamagePercent < 100 ? StatusEffectKey.IncomingDamageDecrease : (StatusEffectKey?)null;
         public int FlatReduction { get; }
+        public int RemainingDamagePercent { get; }
 
-        public EffectIncomingDamageContribution(EffectOriginKey origin, int flatReduction)
+        public EffectIncomingDamageContribution(EffectOriginKey origin, int flatReduction, int remainingDamagePercent = 100)
         {
             if (origin.IsValid == false) throw new ArgumentException(nameof(origin));
             if (flatReduction < 0) throw new ArgumentOutOfRangeException(nameof(flatReduction));
 
+            if (remainingDamagePercent < 0 || remainingDamagePercent > 100) throw new ArgumentOutOfRangeException(nameof(remainingDamagePercent));
+            RemainingDamagePercent = remainingDamagePercent;
             Origin = origin;
             FlatReduction = flatReduction;
         }

@@ -27,7 +27,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 
             input.Press(StageInputNames.Deployment.Cancel, _receiver.Cancel);
             input.Press(StageInputNames.Deployment.EnterCombat, _receiver.EnterCombatRequested);
-            input.Press(StageInputNames.Deployment.DrawCharacter, _receiver.DrawRequested);
         }
     }
 }

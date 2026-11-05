@@ -5,6 +5,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
 {
     public interface ICameraCatalogHandle : IDisposable
     {
+        int Priority { get; }
+        void RaisePriority();
         void SetPriority(int priority);
         void SetZoom(float value);
         void Customize(CameraCatalogData data);
@@ -17,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
 
     internal interface ICameraCatalogHandlePoolService
     {
+        int GetHighestPriority();
         void Return(CameraCatalogNode node, ulong version);
     }
 
@@ -31,6 +34,20 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
             this.pool = pool;
             this.node = node;
             version = node.Version;
+        }
+
+        public int Priority => RequireCamera().Priority;
+
+        /// <summary>다른 카메라의 값은 유지하고 이 카메라만 최상위 우선순위로 올립니다.</summary>
+        public void RaisePriority()
+        {
+            var camera = RequireCamera();
+            if (!camera.isActiveAndEnabled)
+                throw new InvalidOperationException("목표 버추얼 카메라가 활성화되어 있어야 합니다.");
+
+            int highest = pool.GetHighestPriority();
+            camera.Priority = highest == int.MaxValue ? int.MaxValue : highest + 1;
+            camera.MoveToTopOfPrioritySubqueue();
         }
 
         public void SetPriority(int priority) => RequireCamera().Priority = priority;

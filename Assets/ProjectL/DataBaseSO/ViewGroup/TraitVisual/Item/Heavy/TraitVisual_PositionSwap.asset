@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_PositionSwap
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 440
+    displayName: "\uC704\uCE58 \uAD50\uD658"
+    icon: {fileID: 0}
+    description: "이동할 칸의 아군과 위치를 교대합니다. \n교대 대상은 이동 행동과 이동 거리를 \n소모하지 않습니다."
+    defenseReductionDescription: 
+    rankValueFormat: "\uBCF4\uD638\uB9C9 {0} \u2192 {2} (+{1})"
+    activations:
+    - kind: 250
+      direction: 0
+      cueTiming: 0
+      bodyText:
+        enabled: 1
+        textSource: 0
+        overrideText: 
+        target: 2
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 9
+          anchor: 1
+          delay: 0
+          point: 4
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 2
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 1
+        waitSeconds: 2
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

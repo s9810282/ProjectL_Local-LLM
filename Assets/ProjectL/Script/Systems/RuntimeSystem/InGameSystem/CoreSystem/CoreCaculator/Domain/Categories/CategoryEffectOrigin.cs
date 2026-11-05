@@ -39,10 +39,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             switch (origin.RuleKey)
             {
-                case ManeuverRefundRuleKeyName:
-                    return CategoryRuleKey.ManeuverRefund;
-                case DirectionalArmorRuleKeyName:
-                    return CategoryRuleKey.DirectionalArmor;
                 case SafeBombardmentRuleKeyName:
                     return CategoryRuleKey.SafeBombardment;
                 default:
@@ -50,18 +46,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
         }
 
-        private const string ManeuverRefundRuleKeyName = "maneuver-refund";
-        private const string DirectionalArmorRuleKeyName = "directional-armor";
         private const string SafeBombardmentRuleKeyName = "safe-bombardment";
 
         private static string GetRuleKeyName(CategoryRuleKey ruleKey)
         {
             switch (ruleKey)
             {
-                case CategoryRuleKey.ManeuverRefund:
-                    return ManeuverRefundRuleKeyName;
-                case CategoryRuleKey.DirectionalArmor:
-                    return DirectionalArmorRuleKeyName;
                 case CategoryRuleKey.SafeBombardment:
                     return SafeBombardmentRuleKeyName;
                 default:

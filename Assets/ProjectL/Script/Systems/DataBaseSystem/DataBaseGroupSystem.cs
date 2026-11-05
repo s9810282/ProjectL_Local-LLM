@@ -1,8 +1,8 @@
+using ProjectL.Systems.ServiceKeys.DBFactory;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable;
 using ProjectL.Systems.DataBaseSystem.Queries.RenderDataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase;
-using ProjectL.Systems.ServiceKeys;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 
@@ -27,7 +27,7 @@ namespace ProjectL.Systems.DataBaseSystem
 
     /// <summary>
     /// 아티팩트 보드 처음 크기 설정만 노출합니다. IInGameQuery에 넣지 않아 테스트용 InGame 조회 구현체에 영향을 주지 않습니다.
-    /// 이 설정을 쓰는 쪽은 DB가 이 인터페이스를 구현하지 않을 수 있음을 처리해야 합니다(아티팩트 팝업 계획 D7).
+    /// 운영 DB(<see cref="DataBaseGroupSystem"/>)는 늘 구현합니다. 보드 준비는 이 설정이 없으면 InitData에서 바로 멈춥니다(검사 후속 정리 R-f J8).
     /// </summary>
     internal interface IHasArtifactBoardConfig : IServiceModule
     {
@@ -52,7 +52,7 @@ namespace ProjectL.Systems.DataBaseSystem
             RenderQuery = SystemReader.ServiceStoreReader.GetService(DataBaseGroupKey.Render);
             InGameQuery = SystemReader.ServiceStoreReader.GetService(DataBaseGroupKey.InGame);
             ViewQuery = SystemReader.ServiceStoreReader.GetService(DataBaseGroupKey.View);
-            ArtifactBoardConfig = SystemReader.ServiceStoreReader.GetService(DataBaseGroupKey.ArtifactBoardConfig).ArtifactBoardConfig;
+            ArtifactBoardConfig = SystemReader.ServiceStoreReader.GetService(DataBaseServiceKey.ArtifactBoardConfig).ArtifactBoardConfig;
         }
 
         public override void ExportServices(ISystemWriteSink sink)

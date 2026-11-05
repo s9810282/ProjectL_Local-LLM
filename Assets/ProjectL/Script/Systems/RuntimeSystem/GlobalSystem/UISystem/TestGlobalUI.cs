@@ -2,8 +2,9 @@ using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
 {
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "TestGlobalUI")]
     public class TestGlobalUI : GlobalUIBase
     {
         public override UIId ID => UIId.TestGlobal;

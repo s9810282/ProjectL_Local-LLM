@@ -19,18 +19,47 @@ MonoBehaviour:
     cellOffsetSize: {x: 0.8, y: 1, z: 0.8}
     cellPaddingX: 0.1
     cellPaddingY: 0.1
-    outlineCellSpacing: {x: 1, y: 1}
+    outlineCellSpacing: {x: 1.5, y: 1.5}
+    showGridDecal: 0
     gridLineWidth: 0.05
     gridDecalMaterial: {fileID: 2100000, guid: a37d1aa4286135a48a2ca4097db22dc8, type: 2}
     gridDecalDepth: 1
+    gridDecalRenderingLayer: FieldGround
     outlineThickness: 0.06
     outlineYOffset: 0.02
+    outlineDashLength: 0.25
+    outlineDashFill: 0.65
+    cellOutlineStyle: 0
+    overlapCellOutlineStyle: 1
+    cellOutlineScale: 1
+    outlineCornerRadius: 0.004
+    highlightFillMaterial: {fileID: 2100000, guid: 0d985b48362048e4935336b594844221, type: 2}
+    overlapInsetScale: 0.85
+    overlapCornerRadius: 0.35
+    movementPathThickness: 0.4
+    movementPathYOffset: 0.02
+    movementPathMaterial: {fileID: 2100000, guid: c18a30c40d622cb3c9d2821a071efe76, type: 2}
+    movementPathArrowLength: 0.5
+    movementPathArrowWidth: 0.8
+    movementPathArrowTipOffset: 0
+    trajectoryMaterial: {fileID: 2100000, guid: 3c09578779d937804986b2ffa8940090, type: 2}
+    trajectoryThickness: 0.15
+    trajectoryDotSpacing: 0.3
+    trajectoryDotFill: 0.45
+    trajectoryFlowSpeed: 0.6
+    trajectoryBlockedMarker: {fileID: 0}
+    knockbackArrowMaterial: {fileID: 2100000, guid: 57f974494f6a435889f224efa2302097, type: 2}
+    knockbackArrowLength: 0.5
+    knockbackArrowWidth: 0.8
+    knockbackArrowLift: 0.25
     handUnitLayerMask:
       serializedVersion: 2
       m_Bits: 256
-    ghostMaterial: {fileID: 0}
+    ghostMaterial: {fileID: -7330079771847897211, guid: 85c74e5e78dffe44d8309c15d4cab45a, type: 3}
     validGhostTint: {r: 0.45, g: 1, b: 0.55, a: 0.5}
     invalidGhostTint: {r: 1, g: 0.4, b: 0.4, a: 0.5}
     ghostWorldOffset: {x: 0, y: 0.05, z: 0}
     ghostScale: 0.5
     fieldUnitScale: 0.5
+    movementOriginalOpacity: 0.65
+    neutralGhostTint: {r: 0.8, g: 0.8, b: 0.8, a: 0.5}

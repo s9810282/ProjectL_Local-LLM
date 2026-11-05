@@ -12,19 +12,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public MovePreview? Move { get; }
         public MovementRangeResult? MoveRange { get; }
         public CombatPlacementPreview? Placement { get; }
-        public CheckpointReturnPreview CheckpointReturn { get; }
+        public CombatActionAvailability ActionAvailability { get; }
         public MovementPreviewContext MovementContext { get; }
+        /// <summary>필드 유닛 하나의 공격 범위 칸 조회 응답이다(호버 공격 범위 설계 UR2).</summary>
+        public UnitAttackRangeResult? UnitRange { get; }
         private CombatPreviewResult(int number, AttackRangeResult? range = null, AttackPreview? attack = null,
             MovePreview? move = null, MovementRangeResult? moveRange = null, CombatPlacementPreview? placement = null,
-            CheckpointReturnPreview checkpointReturn = null, MovementPreviewContext movementContext = null)
+            CombatActionAvailability actionAvailability = null, MovementPreviewContext movementContext = null,
+            UnitAttackRangeResult? unitRange = null)
         {
             if (number < 1) throw new ArgumentOutOfRangeException(nameof(number));
             if ((range.HasValue ? 1 : 0) + (attack.HasValue ? 1 : 0) + (move.HasValue ? 1 : 0) +
-                (moveRange.HasValue ? 1 : 0) + (placement.HasValue ? 1 : 0) + (checkpointReturn != null ? 1 : 0) != 1)
+                (moveRange.HasValue ? 1 : 0) + (placement.HasValue ? 1 : 0) + (actionAvailability != null ? 1 : 0) +
+                (unitRange.HasValue ? 1 : 0) != 1)
                 throw new ArgumentException("미리보기 내용은 하나만 필요합니다.");
             RequestNumber = number; Range = range; Attack = attack; Move = move; MoveRange = moveRange; Placement = placement;
-            CheckpointReturn = checkpointReturn;
+            ActionAvailability = actionAvailability;
             MovementContext = movementContext;
+            UnitRange = unitRange;
         }
         public static CombatPreviewResult ForAttackRange(int number, AttackRangeResult range)
         {
@@ -41,7 +46,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public static CombatPreviewResult ForMove(int number, MovePreview move, MovementPreviewContext context = null) => new(number, move: move, movementContext: context);
         public static CombatPreviewResult ForMoveRange(int number, MovementRangeResult range) => new(number, moveRange: range);
         public static CombatPreviewResult ForPlacement(int number, CombatPlacementPreview placement) => new(number, placement: placement);
-        public static CombatPreviewResult ForCheckpointReturn(int number, CheckpointReturnPreview preview, MovementPreviewContext context = null) =>
-            new(number, checkpointReturn: preview ?? throw new ArgumentNullException(nameof(preview)), movementContext: context);
+        public static CombatPreviewResult ForActionAvailability(int number, CombatActionAvailability availability) =>
+            new(number, actionAvailability: availability ?? throw new ArgumentNullException(nameof(availability)));
+        public static CombatPreviewResult ForUnitAttackRange(int number, UnitAttackRangeResult range)
+        {
+            if (range.UnitId.IsEmpty || (range.Succeeded == (range.FailureReason != AttackFailureReason.None)))
+                throw new ArgumentException("유닛 공격 범위 결과가 초기화되지 않았습니다.", nameof(range));
+            return new CombatPreviewResult(number, unitRange: range);
+        }
     }
 }

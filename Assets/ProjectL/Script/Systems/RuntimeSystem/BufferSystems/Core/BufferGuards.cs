@@ -1,3 +1,7 @@
+using System.Linq;
+using ProjectL.Systems.DataBaseSystem.Data.Common;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Map;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
@@ -40,6 +44,17 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
                 _current.CurrentStage.NodeId != nodeId.Value ||
                 _current.CurrentStage.StageKey != stageKey.Value)
                 throw new System.InvalidOperationException("제안이 현재 선택한 스테이지와 다릅니다.");
+        }
+
+        /// <summary>대상 챕터가 미완료이고, 대상 노드가 Core 판정 때와 같은 종류·역할의 미완료 노드인지 본다.</summary>
+        internal static bool IsOpenTarget(IMapProgressBufferReadSink map, IStageProgressBufferReadSink stages,
+            int chapterKey, StageNodeId nodeId, StageKey stageKey,
+            StageType stageType, StageMapRole mapRole)
+        {
+            return !map.GetMap(chapterKey).IsClear &&
+                stages.GetStages(chapterKey).Any(stage =>
+                    stage.NodeId == nodeId.Value && stage.StageKey == stageKey.Value &&
+                    !stage.IsClear && stage.StageType == stageType && stage.MapRole == mapRole);
         }
     }
 }

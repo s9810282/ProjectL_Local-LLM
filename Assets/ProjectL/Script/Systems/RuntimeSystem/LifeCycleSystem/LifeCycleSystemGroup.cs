@@ -1,8 +1,12 @@
+using ProjectL.Systems.ServiceKeys.Runtime.LifeCycle;
 using ProjectL.Framework.Composition;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.ArtifactPreparation;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
-using ProjectL.Systems.ServiceKeys;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Artifact;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
 {
@@ -13,10 +17,23 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
     {
         ILifeCycleManager LifeCycleManager { get; }
         ICombatEntryService CombatEntry { get; }
-        ICombatExitService CombatExit { get; }
+        IArtifactBoardPreparation ArtifactBoardPreparation { get; }
 
         /// <summary>전투 진행 판단에 쓰는 사실을 읽는 유일한 자리입니다(재구성 설계 J13·D5).</summary>
         ICombatProgressReader CombatProgress { get; }
+        IStageEntryAttemptRead StageEntryAttempts { get; }
+
+        /// <summary>이번 Stage 방문의 진행 사실과 상태 바꿈 입구입니다. Stage Plan만 씁니다(검사 후속 정리 계획 TP-R9).</summary>
+        IStageProgress StageProgress { get; }
+
+        /// <summary>증강 선택이 남아 있는지 읽는 자리입니다(강화 View 설계 §14 TG2). 읽기만 합니다.</summary>
+        IStageTraitGrowthFacts StageTraitGrowthFacts { get; }
+
+        /// <summary>로비 판단에 쓰는 사실을 읽는 유일한 자리입니다(로비 재구성 설계 §4.6). 읽기만 합니다.</summary>
+        ILobbyProgressReader LobbyProgress { get; }
+
+        /// <summary>로비 아티팩트 처리 기록 확인 Job을 만드는 입구입니다. 도메인 정지는 이 확인 Job만 합니다(로비 재구성 설계 P1).</summary>
+        ILobbyArtifactChecks LobbyArtifactChecks { get; }
     }
 
     #endregion
@@ -35,16 +52,26 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
     {
         public ILifeCycleManager LifeCycleManager { get; }
         public ICombatEntryService CombatEntry { get; }
-        public ICombatExitService CombatExit { get; }
+        public IArtifactBoardPreparation ArtifactBoardPreparation { get; }
         public ICombatProgressReader CombatProgress { get; }
+        public IStageEntryAttemptRead StageEntryAttempts { get; }
+        public IStageProgress StageProgress { get; }
+        public IStageTraitGrowthFacts StageTraitGrowthFacts { get; }
+        public ILobbyProgressReader LobbyProgress { get; }
+        public ILobbyArtifactChecks LobbyArtifactChecks { get; }
 
         internal LifeCycleSystemGroup(ISystemReader systemReader) : base(systemReader)
         {
             LifeCycleManager = systemReader.ServiceStoreReader.GetService(
                 LifeCycleSystemServiceKey.Manager);
             CombatEntry = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.CombatEntry);
-            CombatExit = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.CombatExit);
+            ArtifactBoardPreparation = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.ArtifactBoardPreparation);
             CombatProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.CombatProgress);
+            StageEntryAttempts = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageEntryAttempts);
+            StageProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageProgress);
+            StageTraitGrowthFacts = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageTraitGrowthFacts);
+            LobbyProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.LobbyProgress);
+            LobbyArtifactChecks = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.LobbyArtifactChecks);
         }
 
         public void BindScene()

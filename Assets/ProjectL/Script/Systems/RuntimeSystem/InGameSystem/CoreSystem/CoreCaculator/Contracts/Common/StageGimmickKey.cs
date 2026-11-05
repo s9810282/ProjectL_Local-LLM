@@ -7,5 +7,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         None = 0,
         Railway = 10,
+        Haboob = 20,
+        Rockfall = 30,
+        Tornado = 40,
     }
 }

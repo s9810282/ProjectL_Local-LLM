@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -6,12 +8,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 {
     public readonly struct AttackHitResult
     {
+        public IReadOnlyList<AttackHitContactSnapshot> Contacts { get; }
         public EntityId TargetId { get; }
         /// <summary>일반 공격의 대상 역할이다. 기존 호출의 None은 역할을 추정하지 않은 값이다.</summary>
         public AttackTargetRole Role { get; }
         /// <summary>정산 전에 적용된 비율이며 실제 HP 손실에 다시 적용하지 않는다.</summary>
         public int AppliedSplashPercent { get; }
         public int DamageDealt { get; }
+        /// <summary>피격 정산 도중 피해 적용 경계(아이템)가 적용한 회복이며 실제 피해와 분리한다. 공격 결과 고정 시점까지의 값이다.</summary>
+        public int HealthRecovery { get; }
         /// <summary>위치 보정 제거에 따른 HP 상한 감소이며 공격 피해에는 포함하지 않는다.</summary>
         public int HealthNormalizationLoss { get; }
         public int TargetHealthBefore { get; }
@@ -19,7 +24,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public bool TargetKilled { get; }
 
         public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
-            AttackTargetRole role = AttackTargetRole.None, int appliedSplashPercent = 100, int healthNormalizationLoss = 0)
+            AttackTargetRole role, int appliedSplashPercent, int healthNormalizationLoss, int healthRecovery,
+            IReadOnlyList<AttackHitContactSnapshot> contacts)
+            : this(targetId, targetHealthBefore, targetHealthAfter, role, appliedSplashPercent, healthNormalizationLoss, healthRecovery)
+        {
+            Contacts = AttackHitContactSnapshot.Copy(contacts);
+            var pairs = Contacts.Select(c => (c.Role, c.AppliedSplashPercent)).Distinct().ToArray();
+            if (pairs.Length == 1 && (role != pairs[0].Role || appliedSplashPercent != pairs[0].AppliedSplashPercent) ||
+                pairs.Length > 1 && (role != AttackTargetRole.None || appliedSplashPercent != 100))
+                throw new ArgumentException("집계 역할과 접촉 역할이 다릅니다.", nameof(contacts));
+        }
+
+        public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
+            AttackTargetRole role = AttackTargetRole.None, int appliedSplashPercent = 100, int healthNormalizationLoss = 0,
+            int healthRecovery = 0)
         {
             if (Enum.IsDefined(typeof(AttackTargetRole), role) == false)
                 throw new ArgumentOutOfRangeException(nameof(role));
@@ -27,6 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(appliedSplashPercent));
             if (role != AttackTargetRole.Additional && appliedSplashPercent != 100)
                 throw new ArgumentException("추가 대상 이외의 적용 비율은 100이어야 합니다.", nameof(appliedSplashPercent));
+            Contacts = null;
             Role = role;
             AppliedSplashPercent = appliedSplashPercent;
             if (targetId.IsEmpty)
@@ -35,16 +54,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(targetHealthBefore), "대상 체력(이전)은 음수일 수 없습니다.");
             if (targetHealthAfter < 0)
                 throw new ArgumentOutOfRangeException(nameof(targetHealthAfter), "대상 체력(이후)은 음수일 수 없습니다.");
-            if (targetHealthAfter > targetHealthBefore)
+            if (healthRecovery < 0) throw new ArgumentOutOfRangeException(nameof(healthRecovery));
+            if ((long)targetHealthAfter > (long)targetHealthBefore + healthRecovery)
             {
                 throw new ArgumentOutOfRangeException(nameof(targetHealthAfter), "공격 후 체력은 공격 전 체력보다 클 수 없습니다.");
             }
 
             TargetId = targetId;
-            if (healthNormalizationLoss < 0 || healthNormalizationLoss > targetHealthBefore - targetHealthAfter)
+            if (healthNormalizationLoss < 0 || healthNormalizationLoss > (long)targetHealthBefore - targetHealthAfter + healthRecovery)
                 throw new ArgumentOutOfRangeException(nameof(healthNormalizationLoss));
             HealthNormalizationLoss = healthNormalizationLoss;
-            DamageDealt = targetHealthBefore - targetHealthAfter - healthNormalizationLoss;
+            HealthRecovery = healthRecovery;
+            DamageDealt = checked(targetHealthBefore - targetHealthAfter - healthNormalizationLoss + healthRecovery);
             TargetHealthBefore = targetHealthBefore;
             TargetHealthAfter = targetHealthAfter;
             TargetKilled = TargetHealthAfter == 0;

@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime.Global.Render;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup;
@@ -6,7 +7,6 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.EffectSystem
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.LightSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.MeshSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.RenderFeatureSystem;
-using ProjectL.Systems.ServiceKeys;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core
 {
@@ -34,7 +34,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core
 
         public RenderCoreGroup(ISystemReader systemReader)
         {
-            CameraGroup = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.CameraGroup);
+            CameraGroup = systemReader.ServiceStoreReader.GetService(RenderSystemGroupServiceKey.CameraGroup);
             EffectSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.ParticleSystem);
             MeshSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.MeshSystem);
             ColorSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.ColorSystem);

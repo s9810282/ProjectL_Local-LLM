@@ -12,6 +12,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
     /// </summary>
     public readonly struct CombatViewCommandData
     {
+        public int? ItemKey { get; }
         public CombatViewCommandKind Kind { get; }
         /// <summary>배치·회수·이동·공격의 주체입니다. 주체가 없는 명령은 Empty입니다.</summary>
         public EntityId EntityId { get; }
@@ -23,16 +24,25 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         public AttackAim Aim { get; }
         public MovementPath Path { get; }
         public MovementPreviewContext MovementContext { get; }
+        /// <summary>입력 당시의 전투와 진영 턴이다. 처리 시점의 최신 값으로 바꾸지 않는다.</summary>
+        public long ExpectedBattleInstanceId { get; }
+        public long ExpectedControllerTurnSequence { get; }
+        public int ExpectedMoveCommandNumber { get; }
 
         private CombatViewCommandData(CombatViewCommandKind kind, EntityId entityId,
-            CellCoord cell, Rotation4 rotation, AttackAim aim, MovementPath path = null, MovementPreviewContext movementContext = null)
+            CellCoord cell, Rotation4 rotation, AttackAim aim, MovementPath path = null, MovementPreviewContext movementContext = null, int? itemKey = null,
+            long expectedBattleInstanceId = 0, long expectedControllerTurnSequence = 0, int expectedMoveCommandNumber = 0)
         {
+            ItemKey = itemKey;
             Kind = kind;
             EntityId = entityId;
             Cell = cell;
             Rotation = rotation;
             Aim = aim;
             Path = path; MovementContext = movementContext;
+            ExpectedBattleInstanceId = expectedBattleInstanceId;
+            ExpectedControllerTurnSequence = expectedControllerTurnSequence;
+            ExpectedMoveCommandNumber = expectedMoveCommandNumber;
         }
 
         public static CombatViewCommandData PlaceMainCharacter(CellCoord cell, Rotation4 rotation)
@@ -57,6 +67,17 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
                 unit, default, default, default);
         }
 
+        public static CombatViewCommandData EquipItem(EntityId unit, int itemKey) => ItemRequest(CombatViewCommandKind.EquipItem, unit, itemKey);
+        public static CombatViewCommandData ReplaceItem(EntityId unit, int itemKey) => ItemRequest(CombatViewCommandKind.ReplaceItem, unit, itemKey);
+        public static CombatViewCommandData UnequipItem(EntityId unit) => ItemRequest(CombatViewCommandKind.UnequipItem, unit, null);
+
+        private static CombatViewCommandData ItemRequest(CombatViewCommandKind kind, EntityId unit, int? key)
+        {
+            CombatViewInputGuard.RequireEntity(unit, nameof(unit));
+            if (key <= 0) throw new ArgumentOutOfRangeException(nameof(key));
+            return new CombatViewCommandData(kind, unit, default, default, default, itemKey: key);
+        }
+
         public static CombatViewCommandData EnterCombat()
         {
             return new CombatViewCommandData(CombatViewCommandKind.EnterCombat,
@@ -68,37 +89,42 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
             CombatViewInputGuard.RequireEntity(unit, nameof(unit));
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (context == null) throw new ArgumentNullException(nameof(context));
+            CombatViewInputGuard.RequireTurnIdentity(context.BattleInstanceId, context.ControllerTurnSequence);
             return new CombatViewCommandData(CombatViewCommandKind.Move,
-                unit, default, default, default, path, context);
+                unit, default, default, default, path, context,
+                expectedBattleInstanceId: context.BattleInstanceId, expectedControllerTurnSequence: context.ControllerTurnSequence);
         }
 
-        public static CombatViewCommandData ReturnToCheckpoint(EntityId unit, MovementPreviewContext context)
-        {
-            CombatViewInputGuard.RequireEntity(unit, nameof(unit));
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            return new CombatViewCommandData(CombatViewCommandKind.ReturnToCheckpoint, unit, default, default, default,
-                movementContext: context);
-        }
-
-        public static CombatViewCommandData Attack(EntityId attacker, AttackAim aim)
+        public static CombatViewCommandData Attack(EntityId attacker, AttackAim aim,
+            long expectedBattleInstanceId, long expectedControllerTurnSequence)
         {
             CombatViewInputGuard.RequireEntity(attacker, nameof(attacker));
             CombatViewInputGuard.RequireAim(aim);
+            CombatViewInputGuard.RequireTurnIdentity(expectedBattleInstanceId, expectedControllerTurnSequence);
             return new CombatViewCommandData(CombatViewCommandKind.Attack,
-                attacker, default, default, aim);
+                attacker, default, default, aim, expectedBattleInstanceId: expectedBattleInstanceId,
+                expectedControllerTurnSequence: expectedControllerTurnSequence);
         }
 
-        public static CombatViewCommandData EndUnitTurn()
+        public static CombatViewCommandData EndPlayerTurn(long expectedBattleInstanceId, long expectedControllerTurnSequence)
         {
-            return new CombatViewCommandData(CombatViewCommandKind.EndUnitTurn,
-                EntityId.Empty, default, default, default);
+            CombatViewInputGuard.RequireTurnIdentity(expectedBattleInstanceId, expectedControllerTurnSequence);
+            return new CombatViewCommandData(CombatViewCommandKind.EndPlayerTurn,
+                EntityId.Empty, default, default, default, expectedBattleInstanceId: expectedBattleInstanceId,
+                expectedControllerTurnSequence: expectedControllerTurnSequence);
         }
 
-        public static CombatViewCommandData DrawCharacter()
+        public static CombatViewCommandData UndoMove(EntityId unit, long expectedBattleInstanceId,
+            long expectedControllerTurnSequence, int expectedMoveCommandNumber)
         {
-            return new CombatViewCommandData(CombatViewCommandKind.DrawCharacter,
-                EntityId.Empty, default, default, default);
+            CombatViewInputGuard.RequireEntity(unit, nameof(unit));
+            CombatViewInputGuard.RequireTurnIdentity(expectedBattleInstanceId, expectedControllerTurnSequence);
+            if (expectedMoveCommandNumber < 1) throw new ArgumentOutOfRangeException(nameof(expectedMoveCommandNumber));
+            return new CombatViewCommandData(CombatViewCommandKind.UndoMove, unit, default, default, default,
+                expectedBattleInstanceId: expectedBattleInstanceId, expectedControllerTurnSequence: expectedControllerTurnSequence,
+                expectedMoveCommandNumber: expectedMoveCommandNumber);
         }
+
     }
 
     /// <summary>CombatViewBuffer가 번호를 붙여 보관하는 실행 명령입니다.</summary>
@@ -123,6 +149,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
     /// <summary>명령과 미리보기 값의 형식을 검사합니다. 규칙상 가능한지는 검사하지 않습니다.</summary>
     internal static class CombatViewInputGuard
     {
+        internal static void RequireTurnIdentity(long expectedBattleInstanceId, long expectedControllerTurnSequence)
+        {
+            if (expectedBattleInstanceId < 1) throw new ArgumentOutOfRangeException(nameof(expectedBattleInstanceId));
+            if (expectedControllerTurnSequence < 1) throw new ArgumentOutOfRangeException(nameof(expectedControllerTurnSequence));
+        }
+
         internal static void RequireEntity(EntityId entityId, string paramName)
         {
             if (entityId.IsEmpty)

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_KillChainField
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 70
+    displayName: "\uB09C\uC0AC"
+    icon: {fileID: 21300000, guid: b9756d474ddb2bd4585e084200fc2300, type: 3}
+    description: "적 캐릭터를 처치하면\n전장에 있는 무작위 적 캐릭터 하나를 \n추가로 공격합니다."
+    activations: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

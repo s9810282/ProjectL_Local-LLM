@@ -10,6 +10,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Recovery.Item
     {
         [SerializeField, Min(1)] private int optionId = 1;
         [SerializeField, Min(0)] private int cost;
+        [SerializeField] private RecoveryEffectKind effectKind = RecoveryEffectKind.Heal;
+        [SerializeField, Min(1)] private int maxHealthIncrease = 10;
         [SerializeField] private RecoveryHealMode healMode = RecoveryHealMode.Flat;
         [Tooltip("Flat: 회복량, PercentOfMax: 최대 체력 대비 %(1~100), Full: 쓰지 않음")]
         [SerializeField, Min(0)] private int healValue;
@@ -17,6 +19,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Recovery.Item
         /// <summary>다른 SO가 이 선택지를 참조할 때 쓰는 키입니다.</summary>
         internal int OptionId => optionId;
 
-        public override IData GetData() => new RecoveryOptionData(optionId, cost, healMode, healValue);
+        public override IData GetData() => new RecoveryOptionData(optionId, cost, healMode, healValue,
+            effectKind, effectKind == RecoveryEffectKind.MaxHealthGrowth ? maxHealthIncrease : 0);
     }
 }

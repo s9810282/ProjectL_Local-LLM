@@ -1,5 +1,21 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-380402446655870452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad458f082a984c959c42ed35e0672aa3, type: 3}
+  m_Name: TransparentScreenCaptureFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  distortionLayerMask:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30,7 +46,9 @@ MonoBehaviour:
   - {fileID: 2433005988638492109}
   - {fileID: 864200001}
   - {fileID: 864200002}
-  m_RendererFeatureMap: ad6b866f10d7b46ca4ad9d15f5aae567cd0532590ec6c32141a582330000000042a5823300000000
+  - {fileID: -380402446655870452}
+  - {fileID: 7262249524462298539}
+  m_RendererFeatureMap: ad6b866f10d7b46ca4ad9d15f5aae567cd0532590ec6c32141a582330000000042a58233000000000c2a637ffd89b8faab25d32777b1c864
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -40,7 +58,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_TransparentLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 3228827967
   m_DefaultStencilState:
     overrideStencilState: 1
     stencilReference: 0
@@ -70,16 +88,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   IsAddRenderPass: 0
+  linePresets:
+  - key: 0
+    data:
+      lineThickness: 0.27
+      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
+      lineNoiseTexture: {fileID: 2800000, guid: 26a3377eacb3cfe45adfe1e149194407, type: 3}
+      lineNoiseTiling: {x: 10, y: 0}
+      lineNoiseSpeed: 0.06
+      lineDistortion: 1.16
+  - key: 1
+    data:
+      lineThickness: 0.35
+      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
+      lineNoiseTexture: {fileID: 2800000, guid: 49bb715095baeef40ae705080df273ec, type: 3}
+      lineNoiseTiling: {x: 1, y: 1}
+      lineNoiseSpeed: 0.1
+      lineDistortion: 0.57
+  - key: 2
+    data:
+      lineThickness: 0.35
+      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
+      lineNoiseTexture: {fileID: 2800000, guid: 26a3377eacb3cfe45adfe1e149194407, type: 3}
+      lineNoiseTiling: {x: 3, y: 0}
+      lineNoiseSpeed: 0.1
+      lineDistortion: 1
   setting:
     TargetRenderTexture: {fileID: 8400000, guid: 0768573b95db4ce479e0fe2b09efd8eb, type: 2}
     CircleCenter: {x: 0, y: 0}
-    CircleRadius: 1.49
+    CircleRadius: 0
     TargetRenderTextureThickness: 5.48
-    LineThickness: 0.35
-    LineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
-    LineNoiseTexture: {fileID: 2800000, guid: 26a3377eacb3cfe45adfe1e149194407, type: 3}
-    LineNoiseTiling: {x: 3, y: 0}
-    LineNoiseSpeed: 0.1
+    lineKey: 0
     BlendingShader: {fileID: 7200000, guid: 1f8645e0beaa9f848a83fbc6eb389b31, type: 3}
 --- !u!114 &864200002
 MonoBehaviour:
@@ -97,7 +136,7 @@ MonoBehaviour:
   IsAddRenderPass: 0
   FadeInOutShader: {fileID: 7200000, guid: 34e2342ccbe949928d2abdf5961a719f, type: 3}
   Settings:
-    FadeValue: 1
+    FadeValue: 0
     FadeTexture: {fileID: 2800000, guid: 37993c740d62873488c036b33b932ca9, type: 3}
     FadeColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &2433005988638492109
@@ -117,13 +156,40 @@ MonoBehaviour:
   VolmetrickLightShader: {fileID: 7200000, guid: 554ddfadfaae24a49ba88ee0b76880f3, type: 3}
   Settings:
     LightingRange: 60
-    LightingSteps: 16
-    LightingIntensity: 0.0005
+    LightingSteps: 60
+    LightingIntensity: 0.005
     LightingIntensityMax: 0.1
     ShadowSteps: 16
-    ShadowIntensity: 0.001
-    ShadowIntensityMax: -0.005
-    ShadowsColor: {r: 0, g: 0, b: 0, a: 1}
+    ShadowIntensity: 0.02
+    ShadowIntensityMax: -0.01
+    ShadowsColor: {r: 1, g: 0.50319386, b: 0, a: 1}
+--- !u!114 &7262249524462298539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8db6745a5e8141e1840a0e0f62100c2d, type: 3}
+  m_Name: EffectOcclusionOutlineFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    characterLayers:
+      serializedVersion: 2
+      m_Bits: 64
+    effectLayers:
+      serializedVersion: 2
+      m_Bits: 262144
+    widthPixels: 3
+    useBakedNormals: 0
+    outlineColor: {r: 1, g: 0.8, b: 0.4, a: 0.9}
+    minimumOpacity: 0.08
+    opacitySoftness: 0.4
+    depthBias: 0.01
+  outlineShader: {fileID: 4800000, guid: 9dff701e0e284a089880657a0e377f5d, type: 3}
 --- !u!114 &7486577925179682212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,7 +206,7 @@ MonoBehaviour:
   m_Settings:
     technique: 0
     maxDrawDistance: 1000
-    decalLayers: 0
+    decalLayers: 1
     dBufferSettings:
       surfaceData: 2
     screenSpaceSettings:
@@ -164,10 +230,10 @@ MonoBehaviour:
     AfterOpaque: 0
     Source: 1
     NormalSamples: 1
-    Intensity: 20
-    DirectLightingStrength: 0.8
-    Radius: 0.17
+    Intensity: 0.82
+    DirectLightingStrength: 1
+    Radius: 1.62
     Samples: 0
     BlurQuality: 0
-    Falloff: 100
+    Falloff: 200
     SampleCount: -1

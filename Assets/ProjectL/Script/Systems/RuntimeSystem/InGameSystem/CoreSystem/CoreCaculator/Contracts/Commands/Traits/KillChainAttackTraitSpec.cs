@@ -11,5 +11,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             : base(TraitKey.KillChainAttack)
         {
         }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            return true;
+        }
     }
 }

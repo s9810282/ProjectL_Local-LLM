@@ -1,6 +1,6 @@
 # ProjectL StageSession View 통합 인계 가이드
 
-> Current integration contract (2026-10-04): the registered Framework/Buffer route below supersedes the legacy StageSession examples in this guide for production combat movement. Do not reconnect endpoint movement, geometric checkpoint billing, or a movement confirmation button. See the [confirmed drag-path design](../specs/2026-10-04-drag-path-movement-design.md) and [verification/dependency record](../handoffs/2026-10-04-drag-path-movement-verification.md). The other StageSession examples are retained legacy reference, not evidence that those APIs are registered runtime owners.
+> Current integration contract (2026-10-04): the registered Framework/Buffer route below supersedes the legacy StageSession examples in this guide for production combat movement. Do not reconnect endpoint movement, geometric checkpoint billing, or a movement confirmation button. See the confirmed drag-path design (Git history: `2026-10-04-drag-path-movement-design.md`) and [verification/dependency record](../handoffs/2026-10-04-drag-path-movement-verification.md). The other StageSession examples are retained legacy reference, not evidence that those APIs are registered runtime owners.
 
 이 문서는 현재 Core 공개 API를 기준으로 Unity View가 Stage 생성, 초기 적 배치, Railway 기믹이 포함된 Timeline, Unit 턴, 이동, 공격, Combat Trait를 연결하는 방법을 설명한다. 변경 이력이 아니라 **현재 동작만 설명하는 인계 문서**다.
 
@@ -419,8 +419,9 @@ StageConfig config = new StageConfig(
 |---|---|
 | `MapWidth`, `MapHeight` | 논리 Combat Grid 크기 |
 | `ReserveCapacity` | Reserve 슬롯 수 |
-| `PlayerDeploymentDepth` | `Y = 0`부터 Player 배치 행 수 |
-| `EnemyDeploymentDepth` | 위쪽 끝에서 Enemy 배치 행 수 |
+| `PlayerZone` | 아군 배치 구역(`PlayerDeploymentZone`). 줄 구역 `Rows(n)`(`Y < n`) 또는 칸 구역 `Of(칸들)`. 적 배치 구역은 없다(§5-2) |
+| `PlayerDeploymentDepth` | 전환 입구. 줄 구역이면 그 줄 수, 칸 구역이면 0. Core 로직은 읽지 않는다 |
+| `EnemyDeploymentDepth` | 전환 입구. 늘 0. 위 예시처럼 줄 수를 받는 옛 생성자는 그대로 동작하고, 적 줄 수 인자는 쓰지 않는다 |
 | `TimelineSeed` | Timeline 동률 순서를 결정적으로 재현하는 값 |
 | `InitialEnemyPlacements` | 생성 시 배치할 Enemy의 Unit Key, anchor, rotation |
 | `RailCells` | Railway가 영향을 주는 논리 Grid 좌표 |
@@ -538,7 +539,7 @@ StageSession session = StageSessionFactory.Create(
     structureCatalog);
 ```
 
-카탈로그는 비어 있을 수 없고 `EntityKey`가 중복될 수 없다. 초기 적의 `UnitKey`도 이 카탈로그에 있어야 한다. `StageSessionFactory.Create`는 초기 적 생성·배치까지 끝낸 뒤 Session을 반환하므로 View가 처음 받은 Snapshot에는 적이 이미 Combat Grid에 있다. 초기 적끼리 겹치거나, footprint가 맵 밖이거나, Enemy 배치 구역을 벗어나면 부분 성공 Session 대신 Bootstrap/Data 오류 예외가 난다.
+카탈로그는 비어 있을 수 없고 `EntityKey`가 중복될 수 없다. 초기 적의 `UnitKey`도 이 카탈로그에 있어야 한다. `StageSessionFactory.Create`는 초기 적 생성·배치까지 끝낸 뒤 Session을 반환하므로 View가 처음 받은 Snapshot에는 적이 이미 Combat Grid에 있다. 초기 적끼리 겹치거나, footprint가 맵 밖이거나, 아군 배치 구역에 걸치면 부분 성공 Session 대신 Bootstrap/Data 오류 예외가 난다.
 
 `StageSession`은 선택한 실제 Stage 하나의 전투 수명 동안 Stage Controller/Presenter가 보관한다. Stage Map 한 판의 진행 상태를 보관하는 `StageMapSession`과 수명이 다르다.
 
@@ -563,14 +564,15 @@ Player 출전 Unit만 `CreatePlayerReserveUnit`으로 Reserve에 만든다. Enem
 
 ### 5-2. 배치 구역
 
-9×9 맵, 양쪽 깊이 3일 때 전체 footprint가 다음 범위 안에 있어야 한다.
+아군 배치 구역 하나만 있다(2026-10-27 변경, [아군 배치 구역 설계](../specs/2026-10-27-combat-player-deployment-zone-design.md)). 판정 원본은 `DeploymentZonePolicy`다.
 
 ```text
-Player: Y 0..2
-중앙:   Y 3..5 (배치 불가)
-Enemy:  Y 6..8
-Neutral: 모든 행에서 배치 불가
+Player:  전체 footprint가 아군 배치 구역 칸 안
+Enemy:   전체 footprint가 판 안이면서 아군 배치 구역 밖 (고정 배치·본부·가중치 출현·전투 시작 재배치)
+Neutral: 구역 판정 대상 아님 (장애물은 구역을 보지 않음)
 ```
+
+아군 배치 구역은 스테이지 SO `CombatStageData.playerDeploymentCells`가 정한다. 비어 있으면 필드의 아군 줄 수(아래부터 N줄)를 쓴다. 예를 들어 9×9 맵·아군 줄 수 3이면 아군은 Y 0..2, 적은 Y 3..8 어디든 놓인다.
 
 anchor만 보지 말고 Preview가 반환한 회전 후 `OccupiedCells`와 `CanPlace`를 사용한다.
 
@@ -637,7 +639,7 @@ if (entry.Succeeded == false)
 - DirectionalPattern의 잘못된 footprint/local cell
 - 등록되지 않았거나 Spec 타입이 맞지 않는 Trait
 - Focus 최대 보너스 피해의 정수 범위 초과
-- 초기 Enemy의 누락된 Unit Key, 겹침, 범위·배치 구역 위반
+- 초기 Enemy의 누락된 Unit Key, 겹침, 범위 위반, 아군 배치 구역 침범
 - Railway가 있는데 Rail Cell이 없거나, Rail Cell이 범위 밖·중복인 구성
 
 ### 6-2. Timeline 조회

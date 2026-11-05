@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_CleanSweep
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 230
+    displayName: "\uAE54\uB054\uD55C \uB4B7\uC815\uB9AC"
+    icon: {fileID: 21300000, guid: 916ed046ad097db4c892279a55a3d61e, type: 3}
+    description: "다른 아군이 공격할 때마다 \n자신의 공격력이 이번 턴 동안 {아군공격당공격력증가량} 증가합니다."
+    rankValueFormat: "공격력 {0} → {2} (+{1})"
+    activations:
+    - kind: 90
+      direction: 0
+      cueTiming: 1
+      bodyText:
+        enabled: 1
+        textSource: 0
+        overrideText: 
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 13
+          anchor: 1
+          delay: 0
+          point: 4
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions:
+      - actor: 0
+        place: 0
+        distance: 0
+        look: 0
+        outSeconds: 0
+        holdSeconds: 0
+        returnSeconds: 0
+        face: 0
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

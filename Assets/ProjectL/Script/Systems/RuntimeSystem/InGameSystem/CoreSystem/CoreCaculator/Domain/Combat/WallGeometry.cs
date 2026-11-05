@@ -22,7 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public bool Occupies(CellCoord cell) => occupied.Contains(cell);
     }
 
-    /// <summary>검증된 직선 연결 성분의 경계와 원본 증거만 보관한다.</summary>
+    /// <summary>연결 성분의 실제 볼록 조각과 원본 증거를 보관한다. 범위는 감싼 사각형이다.</summary>
     internal sealed class WallRun
     {
         public long XMin { get; }
@@ -32,10 +32,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public int CornerCutTicks { get; }
         public IReadOnlyList<long> SourceIds { get; }
         public IReadOnlyList<CellCoord> Cells { get; }
+        public IReadOnlyList<WallConvexPart> Parts { get; }
         public long ComponentKey => SourceIds[0];
 
         internal WallRun(long xMin, long xMax, long yMin, long yMax, int cornerCutTicks,
             IEnumerable<long> sourceIds, IEnumerable<CellCoord> cells)
+            : this(xMin, xMax, yMin, yMax, cornerCutTicks, sourceIds, cells,
+                new[] { new WallConvexPart(xMin, xMax, yMin, yMax, cornerCutTicks, WallBoundary.All, WallCorner.All) })
+        {
+        }
+
+        internal WallRun(long xMin, long xMax, long yMin, long yMax, int cornerCutTicks,
+            IEnumerable<long> sourceIds, IEnumerable<CellCoord> cells, IEnumerable<WallConvexPart> parts)
         {
             XMin = xMin;
             XMax = xMax;
@@ -44,6 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             CornerCutTicks = cornerCutTicks;
             SourceIds = Array.AsReadOnly(sourceIds.OrderBy(id => id).ToArray());
             Cells = Array.AsReadOnly(cells.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray());
+            Parts = Array.AsReadOnly(parts.ToArray());
         }
     }
 

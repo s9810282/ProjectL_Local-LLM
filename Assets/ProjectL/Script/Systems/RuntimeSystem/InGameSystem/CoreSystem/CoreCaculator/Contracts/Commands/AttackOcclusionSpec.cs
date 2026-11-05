@@ -9,6 +9,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public sealed class AttackOcclusionSpec
     {
         public static AttackOcclusionSpec Default { get; } = new AttackOcclusionSpec(AttackWallDelivery.RequireClear, AttackWallPropagation.FromImpact);
+
+        /// <summary>착탄 전에는 벽을 넘고 착탄 후 파급은 벽에 막힌다. 궤적 연출이나 특정 유닛의 자동 설정은 포함하지 않는다.</summary>
+        public static AttackOcclusionSpec Lobbed { get; } = new AttackOcclusionSpec(AttackWallDelivery.IgnoreWalls, AttackWallPropagation.FromImpact);
+
         public AttackWallDelivery Delivery { get; }
         public AttackWallPropagation Propagation { get; }
 

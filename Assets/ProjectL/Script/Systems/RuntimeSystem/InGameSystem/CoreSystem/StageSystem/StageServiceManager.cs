@@ -47,12 +47,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.StageSystem
         }
 
         // 실행 핸들러를 호출하지 않고 진입에 필요한 데이터만 확인한다.
-        internal void ValidateEntry(int stageKey)
+        internal StageRootData ValidateEntry(int stageKey)
         {
             StageRootData stage = GetStage(stageKey);
             if (!_services.ContainsKey(stage.StageType) || stage.StageData.StageType != stage.StageType)
                 throw new InvalidOperationException("Stage entry data has an unsupported or inconsistent type.");
             stage.StageData.Validate();
+            return stage;
         }
 
         internal ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item.StageMapData GetStageMap(int mapKey)

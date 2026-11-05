@@ -8,7 +8,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </summary>
     /// <remarks>
     /// 전투 설치·정리는 신호로 관측하지 않습니다. 첫 그리기는 Attach가 하고(개선 설계 D13),
-    /// 전투가 사라지거나 바뀌면 조정자가 Detach합니다(D9).
+    /// 전투가 사라지거나 바뀌면 조정자가 직접 봅니다. 이 전투의 완료를 보이는 중이면 마지막 화면을 유지하고,
+    /// 아니면 F1로 보고한 뒤 Detach합니다(D9, C 단계 설계 C-5).
     /// </remarks>
     internal readonly struct CombatRefreshSignal
     {

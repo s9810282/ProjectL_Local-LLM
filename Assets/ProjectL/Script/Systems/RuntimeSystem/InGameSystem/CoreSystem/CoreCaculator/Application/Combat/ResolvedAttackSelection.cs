@@ -18,14 +18,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal IReadOnlyList<CharacterCombatFacts> EligibleCharacters { get; }
         internal IReadOnlyList<StructureCombatFacts> EligibleStructures { get; }
         internal AttackTargetingPolicy Policy { get; }
-        internal bool IsPiercing => PierceTrace != null;
-        internal PierceTrace PierceTrace { get; }
+        internal EntityId SelectedTargetId { get; }
 
         internal ResolvedAttackSelection(AttackCellSelection cells, AttackCellSelection reachableCells,
             IReadOnlyList<KeyValuePair<EntityId, AttackTargetRole>> targets,
             IReadOnlyList<CharacterCombatFacts> eligibleCharacters,
             IReadOnlyList<StructureCombatFacts> eligibleStructures, AttackTargetingPolicy policy,
-            PierceTrace pierceTrace = null)
+            EntityId selectedTargetId = default)
         {
             Cells = cells ?? throw new ArgumentNullException(nameof(cells));
             ReachableCells = reachableCells ?? throw new ArgumentNullException(nameof(reachableCells));
@@ -33,7 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             EligibleCharacters = Array.AsReadOnly((eligibleCharacters ?? throw new ArgumentNullException(nameof(eligibleCharacters))).ToArray());
             EligibleStructures = Array.AsReadOnly((eligibleStructures ?? throw new ArgumentNullException(nameof(eligibleStructures))).ToArray());
             Policy = policy;
-            PierceTrace = pierceTrace;
+            SelectedTargetId = selectedTargetId;
         }
     }
 }

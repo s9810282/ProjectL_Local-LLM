@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c907719567e420f8ccb06d18e87216d, type: 3}
+  m_Name: TraitGrowth_Acceleration
+  m_EditorClassIdentifier: 
+  normal:
+    rid: 1000
+  enhanced:
+    rid: -2
+  rank2:
+    rid: -2
+  rank3:
+    rid: -2
+  displayName: "\uAC00\uC18D"
+  description: "\uC790\uBC1C\uC801\uC73C\uB85C \uC774\uB3D9\uD55C \uCE78\uB9C8\uB2E4
+    \uB2E4\uC74C \uACF5\uACA9\uC758 \uACF5\uACA9\uB825\uC774 1 \uC99D\uAC00\uD569\uB2C8\uB2E4.
+    \uACF5\uACA9 \uD6C4 \uB204\uC801 \uD6A8\uACFC\uB97C \uC18C\uBAA8\uD569\uB2C8\uB2E4."
+  enhancedName: 
+  enhancedDescription: 
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1000
+      type: {class: AccelerationTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        attackPerMovedCell: 1

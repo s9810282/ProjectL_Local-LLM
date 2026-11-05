@@ -1,0 +1,83 @@
+using System;
+using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
+
+namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces
+{
+    /// <summary>전투 클립 이벤트의 종류입니다. 기존 정수값을 유지하며 재생 순서는 시각 값이 정합니다.</summary>
+    internal enum CombatClipEventKind
+    {
+        /// <summary>시작 이벤트(<see cref="CombatAnimationEvents.ClipStart"/>)입니다.</summary>
+        Start = 1,
+
+        /// <summary>이벤트 타이밍(<see cref="CombatAnimationEvents.ClipEvent"/>)입니다.</summary>
+        Event = 2,
+
+        /// <summary>끝 이벤트(<see cref="CombatAnimationEvents.ClipEnd"/>)입니다. 재생의 끝입니다.</summary>
+        End = 3,
+
+        /// <summary>선택 두 번째 중간 이벤트입니다.</summary>
+        Event2 = 4,
+
+        /// <summary>선택 세 번째 중간 이벤트입니다.</summary>
+        Event3 = 5,
+    }
+
+    /// <summary>
+    /// 클립 재생 시각을 따라 존재하는 이벤트를 한 번씩 내는 커서입니다. Unity 애니메이션 이벤트 대신 전투 재생이 이 커서로 시점을 냅니다.
+    /// 지금 시각까지 아직 내지 않은 이벤트를 앞에서부터 하나씩 내므로, 구간은 (이전 시각, 지금 시각]이고 0초 이벤트는 처음 부를 때 나옵니다.
+    /// </summary>
+    /// <remarks>
+    /// 재생 하나에 하나를 만듭니다. <see cref="TryNext"/>는 할당하지 않습니다(Tick 경로). 진행 상태를 가지므로 값 형식으로 두지 않았습니다
+    /// (읽기 전용 필드에 담긴 값 형식은 복사본만 바뀌어 같은 이벤트를 계속 내는 함정이 있음, 원칙 검토 S5).
+    /// </remarks>
+    internal sealed class CombatClipEventCursor
+    {
+        private readonly CombatClipTimings _timings;
+        // 다음 항목입니다. 0은 시작, 중간 이벤트 목록 뒤의 마지막은 끝입니다.
+        private int _next;
+
+        /// <exception cref="ArgumentOutOfRangeException">시각이 <see cref="CombatClipTimings.FindTimeError"/> 규칙에 맞지 않을 때입니다.</exception>
+        internal CombatClipEventCursor(float start, float eventTime, float end)
+            : this(new CombatClipTimings(start, eventTime, end))
+        {
+        }
+
+        /// <summary>DB가 검사한 시각을 공유하며 진행 위치만 소유합니다.</summary>
+        internal CombatClipEventCursor(CombatClipTimings timings)
+        {
+            _timings = timings ?? throw new ArgumentNullException(nameof(timings));
+        }
+
+        /// <summary>끝 이벤트를 냈는지입니다. 낸 뒤에는 더 내지 않습니다.</summary>
+        internal bool IsFinished => _next > _timings.Events.Count + 1;
+
+        /// <summary>
+        /// <paramref name="time"/>(재생 시각, 초)까지 아직 내지 않은 다음 이벤트를 하나 냅니다. 없으면 false입니다.
+        /// 한 시각에 여러 이벤트가 걸리면 시작 → 존재하는 중간 번호들 → 끝 순으로 하나씩 냅니다.
+        /// </summary>
+        internal bool TryNext(float time, out CombatClipEventKind kind)
+        {
+            if (float.IsNaN(time)) throw new ArgumentOutOfRangeException(nameof(time), "재생 시각이 수가 아닙니다.");
+            kind = default;
+            if (IsFinished)
+                return false;
+            int eventCount = _timings.Events.Count;
+            float nextTime = _next == 0 ? _timings.StartTime
+                : _next == eventCount + 1 ? _timings.EndTime : _timings.Events[_next - 1].Time;
+            if (time < nextTime)
+                return false;
+            kind = _next == 0 ? CombatClipEventKind.Start
+                : _next == eventCount + 1 ? CombatClipEventKind.End : KindOf(_timings.Events[_next - 1].Id);
+            _next++;
+            return true;
+        }
+
+        private static CombatClipEventKind KindOf(CombatClipEventId id) => id switch
+        {
+            CombatClipEventId.Event => CombatClipEventKind.Event,
+            CombatClipEventId.Event2 => CombatClipEventKind.Event2,
+            CombatClipEventId.Event3 => CombatClipEventKind.Event3,
+            _ => throw new ArgumentOutOfRangeException(nameof(id), id, "정의되지 않은 클립 이벤트 번호입니다."),
+        };
+    }
+}

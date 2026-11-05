@@ -152,14 +152,9 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
                 3,
-                8,
-                2,
                 30,
-                35,
                 new[] { trait });
         }
 

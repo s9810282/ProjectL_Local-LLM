@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_Sacrifice
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 300
+    displayName: "\uD76C\uC0DD"
+    icon: {fileID: 0}
+    description: "적 턴에 주변 2칸 아군이 치명적인 공격을 받으면 \n대신 피해를 받습니다. \n턴마다 최대 1회 발동합니다."
+    defenseReductionDescription: 
+    rankValueFormat: 
+    activations:
+    - kind: 110
+      direction: 0
+      cueTiming: 0
+      bodyText:
+        enabled: 1
+        textSource: 0
+        overrideText: 
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects: []
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions:
+      - actor: 1
+        place: 1
+        distance: 0.4
+        look: 1
+        outSeconds: 0.5
+        holdSeconds: 0
+        returnSeconds: 0.25
+        face: 2
+      - actor: 2
+        place: 3
+        distance: 0.4
+        look: 0
+        outSeconds: 0.5
+        holdSeconds: 0
+        returnSeconds: 0.25
+        face: 2
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+    alwaysEffects:
+    - condition: 0
+      effect:
+        effect: 11
+        positionOffset: {x: 0, y: -0.35, z: 0}
+        riderYOffset: 0
+        rotationOffset: {x: 0, y: 0, z: 0}
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

@@ -26,6 +26,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     source.Cell.X >= boardWidth || source.Cell.Y >= boardHeight)
                     throw new ArgumentOutOfRangeException(nameof(environment), "초기 환경 원본이 보드 범위를 벗어났습니다.");
 
+            if (environment.Tiles.Where(source => source.Active && EnvironmentContentSupport.IsSupportedInitialTerrain(source))
+                .GroupBy(source => source.Cell).Any(group => group.Count() > 1 && group.OfType<StaticTerrainFact>()
+                    .Any(terrain => terrain.Kind == StaticTerrainKind.WeakGround || terrain.Kind == StaticTerrainKind.Cliff)))
+                throw new InvalidOperationException("약한 지반과 낭떠러지는 다른 지형과 같은 셀에 중복 작성할 수 없습니다.");
+
             foreach (var cell in environment.Tiles.OfType<DestinationTileModifierFact>()
                 .Where(source => source.Active).Select(source => source.Cell).Distinct())
                 PositionTileModifierCalculator.ResolveAt(cell, environment);
@@ -51,9 +56,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             var cells = environment.Tiles.Select(source => source.Cell)
                 .Concat(structures.SelectMany(structure => structure.OccupiedCells)).Distinct();
+            var cliffCells = new HashSet<CellCoord>(environment.Tiles.OfType<StaticTerrainFact>()
+                .Where(source => source.Active && source.Kind == StaticTerrainKind.Cliff &&
+                    bindings.TerrainSourceIds.Contains(source.Id)).Select(source => source.Cell));
             foreach (var cell in cells)
             {
                 var snapshot = ReadSpatial(boardWidth, boardHeight, environment, structures, characters, bindings, cell);
+                if (cliffCells.Contains(cell) && (snapshot.CharacterIds.Count > 0 || snapshot.BlockingStructureIds.Count > 0))
+                    throw new InvalidOperationException("낭떠러지 위에 살아 있는 캐릭터나 구조물을 초기 배치할 수 없습니다.");
                 if (CheckPlacement(snapshot) != EnvironmentPlacementViolation.None)
                     throw new InvalidOperationException("초기 환경 배치가 셀 공존 규칙을 위반합니다.");
             }

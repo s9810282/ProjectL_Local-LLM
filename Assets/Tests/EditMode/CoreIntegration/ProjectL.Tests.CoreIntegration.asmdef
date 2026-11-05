@@ -1,0 +1,14 @@
+{
+    "name": "ProjectL.Tests.CoreIntegration",
+    "rootNamespace": "ProjectL.Tests.CoreIntegration",
+    "references": ["Framework", "ProjectL.Systems", "ProjectL.Core.Contracts", "ProjectL.Core.Application", "Unity.ugui"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -26,6 +26,13 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
         IExportSystemServices
     {
         private readonly Dictionary<int, StageViewPropData> _dataByStage = new();
+        private readonly IViewStageTableQuery _viewStages;
+
+        /// <summary>ViewStage 표를 원본으로 쓰는 호환 조회입니다.</summary>
+        internal StageViewPropTable(IViewStageTableQuery viewStages)
+        {
+            _viewStages = viewStages ?? throw new ArgumentNullException(nameof(viewStages));
+        }
 
         internal StageViewPropTable(IDataProvider<IDatabaseItem> datas)
         {
@@ -41,6 +48,8 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
 
         public StageViewPropData GetStageViewProp(int stageKey)
         {
+            if (_viewStages != null)
+                return _viewStages.GetViewStage(stageKey).Prop;
             if (_dataByStage.TryGetValue(stageKey, out StageViewPropData data))
                 return data;
 
@@ -50,11 +59,23 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
 
         public bool TryGetStageViewProp(int stageKey, out StageViewPropData data)
         {
+            if (_viewStages != null)
+            {
+                if (_viewStages.TryGetViewStage(stageKey, out var stage))
+                {
+                    data = stage.Prop;
+                    return true;
+                }
+                data = null;
+                return false;
+            }
             return _dataByStage.TryGetValue(stageKey, out data);
         }
 
         public IReadOnlyCollection<StageViewPropData> GetAllStageViewProps()
         {
+            if (_viewStages != null)
+                return _viewStages.GetAllViewStages().Select(stage => stage.Prop).ToArray();
             return _dataByStage.Values;
         }
 
@@ -67,8 +88,7 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
-            if (data.GameObject == null)
-                throw new ArgumentNullException(nameof(data.GameObject));
+            data.Validate();
             if (data.StageKey < 1)
                 throw new ArgumentOutOfRangeException(nameof(data.StageKey), "StageKey must be positive.");
             if (_dataByStage.ContainsKey(data.StageKey))

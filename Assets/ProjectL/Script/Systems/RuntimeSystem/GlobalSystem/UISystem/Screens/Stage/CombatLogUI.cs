@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System.Collections.Generic;
 using System.Globalization;
 using System;
@@ -9,14 +10,14 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
-using ProjectL.Systems.ServiceKeys;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 {
     [DisallowMultipleComponent]
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "CombatLogUI")]
     public sealed class CombatLogUI : UIBase, IUIInputReceiver
     {
         private const float LatestDamageTextOffsetX = 0f;
@@ -36,8 +37,9 @@ namespace ProjectL.Systems
 
         [SerializeField] private UnitIcon[] _unitIcons = System.Array.Empty<UnitIcon>();
         private readonly Dictionary<EntityId, EntityKey> _unitKeys = new Dictionary<EntityId, EntityKey>();
-        [Tooltip("드롭다운을 열고 닫는 버튼입니다.")]
+        [Tooltip("전투 기록을 펼치고 접는 버튼입니다.")]
         [SerializeField] private Button toggleButton;
+        [SerializeField] private CombatLogExpansion expansion;
         [Tooltip("최신 로그 한 줄을 표시할 고정 영역입니다. Scroll View 바깥에 연결합니다.")]
         [SerializeField] private RectTransform latestLogRoot;
         [Tooltip("이전 로그만 표시하는 별도 자식 Scroll View입니다.")]
@@ -67,7 +69,7 @@ namespace ProjectL.Systems
             HideEmptyLogs();
             UIInputBinding.Attach(toggleButton, this, 0);
             Initialize();
-            CloseDropDown();
+            SetExpanded(false, true);
         }
 
         void IUIInputReceiver.Click(int slot)
@@ -80,7 +82,7 @@ namespace ProjectL.Systems
         private void OnEnable()
         {
             HideEmptyLogs();
-            CloseDropDown();
+            SetExpanded(false, true);
         }
 
         private void HideEmptyLogs()
@@ -99,7 +101,7 @@ namespace ProjectL.Systems
             Transform template = _initialized ? _template : content != null ? content.Find("Log") : null;
             if (template != null && template.IsChildOf(transform)) template.gameObject.SetActive(false);
         }
-        private void OnDisable() => CloseDropDown();
+        private void OnDisable() => SetExpanded(false, true);
 
         public override void BindUIService(ISystemServiceStoreReader resolver)
         {
@@ -121,7 +123,7 @@ namespace ProjectL.Systems
 
         public override void Hide()
         {
-            CloseDropDown();
+            SetExpanded(false, true);
             gameObject.SetActive(false);
         }
 
@@ -129,12 +131,25 @@ namespace ProjectL.Systems
         public void OpenDropDown() => SetExpanded(true);
         public void CloseDropDown() => SetExpanded(false);
 
-        private void SetExpanded(bool expanded)
+        private void SetExpanded(bool expanded, bool immediate = false)
         {
+            if (expansion != null)
+            {
+                if (toggleButton == null)
+                    throw new InvalidOperationException("[CombatLogUI] 전투 기록 확장 연출에 Toggle Button 참조가 필요합니다.");
+                expansion.BindToggleButton(toggleButton.transform);
+            }
             _expanded = expanded;
+            if (expansion != null)
+            {
+                expansion.SetExpanded(expanded, immediate);
+                _scrollPending = true;
+                return;
+            }
             // 로그 템플릿 설정과 무관하게 버튼으로 이전 기록 영역을 여닫을 수 있어야 한다.
             var view = _scrollRect != null ? _scrollRect : scrollView;
-            if (view == null || view.gameObject == gameObject || !view.transform.IsChildOf(transform)) return;
+            if (view == null || view.gameObject == gameObject || !view.transform.IsChildOf(transform))
+                throw new InvalidOperationException("[CombatLogUI] 별도 자식 Scroll View가 필요합니다.");
             view.gameObject.SetActive(expanded);
             if (view.verticalScrollbar != null)
                 view.verticalScrollbar.gameObject.SetActive(expanded);
@@ -145,14 +160,16 @@ namespace ProjectL.Systems
 
         public void RefreshLogs()
         {
-            if (_combat == null || _history == null || !Initialize()) return;
+            // 씬 수집 뒤 서비스 바인딩 전에는 Update가 먼저 호출될 수 있습니다.
+            if (_combat == null || _history == null) return;
+            Initialize();
             if (_battleId != _combat.BattleInstanceId)
             {
                 _battleId = _combat.BattleInstanceId;
                 _unitKeys.Clear();
                 ClearLogs();
                 _readCount = 0;
-                CloseDropDown();
+                SetExpanded(false, true);
             }
             var results = _history.Results;
             if (_readCount == results.Count) return;
@@ -213,7 +230,7 @@ namespace ProjectL.Systems
         private void AddLog(Sprite attacker, Sprite attackImage, Sprite target, int damage, bool isDead,
             string attackerName, string targetName)
         {
-            if (!Initialize()) return;
+            Initialize();
 
             // 지금까지의 최신 행을 이전 기록으로 이동하고 새 행을 고정 영역에 표시한다.
             if (_latestRow != null)
@@ -308,24 +325,22 @@ namespace ProjectL.Systems
             label.rectTransform.offsetMax = Vector2.zero;
         }
 
-        private bool Initialize()
+        private void Initialize()
         {
-            if (_initialized) return true;
+            if (_initialized) return;
             _scrollRect = scrollView;
             if (_scrollRect == null || latestLogRoot == null || latestLogRoot == transform || _scrollRect.gameObject == gameObject ||
                 !_scrollRect.transform.IsChildOf(transform) || !latestLogRoot.IsChildOf(transform) ||
                 latestLogRoot == _scrollRect.transform || latestLogRoot.IsChildOf(_scrollRect.transform))
             {
-                Debug.LogError("CombatLog requires a separate child Scroll View and a Latest Log Root outside it.", this);
-                return false;
+                throw new InvalidOperationException("[CombatLogUI] CombatLog requires a separate child Scroll View and a Latest Log Root outside it.");
             }
             _scrollTransform = (RectTransform)_scrollRect.transform;
             _content = _scrollRect.content;
             if (_content == null) _content = _scrollTransform.Find("Viewport/Content") as RectTransform;
             if (_content == null)
             {
-                Debug.LogError("CombatLog requires ScrollRect Content or a Viewport/Content child.", this);
-                return false;
+                throw new InvalidOperationException("[CombatLogUI] CombatLog requires ScrollRect Content or a Viewport/Content child.");
             }
 
             RectTransform embeddedTemplate = _content.Find("Log") as RectTransform;
@@ -334,16 +349,14 @@ namespace ProjectL.Systems
                 FindLogComponent<Image>(_template, "Action") == null || FindLogComponent<Image>(_template, "Target") == null ||
                 FindLogComponent<TMP_Text>(_template, "DMG/HEAL") == null || FindLogComponent<Image>(_template, "Dead") == null)
             {
-                Debug.LogError("CombatLog requires Log with Origin, Action, Target, Dead Images and DMG/HEAL TMP text.", this);
-                return false;
+                throw new InvalidOperationException("[CombatLogUI] CombatLog requires Log with Origin, Action, Target, Dead Images and DMG/HEAL TMP text.");
             }
 
             _rowHeight = Mathf.Max(1f, _template.rect.height);
             if (_scrollRect.viewport == null) _scrollRect.viewport = _scrollTransform.Find("Viewport") as RectTransform;
             if (_scrollRect.viewport == null || _scrollRect.viewport == _scrollTransform)
             {
-                Debug.LogError("CombatLog requires a separate Viewport RectTransform.", this);
-                return false;
+                throw new InvalidOperationException("[CombatLogUI] CombatLog requires a separate Viewport RectTransform.");
             }
             var viewport = _scrollRect.viewport;
             if (viewport.GetComponent<RectMask2D>() == null && viewport.GetComponent<Mask>() == null)
@@ -373,7 +386,6 @@ namespace ProjectL.Systems
             _initialized = true;
             SetExpanded(_expanded);
             _scrollPending = true;
-            return true;
         }
 
         private static T FindLogComponent<T>(Transform root, string name) where T : Component

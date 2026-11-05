@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 523745261a4345d2a91c34c6305e44dd, type: 3}
+  m_Name: ObjectVisual_Flag
+  m_EditorClassIdentifier: 
+  kind: 2
+  displayName: "\uAE43\uBC1C"
+  description: "\uD68D\uB4DD\uD55C \uCE90\uB9AD\uD130\uC758 \uD589\uB3D9 \uC6B0\uC120\uC21C\uC704\uAC00
+    <color=#4DA6FF>{우선도증가량} \uC99D\uAC00</color>\uD569\uB2C8\uB2E4.\n\uBCF4\uC720\uD55C
+    \uCE90\uB9AD\uD130\uAC00 \uC0AC\uB9DD\uD558\uBA74 \uD574\uB2F9 \uC704\uCE58\uC5D0
+    \uAE43\uBC1C\uC744 \uB5A8\uC5B4\uB728\uB9BD\uB2C8\uB2E4."
+  icon: {fileID: 0}
+  prefab: {fileID: 100000, guid: 88b876e98db441c8af2c4799152d12bd, type: 3}
+  localOffset: {x: 0, y: 0, z: 0}
+  localScale: {x: 0.5, y: 0.5, z: 0.5}

@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -13,7 +14,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         public IReadOnlyList<EntityId> TargetIds(MovementTileFact tile, EntityId mover, CombatCommandInput current) => new[] { mover };
         public MovementStepEffects Evaluate(MovementStepInput input, MovementTileFact tile) =>
             throw new NotSupportedException("가시밭은 기존 ThornFields 원본을 사용합니다.");
-        public MovementStepEffects EvaluateThorn(MovementStepInput input, ThornFieldCellSnapshot field) =>
-            new(damage: new[] { new MovementHealthRequest(input.MoverId, field.ThornDamage) });
+        public MovementStepEffects EvaluateThorn(MovementStepInput input, ThornFieldCellSnapshot field)
+        {
+            // 기존 원본의 접촉 피해는 유지하지만 보류된 유닛 턴 방어 감소는 생성하지 않는다.
+            return new MovementStepEffects(damage: new[] { new MovementHealthRequest(input.MoverId, field.ThornDamage) });
+        }
     }
 }

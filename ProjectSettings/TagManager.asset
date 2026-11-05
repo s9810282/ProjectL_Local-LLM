@@ -11,10 +11,11 @@ TagManager:
   - rock
   - Water
   - UI
-  - 
+  - Entity
   - 
   - HandUnit
   - 
+  - Distortion
   - 
   - 
   - 
@@ -22,8 +23,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - Blending
   - 
   - BothRendering
   - AfterRendering
@@ -34,9 +34,9 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
+  - UIRender
+  - DayCameraRender
+  - NightCameraRender
   m_SortingLayers:
   - name: Default
     uniqueID: 0
@@ -56,3 +56,4 @@ TagManager:
   - Light Layer 5
   - Light Layer 6
   - Light Layer 7
+  - FieldGround

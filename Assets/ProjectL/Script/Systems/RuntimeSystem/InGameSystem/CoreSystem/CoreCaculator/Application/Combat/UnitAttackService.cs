@@ -33,54 +33,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         public EntityId AttackerId { get; }
         public EntityId PrimaryTargetId { get; }
         public Rotation4 AttackDirection { get; }
-        public int ActionCostSpent { get; }
         public ReadOnlyMemory<CellCoord> AffectedCells { get; }
         public ReadOnlyMemory<AttackHitResult> Hits { get; }
         /// <summary>Cell 조준으로 선택된 중심 Cell입니다. Entity 조준에서는 null입니다.</summary>
         public CellCoord? TargetCell { get; }
 
         private AttackExecutionResult(
-            bool succeeded,
-            AttackFailureReason failureReason,
-            EntityId attackerId,
-            EntityId primaryTargetId,
-            Rotation4 attackDirection,
-            int actionCostSpent,
-            CellCoord[] affectedCells,
-            AttackHitResult[] hits,
-            CellCoord? targetCell)
+            bool succeeded,            AttackFailureReason failureReason,            EntityId attackerId,            EntityId primaryTargetId,            Rotation4 attackDirection,            CellCoord[] affectedCells,            AttackHitResult[] hits,            CellCoord? targetCell)
         {
             Succeeded = succeeded;
             FailureReason = failureReason;
             AttackerId = attackerId;
             PrimaryTargetId = primaryTargetId;
             AttackDirection = attackDirection;
-            ActionCostSpent = actionCostSpent;
+
             AffectedCells = affectedCells;
             Hits = hits;
             TargetCell = targetCell;
         }
 
         public static AttackExecutionResult Success(
-            EntityId attackerId,
-            EntityId primaryTargetId,
-            Rotation4 attackDirection,
-            int actionCostSpent,
-            CellCoord[] affectedCells,
-            AttackHitResult[] hits)
+            EntityId attackerId,            EntityId primaryTargetId,            Rotation4 attackDirection,            CellCoord[] affectedCells,            AttackHitResult[] hits)
         {
-            return Success(attackerId, primaryTargetId, attackDirection,
-                actionCostSpent, affectedCells, hits, targetCell: null);
+            return Success(attackerId,primaryTargetId,attackDirection,affectedCells,hits,targetCell: null);
         }
 
         public static AttackExecutionResult Success(
-            EntityId attackerId,
-            EntityId primaryTargetId,
-            Rotation4 attackDirection,
-            int actionCostSpent,
-            CellCoord[] affectedCells,
-            AttackHitResult[] hits,
-            CellCoord? targetCell)
+            EntityId attackerId,            EntityId primaryTargetId,            Rotation4 attackDirection,            CellCoord[] affectedCells,            AttackHitResult[] hits,            CellCoord? targetCell)
         {
             if (attackerId.IsEmpty)
                 throw new ArgumentException("공격자 ID는 비어 있을 수 없습니다.", nameof(attackerId));
@@ -88,8 +67,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 throw new ArgumentException("대상 ID는 비어 있을 수 없습니다.", nameof(primaryTargetId));
             if (Enum.IsDefined(typeof(Rotation4), attackDirection) == false)
                 throw new ArgumentOutOfRangeException(nameof(attackDirection), "공격 방향은 0, 90, 180, 270 중 하나여야 합니다.");
-            if (actionCostSpent <= 0)
-                throw new ArgumentOutOfRangeException(nameof(actionCostSpent), "소모 행동력은 0보다 커야 합니다.");
             if (affectedCells == null)
                 throw new ArgumentNullException(nameof(affectedCells), "영향 셀은 null일 수 없습니다.");
             if (hits == null)
@@ -102,15 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Array.Copy(hits, copiedHits, hits.Length);
 
             return new AttackExecutionResult(
-                succeeded: true,
-                failureReason: AttackFailureReason.None,
-                attackerId: attackerId,
-                primaryTargetId: primaryTargetId,
-                attackDirection: attackDirection,
-                actionCostSpent: actionCostSpent,
-                affectedCells: copiedCells,
-                hits: copiedHits,
-                targetCell: targetCell);
+                succeeded: true,                failureReason: AttackFailureReason.None,                attackerId: attackerId,                primaryTargetId: primaryTargetId,                attackDirection: attackDirection,                affectedCells: copiedCells,                hits: copiedHits,                targetCell: targetCell);
         }
 
         public static AttackExecutionResult Failure(
@@ -125,15 +94,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // Cell 조준 실패 결과도 Empty 주요 대상을 유지한다.
 
             return new AttackExecutionResult(
-                succeeded: false,
-                failureReason: failureReason,
-                attackerId: attackerId,
-                primaryTargetId: primaryTargetId,
-                attackDirection: Rotation4.R0,
-                actionCostSpent: 0,
-                affectedCells: Array.Empty<CellCoord>(),
-                hits: Array.Empty<AttackHitResult>(),
-                targetCell: null);
+                succeeded: false,                failureReason: failureReason,                attackerId: attackerId,                primaryTargetId: primaryTargetId,                attackDirection: Rotation4.R0,                affectedCells: Array.Empty<CellCoord>(),                hits: Array.Empty<AttackHitResult>(),                targetCell: null);
         }
     }
 }

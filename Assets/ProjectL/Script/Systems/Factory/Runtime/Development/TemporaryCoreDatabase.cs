@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.DataBaseSystem;
@@ -24,6 +25,7 @@ using ProjectL.Systems.DataBaseSystem.Queries.RenderDataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.StageMap;
 
 namespace ProjectL.Systems.Factory.Runtime.Development
 {
@@ -41,30 +43,40 @@ namespace ProjectL.Systems.Factory.Runtime.Development
         private readonly Dictionary<int, RecoveryOptionData> _recovery = new() {
             { 1, new RecoveryOptionData(1, 5, RecoveryHealMode.Flat, 3) },
             { 2, new RecoveryOptionData(2, 10, RecoveryHealMode.Full, 0) } };
-        private readonly PlayerLoadoutData _loadout = new(1, EntityKey.Unit_MainCharacter,
-            new[] { new PlayerLoadoutEntry(EntityKey.Unit_Akimbo, 3) },
-            ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.InitialDrawPlan.DefaultStartingHandSize);
-        private readonly UnitRosterData _roster = new(1, new[] { EntityKey.Unit_MainCharacter, EntityKey.Unit_Akimbo });
+        // 개발 전용 명시적 구성이다. 운영 Akimbo의 승인 수치·외형을 대신하지 않는다.
+        private readonly PlayerLoadoutData _loadout = new(1, EntityKey.Unit_Akimbo,
+            new[] { new PlayerLoadoutEntry(EntityKey.Unit_CactusCannon, 1), new PlayerLoadoutEntry(EntityKey.Unit_ShotGun, 1) },
+            ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.InitialDrawPlan.DefaultStartingHandSize,
+            initialDeckGrantIndices: new[] { 0, 1, 2 });
+        private readonly UnitRosterData _roster = new(1, new[] { EntityKey.Unit_Akimbo, EntityKey.Unit_CactusCannon, EntityKey.Unit_ShotGun });
+        // 폭 1·깊이 5라 중간 노드는 셋이다. 상점·회복 최소 1개씩과 나머지 전투 하나가 놓이며, 놓이는 순서는 시드가 정한다.
         private readonly Dictionary<int, StageMapData> _maps = new() {
-            { 1, new StageMapData(1, 3, 1, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false) } };
-        private readonly StageEconomyData _economy = new(1, 50, 2);
+            { 1, Map(1, 0) } };
+        private readonly StageEconomyData _economy = new(1, 50, 2, new StageClearRewardSpec(100, 50, 100));
         private readonly StructureData _headquarters = new(EntityKey.Structure_Headquarters, 1, 1, 5, false, 0);
-        public CategoryConfigData Config { get; } = new(50, Rotation4.R0);
+        public CategoryConfigData Config { get; } = new(3, 4, 3, 2, 0);
 
         internal TemporaryCoreDatabase(bool withChapterContinuation = false)
         {
-            AddUnit(EntityKey.Unit_MainCharacter, UnitRole.MainCharacter);
-            AddUnit(EntityKey.Unit_Akimbo, UnitRole.Regular);
+            AddUnit(EntityKey.Unit_Akimbo, UnitRole.MainCharacter);
+            AddUnit(EntityKey.Unit_CactusCannon, UnitRole.Regular);
+            AddUnit(EntityKey.Unit_ShotGun, UnitRole.Regular);
             _stages.Add(101, CombatStage(101, "temporary-first", StageMapRole.Regular));
             _stages.Add(102, CombatStage(102, "temporary-boss", StageMapRole.Boss));
             _stages.Add(20, new StageRootData(20, 1, StageMapRole.Regular, new EventStageDetail(new[] { 1, 2 })));
             _stages.Add(30, new StageRootData(30, 1, StageMapRole.Regular,
-                new ShopStageDetail(new[] { new ShopCandidate(EntityKey.Unit_Akimbo, 5) })));
+                new ShopStageDetail(new[] { EntityKey.Unit_CactusCannon }, Array.Empty<int>(), 5)));
             if (withChapterContinuation)
             {
-                _maps.Add(2, new StageMapData(2, 3, 1, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false));
+                // 두 챕터 개발 경로: 챕터 1 다음은 챕터 2, 챕터 2가 마지막이다(맵 SO의 다음 챕터 칸과 같은 뜻).
+                _maps[1] = Map(1, 2);
+                _maps.Add(2, Map(2, 0));
                 _stages.Add(201, CombatStage(201, "temporary-first", StageMapRole.Regular, 2));
                 _stages.Add(202, CombatStage(202, "temporary-boss", StageMapRole.Boss, 2));
+                // 챕터마다 상점·회복 최소 1개가 필요하므로 두 번째 챕터에도 후보를 둔다.
+                _stages.Add(220, new StageRootData(220, 2, StageMapRole.Regular, new EventStageDetail(new[] { 1, 2 })));
+                _stages.Add(230, new StageRootData(230, 2, StageMapRole.Regular,
+                    new ShopStageDetail(new[] { EntityKey.Unit_CactusCannon }, Array.Empty<int>(), 5)));
             }
             _loadout.Validate(); _roster.Validate(); _economy.Validate(); _headquarters.Validate(); Config.Validate();
             foreach (var map in _maps.Values) map.Validate();
@@ -75,15 +87,24 @@ namespace ProjectL.Systems.Factory.Runtime.Development
 
         private void AddUnit(EntityKey key, UnitRole role)
         {
-            var unit = new UnitData(key, role, UnitOwnerEligibility.PlayerOnly, 1, 1, 10, 0, 3, 1,
+            var unit = new UnitData(key, role, UnitOwnerEligibility.PlayerOnly, 1, 1, 10, 0,
                 role == UnitRole.MainCharacter ? 1 : 2,
-                CategoryKey.Base, 5, 4, 1, 1, 1, Array.Empty<UnitTraitData>(), 1);
+                role == UnitRole.MainCharacter ? CategoryKey.Main : key == EntityKey.Unit_ShotGun ? CategoryKey.Heavy : CategoryKey.Cannon,
+                5, 1, Array.Empty<UnitTraitData>(), 1,
+                killReward: UnitKillRewardSpec.Excluded);
             unit.Validate();
             _units.Add(key, unit);
         }
 
+        private static StageMapData Map(int key, int nextChapterKey)
+            => new(key, 5, 1, 1, false, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false, nextChapterKey, new[] {
+                new ChapterStageDistributionRule(ChapterStageKind.Combat, 1, 0, 1),
+                new ChapterStageDistributionRule(ChapterStageKind.Shop, 0, 1, 1),
+                new ChapterStageDistributionRule(ChapterStageKind.Recovery, 0, 1, 1),
+                new ChapterStageDistributionRule(ChapterStageKind.Enhancement, 0, 0, 1) });
+
         private static StageRootData CombatStage(int key, string field, StageMapRole role, int mapKey = 1)
-            => new(key, mapKey, role, new CombatStageDetail(42, field, 1, 0, 1, 100,
+            => new(key, mapKey, role, new CombatStageDetail(42, field, 1, 0, 1,
                 Array.Empty<EntityPlacement>(), Array.Empty<EntityKey>(), Array.Empty<EntityPlacement>(),
                 EntityKey.Structure_Headquarters, new CellCoord(1, 1), Rotation4.R0,
                 new CellCoord(1, 3), Rotation4.R0, null));

@@ -1,0 +1,9 @@
+{
+    "name": "ProjectL.Tool.Runtime",
+    "rootNamespace": "ProjectL.Tool.Runtime",
+    "references": [],
+    "autoReferenced": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "noEngineReferences": false
+}

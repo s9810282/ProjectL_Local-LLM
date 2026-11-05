@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: NodeVisual_Combat_Boss
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    stageKey: 0
     stageType: 1
     mapRole: 1
-    visualPrefab: {fileID: 5982786616946223711, guid: 02a013302b524db7be81ae4246c4df56, type: 3}
-    icon: {fileID: 0}
+    visualPrefab: {fileID: 8327885014856427799, guid: cea59b64eade4584c94f4dbe891f80d7, type: 3}
+    rotationOffset: {x: 0, y: 180, z: 0}
     displayName: Boss Stage

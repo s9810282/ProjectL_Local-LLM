@@ -48,11 +48,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             FocusRuntimeState state = RestoreRequiredState(input);
             TraitStateChange change = _rule.PlanMoveSucceeded(new MoveSucceededTraitContext(
-                _definition,
-                state,
-                context.Distance,
-                context.AnchorChanged,
-                context.ActionCostSpent));
+                _definition,                state,                context.Distance,                context.AnchorChanged));
             return TraitEffectResultAdapter.Convert(input, change);
         }
 
@@ -61,11 +57,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             in AttackSucceededEffectContext context)
         {
             FocusRuntimeState state = RestoreRequiredState(input);
-            TraitKey[] contributors = TraitEffectOrigin.GetTraitContributors(
-                input.Origin,
-                context.PositiveCostContributors);
             TraitStateChange change = _rule.PlanAttackSucceeded(
-                new AttackSucceededTraitContext(_definition, state, contributors));
+                new AttackSucceededTraitContext(_definition,state));
             return TraitEffectResultAdapter.Convert(input, change);
         }
 

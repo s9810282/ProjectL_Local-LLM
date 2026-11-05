@@ -38,10 +38,10 @@ namespace ProjectL.Tests.Core
         [TestCase(true)]
         public void MovementProjection_PreservesSettingsAndSourceSnapshot(bool preview)
         {
-            var input = WallMovementTests.WithWalls(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right),
+            var input = WallMovementTests.WithWalls(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Wall(71, new CellCoord(4, 3)));
             var projection = new MovementProjection(input, preview);
-            projection.Enter(CellCoord.Right, 1);
+            projection.Enter(CellCoord.Right);
             Assert.That(projection.CurrentInput().State.WallBlocking, Is.SameAs(input.State.WallBlocking));
             Assert.That(input.Characters[0].Anchor, Is.EqualTo(CellCoord.Zero));
             Assert.That(input.State.Environment.Tiles.Single().Cell, Is.EqualTo(new CellCoord(4, 3)));
@@ -51,7 +51,7 @@ namespace ProjectL.Tests.Core
         [TestCase(true)]
         public void AcceptedAndRejectedCommands_PreserveWallFactsAndSettings(bool blocked)
         {
-            var input = WallMovementTests.WithWalls(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right),
+            var input = WallMovementTests.WithWalls(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Wall(71, blocked ? CellCoord.Right : new CellCoord(4, 3)));
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.EqualTo(!blocked), result.Reason);
@@ -68,7 +68,7 @@ namespace ProjectL.Tests.Core
         [TestCase("object")]
         [TestCase("terrain")]
         [TestCase("rail")]
-        public void Preparation_RejectsWallOverlap(string occupant)
+        public void Preparation_ValidatesWallOverlapWithoutPlacingMain(string occupant)
         {
             var cell = occupant == "character" ? CellCoord.Zero : new CellCoord(4, 5);
             var sources = new MovementTileFact[] { Wall(71, cell) };
@@ -81,7 +81,14 @@ namespace ProjectL.Tests.Core
                 occupant == "structure" ? new[] { new InitialEnemyStructurePlacementSpec(definition.Key, cell, Rotation4.R0) } : null);
             var initialization = Initialization(sources, stage,
                 occupant == "structure" ? new[] { definition } : null);
-            Assert.That(() => Prepare(initialization), Throws.Exception);
+            if (occupant == "character")
+            {
+                var prepared = Prepare(initialization);
+                Assert.That(prepared.Characters.Single().Area, Is.EqualTo(CharacterRuntimeArea.Hand));
+                Assert.That(prepared.Characters.Single().OccupiedCells, Is.Empty);
+            }
+            else
+                Assert.That(() => Prepare(initialization), Throws.Exception);
         }
 
         [TestCase(false, true)]
@@ -94,11 +101,17 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Preparation_RejectsBentWallWithSourceEvidence()
+        public void Preparation_AcceptsBentWallAndPreservesSourceEvidence()
         {
-            var error = Assert.Throws<ArgumentException>(() => Prepare(Initialization(new[] {
-                Wall(71, new CellCoord(3, 3)), Wall(72, new CellCoord(4, 3)), Wall(73, new CellCoord(4, 4)) })));
-            Assert.That(error.Message, Does.Contain("71").And.Contain("73"));
+            var sources = new[]
+            {
+                Wall(71, new CellCoord(3, 3)), Wall(72, new CellCoord(4, 3)), Wall(73, new CellCoord(4, 4))
+            };
+            var prepared = Prepare(Initialization(sources));
+            Assert.That(prepared.Combat.EnvironmentBindings.TerrainSourceIds, Is.EqualTo(new long[] { 71, 72, 73 }));
+            Assert.That(prepared.CommandState.Environment.Tiles.Select(tile => tile.Id), Is.EqualTo(new long[] { 71, 72, 73 }));
+            Assert.That(prepared.CommandState.Environment.Tiles.Select(tile => tile.Cell),
+                Is.EqualTo(sources.Select(tile => tile.Cell)));
         }
 
         [Test]
@@ -111,20 +124,17 @@ namespace ProjectL.Tests.Core
         internal static StaticTerrainFact Wall(long id, CellCoord cell) =>
             new(id, cell, StaticTerrainKind.Wall, true, new[] { Owner.Player, Owner.Enemy });
 
-        private static CombatCommandState Copy(CombatCommandState s, int cut) => new(s.BoardWidth, s.BoardHeight,
-            s.Phase, s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment,
-            s.EnvironmentProgress, new WallBlockingSpec(cut));
+        private static CombatCommandState Copy(CombatCommandState s, int cut) => new(s.BoardWidth,s.BoardHeight,            s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,s.Environment,            s.EnvironmentProgress,new WallBlockingSpec(cut));
 
         private static StageConfig Stage(CellCoord[] rails = null, InitialEnemyStructurePlacementSpec[] structures = null) =>
             new(8, 6, 8, 2, 2, 42, Array.Empty<InitialEnemyPlacementSpec>(), rails ?? Array.Empty<CellCoord>(),
-                rails == null ? Array.Empty<StageGimmickSpec>() : new StageGimmickSpec[] { new RailwayGimmickSpec(3, 3) },
-                100, structures ?? Array.Empty<InitialEnemyStructurePlacementSpec>());
+                rails == null ? Array.Empty<StageGimmickSpec>() : new StageGimmickSpec[] { new RailwayGimmickSpec(3, 3) }, structures ?? Array.Empty<InitialEnemyStructurePlacementSpec>());
 
         private static BattleInitialization Initialization(MovementTileFact[] sources, StageConfig stage = null,
             StructureSpec[] structures = null, WallBlockingSpec settings = null)
         {
-            var unit = UnitSpecTestFactory.Create(EntityKey.Unit_MainCharacter, 1, 1, new[] { CellCoord.Zero },
-                10, MoveMethod.LiftAndPlace, 3, 1, 1, 5, 4, 1, 1, 1, Array.Empty<TraitSpec>(),
+            var unit = UnitSpecTestFactory.Create(EntityKey.Unit_Gravekeeper, 1, 1, new[] { CellCoord.Zero },
+                10, MoveMethod.LiftAndPlace, 1, 5, 1, Array.Empty<TraitSpec>(),
                 role: UnitRole.MainCharacter, ownerEligibility: UnitOwnerEligibility.PlayerOnly);
             return new BattleInitialization(stage ?? Stage(), CellCoord.Zero, Rotation4.R0, new[] { unit },
                 structures ?? Array.Empty<StructureSpec>(), UnitSpecTestFactory.CreateDefaultCategoryCatalog(),
@@ -136,9 +146,9 @@ namespace ProjectL.Tests.Core
 
         private static BattlePreparation Prepare(BattleInitialization initialization)
         {
-            var owned = new OwnedCharacterRecord(new CharacterInstanceId(1), EntityKey.Unit_MainCharacter, CharacterOwnershipRole.Main);
+            var owned = new OwnedCharacterRecord(new CharacterInstanceId(1), EntityKey.Unit_Gravekeeper, CharacterOwnershipRole.Main);
             return BattlePreparationCalculator.Prepare(initialization, new[] { owned },
-                new MainCharacterPersistentState(4, 12, 7, 6, 5, 2),
+                new MainCharacterPersistentState(4, 12, 7),
                 new System.Collections.Generic.Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 },
                 new InitialDrawPlan(Array.Empty<CharacterInstanceId>()), Array.Empty<CharacterCombatFacts>());
         }

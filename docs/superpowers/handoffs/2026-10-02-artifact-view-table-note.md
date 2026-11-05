@@ -11,7 +11,7 @@
 - `Assets/ProjectL/DataBaseSO/ViewGroup/Artifact/ArtifactViewDataTable.asset`에 외형 아이템 3개(1001 회복 성배, 1002 가시 갑옷, 1003 영혼 방울)가 등록돼 있었고, 세 개 모두 `icon`이 비어 있었다.
 - `ArtifactViewTable` 생성자가 아이템마다 `ArtifactViewData.Validate()`를 부르고, 아이콘이 없으면 `[ArtifactViewData] 아이콘이 필요합니다. ID: 1001` 예외를 낸다. 그래서 **DB 생성(`DataBaseFactory.Create`) 자체가 실패**해 부트스트랩이 시작하지 못했다.
 - 원래 의도는 등록 보류였다.
-  - [Artifact DB 이전 인계](2026-09-28-artifact-db-migration-handoff.md): 1001~1003 모두 "표현 SO 생성(이름·ID 입력), 아이콘 미지정으로 테이블 등록 보류".
+  - [Artifact DB 이전 인계](2026-09-28-artifact-db-migration-handoff-Hojin.md): 1001~1003 모두 "표현 SO 생성(이름·ID 입력), 아이콘 미지정으로 테이블 등록 보류".
   - `ArtifactDataTableTests.Catalog_RegistersOnlyMigratedRulesAndExplicitlyPendingViews`: 외형 테이블이 비어 있어야 한다고 기대(주석 "원본 아이콘 부재: 보류 목록을 해소할 때 이 기대값도 함께 갱신").
   - 그런데 `8f38e2c1`(2026-09-28)에서 테이블에 세 아이템이 등록된 채 커밋됐다.
 - 지금까지 드러나지 않은 이유: DB는 Render → InGame → View 순서로 만들어진다. 그동안은 InGame의 `CombatStageDetail` Economy 누락 예외가 먼저 나서 View 단계에 도달하지 않았다. View Phase A에서 Economy를 채우자 이 문제가 드러났다.

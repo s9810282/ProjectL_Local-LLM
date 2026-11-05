@@ -50,8 +50,36 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Artifact
         IArtifactPreviewWriteSink,
         IArtifactEditResultReadSink,
         IArtifactPreviewReadSink,
-        IExportSystemServices
+        IExportSystemServices, IArtifactCommandResultReadSink, IArtifactCommandResultStore
     {
+        public int HandledCommandNumber => LastCommand?.RequestNumber ?? 0;
+        public int AnsweredPreviewNumber => LastAnsweredPreview?.RequestNumber ?? 0;
+        public ArtifactCommandResult? LastCommand { get; private set; }
+        public ArtifactPreviewResult? LastAnsweredPreview { get; private set; }
+
+        public void PublishCommand(int number, ArtifactView.ArtifactViewCommandData data, ArtifactEditProposal proposal)
+        {
+            if (number <= HandledCommandNumber) throw new ArgumentOutOfRangeException(nameof(number));
+            data.Validate();
+            if (proposal == null) throw new ArgumentNullException(nameof(proposal));
+            var result = new ArtifactCommandResult(number, data, proposal.Result);
+            // PublishEdit가 복사와 검증을 마친 뒤에는 예외가 없는 값 대입만 남깁니다.
+            PublishEdit(proposal);
+            LastCommand = result;
+        }
+
+        public void PublishAnswer(int number, ArtifactView.ArtifactViewPreviewData data, ArtifactPlacementPreview? preview)
+        {
+            if (number <= AnsweredPreviewNumber) throw new ArgumentOutOfRangeException(nameof(number));
+            data.Validate();
+            EnsureInitialized();
+            if (preview == null && data.Kind != ArtifactView.ArtifactViewCommandKind.Move)
+                throw new ArgumentException("프리뷰 생략은 미배치 이동 요청에만 허용합니다.", nameof(preview));
+            var result = new ArtifactPreviewResult(number, data, preview);
+            LastPreview = preview;
+            LastAnsweredPreview = result;
+        }
+
         private ArtifactBufferSnapshot _current = ArtifactBufferSnapshot.Empty;
 
         public ArtifactBufferSnapshot Current => _current;
@@ -94,6 +122,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Artifact
 
         public void ExportServices(ISystemWriteSink sink)
         {
+            sink.AddService<IArtifactCommandResultReadSink>(this);
+            sink.AddService<IArtifactCommandResultStore>(this);
             sink.AddService<IArtifactBufferReadSink>(this);
             sink.AddService<IArtifactInitializationWriteSink>(this);
             sink.AddService<IArtifactEditWriteSink>(this);

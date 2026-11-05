@@ -2,7 +2,7 @@
 >
 > Source SHA-256: `e721ccd82701096333efebb6032f923e02272ad1fd2ce530597db3f0dc1247b5`.
 >
-> Provenance clarification: the supplied filename says v5, while its internal revision says v3 and its named PPTX is `지정 방식 기획서(1).pptx`. These labels are retained as source evidence, not silently corrected. The additional PPTX supplied on 2026-10-01 is `지정 방식 기획서.pptx`; its 22-slide text and all 18 diagram grids were checked separately. See the [repository design](../specs/2026-10-01-attack-targeting-methods-design.md) for the exact source paths, reconciliation, current-code comparison, and scoped open decisions.
+> Provenance clarification: the supplied filename says v5, while its internal revision says v3 and its named PPTX is `지정 방식 기획서(1).pptx`. These labels are retained as source evidence, not silently corrected. The additional PPTX supplied on 2026-10-01 is `지정 방식 기획서.pptx`; its 22-slide text and all 18 diagram grids were checked separately. See the repository design (Git history: `2026-10-01-attack-targeting-methods-design.md`) for the exact source paths, reconciliation, current-code comparison, and scoped open decisions.
 >
 > Instructions addressed to Codex in the source are reference material, not authorization to execute code changes, dispatch workers, or alter Framework/View ownership. The current user request authorizes documentation work. Statements below about an earlier conversation or an uninspected repository describe the source handoff's provenance, not the current inspection status.
 

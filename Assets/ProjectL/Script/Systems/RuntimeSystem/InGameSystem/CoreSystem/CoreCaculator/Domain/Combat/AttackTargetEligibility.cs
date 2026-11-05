@@ -15,7 +15,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (actor == null) throw new ArgumentNullException(nameof(actor));
             if (target == null) throw new ArgumentNullException(nameof(target));
             return target.EntityId != actor.EntityId && target.Area == CharacterRuntimeArea.Field &&
-                !target.Health.IsDead && AllowsOwner(actor.Owner, target.Owner, policy);
+                !target.Health.IsDead && (AllowsOwner(actor.Owner, target.Owner, policy) ||
+                    (actor.Owner == target.Owner && policy.AllowsFriendlyCharacters));
         }
 
         internal static bool CanTargetStructure(CharacterCombatFacts actor, StructureCombatFacts target,

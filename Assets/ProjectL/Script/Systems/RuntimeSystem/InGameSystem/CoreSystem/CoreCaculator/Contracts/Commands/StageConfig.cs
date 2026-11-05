@@ -10,13 +10,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// </summary>
     public sealed class StageConfig
     {
-        private const long LegacyNightLength = 1000;
 
         public int MapWidth { get; }
         public int MapHeight { get; }
         public int ReserveCapacity { get; }
-        public int PlayerDeploymentDepth { get; }
-        public int EnemyDeploymentDepth { get; }
+        /// <summary>아군 배치 구역이다. 적은 이 구역 밖이면 어디든 놓인다. Core 판정은 이 값만 읽는다.</summary>
+        public PlayerDeploymentZone PlayerZone { get; }
+
+        /// <summary>전환 입구다. 줄 구역이면 그 줄 수, 칸 구역이면 0이다. Core 로직은 읽지 않으며 바깥이 옮기면 지운다.</summary>
+        public int PlayerDeploymentDepth => PlayerZone.RowDepth ?? 0;
+
+        /// <summary>전환 입구다. 적 배치 구역이 없어 늘 0이다. Core 로직은 읽지 않으며 바깥이 옮기면 지운다.</summary>
+        public int EnemyDeploymentDepth => 0;
         public int TimelineSeed { get; }
 
         public ReadOnlyMemory<InitialEnemyPlacementSpec> InitialEnemyPlacements { get; }
@@ -24,9 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public ReadOnlyMemory<StageGimmickSpec> StageGimmicks { get; }
 
         /// <summary>
-        /// 밤이 얼마나 지속되는 지
         /// </summary>
-        public long NightLength { get; }
         /// <summary>
         /// Stage 시작 시 자동으로 생성될 적의 건물 배치 초기 위치
         /// </summary>
@@ -134,11 +137,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 initialEnemyPlacements,
                 railCells,
                 stageGimmicks,
-                LegacyNightLength,
                 Array.Empty<InitialEnemyStructurePlacementSpec>())
         {
         }
 
+        /// <summary>
+        /// 전환 입구다. 아군 줄 수로 줄 구역을 만든다. 적 줄 수는 받기만 하고 쓰지 않는다(적 배치 구역 없음).
+        /// 새 코드는 <see cref="PlayerDeploymentZone"/>을 받는 생성자를 쓴다.
+        /// </summary>
         public StageConfig(
             int mapWidth,
             int mapHeight,
@@ -149,7 +155,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             InitialEnemyPlacementSpec[] initialEnemyPlacements,
             CellCoord[] railCells,
             StageGimmickSpec[] stageGimmicks,
-            long nightLength,
+            InitialEnemyStructurePlacementSpec[] initialEnemyStructurePlacements)
+            : this(
+                mapWidth,
+                mapHeight,
+                reserveCapacity,
+                PlayerDeploymentZone.Rows(playerDeploymentDepth),
+                timelineSeed,
+                initialEnemyPlacements,
+                railCells,
+                stageGimmicks,
+                initialEnemyStructurePlacements)
+        {
+        }
+
+        public StageConfig(
+            int mapWidth,
+            int mapHeight,
+            int reserveCapacity,
+            PlayerDeploymentZone playerZone,
+            int timelineSeed,
+            InitialEnemyPlacementSpec[] initialEnemyPlacements,
+            CellCoord[] railCells,
+            StageGimmickSpec[] stageGimmicks,
             InitialEnemyStructurePlacementSpec[] initialEnemyStructurePlacements)
         {
             if (mapWidth <= 0)
@@ -158,16 +186,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(mapHeight));
             if (reserveCapacity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(reserveCapacity));
-            if (playerDeploymentDepth <= 0)
-                throw new ArgumentOutOfRangeException(nameof(playerDeploymentDepth));
-            if (enemyDeploymentDepth <= 0)
-                throw new ArgumentOutOfRangeException(nameof(enemyDeploymentDepth));
-            if (playerDeploymentDepth + enemyDeploymentDepth >= mapHeight)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(playerDeploymentDepth),
-                    "Combined deployment depths must be less than mapHeight.");
-            }
+            if (playerZone == null)
+                throw new ArgumentNullException(nameof(playerZone));
+            if (playerZone.IsEmpty)
+                throw new ArgumentOutOfRangeException(nameof(playerZone), "아군 배치 구역은 1칸 이상이어야 합니다.");
+            if (playerZone.FitsBoard(mapWidth, mapHeight) == false)
+                throw new ArgumentOutOfRangeException(nameof(playerZone), "아군 배치 구역이 맵 범위를 벗어났습니다.");
 
             if (initialEnemyPlacements == null)
                 throw new ArgumentNullException(nameof(initialEnemyPlacements));
@@ -175,8 +199,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(railCells));
             if (stageGimmicks == null)
                 throw new ArgumentNullException(nameof(stageGimmicks));
-            if (nightLength <= 0)
-                throw new ArgumentOutOfRangeException(nameof(nightLength));
             if (initialEnemyStructurePlacements == null)
                 throw new ArgumentNullException(nameof(initialEnemyStructurePlacements));
 
@@ -255,13 +277,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             MapWidth = mapWidth;
             MapHeight = mapHeight;
             ReserveCapacity = reserveCapacity;
-            PlayerDeploymentDepth = playerDeploymentDepth;
-            EnemyDeploymentDepth = enemyDeploymentDepth;
+            PlayerZone = playerZone;
             TimelineSeed = timelineSeed;
             InitialEnemyPlacements = copied;
             RailCells = copiedRailCells;
             StageGimmicks = copiedGimmicks;
-            NightLength = nightLength;
             InitialEnemyStructurePlacements = copiedEnemyStructurePlacements;
         }
     }

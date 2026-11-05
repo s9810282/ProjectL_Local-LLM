@@ -12,4 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db938caf62d41e4ac8d34ff2edce607, type: 3}
   m_Name: Shop_Default
   m_EditorClassIdentifier: 
-  candidates: []
+  candidates:
+  - unitDefinition: {fileID: 11400000, guid: 39a9cd647c4c4d35af33595bbea3064e, type: 2}
+  items: []
+  unitRecruitCostGold: 600
+  itemCategoryWeight: 2
+  unitCategoryWeight: 1

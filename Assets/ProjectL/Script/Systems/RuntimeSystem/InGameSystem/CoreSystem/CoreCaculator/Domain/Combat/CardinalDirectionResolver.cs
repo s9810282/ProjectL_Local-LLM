@@ -5,7 +5,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 {
     /// <summary>
     /// 좌표 차이를 네 직교 Rotation4로 환산합니다.
-    /// 공격 방향과 방어 Facing이 같은 방향 개념을 공유하도록 한 곳에 둡니다.
+    /// 공격과 이동에서 쓰는 방향 변환을 한 곳에 둡니다.
     /// 대각 동률의 최종 규칙은 Q6이며, 지금은 기존 공격 경로와 같은 수평 우선을 사용합니다.
     /// </summary>
     public static class CardinalDirectionResolver

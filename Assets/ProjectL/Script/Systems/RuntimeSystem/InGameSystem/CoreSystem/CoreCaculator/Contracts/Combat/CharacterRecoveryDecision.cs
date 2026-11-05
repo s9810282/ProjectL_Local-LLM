@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -14,30 +15,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int ExpectedBalance { get; }
         public int FinalBalance { get; }
         public int HealedAmount { get; }
+        public int MaxHealthIncrease { get; }
         public CharacterChanges Characters { get; }
 
         public CharacterRecoveryDecision(RecoveryOptionSpec option, CharacterInstanceId soulSourceId, int soulCount, int expectedBalance,
-            int finalBalance, int healedAmount, CharacterChanges characters)
+            int finalBalance, int healedAmount, CharacterChanges characters, int maxHealthIncrease = 0)
         {
             Option = option ?? throw new ArgumentNullException(nameof(option));
             Characters = characters ?? throw new ArgumentNullException(nameof(characters));
             if (soulSourceId.IsEmpty) throw new ArgumentException("영혼 출처 보유 ID가 필요합니다.", nameof(soulSourceId));
             SoulSourceId = soulSourceId;
             if (soulCount < 0 || finalBalance < 0 || expectedBalance - (long)option.Cost != finalBalance ||
-                healedAmount <= 0 || characters.Main == null || characters.Characters.Count != 0 ||
-                characters.Souls.Count != 0 ||
+                healedAmount < 0 || maxHealthIncrease < 0 || characters.Main == null || characters.Main.Id != soulSourceId || characters.Characters.Count != 0 ||
+                characters.Souls.Count != 0 || characters.Owned.Count != 0 || characters.Created.Count != 0 ||
                 characters.Main.Final.CurrentHealth - (long)characters.Main.Expected.CurrentHealth != healedAmount)
                 throw new ArgumentException("회복 제안의 비용·체력·변경 범위가 일치해야 합니다.");
             var before = characters.Main.Expected;
             var after = characters.Main.Final;
-            if (before.CurrentHealth <= 0 || after.CurrentHealth > (long)before.PersistentMaxHealth + soulCount ||
-                before.PersistentMaxHealth != after.PersistentMaxHealth || before.PersistentAttack != after.PersistentAttack ||
-                before.MaxActionCost != after.MaxActionCost || before.MoveRange != after.MoveRange || before.MoveCost != after.MoveCost)
-                throw new ArgumentException("회복은 살아 있는 메인의 체력만 바꿀 수 있습니다.");
+            bool matchesEffect = option.EffectKind == RecoveryEffectKind.Heal
+                ? healedAmount > 0 && maxHealthIncrease == 0
+                : healedAmount == 0 && maxHealthIncrease == option.MaxHealthIncrease;
+            if (!matchesEffect || after.PersistentMaxHealth - (long)before.PersistentMaxHealth != maxHealthIncrease ||
+                before.CurrentHealth <= 0 || after.CurrentHealth > (long)after.PersistentMaxHealth + soulCount ||
+                !before.With(currentHealth: after.CurrentHealth, persistentMaxHealth: after.PersistentMaxHealth).SameValues(after))
+                throw new ArgumentException("회복 효과에 해당하는 현재·최대 체력만 바꿀 수 있습니다.");
             SoulCount = soulCount;
             ExpectedBalance = expectedBalance;
             FinalBalance = finalBalance;
             HealedAmount = healedAmount;
+            MaxHealthIncrease = maxHealthIncrease;
         }
     }
 }

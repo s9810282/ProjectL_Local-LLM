@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using System.Collections.Generic;
 using Cinemachine;
@@ -13,8 +14,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
     }
 
     /// <summary>씬의 가상 카메라를 이름으로 수집하고 풀에서 제어 Node를 대여한다.</summary>
-    internal sealed class CameraCatalogSystem : ICameraCatalogService,
-        ICameraCatalogHandlePoolService, IExportSystemServices, ISystemBindScene, ISystemShutdown
+    internal sealed class CameraCatalogSystem : 
+        ICameraCatalogService,
+        ICameraCatalogHandlePoolService, 
+        
+        IExportSystemServices, 
+        ISystemBindScene, 
+        ISystemPostBindService,
+        ISystemShutdown
     {
         private readonly Dictionary<string, CameraCatalogNode> cameras =
             new Dictionary<string, CameraCatalogNode>(StringComparer.Ordinal);
@@ -28,6 +35,36 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
         }
 
         public void BindScene()
+        {
+            BindCamera();
+        }
+
+        public void PostBindService(ISystemServiceStoreReader systemServiceResolver)
+        {
+            var Loding = systemServiceResolver.GetService(SystemGroupsService.Global).LodingServiceCommand;
+
+            if (Loding == null)
+                throw new InvalidOperationException("Loding service is required for CameraCatalogSystem.");
+
+            Loding.LodingRegisterService.RegisterAfterLoad(new LoadingSystem.LodingNode(10, BindCamera));
+        }
+
+        public ICameraCatalogHandle GetHandle(string objectName)
+        {
+            if (string.IsNullOrWhiteSpace(objectName))
+                throw new ArgumentException("Virtual camera object name is required.", nameof(objectName));
+            if (!cameras.TryGetValue(objectName, out var source))
+                throw new KeyNotFoundException($"Virtual camera '{objectName}' is not in the scene catalog.");
+            if (source.Camera == null)
+                throw new InvalidOperationException($"Virtual camera '{objectName}' was destroyed. Bind the scene again.");
+
+            var node = pool.Get();
+            node.Bind(source.ObjectName, source.Camera);
+            rented.Add(node);
+            return new CameraCatalogHandle(this, node);
+        }
+
+        void BindCamera() 
         {
             var found = UnityEngine.Object.FindObjectsByType<CinemachineVirtualCamera>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -54,26 +91,23 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGr
             }
         }
 
-        public ICameraCatalogHandle GetHandle(string objectName)
-        {
-            if (string.IsNullOrWhiteSpace(objectName))
-                throw new ArgumentException("Virtual camera object name is required.", nameof(objectName));
-            if (!cameras.TryGetValue(objectName, out var source))
-                throw new KeyNotFoundException($"Virtual camera '{objectName}' is not in the scene catalog.");
-            if (source.Camera == null)
-                throw new InvalidOperationException($"Virtual camera '{objectName}' was destroyed. Bind the scene again.");
-
-            var node = pool.Get();
-            node.Bind(source.ObjectName, source.Camera);
-            rented.Add(node);
-            return new CameraCatalogHandle(this, node);
-        }
-
         void ICameraCatalogHandlePoolService.Return(CameraCatalogNode node, ulong version)
         {
             // An old lease must never return a Node already reused by a newer lease.
             if (node.Version != version || !rented.Remove(node)) return;
             pool.Return(node);
+        }
+
+        int ICameraCatalogHandlePoolService.GetHighestPriority()
+        {
+            int highest = int.MinValue;
+            foreach (CameraCatalogNode source in cameras.Values)
+            {
+                if (source.Camera != null)
+                    highest = Math.Max(highest, source.Camera.Priority);
+            }
+
+            return highest;
         }
 
         public void Shutdown() => ReleaseAll();

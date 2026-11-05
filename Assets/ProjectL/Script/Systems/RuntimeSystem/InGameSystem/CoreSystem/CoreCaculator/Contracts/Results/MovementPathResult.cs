@@ -17,18 +17,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public MovementPath RequestedPath { get; }
         public IReadOnlyList<CellCoord> EnteredCells { get; }
         public CellCoord FinalStop { get; }
-        public int ActionCostSpent { get; }
         public int DistanceSpent { get; }
         public MovementStopReason StopReason { get; }
-        public bool ReturnBarrierOccurred { get; }
 
-        public MovementPathResult(MovementPath requestedPath, IReadOnlyList<CellCoord> enteredCells,
-            CellCoord finalStop, int actionCostSpent, int distanceSpent, MovementStopReason stopReason,
-            bool returnBarrierOccurred)
+        public MovementPathResult(MovementPath requestedPath,IReadOnlyList<CellCoord> enteredCells,            CellCoord finalStop,int distanceSpent,MovementStopReason stopReason)
         {
             RequestedPath = requestedPath ?? throw new ArgumentNullException(nameof(requestedPath));
             if (enteredCells == null) throw new ArgumentNullException(nameof(enteredCells));
-            if (actionCostSpent < 0) throw new ArgumentOutOfRangeException(nameof(actionCostSpent));
             if (distanceSpent < 0 || distanceSpent != enteredCells.Count || distanceSpent > requestedPath.StepCount)
                 throw new ArgumentOutOfRangeException(nameof(distanceSpent));
             if (!Enum.IsDefined(typeof(MovementStopReason), stopReason))
@@ -42,10 +37,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentException("완료된 이동은 요청 경로의 끝에 도달해야 합니다.");
             EnteredCells = Array.AsReadOnly(copied);
             FinalStop = finalStop;
-            ActionCostSpent = actionCostSpent;
+
             DistanceSpent = distanceSpent;
             StopReason = stopReason;
-            ReturnBarrierOccurred = returnBarrierOccurred;
         }
     }
 }

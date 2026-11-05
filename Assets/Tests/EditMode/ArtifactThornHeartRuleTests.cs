@@ -28,11 +28,11 @@ namespace ProjectL.Tests.Core
         [TestCase(true, true, 8)]
         [TestCase(false, true, 0)]
         [TestCase(true, false, 0)]
-        public void HeartUsesConfiguredAmount(bool night, bool actualDamage, int expected)
+        public void HeartUsesConfiguredAmount(bool night, bool qualifyingHit, int expected)
         {
             var rule = new ThornHeartRule(8);
 
-            Assert.That(rule.EvaluateDamage(night, actualDamage), Is.EqualTo(expected));
+            Assert.That(rule.EvaluateDamage(night, qualifyingHit), Is.EqualTo(expected));
         }
 
         [TestCase("negative")]

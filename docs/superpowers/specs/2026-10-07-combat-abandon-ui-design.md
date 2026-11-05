@@ -1,6 +1,6 @@
 # 전투 포기 버튼·확인창 설계 (4-V, 2026-10-07)
 
-- **목표:** 전투 화면에서 플레이어가 자발적으로 포기할 수 있게 한다. 포기 순서(남은 처리·표시 → Core `AbandonBattle()` → 완료 표시 → `EndBattle` → 새 Run → StageSelect)는 골격이 이미 갖고 있으므로, View는 **버튼·확인창·완료 문구**와 **요청 한 번**만 맡는다.
+- **목표:** 전투 화면에서 플레이어가 자발적으로 포기할 수 있게 한다. 포기 순서(남은 처리·표시 → Core `AbandonBattle()` → 완료 표시 → `EndBattle` → 새 Run → StageSelect, **2026-10-20부터 목적지는 로비** — [J7](2026-10-10-combat-job-plan-restructure-design.md#j7-이탈-연쇄-k21-유지))는 골격이 이미 갖고 있으므로, View는 **버튼·확인창·완료 문구**와 **요청 한 번**만 맡는다.
 - **상태:** 설계 확정(2026-10-07, P1~P5 추천안). 진행·검증 기록은 View 계획 §7.58.
 - **골격 계약 원본:** [골격 설계](2026-09-30-combat-flow-skeleton-design.md) §6.5 K22, [골격 최종 인계](../handoffs/2026-10-07-combat-skeleton-final-handoff.md) §2.
 

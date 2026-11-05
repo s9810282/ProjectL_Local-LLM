@@ -117,14 +117,9 @@ namespace ProjectL.Tests.Core
                 footprintLocalCells: new[] { CellCoord.Zero },
                 maxHealth: 10,
                 MoveMethod.LiftAndPlace,
-                moveRange: 3,
-                moveCost: 1,
                 1,
                 attackPower: 2,
-                maxActionCost: 8,
-                attackCost: 2,
-                priority: 30,
-                delay: 20);
+                priority: 30);
         }
     }
 }

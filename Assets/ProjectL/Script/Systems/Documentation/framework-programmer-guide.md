@@ -43,9 +43,13 @@ Factory → ExportServices → SystemBuilderHelper → BuildSystemReader
 루트 종료: LifeCycle → InGame → Global (Buffer는 Shutdown 계약 없음)
 ```
 
+운영 조립은 InGame/View의 화면 입력을 먼저 생성하여 등록 정보를 얻고 Global로 전달한다. 생성 순서가 앞서도 루트 Export·InitData 순서는 위와 같다. `UnityInputBridge` 생성자는 목록을 보관하며, Configuration 생성·검증·입력 Configure는 Bridge.InitData 한 곳에서 한 번 수행한다. 화면 전환은 슬롯 Bind/Unbind와 Layer 전환이며 Configure를 다시 호출하지 않는다.
+
+Global의 Export 순서는 Render → Utility → Audio → Input → Loding → UI → GlobalUIPresentation → Job → OptionInputRouter다. GlobalUIPresentation은 서비스 전용이다. 역순 종료는 OptionInputRouter → Job → UI → Loding → Input → Audio → Utility → Render이며, 옵션이 UI/Input/Audio보다 먼저 편집·capture·override·오디오/timeScale을 복원한다. Input 내부는 Bridge의 마지막 Canceled 전달·구독/복제 에셋 해제 후 Router 종료다. 루트의 옵션 우선 종료에서 Global 내부의 옵션 우선 종료로 위치가 달라진 것이며 전체 순서가 동일하다는 뜻은 아니다.
+
 [FrameworkRuntimeFactory](../Factory/Runtime/RunTimeSystemFactory.cs)는 internal이며 ProjectL.Systems 내부 조립 진입점이다. 파일명과 클래스 이름은 다르다. FrameworkRuntime 생성자는 public이고 Reader를 받아 실행을 담당한다. 기본 Factory를 외부 어셈블리에서 바로 호출할 수 있다고 가정하지 않는다.
 
-FrameworkRuntime은 일반 C# 객체다. Create만으로 실행되지 않으며 현재 Assets 소스에서 Unity Update를 이 Runtime의 Tick에 연결하는 게임 부트스트랩 호출자는 확인되지 않는다. 연동 담당 코드가 생성·데이터·씬 바인딩·프레임 갱신·종료를 연결해야 한다.
+FrameworkRuntime은 일반 C# 객체이며 Create만으로 실행되지 않는다. 현재 [GameBootstrap](../RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs)이 Start에서 생성·BindScene·InitData·PostBindService·Initialize를 호출하고, Update에서 Tick, 종료 경계에서 Shutdown을 연결한다. 이 Boot 호출 순서와 Framework가 허용하는 공용 단계 계약은 구분한다.
 
 | 단계 | 호출과 전제조건 |
 |---|---|
@@ -66,6 +70,11 @@ InitData와 PostBindService 사이의 상대 순서, BindScene의 위치까지 R
 | DataBaseFactory / Registry | Catalog → Group → Table → Query. Registry는 구체 타입으로 정확히 조회 |
 | BufferSystemGroup | Current/Stage/Artifact/Character/Currency 상태와 ReadSink/WriteSink |
 | Input | Configuration에서 RouteTable을 완성하고 주입된 Layer Runtime을 통해 현재 Layer 사용 |
+| 화면별 입력 정의·생성 | View의 Names/Layers/KeyBindings와 화면별 InputFactory가 슬롯·Controller를 생성·연결 |
+| 화면 슬롯 | ViewGroup.Input이 runtime별 슬롯4개를 보관. Controller와 화면이 같은 슬롯 인스턴스 사용 |
+| 옵션 입력 | Global이 OptionInputRouter를 한 번 생성하고 마지막 모듈로 등록 |
+| 입력 조립 전달 | InputRegistrationSet은 목록의 방어 복사·합성만 수행. 실행 상태/Controller 객체를 복제하거나 초기화하지 않음 |
+| Runtime 연결 | View 등록 결과를 Global에 전달하고 그룹을 순서대로 Export |
 | UI | UIId 등록, 화면 표시 요청, 뒤로가기 이력 |
 | Render | Effect/Mesh/Color/Light/Outline의 Scope·Handle·Pool 수명 |
 | Job | 등록된 작업의 우선순위 큐와 현재 실행 작업 |
@@ -77,7 +86,7 @@ InputSnapshot은 입력 값, LightSnapshotData는 생성 요청 DTO, Build Snaps
 
 ## 5. 서비스 접근
 
-아래 `resolver`는 이미 전달받은 `ISystemServiceResolver`다. 필요한 using은 `ProjectL.Framework.Composition`, `ProjectL.Systems.ServiceKeys`다.
+아래 `resolver`는 이미 전달받은 `ISystemServiceResolver`다. 필요한 using은 `ProjectL.Framework.Composition`, `ProjectL.Systems.ServiceKeys.Runtime`이다.
 
 ```csharp
 var global = resolver.GetService(SystemGroupsService.Global);
@@ -91,13 +100,20 @@ var utility = global.UtilityServiceCommand;
 var loadingRegister = global.LodingServiceCommand.LodingRegisterService;
 var loading = global.LodingServiceCommand.LodingService;
 var jobs = global.JobServiceCommand;
+
+var slots = inGame.ViewGroup.Input;
+var stage = slots.Stage;
+var stageSelection = slots.StageSelection;
+var artifact = slots.Artifact;
+var lobby = slots.Lobby;
+var optionRequests = global.OptionCloseRequests;
 ```
 
 | 기능 | API |
 |---|---|
 | 입력 | input.InputSystemServices.Configure/Submit, input.InputLayerServices.ChangeLayer |
 | UI | ui.OpenUI / CloseUI / BackCloseUI / HideAllUI |
-| 렌더 | render.EffectSystemServices / MeshSystemServices / ColorSystemServices / LightSystemServices / OutlineSystemServices |
+| 렌더 | render.EffectSystemServices / MeshSystemServices / ColorSystemServices / LightSystemServices / ViewGroup.SelectOutlineSystemServices |
 | 유틸리티 | utility.delayService, utility.eventSystemService |
 | Job | jobs.JobRegister.Register, jobs.JobRunner.Register/RegisterRange/IsIdle/Clear |
 | LifeCycle | lifeCycle.LifeCycleManager.Change/Exit |
@@ -105,7 +121,28 @@ var jobs = global.JobServiceCommand;
 
 Global은 LifeCycle 접근자를 제공하지 않는다. Render·Job·UI 등의 키가 public이어도 루트에 등록됐다는 뜻은 아니다. 루트에서 그 키를 직접 조회하지 않고 Global Context를 거친다. AudioSystem은 Global Factory에 서비스·모듈로 등록되며 global.AudioServiceCommand로 접근한다. Audio 키는 Global 내부 Reader에서만 조회한다. 상세 사용법은 [Audio 연결](audio-integration.md)을 참고한다.
 
+화면 전환은 시스템이 Framework Initialize에서 C# ScreenTransitionInitModule을 한 번 읽어 자동으로 초기화한다. 외부 Init API는 없고 `render.ViewGroup.ScreenTransitionSystemServices.CreateScop()`으로 대여한 Scop에 `Play(ScreenTransitionData)`로 요청한다. Scop이 System에 활성화를 알리며 같은 Scop의 재요청은 0부터 다시 시작한다. 대상 버추얼 Priority 하나만 올리고, 목표 반경의 스텐실 패스가 기록된 뒤 Main 마스크를 확정한다. 완료와 Pool 반환은 별개이며 Dispose에서 임시 자원을 정리하고 객체 자체를 반환한다. 반환한 참조는 재사용하지 않는다. 실제 Unity 화면 확인은 대기 중이다. [사용법](../../../../../docs/render-screen-transition.md)과 [전환 설계·Task](../../../../../docs/superpowers/specs/2026-10-18-screen-stencil-transition-design.md)를 참고한다.
+
+운영 입력에서 위 Configure API는 Bridge.InitData가 한 번 호출한다. 화면 소비자는 이를 재호출하지 않는다. 화면 슬롯은 `inGame.ViewGroup.Input`, 옵션 닫기 요청은 `global.OptionCloseRequests`를 사용한다. 호환용 Slot 키·Export 메서드가 남아 있어도 실제 Runtime 루트 등록을 뜻하지 않는다. 독립 Slot 단위 검사는 작은 Builder에 직접 Export할 수 있지만, 생산 경로에 루트 fallback이나 별도 슬롯 생성을 추가하지 않는다. 새 화면 입력은 화면 InputFactory·View context·상위 View 조립에 연결하고 Runtime에 구체 Controller/Layer/키 목록을 복제하지 않는다. [화면별 입력 가이드](../../../../../docs/superpowers/viewDocs/stage-input-guide.md)와 [입력 조립 인계](../../../../../docs/superpowers/handoffs/2026-10-17-view-input-composition-framework-share-Hojin.md)를 참고한다.
+
 SystemServiceStore는 현재 Key.Name을 비교하지 않고 `is TService`로 첫 일치 객체를 찾는다. 같은 서비스 타입을 키 이름으로 구별하는 계약은 없다. 소비자에게 필요한 서비스만 전달하는 방식도 정상이다.
+
+### 조회 키의 소유 계층 (2026-10-17)
+
+`ServiceKeys`의 파일·네임스페이스는 소유 Factory의 계층을 따른다. 그룹 키와 개별 시스템 키는 별도 컨테이너이며, 각 컨테이너는 한 파일에 정의한다.
+
+| Factory 계층 | 키 위치·컨테이너 |
+|---|---|
+| Runtime 루트 | `Runtime/SystemGroupsService`(Global·InGame·LifeCycle), `BufferSystemKey`, 입력 수신 슬롯 키 |
+| Runtime/Global | `GlobalSystemGroupServiceKey`(Render·Utility·Input·Loding·Job), `GlobalSystemServiceKey`(UI·Audio), 하위 Factory별 개별 시스템 키 |
+| Runtime/Global/Render | `RenderSystemGroupServiceKey`(CameraGroup), `RenderSystemServiceKey`(개별 렌더 시스템), `CameraSystemServiceKey`(Catalog·Effect) |
+| Runtime/InGame | `InGameSystemGroupServiceKey`(Core·View) |
+| Runtime/InGame/Core | `InGameCoreSystemServiceKey`(Core 개별 서비스) |
+| Runtime/Buffer·LifeCycle | Buffer별 키 파일, `LifeCycleSystemServiceKey` |
+| DBFactory | `DataBaseGroupKey`(Render·InGame·View), `DataBaseServiceKey`(보드 설정 조회) |
+| DBFactory/Group | `RenderTableKey`, `InGameTableKey`, `ViewTableKey` |
+
+예를 들어 Global 내부 Reader는 `GlobalSystemGroupServiceKey.Render`로 조회하고, 루트 소비자는 `SystemGroupsService.Global`로 얻은 Context의 `RenderServiceCommand`를 사용한다. 키의 위치는 소유 범위를 설명하며, 실제 등록 범위를 넓히지 않는다. 키 추가 시 해당 Factory 계층의 파일만 수정한다.
 
 
 ## 6. Framework Contract
@@ -195,7 +232,11 @@ SystemServiceStore는 현재 Key.Name을 비교하지 않고 `is TService`로 �
 
 **적용:** UIBase 확장과 IUISystemService 소비자.
 
-씬 검색으로 연결할 UI는 UIBase를 상속한다. 기본 `ExportUIService(IUIRegistry)`는 `registry.AddUI(ID, this, ParentID)`로 등록한다. 재정의하면 기본 구현을 호출하거나 직접 등록해야 한다. ParentID의 기본값 None은 루트이며, 자식은 등록된 부모 ID를 사용한다. 자기 자신을 부모로 지정하거나 순환 관계를 만들 수 없다. 같은 UISystem의 UIId는 중복될 수 없으며 None을 사용하지 않는다. OpenUI/OpenChildUI/CloseChildUI/CloseUI/BackCloseUI/HideAllUI는 PostBindService와 Initialize 완료 후 호출한다.
+씬 검색으로 연결할 UI는 UIBase를 상속한다. 기본 `ExportUIService(IUIRegistry)`는 `registry.AddUI(ID, this, ParentID)`로 등록한다. 재정의하면 기본 구현을 호출하거나 직접 등록해야 한다. ParentID의 기본값 None은 루트이며, 자식은 등록된 부모 ID를 사용한다. 자기 자신을 부모로 지정하거나 순환 관계를 만들 수 없다. 같은 UISystem에 개별 등록하는 UIId는 중복될 수 없으며 None을 사용하지 않는다. UIGroup 멤버는 그룹만 등록·바인딩하므로 멤버 간 UIId 중복을 허용한다. OpenUI/OpenChildUI/CloseChildUI/CloseUI/BackCloseUI/HideAllUI는 PostBindService와 Initialize 완료 후 호출한다.
+
+`UIBase.Policy`는 기본 생성자에서 `UIOpenPolicy.Exclusive`로 초기화한다. 파생 UI의 생성자에서 `Policy = UIOpenPolicy.Parallel`로 변경할 수 있다. Policy는 UISystem의 전환 정책이며 입력 Layer나 씬 간 유지 여부를 변경하지 않는다.
+
+`UIGroup : UIBase`는 한 UIId로 모든 멤버를 함께 표시하는 추상 기반 클래스다. Inspector의 `initialInstances`에 UIBase 참조를 지정하거나 개별 등록 전 `AddInstance(instance)`로 추가한다. 멤버는 `Stack<UIBase>`에 보관하며 Open/Hide는 마지막으로 추가한 멤버부터 모두 호출하고 Stack을 보존한다. 그룹 GameObject도 활성·비활성화한다. 멤버별 Policy는 그룹의 일괄 표시에는 적용하지 않는다. 외부에서는 멤버를 따로 열지 않고 그룹 ID를 사용한다. BindScene은 모든 그룹의 초기 멤버 소유권을 먼저 준비한 뒤 멤버를 개별 수집 대상에서 제외한다. 그룹은 서비스·데이터 바인딩을 멤버에 전달하며, 열린 그룹에 새 인스턴스를 추가하면 현재 바인딩과 표시 상태를 적용한다. `PopInstance()`는 마지막 멤버를 숨기고 소유권을 해제해 반환하며 객체를 파괴하지 않는다. 여러 그룹에 같은 인스턴스를 넣거나 순환 그룹을 구성할 수 없고 GlobalUIBase는 독립 루트로 유지한다.
 
 - **근거:** [UIBase.cs](../RuntimeSystem/GlobalSystem/UISystem/Base/UIBase.cs) → 확장 메서드; [UISystem.cs](../RuntimeSystem/GlobalSystem/UISystem/UISystem.cs) → `BindScene`, `AddUI`, `EnsureInitialized`.
 - **위반 예:** ExportUIService를 재정의하고 등록 생략; 중복 UIId; Initialize 전 OpenUI.
@@ -210,16 +251,16 @@ SystemServiceStore는 현재 Key.Name을 비교하지 않고 `is TService`로 �
 
 외부의 열기·닫기·뒤로가기 요청은 IUISystemService를 거친다. UIBase.Open/Hide 직접 호출만으로 화면을 전환한 뒤 시스템 이력도 변경됐다고 간주하지 않는다.
 
-- **근거:** [UISystem.cs](../RuntimeSystem/GlobalSystem/UISystem/UISystem.cs) → `OpenUI`, `CloseUI`, `BackCloseUI`, `RemoveFromHistory`, `OpenCurrentHistoryUI`; [UIBase.cs](../RuntimeSystem/GlobalSystem/UISystem/Base/UIBase.cs) → 표시 콜백.
+- **근거:** [UISystem.cs](../RuntimeSystem/GlobalSystem/UISystem/UISystem.cs) → `OpenUI`, `CloseUI`, `BackCloseUI`, `RemoveFromHistory`; [UIBase.cs](../RuntimeSystem/GlobalSystem/UISystem/Base/UIBase.cs) → 표시 콜백.
 - **위반 예:** 외부 버튼이 UIBase.Hide만 호출하면서 뒤로가기 Stack에서도 제거됐다고 가정.
 - **정상 예:** `CloseUI(id) → 자손부터 Hide → 닫힌 UI 이력 제거`. 이전 화면을 다시 열지 않는다.
 - **판정 주의:** UIBase.Open/Hide **구현 내부**에서 Unity 표시를 바꾸는 것은 정상이다. 등록되지 않은 독립 UI의 정책은 이 규칙 밖이다.
 
-자식 ID에 대한 `OpenUI(childId)`는 `OpenChildUI(parentId, childId)`로 연결된다. 부모가 열려 있어야 한다. 일반 루트와 자식은 공통 History에 현재 열린 UI로 기록한다. 새 일반 UI를 열면 부모가 달라도 기존 일반 화면 경로를 닫고 이력에서 제거한다. 다만 새 자식의 열린 조상은 유지한다. `CloseChildUI(parentId)`는 열린 자손을 닫고 부모는 유지하며, `CloseUI(parentId)`는 자손부터 부모까지 닫는다. `BackCloseUI()`는 공통 History 최상단을 닫는다. 닫힌 UI는 History에서 제거되며 이전 화면을 복원하지 않는다.
+자식 ID에 대한 `OpenUI(childId)`는 `OpenChildUI(parentId, childId)`로 연결된다. 부모가 열려 있어야 한다. 일반 루트와 자식은 공통 History에 현재 열린 UI로 기록한다. Exclusive UI를 열면 부모가 달라도 관련 없는 기존 Exclusive UI를 닫고 이력에서 제거한다. 새 UI의 열린 조상과 Parallel UI는 유지한다. Parallel UI를 열면 기존 UI를 닫지 않는다. 다만 Exclusive 조상이 닫히면 그 아래 Parallel 자손도 함께 닫힌다. `CloseChildUI(parentId)`는 Parallel로 열린 모든 자손 가지를 닫고 부모는 유지하며, `CloseUI(parentId)`는 자손부터 부모까지 닫는다. `BackCloseUI()`는 공통 History에서 마지막으로 열린 UI를 닫는다. Parallel도 일반 호출로 열면 뒤로가기 대상이다. 닫힌 UI는 History에서 제거되며 이전 화면을 복원하지 않는다.
 
 `OpenUI(rootId, true)`로 연 유지 루트는 History에서 제외하고 열린 루트 상태로 별도 추적한다. 유지 루트의 자식도 일반 UI로 History에 기록하므로 BackCloseUI로 닫을 수 있다. 예를 들어 유지 루트 A/C 아래 자식 B/D가 있으면 D를 열 때 B를 닫고 제거하며, D를 닫아도 B는 복원하지 않는다. A/C는 계속 열린다. HideAllUI는 유지 UI도 모두 숨긴다. bool 오버로드의 false 처리는 현재 경고 후 유지 방식으로 계속 실행하므로 일반 루트는 OpenUI(id)를 사용한다.
 
-열린 자식 관계를 별도 Dictionary로 중복 보관하지 않는다. `_parents`는 등록 관계, `_uiHistory`는 열린 일반 UI의 한 경로, `_openRoots`는 유지 UI를 포함한 열린 루트를 관리한다. 새 UI의 부모부터 올라가 History에 있는 가장 가까운 조상을 찾고, 그 위만 Pop하여 닫는다. 조상이 없으면 History를 모두 비운다. 자손 닫기는 History 최상단에서 부모 관계를 따라 요청한 부모가 있는지 확인한 뒤 그 부모 위만 Pop한다. 해당 부모가 조상이 아니면 현재 경로를 건드리지 않는다. 유지 루트는 History에 없으므로 이 과정에서 닫히지 않는다.
+`_parents`는 등록 관계, `_openUIs`는 유지 UI와 자식을 포함한 열린 상태, `_uiHistory`는 뒤로가기 순서를 관리한다. Parallel의 여러 경로를 허용하므로 이력을 하나의 부모·자식 경로로 해석하지 않는다. History는 재사용하는 List로 보관하고 닫힌 ID를 제자리에서 제거해 임시 Stack 할당을 없앴다. 그룹 멤버 Stack도 Open/Hide에서 복사하거나 Pop하지 않는다. 등록·컬렉션 용량 확장 및 개별 UI의 표시 콜백에서 발생하는 할당은 별도로 확인해야 한다.
 
 #### FW-010 — Mesh는 등록한 MeshFilter에 구체 DTO로 갱신한다
 
@@ -422,7 +463,13 @@ var lifeCycle = resolver.GetService(SystemGroupsService.LifeCycle);
 lifeCycle.LifeCycleManager.Change(LifeCycleKeys.Stage);
 ```
 
-LifeCycleKeys와 LifeCycleKey는 `ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base`에 있다. LifeCycleBase는 Global의 로딩 서비스를 루트 resolver로 연결한다. Initialize 때 SceneIndex별 SceneExitLoaded/SceneEnterLoaded Node를 쓰기 전용 `LodingRegisterService`에 등록하고, Enter 요청은 `LodingService.Load`로 위임한다. LodingRegisterSystem은 BeforeLoad·AfterLoad 공통 Node와 Scene별 Node 목록만 보관한다. LodingSystem은 읽기 전용 `LodingRegisterReader`로 정렬된 목록을 받아 BeforeLoad 공통 Node → 현재 State의 SceneExitLoaded Node → LoadSceneAsync → 대상 State의 SceneEnterLoaded Node → AfterLoad 공통 Node 순서로 실행한다. 공통 Node는 Fade·입력·Loading UI를 연결하고, State Node는 해당 화면의 Buffer 바인딩을 담당한다. 같은 단계의 Node는 Priority가 작은 순서와 같은 Priority의 등록 순서로 실행되며, 이 NodeQueue는 Global JobRunner와 별개다. 현재 Lobby/Stage/Artifact/Combat의 SceneIndex는 0/1/2/3이며 실제 Build Settings와 연동해서 사용해야 한다.
+LifeCycleKeys와 LifeCycleKey는 `ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base`에 있다. LifeCycleBase는 Global의 로딩 서비스를 루트 resolver로 연결한다. Initialize 때 SceneIndex별 SceneExitLoaded/SceneEnterLoaded Node를 쓰기 전용 `LodingRegisterService`에 등록하고, Enter 요청은 `LodingService.Load`로 위임한다. LodingRegisterSystem은 BeforeLoad·AfterLoad 공통 Node, 씬별 Node와 준비 작업 등록을 보관한다. LodingSystem은 읽기 전용 `LodingRegisterReader`로 정렬된 목록을 받아 BeforeLoad 공통 Node → 현재 State의 SceneExitLoaded Node → LoadSceneAsync → 대상 State의 SceneEnterLoaded Node → AfterLoad 공통 Node 순서로 실행한다. 공통 Node는 Fade·입력·Loading UI를 연결하고, State Node는 해당 화면의 Buffer 바인딩을 담당한다. 같은 단계의 Node는 Priority가 작은 순서와 같은 Priority의 등록 순서로 실행되며, 이 NodeQueue는 Global JobRunner와 별개다. SceneIndex는 `SceneIndices`(`LifeCycleSystem/Base/SceneIndices.cs`) 한 곳이 정하며 지금 Boot 0(LifeCycle 없음)·Lobby 1·Stage 2·Combat 3·Artifact 4(예약)이다. 실제 Build Settings와 연동해서 사용해야 한다. 씬별 Node priority 전체 표는 `docs/superpowers/viewDocs/runtime-scene-binding-guide.md` §1.1에 있다.
+
+2026-11-03부터 여러 프레임이 필요한 씬 준비는 `RegisterScenePreparation(sceneIndex, new LodingPreparationNode(create))`로 별도 등록한다. 기존 동기 Node와 `AfterLoad`의 finally 실행을 마친 뒤, 등록 순서대로 준비를 진행하고 모두 성공해야 Reveal을 시작한다. 준비가 없는 씬은 기존 경로를 유지한다. `LoadingProgress`는 씬 로드 진행률이며 준비 중에도 1이고, 전체 진입 대기는 `IsLoading`으로 확인한다.
+
+`create`는 매 진입의 새 `Pending` 작업을 반환한다. 작업의 `Begin(isCovered)`는 한 번, `Tick(deltaTime)`은 완료까지 호출한다. `Complete`는 임시 대여·구독 정리까지 끝난 성공만 뜻한다. `Cancelled`·`Failed`와 예외는 성공으로 처리하지 않는다. `Cancel()`은 중복 호출에 안전해야 하며 Abort/Shutdown과 기능 소유자의 해제 양쪽에서 호출할 수 있다. 로딩 표현이 없어도 준비는 기다리지만 `isCovered`는 false이므로 기능이 시각 노출을 방지해야 한다. 준비 작업에서 `IsLoading == false`를 기다리면 상호 대기가 생기므로 금지한다.
+
+Global은 `ILodingPreparation` 계약만 알고 Combat 구현을 참조하지 않는다. 기능의 기존 조립·연결이 작업을 만들고, LoadingSystem은 진행과 Reveal을 소유한다. 새 서비스를 루트나 부모 Builder에 중복 등록하지 않는다. 첫 적용인 Combat 유닛/HUD 준비의 수명·공유 사항은 [구현 검토와 로딩 계약 공유](../../../../../docs/superpowers/handoffs/2026-11-03-combat-unit-prewarm-review-handoff.md)에 있다.
 
 JobRegister는 static Plan에서 Job 목록을 생성받아 Runner에 등록한다. 작은 Priority 우선이며 동률은 등록 순서다. 미완료 Job은 다음 Tick에도 Execute될 수 있다. 한 Tick의 즉시 완료 처리 상한은 32개다. 현재 각 Plan의 Start 작업은 임시 구현이며 실제 게임 작업 연결이 남아 있다.
 
@@ -520,6 +567,8 @@ CustomPool은 중복 반환·소유자·최대 개수 추적을 제공하지 않
 ## 카메라 서비스와 Cinemachine 참조
 
 카메라는 `global.RenderServiceCommand.CoreGroup.CameraGroup`을 통해 접근한다. CameraCatalogSystem은 BindScene에서 로드된 씬의 CinemachineVirtualCamera를 수집하고 오브젝트 이름으로 GetHandle을 제공한다. 제어 기간에 핸들을 보관하고 사용이 끝나면 Dispose로 반환한다. 줌·흔들림 요청은 CameraEffectSystem.Dispatch로 전달한다. 세부 계약은 [카메라 카탈로그](../../../../../docs/render-camera-catalog.md)와 [카메라 효과](../../../../../docs/render-camera-effects.md)를 참고한다.
+
+UnityCameraCatalogSystem은 Unity Camera 전용이다. 최초 BindScene에서 이름별 출력 카메라를 수집하고 이후 BindScene은 목록·핸들을 보존한다. 플레이 중 최초 등록의 이름 검증을 통과하면 각 Camera의 최상위 루트에 DontDestroyOnLoad를 적용한다. 같은 루트는 한 번만 처리하며 자식의 부모·Transform·활성 상태는 유지한다. EditMode와 등록 실패 시에는 영속화하지 않는다. `CameraGroup.UnityCameraCatalogSystem.GetHandle(name)`의 핸들은 출력 설정을 제어한다. 카메라 생성은 Bootstrap/씬 구성의 책임이며 카탈로그는 Shutdown에서도 카메라를 파괴하지 않는다. 두 카탈로그는 별도 서비스이며 효과는 버추얼 카탈로그만 사용한다.
 
 현재 카메라 구현과 CameraCatalogSystemTests·CameraEffectSystemTests가 Cinemachine 타입을 직접 사용하므로 Systems 및 Framework 테스트 어셈블리의 Cinemachine 참조를 유지한다. UI·Audio 테스트 참조를 추가할 때 Cinemachine이나 Core.Application 참조를 제거하지 않는다.
 

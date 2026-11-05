@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     internal static class MovementEnvironmentCalculator
     {
         internal static void ResolveObjectsAt(MovementProjection projection, EntityId arriver, CellCoord cell,
-            IReadOnlyList<IMovementTileRule> rules)
+            IReadOnlyList<IMovementTileRule> rules, bool skipMines = false)
         {
             var sources = ObjectArrivalCalculator.OrderedAt(projection.Environment, projection.Bindings, cell);
             foreach (var source in sources)
@@ -23,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var current = projection.Character(arriver);
                 if (current.Health.IsDead || current.Area != CharacterRuntimeArea.Field || current.Anchor != cell || projection.Terminal) return;
                 var tile = (ObjectSourceFact)projection.Source(source.Id);
-                if (!tile.Active) continue;
+                if (!tile.Active || skipMines && tile.IsMine) continue;
                 var rule = rules.SingleOrDefault(r => r.Key == tile.RuleKey) ??
                     throw new NotSupportedException("Object의 진입 규칙이 연결되지 않았습니다: " + tile.RuleKey);
                 var targets = rule.TargetIds(tile, arriver, projection.CurrentInput())
@@ -31,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var effects = rule.Evaluate(projection.StepInput(cell, MovementEffectPhase.Hazard, targets, arriver), tile) ??
                     throw new InvalidOperationException("Object 효과는 null일 수 없습니다.");
                 if (effects.Damage.Select(r => r.TargetId).Concat(effects.Healing.Select(r => r.TargetId))
-                    .Concat(effects.MovementMethods.Select(r => r.TargetId)).Concat(effects.HeldChanges.Select(r => r.TargetId))
+                    .Concat(effects.DebuffChanges.Select(r => r.TargetId)).Concat(effects.MovementMethods.Select(r => r.TargetId)).Concat(effects.HeldChanges.Select(r => r.TargetId))
                     .Any(id => !targets.Contains(id)))
                     throw new InvalidOperationException("Object 효과가 선언한 후보 대상 밖을 변경할 수 없습니다.");
                 if (effects.ForcedMovement.Count != 0)
@@ -40,7 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (effects.ExpectedSource == null)
                 {
                     if (effects.Damage.Count != 0 || effects.Healing.Count != 0 || effects.MovementMethods.Count != 0 ||
-                        effects.HeldChanges.Count != 0)
+                        effects.HeldChanges.Count != 0 || effects.DebuffChanges.Count != 0)
                         throw new InvalidOperationException("발동하지 않은 Object는 다른 효과를 낼 수 없습니다.");
                     continue;
                 }
@@ -51,6 +51,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 projection.ChangeSource(tile, effects);
                 var origin = effects.Damage.Count == 0 ? null : new CombatDamageOrigin(cell, null, projection.NextAttackGroup());
                 foreach (var damage in effects.Damage) projection.ChangeHealth(damage, false, origin);
+                foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
                 foreach (var method in effects.MovementMethods) projection.ChangeMethod(method);
                 projection.ResolveDeathBoundary();
                 if (projection.Character(arriver).Health.IsDead || projection.Terminal) return;
@@ -67,32 +68,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal static void ResolveEntry(MovementProjection projection, CellCoord enteredCell, IReadOnlyList<IMovementTileRule> rules,
-            EntityId? mover = null, bool consumeThorn = true)
+            EntityId? mover = null, bool consumeThorn = true, bool skipMines = false)
         {
             var arriver = mover ?? projection.Input.ActorId;
             bool Interrupted() => projection.Character(arriver).Health.IsDead || projection.Terminal ||
                 projection.Character(arriver).Area != CharacterRuntimeArea.Field || projection.Character(arriver).Anchor != enteredCell;
             if (Interrupted()) return;
-            if (consumeThorn && projection.HasThorn(enteredCell))
-            {
-                var thorn = RequiredThorn(rules);
-                var effects = thorn.EvaluateThorn(projection.StepInput(enteredCell, MovementEffectPhase.Hazard, mover: arriver), projection.Thorn(enteredCell));
-                projection.ConsumeThorn(enteredCell);
-                var origin = new CombatDamageOrigin(enteredCell, null, projection.NextAttackGroup());
-                foreach (var damage in effects.Damage)
-                    projection.ChangeHealth(damage, false, origin);
-                projection.ResolveDeathBoundary();
-            }
+            if (consumeThorn) ResolveThornContact(projection, arriver, enteredCell, rules);
+            if (Interrupted()) return;
+            if (TornadoCalculator.ResolveGroupedEntry(projection, arriver, enteredCell, rules)) return;
             foreach (var phase in new[] { MovementEffectPhase.Hazard, MovementEffectPhase.Recovery })
             {
                 if (Interrupted()) return;
                 if (phase == MovementEffectPhase.Recovery)
                 {
-                    ResolveObjectsAt(projection, arriver, enteredCell, rules);
+                    ResolveObjectsAt(projection, arriver, enteredCell, rules, skipMines);
                     if (Interrupted()) return;
                 }
                 var ids = projection.Environment.Tiles.Where(t => t.Active && t.Cell == enteredCell &&
-                        t.TriggersArrivalRule &&
+                        t.TriggersArrivalRule && (!skipMines || !t.IsMine) &&
                         !projection.Bindings.ObjectSourceIds.Contains(t.Id))
                     .OrderBy(t => t.Priority).ThenBy(t => t.Id).Select(t => t.Id).ToArray();
                 foreach (var id in ids)
@@ -107,7 +101,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var effects = rule.Evaluate(projection.StepInput(enteredCell, phase, targetIds, arriver), tile) ??
                         throw new InvalidOperationException("진입 규칙은 null 결과를 반환할 수 없습니다.");
                     if (effects.Damage.Select(r => r.TargetId).Concat(effects.Healing.Select(r => r.TargetId))
-                        .Concat(effects.ForcedMovement.Select(r => r.TargetId)).Concat(effects.MovementMethods.Select(r => r.TargetId))
+                        .Concat(effects.ForcedMovement.Select(r => r.TargetId)).Concat(effects.DebuffChanges.Select(r => r.TargetId)).Concat(effects.MovementMethods.Select(r => r.TargetId))
                         .Any(id => !targetIds.Contains(id)))
                         throw new InvalidOperationException("규칙 결과가 선언한 후보 대상 밖을 변경할 수 없습니다.");
                     if (phase == MovementEffectPhase.Hazard && effects.Healing.Count != 0 ||
@@ -119,6 +113,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var origin = effects.Damage.Count == 0 ? null : new CombatDamageOrigin(tile.Cell, null, projection.NextAttackGroup());
                     foreach (var damage in effects.Damage)
                         projection.ChangeHealth(damage, false, origin);
+                    foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
                     foreach (var method in effects.MovementMethods) projection.ChangeMethod(method);
                     projection.ResolveDeathBoundary();
                     if (Interrupted()) return;
@@ -132,6 +127,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
         }
 
+        /// <summary>이동 원인과 무관하게 현재 대상과 턴 소유자로 가시 접촉을 적용한다.</summary>
+        private static void ResolveThornContact(MovementProjection projection, EntityId mover, CellCoord cell,
+            IReadOnlyList<IMovementTileRule> rules)
+        {
+            if (!projection.HasThorn(cell)) return;
+            var effects = RequiredThorn(rules).EvaluateThorn(
+                projection.StepInput(cell, MovementEffectPhase.Hazard, mover: mover), projection.Thorn(cell));
+            projection.ConsumeThorn(cell);
+            var origin = new CombatDamageOrigin(cell, null, projection.NextAttackGroup());
+            foreach (var damage in effects.Damage) projection.ChangeHealth(damage, false, origin);
+            foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
+            projection.ResolveDeathBoundary();
+        }
+
         private static ThornMovementTileRule RequiredThorn(IReadOnlyList<IMovementTileRule> rules) =>
             rules.OfType<ThornMovementTileRule>().SingleOrDefault() ??
             throw new NotSupportedException("가시밭 진입 규칙이 구성되지 않았습니다.");
@@ -140,48 +149,65 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             IReadOnlyList<IMovementTileRule> rules)
         {
             if (request.Distance == 0) return;
-            if (request.Distance != 1) throw new NotSupportedException("기존 강제 이동 계약은 한 칸입니다.");
             var before = projection.Character(request.TargetId);
             if (before.Health.IsDead || before.Area != CharacterRuntimeArea.Field) return;
             if (before.OccupiedCells.Count != 1) throw new NotSupportedException("다중 셀 강제 이동은 연결되지 않았습니다.");
             var input = projection.CurrentInput();
-            var destination = ForcedDisplacementGeometry.ResolveDestinationAnchor(before.Anchor.Value,
-                ImpactPatternCalculator.GetForwardStep(request.Direction), request.Distance);
-            if (request.Cause == MovementDisplacementCause.Knockback)
-            {
-                projection.TerrainQueryCells.Add(before.Anchor.Value);
-                projection.TerrainQueryCells.Add(destination);
-                if (!EnvironmentTerrainRules.CanKnockback(input.State.Environment, input.EnvironmentBindings,
-                    before.Anchor.Value, destination)) return;
-            }
-            if (!input.State.IsInside(destination) ||
-                EnvironmentTerrainRules.IsWallOccupied(input.State.Environment, input.EnvironmentBindings, destination) ||
-                input.Characters.Any(c => c.EntityId != before.EntityId && !c.Health.IsDead && c.OccupiedCells.Contains(destination)) ||
-                input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(destination))) return;
-            var departed = PositionTileModifierCalculator.Replace(before, PositionTileModifier.None);
-            PositionTileModifierCalculator.RecordNormalization(projection.Events, before, departed);
-            var after = CombatMovementCalculator.MoveTo(departed, destination);
-            if (after.EntityId != projection.Input.ActorId)
-                after = CombatMovementCalculator.SealPendingMovement(after);
-            projection.RecordForcedMove(before, after);
-            var profile = CombatCommandCalculator.RequiredProfile(input, before);
-            foreach (var cell in MovementPathCalculator.ResolvePathCells(before.Anchor.Value, destination,
-                new TileFootprint(profile.Definition.FootprintWidth, profile.Definition.FootprintHeight,
-                    profile.Definition.FootprintLocalCells.ToArray()), before.Rotation.Value))
-            {
-                if (!projection.HasThorn(cell)) continue;
-                var effect = RequiredThorn(rules).EvaluateThorn(
-                    new MovementStepInput(cell, after), projection.Thorn(cell));
-                projection.ConsumeThorn(cell);
-                var origin = new CombatDamageOrigin(cell, null, projection.NextAttackGroup());
-                foreach (var damage in effect.Damage)
-                    projection.ChangeHealth(new MovementHealthRequest(before.EntityId, damage.Amount, damage.DamageOrigin),
-                        false, origin);
-                projection.ResolveDeathBoundary();
-                if (projection.Terminal || projection.Character(before.EntityId).Health.IsDead) return;
-            }
-            ResolveObjectsAt(projection, before.EntityId, destination, rules);
-            projection.ResolveForcedArrival(before.EntityId);
+            // 강제 이동 면역은 원인과 관계없이 이동만 막는다(G9).
+            if (UnitBehaviorRules.IsForcedMovementImmune(input, before, projection.ProfileReads)) return;
+            var profile = CombatCommandCalculator.RequiredProfile(input, before, projection.ProfileReads);
+            var footprint = new TileFootprint(profile.Definition.FootprintWidth, profile.Definition.FootprintHeight,
+                profile.Definition.FootprintLocalCells.ToArray());
+            var rotation = before.Rotation.Value;
+            bool departed = false;
+            // 거리 N을 한 칸씩 진행한다. 칸 검사는 기존 조합(넉백 원인일 때만 높은 지대 규칙)을 그대로 쓴다(G8-6).
+            var path = ForcedDisplacementPathCalculator.Execute(before.Anchor.Value, ImpactPatternCalculator.GetForwardStep(request.Direction),
+                request.Distance,
+                (from, to) =>
+                {
+                    var current = projection.CurrentInput();
+                    if (request.Cause == MovementDisplacementCause.Knockback)
+                    {
+                        projection.TerrainQueryCells.Add(from);
+                        projection.TerrainQueryCells.Add(to);
+                        if (!EnvironmentTerrainRules.CanKnockback(current.State.Environment, current.EnvironmentBindings, from, to)) return false;
+                    }
+                    return current.State.IsInside(to) &&
+                        !EnvironmentTerrainRules.IsWallOccupied(current.State.Environment, current.EnvironmentBindings, to) &&
+                        !current.Characters.Any(c => c.EntityId != before.EntityId && !c.Health.IsDead && c.OccupiedCells.Contains(to)) &&
+                        !current.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(to));
+                },
+                (from, to, last) =>
+                {
+                    var prior = projection.Character(before.EntityId);
+                    var moving = prior;
+                    if (!departed)
+                    {
+                        // 위치 보정은 출발할 때 한 번만 해제한다.
+                        moving = PositionTileModifierCalculator.Replace(prior, PositionTileModifier.None);
+                        PositionTileModifierCalculator.RecordNormalization(projection.Events, prior, moving);
+                        departed = true;
+                    }
+                    var after = CombatMovementCalculator.MoveTo(moving, to);
+                    projection.RecordForcedMove(prior, after);
+                    if (projection.ResolveForcedTerrainEntry(before.EntityId, to)) return false;
+                    foreach (var cell in MovementPathCalculator.ResolvePathCells(from, to, footprint, rotation))
+                    {
+                        ResolveThornContact(projection, before.EntityId, cell, rules);
+                        if (projection.Terminal || projection.Character(before.EntityId).Health.IsDead) return false;
+                    }
+                    // 지나가는 칸과 마지막 칸 모두 오브젝트를 즉시 처리한다(G8-2 B). 타일 강제 이동은 원래 즉시 처리 경로다.
+                    if (!projection.Terminal)
+                    {
+                        if (TornadoCalculator.ResolveGroupedEntry(projection, before.EntityId, to, rules)) return false;
+                        if (projection.Terminal || projection.Character(before.EntityId).Health.IsDead || projection.Character(before.EntityId).Anchor != to) return false;
+                    }
+                    ResolveObjectsAt(projection, before.EntityId, to, rules);
+                    return last || !projection.Character(before.EntityId).Health.IsDead && !projection.Terminal;
+                });
+            // 도중 사망·전투 종료로 끊긴 경우가 아니면 마지막으로 들어간 칸에서 강제 도착을 처리한다.
+            if (path.Steps.Count != 0 && path.Stop != ForcedDisplacementStop.Interrupted)
+                projection.ResolveForcedArrival(before.EntityId);
         }
     }
 }

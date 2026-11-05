@@ -12,20 +12,20 @@ namespace ProjectL.Tests.Core
 {
     public sealed class EnvironmentTerrainRuleTests
     {
-        [TestCase(false, true, 1, 3)]
-        [TestCase(true, false, 1, 1)]
-        [TestCase(true, true, 1, 1)]
-        [TestCase(false, false, 1, 1)]
-        [TestCase(false, true, 0, 2)]
-        public void EdgeCost_IsDirectional(bool fromHigh, bool toHigh, int baseCost, int expected)
+        /// <summary>고지대 Wall 무시 설계 D6: 피해 감소는 저지대 → 고지대만 70%이고 고지대에서 쏘면 감소가 없다.</summary>
+        [TestCase(false, true, 70)]
+        [TestCase(true, true, 100)]
+        [TestCase(true, false, 100)]
+        [TestCase(false, false, 100)]
+        public void HighGroundDamage_ReducesOnlyLowToHigh(bool fromHigh, bool toHigh, int expected)
         {
             var environment = new MovementEnvironmentFacts(new MovementTileFact[]
             {
                 Terrain(11, CellCoord.Zero, active: fromHigh),
                 Terrain(12, CellCoord.Right, active: toHigh)
             });
-            Assert.That(EnvironmentTerrainRules.EdgeActionCost(environment, Bindings(11, 12),
-                CellCoord.Zero, CellCoord.Right, baseCost), Is.EqualTo(expected));
+            Assert.That(EnvironmentTerrainRules.RemainingDamagePercent(environment, Bindings(11, 12),
+                CellCoord.Zero, CellCoord.Right), Is.EqualTo(expected));
         }
 
         [TestCase(0, 0)]
@@ -84,14 +84,9 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LocalRules_RejectNegativeInputsAndOverflow()
+        public void LocalRules_RejectNegativeInputsWithoutAddingRetiredSurcharge()
         {
-            var environment = new MovementEnvironmentFacts(new MovementTileFact[] { Terrain(11, CellCoord.Right) });
             Assert.Throws<ArgumentOutOfRangeException>(() => EnvironmentTerrainRules.SandstormRange(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => EnvironmentTerrainRules.EdgeActionCost(
-                environment, Bindings(11), CellCoord.Zero, CellCoord.Right, -1));
-            Assert.Throws<OverflowException>(() => EnvironmentTerrainRules.EdgeActionCost(
-                environment, Bindings(11), CellCoord.Zero, CellCoord.Right, int.MaxValue));
             Assert.Throws<ArgumentOutOfRangeException>(() => Terrain(11, CellCoord.Zero, (StaticTerrainKind)99));
         }
 
@@ -99,7 +94,7 @@ namespace ProjectL.Tests.Core
         public void CommandCopies_PreserveCapturedBindings()
         {
             var bindings = Bindings(11);
-            var input = WithEnvironment(MovementTestData.SafeRoute(4, 4, 1, CellCoord.Zero, CellCoord.Right),
+            var input = WithEnvironment(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 MovementEnvironmentFacts.Empty, bindings);
             var intent = CombatCommandComposition.Intent(input, CombatCommandKind.Move);
             var aimed = CombatAttackQueries.WithAim(input, AttackAim.ForCell(CellCoord.Up));
@@ -112,7 +107,6 @@ namespace ProjectL.Tests.Core
                 Assert.That(copied.EnvironmentBindings, Is.SameAs(bindings));
             Assert.That(MovementTestData.Route(after, CellCoord.Right, CellCoord.Up + CellCoord.Right)
                 .EnvironmentBindings, Is.SameAs(bindings));
-            Assert.That(MovementTestData.Return(after).EnvironmentBindings, Is.SameAs(bindings));
             Assert.That(CombatCommandTestData.Input().EnvironmentBindings, Is.SameAs(EnvironmentSemanticBindings.Empty));
         }
 
@@ -120,11 +114,11 @@ namespace ProjectL.Tests.Core
         public void StaticTerrain_IsNotDispatchedAsArrivalRuleOrConsumed()
         {
             var terrain = Terrain(11, CellCoord.Right);
-            var input = WithEnvironment(MovementTestData.SafeRoute(4, 4, 1, CellCoord.Zero, CellCoord.Right),
+            var input = WithEnvironment(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 new MovementEnvironmentFacts(new MovementTileFact[] { terrain }), Bindings(11));
             var move = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(move.Accepted, Is.True, move.Reason);
-            Assert.That(move.PathMovement.ReturnBarrierOccurred, Is.False);
+            Assert.That(MovementTestData.Actor(move).ActionUse, Is.EqualTo(UnitActionUse.Moved));
             Assert.That(move.FinalState.Environment.Tiles.Single().SameValues(terrain), Is.True);
         }
 
@@ -139,12 +133,12 @@ namespace ProjectL.Tests.Core
             MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId,
-                s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn, environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.IsNight,s.Structures,s.ThornFields,s.Turn,environment);
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state,
                 input.Characters, input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls,
                 input.Artifacts, input.TargetCell, input.Rotation, input.Battle, input.ProcessingKind,
-                input.Path, input.MovementContext, input.BattleInstanceId, input.ArtifactItems, bindings);
+                input.Path, input.MovementContext, input.BattleInstanceId, input.ArtifactItems, bindings,
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence);
         }
     }
 }

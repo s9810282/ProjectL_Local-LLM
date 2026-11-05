@@ -10,11 +10,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         EffectAttackTargetingContribution EvaluateAttackTargeting(in EffectRuleInput input);
     }
 
-    internal interface IEffectAttackCostRule : ICombatEffectRule
+
+    /// <summary>대상별 방어 우회와 최종 배율을 기여합니다. 발동 조건은 개별 규칙이 소유합니다.</summary>
+
+    internal interface IEffectTargetDamageRule : ICombatEffectRule
     {
-        EffectAttackCostContribution EvaluateAttackCost(
-            in EffectRuleInput input,
-            in AttackCostEffectContext context);
+        EffectTargetDamageContribution EvaluateTargetDamage(in EffectRuleInput input, in TargetDamageEffectContext context);
     }
 
     internal interface IEffectAttackDamageRule : ICombatEffectRule
@@ -65,15 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     /// 성공한 능동 공격에서 이동 비용 환급을 요청하는 capability입니다.
     /// 실제 배분과 상한 적용은 공통 evaluator가 담당합니다.
     /// </summary>
-    internal interface IEffectAttackCostRefundRule : ICombatEffectRule
-    {
-        EffectAttackCostRefundContribution EvaluateAttackCostRefund(
-            in EffectRuleInput input,
-            in AttackActionCostRefundEffectContext context);
 
-        /// <summary>확정된 실제 환급액을 받아 소유자 상태 전이를 계획합니다.</summary>
-        EffectRuleResult PlanAttackCostRefundApplied(in EffectRuleInput input, int actualRefund);
-    }
 
     /// <summary>
     /// 대상별 피격 피해 경감을 기여하는 capability입니다. 평가는 상태를 바꾸지 않습니다.

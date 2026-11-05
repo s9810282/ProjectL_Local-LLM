@@ -59,7 +59,7 @@ namespace ProjectL.Tests.Core
 
         [Test, Combinatorial]
         public void RestrictivePrimary_EligibilityPrecedesWall(
-            [Values(CategoryKey.Base, CategoryKey.Rider, CategoryKey.Heavy)] CategoryKey category,
+            [Values(CategoryKey.Main, CategoryKey.Rider, CategoryKey.Heavy)] CategoryKey category,
             [Values(false, true)] bool friendly)
         {
             var input = Input(Actor, Center, category: category, walls: new[] { new CellCoord(2, 3) },
@@ -71,12 +71,12 @@ namespace ProjectL.Tests.Core
 
         [TestCase(false)]
         [TestCase(true)]
-        public void Cannon_EmptyCenterRequiresDelivery_AndPaysOnceIfClear(bool blocked)
+        public void Cannon_EmptyCenterRequiresClearDelivery(bool blocked)
         {
             var input = Input(Actor, Center, category: CategoryKey.Cannon, targets: Array.Empty<CharacterCombatFacts>(),
                 walls: blocked ? new[] { new CellCoord(2, 3) } : Array.Empty<CellCoord>());
             AssertAgreement(input, blocked ? AttackFailureReason.BlockedByWall : AttackFailureReason.None);
-            if (!blocked) Assert.That(CombatCommandCalculator.Calculate(input, Rules).Attack.Value.ActionCostSpent, Is.EqualTo(2));
+            if (!blocked) Assert.That(CombatCommandCalculator.Calculate(input, Rules).ActionUseSettlement.FinalActionUse, Is.EqualTo(UnitActionUse.Attacked));
         }
 
         [TestCase(false)]
@@ -118,8 +118,8 @@ namespace ProjectL.Tests.Core
                 walls: new[] { new CellCoord(2, 3) }, method: new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.All, TargetingSplash.None, 0));
             // (4,5)는 기울기 2/3으로 벽 내부를 지난다. (4,6)은 1/1로 모서리에 접해 통과한다.
             var walls = WallGeometryBuilder.Build(10, 10, input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
-            Assert.That(AttackOcclusionResolver.CheckDirect(Actor, new CellCoord(4, 5), walls, AttackOcclusionSpec.Default), Is.Not.Null);
-            Assert.That(AttackOcclusionResolver.CheckDirect(Actor, new CellCoord(4, 6), walls, AttackOcclusionSpec.Default), Is.Null);
+            Assert.That(AttackOcclusionResolver.CheckDirect(Actor, new CellCoord(4, 5), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings), AttackOcclusionSpec.Default), Is.Not.Null);
+            Assert.That(AttackOcclusionResolver.CheckDirect(Actor, new CellCoord(4, 6), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings), AttackOcclusionSpec.Default), Is.Null);
             AssertAgreement(input, AttackFailureReason.None);
             Assert.That(CombatCommandCalculator.Calculate(input, Rules).Attack.Value.Hits.Length, Is.EqualTo(1));
             AssertAgreement(WithMethod(input, Single(), AttackAim.ForCell(Center)), AttackFailureReason.BlockedByWall);
@@ -144,7 +144,7 @@ namespace ProjectL.Tests.Core
                 10, 10, input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
             var policy = input.Profiles[0].Occlusion;
             Assert.That(AttackOcclusionResolver.CheckDirect(
-                impact, new CellCoord(5, 3), walls, policy) == null, Is.EqualTo(ignoreDelivery));
+                impact, new CellCoord(5, 3), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings), policy) == null, Is.EqualTo(ignoreDelivery));
             Assert.That(AttackOcclusionResolver.CheckPropagation(
                 impact, new CellCoord(5, 3), walls, policy) == null, Is.EqualTo(ignorePropagation));
         }
@@ -198,14 +198,18 @@ namespace ProjectL.Tests.Core
             var input = Input(Actor, Center, pierce: true, policy: ignore ? Ignore : null,
                 targets: new[] { Target(2, new CellCoord(3, 5)) }, structures: new[] { Structure(new CellCoord(4, 3)) },
                 walls: new[] { new CellCoord(2, 3) });
-            var selection = Evaluate(input).Selection;
-            Assert.That(selection, Is.Not.Null);
-            Assert.That(selection.ReachableCells.DesignatedCells.ToArray().Contains(Center), Is.EqualTo(ignore));
-            Assert.That(selection.ReachableCells.DesignatedCells.ToArray(), Has.No.Member(new CellCoord(2, 3)));
-            Assert.That(selection.ReachableCells.DesignatedCells.ToArray(), Has.No.Member(new CellCoord(5, 3)));
-            Assert.That(selection.PierceTrace.ReachableCells, Is.EqualTo(selection.ReachableCells.DesignatedCells.ToArray()));
+            var evaluation = Evaluate(input);
+            if (!ignore)
+            {
+                Assert.That(evaluation.FailureReason, Is.EqualTo(AttackFailureReason.BlockedByWall));
+                return;
+            }
+            Assert.That(evaluation.Selection.Cells.PrimaryCell, Is.EqualTo(Center));
+            var result = CombatCommandCalculator.Calculate(input, Rules).Attack.Value;
+            Assert.That(result.PiercingShot.Endpoint, Is.EqualTo(new CellCoord(4,3)));
+            Assert.That(result.PiercingShot.StopReason, Is.EqualTo(PiercingShotStopReason.Structure));
+            Assert.That(result.AffectedCells.ToArray(), Has.No.Member(new CellCoord(5,3)));
         }
-
         [Test]
         public void BlockedPrimary_CannotBeRescuedByClearSplash()
         {
@@ -219,7 +223,7 @@ namespace ProjectL.Tests.Core
         public void LowAp_RangeKeepsRawCellsAndTargets_WhileBlockedAimIsUnavailable()
         {
             var input = Input(Actor, Center, walls: new[] { new CellCoord(2, 3) });
-            input = CombatCommandTestData.With(input, characters: input.Characters.Select((c, i) => i == 0 ? CombatCommandTestData.With(c, ap: 0) : c).ToArray());
+            input = CombatCommandTestData.With(input, state: input.State.With());
             Assert.That(Evaluate(input).FailureReason, Is.EqualTo(AttackFailureReason.BlockedByWall));
             Assert.That(Evaluate(input).BlockedContacts, Is.Not.Empty);
             var range = CombatCommandCalculator.GetAttackRange(input);
@@ -235,8 +239,8 @@ namespace ProjectL.Tests.Core
             var allied = Structure(new CellCoord(3, 3));
             allied = new StructureCombatFacts(allied.EntityId, allied.Definition, allied.Health, allied.Anchor, allied.Rotation, allied.OccupiedCells, Owner.Player);
             var input = Input(Actor, Center, pierce: true, policy: ignore ? Ignore : null, structures: new[] { allied }, walls: new[] { new CellCoord(2, 3) });
-            AssertAgreement(input, AttackFailureReason.NoEligibleTargets);
-            Assert.That(Evaluate(input).BlockedContacts, Is.Empty);
+            AssertAgreement(input, ignore ? AttackFailureReason.None : AttackFailureReason.BlockedByWall);
+            if (ignore) Assert.That(CombatCommandCalculator.Calculate(input, Rules).Attack.Value.Hits.Length, Is.Zero);
         }
 
         [TestCase(false)]
@@ -254,12 +258,10 @@ namespace ProjectL.Tests.Core
             var input = Input(Actor, Center, walls: new[] { new CellCoord(2, 3) }, pending: true);
             var actor = input.Characters[0];
             actor = new CharacterCombatFacts(actor.EntityId, actor.OwnedId, actor.CharacterKey, actor.Owner, actor.OwnershipRole,
-                actor.Area, actor.Health, actor.Stats, actor.ReserveSlotIndex, actor.Anchor, actor.Rotation, actor.OccupiedCells,
-                actor.MovementCheckpointAnchor, 2, 1, pendingMoveDistance: 1, attackRefundEligibleMoveCost: 2);
+                actor.Area, actor.Health, actor.Stats, actor.ReserveSlotIndex, actor.Anchor, actor.Rotation, actor.OccupiedCells, actor.ActionUse);
             var s = input.State;
             input = CombatCommandTestData.With(input, characters: input.Characters.Select((c, i) => i == 0 ? actor : c).ToArray(),
-                state: new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight, s.Structures,
-                    s.ThornFields, s.Timeline, s.Turn, s.Environment, new EnvironmentProgressFacts(1, 100, 0xA51E), s.WallBlocking));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,                    s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(1, 100, 0xA51E),s.WallBlocking));
             var beforeStats = actor.Stats;
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Reason, Is.EqualTo(nameof(AttackFailureReason.BlockedByWall)));
@@ -272,15 +274,12 @@ namespace ProjectL.Tests.Core
             Assert.That(result.ConsumedSoulIds, Is.Empty);
             Assert.That(result.Field.Final.SameValues(input.Souls), Is.True);
             Assert.That(result.Attack.HasValue, Is.False);
-            Assert.That(actor.PendingMoveActionCost, Is.EqualTo(1));
+            Assert.That(actor.ActionUse, Is.EqualTo(UnitActionUse.Available));
             Assert.That(actor.Stats, Is.EqualTo(beforeStats));
             Assert.That(actor.Health.CurrentHealth, Is.EqualTo(100));
-            Assert.That(((MoveAttackDiscountTraitStatusSnapshot)actor.Stats.TraitStatuses.Span[0]).DiscountArmed, Is.True);
-            Assert.That(actor.MovementCheckpointAnchor, Is.EqualTo(new CellCoord(1, 2)));
+            Assert.That(((AccelerationTraitStatusSnapshot)actor.Stats.TraitStatuses.Span[0]).HeldAttackBonus, Is.EqualTo(1));
+            Assert.That(actor.Anchor, Is.EqualTo(Actor));
             Assert.That(result.FinalState.EnvironmentProgress, Is.SameAs(input.State.EnvironmentProgress));
-            Assert.That(actor.AttackRefundEligibleMoveCost, Is.EqualTo(2));
-            Assert.That(actor.PendingMoveDistance, Is.EqualTo(1));
-            Assert.That(actor.Stats.CurrentActionCost, Is.EqualTo(5));
             Assert.That(result.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(0xA51E));
         }
 
@@ -322,10 +321,10 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentOutOfRangeException>(() => AttackSelectionEvaluation.Failure(AttackFailureReason.None));
         }
 
-        private static AttackSelectionEvaluation Evaluate(CombatCommandInput input) =>
+        internal static AttackSelectionEvaluation Evaluate(CombatCommandInput input) =>
             CombatAttackQueries.Selection(input, input.Characters[0], input.Profiles[0]);
 
-        private static void AssertAgreement(CombatCommandInput input, AttackFailureReason reason)
+        internal static void AssertAgreement(CombatCommandInput input, AttackFailureReason reason)
         {
             Assert.That(Evaluate(input).FailureReason, Is.EqualTo(reason), "selection");
             var preview = CombatCommandCalculator.Preview(input, Rules);
@@ -337,10 +336,10 @@ namespace ProjectL.Tests.Core
             else Assert.That(preview.Targets.ToArray().Select(t => t.TargetId), Is.EqualTo(result.Attack.Value.Hits.ToArray().Select(t => t.TargetId)));
         }
 
-        private static TargetingMethodSpec Single(TargetingSplash splash = TargetingSplash.None) =>
+        internal static TargetingMethodSpec Single(TargetingSplash splash = TargetingSplash.None) =>
             new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, splash, splash == TargetingSplash.None ? 0 : 70);
 
-        private static CharacterCombatFacts Target(int id, CellCoord cell, Owner owner = Owner.Enemy) =>
+        internal static CharacterCombatFacts Target(int id, CellCoord cell, Owner owner = Owner.Enemy) =>
             CombatCommandTestData.Character(id, EntityKey.Unit_Demon, cell, owner);
 
         private static StructureCombatFacts Structure(params CellCoord[] cells) => new StructureCombatFacts(new EntityId(20),
@@ -351,31 +350,30 @@ namespace ProjectL.Tests.Core
             CombatAttackQueries.WithAim(CombatCommandTestData.With(input, profiles: input.Profiles.Select((p, i) => i == 0
                 ? new CombatAttackProfile(p.Definition, method) : p).ToArray()), aim);
 
-        private static CombatCommandInput Input(CellCoord actorCell, CellCoord center, CategoryKey category = CategoryKey.Base,
+        internal static CombatCommandInput Input(CellCoord actorCell, CellCoord center, CategoryKey category = CategoryKey.Main,
             CharacterCombatFacts[] targets = null, StructureCombatFacts[] structures = null, CellCoord[] walls = null,
             int cut = 128, AttackOcclusionSpec policy = null, TargetingMethodSpec method = null, bool pending = false,
             bool pierce = false, int cap = 9, int attack = 20)
         {
-            method ??= pierce ? new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0) : Single();
+            method ??= pierce ? new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0) : Single();
             var aim = method.ChoiceMode == TargetingChoiceMode.Single ? AttackAim.ForCell(center)
                 : method.ChoiceMode == TargetingChoiceMode.All ? AttackAim.ForAll() : AttackAim.ForDirection(AttackDirection.Right);
-            var input = CombatCommandTestData.Input(method, aim, empty: true, pending: pending, category: category);
+            var input = CombatCommandTestData.Input(method, aim, empty: true, category: category);
             var actor = CombatCommandTestData.With(input.Characters[0], position: actorCell, appointRange: 9,
                 traits: pierce ? new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) }
-                    : pending ? new TraitStatusSnapshot[] { new MoveAttackDiscountTraitStatusSnapshot(true, true) } : Array.Empty<TraitStatusSnapshot>());
+                    : pending ? new TraitStatusSnapshot[] { new AccelerationTraitStatusSnapshot(1) } : Array.Empty<TraitStatusSnapshot>());
             // 영점 피해 검사는 실제 전투 능력치까지 영점으로 맞춘다.
             if (attack == 0) actor = CombatCommandTestData.With(CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, actorCell, Owner.Player, 0), appointRange: 9);
             var spec = input.Profiles[0].Definition;
             var profile = new CombatAttackProfile(new UnitSpec(spec.Key, spec.Role, 1, 1, new[] { CellCoord.Zero }, spec.MaxHealth,
-                spec.MoveMethod, spec.MoveRange, spec.MoveCost, 9, category, attack, spec.MaxActionCost, spec.AttackCost,
-                spec.PhysicalDefense, spec.Priority, spec.Delay, true, pierce ? new TraitSpec[] { new PiercingFalloffTraitSpec(30, cap) }
-                    : pending ? new TraitSpec[] { new MoveAttackDiscountTraitSpec(1, 1) } : spec.Traits.ToArray(), spec.OwnerEligibility, policy), method);
+                spec.MoveMethod, 9, category, attack,
+                spec.PhysicalDefense, spec.Priority, pierce ? new TraitSpec[] { new PiercingFalloffTraitSpec(30, cap) }
+                    : pending ? new TraitSpec[] { new AccelerationTraitSpec(1) } : spec.Traits.ToArray(), spec.OwnerEligibility, policy), method);
             var characters = new[] { actor, input.Characters[1] }.Concat(targets ?? new[] { Target(2, center) }).ToArray();
             input = CombatCommandTestData.With(input, characters: characters, profiles: new[] { profile, input.Profiles[1], input.Profiles[2] });
             input = WallMovementTests.WithWalls(input, (walls ?? Array.Empty<CellCoord>()).Select((c, i) => WallStateLifecycleTests.Wall(71 + i, c)).ToArray());
             var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(10, 10, s.Phase, s.ActiveActorId, s.IsNight,
-                structures ?? s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment, s.EnvironmentProgress, new WallBlockingSpec(cut)));
+            return CombatCommandTestData.With(input, state: new CombatCommandState(10,10,s.Phase,s.IsNight,                structures ?? s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,new WallBlockingSpec(cut)));
         }
     }
 }

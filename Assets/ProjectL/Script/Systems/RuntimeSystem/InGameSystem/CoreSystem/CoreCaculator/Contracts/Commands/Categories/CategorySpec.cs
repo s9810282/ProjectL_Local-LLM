@@ -11,14 +11,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public sealed class CategorySpec
     {
         public CategoryKey Key { get; }
+        public int MovementAllowance { get; }
         public ReadOnlyMemory<CategoryRuleSpec> RuleSpecs { get; }
+        /// <summary>이 Category 유닛의 레벨당 능력치 상승치입니다. 생략하면 성장하지 않습니다.</summary>
+        public CategoryLevelGrowth LevelGrowth { get; }
 
-        public CategorySpec(CategoryKey key, IReadOnlyList<CategoryRuleSpec> ruleSpecs)
+        public CategorySpec(CategoryKey key,IReadOnlyList<CategoryRuleSpec> ruleSpecs,            int movementAllowance,CategoryLevelGrowth levelGrowth = default)
         {
             if (Enum.IsDefined(typeof(CategoryKey), key) == false || key == CategoryKey.None)
                 throw new ArgumentOutOfRangeException(nameof(key));
             if (ruleSpecs == null)
                 throw new ArgumentNullException(nameof(ruleSpecs));
+            if (movementAllowance < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementAllowance));
 
             CategoryRuleSpec[] copied = new CategoryRuleSpec[ruleSpecs.Count];
             HashSet<CategoryRuleKey> seenKeys = new HashSet<CategoryRuleKey>();
@@ -44,7 +49,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             }
 
             Key = key;
+            MovementAllowance = movementAllowance;
+
             RuleSpecs = copied;
+            LevelGrowth = levelGrowth;
         }
     }
 }

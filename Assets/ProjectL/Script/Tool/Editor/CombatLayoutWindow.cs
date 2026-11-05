@@ -85,6 +85,7 @@ namespace ProjectL.Tool.Editor
 
         private void OnDisable()
         {
+            CancelSoGimmickShapes();
             EndStroke();
             Undo.undoRedoPerformed -= OnUndoRedo;
             SaveDraft();
@@ -93,6 +94,7 @@ namespace ProjectL.Tool.Editor
 
         private void OnUndoRedo()
         {
+            if (editMode == CombatLayoutEditMode.So) { OnSoUndoRedo(); return; }
             settings = document.stage.Copy();
             modified = true; SaveDraft(); Repaint();
             RefreshDetails();
@@ -111,6 +113,7 @@ namespace ProjectL.Tool.Editor
         {
             if (document == null) return;
             DrawHeader();
+            if (editMode == CombatLayoutEditMode.So) { DrawSoMode(); return; }
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(230)))
@@ -135,13 +138,19 @@ namespace ProjectL.Tool.Editor
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
                 GUILayout.Label("ProjecL / 전투 스테이지", EditorStyles.boldLabel);
+                DrawEditModeToggle();
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("맵 정보", EditorStyles.toolbarButton))
-                { tool = 7; selectedUnitKey = 0; ShowDetails(CombatLayoutDetailsMode.Map); }
-                if (GUILayout.Button("새 맵", EditorStyles.toolbarButton)) NewDocument();
-                if (GUILayout.Button("엑셀 열기", EditorStyles.toolbarButton)) OpenWorkbook();
-                if (GUILayout.Button("엑셀 내보내기", EditorStyles.toolbarButton)) ExportWorkbook();
+                if (editMode == CombatLayoutEditMode.So) DrawSoHeaderButtons();
+                else
+                {
+                    if (GUILayout.Button("맵 정보", EditorStyles.toolbarButton))
+                    { tool = 7; selectedUnitKey = 0; ShowDetails(CombatLayoutDetailsMode.Map); }
+                    if (GUILayout.Button("새 맵", EditorStyles.toolbarButton)) NewDocument();
+                    if (GUILayout.Button("엑셀 열기", EditorStyles.toolbarButton)) OpenWorkbook();
+                    if (GUILayout.Button("엑셀 내보내기", EditorStyles.toolbarButton)) ExportWorkbook();
+                }
             }
+            if (editMode == CombatLayoutEditMode.So) { DrawSoHeaderStatus(); return; }
             EditorGUILayout.LabelField(document.stage.name + (modified ? " *" : ""), string.IsNullOrEmpty(lastPath) ? "새 배치" : Path.GetFileName(lastPath));
             if (!string.IsNullOrEmpty(notice)) EditorGUILayout.HelpBox(notice, noticeType);
         }

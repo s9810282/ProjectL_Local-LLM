@@ -29,16 +29,14 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Expectations, Is.Empty);
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         [TestCase(CategoryKey.Cannon)]
         public void CategoryBindings_GrantOnlyCannonCapabilitiesWithoutChangingState(CategoryKey category)
         {
             var input = CombatCommandTestData.Input();
-            var snapshot = category == CategoryKey.Rider ? CategorySnapshot.CreateRider(true)
-                : category == CategoryKey.Heavy ? CategorySnapshot.CreateHeavy(Rotation4.R90, true, 40)
-                : CategorySnapshot.CreateStateless(category);
+            var snapshot = CategorySnapshot.CreateStateless(category);
             var actor = CombatCommandTestData.With(input.Characters[0], category: snapshot);
             var profile = new CombatAttackProfile(
                 CombatCommandTestData.Spec(actor.CharacterKey, 20, category), input.Profiles[0].Method);
@@ -56,14 +54,11 @@ namespace ProjectL.Tests.Core
                     actor.EntityId, category, CategoryRuleKey.SafeBombardment)));
             Assert.That(bindings.Select(b => b.ExpectedState), Is.EqualTo(states));
             Assert.That(actor.Stats.Category, Is.SameAs(snapshot));
-            Assert.That(actor.Stats.CurrentActionCost, Is.EqualTo(5));
-            Assert.That(snapshot.RefundUsedThisTurn, Is.EqualTo(category == CategoryKey.Rider ? (bool?)true : null));
-            Assert.That(snapshot.DefenseFacing, Is.EqualTo(category == CategoryKey.Heavy ? (Rotation4?)Rotation4.R90 : null));
-            Assert.That(snapshot.MovedThisTurn, Is.EqualTo(category == CategoryKey.Heavy ? (bool?)true : null));
-            Assert.That(snapshot.DamageReductionPercent, Is.EqualTo(category == CategoryKey.Heavy ? (int?)40 : null));
+            Assert.That(actor.ActionUse, Is.EqualTo(UnitActionUse.Available));
+            Assert.That(snapshot.Key, Is.EqualTo(category));
             if (cannon)
             {
-                var plan = engine.PlanAttackSucceeded(bindings, new AttackSucceededEffectContext(Array.Empty<EffectOriginKey>()));
+                var plan = engine.PlanAttackSucceeded(bindings, new AttackSucceededEffectContext());
                 Assert.That(plan.Changes, Is.Empty);
                 Assert.That(plan.Activations, Is.Empty);
             }

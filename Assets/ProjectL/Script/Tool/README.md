@@ -2,6 +2,8 @@
 
 처음 사용하는 경우 [전투 스테이지 편집 사용법](사용법.md)을 참고하세요. 실행, DT 읽기, 유닛 배치, 타일 편집과 엑셀 저장 순서를 설명합니다.
 
+창 머리줄의 **DT | SO**로 두 모드를 바꿉니다. 아래 내용은 DT 모드(엑셀)입니다. **SO 모드**는 게임이 실제로 쓰는 전투 스테이지 SO(Stage Root·전투 데이터·View Stage Data와 참조 SO)를 열고, 고치고, 새로 만들고, 표에 등록합니다. 사용법·DB SO 만들기·검사와 저장 규칙은 [SO모드 사용법](SO모드%20사용법.md)에 있습니다. SO 모드 코드는 `Editor/CombatLayoutWindow.SoMode.cs`와 `Editor/CombatStageSo*.cs`이며, 설계·기록은 `docs/superpowers/specs/2026-10-27-combat-stage-editor-so-mode-design.md`·`…-additions-design.md`와 같은 날짜의 계획 문서에 있습니다.
+
 Unity 상단 **ProjecL → 전투 스테이지 편집**으로 전용 창을 엽니다. Project 창의 에셋 우클릭 메뉴 **ProjecL → 전투 스테이지 편집**에서도 열 수 있습니다. 창은 Unity의 다른 탭 옆에 도킹할 수 있습니다. **ProjecL → 데이터 폴더**는 `Assets/DataTable`을 선택합니다.
 
 ## 전투 스테이지 제작

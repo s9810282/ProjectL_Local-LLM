@@ -74,6 +74,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             KnownTo.SequenceEqual(other.KnownTo);
 
         public abstract bool SameValues(MovementTileFact other);
+
+        /// <summary>기존 원본의 형식이 바뀌었거나 Object가 허용 밖으로 바뀌었을 때 쓰는 문구다.</summary>
+        protected const string IdentityChangeFailure = "기존 환경 원본의 기능·식별 내용 변경 또는 재활성화는 허용하지 않습니다.";
+
+        /// <summary>
+        /// Buffer 저장 검사 전용: 이 원본이 같은 ID의 <paramref name="final"/>로 바뀌어도 되면 null, 아니면 거절 문구다.
+        /// 기본은 형식만 본다. 종류마다 바뀌면 안 되는 값이 있으면 그 종류가 override한다. Core 계산은 이것을 부르지 않는다.
+        /// </summary>
+        public virtual string SuccessorFailure(MovementTileFact final) =>
+            GetType() != final.GetType() ? IdentityChangeFailure : null;
         /// <summary>일반 진입 규칙(위험·회복 단계)을 실행하는 원본인지 나타낸다. 위치·존재로만 작용하는 원본은 false다.</summary>
         public virtual bool TriggersArrivalRule => true;
         /// <summary>공개 사본은 해당 관찰자의 가시성만 남긴다. 다른 원본 값은 그대로 복사한다.</summary>

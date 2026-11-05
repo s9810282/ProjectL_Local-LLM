@@ -13,15 +13,17 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Targeting.Item
         public TargetingChoiceMode ChoiceMode { get; }
         public TargetingSplash Splash { get; }
         public int SplashPercent { get; }
+        public TargetingChoiceAngle ChoiceAngle { get; }
 
         public TargetingMethodData(int methodKey, TargetingShape shape, TargetingChoiceMode choiceMode,
-            TargetingSplash splash, int splashPercent)
+            TargetingSplash splash, int splashPercent, TargetingChoiceAngle choiceAngle = TargetingChoiceAngle.Unrestricted)
         {
             MethodKey = methodKey;
             Shape = shape;
             ChoiceMode = choiceMode;
             Splash = splash;
             SplashPercent = splashPercent;
+            ChoiceAngle = choiceAngle;
         }
 
         public void Validate()
@@ -35,7 +37,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Targeting.Item
             // enum 및 ChoiceMode/Splash 조합은 Core Contracts와 같은 규칙으로 검사합니다.
             try
             {
-                _ = new TargetingMethodSpec(Shape, ChoiceMode, Splash, SplashPercent);
+                _ = new TargetingMethodSpec(Shape, ChoiceMode, Splash, SplashPercent, ChoiceAngle);
             }
             catch (ArgumentException exception)
             {

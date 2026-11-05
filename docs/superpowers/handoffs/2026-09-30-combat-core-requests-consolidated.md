@@ -18,7 +18,7 @@ Task 4에서 전투 준비 서비스와 구조물·레일·기믹 정보가 생�
 | 문서 | 적힌 내용 |
 |---|---|
 | View 설계 결정 K2([전투 진행 골격 설계](../specs/2026-09-30-combat-flow-skeleton-design.md) §9) | `CombatLifeCycle`·`CombatFlow`·`CombatPlan`·전투 Job 전부(`Start` 포함)와 `JobType` 값은 **View 작업**이 만든다. Core는 **처리 서비스만** 제공한다 |
-| 천명님 [이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md) Global Constraints(`1a51234c`에서 추가) | "Core-side ownership includes CombatPlan, command-processing Jobs" |
+| 천명님 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`) Global Constraints(`1a51234c`에서 추가) | "Core-side ownership includes CombatPlan, command-processing Jobs" |
 
 View 쪽 요청 문서가 전달되기 전에 두 계획이 각자 진행돼 생긴 어긋남으로 보인다. **View 작업은 K2를 유지하려 한다.** 이유는 다음과 같다.
 

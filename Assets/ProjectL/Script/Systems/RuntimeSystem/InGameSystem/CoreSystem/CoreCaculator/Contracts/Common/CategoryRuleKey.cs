@@ -7,8 +7,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public enum CategoryRuleKey
     {
         None = 0,
-        ManeuverRefund = 1, // Rider: 이동 비용 환급
-        DirectionalArmor = 2, // Heavy: 전방 피해 경감
+        // 폐기된 이동 환급(1)과 아군 보호(4)의 직렬화 번호는 재사용하지 않습니다.
+        DirectionalArmor = 2, // 폐기된 방향 방어의 직렬화 번호 예약
         SafeBombardment = 3, // Cannon: 근접 직접 조준 제한
     }
 }

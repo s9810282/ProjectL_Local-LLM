@@ -17,10 +17,11 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         Move = 5,
         /// <summary>유닛 공격. 개체 ID와 조준을 받습니다.</summary>
         Attack = 6,
-        /// <summary>현재 유닛의 턴을 끝냅니다.</summary>
-        EndUnitTurn = 7,
-        /// <summary>수동 드로우.</summary>
-        DrawCharacter = 8,
-        ReturnToCheckpoint = 9
+        /// <summary>입력에 기록된 플레이어 턴을 끝냅니다.</summary>
+        EndPlayerTurn = 7,
+        EquipItem = 10,
+        UnequipItem = 11,
+        ReplaceItem = 12,
+        UndoMove = 15
     }
 }

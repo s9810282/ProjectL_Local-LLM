@@ -9,9 +9,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     {
         EffectAttackTargetingEvaluation EvaluateAttackTargeting(IReadOnlyList<EffectRuleBinding> bindings);
 
-        EffectAttackCostEvaluation EvaluateAttackCost(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in AttackCostEffectContext context);
 
         EffectAttackDamageEvaluation EvaluateAttackDamage(
             IReadOnlyList<EffectRuleBinding> bindings,
@@ -24,6 +21,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// <summary>
         /// 대상 하나의 거리 배율 기여를 곱합니다. 상태는 바꾸지 않습니다.
         /// </summary>
+        EffectTargetDamageEvaluation EvaluateTargetDamage(
+            IReadOnlyList<EffectRuleBinding> bindings, in TargetDamageEffectContext context);
+
         EffectTargetDistanceDamageEvaluation EvaluateTargetDistanceDamage(
             IReadOnlyList<EffectRuleBinding> bindings,
             in TargetDistanceDamageEffectContext context);
@@ -44,14 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// <summary>
         /// 환급 요청을 모아 남은 AP 용량 상한까지만 배분합니다.
         /// </summary>
-        EffectAttackCostRefundEvaluation EvaluateAttackCostRefund(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in AttackActionCostRefundEffectContext context,
-            int refundCapacity);
 
-        CombatEffectPlan PlanAttackCostRefundApplied(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            EffectAttackCostRefundEvaluation evaluation);
 
         /// <summary>
         /// 대상별 피격 경감을 모아 피해량 상한까지 배분합니다.

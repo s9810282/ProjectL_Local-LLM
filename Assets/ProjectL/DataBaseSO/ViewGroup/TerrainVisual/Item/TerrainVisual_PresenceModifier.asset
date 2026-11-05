@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e8a5486f6904e14ade447e5b6ae229c, type: 3}
+  m_Name: TerrainVisual_PresenceModifier
+  m_EditorClassIdentifier:
+  kind: 7
+  visualMode: 0
+  displayName: "위치 능력치 보정"
+  description:
+  icon: {fileID: 0}
+  prefab: {fileID: 100000, guid: 0d238857352043bcb457a8c55039c3b9, type: 3}
+  localOffset: {x: 0, y: 0, z: 0}
+  localScale: {x: 1, y: 1, z: 1}

@@ -38,7 +38,15 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         /// <summary>미리보기 요청을 교체하고 발급한 번호를 돌려줍니다.</summary>
         int SetPreview(CombatViewPreviewData preview);
 
+        /// <summary>번호를 보지 않고 미리보기 요청을 비웁니다(전투 경계 정리·시험용). 요청 소유자는 <see cref="ClearPreview(int)"/>를 씁니다.</summary>
         void ClearPreview();
+
+        /// <summary>
+        /// 미리보기 요청이 <paramref name="number"/>일 때만 비웁니다. 비웠으면 true입니다. 0 이하·다른 번호·빈 슬롯이면 아무것도 하지 않습니다.
+        /// 요청 소유자는 자기 번호로 이것만 부릅니다. 번호는 명령·미리보기가 같은 카운터로 하나씩 발급하므로, 번호가 같으면 같은 요청입니다
+        /// (남의 요청을 지우지 않게, View 2라운드 W5-4).
+        /// </summary>
+        bool ClearPreview(int number);
 
         /// <summary>Core가 처리했다고 알린 번호까지의 명령을 지웁니다.</summary>
         void RemoveCommandsThrough(int handledNumber);
@@ -115,6 +123,15 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         {
             _preview = default;
             _hasPreview = false;
+        }
+
+        public bool ClearPreview(int number)
+        {
+            if (number <= 0 || !_hasPreview || _preview.Number != number)
+                return false;
+
+            ClearPreview();
+            return true;
         }
 
         public void RemoveCommandsThrough(int handledNumber)

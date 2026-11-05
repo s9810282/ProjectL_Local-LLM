@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c39f46666429e7a772c3f475bdf4d00, type: 3}
+  m_Name: StageOfferText_Recovery
+  m_EditorClassIdentifier: 
+  stageOfferTextData:
+    target: 0
+    stageKeys:
+    - 1301
+    - 1302
+    - 1303
+    - 2203
+    eventName: "회복"
+    eventDescription: "메인 캐릭터를 회복합니다"
+    goldFormat: "보유 골드 : {0}G"
+    priceFormat: "{0}G"
+    selectButtonText: "선택한다"
+    completedButtonText: "적용 완료"
+    unavailableButtonText: "회복 불가"
+    exitButtonText: "떠난다"
+    backButtonText: ""
+    lines:
+    - kind: 4
+      format: "예상 회복량 : {0}"
+    - kind: 15
+      format: "예상 최대 체력 증가량 : {0}"
+    defaultErrorText: "회복 상태가 바뀌었습니다."
+    errors:
+    - kind: 1
+      text: "골드가 부족합니다."
+    - kind: 9
+      text: "회복 효과가 없습니다."
+    - kind: 10
+      text: "이미 회복을 선택했습니다."

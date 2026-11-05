@@ -22,7 +22,7 @@ namespace ProjectL.Tests.Core
         private static readonly IMovementTileRule[] Rules = Array.Empty<IMovementTileRule>();
 
         [Test]
-        public void EnemyAcrossWall_PursuesGenuinelyClearPosition_ThenAttacks()
+        public void EnemyAcrossWall_PursuesGenuinelyClearPosition_ThenAttacksOnNextEnemyTurn()
         {
             var input = EnemyMovementPathTests.Input(actorCell: new CellCoord(1, 1), targetCell: new CellCoord(3, 1));
             input = CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId == input.ActorId
@@ -37,7 +37,7 @@ namespace ProjectL.Tests.Core
             Assert.That(path.Cells, Has.No.Member(new CellCoord(2, 1)));
             var move = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(input, CombatCommandKind.Move, path: path), Rules);
             Assert.That(move.Accepted, Is.True, move.Reason);
-            var attack = CombatCommandComposition.Intent(CombatCommandComposition.Project(move), CombatCommandKind.Attack, aim);
+            var attack = CombatCommandComposition.Intent(CombatCommandTestData.NextEnemyTurn(CombatCommandComposition.Project(move)), CombatCommandKind.Attack, aim);
             var preview = CombatCommandCalculator.Preview(attack, Rules);
             Assert.That(preview.CanAttack, Is.True);
             Assert.That(preview.BlockedContacts, Is.Empty);
@@ -45,8 +45,11 @@ namespace ProjectL.Tests.Core
             var result = CombatCommandCalculator.Advance(input, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.PathMovement, Is.Not.Null);
-            Assert.That(result.Attack.HasValue, Is.True);
-            Assert.That(result.Attack.Value.Hits.ToArray().Any(h => h.TargetId == new EntityId(2) && h.DamageDealt > 0), Is.True);
+            Assert.That(result.Attack.HasValue, Is.False);
+            var nextTurn = CombatCommandTestData.NextEnemyTurn(CombatCommandComposition.Project(result));
+            var attacked = CombatCommandCalculator.Advance(nextTurn, Rules);
+            Assert.That(attacked.Accepted, Is.True, attacked.Reason);
+            Assert.That(attacked.Attack.Value.Hits.ToArray().Any(h => h.TargetId == new EntityId(2) && h.DamageDealt > 0), Is.True);
         }
 
         [TestCase(false)]
@@ -76,7 +79,7 @@ namespace ProjectL.Tests.Core
         [TestCase(true, 2, false)]
         public void FinitePierceGoal_AgreesWithPreviewAndAuthoredWallPolicy(bool ignoreWalls, int cap, bool needsMove)
         {
-            var input = EnemyMovementPathTests.Input(cost: 0, actorCell: new CellCoord(0, 2), targetCell: new CellCoord(4, 2));
+            var input = EnemyMovementPathTests.Input(actorCell: new CellCoord(0, 2), targetCell: new CellCoord(4, 2));
             var actor = CombatCommandTestData.With(input.Characters[0], appointRange: 4,
                 category: CategorySnapshot.CreateStateless(CategoryKey.Cannon),
                 traits: new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) });
@@ -84,16 +87,15 @@ namespace ProjectL.Tests.Core
             var policy = new AttackOcclusionSpec(ignoreWalls ? AttackWallDelivery.IgnoreWalls : AttackWallDelivery.RequireClear,
                 AttackWallPropagation.FromImpact);
             var definition = new UnitSpec(spec.Key, spec.Role, 1, 1, new[] { CellCoord.Zero }, spec.MaxHealth,
-                spec.MoveMethod, spec.MoveRange, spec.MoveCost, 4, spec.CategoryKey, spec.AttackPower, spec.MaxActionCost,
-                spec.AttackCost, spec.PhysicalDefense, spec.Priority, spec.Delay, true, spec.Traits.ToArray(), spec.OwnerEligibility, policy);
+                spec.MoveMethod, 4, spec.CategoryKey, spec.AttackPower, spec.PhysicalDefense, spec.Priority, spec.Traits.ToArray(), spec.OwnerEligibility, policy);
             var ally = CombatCommandTestData.Character(3, EntityKey.Unit_Akimbo, new CellCoord(2, 2), Owner.Enemy);
             input = CombatCommandTestData.With(input, new[] { actor, input.Characters[1], input.Characters[2], ally },
                 profiles: input.Profiles.Select(p => p.Definition.Key == actor.CharacterKey ? new CombatAttackProfile(definition,
-                    new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0)) : p).ToArray());
+                    new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0)) : p).ToArray());
             input = WallMovementTests.WithWalls(input, WallStateLifecycleTests.Wall(71, new CellCoord(3, 2)));
-            var aim = AttackAim.ForDirection(AttackDirection.Right);
+            var aim = AttackAim.ForCell(new CellCoord(4, 2));
             var preview = CombatCommandCalculator.Preview(CombatAttackQueries.WithAim(input, aim), Rules);
-            Assert.That(preview.CanAttack, Is.True);
+            Assert.That(preview.CanAttack, Is.EqualTo(ignoreWalls));
             Assert.That(preview.Targets.ToArray().Any(t => t.TargetId == new EntityId(2)), Is.EqualTo(!needsMove));
             Assert.That(EnemyMovementPathfinder.TryFind(input, new EntityId(2), out var path), Is.EqualTo(needsMove));
             if (!needsMove) return;
@@ -101,17 +103,30 @@ namespace ProjectL.Tests.Core
             Assert.That(MovementRouteValidator.Validate(input, path, out _), Is.EqualTo(MovementFailureReason.None));
             var moved = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(input, CombatCommandKind.Move, path: path), Rules);
             Assert.That(moved.Accepted, Is.True, moved.Reason);
-            var after = CombatCommandComposition.Project(moved);
-            var range = CombatCommandCalculator.GetAttackRange(CombatCommandComposition.Intent(after, CombatCommandKind.Attack));
-            Assert.That(range.AttackAims.ToArray().Any(a => CombatCommandCalculator.Preview(
-                CombatCommandComposition.Intent(after, CombatCommandKind.Attack, a), Rules).Targets.ToArray().Any(t => t.TargetId == new EntityId(2))), Is.True);
+            var after = CombatCommandTestData.NextEnemyTurn(CombatCommandComposition.Project(moved));
+            bool reachesTarget = false;
+            for (int turn = 0; turn < 4; turn++)
+            {
+                var range = CombatCommandCalculator.GetAttackRange(CombatCommandComposition.Intent(after, CombatCommandKind.Attack));
+                reachesTarget = range.AttackAims.ToArray().Any(a => CombatCommandCalculator.Preview(
+                    CombatCommandComposition.Intent(after, CombatCommandKind.Attack, a), Rules).Targets.ToArray().Any(t => t.TargetId == new EntityId(2)));
+                if (reachesTarget) break;
+                // 포대의 이동 허용량은 2이므로 우회 경로를 여러 적 턴에 걸쳐 이동한다.
+                Assert.That(EnemyMovementPathfinder.TryFind(after, new EntityId(2), out var continuation), Is.True);
+                Assert.That(continuation.Cells, Has.No.Member(new CellCoord(3, 2)));
+                var continued = CombatCommandCalculator.Calculate(
+                    CombatCommandComposition.Intent(after, CombatCommandKind.Move, path: continuation), Rules);
+                Assert.That(continued.Accepted, Is.True, continued.Reason);
+                after = CombatCommandTestData.NextEnemyTurn(CombatCommandComposition.Project(continued));
+            }
+            Assert.That(reachesTarget, Is.True);
         }
 
         [TestCase(false)]
         [TestCase(true)]
         public void IgnoringAttackWalls_DoesNotAllowPursuitThroughOccupiedWallCells(bool ignore)
         {
-            var input = EnemyMovementPathTests.Input(cost: 0, actorCell: new CellCoord(0, 1), targetCell: new CellCoord(4, 1));
+            var input = EnemyMovementPathTests.Input(actorCell: new CellCoord(0, 1), targetCell: new CellCoord(4, 1));
             var profiles = input.Profiles.Select(p => p.Definition.Key == EntityKey.Unit_Demon ? new CombatAttackProfile(
                 CopyPolicy(p.Definition, new AttackOcclusionSpec(ignore ? AttackWallDelivery.IgnoreWalls : AttackWallDelivery.RequireClear,
                     AttackWallPropagation.FromImpact)), p.Method) : p).ToArray();
@@ -123,8 +138,6 @@ namespace ProjectL.Tests.Core
         }
 
         private static UnitSpec CopyPolicy(UnitSpec s, AttackOcclusionSpec policy) => new UnitSpec(s.Key, s.Role,
-            s.FootprintWidth, s.FootprintHeight, s.FootprintLocalCells.ToArray(), s.MaxHealth, s.MoveMethod, s.MoveRange,
-            s.MoveCost, 4, s.CategoryKey, s.AttackPower, s.MaxActionCost, s.AttackCost, s.PhysicalDefense, s.Priority, s.Delay,
-            true, s.Traits.ToArray(), s.OwnerEligibility, policy);
+            s.FootprintWidth, s.FootprintHeight, s.FootprintLocalCells.ToArray(), s.MaxHealth, s.MoveMethod, 4, s.CategoryKey, s.AttackPower, s.PhysicalDefense, s.Priority, s.Traits.ToArray(), s.OwnerEligibility, policy);
     }
 }

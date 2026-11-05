@@ -190,7 +190,7 @@
 |---|---|---|
 | Combat 진입 직후 멈춤, 로그 `[CombatSceneRoot] 씬 참조가 비어 있습니다: X` | Combat.unity의 `CombatSceneRoot` 참조 누락 | Inspector에서 X 연결. 지금 `abandonPanel`이 흔한 원인(CLAUDE.md 경고) |
 | 로그 `Combat 씬에는 CombatSceneRoot가 하나 있어야 합니다. 찾은 수: N` | 씬에 Root가 0개 또는 2개 이상 | Hierarchy 검색 |
-| 진입 거절 로그(`전투 진입 거절: ...`) | 노드가 전투 노드가 아님, 로스터 없음 | DB 정의(`Database`)면 개발 노드 번호가 그 맵 그래프의 전투 노드인지 확인 |
+| 진입 거절 로그(`전투 진입 거절: ...`) | 노드가 전투 노드가 아님, 로스터 없음 | DB 정의(`Database`)면 개발 노드 번호가 그 맵 그래프의 전투 노드인지 확인. **(2026-10-24 바뀜: 비전투 노드는 거절이 아니라 준비 Job의 예외(F1)이고, 개발 진입은 `ResolveDevEntryNode`가 전투 노드로 보정한다. Bootstrap의 이 힌트는 지웠고 로그에는 Core 사유만 남는다 — 골격 점검 K-5 g)** |
 | `[CombatFlow] ... 전투 진행을 멈춥니다` | Core가 기대한 번호·결과를 남기지 않음 | 메시지의 종류(명령·미리보기·자동 진행)와 번호를 보고 Core 처리 확인. 예외가 아니라 Flow만 멈춘다 |
 | `[CombatViewSystem] 확인하지 않은 결과를 건너뛰었습니다` | Core가 한 Job에서 결과를 두 번 게시했거나, View 확인 전 상태 변경 Job이 돌았음 | Flow의 `IsPresentationDone` 조건, Core 게시 횟수 |
 | 입력이 전혀 안 먹힘 | 입력 Layer 미연결(첫 표시 전), 대기 중(시작/턴 종료), 종료 상태, 포기 확인창 열림 | `ReadFacts` 값: `IsBattleDisplayed`·`HasPendingCommand`·`HasCompletion`·`CurrentLayer`. `Receive` 첫 줄의 조건 |

@@ -55,4 +55,4 @@ Work continued in the existing feature checkout to preserve its dependent uncomm
 
 Next deliverable: P2 guarded purchase, explicit zero-through-three-purchase completion and completion-only retry after a committed purchase. P3 then proves the full shop/battle cycle and documents caller adoption. Production DB readiness, scene wiring, rewards and final Run policy are not completed by this P1 result.
 
-References: [design](../specs/2026-10-03-shop-stage-core-connection-design.md), [implementation plan](../plans/2026-10-03-shop-stage-core-connection-implementation-plan.md).
+References: design (Git history: `2026-10-03-shop-stage-core-connection-design.md`), implementation plan (Git history: `2026-10-03-shop-stage-core-connection-implementation-plan.md`).

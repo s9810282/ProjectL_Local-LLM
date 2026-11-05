@@ -27,6 +27,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal MovementTileFact Source(long id) => _sources[id];
 
+        internal void AddTraitTrail(TraitTrailFact trail)
+        {
+            if (trail == null) throw new ArgumentNullException(nameof(trail));
+            if (trail.Id != Progress.NextSourceId || _sources.ContainsKey(trail.Id))
+                throw new InvalidOperationException("흔적은 기존 환경의 다음 원본 ID를 사용해야 합니다.");
+            _sources.Add(trail.Id, trail);
+            Progress = new EnvironmentProgressFacts(Progress.NextObjectEntryOrdinal, checked(Progress.NextSourceId + 1), Progress.RandomState);
+        }
+
+        /// <summary>현재 원본과 일치하는 약한 지반의 한 번 진입 또는 붕괴만 반영한다.</summary>
+        internal void ChangeTerrain(StaticTerrainFact expected, StaticTerrainFact final)
+        {
+            if (expected == null) throw new ArgumentNullException(nameof(expected));
+            if (final == null) throw new ArgumentNullException(nameof(final));
+            if (!_sources.TryGetValue(expected.Id, out var current) || !current.SameValues(expected) ||
+                !Bindings.TerrainSourceIds.Contains(expected.Id) || !expected.Active || expected.Kind != StaticTerrainKind.WeakGround)
+                throw new InvalidOperationException("지형 변경 기대값은 현재 분류된 활성 약한 지반이어야 합니다.");
+
+            bool entered = final.Kind == StaticTerrainKind.WeakGround && expected.EntryCount < long.MaxValue &&
+                expected.RegisterEntry().SameValues(final);
+            bool collapsed = final.Kind == StaticTerrainKind.Cliff && expected.PendingCollapse &&
+                expected.Collapse().SameValues(final);
+            if (!entered && !collapsed)
+                throw new InvalidOperationException("지형 변경은 기존 구성과 식별자를 유지하는 한 번 진입 또는 예정된 붕괴여야 합니다.");
+            _sources[expected.Id] = final;
+        }
+
         /// <summary>일반 진입 규칙에 넘길 셀의 원본을 기존 순서(Priority, ID)로 고른다.</summary>
         internal MovementTileFact[] ArrivalRuleSourcesAt(CellCoord cell) =>
             _sources.Values.Where(s => s.Cell == cell && s.TriggersArrivalRule).OrderBy(s => s.Priority).ThenBy(s => s.Id).ToArray();
@@ -40,11 +67,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return index;
         }
 
-        internal void ChangeTornado(TornadoSourceFact expected, TornadoSourceFact final)
+        internal void SetRandom(uint expected, uint final)
         {
-            if (!Source(expected.Id).SameValues(expected) || !expected.AfterActivation(final.Cell).SameValues(final))
-                throw new InvalidOperationException("Tornado의 위치 변경 또는 주기 기대값이 잘못되었습니다.");
-            _sources[expected.Id] = final;
+            if (Progress.RandomState != expected) throw new InvalidOperationException("환경 난수 기대값이 오래되었습니다.");
+            Progress = new EnvironmentProgressFacts(Progress.NextObjectEntryOrdinal, Progress.NextSourceId, final);
         }
 
         /// <summary>선택된 원본의 규칙 결과만 반영한다. 실제로 바뀌었으면 true다.</summary>
@@ -56,7 +82,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (expected.Id != selected.Id || !Source(selected.Id).SameValues(expected) ||
                 !expected.KnownTo.SequenceEqual(final.KnownTo) || expected.Priority != final.Priority || expected.IsMine != final.IsMine)
                 throw new InvalidOperationException("진입 규칙의 원본 기대값 또는 변경 범위가 잘못되었습니다.");
-            if (expected is ObjectSourceFact objectSource && !objectSource.WithActive(final.Active).SameValues(final))
+            if (expected is ObjectSourceFact objectSource && !objectSource.ChangesOnlyActive(final))
                 throw new InvalidOperationException("Object 소모는 진입 순서나 원본 내용까지 바꿀 수 없습니다.");
             if (expected.SameValues(final)) return false;
             _sources[expected.Id] = final;
@@ -66,13 +92,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>사망 전 위치로 깃발 드롭을 제안하고 원본·분류·할당 진행값을 함께 갱신한다.</summary>
         internal void ResolveFlagDrops(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
             IReadOnlyList<StructureCombatFacts> structures, IReadOnlyDictionary<EntityId, CellCoord> deathAnchors,
-            List<CombatEvent> events)
+            List<CombatEvent> events, IReadOnlyCollection<EntityId> fallenEntityIds = null)
         {
             var environment = Facts;
             var bindings = Bindings;
             var progress = Progress;
             FlagDropCalculator.ResolveDeaths(input, characters, structures, deathAnchors,
-                ref environment, ref bindings, ref progress, events);
+                ref environment, ref bindings, ref progress, events, fallenEntityIds);
             Bindings = bindings;
             Progress = progress;
             foreach (var source in environment.Tiles) _sources[source.Id] = source;

@@ -12,6 +12,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly HashSet<(EntityId Target, long Group)> _protected = new();
         private long _last = Direct;
 
+        internal CommandAttackGroups Clone()
+        {
+            var copy = new CommandAttackGroups { _last = _last };
+            foreach (var pair in _protected) copy._protected.Add(pair);
+            return copy;
+        }
+
         internal long Next() => checked(++_last);
         internal bool IsProtected(EntityId target, long group) => _protected.Contains((target, group));
         internal void MarkProtected(EntityId target, long group) => _protected.Add((target, group));

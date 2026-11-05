@@ -6,13 +6,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public bool AllowsEmptySingle { get; }
         public bool AllowsFriendlyTargets { get; }
         public bool AllowsNeutralTargets { get; }
+        public bool AllowsFriendlyCharacters { get; }
         public bool ExcludesAdjacentDirectCells { get; }
 
         public AttackTargetingPolicy(bool allowsEmptySingle, bool allowsFriendlyTargets,
-            bool allowsNeutralTargets, bool excludesAdjacentDirectCells)
+            bool allowsNeutralTargets, bool excludesAdjacentDirectCells, bool allowsFriendlyCharacters = false)
         {
             AllowsEmptySingle = allowsEmptySingle;
             AllowsFriendlyTargets = allowsFriendlyTargets;
+            AllowsFriendlyCharacters = allowsFriendlyCharacters;
             AllowsNeutralTargets = allowsNeutralTargets;
             ExcludesAdjacentDirectCells = excludesAdjacentDirectCells;
         }
@@ -22,6 +24,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             AllowsEmptySingle || other.AllowsEmptySingle,
             AllowsFriendlyTargets || other.AllowsFriendlyTargets,
             AllowsNeutralTargets || other.AllowsNeutralTargets,
-            ExcludesAdjacentDirectCells || other.ExcludesAdjacentDirectCells);
+            ExcludesAdjacentDirectCells || other.ExcludesAdjacentDirectCells,
+            AllowsFriendlyCharacters || other.AllowsFriendlyCharacters);
     }
 }

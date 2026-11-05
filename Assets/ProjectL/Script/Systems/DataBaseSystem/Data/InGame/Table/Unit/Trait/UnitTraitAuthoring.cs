@@ -1,4 +1,7 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
@@ -26,16 +29,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
     }
 
     [Serializable]
-    internal sealed class MoveAttackDiscountTraitAuthoring : UnitTraitAuthoring
-    {
-        [SerializeField, Min(1)] private int discountAmount = 1;
-        [SerializeField, Min(1)] private int minimumAttackCost = 1;
-
-        internal override UnitTraitData ToData() =>
-            new MoveAttackDiscountTraitData(discountAmount, minimumAttackCost);
-    }
-
-    [Serializable]
     internal sealed class PiercingFalloffTraitAuthoring : UnitTraitAuthoring
     {
         [SerializeField, Range(1, 100)] private int reductionPercentPerTarget = 50;
@@ -51,7 +44,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         [SerializeField, Min(1)] private int thornDamage = 1;
         [SerializeField, Min(1)] private int lifetimeUnitTurns = 1;
 
-        internal override UnitTraitData ToData() => new ThornFieldTraitData(thornDamage, lifetimeUnitTurns);
+        [SerializeField, Range(0, 100)] private int defenseReductionPercent;
+        [SerializeField] private UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended;
+
+        internal override UnitTraitData ToData() => new ThornFieldTraitData(thornDamage, lifetimeUnitTurns, defenseReductionPercent, tickPhase);
     }
 
     [Serializable]
@@ -76,5 +72,27 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
     internal sealed class KillChainAttackTraitAuthoring : UnitTraitAuthoring
     {
         internal override UnitTraitData ToData() => new KillChainAttackTraitData();
+    }
+
+    /// <summary>사령술의 소환 정의입니다. SO 참조는 입력 계층에서만 사용하고 키로 내보냅니다.</summary>
+    [Serializable]
+    internal sealed class NecromancyTraitAuthoring : UnitTraitAuthoring
+    {
+        [SerializeField] private UnitDataSO summonedUnit;
+        [SerializeField, Min(1)] private int maxLivingSummons = 1;
+        [Tooltip("사령술이 보류된 동안 쓰지 않는 값입니다(진영 턴에서 소환 시점 미정). 옛 행동 타임라인의 첫 행동 지연이었습니다.")]
+        [SerializeField, Min(0)] private long firstActionDelay;
+
+        internal override UnitTraitData ToData() => new NecromancyTraitData(
+            summonedUnit != null ? summonedUnit.Key : EntityKey.None, maxLivingSummons, firstActionDelay);
+    }
+
+    /// <summary>포효를 발동하는 밤 피격 횟수입니다. 넉백 거리는 기존 넉백 특성에 입력합니다.</summary>
+    [Serializable]
+    internal sealed class RoarTraitAuthoring : UnitTraitAuthoring
+    {
+        [SerializeField, Min(1)] private int hitThreshold = 1;
+
+        internal override UnitTraitData ToData() => new RoarTraitData(hitThreshold);
     }
 }

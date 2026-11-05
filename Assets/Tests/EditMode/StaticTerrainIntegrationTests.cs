@@ -44,6 +44,21 @@ namespace ProjectL.Tests.Core
             Assert.That(environmentDamage.FinalDamage, Is.EqualTo(expectedDamage));
         }
 
+        [TestCase(0, 0)]
+        [TestCase(1, 1)]
+        public void AttackMinimum_AppliesAfterTerrain_WithoutChangingEnvironmentalDamage(int incoming, int expected)
+        {
+            var input = Terrain(CombatCommandTestData.Input(), Tile(71, new CellCoord(4, 3), StaticTerrainKind.HighGround));
+            var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
+            var victim = input.Characters.Single(c => c.EntityId == new EntityId(2));
+            var pipeline = new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault()));
+            var result = CombatDamageCalculator.Attack(input, new CombatEffectEngine(), pipeline, actor, victim,
+                incoming, AttackTargetRole.Primary, 100, actor.Anchor, null);
+            Assert.That(result.FinalDamage, Is.EqualTo(expected));
+            Assert.That(CombatDamageCalculator.Environment(input, incoming,
+                new CombatDamageOrigin(actor.Anchor, actor.EntityId), victim.Anchor).FinalDamage, Is.Zero);
+        }
+
         [TestCase(false, 7)]
         [TestCase(true, 10)]
         public void HighGround_UsesPhysicalOriginInsteadOfCreditedCharacter(bool highOrigin, int expected)
@@ -107,12 +122,10 @@ namespace ProjectL.Tests.Core
         [Test]
         public void Preview_SandstormDefenseClassificationMustRemainCurrent()
         {
-            var input = Terrain(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right),
+            var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Tile(71, CellCoord.Right, StaticTerrainKind.Sandstorm));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures, new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },
-                s.Timeline, s.Turn, s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
             input = Rebind(input, input.EnvironmentBindings);
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var expected = MovementContextCalculator.Capture(input, Owner.Player, rules);
@@ -127,12 +140,10 @@ namespace ProjectL.Tests.Core
         [TestCase(true, false)]
         public void ForcedMovement_OnlyExplicitKnockbackRejectsAscent(bool knockback, bool moved)
         {
-            var input = Terrain(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right),
+            var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Tile(71, new CellCoord(2, 0), StaticTerrainKind.HighGround));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn,
-                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray())));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray())));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new PushRule(knockback) });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(moved ? new CellCoord(2, 0) : CellCoord.Right));
@@ -160,14 +171,15 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput Rebind(CombatCommandInput input, EnvironmentSemanticBindings bindings) =>
             new(input.Number, input.Kind, input.ActorId, input.Aim, input.State, input.Characters, input.Profiles,
                 input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell, input.Rotation,
-                input.Battle, input.ProcessingKind, input.Path, input.MovementContext, 1, input.ArtifactItems, bindings);
+                input.Battle, input.ProcessingKind, input.Path, input.MovementContext, 1, input.ArtifactItems, bindings,
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence);
 
         [Test]
-        public void Sandstorm_AppliesAfterMatchupAndHeavy()
+        public void Sandstorm_AppliesAfterCategoryMatchup()
         {
             var input = Terrain(CombatCommandTestData.Input(), Tile(71, new CellCoord(4, 3), StaticTerrainKind.Sandstorm));
-            var actor = CombatCommandTestData.With(input.Characters[0], category: CategorySnapshot.CreateRider(false));
-            var victim = CombatCommandTestData.With(input.Characters[2], category: CategorySnapshot.CreateHeavy(Rotation4.R270, false, 50));
+            var actor = CombatCommandTestData.With(input.Characters[0], category: CategorySnapshot.CreateStateless(CategoryKey.Rider));
+            var victim = CombatCommandTestData.With(input.Characters[2], category: CategorySnapshot.CreateStateless(CategoryKey.Heavy));
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20, CategoryKey.Rider), profiles[0].Method);
             profiles[1] = new CombatAttackProfile(CombatCommandTestData.Spec(victim.CharacterKey, 1, CategoryKey.Heavy), profiles[1].Method);
@@ -176,9 +188,9 @@ namespace ProjectL.Tests.Core
                 new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())), actor, victim, 20,
                 AttackTargetRole.Primary, 100, actor.Anchor, null);
             Assert.That(result.DamageAfterMatchup, Is.EqualTo(14));
-            Assert.That(result.IncomingReduction, Is.EqualTo(7));
-            Assert.That(result.DamageAfterReceivedPercentages, Is.EqualTo(5.6m));
-            Assert.That(result.FinalDamage, Is.EqualTo(5));
+            Assert.That(result.IncomingReduction, Is.Zero);
+            Assert.That(result.DamageAfterReceivedPercentages, Is.EqualTo(11.2m));
+            Assert.That(result.FinalDamage, Is.EqualTo(11));
         }
 
         [Test]
@@ -193,10 +205,11 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Sandstorm_PierceQueriesAndExecutionUseReducedReach()
+        public void Sandstorm_ReducesPierceAimOnly_ShotStillRunsToBoardEdge()
         {
-            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
-            var input = Terrain(CombatCommandTestData.Input(method, AttackAim.ForDirection(AttackDirection.Right), empty: true),
+            // 모래폭풍은 사거리(조준 칸)만 줄인다. 관통 진행은 사거리와 무관하게 보드 끝까지다(2026-10-20).
+            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var input = Terrain(CombatCommandTestData.Input(method, AttackAim.ForCell(new CellCoord(3, 3)), empty: true),
                 Tile(71, new CellCoord(1, 3), StaticTerrainKind.Sandstorm));
             var actor = CombatCommandTestData.With(input.Characters[0], category: CategorySnapshot.CreateStateless(CategoryKey.Cannon),
                 traits: new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) });
@@ -212,19 +225,18 @@ namespace ProjectL.Tests.Core
             var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>());
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(preview.Targets.Length, Is.EqualTo(2));
-            Assert.That(result.Attack.Value.Hits.ToArray().Select(h => h.DamageDealt), Is.EqualTo(new[] { 20, 14 }));
+            Assert.That(preview.Targets.Length, Is.EqualTo(3));
+            Assert.That(result.Attack.Value.Hits.ToArray().Select(h => h.DamageDealt), Is.EqualTo(new[] { 20, 14, 8 }));
+            Assert.That(result.Attack.Value.PiercingShot.StopReason, Is.EqualTo(PiercingShotStopReason.BoardEdge));
         }
 
         [Test]
         public void SandstormTransit_UsesCurrentCellBeforeDestinationSettlement()
         {
-            var input = Terrain(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right, new CellCoord(2, 0)),
+            var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0)),
                 Tile(71, CellCoord.Right, StaticTerrainKind.Sandstorm));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.ActiveActorId, s.IsNight, s.Structures, new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },
-                s.Timeline, s.Turn, s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             Assert.That(CombatMovementCalculator.Preview(input, rules).ProjectedActor.Health.CurrentHealth, Is.EqualTo(92));
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -235,13 +247,15 @@ namespace ProjectL.Tests.Core
         [Test]
         public void DepartureAndReturn_RecomputeRangeWithoutMutatingBaseStats()
         {
-            var input = Terrain(MovementTestData.SafeRoute(5, 2, 1, CellCoord.Zero, CellCoord.Right),
+            var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Tile(71, CellCoord.Zero, StaticTerrainKind.Sandstorm));
             Assert.That(EnvironmentTerrainRules.AppointRange(input, input.Characters[0]), Is.EqualTo(3));
             var moved = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             var after = MovementTestData.After(moved);
             Assert.That(EnvironmentTerrainRules.AppointRange(after, MovementTestData.Actor(moved)), Is.EqualTo(4));
-            var returned = CombatCommandCalculator.Calculate(MovementTestData.Return(after), Array.Empty<IMovementTileRule>());
+            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(after, CombatControllerPhase.StartingPlayer));
+            var nextMove = CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(started), CombatCommandKind.Move, input.ActorId);
+            var returned = CombatCommandCalculator.Calculate(MovementTestData.Route(nextMove, CellCoord.Right, CellCoord.Zero), Array.Empty<IMovementTileRule>());
             var restored = MovementTestData.After(returned);
             Assert.That(EnvironmentTerrainRules.AppointRange(restored, MovementTestData.Actor(returned)), Is.EqualTo(3));
             Assert.That(MovementTestData.Actor(returned).Stats.AppointRange, Is.EqualTo(4));
@@ -258,7 +272,7 @@ namespace ProjectL.Tests.Core
             chars[0] = CombatCommandTestData.With(chars[0], traits: new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(1) });
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20,
-                CategoryKey.Base, new KnockbackTraitSpec(1)), profiles[0].Method);
+                CategoryKey.Main, new KnockbackTraitSpec(1)), profiles[0].Method);
             input = CombatCommandTestData.With(input, chars, profiles: profiles);
             input = Terrain(input, new[] { fromHigh ? Tile(71, new CellCoord(4, 3), StaticTerrainKind.HighGround) : null,
                 toHigh ? Tile(72, new CellCoord(5, 3), StaticTerrainKind.HighGround) : null }.Where(t => t != null).ToArray());
@@ -274,12 +288,12 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput Terrain(CombatCommandInput input, params StaticTerrainFact[] terrain)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.ActiveActorId, s.IsNight,
-                s.Structures, s.ThornFields, s.Timeline, s.Turn, new MovementEnvironmentFacts(terrain));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(terrain));
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell,
                 input.Rotation, input.Battle, input.ProcessingKind, input.Path, input.MovementContext, input.BattleInstanceId,
-                input.ArtifactItems, new EnvironmentSemanticBindings(terrain.Select(t => t.Id).ToArray(), Array.Empty<long>(), Array.Empty<EntityId>()));
+                input.ArtifactItems, new EnvironmentSemanticBindings(terrain.Select(t => t.Id).ToArray(), Array.Empty<long>(), Array.Empty<EntityId>()),
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence);
         }
     }
 }

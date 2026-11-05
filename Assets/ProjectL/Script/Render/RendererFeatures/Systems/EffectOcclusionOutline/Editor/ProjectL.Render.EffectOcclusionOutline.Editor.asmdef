@@ -1,0 +1,7 @@
+{
+    "name": "ProjectL.Render.EffectOcclusionOutline.Editor",
+    "rootNamespace": "ProjectL.Render.RendererFeatures.Systems.EffectOcclusionOutline.Editor",
+    "references": ["ProjectL.Render.EffectOcclusionOutline", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime", "ProjectL.Tool.Editor"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}

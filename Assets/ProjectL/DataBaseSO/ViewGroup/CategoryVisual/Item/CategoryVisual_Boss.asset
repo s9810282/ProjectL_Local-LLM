@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4024d4c005f25294c93cbedcc8a58bb3, type: 3}
+  m_Name: CategoryVisual_Boss
+  m_EditorClassIdentifier: 
+  categoryVisualData:
+    key: 50
+    whiteIcon: {fileID: 0}
+    blackIcon: {fileID: -82875606, guid: 21fd8be3e4c68444f9f2abf0a61e30d8, type: 3}

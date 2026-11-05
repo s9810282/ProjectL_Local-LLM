@@ -17,12 +17,6 @@ namespace ProjectL.Tests.Core
             EffectOriginKey origin = Origin(EffectOwnerKind.Trait, 7, 1, "main");
             var state = new IntStateSnapshot(1);
             var expectation = new EffectStateExpectation(origin, state);
-            var costContributions = new[]
-            {
-                new EffectAttackCostContribution(origin, 2, 1, true),
-            };
-            var positiveCostContributors = new[] { origin };
-            var costExpectations = new[] { expectation };
             var damageContributions = new[]
             {
                 new EffectAttackDamageContribution(origin, 3),
@@ -33,41 +27,19 @@ namespace ProjectL.Tests.Core
                 new EffectActivation(origin, 1, 3, new EntityId(11)),
             };
 
-            var cost = new EffectAttackCostEvaluation(
-                3, costContributions, positiveCostContributors, costExpectations);
             var damage = new EffectAttackDamageEvaluation(
                 8, damageContributions, damageExpectations);
             var result = new EffectRuleResult(null, activations);
 
-            costContributions[0] = default;
-            positiveCostContributors[0] = default;
-            costExpectations[0] = default;
             damageContributions[0] = default;
             damageExpectations[0] = default;
             activations[0] = default;
 
-            Assert.That(cost.Contributions[0].Origin, Is.EqualTo(origin));
-            Assert.That(cost.PositiveCostContributors[0], Is.EqualTo(origin));
-            Assert.That(cost.Expectations[0].Origin, Is.EqualTo(origin));
             Assert.That(damage.Contributions[0].Origin, Is.EqualTo(origin));
             Assert.That(damage.Expectations[0].Origin, Is.EqualTo(origin));
             Assert.That(result.Activations[0].Origin, Is.EqualTo(origin));
         }
 
-        [Test]
-        public void AttackSucceededContext_CopiesSortsAndRejectsDuplicateOrigins()
-        {
-            EffectOriginKey first = Origin(EffectOwnerKind.Category, 4, 2, "first");
-            EffectOriginKey second = Origin(EffectOwnerKind.Artifact, 0, 3, "second");
-            var contributors = new[] { second, first };
-
-            var context = new AttackSucceededEffectContext(contributors);
-            contributors[0] = default;
-
-            Assert.That(context.PositiveCostContributors, Is.EqualTo(new[] { first, second }));
-            Assert.Throws<ArgumentException>(() =>
-                new AttackSucceededEffectContext(new[] { first, first }));
-        }
 
         [Test]
         public void Plan_CopiesInputAndPreservesExpectationsWithoutChanges()

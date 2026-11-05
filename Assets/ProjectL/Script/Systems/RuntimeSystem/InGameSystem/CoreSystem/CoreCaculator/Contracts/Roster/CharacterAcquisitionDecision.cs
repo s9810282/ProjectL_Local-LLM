@@ -9,18 +9,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public bool Succeeded => FailureReason == RosterAcquireFailureReason.None;
         public RosterAcquireFailureReason FailureReason { get; }
         public IReadOnlyList<RosterAcquireRequest> Requests { get; }
-        public MainCharacterPersistentState InitialMain { get; }
 
         private CharacterAcquisitionDecision(RosterAcquireFailureReason reason,
-            RosterAcquireRequest[] requests, MainCharacterPersistentState initialMain)
+            RosterAcquireRequest[] requests)
         {
             FailureReason = reason;
             Requests = Array.AsReadOnly(requests);
-            InitialMain = initialMain;
         }
 
-        public static CharacterAcquisitionDecision Success(IReadOnlyList<RosterAcquireRequest> requests,
-            MainCharacterPersistentState initialMain = null)
+        public static CharacterAcquisitionDecision Success(IReadOnlyList<RosterAcquireRequest> requests)
         {
             if (requests == null || requests.Count == 0)
                 throw new ArgumentException("획득할 카드가 필요합니다.", nameof(requests));
@@ -29,7 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             for (int i = 0; i < copy.Length; i++)
                 copy[i] = requests[i] ?? throw new ArgumentException("획득 요청에 null을 넣을 수 없습니다.");
 
-            return new CharacterAcquisitionDecision(RosterAcquireFailureReason.None, copy, initialMain);
+            return new CharacterAcquisitionDecision(RosterAcquireFailureReason.None, copy);
         }
 
         public static CharacterAcquisitionDecision Failure(RosterAcquireFailureReason reason)
@@ -38,7 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 Enum.IsDefined(typeof(RosterAcquireFailureReason), reason) == false)
                 throw new ArgumentOutOfRangeException(nameof(reason));
 
-            return new CharacterAcquisitionDecision(reason, Array.Empty<RosterAcquireRequest>(), null);
+            return new CharacterAcquisitionDecision(reason, Array.Empty<RosterAcquireRequest>());
         }
     }
 }

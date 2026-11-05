@@ -7,6 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// <summary>정리 전 게시할 최종 캐릭터 값, 승패 및 진행 결정이다.</summary>
     public sealed class BattleCompletionChanges
     {
+        public BattleRewardReceipt Rewards { get; }
         public CharacterChanges Characters { get; }
         public StageOutcomeSnapshot Outcome { get; }
         public ChapterProgressionResult Progression { get; }
@@ -15,7 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public RunCompletionReceipt RunCompletion { get; }
 
         public BattleCompletionChanges(CharacterChanges characters, StageOutcomeSnapshot outcome,
-            ChapterProgressionResult progression)
+            ChapterProgressionResult progression, BattleRewardReceipt rewards = null)
         {
             Characters = characters ?? throw new ArgumentNullException(nameof(characters));
             Progression = progression ?? throw new ArgumentNullException(nameof(progression));
@@ -24,13 +25,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                     ? !progression.ClearStage || progression.EndAttempt
                     : !progression.EndAttempt || progression.ClearStage || progression.ClearMap))
                 throw new ArgumentException("완료 승패와 진행 결정이 일치해야 합니다.");
+            if (rewards != null && outcome.Outcome != Common.StageOutcome.Victory)
+                throw new ArgumentException("승리 완료에만 보상 영수증을 붙일 수 있습니다.", nameof(rewards));
+            Rewards = rewards;
             Outcome = outcome;
             RunCompletion = progression.EndAttempt
                 ? new RunCompletionReceipt(Common.RunOutcome.Defeat, progression.ChapterKey, progression.NodeId, progression.StageKey) : null;
         }
 
         public BattleCompletionChanges(SoulActionChanges settlement, StageOutcomeSnapshot outcome,
-            ChapterProgressionResult progression) : this(settlement?.Characters, outcome, progression)
+            ChapterProgressionResult progression, BattleRewardReceipt rewards = null) : this(settlement?.Characters, outcome, progression, rewards)
         {
             Settlement = settlement ?? throw new ArgumentNullException(nameof(settlement));
         }

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4024d4c005f25294c93cbedcc8a58bb3, type: 3}
+  m_Name: CategoryVisual_Rider
+  m_EditorClassIdentifier: 
+  categoryVisualData:
+    key: 20
+    whiteIcon: {fileID: -597709344, guid: 716b3b221a09aee409d2e2fa00d15563, type: 3}
+    blackIcon: {fileID: -1212573622, guid: 993ee2da7ccd92f499cc669cbcb13a83, type: 3}

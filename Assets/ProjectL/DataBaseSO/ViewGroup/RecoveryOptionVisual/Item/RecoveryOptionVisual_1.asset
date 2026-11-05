@@ -14,4 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recoveryOptionVisualData:
     optionId: 1
-    displayName: "\uCCB4\uB825 10 \uD68C\uBCF5"
+    displayName: "\uCCB4\uB825 \uD68C\uBCF5"
+    icon: {fileID: -1866592043, guid: b92e33e8fe6ffd64ba752425a8f63d51, type: 3}
+    description: "누구나 먹어봤던 맛\n체력을 {회복량} 회복합니다."

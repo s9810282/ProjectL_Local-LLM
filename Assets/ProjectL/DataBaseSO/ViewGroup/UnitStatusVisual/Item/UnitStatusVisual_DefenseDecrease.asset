@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c948482b21d738a8f39179942a0c447, type: 3}
+  m_Name: UnitStatusVisual_DefenseDecrease
+  m_EditorClassIdentifier: 
+  unitStatusVisualData:
+    effectKey: 4
+    displayName: "방어력 감소"
+    icon: {fileID: 0}
+    descriptionTemplate: "현재 유효 방어력 {0}"

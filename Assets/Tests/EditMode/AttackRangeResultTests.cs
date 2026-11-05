@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using NUnit.Framework;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.BootstrapModels;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
@@ -33,10 +34,7 @@ namespace ProjectL.Tests.Core
             };
 
             AttackRangeResult result = AttackRangeResult.Success(
-                new EntityId(1),
-                rangeCells,
-                inRangeTargetIds,
-                canAffordAttack: false, attackAims: Array.Empty<AttackAim>());
+                new EntityId(1),                rangeCells,                inRangeTargetIds,attackAims: Array.Empty<AttackAim>());
 
             rangeCells[0] = new CellCoord(9, 9);
             inRangeTargetIds[0] = new EntityId(99);
@@ -50,7 +48,6 @@ namespace ProjectL.Tests.Core
             Assert.That(
                 result.InRangeTargetIds.ToArray(),
                 Is.EqualTo(new[] { new EntityId(2), new EntityId(5) }));
-            Assert.That(result.CanAffordAttack, Is.False);
         }
 
         [Test]
@@ -67,7 +64,6 @@ namespace ProjectL.Tests.Core
             Assert.That(result.AttackerId, Is.EqualTo(new EntityId(1)));
             Assert.That(result.RangeCells.Length, Is.Zero);
             Assert.That(result.InRangeTargetIds.Length, Is.Zero);
-            Assert.That(result.CanAffordAttack, Is.False);
         }
 
         [Test]
@@ -75,10 +71,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentNullException>(() => AttackRangeResult.Success(
-                    new EntityId(1),
-                    null,
-                    Array.Empty<EntityId>(),
-                    canAffordAttack: true, attackAims: Array.Empty<AttackAim>())).ParamName,
+                    new EntityId(1),                    null,                    Array.Empty<EntityId>(),attackAims: Array.Empty<AttackAim>())).ParamName,
                 Is.EqualTo("rangeCells"));
         }
 
@@ -87,10 +80,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentNullException>(() => AttackRangeResult.Success(
-                    new EntityId(1),
-                    Array.Empty<CellCoord>(),
-                    null,
-                    canAffordAttack: true, attackAims: Array.Empty<AttackAim>())).ParamName,
+                    new EntityId(1),                    Array.Empty<CellCoord>(),                    null,attackAims: Array.Empty<AttackAim>())).ParamName,
                 Is.EqualTo("inRangeTargetIds"));
         }
     }
@@ -98,13 +88,10 @@ namespace ProjectL.Tests.Core
     public sealed class AttackPreviewContractTests
     {
         [Test]
-        public void CompleteSettlement_AllowsCalculatedZeroAndRejectsInconsistentFinal()
+        public void CompleteSettlement_PreservesActionUseAndCategory()
         {
-            var valid = new ActionCostSettlementSnapshot(
-                before: 3,
-                spent: 2,
-                refunded: 0,
-                final: 1);
+            var valid = new UnitActionUseSettlementSnapshot(
+                new EntityId(1),beforeActionUse: UnitActionUse.Available,finalActionUse: UnitActionUse.Attacked);
 
             AttackPreview preview = AttackPreview.Success(
                 new EntityId(1),
@@ -116,31 +103,13 @@ namespace ProjectL.Tests.Core
                 Array.Empty<TraitStatusSnapshot>(),
                 CategorySnapshot.CreateStateless(CategoryKey.Heavy));
 
-            Assert.That(preview.ActionCostSettlement.Before, Is.EqualTo(3));
-            Assert.That(preview.AttackCost, Is.EqualTo(2));
-            Assert.That(preview.ActionCostRefunded, Is.Zero);
-            Assert.That(preview.FinalActionCost, Is.EqualTo(1));
+            Assert.That(preview.ActionUseSettlement.ActorId, Is.EqualTo(new EntityId(1)));
+            Assert.That(preview.ActionUseSettlement.BeforeActionUse, Is.EqualTo(UnitActionUse.Available));
+            Assert.That(preview.ActionUseSettlement.FinalActionUse, Is.EqualTo(UnitActionUse.Attacked));
             Assert.That(preview.ProjectedCategory.Key, Is.EqualTo(CategoryKey.Heavy));
 
-            Assert.Throws<ArgumentException>(() =>
-                new ActionCostSettlementSnapshot(3, 2, 0, final: 2));
         }
 
-        [Test]
-        public void Success_WithPositiveAttackCost_PreservesAttackCost()
-        {
-            AttackPreview result = AttackPreview.Success(
-                new EntityId(1),
-                new EntityId(2),
-                Rotation4.R0,
-                new ActionCostSettlementSnapshot(2, 2, 0, 0),
-                Array.Empty<CellCoord>(),
-                Array.Empty<AttackTargetPreview>(),
-                Array.Empty<TraitStatusSnapshot>(),
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
-
-            Assert.That(result.AttackCost, Is.EqualTo(2));
-        }
 
         [Test]
         public void Success_WithEmptyPrimaryTargetId_Throws()
@@ -150,11 +119,11 @@ namespace ProjectL.Tests.Core
                     new EntityId(1),
                     EntityId.Empty,
                     Rotation4.R0,
-                    new ActionCostSettlementSnapshot(2, 2, 0, 0),
+                    new UnitActionUseSettlementSnapshot(new EntityId(1),                        UnitActionUse.Available,UnitActionUse.Attacked),
                     Array.Empty<CellCoord>(),
                     Array.Empty<AttackTargetPreview>(),
                     Array.Empty<TraitStatusSnapshot>(),
-                    CategorySnapshot.CreateStateless(CategoryKey.Base))).ParamName,
+                    CategorySnapshot.CreateStateless(CategoryKey.Main))).ParamName,
                 Is.EqualTo("primaryTargetId"));
         }
 
@@ -177,22 +146,6 @@ namespace ProjectL.Tests.Core
 
     public sealed class AttackCommandResultContractTests
     {
-        [Test]
-        public void AttackResultSuccess_WithZeroActionCostSpent_ThrowsOutOfRange()
-        {
-            Assert.That(
-                Assert.Throws<ArgumentOutOfRangeException>(() => AttackResult.Success(
-                    new EntityId(1),
-                    new EntityId(2),
-                    Rotation4.R0,
-                    new ActionCostSettlementSnapshot(1, 0, 0, 1),
-                    Array.Empty<CellCoord>(),
-                    Array.Empty<AttackHitResult>(),
-                    CreateStageSnapshot(),
-                    Array.Empty<TraitActivationSnapshot>(),
-                    Array.Empty<CategoryActivationSnapshot>())).ParamName,
-                Is.EqualTo("actionCostSettlement"));
-        }
 
         [Test]
         public void AttackResultSuccess_WithUndefinedDirection_ThrowsOutOfRange()
@@ -202,7 +155,7 @@ namespace ProjectL.Tests.Core
                     new EntityId(1),
                     new EntityId(2),
                     (Rotation4)99,
-                    new ActionCostSettlementSnapshot(1, 1, 0, 0),
+                    new UnitActionUseSettlementSnapshot(new EntityId(1),                        UnitActionUse.Available,UnitActionUse.Attacked),
                     Array.Empty<CellCoord>(),
                     Array.Empty<AttackHitResult>(),
                     CreateStageSnapshot(),
@@ -219,7 +172,7 @@ namespace ProjectL.Tests.Core
                     new EntityId(1),
                     new EntityId(2),
                     Rotation4.R0,
-                    new ActionCostSettlementSnapshot(1, 1, 0, 0),
+                    new UnitActionUseSettlementSnapshot(new EntityId(1),                        UnitActionUse.Available,UnitActionUse.Attacked),
                     null,
                     Array.Empty<AttackHitResult>(),
                     CreateStageSnapshot(),
@@ -236,7 +189,7 @@ namespace ProjectL.Tests.Core
                     new EntityId(1),
                     new EntityId(2),
                     Rotation4.R0,
-                    new ActionCostSettlementSnapshot(1, 1, 0, 0),
+                    new UnitActionUseSettlementSnapshot(new EntityId(1),                        UnitActionUse.Available,UnitActionUse.Attacked),
                     Array.Empty<CellCoord>(),
                     null,
                     CreateStageSnapshot(),
@@ -245,31 +198,13 @@ namespace ProjectL.Tests.Core
                 Is.EqualTo("hits"));
         }
 
-        [Test]
-        public void AttackExecutionResultSuccess_WithZeroActionCostSpent_ThrowsOutOfRange()
-        {
-            Assert.That(
-                Assert.Throws<ArgumentOutOfRangeException>(() => AttackExecutionResult.Success(
-                    new EntityId(1),
-                    new EntityId(2),
-                    Rotation4.R0,
-                    actionCostSpent: 0,
-                    Array.Empty<CellCoord>(),
-                    Array.Empty<AttackHitResult>())).ParamName,
-                Is.EqualTo("actionCostSpent"));
-        }
 
         [Test]
         public void AttackExecutionResultSuccess_WithUndefinedDirection_ThrowsOutOfRange()
         {
             Assert.That(
                 Assert.Throws<ArgumentOutOfRangeException>(() => AttackExecutionResult.Success(
-                    new EntityId(1),
-                    new EntityId(2),
-                    (Rotation4)99,
-                    actionCostSpent: 1,
-                    Array.Empty<CellCoord>(),
-                    Array.Empty<AttackHitResult>())).ParamName,
+                    new EntityId(1),                    new EntityId(2),                    (Rotation4)99,                    Array.Empty<CellCoord>(),                    Array.Empty<AttackHitResult>())).ParamName,
                 Is.EqualTo("attackDirection"));
         }
 
@@ -278,12 +213,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentNullException>(() => AttackExecutionResult.Success(
-                    new EntityId(1),
-                    new EntityId(2),
-                    Rotation4.R0,
-                    actionCostSpent: 1,
-                    null,
-                    Array.Empty<AttackHitResult>())).ParamName,
+                    new EntityId(1),                    new EntityId(2),                    Rotation4.R0,                    null,                    Array.Empty<AttackHitResult>())).ParamName,
                 Is.EqualTo("affectedCells"));
         }
 
@@ -292,12 +222,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentNullException>(() => AttackExecutionResult.Success(
-                    new EntityId(1),
-                    new EntityId(2),
-                    Rotation4.R0,
-                    actionCostSpent: 1,
-                    Array.Empty<CellCoord>(),
-                    null)).ParamName,
+                    new EntityId(1),                    new EntityId(2),                    Rotation4.R0,                    Array.Empty<CellCoord>(),                    null)).ParamName,
                 Is.EqualTo("hits"));
         }
 

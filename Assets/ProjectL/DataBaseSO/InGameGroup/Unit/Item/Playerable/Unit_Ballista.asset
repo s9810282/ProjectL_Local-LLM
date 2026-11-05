@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7811fa7707c4c7b8f0f515bb17006fa, type: 3}
+  m_Name: Unit_Ballista
+  m_EditorClassIdentifier: 
+  key: 15
+  role: 0
+  ownerEligibility: 0
+  killRewardConfigured: 1
+  killRewardEligible: 0
+  killGold: 0
+  killExperience: 0
+  canMoveVoluntarily: 1
+  canBasicAttack: 1
+  isForcedMovementImmune: 0
+  footprintWidth: 1
+  footprintHeight: 1
+  maxHealth: 15
+  physicalDefense: 5
+  targetingMethod: {fileID: 11400000, guid: e5e42fa120684bc899e2050a79576e8a, type: 2}
+  attackRange: 4
+  category: 40
+  attackPower: 8
+  wallDelivery: 2
+  wallPropagation: 1
+  priority: 30
+  traits:
+  - rid: 6249925418060611683
+  - rid: 6249925418060611684
+  references:
+    version: 2
+    RefIds:
+    - rid: 6249925418060611683
+      type: {class: ImpactBoltTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        distanceCells: 1
+    - rid: 6249925418060611684
+      type: {class: StationaryFireTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        extraDamagePercent: 100

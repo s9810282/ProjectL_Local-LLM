@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c39f46666429e7a772c3f475bdf4d00, type: 3}
+  m_Name: StageOfferText_TraitGrowth
+  m_EditorClassIdentifier: 
+  stageOfferTextData:
+    target: 1
+    stageKeys: []
+    eventName: "증강 선택"
+    eventDescription: "특성을 하나 선택합니다"
+    goldFormat: ""
+    priceFormat: ""
+    selectButtonText: "선택한다"
+    completedButtonText: ""
+    unavailableButtonText: ""
+    lines:
+    - kind: 5
+      format: "{0} Lv.{1} · {2}"
+    - kind: 6
+      format: "신규 특성"
+    - kind: 7
+      format: "특성 강화"
+    defaultErrorText: "선택을 처리하지 못했습니다."
+    errors:
+    - kind: 11
+      text: "선택지가 바뀌었습니다. 다시 골라 주세요."
+    - kind: 12
+      text: "지금은 고를 수 없습니다."

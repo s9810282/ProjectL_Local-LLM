@@ -64,10 +64,10 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
                 unit, default, default, default, path);
         }
 
-        public static CombatViewPreviewData ReturnToCheckpoint(EntityId unit)
+        public static CombatViewPreviewData ActionAvailability(EntityId unit)
         {
             CombatViewInputGuard.RequireEntity(unit, nameof(unit));
-            return new CombatViewPreviewData(CombatViewPreviewKind.ReturnToCheckpoint, unit, default, default, default);
+            return new CombatViewPreviewData(CombatViewPreviewKind.ActionAvailability, unit, default, default, default);
         }
 
         public static CombatViewPreviewData AttackRange(EntityId attacker)
@@ -83,6 +83,13 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
             CombatViewInputGuard.RequireAim(aim);
             return new CombatViewPreviewData(CombatViewPreviewKind.Attack,
                 attacker, default, default, aim);
+        }
+
+        public static CombatViewPreviewData UnitAttackRange(EntityId unit)
+        {
+            CombatViewInputGuard.RequireEntity(unit, nameof(unit));
+            return new CombatViewPreviewData(CombatViewPreviewKind.UnitAttackRange,
+                unit, default, default, default);
         }
     }
 

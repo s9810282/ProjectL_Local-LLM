@@ -1,6 +1,6 @@
 # Environment content activation handoff
 
-Updated 2026-10-06. E1–E10 implement and verify the authorized rules, existing Buffer publication and logical View-result compatibility. This is an implementation record and owner handoff, not authorization to enable production content. User-confirmed rules are in the [design](../specs/2026-10-05-environment-content-follow-up-design.md); task evidence is in the [implementation plan](../plans/2026-10-05-environment-content-implementation-plan.md), sections 6–17.
+Updated 2026-10-06. E1–E10 implement and verify the authorized rules, existing Buffer publication and logical View-result compatibility. This is an implementation record and owner handoff, not authorization to enable production content. User-confirmed rules are in the design (Git history: `2026-10-05-environment-content-follow-up-design.md`); task evidence is in the implementation plan (Git history: `2026-10-05-environment-content-implementation-plan.md`), sections 6–17.
 
 The eight contents are High Ground, Sandstorm, Powder Barrel, Supplies, Sheriff Badge, Mine, Flag and Tornado. Wall and the obsolete HP-99 sentinel are excluded. Explicit test payloads are not production balance values. No production SO, scene, prefab, visual asset, package or assembly was changed by E10. No PlayMode or playable-stage activation evidence is claimed.
 

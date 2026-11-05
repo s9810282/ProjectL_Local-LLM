@@ -3,6 +3,9 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.RunStart;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
 {
@@ -11,14 +14,17 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
     {
         private readonly IInGameSystemGroupService _service;
         private readonly ICurrentProgressBufferReadSink _current;
+        private readonly IStageViewBufferWriteSink _stageInput;
 
         public int Priority { get; }
         public bool IsCompleted { get; private set; }
 
-        internal StageJob(IInGameSystemGroupService service, int priority, ICurrentProgressBufferReadSink current)
+        internal StageJob(IInGameSystemGroupService service, int priority, ICurrentProgressBufferReadSink current,
+            IStageViewBufferWriteSink stageInput)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _current = current ?? throw new ArgumentNullException(nameof(current));
+            _stageInput = stageInput ?? throw new ArgumentNullException(nameof(stageInput));
             Priority = priority;
             IsCompleted = false;
         }
@@ -31,6 +37,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
 
             // 등록 시점의 복사본 대신 앞선 초기화 Job까지 반영된 현재 챕터를 읽는다.
             int chapterKey = _current.HasMap ? _current.CurrentMapKey : 1;
+            // 교체 전 입력을 취소한다. 발급 번호와 이미 게시한 결과는 유지한다.
+            _stageInput.Clear();
             var result = _service.CoreGroup.ChapterProgression.EnterChapter(chapterKey);
             if (!result.Accepted)
                 throw new InvalidOperationException($"Chapter entry rejected: {result.FailureReason}.");
@@ -39,32 +47,29 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
     }
 
     /// <summary>
-    /// 새 Run을 시작한다. 이전 Run 정리·시작 로스터·시작 Run 재화는 Core·Buffer가 한 번에 처리하고,
-    /// 이 Job은 Plan이 정한 순서(챕터 진입 전)에 한 번 요청만 한다. 거절이면 예외로 흐름을 멈춘다.
+    /// Stage 첫 진입의 새 Run 결과를 받습니다. 받는 요청이 없어 늘 시작하고, 거절이면 예외로 흐름을 멈춥니다(옛 NewRunJob과 같음).
+    /// 호출·검사는 <see cref="RunStartJob"/>이 합니다.
     /// </summary>
-    internal struct NewRunJob : IJobService
+    internal sealed class StageRunStartOutcome : IRunStartOutcome
     {
-        private readonly IInGameSystemGroupService _service;
-        private readonly int _loadoutKey;
-        public int Priority { get; }
-        public bool IsCompleted { get; private set; }
+        internal static readonly StageRunStartOutcome Instance = new();
 
-        internal NewRunJob(IInGameSystemGroupService service, int loadoutKey, int priority)
+        private StageRunStartOutcome()
         {
-            _service = service ?? throw new ArgumentNullException(nameof(service));
-            if (loadoutKey < 1) throw new ArgumentOutOfRangeException(nameof(loadoutKey));
-            _loadoutKey = loadoutKey;
-            Priority = priority;
-            IsCompleted = false;
         }
 
-        public void Execute()
+        public bool TryStart() => true;
+
+        public void Publish(RosterAcquireResult result)
         {
-            if (IsCompleted) return;
-            var result = _service.CoreGroup.RunStart.StartNewRun(_loadoutKey);
+            if (result == null) throw new ArgumentNullException(nameof(result));
             if (!result.Succeeded)
-                throw new InvalidOperationException($"New run rejected: {result.FailureReason}. Loadout: {_loadoutKey}.");
-            IsCompleted = true;
+                throw new InvalidOperationException(
+                    $"New run rejected: {result.FailureReason}. Loadout: {RunStartJob.DefaultLoadoutKey}.");
+        }
+
+        public void Fail()
+        {
         }
     }
 }

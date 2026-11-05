@@ -14,7 +14,7 @@ namespace ProjectL.Tests.Core
     /// </summary>
     public sealed class AttackProfileRuleTests
     {
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         [TestCase(CategoryKey.Cannon)]
@@ -42,6 +42,19 @@ namespace ProjectL.Tests.Core
             var method = new TargetingMethodSpec(shape, choiceMode, TargetingSplash.None, 0);
 
             var exception = Assert.Throws<ArgumentException>(() => new CombatAttackProfile(ThornCannon(), method));
+            StringAssert.Contains("가시밭", exception.Message);
+        }
+
+        /// <summary>관통 기록은 경로 밖 가시밭 피격을 표현하지 못하므로 두 특성을 함께 쓰는 프로필은 거부한다.</summary>
+        [Test]
+        public void PiercingWithThornField_IsRejected()
+        {
+            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var unit = CombatCommandTestData.Spec(EntityKey.Unit_Ballista, 10, CategoryKey.Main,
+                new PiercingFalloffTraitSpec(30, int.MaxValue), new ThornFieldTraitSpec(5, 5));
+
+            var exception = Assert.Throws<ArgumentException>(() => new CombatAttackProfile(unit, method));
+            StringAssert.Contains("관통", exception.Message);
             StringAssert.Contains("가시밭", exception.Message);
         }
 

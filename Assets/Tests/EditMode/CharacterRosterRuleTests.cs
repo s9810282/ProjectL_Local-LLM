@@ -8,26 +8,47 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 
 namespace ProjectL.Tests.Core
 {
     public sealed class CharacterRosterRuleTests
     {
+        [TestCase(1)]
+        [TestCase(3)]
+        [TestCase(int.MaxValue)]
+        public void AcquireSub_PreservesRequestedLevel(int level)
+        {
+            var decision = CharacterRosterRules.PlanAcquire(Sub(EntityKey.Unit_Cowboy), Array.Empty<CharacterDefinitionFacts>(), level);
+            Assert.That(decision.Succeeded, Is.True);
+            Assert.That(decision.Requests.Single().InitialLevel, Is.EqualTo(level));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void AcquireSub_RejectsNonpositiveInput(int level)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                CharacterRosterRules.PlanAcquire(Sub(EntityKey.Unit_Cowboy), Array.Empty<CharacterDefinitionFacts>(), level));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                CharacterRosterRules.PlanAcquire(null, Array.Empty<CharacterDefinitionFacts>(), level));
+        }
+
         [Test]
         public void InitialRoster_PlansOneMainThenThreeSubsInInputOrder()
         {
-            var main = new CharacterDefinitionFacts(EntityKey.Unit_MainCharacter,
+            var main = new CharacterDefinitionFacts(EntityKey.Unit_Akimbo,
                 UnitRole.MainCharacter, UnitOwnerEligibility.PlayerOnly,
-                new MainCharacterPersistentState(10, 10, 5, 4, 3, 1));
+                new MainCharacterPersistentState(10, 10, 5), CategoryKey.Main);
             var decision = CharacterRosterRules.PlanInitialRoster(main, new[]
             {
-                Sub(EntityKey.Unit_Sniper), Sub(EntityKey.Unit_Akimbo), Sub(EntityKey.Unit_Akimbo)
+                Sub(EntityKey.Unit_Sniper), Sub(EntityKey.Unit_Cowboy), Sub(EntityKey.Unit_DynamiteHammer)
             }, true);
 
             Assert.That(decision.Succeeded, Is.True);
             Assert.That(decision.Requests.Select(x => x.CharacterKey), Is.EqualTo(new[]
             {
-                EntityKey.Unit_MainCharacter, EntityKey.Unit_Sniper, EntityKey.Unit_Akimbo, EntityKey.Unit_Akimbo
+                EntityKey.Unit_Akimbo, EntityKey.Unit_Sniper, EntityKey.Unit_Cowboy, EntityKey.Unit_DynamiteHammer
             }));
             Assert.That(decision.Requests.Select(x => x.Role), Is.EqualTo(new[]
             {
@@ -36,12 +57,11 @@ namespace ProjectL.Tests.Core
             }));
         }
 
-        [TestCase(UnitRole.MainCharacter, UnitOwnerEligibility.PlayerOnly)]
         [TestCase(UnitRole.Regular, UnitOwnerEligibility.EnemyOnly)]
         public void Acquisition_RejectsNonPlayerRegularDefinitions(UnitRole role, UnitOwnerEligibility owner)
         {
-            var decision = CharacterRosterRules.PlanAcquireSub(new CharacterDefinitionFacts(
-                EntityKey.Unit_Demon, role, owner));
+            var decision = CharacterRosterRules.PlanAcquire(new CharacterDefinitionFacts(
+                EntityKey.Unit_Demon, role, owner), Array.Empty<CharacterDefinitionFacts>());
             Assert.That(decision.FailureReason, Is.EqualTo(RosterAcquireFailureReason.InvalidDefinition));
             Assert.That(decision.Requests, Is.Empty);
         }
@@ -49,6 +69,7 @@ namespace ProjectL.Tests.Core
         [TestCase(0, 0)]
         [TestCase(2, 2)]
         [TestCase(4, 3)]
+        [TestCase(6, 3)]
         public void InitialDrawPlan_TakesAtMostThreeSubs(int subs, int initialCount)
         {
             InitialDrawPlan plan = InitialDrawCalculator.Plan(Candidates(subs), 42);
@@ -56,6 +77,7 @@ namespace ProjectL.Tests.Core
             Assert.That(plan.InitialCount, Is.EqualTo(initialCount));
         }
 
+        [TestCase(5, 6, 4, TestName = "Custom_Main1Sub4")]
         [TestCase(4, 5, 3, TestName = "Default_Main1Sub3")]
         [TestCase(3, 5, 2, TestName = "Smaller_Main1Sub2")]
         [TestCase(1, 5, 0, TestName = "MainOnly")]
@@ -86,37 +108,15 @@ namespace ProjectL.Tests.Core
             var candidate = Candidates(1)[0];
             Assert.Throws<ArgumentException>(() => InitialDrawCalculator.Plan(new[] { candidate, candidate }, 42));
             Assert.Throws<ArgumentException>(() => InitialDrawCalculator.Plan(new StageDrawCandidate[] { null }, 42));
-            Assert.Throws<ArgumentException>(() => new StageDrawCandidate(default, EntityKey.Unit_Akimbo));
-        }
-
-        [Test]
-        public void Shop_UsesLegacySeededOfferSelectionAndValidatesUnselectedCandidates()
-        {
-            var candidates = new[]
-            {
-                new ShopCandidateSpec(EntityKey.Unit_Akimbo, 5),
-                new ShopCandidateSpec(EntityKey.Unit_Sniper, 9)
-            };
-            Assert.That(CharacterShopRules.TryPlanOffers(candidates,
-                new[] { Sub(EntityKey.Unit_Akimbo), Sub(EntityKey.Unit_Sniper) }, 76514027,
-                out var offers), Is.True);
-            Assert.That(offers.Select(x => x.CharacterKey), Is.EqualTo(new[]
-            {
-                EntityKey.Unit_Akimbo, EntityKey.Unit_Sniper, EntityKey.Unit_Sniper
-            }));
-
-            Assert.That(CharacterShopRules.TryPlanOffers(candidates,
-                new[] { Sub(EntityKey.Unit_Akimbo), new CharacterDefinitionFacts(
-                    EntityKey.Unit_Sniper, UnitRole.Regular, UnitOwnerEligibility.EnemyOnly) }, 42,
-                out var invalid), Is.False);
-            Assert.That(invalid, Is.Null);
+            Assert.Throws<ArgumentException>(() => new StageDrawCandidate(default, EntityKey.Unit_Cowboy));
         }
 
         private static CharacterDefinitionFacts Sub(EntityKey key) =>
-            new(key, UnitRole.Regular, UnitOwnerEligibility.Both);
+            new(key, UnitRole.Regular, UnitOwnerEligibility.Both,
+                category: key == EntityKey.Unit_Cowboy || key == EntityKey.Unit_DynamiteHammer ? CategoryKey.Rider : CategoryKey.Cannon);
 
         private static StageDrawCandidate[] Candidates(int count) =>
             Enumerable.Range(1, count).Select(i => new StageDrawCandidate(
-                new CharacterInstanceId(i), EntityKey.Unit_Akimbo)).ToArray();
+                new CharacterInstanceId(i), EntityKey.Unit_Cowboy)).ToArray();
     }
 }

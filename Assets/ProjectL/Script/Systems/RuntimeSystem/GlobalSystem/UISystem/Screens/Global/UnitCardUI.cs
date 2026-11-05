@@ -1,27 +1,37 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using UnityEngine;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
-using ProjectL.Systems.ServiceKeys;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 {
     /// <summary>
     /// 덱 정보 카드의 데이터 조회입니다. Buffer·DB·보유 카드에서 값을 읽어 같은 오브젝트의 <see cref="UnitCardView"/>에 넘깁니다.
-    /// 표시(직렬화 참조·문구·패널)는 UnitCardView가 맡습니다(손패 카드화 설계 C1·C4).
+    /// 카드 표시는 UnitCardView, 공용 상세의 선택·개폐는 수신자가 맡습니다(손패 카드화 설계 C1·C4).
     /// </summary>
     [RequireComponent(typeof(UnitCardView))]
-    public class UnitCardUI : UIBase
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "UnitCardUI")]
+    public sealed class UnitCardUI : UIBase, IUIInputReceiver
     {
         private UnitCardView _view;
         private ICharacterBufferReadSink _characters;
+        private ICombatStateBufferReadSink _combat;
+        private bool _displayedDeployment;
+        private OwnedCharacterStatsReader _ownedStats;
+        private OwnedCharacterStatsSnapshot _displayedStats;
+        private IUIRuntimeFaultHandler _faults;
         private IUnitVisualTableQuery _unitVisuals;
         private ITraitVisualTableQuery _traitVisuals;
         private EntityId _entityId;
@@ -30,9 +40,22 @@ namespace ProjectL.Systems
         private bool _hasCharacter;
         private CharacterData _displayed;
         private int? _level;
-        private bool _subscribed;
+        private IUnitCardInfoReceiver _infoReceiver;
+        private UnitInfoContent _infoContent;
+        internal int DisplayRevision { get; private set; }
+
+        public UnitCardUI()
+        {
+            Policy = UIOpenPolicy.Parallel;
+        }
 
         public override UIId ID => UIId.UnitCard;
+
+        public override void BindUISystemService(IUISystemService service)
+        {
+            base.BindUISystemService(service);
+            _faults = service as IUIRuntimeFaultHandler;
+        }
         public EntityId CharacterId => _displayed?.EntityId ?? _entityId;
         public CharacterInstanceId OwnedCharacterId => _ownedId;
 
@@ -48,30 +71,51 @@ namespace ProjectL.Systems
                         throw new InvalidOperationException("[UnitCardUI] 같은 오브젝트에 UnitCardView가 필요합니다.");
                 }
 
-                if (!_subscribed)
-                {
-                    // 패널을 열기 직전에 최신 값으로 다시 그린다(분리 전 동작 유지).
-                    _view.PanelOpening += Refresh;
-                    _subscribed = true;
-                }
-
                 return _view;
             }
         }
 
-        private void OnEnable() => Refresh();
-
-        private void OnDestroy()
+        protected override void OnUIOpened()
         {
-            if (_subscribed && _view != null)
-                _view.PanelOpening -= Refresh;
+            _ownedStats?.Clear();
+            Refresh();
         }
+
+        protected override void OnUIHidden()
+        {
+            _infoReceiver?.Forget(this);
+            _ownedStats?.Clear();
+            _displayedStats = null;
+        }
+
+        internal void BindInfoReceiver(IUnitCardInfoReceiver receiver)
+        {
+            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
+            View.BindInfoInput(this);
+            if (!ReferenceEquals(_infoReceiver, receiver)) _infoReceiver?.Forget(this);
+            _infoReceiver = receiver;
+        }
+
+        void IUIInputReceiver.Click(int slot)
+        {
+            if (slot == 0 && isActiveAndEnabled && View.HasContent) RequireInfoReceiver().Toggle(this);
+        }
+
+        void IUIInputReceiver.HoverEnter(int slot) { }
+        void IUIInputReceiver.HoverExit(int slot) { }
+
+        private IUnitCardInfoReceiver RequireInfoReceiver() => _infoReceiver ??
+            throw new InvalidOperationException($"[UnitCardUI] UIId.UnitCard, '{name}': 공용 상세 입력 바인딩이 필요합니다.");
 
         public override void BindUIService(ISystemServiceStoreReader resolver)
         {
             if (resolver == null) throw new ArgumentNullException(nameof(resolver));
-            _characters = resolver.GetService(BufferSystemKey.Buffer).CharacterReadSink;
-            Refresh();
+            var buffer = resolver.GetService(BufferSystemKey.Buffer);
+            _characters = buffer.CharacterReadSink;
+            _combat = buffer.CombatStateReadSink;
+            _ownedStats = new OwnedCharacterStatsReader(_characters, buffer.CombatStateReadSink,
+                buffer.CharacterStatsReadSink, buffer.RunDeckReadSink, _faults, buffer.CharacterStatsRequestSink);
+            InvalidateDisplay();
         }
 
         public override void GetUIData(IServiceModule query)
@@ -79,36 +123,51 @@ namespace ProjectL.Systems
             if (query == null) throw new ArgumentNullException(nameof(query));
             _unitVisuals = (query as IHasViewQuery)?.ViewQuery.UnitVisualTableQuery;
             _traitVisuals = (query as IHasViewQuery)?.ViewQuery.TraitVisualTableQuery;
-            Refresh();
+            InvalidateDisplay();
+        }
+
+        private void InvalidateDisplay()
+        {
+            // 초기화 단계에서는 상대 서비스의 준비를 가정해 조회하지 않는다.
+            _displayed = null;
+            _displayedOwned = null;
+            _displayedStats = null;
+            DisplayRevision++;
+            _infoContent = null;
+            _infoReceiver?.Forget(this);
+            View.Clear();
         }
 
         /// <summary>전투 EntityId로 Buffer를 조회합니다. Level 데이터가 없으면 '-'로 표시합니다.</summary>
         public void SetCharacter(EntityId id, int? level = null)
         {
             ValidateLevel(level);
+            if (_entityId != id || !_ownedId.IsEmpty) View.Clear();
             _entityId = id;
             _ownedId = CharacterInstanceId.Empty;
             _level = level;
-            ClosePanels();
+            _infoReceiver?.Forget(this);
             Refresh();
         }
 
-        /// <summary>덱의 보유 ID로 Buffer를 조회합니다. 전투 조회값이 없으면 능력치를 비웁니다.</summary>
+        /// <summary>덱의 보유 ID로 조회합니다. 비전투에서는 배치 전 기준 능력치를 표시합니다.</summary>
         public void SetOwnedCharacter(CharacterInstanceId id, int? level = null)
         {
             ValidateLevel(level);
+            if (_ownedId != id || !_entityId.IsEmpty) View.Clear();
             _ownedId = id;
             _entityId = EntityId.Empty;
             _level = level;
-            ClosePanels();
+            _infoReceiver?.Forget(this);
             Refresh();
         }
 
         public void SetLevel(int? level)
         {
             ValidateLevel(level);
+            if (_level == level) return;
             _level = level;
-            View.SetLevel(_level);
+            Refresh();
         }
 
         private static void ValidateLevel(int? level)
@@ -118,14 +177,16 @@ namespace ProjectL.Systems
 
         public override void Open()
         {
-            gameObject.SetActive(true);
+            base.Open();
             Refresh();
         }
 
         public override void Hide()
         {
-            ClosePanels();
-            gameObject.SetActive(false);
+            _ownedStats?.Clear();
+            _displayedStats = null;
+            _infoReceiver?.Forget(this);
+            base.Hide();
         }
 
         private CharacterData ReadCharacter()
@@ -146,22 +207,35 @@ namespace ProjectL.Systems
                 ? owned : null;
         }
 
-        private void Update()
+        private void Update() => RefreshIfChanged();
+
+        private void RefreshIfChanged()
         {
-            // Buffer는 불변 조회값을 교체한다. 변경된 경우에만 텍스트와 이미지를 갱신한다.
+            // 패널 입력도 같은 변경 검사를 사용해, 바뀌지 않은 특성 배열·문자열을 포인터 입력마다 만들지 않습니다.
             var owned = ReadOwned();
-            if (!ReferenceEquals(_displayed, ReadCharacter()) ||
+            bool statsChanged = !_ownedId.IsEmpty && (_ownedStats?.Refresh() ?? false);
+            if (statsChanged || _displayedDeployment != IsDeployment || !ReferenceEquals(_displayed, ReadCharacter()) ||
                 !ReferenceEquals(_displayedOwned, owned)) Refresh();
         }
+
+        private bool IsDeployment => _combat?.Current != null &&
+            _combat.Current.CommandState.Turn.StagePhase == StagePhase.Deployment;
 
         public void Refresh()
         {
             UnitCardView view = View;
+            DisplayRevision++;
+            _displayedDeployment = IsDeployment;
             _displayed = ReadCharacter();
             _displayedOwned = ReadOwned();
+            if (!_ownedId.IsEmpty) _ownedStats?.Refresh();
+            if (_ownedStats?.IsFaulted == true) return;
+            _displayedStats = _ownedStats?.Find(_ownedId);
+            if (!_ownedId.IsEmpty && _displayedOwned == null) _ownedId = CharacterInstanceId.Empty;
             _hasCharacter = _displayed != null || _displayedOwned != null;
             if (!_hasCharacter)
             {
+                _infoContent = null;
                 view.Clear();
                 return;
             }
@@ -175,42 +249,74 @@ namespace ProjectL.Systems
                 fallbackName = unitVisual.DisplayName;
                 image = unitVisual.InfoIcon;
             }
-            view.ShowCharacter(key, fallbackName, image, _level);
+            int? characterLevel = character?.ToFacts().Experience.EnemyLevel;
+            if (character?.OwnedId is CharacterInstanceId ownedId &&
+                _characters.TryGetOwned(ownedId, out var ownedCharacter))
+                characterLevel = ownedCharacter.Level;
+            int? level = _level ?? _displayedStats?.Level ?? _displayedOwned?.Level ?? characterLevel;
+            view.ShowCharacter(key, fallbackName, image, level);
             if (character != null)
             {
-                view.ShowDetails(character);
+                view.ShowDeckDetails(level, character.Health.CurrentHealth, character.Health.MaxHealth, character.EffectivePhysicalDefense,
+                    character.EffectiveAttackPower);
+            }
+            else if (_displayedStats != null)
+            {
+                var stats = _displayedStats.Stats;
+                view.ShowDeckDetails(level, stats.CurrentHealth, stats.MaxHealth, stats.PhysicalDefense,
+                    stats.AttackPower);
             }
             else view.ClearDetails();
-            SetPanelContent(key);
+            view.SetDead(character != null && character.Health.IsDead);
+            view.SetDeployed(_displayedDeployment && character != null && character.Area == CharacterRuntimeArea.Field);
+            _infoContent = CreateInfoContent();
         }
 
-        private void SetPanelContent(EntityKey key)
+        /// <summary>같은 조회 캐시에서 상세 표시값만 만듭니다. 특성 문자열은 상세 갱신 때만 생성합니다.</summary>
+        internal UnitInfoContent ReadInfoContent()
         {
-            string names = string.Empty;
-            string descriptions = string.Empty;
-            Sprite icon = null;
-            if (_displayed != null && _traitVisuals != null)
-            {
-                foreach (var trait in _displayed.Stats.TraitStatuses.Span)
-                {
-                    if (!_traitVisuals.TryGetTraitVisual(trait.Key, out var traitVisual)) continue;
-                    // 현재 패널은 아이콘 하나를 사용한다. 여러 특성은 이름과 설명을 순서대로 표시한다.
-                    if (names.Length == 0) icon = traitVisual.Icon;
-                    names += (names.Length == 0 ? string.Empty : "\n") + traitVisual.DisplayName;
-                    string description = traitVisual.Description.Replace("\\n", "\n");
-                    descriptions += (descriptions.Length == 0 ? string.Empty : "\n\n") + description;
-                }
-            }
-            View.ShowPanelContent(key, icon, names, descriptions);
+            RefreshIfChanged();
+            return _ownedStats?.IsFaulted == true ? null : _infoContent;
         }
 
-        public void HoverSynergyEnter() => View.HoverSynergyEnter();
-        public void HoverSynergyExit() => View.HoverSynergyExit();
-        public void HoverFunctionEnter() => View.HoverFunctionEnter();
-        public void HoverFunctionExit() => View.HoverFunctionExit();
-        public void ToggleSynergyPanel() => View.ToggleSynergyPanel();
-        public void ToggleFunctionPanel() => View.ToggleFunctionPanel();
-
-        public void ClosePanels() => View.ClosePanels();
+        private UnitInfoContent CreateInfoContent()
+        {
+            if (!_hasCharacter || _ownedStats?.IsFaulted == true) return null;
+            CharacterData character = _displayed;
+            EntityKey key = character?.CharacterKey ?? _displayedOwned.CharacterKey;
+            string displayName = null;
+            Sprite portrait = null;
+            if (_unitVisuals != null && _unitVisuals.TryGetUnitVisual(key, out var visual))
+            {
+                displayName = visual.DisplayName;
+                portrait = visual.InfoIcon;
+            }
+            int? characterLevel = character?.ToFacts().Experience.EnemyLevel;
+            if (character?.OwnedId is CharacterInstanceId id && _characters.TryGetOwned(id, out var owned))
+                characterLevel = owned.Level;
+            int? level = _level ?? _displayedStats?.Level ?? _displayedOwned?.Level ?? characterLevel;
+            UnitCardTraitContent[] traits;
+            if (character != null)
+            {
+                CombatStateData combat = _combat?.Current ?? throw new InvalidOperationException(
+                    $"[UnitCardUI] 전투 개체 {character.EntityId}의 특성 설정을 읽을 전투 상태가 없습니다.");
+                var facts = character.ToFacts();
+                traits = UnitCardTraitContent.Create(_traitVisuals, facts.Stats.TraitStatuses.Span,
+                    combat.TraitSettings.For(facts));
+            }
+            else
+            {
+                traits = UnitCardTraitContent.Create(_traitVisuals, _displayedStats);
+            }
+            var baseline = _displayedStats?.Stats;
+            return new UnitInfoContent(
+                (character?.Stats.Category?.Key ?? baseline?.CombatCategoryKey)?.ToString() ?? "-",
+                View.ResolveDisplayName(key, displayName), portrait, level,
+                character?.Health.CurrentHealth ?? baseline?.CurrentHealth,
+                character?.EffectiveAttackPower ?? baseline?.AttackPower,
+                character?.EffectivePhysicalDefense ?? baseline?.PhysicalDefense,
+                character?.Stats.MoveRange ?? baseline?.MoveRange,
+                character?.Stats.AttackRange ?? baseline?.AttackRange, traits);
+        }
     }
 }

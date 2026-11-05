@@ -16,6 +16,16 @@ namespace ProjectL.Tests.Core
 {
     public sealed class ArtifactSoulBufferCalculationTests
     {
+        [Test]
+        public void DeferredSoulSpawnAndCountdown_PreserveExistingFieldAndIds()
+        {
+            var field = Field(1);
+            var calculator = TwoAltars();
+            var result = calculator.PlanDeaths(field, new[] { DeathAt(2, new CellCoord(3, 1)) }, true);
+            Assert.That(result.Final, Is.SameAs(field));
+            Assert.That(calculator.PlanCountdown(field).Final, Is.SameAs(field));
+        }
+
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(5)]
@@ -93,31 +103,30 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Field.Final.Entries.Count, Is.EqualTo(2));
         }
 
-        [Test]
-        public void SoulCollection_HappensOnCommittedMovement()
+        [TestCase(UnitActionUse.Available)]
+        [TestCase(UnitActionUse.Moved)]
+        [TestCase(UnitActionUse.Attacked)]
+        public void SoulCollection_PreservesActionEligibility(UnitActionUse actionUse)
         {
             var calculator = EmptyCalculator();
-            Assert.Throws<InvalidOperationException>(() =>
-                calculator.Collect(Input(Facts(0, pending: 1), 0), Field(1), true));
-            var facts = Facts(0);
+            var facts = Facts(0, actionUse: actionUse);
             var result = calculator.Collect(Input(facts, 0), Field(1), true);
             var final = result.Characters.Characters.Single().Final;
-            Assert.That(final.PendingMoveActionCost, Is.Zero);
-            Assert.That(final.MovementCheckpointAnchor, Is.EqualTo(facts.Anchor.Value));
-            Assert.That(final.Stats.CurrentActionCost, Is.EqualTo(facts.Stats.CurrentActionCost));
+            Assert.That(final.Anchor, Is.EqualTo(facts.Anchor));
+            Assert.That(final.ActionUse, Is.EqualTo(actionUse));
+            Assert.That(result.ConsumedSoulIds.Count, Is.EqualTo(2));
         }
 
         [Test]
-        public void ForcedArrival_PreservesExistingMovementAccounting()
+        public void ForcedArrival_PreservesSpentAction()
         {
-            var facts = Facts(0, pending: 1);
+            var facts = Facts(0, actionUse: UnitActionUse.Moved);
             var input = new SoulCollectorInput(facts,
                 new OwnedCharacterRecord(facts.OwnedId.Value, facts.CharacterKey, CharacterOwnershipRole.Sub),
                 0, 10, arrivalKind: SoulArrivalKind.Forced);
             var final = EmptyCalculator().Collect(input, Field(1), true)
                 .Characters.Characters.Single().Final;
-            Assert.That(final.PendingMoveActionCost, Is.EqualTo(1));
-            Assert.That(final.Stats.CurrentActionCost, Is.EqualTo(facts.Stats.CurrentActionCost));
+            Assert.That(final.ActionUse, Is.EqualTo(UnitActionUse.Moved));
         }
 
         [Test]
@@ -131,27 +140,6 @@ namespace ProjectL.Tests.Core
                 new SoulCollectorInput(Facts(0, baseHealth: int.MaxValue),
                     new OwnedCharacterRecord(facts.OwnedId.Value, facts.CharacterKey,
                         CharacterOwnershipRole.Sub), 0, int.MaxValue), Field(1), true));
-        }
-
-        [TestCase(true, Owner.Enemy, 1)]
-        [TestCase(false, Owner.Enemy, 0)]
-        [TestCase(true, Owner.Player, 0)]
-        public void SpawnAndExpiry_UseDeathFactsAndKeepFiveTurnLifetime(bool night, Owner owner, int count)
-        {
-            var effect = ArtifactSoulSchemaTests.SoulEffect();
-            var calculator = new SoulEffectCalculator(new ArtifactLoadoutSnapshot(1,
-                new[] { new ArtifactPlacedEffectSnapshot(11, 4, effect) }));
-            var alive = Facts(0, owner: owner);
-            var dead = Facts(0, dead: true, owner: owner);
-            var result = calculator.PlanDeaths(SoulFieldSnapshot.Empty,
-                new[] { new SoulDeathFacts(new CharacterStateChange(alive, dead), dead.Anchor.Value) }, night, false);
-            Assert.That(result.Final.Entries.Count, Is.EqualTo(count));
-            if (count == 0) return;
-            Assert.That(result.Final.Entries.Single().RemainingUnitTurns, Is.EqualTo(5));
-            SoulFieldSnapshot field = result.Final;
-            for (int i = 0; i < 5; i++) field = calculator.PlanCountdown(field).Final;
-            Assert.That(field.Entries, Is.Empty);
-            Assert.That(field.NextSoulId, Is.EqualTo(2));
         }
 
         [Test]
@@ -174,21 +162,6 @@ namespace ProjectL.Tests.Core
             var enemy = Facts(0, owner: Owner.Enemy);
             Assert.That(EmptyCalculator().EvaluateAttackPower(enemy, int.MaxValue, new[] { enemy }),
                 Is.EqualTo(5));
-        }
-
-        [Test]
-        public void TurnEnd_SpawnsBeforeCountdown_AndDisplacedDeathKeepsItsActualAnchor()
-        {
-            var calculator = new SoulEffectCalculator(new ArtifactLoadoutSnapshot(1,
-                new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
-            var before = Facts(0, owner: Owner.Enemy);
-            var dead = new CharacterCombatFacts(before.EntityId, null, before.CharacterKey, Owner.Enemy,
-                null, CharacterRuntimeArea.Excluded, new HealthStateSnapshot(0, 10), before.Stats,
-                null, null, null, Array.Empty<CellCoord>(), before.MovementCheckpointAnchor, 0, 0);
-            var result = calculator.PlanDeaths(SoulFieldSnapshot.Empty,
-                new[] { new SoulDeathFacts(new CharacterStateChange(before, dead), new CellCoord(3, 1)) }, true, true);
-            Assert.That(result.Final.Entries.Single().Cell, Is.EqualTo(new CellCoord(3, 1)));
-            Assert.That(result.Final.Entries.Single().RemainingUnitTurns, Is.EqualTo(4));
         }
 
         [Test]
@@ -227,6 +200,18 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
+        public void Collection_PreservesBattleEarnedExperience()
+        {
+            // 영혼 수집도 전투 사실을 다시 만드는 사본 경로다. 이번 전투 획득 경험치를 잃으면 안 된다(경험치 설계 §4.3).
+            var collector = CharacterExperienceFactsTests.With(Facts(count: 3), CharacterExperienceFacts.ForAlly(7));
+
+            var final = EmptyCalculator().Collect(Input(collector, 3), Field(0), true).Characters.Characters.Single().Final;
+
+            Assert.That(final, Is.Not.SameAs(collector));
+            Assert.That(final.Experience.Earned, Is.EqualTo(7));
+        }
+
+        [Test]
         public void Collection_SecondSoulOverflowLeavesWholeInputUnchanged()
         {
             var facts = Facts(0, baseHealth: int.MaxValue - 1);
@@ -236,66 +221,9 @@ namespace ProjectL.Tests.Core
                     facts.CharacterKey, CharacterOwnershipRole.Sub), 0, int.MaxValue - 1), field, true));
             Assert.That(facts.Health, Is.EqualTo(new HealthStateSnapshot(9, int.MaxValue - 1)));
             Assert.That(facts.Stats.SoulAttackBonus, Is.Zero);
-            Assert.That(facts.Stats.CurrentActionCost, Is.EqualTo(2));
+            Assert.That(facts.ActionUse, Is.EqualTo(UnitActionUse.Available));
             Assert.That(field.Entries.Select(s => s.Id), Is.EqualTo(new long[] { 1, 2 }));
             Assert.That(field.NextSoulId, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void Deaths_OrderEntityThenOrigin_AndRepeatedCalculationDoesNotAllocateLiveIds()
-        {
-            var calculator = TwoAltars();
-            var first = DeathAt(2, new CellCoord(3, 1));
-            var second = DeathAt(3, new CellCoord(4, 1));
-            var source = new SoulFieldSnapshot(7, Array.Empty<SoulFieldFacts>());
-            var result = calculator.PlanDeaths(source, new[] { second, first }, true, false);
-            var repeated = calculator.PlanDeaths(source, new[] { first, second }, true, false);
-            Assert.That(result.Final.Entries.Select(s => s.Id), Is.EqualTo(new long[] { 7, 8, 9, 10 }));
-            Assert.That(result.Final.Entries.Select(s => s.Cell), Is.EqualTo(new[]
-                { new CellCoord(3, 1), new CellCoord(3, 1), new CellCoord(4, 1), new CellCoord(4, 1) }));
-            Assert.That(result.Final.Entries.Select(s => s.Origin.OwnerInstanceId),
-                Is.EqualTo(new[] { 4, 5, 4, 5 }));
-            Assert.That(result.Final.Entries.Select(s => s.RemainingUnitTurns), Is.All.EqualTo(5));
-            Assert.That(result.Final.NextSoulId, Is.EqualTo(11));
-            Assert.That(repeated.Final.SameValues(result.Final), Is.True);
-            Assert.That(source.Entries, Is.Empty);
-            Assert.That(source.NextSoulId, Is.EqualTo(7));
-        }
-
-        [Test]
-        public void Deaths_DuplicateFactOrLateIdOverflowCannotPublishPartialSpawns()
-        {
-            var first = DeathAt(2, new CellCoord(3, 1));
-            var second = DeathAt(3, new CellCoord(4, 1));
-            var source = new SoulFieldSnapshot(long.MaxValue - 2, Array.Empty<SoulFieldFacts>());
-            Assert.Throws<ArgumentException>(() => TwoAltars().PlanDeaths(source,
-                new[] { first, first }, true, false));
-            Assert.Throws<OverflowException>(() => TwoAltars().PlanDeaths(source,
-                new[] { first, second }, true, false));
-            Assert.That(source.Entries, Is.Empty);
-            Assert.That(source.NextSoulId, Is.EqualTo(long.MaxValue - 2));
-        }
-
-        [Test]
-        public void Countdown_RemovesExpiringSoulOnce_AndPreservesIdsOriginHealAndInput()
-        {
-            var origin = new EffectOriginKey(EffectOwnerKind.Artifact, 4, 11, "soul");
-            var source = new SoulFieldSnapshot(3, new[]
-            {
-                new SoulFieldFacts(1, origin, CellCoord.Zero, 1, 3),
-                new SoulFieldFacts(2, origin, CellCoord.Right, 5, 7)
-            });
-            var result = EmptyCalculator().PlanCountdown(source);
-            var living = result.Final.Entries.Single();
-            Assert.That(living.Id, Is.EqualTo(2));
-            Assert.That(living.RemainingUnitTurns, Is.EqualTo(4));
-            Assert.That(living.Origin, Is.EqualTo(origin));
-            Assert.That(living.Cell, Is.EqualTo(CellCoord.Right));
-            Assert.That(living.HealAmount, Is.EqualTo(7));
-            Assert.That(result.Final.NextSoulId, Is.EqualTo(3));
-            Assert.That(source.Entries.Select(s => s.RemainingUnitTurns), Is.EqualTo(new[] { 1, 5 }));
-            Assert.Throws<NotSupportedException>(() =>
-                ((System.Collections.Generic.IList<SoulFieldFacts>)result.Final.Entries).Clear());
         }
 
         [Test]
@@ -305,7 +233,7 @@ namespace ProjectL.Tests.Core
             var reserveSource = Facts(0, owner: Owner.Enemy, entityId: 5);
             var reserve = new CharacterCombatFacts(reserveSource.EntityId, null, reserveSource.CharacterKey,
                 Owner.Enemy, null, CharacterRuntimeArea.Excluded, reserveSource.Health, reserveSource.Stats,
-                null, null, null, Array.Empty<CellCoord>(), reserveSource.MovementCheckpointAnchor, 0, 0);
+                null, null, null, Array.Empty<CellCoord>(), reserveSource.ActionUse);
             var characters = new[] { Facts(0, owner: Owner.Enemy, dead: true, entityId: 4), reserve,
                 Facts(0, owner: Owner.Enemy, entityId: 3), actor, Facts(0, owner: Owner.Enemy) };
             var calculator = new SoulEffectCalculator(new ArtifactLoadoutSnapshot(0, new[]
@@ -324,7 +252,7 @@ namespace ProjectL.Tests.Core
                 new[] { maximum, Facts(0, owner: Owner.Enemy), Facts(0, owner: Owner.Enemy, entityId: 3) }));
             Assert.That(maximum.Health, Is.EqualTo(new HealthStateSnapshot(9, 10)));
             Assert.That(maximum.Stats.AttackPower, Is.EqualTo(int.MaxValue));
-            Assert.That(maximum.Stats.CurrentActionCost, Is.EqualTo(2));
+            Assert.That(maximum.ActionUse, Is.EqualTo(UnitActionUse.Available));
         }
 
         private static SoulDeathFacts DeathAt(int entityId, CellCoord anchor)
@@ -332,7 +260,7 @@ namespace ProjectL.Tests.Core
             var before = Facts(0, owner: Owner.Enemy, entityId: entityId);
             var dead = new CharacterCombatFacts(before.EntityId, null, before.CharacterKey, Owner.Enemy,
                 null, CharacterRuntimeArea.Excluded, new HealthStateSnapshot(0, 10), before.Stats,
-                null, null, null, Array.Empty<CellCoord>(), before.MovementCheckpointAnchor, 0, 0);
+                null, null, null, Array.Empty<CellCoord>(), before.ActionUse);
             return new SoulDeathFacts(new CharacterStateChange(before, dead), anchor);
         }
 
@@ -359,18 +287,16 @@ namespace ProjectL.Tests.Core
         });
 
         private static CharacterCombatFacts Facts(int count, int temporaryAttack = 0,
-            bool dead = false, int pending = 0, Owner owner = Owner.Player, int entityId = 1,
+            bool dead = false, UnitActionUse actionUse = UnitActionUse.Available, Owner owner = Owner.Player, int entityId = 1,
             int baseHealth = 10, int attack = 5)
         {
             var cell = new CellCoord(2, 1);
-            var stats = new UnitStatsSnapshot(MoveMethod.LiftAndPlace, 3, 1, 3, attack, 0, 4, 1, 2, 2, 1, 1, Array.Empty<TraitStatusSnapshot>(),
-                CategorySnapshot.CreateStateless(CategoryKey.Base), count + temporaryAttack,
-                attack + count + temporaryAttack, count, count);
+            var stats = new UnitStatsSnapshot(MoveMethod.LiftAndPlace,3,3,attack,0,1,Array.Empty<TraitStatusSnapshot>(),                CategorySnapshot.CreateStateless(CategoryKey.Main),count + temporaryAttack,                attack + count + temporaryAttack,count,count);
             return new CharacterCombatFacts(new EntityId(owner == Owner.Enemy && entityId == 1 ? 2 : entityId),
                 owner == Owner.Player ? new CharacterInstanceId(1) : (CharacterInstanceId?)null,
                 EntityKey.Unit_Akimbo, owner, owner == Owner.Player ? CharacterOwnershipRole.Sub : (CharacterOwnershipRole?)null,
                 CharacterRuntimeArea.Field, new HealthStateSnapshot(dead ? 0 : 9, baseHealth + count), stats,
-                null, cell, Rotation4.R0, new[] { cell }, cell, 1, pending, temporaryAttack);
+                null, cell, Rotation4.R0, new[] { cell }, actionUse, temporaryAttack);
         }
     }
 }

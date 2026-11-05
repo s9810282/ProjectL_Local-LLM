@@ -3,10 +3,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Transitions;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules
 {
-    internal interface IAttackCostModifier
-    {
-        AttackCostContribution EvaluateAttackCost(in AttackCostTraitContext context);
-    }
+
 
     internal interface IAttackDamageModifier
     {

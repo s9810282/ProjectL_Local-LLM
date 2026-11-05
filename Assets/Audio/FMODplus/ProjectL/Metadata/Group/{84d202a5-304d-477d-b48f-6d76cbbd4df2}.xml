@@ -4,9 +4,6 @@
 		<property name="name">
 			<value>UI</value>
 		</property>
-		<relationship name="masters">
-			<destination>{21f789db-de75-4e19-b7d2-336f61f0976d}</destination>
-		</relationship>
 		<relationship name="effectChain">
 			<destination>{bda993a5-375e-4a1e-9674-c28ac6b39c33}</destination>
 		</relationship>

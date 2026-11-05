@@ -22,7 +22,7 @@
 
 이는 **작업 담당 분리**다. Plan·Job 코드는 기존 Systems 실행 계층에 두며, View 표현 코드에 전투 규칙이나 게임 상태 쓰기를 옮기지 않는다. 한 번의 처리에 필요한 계산·검증·상태 반영·결과 기록은 Core 처리 서비스의 동기 호출 안에서 끝낸다.
 
-Core는 앞으로 전투 Plan·Job을 별도로 확장하거나 중복 구현하지 않는다. 기존 Core 이전 계획의 Global Constraints와 Task 8에 적힌 전투 Plan·Job 담당은 이 결정으로 변경한다. Task 4의 완료 이력은 유지한다. **2026-09-30 후속 정리:** [Core 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md)에 담당 변경과 G2, F3 선행 Task 4A, 종료·조회·통합 검증을 반영했다. 구현이나 병합 완료를 뜻하지 않는다. 이 답변은 Stage 등 다른 구간의 모든 Plan·Job 담당을 일괄 변경하는 결정은 아니다.
+Core는 앞으로 전투 Plan·Job을 별도로 확장하거나 중복 구현하지 않는다. 기존 Core 이전 계획의 Global Constraints와 Task 8에 적힌 전투 Plan·Job 담당은 이 결정으로 변경한다. Task 4의 완료 이력은 유지한다. **2026-09-30 후속 정리:** Core 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)에 담당 변경과 G2, F3 선행 Task 4A, 종료·조회·통합 검증을 반영했다. 구현이나 병합 완료를 뜻하지 않는다. 이 답변은 Stage 등 다른 구간의 모든 Plan·Job 담당을 일괄 변경하는 결정은 아니다.
 
 ## 2. 병합과 Start 인계 — 요청 §3 답변
 

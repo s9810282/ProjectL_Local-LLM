@@ -1,0 +1,14 @@
+{
+    "name": "ProjectL.CombatField.Editor.Tests",
+    "rootNamespace": "ProjectL.CombatField.Editor.Tests",
+    "references": ["ProjectL.Systems", "ProjectL.Core.Contracts", "Framework", "Unity.TextMeshPro", "Unity.ugui"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

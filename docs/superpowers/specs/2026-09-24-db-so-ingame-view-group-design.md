@@ -380,7 +380,7 @@ StageMapViewConfig를 복구한다. 값은 인벤토리 §4.2와 같다.
 
 표시 계약 보완(2026-10-03):
 
-- `nodePrefab`의 직접 자식 `ClearedIndicator`에는 완료 표시용 Renderer를 둔다. 기존 `StageMapNode`에는 Collider가 없는 체크 모양의 자식으로 구성하며, 원본에서는 비활성화한다. 노드 표시 시 실제 스테이지(`StageKey != 0`)의 `IsClear`가 true일 때만 인스턴스에서 활성화한다. 클리어 여부의 별도 View 상태·DB 필드는 만들지 않는다(P6/P7). 선택·호버 강조 색과 완료 표시는 독립적이다.
+- `nodePrefab`의 직접 자식 `ClearedIndicator`에는 완료 표시용 Renderer를 둔다. 2026-10-11 사용자 승인으로 `StageMapNode`의 체크를 Collider 없는 중앙 수직 봉 하나로 바꿨으며, 원본에서는 비활성화한다. 실제 스테이지(`StageKey != 0`)의 `IsClear`가 true이고 현재 위치가 아닐 때 인스턴스에서 활성화한다. 현재 위치는 `CurrentProgress`에서 읽어 `CurrentMarkerAnchor` 아래 캡슐 하나로 표시하며, 종류별 외형과 완료 봉은 숨긴다. 떠난 뒤에만 완료 봉 또는 미클리어 외형을 복원한다. 클리어 여부의 별도 View 상태·DB 필드는 만들지 않는다(P6/P7). [현재 표시 계약](../viewDocs/stage-map-guide-Hojin.md#4-현재-위치와-클리어-표시)을 따른다.
 - `nodePrefab`의 직접 자식 `HitTarget`에는 피킹용 Collider를 두고, 그 Layer는 `nodeMask`에 포함한다(2026-10-04, 스테이지 선택 View 계획 4번). 피킹은 맞은 Collider에서 부모를 따라 노드 Root를 찾으므로 외형 프리팹의 Collider도 같은 노드로 판별된다.
 - `StageMapViewData.Validate`는 `ClearedIndicator`와 그 Renderer를 검사한다. 노드 프리팹을 교체할 때 이 자식 계약을 유지한다. SO·프리팹 원본의 상태를 런타임 표시 코드에서 수정하지 않는다.
 - `StageMapViewDisplay.Show`는 `Func<StageProgressData, GameObject>` 외형 조회 함수를 받는다. 호출자는 기존 `StageNodeVisualTable.TryGetNodeVisual`에 연결해 `(StageType, MapRole)`에 해당하는 `VisualPrefab`을 반환하며, 외형 미지정은 null을 반환한다. Display/NodeView에서 별도 외형 사전이나 중복 키 검사를 만들지 않는다. 시작 노드는 조회 함수를 호출하지 않고 `StartVisualPrefab`을 사용한다.

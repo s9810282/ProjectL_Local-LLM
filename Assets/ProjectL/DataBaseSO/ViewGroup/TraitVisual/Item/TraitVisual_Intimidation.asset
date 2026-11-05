@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_Intimidation
+  m_EditorClassIdentifier:
+  traitVisualData:
+    key: 110
+    displayName: "\uC704\uC555"
+    icon: {fileID: 21300000, guid: c28f5da82663b3b4ab3f4793980618b9, type: 3}
+    description: "공격한 적의 공격력을 {공격력감소율}% 감소시킵니다. \n대상의 다음 공격이 완료될 때까지 유지됩니다."
+    activations:
+    - kind: 160
+      cueTiming: 0
+      bodyText:
+        enabled: 0
+        textSource: 0
+        overrideText:
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 14
+          anchor: 1
+          delay: 0
+          point: 4
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

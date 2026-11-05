@@ -13,4 +13,19 @@ MonoBehaviour:
   m_Name: EffectDataTable
   m_EditorClassIdentifier: 
   databaseItems:
+  - {fileID: 11400000, guid: 76d5563f4dc44e11a97e7f27dca235c0, type: 2}
   - {fileID: 11400000, guid: d819bf7b9a8825b49b7fcc5107eb5e8b, type: 2}
+  - {fileID: 11400000, guid: 6b7bf301b2557404689830eeac80014a, type: 2}
+  - {fileID: 11400000, guid: e3d3db4547794c04b99d75b7966cf1bf, type: 2}
+  - {fileID: 11400000, guid: 239ecc1a371637b45b6c04e6aa2b72aa, type: 2}
+  - {fileID: 11400000, guid: 0d51bf4beca71a443b09896939a2beab, type: 2}
+  - {fileID: 11400000, guid: bd31f4e1423a40f46bca25e760a5cbbd, type: 2}
+  - {fileID: 11400000, guid: f470e4f65220bdb4d9bd2b6d1892c7e3, type: 2}
+  - {fileID: 11400000, guid: df4d7fc4c1354514b9c10ab632b39025, type: 2}
+  - {fileID: 11400000, guid: 9239a5354da650d48b2fc9794a716343, type: 2}
+  - {fileID: 11400000, guid: 6652dbf4372bed945bcc23d5e7328a95, type: 2}
+  - {fileID: 11400000, guid: 2b92f6b5418aefc498f7d6f00d923a98, type: 2}
+  - {fileID: 11400000, guid: c12ddba5d03ac254182b1c1000987ebd, type: 2}
+  - {fileID: 11400000, guid: ca697b58d90f4c14addfe39398bdb0d2, type: 2}
+  - {fileID: 11400000, guid: 3c260953a06840aab7e589f7718e9e9d, type: 2}
+  - {fileID: 11400000, guid: a83e5bcf29785fd4a88570571f008c3e, type: 2}

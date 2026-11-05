@@ -1,5 +1,25 @@
 # 필드 격자 아웃라인 표시 모드 설계 (2026-10-09)
 
+> 2026-11-02 사용자 요청: 기본 강조(깊이 0)는 기존 `cellOutlineStyle`, 겹친 강조(깊이 1 이상)는 새 `overlapCellOutlineStyle`로 Merged/EachCell을 따로 고른다. 테두리·채움·호버와 아래 채움의 구멍은 해당 깊이의 같은 방식을 따른다. 크기·축소·모서리 식은 유지한다. 설계는 [기본·겹침 강조 방식 분리](2026-11-02-field-outline-style-and-independent-impact-design.md), 구현 상태는 [OS1 계획](../plans/2026-11-02-field-outline-style-and-independent-impact-plan.md)이다.
+
+> 같은 날 후속 요청: 호버 공격 범위에만 적용했던 전체 깊이 통일을 모든 채우는 강조로 넓힌다. 일부 칸이 아래 종류와 겹치면 같은 종류의 나머지 칸도 같은 깊이·크기·겹침 방식을 따른다. 빈 깊이는 건너 실제 위 종류 모양만큼 아래 채움을 비운다. [후속 설계 §1.1](2026-11-02-field-outline-style-and-independent-impact-design.md#11-후속-결정--모든-채움-강조의-깊이-통일-os1b), 구현 기록은 같은 계획 OS1b다.
+
+> 2026-10-12 후속 설계 승인: 아래 U3·§5의 **레일 숨김 정책은 [Railway View 설계](2026-10-12-railway-view-design.md)의 상시 표시 정책으로 변경**한다. [RW1](../plans/2026-10-12-railway-view-plan.md) 코드 반영 완료·Unity 확인 대기다. 다른 구역·데칼·호버 조건은 유지한다. 아래 내용은 기존 격자 모드 구현의 기준과 이력이다.
+
+> 2026-10-20 사용자 결정("바닥 데칼 상시 표시하게 해줘"): 아래 U4·U8·F5의 **격자 Decal 켜는 조건은 "표시기가 구성된 동안 늘 켬"으로 바뀐다.** 끄는 것은 표시 해제(`FieldOutlineRenderer.Release`)뿐이다. "행동 중"(`FieldHighlightState.IsActing`)은 이제 층 테두리·호버·칸 채우기만 정한다. 2026-10-19 사용자가 넣은 임시 우회(`SetDecalVisible`의 `return;`)를 `ShowDecal` 하나로 정리했다. 구역·호버·층 조건은 그대로다.
+
+> 2026-10-28 사용자 요청("GridOutline에 bool 값을 통한 키고 낌"): `StageFieldViewData.showGridDecal`(기본 켬)로 **바닥 격자 Decal만** 켜고 끈다. 끄면 표시기는 Decal을 만들지도 켜지도 않고, 격자 Decal 값 넷(`gridLineWidth`·`gridDecalMaterial`·`gridDecalDepth`·`gridDecalRenderingLayer`)은 쓰지도 검사하지도 않는다(검사 원본 `ValidateGridDecal`). 칸 아웃라인·채우기·칸 간격은 그대로다. 값은 표시기를 만들 때 읽으므로 다음 Combat 진입부터 적용된다.
+
+> 2026-10-29 사용자 요청("StageFieldView_Default의 값을 기본 데칼·점선 테두리·이동 경로가 공유 — 구분 필요"): 이동 경로선이 칸 테두리 두께·높이(`outlineThickness`·`outlineYOffset`)를 함께 쓰던 것을 나눠, 경로선은 새 값 `movementPathThickness`·`movementPathYOffset`(기본 0.06·0.02 = 옛 값, 화면 같음)을 쓴다. 칸 테두리·칸 채우기는 옛 두 값 그대로다. 격자 Decal은 원래 자기 값(선 두께·머티리얼·깊이·Rendering Layer)이었고, 칸 간격 `outlineCellSpacing`만 모두가 함께 쓴다 — 유닛 위치·클릭 판정도 따르는 격자 자체라 나누지 않는다(필드 이름은 SO 모드 도구가 문자열로 읽어 그대로). 인스펙터 묶음은 공통·격자 Decal·칸 테두리·이동 경로선으로 나눴다. 경로선 색은 그대로 Combat 씬 `FieldView.movementDraftColor`다.
+
+> 2026-10-29 사용자 요청("호버 및 테두리가 중첩되는 경우에 위에 것을 모서리가 둥근 사각형으로", 1단계 = 크기 먼저): 칸 채우기는 **칸 하나에 하나만이 아니라, 겹친 채우기를 아래부터 세어 k번째를 칸 크기 × `overlapInsetScale`^k(기본 0.7)로 칸 가운데에 그린다**(새 부품 `FieldCellFillStack`, 정렬 순서는 깊이마다 `FieldSortingOrders.Fill`, 칸 테두리 시작은 16). 순서는 배치 구역 → 채우는 층(층 표 순서) → 호버다. 1단계에서 테두리는 그대로다. 정책 원본은 [겹친 강조 안쪽 축소 설계](2026-10-29-combat-overlap-inset-enemy-move-range-design.md)(OI1~OI5).
+
+> 2026-10-29 사용자 요청("테두리 깎을 수 있게, Overlap이면 그리드 라인이 호버 메쉬 위에 딱 맞게", 그림 "다른 타일과 이어진 부분의 면은 그리지 않는다"): **겹친 칸 채우기는 같은 깊이·같은 종류 칸을 한 덩어리로 이어, 바깥 둘레만 칸 × (1 − `overlapInsetScale`^k) / 2만큼 안쪽으로 줄인 판**이다(칸마다 따로 줄이지 않음). 볼록 모서리만 `overlapCornerRadius`로 둥글고 오목 모서리는 직각, 아래 판은 위 판 모양만큼 비워 색이 섞이지 않는다(새 셰이더 `ProjectL/Combat/CellFill`이 깊이별 칸 지도로 깎음, `highlightFillMaterial` = `CellFill.mat`, 채우기 알파 = 색 알파 × `fillAlpha`). 그 층·호버 테두리는 겹친 칸을 덩어리에서 빼고 깊이마다 판과 같은 모양으로 그린다. 칸 테두리 덩어리의 볼록 모서리는 `outlineCornerRadius`(기본 0 = 직각)로 둥글게 한다(GlobalSystem 테두리 메시 선택 값 `cornerRadius`·`loopInset`, 사용자 허락). 정책 원본은 [겹친 강조 2단계 설계](2026-10-29-combat-overlap-rounded-inset-design.md) §8·§9.
+
+> 2026-10-29 사용자 요청("지금 모드 그대로 두고, 모든 그리드에 테두리 4방향을 다 치는 모드로도 하나"): View DB `cellOutlineStyle`(기본 `Merged` = 위 덩어리 테두리)을 `EachCell`로 바꾸면 **칸마다 네 변을 모두 그린다**. 칸 크기 `cellOutlineScale`이 1이고 모서리가 직각이면 맞닿은 변은 한 번만, 1보다 작거나 둥글면 칸마다 따로 그리고, 겹친 칸 판·테두리도 칸마다 따로다(둥근 네모는 밑 층 `outlineCornerRadius`·겹친 층 `overlapCornerRadius`). GlobalSystem 테두리 메시 선택 값 `eachCell`(사용자 허락). 정책 원본은 [겹친 강조 2단계 설계](2026-10-29-combat-overlap-rounded-inset-design.md) §10.
+
+> 2026-10-29 사용자 요청("경로를 화살표처럼, 프리팹이 아니라 선과 자연스럽게 이어지게"): 이동 경로는 더 `DrawPointLineSystem` 선 핸들로 그리지 않고, 새 부품 `FieldMovementPathLine`(Display/Field)이 MeshSystem·ColorSystem을 조합해 **띠 + 꺾인 칸의 직각 이음 + 끝 화살촉 하나**로 그린다(모양 규칙 원본 `FieldMovementPathShape`). 높이 구간 규칙(구간마다 다음 구간 첫 칸까지)·색(`movementDraftColor`)·다시 그리는 조건(칸·색이 바뀔 때)은 그대로다. 새 값은 `movementPathMaterial`(기본 경로 전용 `Prefabs/Combat/Materials/MovementPath.mat`)·`movementPathArrowLength`·`movementPathArrowWidth`·`movementPathArrowTipOffset`이다. 정책 원본은 [이동 경로 화살표 설계](2026-10-29-combat-movement-path-arrow-design.md)(MA1~MA7).
+
 - **목표:** 전투 필드 표시를 두 모드로 나눈다. 기존 **셀 프리팹 모드**는 그대로 두고, 새 **격자 아웃라인 모드**는 평소 필드에 아무것도 그리지 않다가 이동·공격 대상 지정·배치를 할 때만 격자 Decal과 AreaOutline으로 구역과 색을 보여 준다.
 - **상태:** 설계 확정(2026-10-09, F7·F8 추천안 승인), O1~O3 코드 반영(Unity 확인 대기). Task 계획·진행 기록은 View 계획 §7.62에만 적는다.
 - **사용자 결정(2026-10-09):**
@@ -50,7 +70,7 @@ FieldView (MonoBehaviour, 씬 참조·색 설정·집기)
 - **F8 셀 프리팹 모드의 Decal(U7 확정):** 셀 프리팹 모드는 2026-10-08 이전처럼 Decal을 쓰지 않는다. 격자 Decal은 아웃라인 모드 전용이 된다.
 - **F9 서비스 연결:** `CombatViewSystem.PostBindService`에서 `global.RenderServiceCommand.ViewGroup.AreaOutlineSystemServices`를 받아 지금 `IColorSystemService`처럼 `CombatSceneDisplay` → `FieldView.Build`로 넘긴다. 새 서비스·모듈 등록은 없다.
 - **F10 설정 검사:** `Validate`는 모드별로 한다. `CellPrefab`은 셀 프리팹 필수, `GridOutline`은 격자 Decal 머티리얼·칸 간격·선 두께·아웃라인 두께가 필수다.
-- **F11 회전:** Decal과 AreaOutline 모두 월드 XZ 기준이다. 필드 루트가 회전돼 있으면 아웃라인 모드는 경고 한 번 뒤 그리지 않는다(지금 Decal 규칙과 같다).
+- **F11 회전:** Decal과 AreaOutline 모두 월드 XZ 기준이다. 필드 루트가 회전돼 있으면 아웃라인 모드는 경고 한 번 뒤 그리지 않는다(지금 Decal 규칙과 같다). 2026-11-04 평가 C10-08(Q-N4 A): 경고 대신 설치 때 예외로 막는다(`FieldOutlineRenderer.Build`).
 
 ## 3. 바뀌는 파일
 

@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87eff134c9a4405195d5488bec77fb06, type: 3}
+  m_Name: RockfallVisualDataTable
+  m_EditorClassIdentifier:
+  databaseItems:
+  - {fileID: 11400000, guid: f55188259cf74e859e934e52c8b3ae71, type: 2}

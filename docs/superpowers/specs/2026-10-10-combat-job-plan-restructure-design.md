@@ -2,6 +2,10 @@
 
 - **목표:** 전투 진행의 "다음에 무엇을 할지" 판단을 `CombatPlan` 한 곳으로 모으고, Core 호출을 모두 전투 Job으로 옮긴다. `CombatLifeCycle`은 Job을 거는 **트리거**만 하며 Buffer·Core·View를 모른다. 제작자(민형님)의 원래 계획에 맞춘다.
 - **상태:** 설계 확정(2026-10-10, D1~D6 추천안 승인). 코드 변경 없음. Task·실행 기록은 [Task 계획](../plans/2026-10-10-combat-job-plan-restructure-plan.md)에만 적는다.
+- **대신함(2026-10-23~24, [골격 점검 설계](2026-10-23-combat-skeleton-check-design.md), 줄 번호는 HEAD 기준):**
+  - 10-22 개정의 "단계 Job을 Runner에 넘기고, Runner가 같은 Tick에 바로 이어 실행"(`:86`)과 "Runner가 같은 Tick에 이어서 실행"(`:117`)은 이제 `CombatNextJob`이 단계 Job을 자기 안에서 차례로 실행하는 것으로 읽는다(K-1, 2026-10-23).
+  - 진입 등록은 `RegisterCombatEntry(request)` 대신 진입 서비스가 `Register(JobRootType.Combat, JobType.Entry)`를 부르고, Plan이 진입 서비스의 `Current`를 읽는다(K-2). `MarkQueued`·`Fail`은 진입 서비스가 한다. 이 문서의 `RegisterCombatEntry` 언급(`:22`·`:143`·`:278`)은 이 뜻으로 읽는다(2026-10-23).
+  - 계약 스케치의 `ICombatProgressReader.ActiveCharacterCount`(`:252`)는 쓰는 곳이 없어 지웠다(K-5 d, 2026-10-24).
 - **사용자 결정(2026-10-10):**
   - U1. `CombatLifeCycle`은 Job을 실행시키는 트리거 역할만 한다. Buffer 등을 알 필요가 없다(제작자 계획).
   - U2. 전투 진행(진입·처리·이탈)을 Job·Plan으로 푼다. 판단 주인은 `CombatPlan` 하나다.
@@ -83,10 +87,13 @@ internal sealed class CombatLifeCycle : LifeCycleBase
 
 - `ISystemTick`(모듈 Tick)·`ICombatEntryService`·`ICombatExitService`·`ILifeCycleTransitionGuard` 구현과 서비스 Export를 없앤다. Flow·ExitSequence 조립도 없어진다.
 - Tick당 등록은 많아야 한 번이다. Runner는 다음 Tick에 실행한다(Tick 순서 Buffer → Global → InGame → LifeCycle, 골격 §2). 지금 Flow와 같은 속도다.
+- **2026-10-22 개정([개선 설계 §5.1](2026-10-22-combat-view-structure-improvement-design.md)):** 등록과 실행 사이에는 Global 그룹의 Job 앞 모듈(Render~UI)과 Unity 입력 콜백이 돌아 사실이 바뀔 수 있다. 그래서 `Next` 등록은 **할 일이 있는지만** 보고 `CombatNextJob` 하나를 건다. 무엇을 할지는 그 Job이 실행 순간 `CombatPlan.BuildStep`으로 정해 단계 Job을 Runner에 넘기고, Runner가 같은 Tick에 바로 이어 실행한다(그 사이 다른 모듈은 돌지 않는다). Job 재료는 그룹이 아니라 좁은 걸음 재료 `CombatStepContext`(사실 읽기·View 계약·진입·전환·Core 서비스 다섯)다. 등록과 실행 사이에 들어온 포기 요청도 실행 순간 판단에 들어가 이긴다(10-22 사용자 결정, K22 A5의 "등록된 명령 먼저"는 "실행 순간 처리 전인 명령은 처리하지 않음"으로 바뀜).
 
 ### J2. `CombatPlan.Decide` 판단표 (위에서부터 처음 맞는 줄 하나)
 
 `Decide(in CombatProgressFacts facts)`는 사실 묶음만 받아 다음 단계(종류 + 필요한 번호)를 돌려주는 순수 함수다. `Register`가 그 단계를 Job 목록으로 바꾼다.
+
+> **2026-10-22:** 0·4·6행은 [개선 설계 §4.4](2026-10-22-combat-view-structure-improvement-design.md)(Phase 1)로 바뀌었다 — 0행 삭제(전투 없음 판단은 승패 블록 뒤), 4행 = [정리 → (보스 승리면) 챕터 완료 → 완료 표시](전투가 있을 때만), 6행 = [전환(Run 결과로 정한 목적지)]. 단계를 Job 목록으로 바꾸는 것은 `BuildStep`(J1 개정)이다. 아래 표는 바뀌기 전 이력이며 지금 판단표의 원본은 코드 `CombatPlan.Decide`다.
 
 기호: S = Core 결과 순번, P = View 연출 확인 번호, H = Core 처리 명령 번호. "재생 중" = P < S ∨ View 재생·후처리 중.
 
@@ -98,7 +105,7 @@ internal sealed class CombatLifeCycle : LifeCycleBase
 | 3 | Completion 있음 ∧ View 미부착 | 없음(부착 대기) |
 | 4 | Completion 있음 ∧ 완료 표시 전 | [완료 표시 시작](J7) |
 | 5 | Completion 있음 ∧ 완료 표시 중 | 없음 |
-| 6 | Completion 있음 ∧ 완료 확인됨 | [정리 기준 기록] → [EndBattle] → [Run 종료 판정] → [새 Run(조건부)] → [전환](J7) |
+| 6 | Completion 있음 ∧ 완료 확인됨 | [EndBattle] → [Run 종료 판정] → [새 Run(조건부)] → [전환](J7) |
 | 7 | 포기 요청 ∧ 제출 열림 | [제출 정지] |
 | 8 | 포기 요청 ∧ 재생 중 | 없음 |
 | 9 | 포기 요청 | [포기](J8) |
@@ -121,12 +128,13 @@ Job은 Core 처리 호출이 **한 번의 동기 호출**로 끝난다는 계약
 | Job | 호출 | 같은 Execute 안의 확인(어긋나면 예외) |
 |---|---|---|
 | 명령(N) | `ProcessNextCommand()` | H ≥ N |
-| 미리보기(번호) | `ProcessLatestPreview()` | 응답 번호 ≥ 번호, **또는** 현재 요청이 더는 그 번호가 아님(View가 비우거나 바꿈) |
+| 미리보기(번호) | `ProcessLatestPreview()` | 응답 번호 ≥ 번호(2026-10-22부터. 전에는 "또는 현재 요청이 더는 그 번호가 아님"도 통과) |
 | 자동 진행(S) | `AdvanceCombat()` | 골격 §4.3.1 순서: S′ > S → 결과 있음 → 결과 순번 = S′ → `Kind == Advance` → `Accepted` (K8) |
 | 포기 | `AbandonBattle()` | J8 |
 | 진입 | `EnterBattle()`(기존 `CombatPrepareJob`) | 호출 전 `!HasBattle`, 호출 뒤 기존 `CombatEntryRequest.PublishResult` 대응 확인 |
 
-- 등록(Tick N의 LifeCycle)과 실행(Tick N+1의 Runner) 사이에는 Runtime 모듈이 돌지 않는다. 다만 Unity 입력 콜백은 Tick 밖에서 올 수 있으므로 미리보기의 "요청이 바뀜" 예외를 지금처럼 유지한다.
+- ~~등록(Tick N의 LifeCycle)과 실행(Tick N+1의 Runner) 사이에는 Runtime 모듈이 돌지 않는다.~~ **2026-10-22 정정:** 실제로는 그 사이 Global 그룹의 Job 앞 모듈(Render~UI)이 돌고 Unity 입력 콜백도 온다. 그래서 판단을 실행 순간으로 옮겼다(J1 개정). 단계 Job은 판단과 같은 Runner Tick에 바로 이어 실행되므로 판단 때의 사실을 다시 증명하지 않는다 — 미리보기의 "요청이 바뀜" 통과와 정리 Job의 정리 전 대상 확인을 걷었다.
+- **사후 확인은 다음 판단이 기대는 사실만 본다(2026-10-22, 개선 설계 §5.2):** 정리 Job은 전투 없음과 결과 순번 S 그대로만, 포기 Job은 포기 완료 기록만 확인한다. Core의 보존 규칙(최신 결과 참조·활성 캐릭터 0·P ≥ S·포기 때 결과 보존)은 다시 증명하지 않는다.
 
 ### J4. 연출 대기는 Plan의 조건 (K1 유지)
 
@@ -138,34 +146,43 @@ Job은 Core 처리 호출이 **한 번의 동기 호출**로 끝난다는 계약
 - 의존: Runner(`IsIdle`)·Register·Loading·오류 경계·`CombatProgressReader`(활성화 확인용, J6). Buffer를 직접 받지 않는다.
 - `RequestEntry`: 오류 없음, 진행 중 요청 없음(대기 중 같은 대상은 같은 요청 반환, 거절·취소된 요청은 교체), Runner Idle, 로딩 아님 → `RegisterCombatEntry(request)`.
 - `CombatPlan.RegisterEntry` → **[진입(EnterBattle)] → [진입 전환]**.
-  - 진입 Job은 호출 전 `!HasBattle`을 확인한다(옛 K11 3번).
+  - 이전 전투가 남아 있으면(`!HasBattle`이 아니면) `RequestEntry`가 읽기 객체로 확인해 바로 거부한다(옛 K11 3번, R3 구현).
   - 진입 전환 Job: 요청이 `Prepared` ∧ Job 완료면 `BeginActivation()` → `Change(Combat)`. `Rejected`·`Cancelled`면 아무것도 하지 않는다(요청자가 요청 객체에서 결과를 읽는다).
   - 지금 LifeCycle 모듈 Tick의 진입 결과 감시가 없어진다.
 - 옛 K11의 1·4번(Flow 정지·Flow 확인 대기)은 Flow가 없어지므로 사라진다.
+
+2026-10-16 NM2 후속: 맵 입력 번호가 있는 요청은 기존 진입 전환 Job이 현재 맵 owner의 착지 Ready도 기다린다. `IMapCombatPresentationOwnerSource`·lease는 같은 서비스의 좁은 역할이며 별도 서비스/Plan 등록은 없다. Bootstrap 번호 0과 전투 이탈 정책은 유지한다. 이 추가 표시 대기와 요청별 수명 계약의 원본은 [노드 이동 설계 §5](2026-10-10-stage-map-design-Hojin.md#62-전투-표시-대기-계약), 검증 상태는 [NM 계획](../plans/2026-10-10-stage-map-plan-Hojin.md#37-노드-이동)이다. 사용자 승인으로 반영했으며 전투 작업자의 외부 합의·인수는 별도다.
 
 ### J6. 활성화는 `OnEnter`에서 동기로 (K20 유지)
 
 Combat 씬 Enter 노드에서 LifeCycle `OnEnter`(우선순위 0)가 View `OnCombatSceneEntered`(100)보다 먼저 돌고, View는 그때 `IsActive`가 아니면 예외를 던진다(`CombatViewSystem.cs:540`, View 개선 설계 D13). 활성화를 Job으로 옮기면 Runner가 그 뒤에 돌아 View Attach가 실패한다. 그래서 활성화는 Job이 아니라 **`OnEnter` → `CombatEntry.ActivateAccepted()`** 동기 호출로 둔다.
 
-- `ActivateAccepted()`: 현재 요청이 `Activating` ∧ Job 완료 ∧ 결과 수락 ∧ 현재 선택(챕터·노드·스테이지)이 요청 대상과 같을 때 `Activate()`. 아니면 예외. 현재 선택은 `CombatProgressReader`로 읽는다(지금 `OnEnter`의 확인과 같다).
+- `ActivateAccepted()`(R3 구현: `CombatEntryService`의 internal 메서드. 부르는 곳이 `CombatLifeCycle` 하나라 공개 계약에 두지 않는다, ISP): 현재 요청이 `Activating` ∧ Job 완료 ∧ 결과 수락 ∧ 현재 선택(챕터·노드·스테이지)이 요청 대상과 같을 때 `Activate()`. 아니면 예외. 현재 선택은 `CombatProgressReader`로 읽는다(지금 `OnEnter`의 확인과 같다).
 - LifeCycle이 아는 것은 같은 LifeCycle 층의 `ICombatEntryService` 하나다(U1 위반 아님).
 - 입력 Buffer 비우기는 J12 D4를 따른다.
 
 ### J7. 이탈 연쇄 (K21 유지)
 
+> **2026-10-22 개정([개선 설계 §4](2026-10-22-combat-view-structure-improvement-design.md), 코드 원본 `CombatPlan.Decide`·`BuildStep`):**
+> - **모든 결과가 같은 순서다:** [제출 정지] → 남은 연출 → [정리(EndBattle) → (보스 승리면) 챕터 완료 → 완료 표시] → 사용자 확인 → [전환]. 정리·챕터 완료·표시는 한 걸음이라 같은 Runner Tick에 이어 돌고, 결과 화면은 Core가 Run 결과를 확정한 뒤 열린다. 보스만 "정리 먼저"였던 특수 경로는 없어졌다.
+> - **목적지는 `CombatPlan.DestinationOf(Run 결과)` 한 곳:** Run이 이어지면(일반 승리·다음 챕터) StageSelect, 끝났으면(일반 패배·자발적 포기·최종 승리) Lobby.
+> - **전투 쪽 새 Run은 없다:** 새 Run은 로비 출발이 만든다. 새 Run Job·`NewRunLoadoutKey`·공유 컨텍스트 `CombatExitContext`·Run 종료 판정 Job은 지웠다. 보스 승리의 챕터 완료는 `CombatChapterCompletionJob`(거절은 예외) 하나다.
+> - **확인 범위:** 정리 Job은 전투 없음·결과 순번 S 그대로만 본다(J3 개정). 정상 이탈은 Combat을 나가는 순간 진입 요청을 닫고, 전투가 남은 채 나갔을 때만 `ExitCheck`가 F1로 잡는다(J9).
+> - 아래 표와 줄은 바뀌기 전 이력이다.
+
 | Job | 하는 일 |
 |---|---|
 | 제출 정지 | `view.SuspendSubmissions()`(멱등) |
 | 완료 표시 시작 | Completion 대상 = 현재 진입(chapter·node·stage) 확인. 일반 승패면 최신 결과가 수락 ∧ 결과 순번 = S ∧ Outcome = Completion.Outcome인지 확인(포기 Completion은 결과를 게시하지 않으므로 건너뜀). 그다음 `view.PresentCompletion(completion)` |
-| 정리 기준 기록 | 공유 컨텍스트에 최신 결과 참조·S·Completion 참조·전투 인스턴스를 적는다 |
-| EndBattle | `EndBattle()` → `!HasBattle`, 활성 캐릭터 0명, 결과 참조·S·Completion 보존, P ≥ S 확인(지금 `CombatExitSequence`의 확인과 같다) |
-| Run 종료 판정 | K21 규칙 그대로: 보스 승리면 `CompleteChapter` 한 번(`RunCompleted` → 종료, `NextChapterSelected` → 계속, `DefinitionUnavailable` → 임시로 종료, 그 밖의 거절 → 예외), 아니면 `ChapterProgression.Outcome != InProgress` |
+| EndBattle | 호출 직전 최신 결과 참조·S를 공유 컨텍스트에 기억(완료가 이탈 대상과 같은지도 확인) → `EndBattle()` → `!HasBattle`, 활성 캐릭터 0명, 결과 참조·S·Completion 보존, P ≥ S 확인(지금 `CombatExitSequence`의 확인과 같다). R2에서 "정리 기준 기록"을 따로 두지 않고 이 Job에 합쳤다(같은 Tick·같은 연쇄라 기준이 같다) |
+| Run 종료 판정 | K21 규칙 그대로: 보스 승리면 `CompleteChapter` 한 번(`RunCompleted` → 종료, `NextChapterSelected` → 계속, 거절은 모두 예외. 2026-10-20부터 마지막 챕터는 Core가 맵 SO의 다음 챕터 키(0 = 마지막)로 판정하므로 옛 "`DefinitionUnavailable` → 임시로 종료"는 없앴다, Run 요약 설계 §9 (Git history: `2026-10-20-run-summary-statistics-design.md`)), 아니면 `ChapterProgression.Outcome != InProgress` |
 | 새 Run(조건부) | Run 종료일 때만 `RunStart.StartNewRun(NewRunLoadoutKey)` → `Outcome == InProgress` ∧ `!HasBattle` 확인. 아니면 호출 없이 완료 |
 | 전환 | `LifeCycleManager.Change(목적지)` |
 
 - **공유 컨텍스트(`CombatExitContext`):** 6행 연쇄를 만들 때 Plan이 하나 만들어 그 Job들에 넘긴다. 연쇄 하나 동안만 산다. 진입 Job이 `CombatEntryRequest`를 공유하는 것과 같은 방식이다. Plan 자신은 상태를 갖지 않는다.
 - **완료 표시 상태는 View가 갖는다:** `None`/`Showing`/`Confirmed`. 새 Attach에서 초기화한다. 확인 콜백 뒤 표시 코드가 예외를 던져도 `EndBattle`은 다음 판단(다음 Tick 이후)에서야 등록되므로 지금 규칙("동기 완료 콜백 뒤 같은 호출 스택에서 EndBattle을 하지 않는다")이 지켜진다.
-- **목적지·로드아웃 상수는 `CombatPlan` 한 곳:** 일반 이탈·Run 종료 모두 지금은 StageSelect(`LifeCycleKeys.Stage`), Title이 생기면 Run 종료 목적지만 바꾼다. 새 Run 로드아웃 1(임시). 평가 문서 M6의 흩어진 상수 3개 중 2개가 한 곳으로 모인다.
+- **목적지·로드아웃 정책은 `CombatPlan` 한 곳:** **Run이 끝나면(일반 패배·자발적 포기·최종 승리) 새 Run 준비 후 로비(`RunEndDestination = LifeCycleKeys.Lobby`)**로 돌아간다. Run이 이어지면(일반 승리·다음 챕터) StageSelect(`ContinueDestination`)다. 결과별 분기는 없고 Run 종료 판정(Core)만 목적지를 가른다. 새 Run 로드아웃 1(임시). 이력: 2026-10-16에 일반 패배만 로비, 2026-10-20에 포기, 이어서 최종 승리도 로비로 바꿨다(사용자 결정, Run 결과 요약 표시를 로비 한 곳에 두기 위해).
+- **새 Run 준비 순서 유지:** 일반 패배·포기·최종 승리 모두 완료 표시·사용자 확인 → EndBattle → Run 종료 판정 → `StartNewRun(1)`·준비 확인 → 로비 전환 순서다. 로비 출발의 새 Run 생성 위치 조정과 전체 Run 종료의 로비 복귀는 [로비 계획 LV10](../plans/2026-10-11-lobby-plan-Hojin.md#311-lv10-run-종료-뒤-로비-복귀)의 별도 후속이다. 이번 변경은 그 전체 완료를 뜻하지 않는다.
 - 평가 문서 R2("Run 종료 판정이 커질 자리")는 Run 종료 판정 Job이 그 작은 판정 객체 역할을 한다.
 
 ### J8. 포기 (K22: A1·A2 변경, A3~A5 유지)
@@ -300,14 +317,15 @@ _plans[JobRootType.Combat] = (service, jobType) => CombatPlan.Register(service, 
 |---|---|
 | `LifeCycleSystem/LifeCycles/Combat/CombatLifeCycle.cs` | J1로 축소 |
 | `…/Combat/CombatEntryService.cs`(신규) | J5·J6 |
-| `…/Combat/CombatEntryRequest.cs` | `ICombatEntryService`에 `Current`·`ActivateAccepted` |
+| `…/Combat/CombatEntryRequest.cs` | `ICombatEntryService`에 `Current`(읽기 전용) |
 | `…/Combat/CombatProgressFacts.cs`·`CombatProgressReader.cs`(신규) | J13 |
 | `…/Combat/ICombatProgressView.cs`(신규) | J12 |
 | `…/Combat/CombatFlow.cs` | 삭제(판단은 J2, 확인은 J3) |
 | `…/Combat/CombatExitSequence.cs` | 삭제(J7·J8). `ICombatExitService`·`ICombatAbandonRequest`·`ICombatExitPresentation`·`CombatExitStatus` 포함 |
 | `…/Combat/Plans/CombatPlan.cs` | J2 `Decide`·단계 → Job 구성, `ExitCheck`, 진입 연쇄, 상수 |
 | `…/Combat/Plans/CombatExitContext.cs`(신규) | J7 공유 컨텍스트 |
-| `…/Combat/Jobs/` | 명령·미리보기·자동 진행 Job에 기대 번호와 확인 추가. 신규: 진입 전환, 제출 정지, 완료 표시 시작, 정리 기준 기록, EndBattle, Run 종료 판정, 새 Run(조건부), 전환, 포기, ExitCheck(묶을 수 있는 것은 Task 계획에서) |
+| `…/Combat/Jobs/` | 명령·미리보기·자동 진행 Job에 기대 번호와 확인 추가. 신규: `CombatExitJobs.cs`(제출 정지·완료 표시 시작·EndBattle·Run 종료 판정·새 Run(조건부)·전환·ExitCheck), `CombatAbandonJob.cs`, `CombatEntryTransitionJob.cs` |
+| `…/Combat/Plans/CombatStep.cs`(신규) | `Decide`가 돌려주는 단계 값 |
 | `LifeCycleSystem/LifeCycleSystemGroup.cs`, `ServiceKeys/…` | `CombatExit` 제거, D5-a면 `CombatProgress` 추가 |
 | `Factory/Runtime/LifeCycle/LifeCycleSystemFactory.cs` | `CombatEntryService`(D5-a면 읽기 객체도) 생성·등록 |
 | `GlobalSystem/JobSystem/JobRegister/JobRegisterSystem.cs` | J14 (**민형님 파일**) |
@@ -333,7 +351,7 @@ _plans[JobRootType.Combat] = (service, jobType) => CombatPlan.Register(service, 
 | K16·F1 단일 오류 경계 | 유지, Flow 소프트 정지까지 흡수(J10, D2) |
 | K19 판단표 원본 | 골격 §4.1 → 이 문서 J2(확정 시) |
 | K20 명시적 진입·한 번의 활성화 | 유지. 진입 결과 감시는 Job, 활성화는 `OnEnter` 동기(J5·J6) |
-| K21 Run 종료 → 새 Run → StageSelect | 유지(J7) |
+| K21 Run 종료 → 새 Run → 목적지 | 준비·정리 순서 유지(J7). 2026-10-16 일반 패배의 목적지만 로비로 변경 |
 | K22 포기 | A1·A2 변경, A3~A5 유지(J8) |
 | 골격 §6.4 우회 차단 | D1 |
 | 골격 §3 "진행의 주인은 CombatFlow" | "판단의 주인은 CombatPlan" |
@@ -406,8 +424,8 @@ Phase마다 멈추고 보고한다. R3 뒤 Unity EditMode와 재생 확인을 �
 | Job 확인 | 명령 H 미갱신·미리보기 응답 누락(요청 바뀜은 통과)·자동 진행 순번/종류/거절·포기 결과 보존 위반 → 예외 |
 | 진입(K20) | 정상 수락·거절·취소·중복 요청, 활성화 한 번, View Attach 때 `IsActive` |
 | 승리 복귀(F2) | Completion → 표시 → 확인 → EndBattle → StageSelect, 결과·S 보존 |
-| 패배·Run 종료(K21) | 새 Run 준비 → `InProgress` → StageSelect. 보스 승리 `CompleteChapter` 1회 |
-| 포기(K22) | 배치 국면 포기, Runner 바쁜 중 포기(처리·표시 뒤 1회), 대기 중 승리 → `AlreadyCompleted`, 기록 모드에서 무시 |
+| Run 종료(K21, 2026-10-16·10-20 목적지 변경) | 완료 확인 → 새 Run 준비 → `InProgress` → 로비(일반 패배·자발적 포기·최종 승리). 보스 승리 `CompleteChapter` 1회 |
+| 포기(K22) | 배치 국면 포기, Runner 바쁜 중 포기(처리·표시 뒤 1회), 대기 중 승리 → `AlreadyCompleted`, 기록 모드에서 무시. 포기 뒤 새 Run → 로비 |
 | 입력 대기(VR1) | `CombatCommandGate`의 시작/턴 종료 대기와 이동 허용이 그대로인지 |
 | 기록 모드 | 진입·표시·입력 기록만, 처리 Job 없음 |
 | 오류 | Job 예외 → F1 1회 보고, 이후 등록·전환 없음. 같은 Tick 앞쪽 오류 뒤 트리거 없음 |

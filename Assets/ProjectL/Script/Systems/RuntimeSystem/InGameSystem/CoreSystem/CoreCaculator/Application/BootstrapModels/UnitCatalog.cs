@@ -68,21 +68,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             foreach (UnitDefinition definition in _definitions.Values)
             {
-                if (definition.HasTimelineConfiguration == false)
-                    throw new InvalidOperationException(
-                        $"Unit '{definition.Key}' has no Timeline Priority/Delay configuration.");
 
                 if (definition.MoveMethod != MoveMethod.LiftAndPlace)
                     throw new InvalidOperationException(
                         $"Unit '{definition.Key}'의 MoveMethod는 LiftAndPlace여야 합니다.");
 
-                if (definition.MoveCost <= 0)
-                    throw new InvalidOperationException(
-                        $"Unit '{definition.Key}'의 MoveCost는 1 이상이어야 합니다.");
-
-                if (definition.AttackCost <= 0)
-                    throw new InvalidOperationException(
-                        $"Unit '{definition.Key}'의 AttackCost는 1 이상이어야 합니다.");
             }
         }
 
@@ -94,6 +84,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             for (int i = 0; i < traitSpecs.Length; i++)
             {
                 TraitSpec traitSpec = traitSpecs[i];
+
+                if (Combat.DeferredCombatFeatures.IsImplementationPending(traitSpec.TraitKey))
+                    throw new InvalidOperationException($"Unit {spec.Key}, Trait {traitSpec.TraitKey}: ImplementationPending.");
 
                 TraitRegistration registration = _traitRegistry.GetRequiredRegistration(traitSpec.TraitKey);
 
@@ -119,20 +112,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 footprint,
                 spec.MaxHealth,
                 spec.MoveMethod,
-                spec.MoveRange,
-                spec.MoveCost,
                 spec.AttackRange,
                 category,
                 spec.AttackPower,
-                spec.MaxActionCost,
-                spec.AttackCost,
                 spec.PhysicalDefense,
                 spec.Priority,
-                spec.Delay,
                 traitDefinitions,
-                hasTimelineConfiguration: true,
                 ownerEligibility: spec.OwnerEligibility,
-                occlusion: spec.Occlusion);
+                occlusion: spec.Occlusion,
+                killReward: spec.KillReward,
+                combatCategory: spec.SpecializationCategory.HasValue ? _categoryRegistry.GetRequired(spec.CombatCategoryKey) : null);
         }
 
         private static void ValidateTraitDefinition(TraitDefinition definition)

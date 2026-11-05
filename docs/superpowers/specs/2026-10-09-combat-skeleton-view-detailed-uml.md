@@ -1,5 +1,7 @@
 # 전투 골격·View 상세 UML (2026-10-09)
 
+> **2026-10-10 R4 주의:** 아래 도표는 Job·Plan 재구성 이전 코드의 스냅샷이다. `CombatFlow`·`CombatExitSequence`·`CombatExit` 서비스·전환 guard는 R3에서 제거됐으며, 현재 구조는 `CombatLifeCycle` 트리거 → `CombatProgressReader` 사실 묶음 → `CombatPlan.Decide` 판단 → 전투 Job 실행이다. 진입 수명은 `CombatEntryService`, 완료 표시·포기 요청 상태는 View가 소유한다. 현재 계약은 [재구성 설계](2026-10-10-combat-job-plan-restructure-design.md), 구현·검증은 [Task 계획](../plans/2026-10-10-combat-job-plan-restructure-plan.md)을 따른다. 본문 도표는 당시 기록으로 보존한다.
+
 - **기준 코드:** `feature/Yonggeun/Stage` HEAD `88c845d0`(2026-10-09). 작업 트리의 `Combat.unity` 수정은 반영하지 않았다(씬 YAML은 읽지 않음).
 - **주의(2026-10-09 추가):** 이 문서는 **필드 격자 아웃라인 이전 기준**이다. 그 뒤 `FieldView`의 강조 상태·그리기가 `FieldHighlightState`·`IFieldHighlightRenderer`(`FieldCellColorRenderer`·`FieldOutlineRenderer`)로 나뉘었다([격자 아웃라인 설계](2026-10-09-field-grid-outline-mode-design.md), View 계획 §7.62). §4.6의 `FieldView` 클래스도와 표시 관련 설명은 그 변경을 반영하지 않았다. 현재 View 평가는 [SOLID·SSOT 평가](2026-10-09-combat-view-solid-ssot-evaluation.md)를 따른다.
 - **범위:** Boot → 전투 진입 → 배치·전투 입력 → Core 처리 → 결과 표시 → 승패·포기 이탈 → 다음 구간 전환. Core 내부 계산(`CoreCaculator`)은 경계까지만 그린다.

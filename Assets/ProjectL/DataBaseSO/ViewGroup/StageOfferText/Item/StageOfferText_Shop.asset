@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c39f46666429e7a772c3f475bdf4d00, type: 3}
+  m_Name: StageOfferText_Shop
+  m_EditorClassIdentifier: 
+  stageOfferTextData:
+    target: 0
+    stageKeys:
+    - 1203
+    eventName: "상점"
+    eventDescription: "필요한 물건을 구입합니다"
+    goldFormat: "보유 골드 : {0}G"
+    priceFormat: "{0}G"
+    selectButtonText: "선택한다"
+    completedButtonText: "구매 완료"
+    unavailableButtonText: ""
+    exitButtonText: "떠난다"
+    backButtonText: ""
+    lines:
+    - kind: 1
+      format: "Lv. {0} · 보유 {1}"
+    - kind: 2
+      format: "수량 1 · {0}"
+    - kind: 3
+      format: "{0}\n{1}"
+    defaultErrorText: "상점 상태가 바뀌어 화면을 다시 불러옵니다."
+    errors:
+    - kind: 1
+      text: "골드가 부족합니다."
+    - kind: 2
+      text: "이미 보유한 유닛입니다."
+    - kind: 3
+      text: "아이템을 더 보유할 수 없습니다."
+    - kind: 4
+      text: "이미 구매한 상품입니다."
+    - kind: 5
+      text: "덱이 가득 찼습니다."
+    - kind: 6
+      text: "이미 구매했습니다. 떠난다를 눌러 주세요."
+    - kind: 7
+      text: "완료하지 못했습니다. 떠난다를 다시 눌러 주세요."

@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   databaseItems:
   - {fileID: 11400000, guid: 9d0822b6ed1f4e0f802fc312d7c8f531, type: 2}
+  - {fileID: 11400000, guid: 69086cd38fb98b64aa6eab53dfbf340d, type: 2}

@@ -1,3 +1,5 @@
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.Configuration;
+
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 {
     /// <summary>
@@ -10,8 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
         /// <summary>모든 스테이지 내부 Layer가 함께 켜는 공통 맵입니다.</summary>
         internal static class Common
         {
-            internal const string Map = "Common";
-            internal const string OpenSettings = "OpenSettings";
+            internal const string Map = GlobalInputNames.CommonMap;
+            internal const string OpenSettings = GlobalInputNames.OpenSettings;
         }
 
         /// <summary>전투 진입 전 배치 단계의 맵입니다.</summary>
@@ -23,7 +25,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
             internal const string Press = "Press";
             internal const string Cancel = "Cancel";
             internal const string EnterCombat = "EnterCombat";
-            internal const string DrawCharacter = "DrawCharacter";
         }
 
         /// <summary>전투 단계의 맵입니다.</summary>
@@ -35,9 +36,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
             internal const string Select = "Select";
             internal const string Cancel = "Cancel";
             internal const string EndTurn = "EndTurn";
-            internal const string MoveMode = "MoveMode";
             internal const string AttackMode = "AttackMode";
             internal const string Return = "Return";
+        }
+
+        /// <summary>배치·전투 두 Layer가 함께 켜는 전투 카메라 조작 맵입니다(카메라 조작 설계 CC2).</summary>
+        internal static class CombatCamera
+        {
+            internal const string Map = "CombatCamera";
+            /// <summary>이동 방향입니다(Value Vector2, WASD·화살표 2D 묶음). 키를 떼면 (0, 0)입니다.</summary>
+            internal const string Pan = "Pan";
+            /// <summary>휠입니다(PassThrough Axis, <c>&lt;Mouse&gt;/scroll/y</c>). 위로 굴리면 양수입니다.</summary>
+            internal const string Zoom = "Zoom";
         }
     }
 }

@@ -17,6 +17,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
         protected bool SameObjectValues(ObjectSourceFact other) => SameSourceValues(other) && EntryOrdinal == other.EntryOrdinal;
         public abstract ObjectSourceFact WithActive(bool active);
+
+        /// <summary>활성 여부 외에는 바뀌지 않았는지다. Core 계산과 Buffer 저장 검사가 함께 쓰는 규칙이다.</summary>
+        public bool ChangesOnlyActive(MovementTileFact final) => WithActive(final.Active).SameValues(final);
+
+        /// <summary>Buffer 저장 검사: 형식 유지, 활성 외 변경 금지, 재활성화 금지. 재활성화 금지는 Core 계산 규칙에는 없다.</summary>
+        public override string SuccessorFailure(MovementTileFact final) =>
+            base.SuccessorFailure(final) ??
+            (!ChangesOnlyActive(final) || !Active && final.Active ? IdentityChangeFailure : null);
     }
 
     /// <summary>중심을 포함한 3×3에 동일한 원시 피해를 주는 불변 지뢰 원본이다.</summary>

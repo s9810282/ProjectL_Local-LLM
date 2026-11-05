@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using NUnit.Framework;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
@@ -16,6 +17,23 @@ namespace ProjectL.Tests.Core
 {
     public sealed class CharacterCategoryContractTests
     {
+        [TestCase(-1)]
+        public void CategorySpec_RejectsNegativeMovement(int allowance)
+        {
+            Assert.That(Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new CategorySpec(CategoryKey.Main,Array.Empty<CategoryRuleSpec>(),allowance)).ParamName,
+                Is.EqualTo("movementAllowance"));
+        }
+
+        [TestCase(0)]
+        [TestCase(5)]
+        public void CategorySpec_PreservesExplicitMovement(int allowance)
+        {
+            var spec = new CategorySpec(CategoryKey.Main,Array.Empty<CategoryRuleSpec>(),allowance);
+
+            Assert.That(spec.MovementAllowance, Is.EqualTo(allowance));
+        }
+
         private static readonly EntityId UnitA = new EntityId(7);
         private static readonly EntityId UnitB = new EntityId(8);
 
@@ -23,17 +41,18 @@ namespace ProjectL.Tests.Core
         public void CategoryRuleKey_UsesStableSerializedValues()
         {
             Assert.That((int)CategoryRuleKey.None, Is.EqualTo(0));
-            Assert.That((int)CategoryRuleKey.ManeuverRefund, Is.EqualTo(1));
+            Assert.That(Enum.IsDefined(typeof(CategoryRuleKey), 1), Is.False);
             Assert.That((int)CategoryRuleKey.DirectionalArmor, Is.EqualTo(2));
+            Assert.That(Enum.IsDefined(typeof(CategoryRuleKey), 4), Is.False);
             Assert.That((int)CategoryRuleKey.SafeBombardment, Is.EqualTo(3));
         }
 
         [Test]
         public void CategoryActivationKind_DoesNotCollideWithTraitActivationKind()
         {
-            Assert.That((int)CategoryActivationKind.RefundApplied, Is.EqualTo(10));
+            Assert.That(Enum.IsDefined(typeof(CategoryActivationKind), 10), Is.False);
             Assert.That((int)CategoryActivationKind.DefenseFacingChanged, Is.EqualTo(20));
-            Assert.That((int)CategoryActivationKind.IncomingDamageReduced, Is.EqualTo(21));
+            Assert.That(Enum.IsDefined(typeof(CategoryActivationKind), 21), Is.False);
 
             // 숫자가 겹쳐도 서로 다른 enum이므로 변환 없이 구분되어야 한다.
             Assert.That(
@@ -45,11 +64,11 @@ namespace ProjectL.Tests.Core
         [Test]
         public void CategoryRuleSpec_IsNotTraitSpec()
         {
-            var refundSpec = new ManeuverRefundCategoryRuleSpec();
+            var categorySpec = new SafeBombardmentCategoryRuleSpec();
 
-            Assert.That(refundSpec, Is.Not.InstanceOf<TraitSpec>());
+            Assert.That(categorySpec, Is.Not.InstanceOf<TraitSpec>());
             Assert.That(typeof(TraitSpec).IsAssignableFrom(typeof(CategoryRuleSpec)), Is.False);
-            Assert.That(refundSpec.Key, Is.EqualTo(CategoryRuleKey.ManeuverRefund));
+            Assert.That(categorySpec.Key, Is.EqualTo(CategoryRuleKey.SafeBombardment));
         }
 
         [Test]
@@ -60,32 +79,11 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void DirectionalArmorSpec_StoresExplicitConfiguration()
-        {
-            var spec = new DirectionalArmorCategoryRuleSpec(50, Rotation4.R0);
-
-            Assert.That(spec.Key, Is.EqualTo(CategoryRuleKey.DirectionalArmor));
-            Assert.That(spec.DamageReductionPercent, Is.EqualTo(50));
-            Assert.That(spec.InitialFacing, Is.EqualTo(Rotation4.R0));
-        }
-
-        [TestCase(0)]
-        [TestCase(-1)]
-        [TestCase(101)]
-        public void DirectionalArmorSpec_RejectsOutOfRangeReduction(int percent)
-        {
-            Assert.That(
-                Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new DirectionalArmorCategoryRuleSpec(percent, Rotation4.R0)).ParamName,
-                Is.EqualTo("damageReductionPercent"));
-        }
-
-        [Test]
         public void CategorySpec_RejectsNoneKey()
         {
             Assert.That(
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new CategorySpec(CategoryKey.None, Array.Empty<CategoryRuleSpec>())).ParamName,
+                    new CategorySpec(CategoryKey.None,Array.Empty<CategoryRuleSpec>(),3)).ParamName,
                 Is.EqualTo("key"));
         }
 
@@ -94,7 +92,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new CategorySpec((CategoryKey)9999, Array.Empty<CategoryRuleSpec>())).ParamName,
+                    new CategorySpec((CategoryKey)9999,Array.Empty<CategoryRuleSpec>(),3)).ParamName,
                 Is.EqualTo("key"));
         }
 
@@ -103,13 +101,13 @@ namespace ProjectL.Tests.Core
         {
             var specs = new CategoryRuleSpec[]
             {
-                new ManeuverRefundCategoryRuleSpec(),
-                new ManeuverRefundCategoryRuleSpec(),
+                new SafeBombardmentCategoryRuleSpec(),
+                new SafeBombardmentCategoryRuleSpec(),
             };
 
             Assert.That(
                 Assert.Throws<ArgumentException>(() =>
-                    new CategorySpec(CategoryKey.Rider, specs)).ParamName,
+                    new CategorySpec(CategoryKey.Rider,specs,4)).ParamName,
                 Is.EqualTo("ruleSpecs"));
         }
 
@@ -120,51 +118,51 @@ namespace ProjectL.Tests.Core
 
             Assert.That(
                 Assert.Throws<ArgumentException>(() =>
-                    new CategorySpec(CategoryKey.Rider, specs)).ParamName,
+                    new CategorySpec(CategoryKey.Rider,specs,4)).ParamName,
                 Is.EqualTo("ruleSpecs"));
         }
 
         [Test]
         public void CategorySpec_BaseAllowsZeroRules()
         {
-            var spec = new CategorySpec(CategoryKey.Base, Array.Empty<CategoryRuleSpec>());
+            var spec = new CategorySpec(CategoryKey.Main,Array.Empty<CategoryRuleSpec>(),3);
 
-            Assert.That(spec.Key, Is.EqualTo(CategoryKey.Base));
+            Assert.That(spec.Key, Is.EqualTo(CategoryKey.Main));
             Assert.That(spec.RuleSpecs.Length, Is.Zero);
         }
 
         [Test]
         public void CategorySpec_CopiesRuleListDefensively()
         {
-            var specs = new CategoryRuleSpec[] { new ManeuverRefundCategoryRuleSpec() };
-            var spec = new CategorySpec(CategoryKey.Rider, specs);
+            var specs = new CategoryRuleSpec[] { new SafeBombardmentCategoryRuleSpec() };
+            var spec = new CategorySpec(CategoryKey.Cannon,specs,2);
 
-            specs[0] = new SafeBombardmentCategoryRuleSpec();
+            specs[0] = null;
 
-            Assert.That(spec.RuleSpecs.Span[0].Key, Is.EqualTo(CategoryRuleKey.ManeuverRefund));
+            Assert.That(spec.RuleSpecs.Span[0].Key, Is.EqualTo(CategoryRuleKey.SafeBombardment));
         }
 
         [Test]
         public void CategoryEffectOrigin_RoundTripsCategoryAndRuleKey()
         {
             EffectOriginKey origin = CategoryEffectOrigin.Create(
-                UnitA, CategoryKey.Heavy, CategoryRuleKey.DirectionalArmor);
+                UnitA, CategoryKey.Cannon, CategoryRuleKey.SafeBombardment);
 
             Assert.That(origin.Kind, Is.EqualTo(EffectOwnerKind.Category));
             Assert.That(origin.OwnerInstanceId, Is.EqualTo(UnitA.Value));
             Assert.That(
                 CategoryEffectOrigin.GetRequiredCategoryKey(origin, UnitA),
-                Is.EqualTo(CategoryKey.Heavy));
+                Is.EqualTo(CategoryKey.Cannon));
             Assert.That(
                 CategoryEffectOrigin.GetRequiredRuleKey(origin, UnitA),
-                Is.EqualTo(CategoryRuleKey.DirectionalArmor));
+                Is.EqualTo(CategoryRuleKey.SafeBombardment));
         }
 
         [Test]
         public void CategoryEffectOrigin_RejectsMismatchedUnitId()
         {
             EffectOriginKey origin = CategoryEffectOrigin.Create(
-                UnitA, CategoryKey.Rider, CategoryRuleKey.ManeuverRefund);
+                UnitA, CategoryKey.Cannon, CategoryRuleKey.SafeBombardment);
 
             Assert.That(
                 Assert.Throws<ArgumentException>(() =>
@@ -201,7 +199,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That(
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    CategoryEffectOrigin.Create(UnitA, CategoryKey.None, CategoryRuleKey.ManeuverRefund))
+                    CategoryEffectOrigin.Create(UnitA, CategoryKey.None, CategoryRuleKey.SafeBombardment))
                     .ParamName,
                 Is.EqualTo("categoryKey"));
             Assert.That(
@@ -210,7 +208,7 @@ namespace ProjectL.Tests.Core
                 Is.EqualTo("ruleKey"));
             Assert.That(
                 Assert.Throws<ArgumentException>(() =>
-                    CategoryEffectOrigin.Create(EntityId.Empty, CategoryKey.Rider, CategoryRuleKey.ManeuverRefund))
+                    CategoryEffectOrigin.Create(EntityId.Empty, CategoryKey.Rider, CategoryRuleKey.SafeBombardment))
                     .ParamName,
                 Is.EqualTo("unitId"));
         }
@@ -218,13 +216,13 @@ namespace ProjectL.Tests.Core
         [Test]
         public void TraitAndCategoryOrigins_StayDistinctWithSameNumericDefinitionKey()
         {
-            // Category Rider(20)와 Trait MoveAttackDiscount(20)는 숫자가 같다.
-            Assert.That((int)CategoryKey.Rider, Is.EqualTo((int)TraitKey.MoveAttackDiscount));
+            // Category Cannon(40)과 Trait ThornField(40)는 숫자가 같다.
+            Assert.That((int)CategoryKey.Cannon, Is.EqualTo((int)TraitKey.ThornField));
 
             EffectOriginKey categoryOrigin = CategoryEffectOrigin.Create(
-                UnitA, CategoryKey.Rider, CategoryRuleKey.ManeuverRefund);
+                UnitA, CategoryKey.Cannon, CategoryRuleKey.SafeBombardment);
             EffectOriginKey traitOrigin = new EffectOriginKey(
-                EffectOwnerKind.Trait, UnitA.Value, (int)TraitKey.MoveAttackDiscount, "main");
+                EffectOwnerKind.Trait, UnitA.Value, (int)TraitKey.ThornField, "main");
 
             Assert.That(categoryOrigin, Is.Not.EqualTo(traitOrigin));
             Assert.That(categoryOrigin.CompareTo(traitOrigin), Is.Not.Zero);

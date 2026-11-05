@@ -19,5 +19,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             DamagePerStack = damagePerStack;
             MaxStacks = maxStacks;
         }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            var otherSpec = (FocusTraitSpec)other;
+            return DamagePerStack == otherSpec.DamagePerStack &&
+                MaxStacks == otherSpec.MaxStacks;
+        }
     }
 }

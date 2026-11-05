@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4024d4c005f25294c93cbedcc8a58bb3, type: 3}
+  m_Name: CategoryVisual_Cannon
+  m_EditorClassIdentifier: 
+  categoryVisualData:
+    key: 40
+    whiteIcon: {fileID: -735327546, guid: 4ec56bbf9bc747646a872baec6c44747, type: 3}
+    blackIcon: {fileID: -754540652, guid: 0c194912c1520f141ac7644883bacb08, type: 3}

@@ -18,7 +18,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (character.OwnershipRole == CharacterOwnershipRole.Main)
             {
                 ValidateMain(character, main);
-                persistent = new MainCharacterPersistentChange(main, WithHealth(main, currentHealth));
+                persistent = new MainCharacterPersistentChange(character.OwnedId.Value, main, main.WithCurrentHealth(currentHealth));
             }
             return new CharacterChanges(new[] { new CharacterStateChange(character,
                 Copy(character, health, character.Stats)) }, Array.Empty<SoulCountChange>(), persistent);
@@ -32,60 +32,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int maxHealth = checked(final.PersistentMaxHealth + character.Stats.SoulMaxHealthBonus +
                 character.TemporaryMaxHealthBonus + character.PositionModifier.MaxHealthBonus);
             UnitStatsSnapshot s = character.Stats;
-            var stats = new UnitStatsSnapshot(s.MoveMethod, final.MoveRange, final.MoveCost,
-                s.AppointRange, final.PersistentAttack, s.PhysicalDefense,
-                final.MaxActionCost, s.AttackCost, Math.Min(s.RemainingMoveRange, final.MoveRange),
-                Math.Min(s.CurrentActionCost, final.MaxActionCost), s.Priority, s.Delay,
-                s.TraitStatuses.ToArray(), s.Category, s.ArtifactAttackBonus,
-                checked(final.PersistentAttack + s.ArtifactAttackBonus + s.PositionAttackBonus),
-                s.SoulAttackBonus, s.SoulMaxHealthBonus, s.PositionAttackBonus);
+            var stats = s.With(attackPower: final.PersistentAttack, physicalDefense: final.PersistentDefense,
+                effectiveAttackPower: checked(final.PersistentAttack + s.ArtifactAttackBonus + s.PositionAttackBonus + s.TraitAttackBonus));
             return new CharacterChanges(new[] { new CharacterStateChange(character,
                 Copy(character, new HealthStateSnapshot(final.CurrentHealth, maxHealth), stats)) },
-                Array.Empty<SoulCountChange>(), new MainCharacterPersistentChange(expected, final));
+                Array.Empty<SoulCountChange>(), new MainCharacterPersistentChange(character.OwnedId.Value, expected, final));
         }
 
-        /// <summary>이동·효과·사망 정산이 끝난 제안에 종료 주체의 행동 자원 복원을 합친다.</summary>
-        public static SoulActionChanges EndTurn(CharacterCombatFacts actor, SoulActionChanges settled)
+        internal static CharacterCombatFacts Recover(CharacterCombatFacts source, int amount, out int actualRecovery)
         {
-            if (actor == null) throw new ArgumentNullException(nameof(actor));
-            if (settled == null) throw new ArgumentNullException(nameof(settled));
-            var changes = new List<CharacterStateChange>(settled.Characters.Characters);
-            int index = changes.FindIndex(c => c.Expected.EntityId == actor.EntityId);
-            CharacterCombatFacts final = index >= 0 ? changes[index].Final : actor;
-            if (!final.Health.IsDead && final.Area == CharacterRuntimeArea.Field)
-            {
-                if (final.PendingMoveActionCost != 0 || final.MovementCheckpointAnchor != final.Anchor.Value)
-                    throw new InvalidOperationException("턴 종료 전에 이동 비용을 정산해야 합니다.");
-                UnitStatsSnapshot s = final.Stats;
-                var stats = new UnitStatsSnapshot(s.MoveMethod, s.MoveRange, s.MoveCost,
-                    s.AppointRange, s.AttackPower, s.PhysicalDefense,
-                    s.MaxActionCost, s.AttackCost, s.RemainingMoveRange, s.MaxActionCost,
-                    s.Priority, s.Delay, s.TraitStatuses.ToArray(), s.Category, s.ArtifactAttackBonus,
-                    s.EffectiveAttackPower, s.SoulAttackBonus, s.SoulMaxHealthBonus, s.PositionAttackBonus);
-                var change = new CharacterStateChange(index >= 0 ? changes[index].Expected : actor,
-                    Copy(final, final.Health, stats));
-                if (index >= 0) changes[index] = change;
-                else changes.Add(change);
-            }
-            return new SoulActionChanges(new CharacterChanges(changes, settled.Characters.Souls,
-                settled.Characters.Main), settled.Field, settled.ConsumedSoulIds);
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
+            actualRecovery = source.Health.IsDead ? 0 : (int)Math.Min(amount,
+                (long)source.Health.MaxHealth - source.Health.CurrentHealth);
+            return actualRecovery == 0 ? source : Copy(source,
+                new HealthStateSnapshot(source.Health.CurrentHealth + actualRecovery, source.Health.MaxHealth), source.Stats);
         }
-
-        internal static MainCharacterPersistentState WithHealth(MainCharacterPersistentState main, int hp) =>
-            new(hp, main.PersistentMaxHealth, main.PersistentAttack, main.MaxActionCost, main.MoveRange, main.MoveCost);
 
         internal static void ValidateMain(CharacterCombatFacts character, MainCharacterPersistentState main)
         {
+            // 부분 비교(의도 미확인): 체력만 본다. 전체 대응(MatchesMainState)으로 바꾸면 동작이 바뀐다. 설계 Q-B2.
             if (character == null || main == null || character.OwnershipRole != CharacterOwnershipRole.Main ||
                 character.Health.CurrentHealth != main.CurrentHealth)
                 throw new ArgumentException("메인 사실과 지속 상태가 일치해야 합니다.");
         }
 
         internal static CharacterCombatFacts Copy(CharacterCombatFacts c, HealthStateSnapshot health,
-            UnitStatsSnapshot stats) => new(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner,
-                c.OwnershipRole, c.Area, health, stats, c.ReserveSlotIndex, c.Anchor, c.Rotation,
-                c.OccupiedCells, c.MovementCheckpointAnchor, c.CommittedMoveDistance,
-                c.PendingMoveActionCost, c.TemporaryAttackBonus, c.TemporaryMaxHealthBonus,
-                c.PendingMoveDistance, c.AttackRefundEligibleMoveCost, c.PositionModifier, c.HeldEnvironment);
+            UnitStatsSnapshot stats) => c.With(health: health, stats: stats);
     }
 }

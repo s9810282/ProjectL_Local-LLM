@@ -9,6 +9,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
@@ -20,7 +21,7 @@ namespace ProjectL.Tests.Core
 {
     public sealed class StageEnemyAiTurnTests
     {
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         public void NonCannon_FriendlyOnlyDirectionIsNotSelectable(CategoryKey category)
@@ -38,7 +39,7 @@ namespace ProjectL.Tests.Core
                 .TrySelectAttackAim(input, range, out _), Is.False);
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         public void NonCannon_MixedDirectionFiltersAlliesFromAiPreviewAndExecution(CategoryKey category)
@@ -83,9 +84,7 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput DirectionInput(CategoryKey category)
         {
             var input = EnemyMovementPathTests.Input(actorCell: new CellCoord(0, 2), targetCell: new CellCoord(4, 2));
-            var snapshot = category == CategoryKey.Rider ? CategorySnapshot.CreateRider(false)
-                : category == CategoryKey.Heavy ? CategorySnapshot.CreateHeavy(Rotation4.R90, false, 50)
-                : CategorySnapshot.CreateStateless(category);
+            var snapshot = CategorySnapshot.CreateStateless(category);
             var actor = CombatCommandTestData.With(input.Characters[0], category: snapshot, appointRange: 4);
             var ally = CombatCommandTestData.Character(3, EntityKey.Unit_Akimbo, new CellCoord(2, 2), Owner.Enemy);
             var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
@@ -118,7 +117,9 @@ namespace ProjectL.Tests.Core
             Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input, range, out var aim), Is.True);
             Assert.That(CombatCommandCalculator.Preview(new CombatCommandInput(input.Number, input.Kind, input.ActorId,
                 aim, input.State, input.Characters, input.Profiles, input.Main, input.Owned, input.SoulCounts,
-                input.Souls, input.Artifacts), System.Array.Empty<IMovementTileRule>()).Targets.ToArray().Single().TargetId, Is.EqualTo(new EntityId(2)));
+                input.Souls, input.Artifacts,
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence,
+                battleInstanceId: input.BattleInstanceId), System.Array.Empty<IMovementTileRule>()).Targets.ToArray().Single().TargetId, Is.EqualTo(new EntityId(2)));
         }
 
         [Test]
@@ -146,12 +147,119 @@ namespace ProjectL.Tests.Core
             var hq = new StructureCombatFacts(new EntityId(20), new StructureSpec(EntityKey.Structure_Headquarters,
                 1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100),
                 new CellCoord(1, 2), Rotation4.R0, new[] { new CellCoord(1, 2) });
-            var state = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                new[] { hq }, input.State.ThornFields, input.State.Timeline);
+            var state = input.State.With(structures: new[] { hq });
             input = CombatCommandTestData.With(input, chars, state);
             Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input,
                 CombatCommandCalculator.GetAttackRange(input), out var aim), Is.True);
             Assert.That(aim.Cell, Is.EqualTo(new CellCoord(5, 3)));
+        }
+
+        [Test]
+        public void Facts_BadgeBreakIsValidAttackWhenOnlyTarget()
+        {
+            var input = BadgeInput(20, BadgeDemon(2, new CellCoord(2, 3)));
+            Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input,
+                CombatCommandCalculator.GetAttackRange(input), out var aim), Is.True);
+            Assert.That(aim.Cell, Is.EqualTo(new CellCoord(2, 3)));
+        }
+
+        [Test]
+        public void Facts_ActualHpLossPrecedesBadgeBreak()
+        {
+            // 칸 동점이면 x가 작은 (2,3)이 이긴다. 실제 피해가 있는 (5,3)이 골라져야 한다.
+            var input = BadgeInput(20, BadgeDemon(2, new CellCoord(2, 3)),
+                CombatCommandTestData.Character(3, EntityKey.Unit_Demon, new CellCoord(5, 3), Owner.Enemy));
+            Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input,
+                CombatCommandCalculator.GetAttackRange(input), out var aim), Is.True);
+            Assert.That(aim.Cell, Is.EqualTo(new CellCoord(5, 3)));
+        }
+
+        [Test]
+        public void Facts_ZeroDamageLegalTargetStillAttacks()
+        {
+            // 합법적인 대상이면 피해 0도 공격 후보이며 예산과 별개다.
+            var input = BadgeInput(0, BadgeDemon(2, new CellCoord(2, 3)));
+            Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input,
+                CombatCommandCalculator.GetAttackRange(input), out _), Is.True);
+        }
+
+        private static CharacterCombatFacts BadgeDemon(int id, CellCoord cell) =>
+            HeldEnvironmentEffects.AcquireBadge(CombatCommandTestData.Character(id, EntityKey.Unit_Demon, cell, Owner.Enemy), 41);
+
+        private static CombatCommandInput BadgeInput(int attackPower, params CharacterCombatFacts[] targets)
+        {
+            var method = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var input = CombatCommandTestData.Input(method, empty: true);
+            var actor = CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(1, 3), Owner.Player, attackPower);
+            return CombatCommandTestData.With(input, new[] { actor, input.Characters[1] }.Concat(targets).ToArray(),
+                profiles: input.Profiles.Select(p => p.Definition.Key == EntityKey.Unit_Akimbo
+                    ? new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, attackPower), method) : p).ToArray());
+        }
+
+        [Test]
+        public void RejectedAttackOnFartherTarget_FallsBackToPursuitOfNearestHostile()
+        {
+            // 적이 모르는 모래폭풍이 사거리를 3에서 2로 줄인다. 직선 공격은 거리 3의 (4,1)을 고르지만 실제로 거절되고,
+            // 가장 가까운(맨해튼 2) 대각선 (2,2)는 직선 밖이라 추격 이동으로 넘어간다.
+            var input = HiddenSandstormInput(new CellCoord(4, 1), new CellCoord(2, 2));
+            var range = CombatCommandCalculator.GetAttackRange(input);
+            var policy = new EnemyAiPolicy(new HostilityPolicy(), Array.Empty<IMovementTileRule>());
+            Assert.That(policy.TrySelectAttackAim(input, range, out var aim), Is.True);
+            Assert.That(aim.Cell, Is.EqualTo(new CellCoord(4, 1)));
+            Assert.That(CombatCommandCalculator.Calculate(CombatAttackQueries.WithAim(input, aim),
+                Array.Empty<IMovementTileRule>()).Accepted, Is.False);
+            Assert.That(policy.TrySelectPursuitTarget(input, out var pursuit), Is.True);
+            Assert.That(pursuit, Is.EqualTo(new EntityId(3)));
+
+            var result = CombatCommandCalculator.Advance(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            Assert.That(result.Attack.HasValue, Is.False);
+            Assert.That(result.PathMovement, Is.Not.Null);
+            Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(new CellCoord(2, 1)));
+            Assert.That(MovementTestData.Actor(result).ActionUse, Is.EqualTo(UnitActionUse.Moved));
+            Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.Attacked), Is.Zero);
+            Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.EnemyPhaseEnded), Is.Zero);
+        }
+
+        [Test]
+        public void RejectedAttackOnNearestTarget_FindsNoPursuitAndEndsPhaseWithoutChangingUnit()
+        {
+            // 거절된 조준이 가장 가까운 대상이면 경로 탐색도 같은 공개 사실로 "이미 공격 위치"라 판단해 이동하지 않는다.
+            var input = HiddenSandstormInput(new CellCoord(4, 1));
+            var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
+            Assert.That(EnemyMovementPathfinder.TryFind(input, new EntityId(2), out _), Is.False);
+
+            var result = CombatCommandCalculator.Advance(input, Array.Empty<IMovementTileRule>());
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            Assert.That(result.Attack.HasValue, Is.False);
+            Assert.That(result.PathMovement, Is.Null);
+            Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.Attacked), Is.Zero);
+            Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.EnemyPhaseEnded), Is.EqualTo(1));
+            var final = CombatCommandComposition.Project(result).Characters.Single(c => c.EntityId == actor.EntityId);
+            Assert.That(final.Anchor, Is.EqualTo(actor.Anchor));
+            Assert.That(final.Health.CurrentHealth, Is.EqualTo(actor.Health.CurrentHealth));
+        }
+
+        private static CombatCommandInput HiddenSandstormInput(CellCoord farTarget, CellCoord? nearTarget = null)
+        {
+            var method = new TargetingMethodSpec(TargetingShape.CardinalLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var input = EnemyMovementPathTests.Input(targetCell: farTarget);
+            var characters = input.Characters.Select(c => c.EntityId == input.ActorId
+                ? CombatCommandTestData.With(c, appointRange: 3) : c);
+            if (nearTarget.HasValue)
+                characters = characters.Append(CombatCommandTestData.Character(3, EntityKey.Unit_Akimbo, nearTarget.Value, Owner.Player));
+            var actorKey = input.Characters.Single(c => c.EntityId == input.ActorId).CharacterKey;
+            var all = characters.ToArray();
+            input = CombatCommandTestData.With(input, characters: all,
+                profiles: input.Profiles.Select(p => p.Definition.Key == actorKey
+                    ? new CombatAttackProfile(p.Definition, method) : p).ToArray());
+            var owned = all.Where(c => c.OwnedId.HasValue).ToArray();
+            input = input.WithPersistentFacts(owned.Select(c => new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey,
+                c.OwnershipRole.Value)).ToArray(), input.ItemInventory, input.GoldBalance, input.FameBalance);
+            input = input.WithWorld(input.State, input.Characters, input.Main, owned.ToDictionary(c => c.OwnedId.Value, _ => 0),
+                input.Souls, input.EnvironmentBindings);
+            return HighGroundMovementTests.TerrainInput(input, new StaticTerrainFact(11, new CellCoord(1, 1),
+                StaticTerrainKind.Sandstorm, true, new[] { Owner.Player }));
         }
 
         [Test]

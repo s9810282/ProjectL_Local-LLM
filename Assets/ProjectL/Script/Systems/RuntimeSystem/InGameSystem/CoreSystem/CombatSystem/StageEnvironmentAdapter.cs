@@ -28,7 +28,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             Read(int boardWidth, int boardHeight, IReadOnlyList<TerrainPresencePlacementData> placements,
                 IReadOnlyList<StaticTerrainPlacementData> staticPlacements,
                 IReadOnlyList<InitialObjectPlacementSpec> objectPlacements = null,
-                IReadOnlyList<TornadoSourceFact> tornadoPlacements = null, IReadOnlyList<CellCoord> wallCells = null)
+                IReadOnlyList<TornadoSourceFact> tornadoPlacements = null, IReadOnlyList<CellCoord> wallCells = null,
+                IReadOnlyList<long> reservedSourceIds = null)
         {
             if (placements == null) throw new ArgumentNullException(nameof(placements));
             if (staticPlacements == null) throw new ArgumentNullException(nameof(staticPlacements));
@@ -53,7 +54,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             {
                 var placement = staticPlacements[i] ?? throw new ArgumentException("지형 배치는 null일 수 없습니다.", nameof(staticPlacements));
                 sources[placements.Count + i] = new StaticTerrainFact(placement.SourceId, placement.Cell,
-                    placement.Kind, true, placement.KnownTo);
+                    placement.Kind, true, placement.KnownTo, placement.EntryThreshold);
                 terrainIds[placements.Count + i] = placement.SourceId;
             }
 
@@ -73,7 +74,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 objectIds[i] = source.Id;
             }
 
-            long maximumSourceId = sources.Take(sourceCount).Select(source => source.Id).DefaultIfEmpty(0).Max();
+            // 전투 준비가 나중에 만들 원본(최초 무작위 토네이도)의 ID다. 원본·분류에는 넣지 않고 호환 벽 ID 할당에서만 피한다.
+            var reserved = (reservedSourceIds ?? Array.Empty<long>()).ToArray();
+            if (reserved.Any(id => id < 1) || reserved.Distinct().Count() != reserved.Length)
+                throw new ArgumentException("예약한 원본 ID는 양수이며 중복될 수 없습니다.", nameof(reservedSourceIds));
+            if (sources.Take(sourceCount).Any(source => reserved.Contains(source.Id)))
+                throw new ArgumentException("예약한 원본 ID가 저작된 환경 원본과 겹칩니다.", nameof(reservedSourceIds));
+            long maximumSourceId = sources.Take(sourceCount).Select(source => source.Id).Concat(reserved).DefaultIfEmpty(0).Max();
             for (int i = 0; i < walls.Length; i++)
             {
                 long id = checked(maximumSourceId + i + 1L);

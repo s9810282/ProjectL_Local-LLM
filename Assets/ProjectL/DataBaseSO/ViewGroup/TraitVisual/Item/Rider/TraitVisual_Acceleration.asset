@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_Acceleration
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 370
+    displayName: "\uAC00\uC18D"
+    icon: {fileID: 21300000, guid: 9ecac225ce015d74dac72c5ccee49fb8, type: 3}
+    description: "이동한 칸마다 공격력이 {이동칸당공격력증가량} 증가합니다. \n가속으로 증가한 공격력은 공격 시 사라집니다."
+    defenseReductionDescription: 
+    rankValueFormat: 
+    activations:
+    - kind: 90
+      direction: 0
+      cueTiming: 1
+      bodyText:
+        enabled: 1
+        textSource: 0
+        overrideText: 
+        target: 0
+        count: 1
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 13
+          anchor: 1
+          delay: 0
+          point: 3
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

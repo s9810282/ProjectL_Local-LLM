@@ -3,6 +3,7 @@
 ```text
 Render Core
 └─ CameraGroup                     서비스 묶음 + 모듈 수명 전달만
+   ├─ UnityCameraCatalogSystem     유지 Unity Camera 이름 조회 / 출력 설정 핸들
    ├─ CameraCatalogSystem          이름별 수집 / 풀 Node / 제어 핸들
    └─ CameraEffectSystem           Type → ICameraEvent 등록/호출
       └─ Event
@@ -10,7 +11,9 @@ Render Core
          └─ CameraShakeEvent       C# Impulse 신호 생성
 ```
 
-새 MonoBehaviour나 이벤트용 GameObject를 만들지 않는다. 그룹은 효과 데이터를 해석하거나 카메라를 조작하지 않는다. Factory가 두 시스템을 그룹 내부에 등록하고 Render에는 그룹 모듈만 내보낸다. CameraGroup/CameraEffectSystem에는 Tick이 없다. 그룹은 BindScene/PostBindService/Shutdown만 전달한다.
+새 MonoBehaviour나 이벤트용 GameObject를 만들지 않는다. 그룹은 효과 데이터를 해석하거나 카메라를 조작하지 않는다. Factory가 카탈로그 둘과 효과 시스템을 그룹 내부에 등록하고 Render에는 그룹 모듈만 내보낸다. CameraGroup/CameraEffectSystem에는 Tick이 없다. 그룹은 BindScene/PostBindService/Shutdown만 전달한다.
+
+2026-10-17 C1부터 Factory는 Unity 출력 카메라 카탈로그도 등록한다. CameraEffectSystem에 주입되는 카탈로그는 기존 버추얼 전용 CameraCatalogSystem이다. 새 Unity 카탈로그의 출력 설정·영속 수명은 줌/흔들림 효과와 독립적이다.
 
 ## 호출
 
@@ -57,10 +60,4 @@ CameraEffectSystemTests에는 실제 DelayService를 통한 줌 보간·즉시 �
 
 ## 씬 테스트러너
 
-JMHTest 씬을 Play하면 Runtime Test Runner가 프레임워크를 시작하고 Camera Event Tests 패널을 표시한다. 기존 TestRuner만 사용하며 별도 테스트 Mono를 추가하지 않았다. 두 가상 카메라에는 채널 1, Gain 1, Noise 단계, Camera Space 설정의 CinemachineImpulseListener를 붙였다. ImpulseSource는 없다.
-
-패널 또는 TestRuner의 Camera 컨텍스트 메뉴에서 Zoom In, Shake, Zoom + Shake, Shake Burst, Replace Running Zoom, Dispose During Effects를 실행할 수 있다. Last data에 실제 전달한 ICameraEventData의 타입이 표시된다. Inspector에서 Shake Velocity/Duration/Channel/Shape/Burst Count 및 기존 줌 값들을 변경한다. 채널을 변경하면 Listener의 Channel Mask도 맞춰야 하며, 없거나 비활성/채널 불일치/Gain 0인 경우 러너가 오류를 표시한다.
-
-Run Inspector Test List는 이동/복구, 줌, 흔들림, 동시 효과, 반복 흔들림, 줌 요청 대체, Dispose 검사, 시네마틱 전환과 동시 효과, 최종 복구를 순서대로 실행한다. Dispose 검사는 2초 효과를 시작하고 0.25초 뒤 효과 시스템을 재바인딩하여 기존 이벤트를 Dispose한다. 남아 있던 Delay 예약의 원래 종료 시점까지 기다린 후 줌 값이 유지되면 PASS, 바뀌면 FAIL을 패널/Console에 기록한다. 새 이벤트도 재등록되므로 검사 후 다시 효과를 실행할 수 있다. 검사 중 수동 조작과 WASD는 잠시 제한한다.
-
-Stop Test List는 진행 중인 Dispose 검사도 중단하고 그 효과를 정리한다. Reset All은 이벤트들을 Dispose/재등록한 뒤 줌과 플레이 카메라 포즈를 복원하고 플레이 카메라로 전환한다. 기존 CameraTest enum 값(0~6)은 유지하고 새 테스트는 7~11로 추가하여 기존 직렬화 값을 보존했다.
+2026-10-18 사용자 요청으로 TestRuner의 이동·줌·흔들림 테스트를 제거했다. Camera Event Tests 패널·Inspector 설정·Camera 컨텍스트 메뉴·자동 테스트 목록은 더 이상 제공하지 않는다. CameraEffectSystem의 공개 API와 EditMode 테스트는 유지하며, 현재 JMHTest Runner의 용도는 [After/Before 화면 전환 테스트](render-screen-transition.md#jmhtest-수동-테스트)다.

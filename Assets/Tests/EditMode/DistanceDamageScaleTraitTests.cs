@@ -176,8 +176,7 @@ namespace ProjectL.Tests.Core
             var headquarters = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), new CellCoord(3, 3), Rotation4.R0, new[] { new CellCoord(3, 3) }, Owner.Enemy);
-            var state = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                new[] { headquarters }, input.State.ThornFields, input.State.Timeline);
+            var state = new CombatCommandState(8,8,input.State.Phase,false,                new[] { headquarters },input.State.ThornFields,turn: input.State.Turn);
 
             CombatCommandTransition result = CombatCommandCalculator.Calculate(
                 CombatCommandTestData.With(input, chars, state), Array.Empty<IMovementTileRule>());
@@ -208,7 +207,7 @@ namespace ProjectL.Tests.Core
                 CombatCommandTestData.Character(4, EntityKey.Unit_Demon, new CellCoord(3, 3), Owner.Enemy),
             };
             var profiles = input.Profiles.ToArray();
-            profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 7, CategoryKey.Base,
+            profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 7, CategoryKey.Main,
                 new DistanceDamageScaleTraitSpec(ShotgunPercents)), profiles[0].Method);
 
             CombatCommandTransition result = CombatCommandCalculator.Calculate(
@@ -228,8 +227,8 @@ namespace ProjectL.Tests.Core
         [Test]
         public void PierceAttack_AppliesFalloffBeforeDistanceScale()
         {
-            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
-            var input = CombatCommandTestData.Input(method, AttackAim.ForDirection(AttackDirection.Right), empty: true);
+            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var input = CombatCommandTestData.Input(method, AttackAim.ForCell(new CellCoord(3, 3)), empty: true);
             int[] percents = { 100, 100, 150, 100 };
             var actor = CombatCommandTestData.With(
                 CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(1, 3), Owner.Player, 3),
@@ -294,7 +293,7 @@ namespace ProjectL.Tests.Core
             };
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(
-                CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, attack, CategoryKey.Base, traits), method);
+                CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, attack, CategoryKey.Main, traits), method);
             return CombatCommandTestData.With(input, chars, profiles: profiles);
         }
 
@@ -307,13 +306,8 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                3,
-                1,
                 4,
                 1,
-                3,
-                1,
-                10,
                 10,
                 new[] { trait });
         }

@@ -1,0 +1,163 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_ShieldHistory
+  m_EditorClassIdentifier:
+  input:
+    version: 3
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 1
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "a"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+      - id: "b"
+        name: "b"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+        actionUse: 1
+        distanceMoved: 0
+      - id: "target"
+        name: "target"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "shield"
+            key: 7
+            ownerKind: 1
+            sourceId: "a"
+            trait: 240
+            amount: 30
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+          - id: "inactive"
+            key: 7
+            ownerKind: 1
+            sourceId: "b"
+            trait: 240
+            amount: 12
+            percent: 20
+            remainingTurns: 2
+            eligible: 0
+            lastResetControllerTurnCount: 0
+            lifetime: 1
+            hasMovement: 0
+            battleInstanceId: 1
+            controllerTurnSequence: 1
+            moveCommandNumber: 1
+        actionUse: 1
+        distanceMoved: 0
+    entries:
+      - id: "3018bab01fef42b4a7fdfb3eebe96dbe"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "28d7105a60a846369bbdf972031aadc2"
+        name: "소진 이력만 남음·칩 없음"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "5a1ee1f4f4b24696b85fe4d451bcb389"
+            name: "명시 출처 설정"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "shield"
+                key: 7
+                ownerKind: 1
+                sourceId: "a"
+                trait: 240
+                amount: 0
+                percent: 20
+                remainingTurns: 2
+                eligible: 0
+                lastResetControllerTurnCount: 0
+                lifetime: 1
+                hasMovement: 0
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1
+      - id: "528dc2dea6aa44b0a1eb1cf8cb268508"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "762324de9ac24a9abf299b33f95b40b7"
+        name: "명시한 정상 reset·칩 복귀"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "f19b2aad330441aa8b1023e59e9fea96"
+            name: "명시 출처 설정"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "shield"
+                key: 7
+                ownerKind: 1
+                sourceId: "a"
+                trait: 240
+                amount: 20
+                percent: 20
+                remainingTurns: 2
+                eligible: 1
+                lastResetControllerTurnCount: 1
+                lifetime: 1
+                hasMovement: 0
+                battleInstanceId: 1
+                controllerTurnSequence: 1
+                moveCommandNumber: 1

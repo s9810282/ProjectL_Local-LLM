@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5993b34b2ca846dca435f3ba5d46ea26, type: 3}
+  m_Name: BakedLighting
+  m_EditorClassIdentifier: 
+  mode: 1
+  atlases:
+  - color: {fileID: 2800000, guid: 6e00805f7bf4add4abb3298e52a329c3, type: 3}
+    direction: {fileID: 2800000, guid: 15cc9e35c68fed4429865dfafd254751, type: 3}
+    shadowMask: {fileID: 0}
+  surfaces:
+  - node:
+      indices: 00000000
+      nodeName: land2
+      componentIndex: 0
+    mesh: {fileID: 4493585093827132993, guid: 5dce52b78253d41429752aeeb96991b0, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 1.086304, y: 1.086304, z: -0.21610057, w: -0.18485057}
+  - node:
+      indices: 01000000
+      nodeName: Rock
+      componentIndex: 0
+    mesh: {fileID: -7481085904417074962, guid: ce6e4e188349bae45a507cce4aec9944, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 0.025320584, y: 0.025320584, z: 0.061322473, w: -0.001177528}
+  - node:
+      indices: 02000000
+      nodeName: Rock
+      componentIndex: 0
+    mesh: {fileID: -7481085904417074962, guid: ce6e4e188349bae45a507cce4aec9944, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 0.025320584, y: 0.025320584, z: -0.001177528, w: -0.001177528}
+  - node:
+      indices: 03000000
+      nodeName: Rock
+      componentIndex: 0
+    mesh: {fileID: -7481085904417074962, guid: ce6e4e188349bae45a507cce4aec9944, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 0.025320584, y: 0.025320584, z: 0.030072471, w: -0.001177528}
+  lights:
+  - node:
+      indices: 04000000
+      nodeName: Directional Light
+      componentIndex: 0
+    isBaked: 1
+    bakeType: 2
+    mixedMode: 2
+    maskChannel: -1
+    probeIndex: 0

@@ -12,11 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         public MovementStepEffects Evaluate(MovementStepInput input, MovementTileFact tile)
         {
-            var flag = (FlagSourceFact)tile;
-            if (input.HeldEnvironment.Flag != null) return new MovementStepEffects();
-            var final = HeldEnvironmentEffects.WithFlag(input.HeldEnvironment, HeldFlag.From(flag));
-            return new MovementStepEffects(expectedSource: flag, finalSource: flag.WithActive(false),
-                heldChanges: new[] { new MovementHeldChange(input.MoverId, input.HeldEnvironment, final) });
+            // 진영 턴에서 우선도 전용 깃발 기능은 재설계 전까지 비활성이다. 보류 여부는 DeferredCombatFeatures.IsFlagPickupAvailable이 정한다.
+            return new MovementStepEffects();
         }
     }
 }

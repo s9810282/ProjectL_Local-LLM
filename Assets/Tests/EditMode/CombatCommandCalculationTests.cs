@@ -14,23 +14,19 @@ namespace ProjectL.Tests.Core
     public sealed class CombatCommandCalculationTests
     {
         [Test]
-        public void ThreeTargets_ChargeAttackApOnce_AndScaleEachAdditionalFromCommonDamage()
+        public void ThreeTargets_ScaleEachAdditionalFromCommonDamage()
         {
             CombatCommandInput input = CombatCommandTestData.Input();
             CombatCommandTransition result = CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.Attack.Value.Hits.Length, Is.EqualTo(3));
-            Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
-            Assert.That(result.Characters.Characters.Single(x => x.Final.EntityId == input.ActorId)
-                .Final.Stats.CurrentActionCost, Is.EqualTo(3));
             Assert.That(result.Attack.Value.Hits.ToArray().Select(x => x.DamageDealt), Is.EqualTo(new[] { 20, 14, 14 }));
-            Assert.That(input.Characters[0].Stats.CurrentActionCost, Is.EqualTo(5));
         }
 
         [Test]
         public void InvalidAim_RejectsWithoutMovementHealthOrApChanges()
         {
-            CombatCommandInput input = CombatCommandTestData.Input(aim: AttackAim.ForCell(new CellCoord(99, 99)), pending: true);
+            CombatCommandInput input = CombatCommandTestData.Input(aim: AttackAim.ForCell(new CellCoord(99, 99)));
             CombatCommandTransition result = CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.False);
             Assert.That(result.Characters.Characters, Is.Empty);
@@ -38,13 +34,13 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Field.Final, Is.SameAs(input.Souls));
         }
 
-        [TestCase(CategoryKey.Base, false)]
+        [TestCase(CategoryKey.Main, false)]
         [TestCase(CategoryKey.Rider, false)]
         [TestCase(CategoryKey.Heavy, false)]
         [TestCase(CategoryKey.Cannon, true)]
-        public void EmptySingle_OnlyCannonIsAcceptedAndPaysNormalCost(CategoryKey category, bool accepted)
+        public void EmptySingle_OnlyCannonIsAccepted(CategoryKey category, bool accepted)
         {
-            var input = CombatCommandTestData.Input(empty: true, pending: true, category: category);
+            var input = CombatCommandTestData.Input(empty: true, category: category);
             CombatCommandTransition result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.EqualTo(accepted), result.Reason);
             if (!accepted)
@@ -53,19 +49,16 @@ namespace ProjectL.Tests.Core
                 Assert.That(result.Characters.Characters, Is.Empty);
                 Assert.That(result.Events, Is.Empty);
                 Assert.That(result.FinalState, Is.SameAs(input.State));
-                Assert.That(input.Characters[0].Stats.CurrentActionCost, Is.EqualTo(5));
-                Assert.That(input.Characters[0].PendingMoveActionCost, Is.EqualTo(1));
+                Assert.That(input.Characters[0].ActionUse, Is.EqualTo(UnitActionUse.Available));
                 return;
             }
             Assert.That(result.Attack.Value.PrimaryTargetId.IsEmpty, Is.True);
             Assert.That(result.Attack.Value.Hits.Length, Is.Zero);
             Assert.That(result.Attack.Value.PrimaryCell, Is.EqualTo(new CellCoord(4, 3)));
-            Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
-            Assert.That(result.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final.Stats.CurrentActionCost, Is.EqualTo(3));
         }
 
         [Test]
-        public void EmptyDirection_RejectsWithoutAttackCost()
+        public void EmptyDirection_RejectsWithoutCharacterChanges()
         {
             var method = new TargetingMethodSpec(TargetingShape.Fan, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
             CombatCommandTransition result = CombatCommandCalculator.Calculate(CombatCommandTestData.Input(
@@ -74,7 +67,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Characters.Characters, Is.Empty);
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         public void NonCannonSplash_ExcludesCasterAndFriendlySecondary(CategoryKey category)
@@ -129,8 +122,7 @@ namespace ProjectL.Tests.Core
             var structure = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 2, new[] { CellCoord.Zero, CellCoord.Up }, health, false, 0),
                 new HealthStateSnapshot(health, health), cells[0], Rotation4.R0, cells, Owner.Enemy);
-            var state = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                new[] { structure }, input.State.ThornFields, input.State.Timeline);
+            var state = new CombatCommandState(8,8,input.State.Phase,false,                new[] { structure },input.State.ThornFields,turn: input.State.Turn);
             // 본부 파괴의 전투 종료와 폭발 피해를 제외하고 점유 해제만 검사한다.
             input = ObstacleReactionTests.Copy(CombatCommandTestData.With(input, state: state),
                 profiles: new[] { new ObstacleContentProfile(structure.EntityId, ObstacleContentKind.PowderBarrel, 0) });
@@ -139,7 +131,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Attack.Value.Hits.Span[0].Role, Is.EqualTo(AttackTargetRole.Primary));
             Assert.That(result.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(20));
             Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(remaining));
-            var projected = CombatCommandComposition.Project(result);
+            var projected = NextPlayer(CombatCommandComposition.Project(result));
             foreach (var cell in cells)
             {
                 var route = cell.Y == 3 ? new[] { new CellCoord(1, 3), new CellCoord(2, 3) } :
@@ -153,7 +145,7 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void RepeatedAttacks_ChargeEachAcceptedIntent_AndDeathReleasesCellForMovement()
+        public void RepeatedAttacks_RequireNewOwnerTurns_AndDeathReleasesCellForLaterMovement()
         {
             var input = CombatCommandTestData.Input(new TargetingMethodSpec(TargetingShape.RadialSquare,
                 TargetingChoiceMode.Single, TargetingSplash.None, 0), AttackAim.ForCell(new CellCoord(2, 3)), empty: true);
@@ -162,20 +154,20 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input, input.Characters.Concat(new[] { target }).ToArray());
             var first = CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(first.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(20));
-            var second = CombatCommandCalculator.Calculate(CombatCommandComposition.Project(first), System.Array.Empty<IMovementTileRule>());
+            var afterFirst = CombatCommandComposition.Project(first);
+            Assert.That(CombatCommandCalculator.Calculate(afterFirst, Array.Empty<IMovementTileRule>()).Accepted, Is.False);
+            var second = CombatCommandCalculator.Calculate(NextPlayer(afterFirst), Array.Empty<IMovementTileRule>());
             Assert.That(second.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(10));
-            Assert.That(second.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final.Stats.CurrentActionCost, Is.EqualTo(1));
             Assert.That(second.Characters.Characters.Single(c => c.Final.EntityId == target.EntityId).Final.OccupiedCells, Is.Empty);
-            var move = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(CombatCommandComposition.Project(second),
+            var move = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(NextPlayer(CombatCommandComposition.Project(second)),
                 CombatCommandKind.Move, path: new MovementPath(new[] { new CellCoord(1, 3), new CellCoord(2, 3) })), System.Array.Empty<IMovementTileRule>());
             Assert.That(move.Accepted, Is.True, move.Reason);
-            Assert.That(move.Characters.Characters.Single().Final.Stats.CurrentActionCost, Is.Zero);
             Assert.That(move.Characters.Characters.Single().Final.Rotation, Is.EqualTo(Rotation4.R0));
             Assert.That(target.Health.CurrentHealth, Is.EqualTo(30));
         }
 
-        [TestCase(TargetingChoiceMode.Direction, CategoryKey.Base, false)]
-        [TestCase(TargetingChoiceMode.All, CategoryKey.Base, false)]
+        [TestCase(TargetingChoiceMode.Direction, CategoryKey.Main, false)]
+        [TestCase(TargetingChoiceMode.All, CategoryKey.Main, false)]
         [TestCase(TargetingChoiceMode.Direction, CategoryKey.Rider, false)]
         [TestCase(TargetingChoiceMode.All, CategoryKey.Rider, false)]
         [TestCase(TargetingChoiceMode.Direction, CategoryKey.Heavy, false)]
@@ -191,8 +183,7 @@ namespace ProjectL.Tests.Core
             var structure = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 50, false, 0),
                 new HealthStateSnapshot(50, 50), new CellCoord(3, 3), Rotation4.R0, new[] { new CellCoord(3, 3) }, Owner.Player);
-            var state = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                new[] { structure }, input.State.ThornFields, input.State.Timeline);
+            var state = new CombatCommandState(8,8,input.State.Phase,false,                new[] { structure },input.State.ThornFields,turn: input.State.Turn);
             var result = CombatCommandCalculator.Calculate(CombatCommandTestData.With(input,
                 input.Characters.Concat(new[] { friend }).ToArray(), state), System.Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.EqualTo(accepted), result.Reason);
@@ -212,7 +203,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(30));
         }
 
-        [TestCase(CategoryKey.Base, false)]
+        [TestCase(CategoryKey.Main, false)]
         [TestCase(CategoryKey.Rider, false)]
         [TestCase(CategoryKey.Heavy, false)]
         [TestCase(CategoryKey.Cannon, true)]
@@ -222,14 +213,13 @@ namespace ProjectL.Tests.Core
             var dead = CombatCommandTestData.With(input.Characters[2], hp: 0);
             dead = new CharacterCombatFacts(dead.EntityId, null, dead.CharacterKey, dead.Owner, null,
                 CharacterRuntimeArea.Excluded, dead.Health, dead.Stats, null, null, null,
-                Array.Empty<CellCoord>(), dead.MovementCheckpointAnchor, 0, 0);
+                Array.Empty<CellCoord>(), dead.ActionUse);
             input = CombatCommandTestData.With(input, new[] { input.Characters[0], input.Characters[1], dead });
             var result = CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.EqualTo(accepted), result.Reason);
             if (accepted)
             {
                 Assert.That(result.Attack.Value.Hits.ToArray(), Is.Empty);
-                Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
             }
             else
             {
@@ -246,7 +236,7 @@ namespace ProjectL.Tests.Core
 
         [TestCase(false)]
         [TestCase(true)]
-        public void Attack_EliminatesOnlyActualCasualtiesFromCanonicalTurnParticipants(bool lethal)
+        public void Attack_EliminatesOnlyActualCasualties_WithoutEndingController(bool lethal)
         {
             var input = CombatCommandTestData.Input();
             var chars = input.Characters.ToArray();
@@ -255,15 +245,19 @@ namespace ProjectL.Tests.Core
                 chars[2] = CombatCommandTestData.With(chars[2], hp: 1);
                 chars[3] = CombatCommandTestData.With(chars[3], hp: 1);
             }
-            var turn = new CombatTurnFacts(StagePhase.Combat, participants: chars.Select(c =>
-                new CombatTurnParticipant(c.EntityId, c.Stats.Priority, c.Stats.Delay)).ToArray());
-            var state = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                input.State.Structures, input.State.ThornFields, input.State.Timeline, turn);
+            var turn = input.State.Turn;
+            var state = new CombatCommandState(8,8,input.State.Phase,false,                input.State.Structures,input.State.ThornFields,turn);
             var result = CombatCommandCalculator.Calculate(CombatCommandTestData.With(input, chars, state), System.Array.Empty<IMovementTileRule>());
-            Assert.That(result.FinalState.Turn.Participants.Select(p => p.EntityId.Value),
+            Assert.That(CombatCommandComposition.Project(result).Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead).Select(c => c.EntityId.Value),
                 Is.EquivalentTo(lethal ? new[] { 1, 4, 10 } : new[] { 1, 2, 3, 4, 10 }));
             Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.Died), Is.EqualTo(lethal ? 2 : 0));
-            Assert.That(turn.Participants.Count, Is.EqualTo(5));
+            Assert.That(result.FinalState.Turn.SameValues(turn), Is.True);
+            Assert.That(input.Characters.Count, Is.EqualTo(5));
+        }
+        private static CombatCommandInput NextPlayer(CombatCommandInput input)
+        {
+            var begun = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingPlayer));
+            return CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(begun), CombatCommandKind.Attack, input.ActorId, input.Aim);
         }
     }
 }

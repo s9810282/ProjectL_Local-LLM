@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b713b01916374798af634bffce2a3124, type: 3}
+  m_Name: TerrainVisualDataTable
+  m_EditorClassIdentifier:
+  databaseItems:
+  - {fileID: 11400000, guid: e14387d4b6e24d50b0b757aa1c9a9c1c, type: 2}
+  - {fileID: 11400000, guid: 993f625096b642dfad90d7cb80b126ab, type: 2}
+  - {fileID: 11400000, guid: f38e048d7d3442988ece7990de6f059e, type: 2}
+  - {fileID: 11400000, guid: 5cb7f5b40c754fbbbffe62f6256274ca, type: 2}
+  - {fileID: 11400000, guid: b12be8d828cb4aa1bd73bbdfdac1f104, type: 2}
+  - {fileID: 11400000, guid: abec384af8f4479c893faece563d08c2, type: 2}
+  - {fileID: 11400000, guid: 14c3cf68f4bc4e95a75941293ca0fd60, type: 2}

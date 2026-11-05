@@ -2,7 +2,7 @@
 
 Date: 2026-09-29
 
-Plan: [CharacterBuffer and Effect State Migration](../plans/2026-09-29-character-buffer-effect-migration-plan.md)
+Plan: CharacterBuffer and Effect State Migration (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)
 
 Status: **Task 0 complete: workspace inspection, Core compilation, and both requested Unity EditMode suites executed. The Framework baseline is not green.** No Task 1 implementation, runtime-code changes, test deletion, commit, or branch integration was performed in this task.
 

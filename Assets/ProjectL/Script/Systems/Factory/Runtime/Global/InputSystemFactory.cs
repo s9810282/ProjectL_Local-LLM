@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.Configuration;
 using ProjectL.Framework.Composition;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.Data;
@@ -18,14 +20,17 @@ namespace ProjectL.Systems.Factory.Runtime.Global
         /// </summary>
         public static IExportSystemServices Create(
             IReadOnlyList<IInputController> controllers,
-            IReadOnlyList<InputLayer> layers)
+            IReadOnlyList<InputLayer> layers,
+            IReadOnlyList<KeyBindingDefinition> keyBindings = null)
         {
             SystemBuilderHelper builder = new();
 
             InputSystem inputSystem = new();
             inputSystem.ExportServices(builder);
 
-            new UnityInputBridge(inputSystem, controllers, layers).ExportServices(builder);
+            var keys = new KeyBindingService(keyBindings ?? Array.Empty<KeyBindingDefinition>());
+            builder.AddService<IKeyBindingService>(keys);
+            new UnityInputBridge(inputSystem, controllers, layers, keys).ExportServices(builder);
 
             return new InputSystemGroup(builder.BuildSystemReader());
         }

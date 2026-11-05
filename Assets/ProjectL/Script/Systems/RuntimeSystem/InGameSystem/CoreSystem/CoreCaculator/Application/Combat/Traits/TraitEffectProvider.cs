@@ -44,12 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (state is FocusRuntimeState focus)
                 {
                     statuses.Add(new FocusTraitStatusSnapshot(
-                        focus.ActiveStacks, focus.GainScheduled, focus.MovedThisTurn));
-                }
-                else if (state is MoveAttackDiscountRuntimeState discount)
-                {
-                    statuses.Add(new MoveAttackDiscountTraitStatusSnapshot(
-                        discount.FirstMoveConsumed, discount.DiscountArmed));
+                        0, false, false));
                 }
                 else if (state is PiercingFalloffRuntimeState &&
                          traitDefinition is PiercingFalloffTraitDefinition falloff)
@@ -62,7 +57,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     statuses.Add(new ThornFieldTraitStatusSnapshot(
                         thornField.ThornDamage,
-                        thornField.LifetimeUnitTurns));
+                        thornField.LifetimeUnitTurns, thornField.DefenseReductionPercent, thornField.TickPhase));
                 }
                 else if (state is KnockbackRuntimeState &&
                          traitDefinition is KnockbackTraitDefinition knockback)
@@ -81,6 +76,135 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     statuses.Add(new KillChainAttackTraitStatusSnapshot());
                 }
+                else if (state is NecromancyRuntimeState &&
+                         traitDefinition is NecromancyTraitDefinition necromancy)
+                {
+                    statuses.Add(new NecromancyTraitStatusSnapshot(necromancy.SummonedUnitKey,
+                        necromancy.MaxLivingSummons, necromancy.FirstActionDelay));
+                }
+                else if (state is RoarRuntimeState roar &&
+                         traitDefinition is RoarTraitDefinition roarDefinition)
+                {
+                    statuses.Add(new RoarTraitStatusSnapshot(roar.HitCount, roarDefinition.HitThreshold));
+                }
+                else if (state is IntimidationRuntimeState &&
+                         traitDefinition is IntimidationTraitDefinition intimidation)
+                {
+                    statuses.Add(new IntimidationTraitStatusSnapshot(intimidation.AttackReductionPercent));
+                }
+                else if (state is ImpactBoltRuntimeState && traitDefinition is ImpactBoltTraitDefinition bolt)
+                {
+                    statuses.Add(new ImpactBoltTraitStatusSnapshot(bolt.DistanceCells));
+                }
+                else if (state is PullRuntimeState && traitDefinition is PullTraitDefinition pull)
+                {
+                    statuses.Add(new PullTraitStatusSnapshot(pull.ExtraRangeCells));
+                }
+                else if (state is HuntersMarkRuntimeState && traitDefinition is HuntersMarkTraitDefinition mark)
+                {
+                    statuses.Add(new HuntersMarkTraitStatusSnapshot(mark.BonusDamagePercent, mark.DurationAffectedSideTurnEnds));
+                }
+                else if (state is VanguardRuntimeState && traitDefinition is VanguardTraitDefinition)
+                {
+                    statuses.Add(new VanguardTraitStatusSnapshot());
+                }
+                else if (state is CleanSweepRuntimeState && traitDefinition is CleanSweepTraitDefinition)
+                {
+                    statuses.Add(new CleanSweepTraitStatusSnapshot());
+                }
+                else if (state is CallOfBloodRuntimeState && traitDefinition is CallOfBloodTraitDefinition)
+                {
+                    statuses.Add(new CallOfBloodTraitStatusSnapshot());
+                }
+                else if (state is MoraleBoostRuntimeState && traitDefinition is MoraleBoostTraitDefinition)
+                {
+                    statuses.Add(new MoraleBoostTraitStatusSnapshot());
+                }
+                else if (state is DisarmRuntimeState && traitDefinition is DisarmTraitDefinition)
+                {
+                    statuses.Add(new DisarmTraitStatusSnapshot());
+                }
+                else if (state is AnkleBreakerRuntimeState && traitDefinition is AnkleBreakerTraitDefinition)
+                {
+                    statuses.Add(new AnkleBreakerTraitStatusSnapshot());
+                }
+                else if (state is SoloActionRuntimeState && traitDefinition is SoloActionTraitDefinition)
+                {
+                    statuses.Add(new SoloActionTraitStatusSnapshot());
+                }
+                else if (state is CohesionRuntimeState && traitDefinition is CohesionTraitDefinition)
+                {
+                    statuses.Add(new CohesionTraitStatusSnapshot());
+                }
+                else if (state is EntrenchmentRuntimeState && traitDefinition is EntrenchmentTraitDefinition)
+                {
+                    statuses.Add(new EntrenchmentTraitStatusSnapshot());
+                }
+                else if (state is SacrificeRuntimeState && traitDefinition is SacrificeTraitDefinition)
+                {
+                    statuses.Add(new SacrificeTraitStatusSnapshot());
+                }
+                else if (state is TauntRuntimeState && traitDefinition is TauntTraitDefinition)
+                {
+                    statuses.Add(new TauntTraitStatusSnapshot());
+                }
+                else if (state is SteadfastWillRuntimeState && traitDefinition is SteadfastWillTraitDefinition)
+                {
+                    statuses.Add(new SteadfastWillTraitStatusSnapshot());
+                }
+                else if (state is GroundCompactionRuntimeState && traitDefinition is GroundCompactionTraitDefinition)
+                {
+                    statuses.Add(new GroundCompactionTraitStatusSnapshot());
+                }
+                else if (state is ReconSquadRuntimeState && traitDefinition is ReconSquadTraitDefinition recon)
+                {
+                    statuses.Add(new ReconSquadTraitStatusSnapshot(recon.IncreasePercent, recon.Radius));
+                }
+                else if (state is DustScreenRuntimeState && traitDefinition is DustScreenTraitDefinition)
+                {
+                    statuses.Add(new DustScreenTraitStatusSnapshot());
+                }
+                else if (state is PositionSwapRuntimeState && traitDefinition is PositionSwapTraitDefinition)
+                {
+                    statuses.Add(new PositionSwapTraitStatusSnapshot());
+                }
+                else if (state is LeapRuntimeState && traitDefinition is LeapTraitDefinition)
+                {
+                    statuses.Add(new LeapTraitStatusSnapshot());
+                }
+                else if (state is AccelerationRuntimeState acceleration && traitDefinition is AccelerationTraitDefinition)
+                {
+                    statuses.Add(new AccelerationTraitStatusSnapshot(acceleration.HeldAttackBonus));
+                }
+                else if (state is StationaryFireRuntimeState stationaryfire && traitDefinition is StationaryFireTraitDefinition)
+                {
+                    statuses.Add(new StationaryFireTraitStatusSnapshot(stationaryfire.MovedThisOwnTurn));
+                }
+                else if (state is ArmorBreakerRuntimeState && traitDefinition is ArmorBreakerTraitDefinition)
+                {
+                    statuses.Add(new ArmorBreakerTraitStatusSnapshot());
+                }
+                else if (state is FinishingShotRuntimeState && traitDefinition is FinishingShotTraitDefinition)
+                {
+                    statuses.Add(new FinishingShotTraitStatusSnapshot());
+                }
+                else if (state is TrackingShotRuntimeState && traitDefinition is TrackingShotTraitDefinition)
+                {
+                    statuses.Add(new TrackingShotTraitStatusSnapshot());
+                }
+                else if (state is FocusedBombardmentRuntimeState && traitDefinition is FocusedBombardmentTraitDefinition)
+                {
+                    statuses.Add(new FocusedBombardmentTraitStatusSnapshot());
+                }
+                else if (state is HunterRuntimeState hunter && traitDefinition is HunterTraitDefinition)
+                {
+                    statuses.Add(new HunterTraitStatusSnapshot(hunter.TargetId, hunter.SuccessfulRewards));
+                }
+                else if (state is RegenerationRuntimeState regenerationState &&
+                         traitDefinition is RegenerationTraitDefinition regeneration)
+                {
+                    statuses.Add(new RegenerationTraitStatusSnapshot(regeneration.HealAmount, regeneration.HealEveryOwnSideTurnEnds, regenerationState.CompletedEligibleTurnEnds));
+                }
                 else
                 {
                     throw new InvalidOperationException(
@@ -88,7 +212,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
             }
 
-            return statuses.ToArray();
+            return statuses.ConvertAll(status => status.WithAvailability(
+                DeferredCombatFeatures.GetTraitUnavailableReason(status.Key),
+                DeferredCombatFeatures.GetTraitPartialUnavailableReason(status.Key))).ToArray();
         }
 
         private static TraitRuntimeState GetValidatedRuntimeState(

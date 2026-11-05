@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c907719567e420f8ccb06d18e87216d, type: 3}
+  m_Name: TraitGrowth_Leap
+  m_EditorClassIdentifier: 
+  normal:
+    rid: 1000
+  enhanced:
+    rid: -2
+  rank2:
+    rid: -2
+  rank3:
+    rid: -2
+  displayName: "\uB6F0\uC5B4\uB118\uAE30"
+  description: "\uC774\uB3D9 \uC911 \uC720\uB2DB\xB7\uBCBD\xB7\uC808\uBCBD\uC744
+    \uD1B5\uACFC\uD558\uACE0 \uC911\uAC04 \uCE78\uC758 \uC9C0\uB8B0\uB97C \uAC74\uB108\uB701\uB2C8\uB2E4.
+    \uB3C4\uCC29 \uCE78\uC5D0\uB294 \uC815\uC0C1 \uB3C4\uCC29 \uC870\uAC74\uC774
+    \uC801\uC6A9\uB429\uB2C8\uB2E4."
+  enhancedName: 
+  enhancedDescription: 
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1000
+      type: {class: LeapTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data: 

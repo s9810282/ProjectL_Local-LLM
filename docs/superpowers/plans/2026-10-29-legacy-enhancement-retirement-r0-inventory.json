@@ -1,0 +1,616 @@
+{
+  "head": "7f4e1d9dcaa5d5248a635d23c7ad9fcd5b1789fb",
+  "families": [
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/ChainExplosionTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/ContemptForWeakTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/DoorBreachingTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/DoubleShotTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/LuckyBulletTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/PrecisionShotTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/ChainExplosionTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/ContemptForWeakTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/DoorBreachingTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/DoubleShotTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/LuckyBulletTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/PrecisionShotTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/ChainExplosionTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/ContemptForWeakTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/DoorBreachingTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/DoubleShotTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/LuckyBulletTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/PrecisionShotTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/ChainExplosionTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/ContemptForWeakTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/DoorBreachingTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/DoubleShotTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/LuckyBulletTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/PrecisionShotTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ChainExplosionEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ChainExplosionEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ContemptForWeakEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ContemptForWeakEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoorBreachingEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoorBreachingEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoubleShotEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoubleShotEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/LuckyBulletEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/LuckyBulletEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/PrecisionShotEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/PrecisionShotEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/ChainExplosionTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/ContemptForWeakTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/DoorBreachingTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/DoubleShotTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/LuckyBulletTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/PrecisionShotTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/ChainExplosionRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/ContemptForWeakRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/DoorBreachingRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/DoubleShotRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/LuckyBulletRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/PrecisionShotRuntimeState.cs"
+  ],
+  "productionDirect": [
+    "Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/Unit/Trait/UnitTraitAuthoring.cs",
+    "Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/Unit/Trait/UnitTraitData.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CharacterSystem/TraitSpecAdapter.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatCommandEffects.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/ChainExplosionTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/ContemptForWeakTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/DoorBreachingTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/DoubleShotTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/LuckyBulletTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/PrecisionShotTraitFactories.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/TraitEffectProvider.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/Traits/TraitRegistry.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Roster/TraitGrowthRules.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/ChainExplosionTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/ContemptForWeakTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/DoorBreachingTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/DoubleShotTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/LuckyBulletTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Commands/Traits/PrecisionShotTraitSpec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Common/TraitKey.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Enhancements/EnhancementKey.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/ChainExplosionTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/ContemptForWeakTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/DoorBreachingTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/DoubleShotTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/LuckyBulletTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Snapshots/Traits/PrecisionShotTraitStatusSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/ChainExplosionTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/ContemptForWeakTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/DoorBreachingTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/DoubleShotTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/LuckyBulletTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Definitions/PrecisionShotTraitDefinition.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ChainExplosionEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ChainExplosionEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ContemptForWeakEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ContemptForWeakEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoorBreachingEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoorBreachingEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoubleShotEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoubleShotEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/LuckyBulletEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/LuckyBulletEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/PrecisionShotEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/PrecisionShotEffectStateSnapshot.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/TraitEffectStateCodec.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/ChainExplosionTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/ContemptForWeakTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/DoorBreachingTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/DoubleShotTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/LuckyBulletTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Rules/PrecisionShotTraitRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/ChainExplosionRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/ContemptForWeakRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/DoorBreachingRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/DoubleShotRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/LuckyBulletRuntimeState.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/States/PrecisionShotRuntimeState.cs"
+  ],
+  "testsDirect": [
+    "Assets/Tests/EditMode/ArmorBreakerTraitTests.cs",
+    "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+    "Assets/Tests/EditMode/CharacterCombatFactsSameValuesTests.cs",
+    "Assets/Tests/EditMode/ContractWithPreservationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/CannonThresholdPublicationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/ChapterDistributionTestData.cs",
+    "Assets/Tests/EditMode/CoreIntegration/RetiredTraitAuthoringTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/SacrificePublicationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/SubTraitShopRetirementTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthAuthoringTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthBoundaryIntegrationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthCommandTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthProgressContractTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthStatSettlementTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthTestRuntime.cs",
+    "Assets/Tests/EditMode/EnhancementActionCostTests.cs",
+    "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+    "Assets/Tests/EditMode/EnhancementDoubleShotTests.cs",
+    "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+    "Assets/Tests/EditMode/EnhancementFollowUpPreparationTests.cs",
+    "Assets/Tests/EditMode/EnhancementLifecycleTests.cs",
+    "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+    "Assets/Tests/EditMode/EnhancementPoisonThornTests.cs",
+    "Assets/Tests/EditMode/EnhancementPrecisionShotTests.cs",
+    "Assets/Tests/EditMode/EnhancementShopRuleTests.cs",
+    "Assets/Tests/EditMode/EnhancementTargetDamageCapabilityTests.cs",
+    "Assets/Tests/EditMode/EnhancementTargetDamageTests.cs",
+    "Assets/Tests/EditMode/HuntersMarkAttackTests.cs",
+    "Assets/Tests/EditMode/HunterTraitTests.cs",
+    "Assets/Tests/EditMode/MovementEnvironmentTests.cs",
+    "Assets/Tests/EditMode/OwnedEnhancementStateTests.cs",
+    "Assets/Tests/EditMode/OwnedTraitGrowthTests.cs",
+    "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+    "Assets/Tests/EditMode/TraitActivationContractTests.cs",
+    "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+    "Assets/Tests/EditMode/TraitAttackNotificationTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthCatalogTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthChangeTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthFixtures.cs",
+    "Assets/Tests/EditMode/TraitGrowthOfferTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthRulesTests.cs",
+    "Assets/Tests/EditMode/TraitMovementAttackTests.cs",
+    "Assets/Tests/EditMode/TraitStateContractTests.cs"
+  ],
+  "testsTransitive": [
+    "Assets/Tests/EditMode/ArmorBreakerTraitTests.cs",
+    "Assets/Tests/EditMode/ArtifactSoulBufferCalculationTests.cs",
+    "Assets/Tests/EditMode/AttackCommandCharacterizationTests.cs",
+    "Assets/Tests/EditMode/AttackElevationTests.cs",
+    "Assets/Tests/EditMode/AttackTargetPolicyIntegrationTests.cs",
+    "Assets/Tests/EditMode/BattleRewardReceiptTests.cs",
+    "Assets/Tests/EditMode/BossDeathPathTests.cs",
+    "Assets/Tests/EditMode/BossHitCounterTests.cs",
+    "Assets/Tests/EditMode/BossNightLifecycleTests.cs",
+    "Assets/Tests/EditMode/BossRoarTests.cs",
+    "Assets/Tests/EditMode/BossTurnTests.cs",
+    "Assets/Tests/EditMode/CactusLobbedAttackTests.cs",
+    "Assets/Tests/EditMode/CannonThresholdTraitTests.cs",
+    "Assets/Tests/EditMode/CharacterCombatFactsSameValuesTests.cs",
+    "Assets/Tests/EditMode/CharacterExperienceFactsTests.cs",
+    "Assets/Tests/EditMode/CharacterStageRecordTests.cs",
+    "Assets/Tests/EditMode/CliffFallTests.cs",
+    "Assets/Tests/EditMode/CombatCommandCalculationTests.cs",
+    "Assets/Tests/EditMode/CombatDamageBoundaryTests.cs",
+    "Assets/Tests/EditMode/CombatExperienceSettlementTests.cs",
+    "Assets/Tests/EditMode/CombatItemDamageSourceTests.cs",
+    "Assets/Tests/EditMode/CombatItemLifetimeTests.cs",
+    "Assets/Tests/EditMode/CombatItemTimelineTests.cs",
+    "Assets/Tests/EditMode/CombatKillRewardTests.cs",
+    "Assets/Tests/EditMode/CombatRewardConsistencyTests.cs",
+    "Assets/Tests/EditMode/CombatRewardParticipationTests.cs",
+    "Assets/Tests/EditMode/CombatStageRecordTests.cs",
+    "Assets/Tests/EditMode/CombatSummonTests.cs",
+    "Assets/Tests/EditMode/ConnectedWallCombatTests.cs",
+    "Assets/Tests/EditMode/ContractWithPreservationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/CannonThresholdPublicationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/ChapterDistributionTestData.cs",
+    "Assets/Tests/EditMode/CoreIntegration/ChapterStageDistributionIntegrationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/RetiredTraitAuthoringTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/SacrificePublicationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/SubTraitShopRetirementTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthAuthoringTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthBoundaryIntegrationTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthChoiceServiceTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthCommandTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthProgressContractTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthStageGateTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthStatSettlementTests.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthTestRuntime.cs",
+    "Assets/Tests/EditMode/CoreIntegration/TraitGrowthTransactionTests.cs",
+    "Assets/Tests/EditMode/DeferredCombatFeatureTests.cs",
+    "Assets/Tests/EditMode/EnhancementActionCostTests.cs",
+    "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+    "Assets/Tests/EditMode/EnhancementDoubleShotTests.cs",
+    "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+    "Assets/Tests/EditMode/EnhancementFollowUpPreparationTests.cs",
+    "Assets/Tests/EditMode/EnhancementLifecycleTests.cs",
+    "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+    "Assets/Tests/EditMode/EnhancementPoisonThornTests.cs",
+    "Assets/Tests/EditMode/EnhancementPrecisionShotTests.cs",
+    "Assets/Tests/EditMode/EnhancementShopRuleTests.cs",
+    "Assets/Tests/EditMode/EnhancementTargetDamageCapabilityTests.cs",
+    "Assets/Tests/EditMode/EnhancementTargetDamageTests.cs",
+    "Assets/Tests/EditMode/ExperienceAttributionPathTests.cs",
+    "Assets/Tests/EditMode/FlagLifecycleTests.cs",
+    "Assets/Tests/EditMode/HeldEnvironmentEffectTests.cs",
+    "Assets/Tests/EditMode/HighGroundWallBypassTests.cs",
+    "Assets/Tests/EditMode/HunterTraitTests.cs",
+    "Assets/Tests/EditMode/HuntersMarkAttackTests.cs",
+    "Assets/Tests/EditMode/HuntersMarkStateTests.cs",
+    "Assets/Tests/EditMode/ImpactBoltTests.cs",
+    "Assets/Tests/EditMode/IntimidationAttackTests.cs",
+    "Assets/Tests/EditMode/IntimidationScheduleTests.cs",
+    "Assets/Tests/EditMode/IntimidationStatePreservationTests.cs",
+    "Assets/Tests/EditMode/KillChainAttackTraitTests.cs",
+    "Assets/Tests/EditMode/KnockbackPathTests.cs",
+    "Assets/Tests/EditMode/LeapTraitTests.cs",
+    "Assets/Tests/EditMode/MineEnvironmentTests.cs",
+    "Assets/Tests/EditMode/MovementEnvironmentTests.cs",
+    "Assets/Tests/EditMode/ObstacleReactionTests.cs",
+    "Assets/Tests/EditMode/OwnedEnhancementResolutionTests.cs",
+    "Assets/Tests/EditMode/OwnedEnhancementStateTests.cs",
+    "Assets/Tests/EditMode/OwnedTraitGrowthTests.cs",
+    "Assets/Tests/EditMode/PiercingShotCommandTests.cs",
+    "Assets/Tests/EditMode/PiercingShotTraceTests.cs",
+    "Assets/Tests/EditMode/PullBoundaryRegressionTests.cs",
+    "Assets/Tests/EditMode/PullObstacleTests.cs",
+    "Assets/Tests/EditMode/PullPreviewTests.cs",
+    "Assets/Tests/EditMode/PullRangeTests.cs",
+    "Assets/Tests/EditMode/PullTerrainTests.cs",
+    "Assets/Tests/EditMode/RoarTraitTests.cs",
+    "Assets/Tests/EditMode/SacrificeTraitTests.cs",
+    "Assets/Tests/EditMode/StaticTerrainIntegrationTests.cs",
+    "Assets/Tests/EditMode/SummonTimelineTests.cs",
+    "Assets/Tests/EditMode/TargetingAngleIntegrationTests.cs",
+    "Assets/Tests/EditMode/TargetingAngleLifecycleTests.cs",
+    "Assets/Tests/EditMode/TauntTraitTests.cs",
+    "Assets/Tests/EditMode/ThornHeartReflectionCommandTests.cs",
+    "Assets/Tests/EditMode/TornadoEnvironmentTests.cs",
+    "Assets/Tests/EditMode/TraitActivationContractTests.cs",
+    "Assets/Tests/EditMode/TraitActivationMovementTests.cs",
+    "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+    "Assets/Tests/EditMode/TraitAttackNotificationTests.cs",
+    "Assets/Tests/EditMode/TraitEffectiveStatsProjectionTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthCatalogTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthChangeTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthFixtures.cs",
+    "Assets/Tests/EditMode/TraitGrowthOfferTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthRulesTests.cs",
+    "Assets/Tests/EditMode/TraitGrowthStatCoexistenceTests.cs",
+    "Assets/Tests/EditMode/TraitMovementAttackTests.cs",
+    "Assets/Tests/EditMode/TraitStateContractTests.cs",
+    "Assets/Tests/EditMode/WallAttackAdmissionTests.cs",
+    "Assets/Tests/EditMode/WallAttackAiTests.cs",
+    "Assets/Tests/EditMode/WallAttackEffectsTests.cs",
+    "Assets/Tests/EditMode/WallMovementTests.cs",
+    "Assets/Tests/EditMode/WallPierceTests.cs",
+    "Assets/Tests/EditMode/WallStateLifecycleTests.cs",
+    "Assets/Tests/EditMode/WeakGroundMovementTests.cs",
+    "Assets/Tests/EditMode/WeakGroundTurnTests.cs"
+  ],
+  "assetsDirect": [
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_ChainExplosion.asset",
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_DoorBreaching.asset",
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_DoubleShot.asset",
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_PoisonThorn.asset",
+    "Assets/ProjectL/DataBaseSO/InGameGroup/TraitGrowth/Item/TraitGrowth_DoorBreaching.asset",
+    "Assets/ProjectL/DataBaseSO/InGameGroup/TraitGrowth/Item/TraitGrowth_DoubleShot.asset",
+    "Assets/ProjectL/DataBaseSO/ViewGroup/TraitVisual/Item/TraitVisual_DoorBreaching.asset",
+    "Assets/ProjectL/DataBaseSO/ViewGroup/TraitVisual/Item/TraitVisual_DoubleShot.asset"
+  ],
+  "guidUsers": {
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_ChainExplosion.asset": {
+      "guid": "e40b861d650c88844a2fcf9702fe536a",
+      "users": [
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/EnhancementDataTable.asset"
+      ]
+    },
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_DoorBreaching.asset": {
+      "guid": "abf744f6275b5c64b80e93783d978657",
+      "users": [
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/EnhancementDataTable.asset",
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Stage/Enhancement/Enhancement_Default.asset"
+      ]
+    },
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_DoubleShot.asset": {
+      "guid": "ae9799bd09750a04a8c7218b96a6c144",
+      "users": [
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/EnhancementDataTable.asset",
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Stage/Enhancement/Enhancement_Default.asset"
+      ]
+    },
+    "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/Item/Enhancement_PoisonThorn.asset": {
+      "guid": "b575412ea92182a408bad626c28334e9",
+      "users": [
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Enhancement/EnhancementDataTable.asset",
+        "Assets/ProjectL/DataBaseSO/InGameGroup/Stage/Enhancement/Enhancement_Default.asset"
+      ]
+    }
+  },
+  "helpers": [
+    {
+      "file": "Assets/Tests/EditMode/EnhancementActionCostTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.WithRewards"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementChainExplosionTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementDoubleShotTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementDoubleShotTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementLuckyBulletTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpCapabilityTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpPreparationTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementFollowUpPreparationTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLifecycleTests.cs",
+      "call": "EnhancementPoisonThornTests.Rules"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLifecycleTests.cs",
+      "call": "EnhancementPoisonThornTests.Rules"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.WithRewards"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Health"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementLuckyBulletTests.cs",
+      "call": "EnhancementDoubleShotTests.Run"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementPoisonThornTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementPoisonThornTests.cs",
+      "call": "EnhancementChainExplosionTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementPrecisionShotTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/EnhancementPrecisionShotTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/HuntersMarkAttackTests.cs",
+      "call": "EnhancementLuckyBulletTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/HuntersMarkAttackTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/HunterTraitTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/ImpactBoltTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/MovementEnvironmentTests.cs",
+      "call": "EnhancementPoisonThornTests.Movement"
+    },
+    {
+      "file": "Assets/Tests/EditMode/MovementEnvironmentTests.cs",
+      "call": "EnhancementTargetDamageTests.Stats"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+      "call": "EnhancementChainExplosionTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+      "call": "EnhancementLuckyBulletTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitActivationOutcomeTests.cs",
+      "call": "EnhancementDoubleShotTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitMovementAttackTests.cs",
+      "call": "EnhancementLuckyBulletTests.Input"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitMovementAttackTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    },
+    {
+      "file": "Assets/Tests/EditMode/TraitMovementAttackTests.cs",
+      "call": "EnhancementLuckyBulletTests.Activations"
+    }
+  ],
+  "followUpProduction": [
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackDeliveryExecutor.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/AttackKnockbackCalculator.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/FollowUpAttackExecutor.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/KillChainAttackCalculator.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/CombatEffectEngine.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/AttackResolvedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/DisplacementResolvedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Contexts/KillChainActivatedEffectContext.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Evaluations/EffectFollowUpRequest.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/ICombatEffectEngine.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/CombatEffects/Rules/CombatEffectCapabilities.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/ChainExplosionEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/DoubleShotEffectRule.cs",
+    "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Domain/Traits/Effects/LuckyBulletEffectRule.cs"
+  ],
+  "changeRider": {
+    "reservedValue": 2,
+    "productionProducts": []
+  }
+}

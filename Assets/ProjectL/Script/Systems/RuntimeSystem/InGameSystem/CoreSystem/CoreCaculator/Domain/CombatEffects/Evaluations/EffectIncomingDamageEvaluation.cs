@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Transitions;
@@ -12,6 +13,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     {
         public int EffectiveReduction { get; }
         public int FinalDamage { get; }
+        public decimal DamageAfterPercentages { get; }
+        public IReadOnlyList<int> RemainingDamagePercents { get; }
         public IReadOnlyList<EffectIncomingDamageContribution> AllocatedReductions { get; }
         public IReadOnlyList<EffectStateExpectation> Expectations { get; }
 
@@ -52,7 +55,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             Array.Sort(copiedExpectations, (left, right) => left.Origin.CompareTo(right.Origin));
 
             EffectiveReduction = effectiveReduction;
-            FinalDamage = checked(incomingDamage - effectiveReduction);
+            RemainingDamagePercents = Array.AsReadOnly(copiedAllocations.Select(a => a.RemainingDamagePercent).ToArray());
+            decimal exact = incomingDamage - effectiveReduction;
+            foreach (int percent in RemainingDamagePercents) exact = exact * percent / 100m;
+            DamageAfterPercentages = exact;
+            FinalDamage = (int)decimal.Truncate(exact);
             AllocatedReductions = Array.AsReadOnly(copiedAllocations);
             Expectations = Array.AsReadOnly(copiedExpectations);
         }

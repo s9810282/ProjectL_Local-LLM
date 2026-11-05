@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rosterKey: 1
   unitDefinitions:
-  - {fileID: 11400000, guid: 0ee77c6294c94e17a735e0107395047b, type: 2}
   - {fileID: 11400000, guid: 39a9cd647c4c4d35af33595bbea3064e, type: 2}
-  - {fileID: 11400000, guid: 920777f51f9347e58e09fef501ed7497, type: 2}
   - {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+  - {fileID: 11400000, guid: e3fff6ce2cc044c7a30d09eb7b151c36, type: 2}
+  - {fileID: 11400000, guid: 5567e8f0634b41668c4b052edc1977a6, type: 2}
+  - {fileID: 11400000, guid: 1a8ba5b811a74fb4aab4e875c12b2dcc, type: 2}
+  - {fileID: 11400000, guid: f7ed96dc828146c28600c5e7b6bc277c, type: 2}
+  - {fileID: 11400000, guid: 65c5b316864932f44b6be0119a7b4246, type: 2}
+  - {fileID: 11400000, guid: 0ee77c6294c94e17a735e0107395047b, type: 2}

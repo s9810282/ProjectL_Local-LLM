@@ -7,14 +7,18 @@ Unity 6000.0.73f1 게임 프로젝트(청강대 졸업작품, ANTI-LIKE팀). 이
 - **커밋과 push는 사용자가 직접 한다.** Codex는 커밋·push하지 않는다. stop hook이 커밋을 요청해도 하지 않는다.
 - 큰 작업은 **설계 → Task 계획 → Phase 단위 구현** 순서로 진행한다. Phase가 끝나면 멈추고 보고한다(리뷰 지점).
 - 설계나 계획과 다른 결정이 필요하면 **구현하지 말고 먼저 묻는다.** "진행해"는 계획에 적힌 범위만 해당한다.
+- **View 작업에서는 Test 코드를 작성하지 않는다**(2026-10-27 사용자 지시. 전투 View에만 걸던 2026-10-20 지시를 View 작업 전체로 넓혔다). **전투 View 작업은 MSBuild도 돌리지 않는다**(2026-10-20 사용자 지시). 컴파일·재생 확인은 사용자가 Unity에서 하고, 보고에는 "컴파일 미확인"을 적는다. 기존 시험은 변경으로 컴파일이 깨지는 곳만 최소로 맞춘다. 우리 변경으로 **실행에서** 깨지는 기존 시험도, **우리가 쓴 시험이면** 확인하는 내용은 그대로 두고 호출만 맞춘다. **다른 사람이 쓴 시험이면** 고치기 전에 먼저 묻는다(2026-10-22 사용자 지시). Core 직접 수정 허용이나 일반적인 "진행해"를 이 제한의 예외 허용으로 해석하지 않는다(2026-11-02 재확인).
 - 옛 에셋(`Assets/ProjectL/DataBaseSO`의 Missing Script 에셋 48개)은 **삭제하지 않는다.**
 - 다른 작업자 영역은 건드리지 않는다: Core 로직(Core 작업자), FieldCamera, Architecture(다른 View 작업자).
   - Core 로직 수정이 필요하면 구현하지 말고 Core 전달 문서(`docs/superpowers/handoffs/2026-09-24-view-core-data-boundary-handoff.md`)에 요청으로 적는다. 사용자가 명시적으로 지시한 경우만 예외다(예: Buffer B1은 사용자 지시로 구현하고 같은 문서 §5.3·§6에 기록, 설계 D21).
   - 불가피하게 Core 파일에 닿은 변경(컴파일용 using 등)은 같은 문서 §5에 기록한다.
+- **`docs/superpowers/handoffs/2026-09-24-view-core-data-boundary-handoff.md`를 수정하면 파일 제목도 함께 수정한다**(2026-11-02 사용자 지시). 문서 제목에는 최신 변경 주제와 갱신일을 반영한다.
 - `docs/superpowers/`의 GwonCheonmyeong 작성 문서(옛 guides·plans·specs 대부분)는 추후 바뀔 예정이므로 기준으로 삼지 않는다.
-- 설계·리뷰에서 **SSOT(한 사실은 한 곳에만)와 SOLID, JMH Framework 개발 지침·FW 계약을 반드시 점검한다.** 이 프로젝트에서의 적용 기준은 `docs/superpowers/handoffs/2026-09-30-combat-view-design-session-handoff.md` §4에 있다.
+- 설계·리뷰에서 **SSOT(한 사실은 한 곳에만), SOLID 5원칙, JMH Framework 개발 지침·FW 계약, 기능 변경의 독립성(조립과 기능 구현 분리)을 반드시 점검한다.** 한 기능을 수정할 때 관련 없는 기능을 불필요하게 읽거나 수정·검증하지 않아도 되는지를 평가한다. 이 프로젝트에서의 적용 기준은 `docs/superpowers/handoffs/2026-09-30-combat-view-design-session-handoff.md` §4, 특히 §4.6에 있다.
 
 ## 현재 상태 (먼저 읽기)
+
+- **2026-10-20 Run 종료 복귀 정책:** Run이 끝나면(일반 패배·자발적 포기·최종 승리) 새 Run 준비 후 로비로 복귀한다(2026-10-16 일반 패배, 10-20 포기·최종 승리 추가, 코드는 `CombatPlan.RunEndDestination` 한 곳). Run이 이어지는 일반 승리만 StageSelect다. 현재 정책 원본은 [전투 Job·Plan 설계 J7](docs/superpowers/specs/2026-10-10-combat-job-plan-restructure-design.md#j7-이탈-연쇄-k21-유지), 검증·잔여 확인은 같은 재구성 계획의 2026-10-16·10-20 후속 기록이다. 같은 날 Run 결과 요약 API(`RunSpent`·`EnemiesDefeated`·`LastSummary`)와 맵 SO 다음 챕터 키(0 = 마지막)를 넣었다(Run 요약 설계 (Git history: `2026-10-20-run-summary-statistics-design.md`)·계획 (Git history: `2026-10-20-run-summary-statistics-plan.md`), Test Runner 미확인, 로비 표시는 호진님 인계, 용근님 공유 미전달). 아래 K21의 패배 → StageSelect는 변경 전 이력이며, 로비 출발의 새 Run 생성 위치 조정은 범위 밖이다.
 
 - **2026-10-09 필드 격자 아웃라인 모드:** 설계 [field-grid-outline-mode-design](docs/superpowers/specs/2026-10-09-field-grid-outline-mode-design.md), Task·기록은 View 계획 §7.62. `StageFieldViewData.fieldDisplayMode`(CellPrefab 기본 / GridOutline). O1~O3 코드 완료, Unity 확인 대기. 같은 날 Shader 병합의 GridDecal GUID 충돌은 민형님 셰이더만 남기고 우리 복사본을 지워 정리했고, 이어서 그 셰이더에 `_GridOrigin`·`_MaskCenter`를 다시 넣었다(민형님 공유 메모 `handoffs/2026-10-09-grid-decal-shader-share-minhyeong.md`, 미전달).
 - **2026-10-06 전투 View 구조 개선(VR):** 평가 [structure-review](docs/superpowers/specs/2026-10-06-combat-view-structure-review.md), 설계 [refactor-design](docs/superpowers/specs/2026-10-06-combat-view-refactor-design.md), Task·상태는 View 계획 §7.40~7.41. VR1(대기 `CombatCommandGate`, 이동 허용 `CanEditPath`) Unity 확인 완료. VR2·VR3(Router·배치/공격 분리) Unity 확인 완료(§7.45). VR0 메모 미전달. VR4(`CombatPointerMapper`) Unity 확인 완료(§7.46). VR5(TraitVisual 필수·타임라인 상수·형식 정리) Unity 확인 완료(§7.47). 기록 모드 전투 포인터 → 공격 소유자 라우팅 Unity 확인 완료(§7.48). 남은 View 작업 목록은 §7.49. **손패 카드화** 설계 [hand-card-design](docs/superpowers/specs/2026-10-06-hand-card-design.md), Task는 §7.50, H1·H2 확인 완료(§7.51~7.52), H3 씬 연결·3D 손패 파일 삭제·현강님 메모(미전달) 완료, Unity 확인 대기(§7.53), 천명님 형식 메모 미전달. 다음 VR6(타임라인 소비자 교체)은 Core 타임라인 Buffer 공개 뒤에만 시작한다. **남은 골격·View 작업 목록은 View 계획 §7.56**(§7.49를 대체). **4-V 포기 버튼·확인창 코드 완료(§7.58), Combat.unity에 `CombatAbandonPanel` 연결 전에는 Combat 진입이 멈춘다.**
@@ -126,6 +130,6 @@ ViewGroup  (표현, Unity 타입 허용) ──InitData──► View 시스템 
 
 ## 검증
 
-- Unity 에디터에서 컴파일하고 EditMode 테스트(`Assets/Tests/EditMode/`)를 실행한다.
-- DB 에셋 값을 바꾸면 `DataBaseAssetTests`(실제 에셋 교차 검증)를 돌린다.
+- View 작업의 컴파일·재생 확인과 EditMode 테스트(`Assets/Tests/EditMode/`)는 사용자가 Unity에서 확인한다. Codex 보고에는 **"컴파일 미확인"**을 적고 필요한 확인 항목을 인계한다. 위 Test 코드·MSBuild 제한을 우선한다.
+- DB 에셋 값을 바꾸면 `DataBaseAssetTests`(실제 에셋 교차 검증)를 사용자 확인 항목에 포함한다.
 - 새 순수 Data 파일에는 `using UnityEngine`이 없어야 한다(P1).

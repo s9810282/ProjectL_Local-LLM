@@ -1,3 +1,5 @@
+> **상대방 기록 보존(코드 미병합):** 상대 커밋 `c1b9b0a`의 문서 내용을 보존했다. 본문의 완료·검증은 당시 브랜치 범위이며 현재 코드의 병합 후 검증을 뜻하지 않는다. 현재 코드에는 아직 상대 변경을 적용하지 않았다. [병합 검토·수정 안내](../plans/2026-10-10-stage-map-plan-Hojin.md#4-c1b9b0a-병합-검토-2026-10-11)를 함께 읽는다.
+
 # 전투 View 설계 — 부트스트랩 · 전투 씬 · 상태 표시 · 입력 → 명령
 
 - 작성일: 2026-09-30 (12차 View 내부 책임 분리 2026-10-05)
@@ -764,7 +766,7 @@ Core·Buffer·Flow의 정상 처리 규칙 변경은 요구하지 않는다. Pha
 
 ### 21.2 W22 — 공격 지정 방식 DB (DB 담당)
 
-Core 설계([공격 지정 방식](2026-10-01-attack-targeting-methods-design.md))는 지정 방식을 `TargetingMethodSpec`(Shape·ChoiceMode·Splash·SplashPercent)으로 정했다. 사거리는 유닛 값이다. "Method_Key와 저장 형식은 DB 담당 결정"으로 남아 있고, 그래서 기본 DB 준비가 `T1/G7`로 막혀 있다.
+Core 설계(공격 지정 방식 (Git history: `2026-10-01-attack-targeting-methods-design.md`))는 지정 방식을 `TargetingMethodSpec`(Shape·ChoiceMode·Splash·SplashPercent)으로 정했다. 사거리는 유닛 값이다. "Method_Key와 저장 형식은 DB 담당 결정"으로 남아 있고, 그래서 기본 DB 준비가 `T1/G7`로 막혀 있다.
 
 | 항목 | 결정 |
 |---|---|

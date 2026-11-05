@@ -23,6 +23,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return remaining > 0L ? (int)remaining : 0;
         }
 
+        /// <summary>조우 순번의 남은 비율을 피해에 적용한다(half-up). 예산 계산과 실제 피해가 이 공식 하나를 쓴다.</summary>
+        internal static int ApplyFalloff(int damage, int remainingPercent) =>
+            CategoryMatchupDamageCalculator.Apply(damage, remainingPercent, 100);
+
         internal int CalculateTargetBudget(
             PiercingFalloffTraitDefinition definition,
             int damageAfterBonuses)
@@ -42,10 +46,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 int remainingPercent = EvaluateRemainingPercent(
                     definition,
                     encounterIndex);
-                int damage = CategoryMatchupDamageCalculator.Apply(
-                    damageAfterBonuses,
-                    remainingPercent,
-                    100);
+                int damage = ApplyFalloff(damageAfterBonuses, remainingPercent);
 
                 if (damage == 0)
                     return Math.Min(definition.MaxTargetsPerRay, encounterIndex);

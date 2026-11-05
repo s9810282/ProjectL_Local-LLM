@@ -92,15 +92,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 
         public void EnterCombatRequested() => _receiver?.EnterCombatRequested();
 
-        public void DrawRequested() => _receiver?.DrawRequested();
 
         public void EndTurnRequested() => _receiver?.EndTurnRequested();
-
-        public void MoveModeRequested() => _receiver?.MoveModeRequested();
 
         public void AttackModeRequested() => _receiver?.AttackModeRequested();
 
         public void RequestReturn() => _receiver?.RequestReturn();
+
+        public void CameraPanChanged(float x, float y) => _receiver?.CameraPanChanged(x, y);
+
+        public void CameraZoomScrolled(float delta) => _receiver?.CameraZoomScrolled(delta);
 
         public void ExportServices(ISystemWriteSink sink)
         {

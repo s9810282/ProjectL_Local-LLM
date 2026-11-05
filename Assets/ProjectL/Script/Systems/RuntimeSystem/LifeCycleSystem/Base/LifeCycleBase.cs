@@ -1,8 +1,8 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using ProjectL.Framework.Composition;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Framework.SystemBase;
-using ProjectL.Systems.ServiceKeys;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
 {
@@ -157,13 +157,13 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
         /// <summary>로딩 콜백 등록 뒤, 자식 전용 초기화를 수행합니다.</summary>
         protected virtual void OnInitialize() { }
 
-        /// <summary>로딩 시작이 완료되었을 때 Flow를 시작합니다.</summary>
+        /// <summary>대상 씬 로딩 완료 콜백에서 해당 구간의 진행을 시작합니다.</summary>
         protected abstract void OnEnter();
 
         /// <summary>활성 LifeCycle에서만 호출됩니다.</summary>
         protected virtual void OnTick(float deltaTime) { }
 
-        /// <summary>로딩 종료 단계에서 Flow를 정리합니다.</summary>
+        /// <summary>현재 씬 이탈 콜백이나 활성 구간의 Shutdown에서 진행을 정리합니다.</summary>
         protected abstract void OnExit();
 
         /// <summary>종료 시 자식이 소유한 자원을 해제합니다.</summary>

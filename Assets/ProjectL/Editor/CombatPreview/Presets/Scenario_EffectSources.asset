@@ -1,0 +1,189 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_EffectSources
+  m_EditorClassIdentifier:
+  input:
+    version: 2
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 2
+    repeatInterval: 0.5
+    units:
+      - id: "a"
+        name: "출처 A"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 3}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "b"
+        name: "출처 B"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 2, y: 5}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects: []
+      - id: "target"
+        name: "가속·효과 수신자"
+        unit:
+          key: 10
+          enemy: 0
+          cell: {x: 4, y: 4}
+          direction: 0
+          health: 100
+          maxHealth: 100
+          attack: 20
+          defense: 0
+        effects:
+          - id: "attack"
+            key: 1
+            ownerKind: 1
+            sourceId: "a"
+            trait: 230
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "down"
+            key: 2
+            ownerKind: 1
+            sourceId: "b"
+            trait: 110
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "defense"
+            key: 4
+            ownerKind: 1
+            sourceId: "b"
+            trait: 390
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "shield"
+            key: 7
+            ownerKind: 1
+            sourceId: "a"
+            trait: 240
+            amount: 30
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "spent"
+            key: 7
+            ownerKind: 1
+            sourceId: "b"
+            trait: 240
+            amount: 0
+            percent: 20
+            remainingTurns: 2
+            eligible: 0
+            lastResetControllerTurnCount: 0
+          - id: "disarm"
+            key: 10
+            ownerKind: 1
+            sourceId: "b"
+            trait: 270
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "bind"
+            key: 11
+            ownerKind: 1
+            sourceId: "b"
+            trait: 280
+            amount: 5
+            percent: 20
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+          - id: "weak"
+            key: 13
+            ownerKind: 1
+            sourceId: "b"
+            trait: 190
+            amount: 5
+            percent: 30
+            remainingTurns: 2
+            eligible: 1
+            lastResetControllerTurnCount: 0
+        ownsAcceleration: 1
+        acceleration: 10
+        cohesionDefenseBonus: 6
+    entries:
+      - id: "1825b0b891df4c9481d962639c8fbd1f"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "064cfb1ee85449178e30cccd08943b07"
+        name: "방어막 적용 조건의 명시 갱신"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "7f02c05225f044ef911ca0c26c8dba58"
+            name: "첫 보호막 비활성"
+            kind: 2
+            relation: 0
+            state:
+              unitId: "target"
+              kind: 2
+              operation: 0
+              effect:
+                id: "shield"
+                key: 7
+                ownerKind: 1
+                sourceId: "a"
+                trait: 240
+                amount: 30
+                percent: 20
+                remainingTurns: 2
+                eligible: 0
+                lastResetControllerTurnCount: 0
+      - id: "fed589680903476ea1478ab3928dbe37"
+        name: "관찰"
+        kind: 1
+        seconds: 1
+        blocks: []
+      - id: "93580fb56e6d404f874758e55ec81d75"
+        name: "출처 이탈·수신 효과 유지"
+        kind: 0
+        seconds: 1
+        blocks:
+          - id: "1fdb6b15471240b4a7ecf4517b40ab8b"
+            name: "출처 A 손패 복귀"
+            kind: 7
+            relation: 0
+            returned:
+              unitId: "a"
+              area: 0
+              reserveSlot: 0

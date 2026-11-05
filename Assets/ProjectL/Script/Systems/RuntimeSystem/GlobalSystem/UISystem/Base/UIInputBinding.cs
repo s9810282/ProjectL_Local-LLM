@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base
 {
@@ -22,23 +23,36 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base
         private Button _button;
         private int _slot;
         private bool _hovered;
+        private bool _hasHover;
+        private IAudioSystemService _audio;
 
-        public static UIInputBinding Attach(Button button, IUIInputReceiver receiver, int slot)
+        public static UIInputBinding Attach(Button button, IUIInputReceiver receiver, int slot, bool hasHover = false)
         {
             if (button == null) return null;
             var binding = button.GetComponent<UIInputBinding>();
             if (binding == null) binding = button.gameObject.AddComponent<UIInputBinding>();
-            binding.Bind(receiver, slot);
+            binding.Bind(receiver, slot, hasHover);
             return binding;
         }
 
-        public void Bind(IUIInputReceiver receiver, int slot)
+        public void Bind(IUIInputReceiver receiver, int slot, bool hasHover = false)
         {
             OnHoverExit();
             _button = GetComponent<Button>();
             _receiver = receiver;
             _receiverObject = receiver as Object;
             _slot = slot;
+            _hasHover = hasHover;
+            ResolveAudio();
+        }
+
+        internal void ResolveAudio() => _audio = GetComponentInParent<UIAudioScope>(true)?.Service;
+        internal void BindAudio(IAudioSystemService audio) => _audio = audio;
+        protected virtual void OnEnable() => ResolveAudio();
+        protected virtual void OnTransformParentChanged()
+        {
+            OnHoverExit();
+            ResolveAudio();
         }
 
         private bool ReceiverAvailable => _receiver != null &&
@@ -49,12 +63,19 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.button == PointerEventData.InputButton.Left && CanInteract)
+            {
+                _audio?.Play(AmbgmEvent.UIClick);
                 _receiver.Click(_slot);
+            }
         }
 
         public void OnSubmit(BaseEventData eventData)
         {
-            if (CanInteract) _receiver.Click(_slot);
+            if (CanInteract)
+            {
+                _audio?.Play(AmbgmEvent.UIClick);
+                _receiver.Click(_slot);
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter();
@@ -63,6 +84,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base
         {
             if (_hovered || !CanInteract) return;
             _hovered = true;
+            if (_hasHover) _audio?.Play(AmbgmEvent.UIHover);
             _receiver.HoverEnter(_slot);
         }
         public void OnHoverExit()

@@ -27,7 +27,7 @@ MonoBehaviour:
       type: 0
       comparison: 0
     target:
-      type: 0
+      type: 4
       faction: 1
       category: 0
       excludeCategory: 0
@@ -39,8 +39,12 @@ MonoBehaviour:
       type: 0
       statId: 
       knockbackDistance: 0
+      soulGrowth:
+        attackBonus: 0
+        maxHealthBonus: 0
+        healAmount: 0
     value:
       type: 0
       basis: 0
-      amount: 10
+      amount: 3
     durationTurns: 0

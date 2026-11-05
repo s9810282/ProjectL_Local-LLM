@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
 {
@@ -26,74 +27,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
     /// <summary>
     /// Controller가 보는 수신 대상입니다. 연결된 View에 입력을 넘기고,
     /// SelectPressed를 받은 View만 그 선택의 완료·취소를 받도록 선택 소유자를 기억합니다.
-    /// 연결된 View가 없으면 입력을 버립니다.
+    /// 연결된 View가 없으면 입력을 버립니다. 연결·소유자 규칙은 공용 <see cref="SelectOwnerSlot{T}"/>가 맡습니다(로비 리팩토링 2차 설계 M-10).
     /// </summary>
     internal sealed class ArtifactInputSlot :
         IArtifactInputSlot,
         IArtifactInputReceiver,
         IExportSystemServices
     {
-        private IArtifactInputReceiver _receiver;
-        private IArtifactInputReceiver _selectOwner;
+        private readonly SelectOwnerSlot<IArtifactInputReceiver> _slot = new(nameof(ArtifactInputSlot));
 
-        public void Bind(IArtifactInputReceiver receiver)
-        {
-            if (receiver == null)
-                throw new ArgumentNullException(nameof(receiver));
-            if (_receiver != null)
-                throw new InvalidOperationException("입력 수신 대상이 이미 연결되어 있습니다. 먼저 Unbind하세요.");
-
-            _receiver = receiver;
-        }
+        public void Bind(IArtifactInputReceiver receiver) => _slot.Bind(receiver);
 
         public void Unbind(IArtifactInputReceiver receiver)
         {
-            if (receiver == null)
-                throw new ArgumentNullException(nameof(receiver));
-            if (!ReferenceEquals(_receiver, receiver))
-                return;
-
-            bool hadSelection = ReferenceEquals(_selectOwner, receiver);
-
-            // 콜백 안에서 새로 연결한 대상의 상태를 덮어쓰지 않도록 상태를 먼저 비웁니다.
-            _receiver = null;
-            _selectOwner = null;
-
-            if (hadSelection)
-                receiver.SelectCanceled();
+            if (_slot.Unbind(receiver)) receiver.SelectCanceled();
         }
 
-        public void PointerMoved(float screenX, float screenY) => _receiver?.PointerMoved(screenX, screenY);
+        public void PointerMoved(float screenX, float screenY) => _slot.Receiver?.PointerMoved(screenX, screenY);
 
-        public void SelectPressed(float screenX, float screenY)
-        {
-            IArtifactInputReceiver receiver = _receiver;
-            if (receiver == null)
-                return;
+        public void SelectPressed(float screenX, float screenY) => _slot.BeginSelect()?.SelectPressed(screenX, screenY);
 
-            // 누름 콜백 안에서 Unbind해도 취소할 수 있도록 소유자를 먼저 기록합니다.
-            _selectOwner = receiver;
-            receiver.SelectPressed(screenX, screenY);
-        }
+        public void SelectReleased(float screenX, float screenY) => _slot.TakeSelectOwner()?.SelectReleased(screenX, screenY);
 
-        public void SelectReleased(float screenX, float screenY)
-        {
-            IArtifactInputReceiver owner = TakeSelectOwner();
-            owner?.SelectReleased(screenX, screenY);
-        }
+        public void SelectCanceled() => _slot.TakeSelectOwner()?.SelectCanceled();
 
-        public void SelectCanceled()
-        {
-            IArtifactInputReceiver owner = TakeSelectOwner();
-            owner?.SelectCanceled();
-        }
+        public void RotateLeft() => _slot.Receiver?.RotateLeft();
 
-        public void RotateLeft() => _receiver?.RotateLeft();
+        public void RotateRight() => _slot.Receiver?.RotateRight();
 
-        public void RotateRight() => _receiver?.RotateRight();
-
-        public void Cancel() => _receiver?.Cancel();
-
+        public void Cancel() => _slot.Receiver?.Cancel();
 
         public void ExportServices(ISystemWriteSink sink)
         {
@@ -101,14 +63,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
                 throw new ArgumentNullException(nameof(sink));
 
             sink.AddService<IArtifactInputSlot>(this);
-        }
-
-        /// <summary>선택의 완료·취소를 받을 소유자를 꺼내고 지웁니다. 콜백 전에 지워 중복 전달을 막습니다.</summary>
-        private IArtifactInputReceiver TakeSelectOwner()
-        {
-            IArtifactInputReceiver owner = _selectOwner;
-            _selectOwner = null;
-            return owner;
         }
     }
 

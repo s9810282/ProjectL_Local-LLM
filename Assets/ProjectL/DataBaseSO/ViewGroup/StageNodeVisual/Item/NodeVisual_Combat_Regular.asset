@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: NodeVisual_Combat_Regular
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    stageKey: 0
     stageType: 1
     mapRole: 0
-    visualPrefab: {fileID: 4750872047159365611, guid: 67d2dc60af8646d686aaeccb80468cfe, type: 3}
-    icon: {fileID: 0}
+    visualPrefab: {fileID: 4066917589396890568, guid: 11f54d9432cb35e4c87dfba056db7b90, type: 3}
+    rotationOffset: {x: 0, y: 180, z: 0}
     displayName: Normal Stage A

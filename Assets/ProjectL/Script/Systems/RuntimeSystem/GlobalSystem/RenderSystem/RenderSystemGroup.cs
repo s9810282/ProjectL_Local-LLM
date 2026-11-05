@@ -26,6 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem
         ISystemInitData<IHasRenderQuery>,
         ISystemInitialize,
         ISystemPostBindService,
+        ISystemTick,
         ISystemShutdown
     {
         private readonly RenderRuntimeRoot runtimeRoot;
@@ -70,6 +71,15 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem
             for (int i = 0; i < SystemReader.SystemModuleStoreReader.PostBindServiceModules.Count; i++)
             {
                 SystemReader.SystemModuleStoreReader.PostBindServiceModules[i].PostBindService(systemServiceResolver);
+            }
+        }
+
+        public void Tick(float deltaTime)
+        {
+            var modules = SystemReader.SystemModuleStoreReader.TickModules;
+            for (int i = 0; i < modules.Count; i++)
+            {
+                modules[i].Tick(deltaTime);
             }
         }
 

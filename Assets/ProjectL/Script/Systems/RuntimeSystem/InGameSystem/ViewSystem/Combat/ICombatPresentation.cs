@@ -1,5 +1,8 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ordering;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
 {
@@ -12,8 +15,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </remarks>
     internal interface ICombatPresentation
     {
-        /// <summary>씬 표시에 연결합니다. 진행 중 연출이 있으면 먼저 취소합니다.</summary>
-        void Attach(ICombatBattleDisplay display);
+        /// <summary>씬 사건 재생에 연결합니다. 진행 중 연출이 있으면 먼저 취소합니다.</summary>
+        /// <param name="playback">
+        /// 해제 뒤 사건 시작을 거절하는 재생 계약을 넘깁니다. 지금은 표시의 <see cref="ICombatBattleDisplay.EventPlayback"/>
+        /// (<see cref="CombatSceneEventPlayback"/>)입니다. 사건 Presenter를 직접 넘기지 않습니다.
+        /// </param>
+        void Attach(ICombatEventPlayback playback);
 
         /// <summary>진행 중 연출을 한 프레임만큼 진행합니다.</summary>
         void Tick(float deltaTime);

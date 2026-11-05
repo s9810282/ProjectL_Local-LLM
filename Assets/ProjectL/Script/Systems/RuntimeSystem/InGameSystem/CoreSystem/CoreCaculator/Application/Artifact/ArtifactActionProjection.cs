@@ -31,9 +31,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (input.Main != null)
             {
                 MainCharacterPersistentState source = input.Main;
-                main = new MainCharacterPersistentChange(source, new MainCharacterPersistentState(
-                    final.Health.CurrentHealth, source.PersistentMaxHealth, source.PersistentAttack,
-                    source.MaxActionCost, source.MoveRange, source.MoveCost));
+                main = new MainCharacterPersistentChange(input.Owned.Id, source,
+                    source.WithCurrentHealth(final.Health.CurrentHealth));
             }
             return new SoulActionChanges(new CharacterChanges(
                 new[] { new CharacterStateChange(input.Character, final) },

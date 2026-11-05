@@ -2,7 +2,7 @@
 
 Date: 2026-10-03. P2 implementation, verification and independent review are complete. P3 remains pending. No commit or push.
 
-References: [implementation plan](../plans/2026-10-03-chapter-continuation-run-completion-implementation-plan.md), [selected design](../specs/2026-10-03-chapter-continuation-run-completion-design.md), [P1 verification](2026-10-03-chapter-continuation-run-completion-p1-verification.md).
+References: implementation plan (Git history: `2026-10-03-chapter-continuation-run-completion-implementation-plan.md`), selected design (Git history: `2026-10-03-chapter-continuation-run-completion-design.md`), [P1 verification](2026-10-03-chapter-continuation-run-completion-p1-verification.md).
 
 ## Implemented behavior
 

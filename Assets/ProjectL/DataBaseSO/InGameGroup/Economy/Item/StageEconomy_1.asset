@@ -15,3 +15,7 @@ MonoBehaviour:
   economyKey: 1
   initialGold: 200
   manualDrawGoldCost: 40
+  clearRewardsConfigured: 1
+  clearGold: 100
+  clearFame: 50
+  clearExperiencePerParticipant: 100

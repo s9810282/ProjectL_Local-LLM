@@ -1,8 +1,10 @@
+using ProjectL.Systems.ServiceKeys.Runtime.Global.Render;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
-using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.OutlineSystem;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.SelectOutlineSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutlineSystem;
-using ProjectL.Systems.ServiceKeys;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.DrawPointLineSystem;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.ScreenTransitionSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View
 {
@@ -11,19 +13,25 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View
     /// </summary>
     public interface IRenderViewServiceContext : IServiceModule
     {
-        IOutlineSystemService OutlineSystemServices { get; }
+        ISelectOutlineSystemService SelectOutlineSystemServices { get; }
         IAreaOutlineSystemService AreaOutlineSystemServices { get; }
+        IDrawPointLineSystemService DrawPointLineSystemServices { get; }
+        IScreenTransitionSystemService ScreenTransitionSystemServices { get; }
     }
 
     internal sealed class RenderViewGroup : IRenderViewServiceContext
     {
-        public IOutlineSystemService OutlineSystemServices { get; }
+        public ISelectOutlineSystemService SelectOutlineSystemServices { get; }
         public IAreaOutlineSystemService AreaOutlineSystemServices { get; }
+        public IDrawPointLineSystemService DrawPointLineSystemServices { get; }
+        public IScreenTransitionSystemService ScreenTransitionSystemServices { get; }
 
         public RenderViewGroup(ISystemReader systemReader)
         {
-            OutlineSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.OutlineSystem);
+            SelectOutlineSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.SelectOutlineSystem);
             AreaOutlineSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.AreaOutlineSystem);
+            DrawPointLineSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.DrawPointLineSystem);
+            ScreenTransitionSystemServices = systemReader.ServiceStoreReader.GetService(RenderSystemServiceKey.ScreenTransitionSystem);
         }
     }
 }

@@ -8,6 +8,49 @@ namespace ProjectL.Tests.Core
     public sealed class TargetingMethodContractTests
     {
         [Test]
+        public void ChoiceAngle_DefaultAndNumericValuesAreStable()
+        {
+            var legacy = new TargetingMethodSpec(TargetingShape.RadialSquare,
+                TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            Assert.That(legacy.ChoiceAngle, Is.EqualTo(TargetingChoiceAngle.Unrestricted));
+            Assert.That(Enum.GetValues(typeof(TargetingChoiceAngle)), Is.EqualTo(new[]
+            {
+                TargetingChoiceAngle.Unrestricted, TargetingChoiceAngle.Front,
+                TargetingChoiceAngle.FrontAndSides, TargetingChoiceAngle.FrontAndRear
+            }));
+            Assert.That((int)TargetingChoiceAngle.Unrestricted, Is.Zero);
+            Assert.That((int)TargetingChoiceAngle.Front, Is.EqualTo(1));
+            Assert.That((int)TargetingChoiceAngle.FrontAndSides, Is.EqualTo(2));
+            Assert.That((int)TargetingChoiceAngle.FrontAndRear, Is.EqualTo(3));
+        }
+
+        [TestCase(TargetingChoiceAngle.Unrestricted)]
+        [TestCase(TargetingChoiceAngle.Front)]
+        [TestCase(TargetingChoiceAngle.FrontAndSides)]
+        [TestCase(TargetingChoiceAngle.FrontAndRear)]
+        public void ChoiceAngle_RoundTripsWithoutChangingOtherValues(TargetingChoiceAngle angle)
+        {
+            var method = new TargetingMethodSpec(TargetingShape.RadialSquare,
+                TargetingChoiceMode.Single, TargetingSplash.Radial, 70, angle);
+            Assert.That(method.ChoiceAngle, Is.EqualTo(angle));
+            Assert.That(method.Shape, Is.EqualTo(TargetingShape.RadialSquare));
+            Assert.That(method.ChoiceMode, Is.EqualTo(TargetingChoiceMode.Single));
+            Assert.That(method.Splash, Is.EqualTo(TargetingSplash.Radial));
+            Assert.That(method.SplashPercent, Is.EqualTo(70));
+        }
+
+        [TestCase(-1)]
+        [TestCase(4)]
+        [TestCase(99)]
+        public void ChoiceAngle_RejectsUndefinedValues(int angle)
+        {
+            Assert.That(Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single,
+                    TargetingSplash.None, 0, (TargetingChoiceAngle)angle)).ParamName,
+                Is.EqualTo("choiceAngle"));
+        }
+
+        [Test]
         public void SerializedMethods_KeepStableValues()
         {
             Assert.That((int)TargetingShape.None, Is.Zero);

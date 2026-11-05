@@ -30,10 +30,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 EffectKnockbackContribution contribution = copiedContributions[i];
                 if (contribution.Origin.IsValid == false ||
                     contribution.DistanceCells < 1 ||
+                    !Enum.IsDefined(typeof(EffectKnockbackMode), contribution.Mode) ||
+                    contribution.Mode != copiedContributions[0].Mode ||
                     contributionOrigins.Add(contribution.Origin) == false)
                 {
                     throw new ArgumentException(
-                        "Invalid Knockback contribution.",
+                        "Invalid Knockback contribution or conflicting displacement modes.",
                         nameof(contributions));
                 }
             }

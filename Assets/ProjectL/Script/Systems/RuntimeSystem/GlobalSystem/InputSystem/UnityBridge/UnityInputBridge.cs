@@ -26,6 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.UnityBridge
         IExportSystemServices
     {
         private readonly IInputSystemService _router;
+        private readonly KeyBindingService _keys;
         private readonly IInputController[] _controllers;
         private readonly InputLayer[] _layers;
         private readonly Dictionary<InputAction, InputValueKind> _valueKinds = new();
@@ -42,9 +43,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.UnityBridge
         internal UnityInputBridge(
             IInputSystemService router,
             IReadOnlyList<IInputController> controllers,
-            IReadOnlyList<InputLayer> layers)
+            IReadOnlyList<InputLayer> layers,
+            KeyBindingService keys = null)
         {
             _router = router ?? throw new ArgumentNullException(nameof(router));
+            _keys = keys;
             _controllers = CopyWithoutNull(controllers, nameof(controllers));
             _layers = CopyLayers(layers);
             _actionTriggeredHandler = OnActionTriggered;
@@ -74,6 +77,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.UnityBridge
             {
                 InputConfigurationValidator.ValidateOrThrow(_runtimeActions, _layers, configuration);
                 CacheValueKinds(configuration);
+                _keys?.Initialize(_runtimeActions);
                 _layerRuntime = new UnityInputLayerRuntime(_runtimeActions, _layers);
                 _router.Configure(_layerRuntime, configuration);
             }
@@ -189,7 +193,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.UnityBridge
             if (InputActionValueReader.TryConvertPhase(context.phase, out InputPhase phase) == false)
                 return;
 
-            // Controller가 등록하지 않은 액션(예: Common.OpenSettings)은 넘기지 않습니다.
+            // Controller가 등록하지 않은 액션은 넘기지 않습니다.
             if (_valueKinds.TryGetValue(context.action, out InputValueKind valueKind) == false)
                 return;
 
@@ -248,6 +252,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.UnityBridge
 
         private void ReleaseRuntimeActions()
         {
+            _keys?.Dispose();
             if (_runtimeActions == null)
                 return;
 

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Structure_Headquarters
   m_EditorClassIdentifier: 
   key: 20
-  footprintWidth: 1
-  footprintHeight: 1
-  maxHealth: 3
+  footprintWidth: 2
+  footprintHeight: 2
+  maxHealth: 10
   isAttackable: 0
   attackPower: 0

@@ -16,7 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public ReadOnlyMemory<ShopOfferSnapshot> Offers { get; }
         public int PurchasedCount { get; }
         /// <summary>상점 한 곳의 상품 슬롯 수다. 슬롯 번호는 1부터 이 값까지다.</summary>
-        public const int OfferCount = 3;
+        public const int OfferCount = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Shop.ShopOfferLimits.Maximum;
         public bool IsSoldOut => PurchasedCount == OfferCount;
         public bool CanComplete { get; }
 

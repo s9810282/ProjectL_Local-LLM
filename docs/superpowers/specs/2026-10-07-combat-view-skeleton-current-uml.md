@@ -1,4 +1,8 @@
+> **상대방 기록 보존(코드 미병합):** 상대 커밋 `c1b9b0a`의 문서 내용을 보존했다. 본문의 완료·검증은 당시 브랜치 범위이며 현재 코드의 병합 후 검증을 뜻하지 않는다. 현재 코드에는 아직 상대 변경을 적용하지 않았다. [병합 검토·수정 안내](../plans/2026-10-10-stage-map-plan-Hojin.md#4-c1b9b0a-병합-검토-2026-10-11)를 함께 읽는다.
+
 # 전투 골격·View — 현재 구현 UML
+
+> **2026-10-10 R4 주의:** 이 문서와 연결된 HTML은 10-07 당시 구현의 스냅샷이며 Job·Plan 재구성을 반영하지 않는다. 현재 진행 판단은 `CombatPlan.Decide` 하나, 사실 읽기는 `CombatProgressReader` 하나, Core 호출은 전투 Job이 맡는다. `CombatFlow`·`CombatExitSequence`·옛 이탈 API·guard는 제거됐고, 진입 수명은 `CombatEntryService`로 분리됐다. 현재 계약은 [재구성 설계](2026-10-10-combat-job-plan-restructure-design.md), 구현·검증은 [Task 계획](../plans/2026-10-10-combat-job-plan-restructure-plan.md)을 따른다. 아래 도표와 HTML은 당시 기록으로 보존한다.
 
 - 기준: 2026-10-07, `feature/Yonggeun/Stage`의 `8408a787`. 구현된 코드 관계만 그린다.
 - [오프라인 HTML 도표](2026-10-07-combat-view-skeleton-current-uml.html)에서 주요 관계와 흐름을 볼 수 있다.

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_MoveAttackDiscount
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 20
+    displayName: "\uC774\uB3D9 \uD6C4 \uACF5\uACA9 \uD560\uC778"
+    icon: {fileID: 21300000, guid: e12e704d3a2473f4494c3a233ea5c178, type: 3}
+    description: "이동 후 공격 시 다음 공격의 행동력 비용이 감소합니다.\n1턴에 1번만 적용됩니다.\n해당 특성 폐기."
+    activations: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

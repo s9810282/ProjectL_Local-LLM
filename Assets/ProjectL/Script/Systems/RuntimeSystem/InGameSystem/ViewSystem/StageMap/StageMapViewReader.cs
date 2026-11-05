@@ -10,6 +10,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     {
         private readonly ICurrentProgressBufferReadSink _current;
         private readonly IStageProgressBufferReadSink _stages;
+        private int _readMapKey;
+        private IReadOnlyList<StageProgressData> _readNodes = Array.Empty<StageProgressData>();
 
         internal StageMapViewReader(ICurrentProgressBufferReadSink current,
             IStageProgressBufferReadSink stages)
@@ -27,6 +29,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         {
             mapKey = 0;
             nodes = Array.Empty<StageProgressData>();
+            _readMapKey = 0;
+            _readNodes = Array.Empty<StageProgressData>();
             if (!_current.HasMap)
                 return false;
 
@@ -37,7 +41,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
             mapKey = currentMapKey;
             nodes = currentNodes;
+            _readMapKey = currentMapKey;
+            _readNodes = currentNodes;
             return true;
+        }
+
+        /// <summary>
+        /// 마지막으로 읽은 맵과 현재 Buffer의 맵이 같을 때 현재 노드를 읽습니다.
+        /// 첫 진입 전에는 그 맵의 시작 노드를 사용하며, 매 Tick GetStages 래퍼를 새로 만들지 않습니다.
+        /// </summary>
+        internal bool TryReadCurrentNode(out int nodeId)
+        {
+            nodeId = 0;
+            if (!_current.HasMap || _current.CurrentMapKey != _readMapKey)
+                return false;
+
+            if (_current.HasSelection)
+            {
+                nodeId = _current.CurrentStage.NodeId;
+                return nodeId > 0;
+            }
+
+            for (int i = 0; i < _readNodes.Count; i++)
+            {
+                StageProgressData node = _readNodes[i];
+                if (!node.IsStart) continue;
+                nodeId = node.NodeId;
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -8,6 +8,13 @@ using UnityEngine.SceneManagement;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 {
+    // Boot에 구성된 각 Player의 슬롯 순서입니다.
+    public enum AmbgmEvent { BGM = 0, AMB = 1, UIClick = 2, UIHover = 3, UIReward = 4, GameStart = 5, StageChanger = 7 }
+    public enum UnitEvent { UnitPick = 0, UnitCancel = 1, UnitMovement = 2, UnitDead = 3, UnitAttack = 4, ObsDamaged = 5, ObsBroken = 6, BulletFall = 12 }
+    /// <summary>Boot의 UnitMovement 슬롯에 등록한 기본 이동 프리셋 인덱스입니다.</summary>
+    public enum UnitMovementPreset { Base = 0 }
+    public enum SfxEvent { Tornado = 0, Tornado_Ended = 1, MineExplosion = 2, FallStone = 3, Haboob = 4, WeakTerrian = 5, Mark = 6, TrainCall = 7, TrainBell = 8 }
+
     public enum AudioStopMode
     {
         AllowFadeout,
@@ -18,6 +25,15 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 
     public interface IAudioSystemService : IServiceModule
     {
+        // 재생·프리셋 변경은 성공 시 true를 반환하고, 잘못된 요청·구성·실제 재생 실패는 예외로 알립니다.
+        // presetIndex = -1은 프리셋을 바꾸지 않고 재생한다는 뜻입니다.
+        bool Play(AmbgmEvent slot, int presetIndex = -1);
+        bool Play(UnitEvent slot, int presetIndex = -1);
+        bool Play(SfxEvent slot, int presetIndex = -1);
+        bool SetPreset(AmbgmEvent slot, int presetIndex);
+        bool IsPlaying(AmbgmEvent slot);
+        bool Stop(AmbgmEvent slot, AudioStopMode stopMode = AudioStopMode.AllowFadeout);
+
         bool IsGamePaused { get; }
 
         /// <summary>동적 생성 후 등록하고 풀 반환 시 해제한다.</summary>
@@ -68,6 +84,12 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 
         void SetPaused(bool paused);
         void SetGamePaused(bool paused);
+
+        /// <summary>Bus의 사용자 볼륨을 선형 배율로 읽습니다. 1은 0dB, 0은 무음입니다.</summary>
+        bool TryGetBusVolume(string busPath, out float volume);
+
+        /// <summary>Bus의 사용자 볼륨을 0~1 선형 배율로 설정합니다.</summary>
+        bool TrySetBusVolume(string busPath, float volume);
     }
 
     #endregion
@@ -82,6 +104,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
         ISystemShutdown
     {
         private AudioManager _audioManager;
+        private FmodEventPlayer _ambgm;
+        private FmodEventPlayer _unit;
+        private FmodEventPlayer _sfx;
         private AudioBase[] _sceneAudioConsumers = Array.Empty<AudioBase>();
         private readonly HashSet<AudioBase> _boundAudioConsumers = new();
         private bool _isShutdown;
@@ -117,6 +142,15 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
             else
             {
                 _audioManager.RegisterExistingPlayers();
+                _ambgm = null;
+                _unit = null;
+                _sfx = null;
+                foreach (var definition in _audioManager.PlayerIdDefinitions)
+                {
+                    if (definition.DisplayName == "AMBGM") _audioManager.TryGetPlayer(definition.Id, out _ambgm);
+                    if (definition.DisplayName == "Unit") _audioManager.TryGetPlayer(definition.Id, out _unit);
+                    if (definition.DisplayName == "SFX") _audioManager.TryGetPlayer(definition.Id, out _sfx);
+                }
             }
 
             _sceneAudioConsumers =
@@ -197,6 +231,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
                     catch (Exception exception) { Debug.LogException(exception, consumer); }
                 }
                 _audioManager = null;
+                _ambgm = null;
+                _unit = null;
+                _sfx = null;
                 _sceneAudioConsumers = Array.Empty<AudioBase>();
                 _boundAudioConsumers.Clear();
             }
@@ -204,23 +241,143 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 
         public bool Play(AudioPlayerId playerId, int slotIndex)
         {
-            EnsureInitialized();
-            return _audioManager.Play(playerId, slotIndex);
+            return PlayRequired(RequirePlayer(playerId), slotIndex);
         }
 
         public bool Play(AudioPlayerId playerId, string slotName)
         {
-            EnsureInitialized();
-            return _audioManager.Play(playerId, slotName);
+            FmodEventPlayer player = RequirePlayer(playerId);
+            return PlayRequired(player, RequireSlotIndex(player, slotName));
         }
+
+        public bool Play(AmbgmEvent slot, int presetIndex = -1) => PlayCue(_ambgm, "AMBGM", (int)slot, presetIndex);
+        public bool Play(UnitEvent slot, int presetIndex = -1) => PlayCue(_unit, "Unit", (int)slot, presetIndex);
+        public bool Play(SfxEvent slot, int presetIndex = -1) => PlayCue(_sfx, "SFX", (int)slot, presetIndex);
+
+        public bool SetPreset(AmbgmEvent slot, int presetIndex)
+        {
+            int index = (int)slot;
+            RequireCue(_ambgm, "AMBGM", index);
+            ApplyPreset(_ambgm, index, presetIndex, skipIfCurrent: true);
+            return true;
+        }
+
+        public bool IsPlaying(AmbgmEvent slot) => TryCue(_ambgm, (int)slot) && _ambgm.IsPlaying((int)slot);
+
+        public bool Stop(AmbgmEvent slot, AudioStopMode stopMode = AudioStopMode.AllowFadeout) =>
+            TryCue(_ambgm, (int)slot) && _audioManager.Stop(_ambgm.PlayerId, (int)slot, ConvertStopMode(stopMode));
+
+        private bool PlayCue(FmodEventPlayer player, string group, int slot, int presetIndex)
+        {
+            RequireCue(player, group, slot);
+            if (presetIndex < -1)
+                throw new ArgumentOutOfRangeException(nameof(presetIndex), presetIndex,
+                    $"[AudioSystem] {Describe(player, slot)}: 프리셋은 -1(변경 없음) 이상이어야 합니다.");
+            if (presetIndex >= 0)
+                ApplyPreset(player, slot, presetIndex, skipIfCurrent: false);
+            return PlayRequired(player, slot);
+        }
+
+        private bool TryCue(FmodEventPlayer player, int slot) =>
+            _isInitialized && !_isShutdown && _audioManager != null && player != null &&
+            player.EventSlots != null && slot >= 0 && slot < player.EventSlots.Count && player.EventSlots[slot] != null &&
+            !string.IsNullOrWhiteSpace(player.EventSlots[slot].selectedEventPath);
+
+        private void RequireCue(FmodEventPlayer player, string group, int slot)
+        {
+            if (!_isInitialized || _isShutdown || _audioManager == null)
+                throw new InvalidOperationException(
+                    $"[AudioSystem] {group}, Slot={slot}: 초기화가 완료된 활성 AudioSystem에서만 재생·프리셋 변경을 요청할 수 있습니다.");
+            if (player == null)
+                throw new InvalidOperationException($"[AudioSystem] {group}, Slot={slot}: 연결된 FmodEventPlayer가 없습니다.");
+            RequireSlot(player, slot);
+        }
+
+        private FmodEventPlayer RequirePlayer(AudioPlayerId playerId)
+        {
+            EnsureInitialized();
+            ValidatePlayerId(playerId);
+            if (!_audioManager.TryGetPlayer(playerId, out FmodEventPlayer player))
+                throw new InvalidOperationException(
+                    $"[AudioSystem] PlayerId={playerId}: 등록된 재생 대상이 없거나 여러 개입니다. 객체 지정 또는 PlayAll을 사용하세요.");
+            return player;
+        }
+
+        private FmodEventPlayer RequirePlayer(AudioPlayerId playerId, GameObject requesterObject)
+        {
+            EnsureInitialized();
+            ValidatePlayerId(playerId);
+            if (requesterObject == null)
+                throw new ArgumentNullException(nameof(requesterObject));
+            if (!_audioManager.TryGetPlayer(playerId, requesterObject, out FmodEventPlayer player))
+                throw new InvalidOperationException(
+                    $"[AudioSystem] PlayerId={playerId}, Object='{requesterObject.name}': 객체에 부착된 등록 Player의 ID가 일치해야 합니다.");
+            return player;
+        }
+
+        private static void ValidatePlayerId(AudioPlayerId playerId)
+        {
+            if (!playerId.IsValid)
+                throw new ArgumentException("[AudioSystem] 재생할 PlayerId가 비어 있습니다.", nameof(playerId));
+        }
+
+        private static FmodEventSlot RequireSlot(FmodEventPlayer player, int slotIndex)
+        {
+            if (player.EventSlots == null || slotIndex < 0 || slotIndex >= player.EventSlots.Count)
+                throw new ArgumentOutOfRangeException(nameof(slotIndex), slotIndex,
+                    $"[AudioSystem] PlayerId={player.PlayerId}, Player='{player.name}': 등록된 슬롯 범위를 벗어났습니다.");
+            FmodEventSlot slot = player.EventSlots[slotIndex];
+            if (slot == null || string.IsNullOrWhiteSpace(slot.selectedEventPath))
+                throw new InvalidOperationException(
+                    $"[AudioSystem] PlayerId={player.PlayerId}, Player='{player.name}', Slot={slotIndex} ('{slot?.slotName}'): 이벤트 경로가 연결되지 않았습니다.");
+            return slot;
+        }
+
+        private static int RequireSlotIndex(FmodEventPlayer player, string slotName)
+        {
+            if (slotName == null) throw new ArgumentNullException(nameof(slotName));
+            if (string.IsNullOrWhiteSpace(slotName))
+                throw new ArgumentException("[AudioSystem] 슬롯 이름이 비어 있습니다.", nameof(slotName));
+            int index = player.FindSlotIndex(slotName);
+            if (index < 0)
+                throw new InvalidOperationException(
+                    $"[AudioSystem] PlayerId={player.PlayerId}, Player='{player.name}', Slot='{slotName}': 이름과 일치하는 슬롯이 없습니다.");
+            return index;
+        }
+
+        private static void ApplyPreset(FmodEventPlayer player, int slotIndex, int presetIndex, bool skipIfCurrent)
+        {
+            var presets = RequireSlot(player, slotIndex).parameterPresets;
+            if (presets == null || presetIndex < 0 || presetIndex >= presets.Count)
+                throw new ArgumentOutOfRangeException(nameof(presetIndex), presetIndex,
+                    $"[AudioSystem] {Describe(player, slotIndex)}: 등록된 프리셋 범위를 벗어났습니다.");
+            if (presets[presetIndex] == null || !presets[presetIndex].enabled)
+                throw new InvalidOperationException(
+                    $"[AudioSystem] {Describe(player, slotIndex)}, Preset={presetIndex}: 프리셋이 없거나 비활성 상태입니다.");
+            if (skipIfCurrent && player.GetCurrentPresetIndex(slotIndex) == presetIndex) return;
+            if (!player.SetCurrentPresetIndex(slotIndex, presetIndex))
+                throw new InvalidOperationException(
+                    $"[AudioSystem] {Describe(player, slotIndex)}, Preset={presetIndex}: 프리셋 변경에 실패했습니다.");
+        }
+
+        private bool PlayRequired(FmodEventPlayer player, int slotIndex)
+        {
+            RequireSlot(player, slotIndex);
+            if (!_audioManager.Play(player, slotIndex))
+                throw new InvalidOperationException(
+                    $"[AudioSystem] {Describe(player, slotIndex)}: 이벤트 재생에 실패했습니다. Player 등록 상태·Catalog/Bank·재생 모드·인스턴스 제한·FMOD 오류를 확인하세요.");
+            return true;
+        }
+
+        private static string Describe(FmodEventPlayer player, int slotIndex) =>
+            $"PlayerId={player.PlayerId}, Player='{player.name}', Slot={slotIndex} ('{player.EventSlots[slotIndex].slotName}'), Event='{player.EventSlots[slotIndex].selectedEventPath}', Preset={player.EventSlots[slotIndex].currentPresetIndex}";
 
         public bool Play(
             AudioPlayerId playerId,
             GameObject requesterObject,
             int slotIndex)
         {
-            EnsureInitialized();
-            return _audioManager.Play(playerId, requesterObject, slotIndex);
+            return PlayRequired(RequirePlayer(playerId, requesterObject), slotIndex);
         }
 
         public bool Play(
@@ -228,20 +385,38 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
             GameObject requesterObject,
             string slotName)
         {
-            EnsureInitialized();
-            return _audioManager.Play(playerId, requesterObject, slotName);
+            FmodEventPlayer player = RequirePlayer(playerId, requesterObject);
+            return PlayRequired(player, RequireSlotIndex(player, slotName));
         }
 
         public int PlayAll(AudioPlayerId playerId, int slotIndex)
         {
-            EnsureInitialized();
-            return _audioManager.PlayAll(playerId, slotIndex);
+            return PlayAllRequired(playerId, slotIndex, null);
         }
 
         public int PlayAll(AudioPlayerId playerId, string slotName)
         {
+            if (slotName == null) throw new ArgumentNullException(nameof(slotName));
+            if (string.IsNullOrWhiteSpace(slotName))
+                throw new ArgumentException("[AudioSystem] 슬롯 이름이 비어 있습니다.", nameof(slotName));
+            return PlayAllRequired(playerId, null, slotName);
+        }
+
+        private int PlayAllRequired(AudioPlayerId playerId, int? slotIndex, string slotName)
+        {
             EnsureInitialized();
-            return _audioManager.PlayAll(playerId, slotName);
+            ValidatePlayerId(playerId);
+            IReadOnlyList<FmodEventPlayer> players = _audioManager.GetPlayers(playerId);
+            if (players.Count == 0)
+                throw new InvalidOperationException(
+                    $"[AudioSystem] PlayAll PlayerId={playerId}, Slot='{slotName ?? slotIndex.ToString()}': 등록된 재생 대상이 없습니다.");
+            // 일부를 재생한 뒤 설정 누락을 발견하지 않도록 전체 슬롯을 먼저 검사합니다.
+            for (int i = 0; i < players.Count; i++)
+                RequireSlot(players[i], slotIndex ?? RequireSlotIndex(players[i], slotName));
+            // 실제 재생 실패도 즉시 예외로 알립니다. 앞서 시작한 소리는 되돌리지 않습니다.
+            for (int i = 0; i < players.Count; i++)
+                PlayRequired(players[i], slotIndex ?? RequireSlotIndex(players[i], slotName));
+            return players.Count;
         }
 
         public bool Stop(
@@ -285,6 +460,23 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
         {
             EnsureInitialized();
             _audioManager.SetGamePaused(paused);
+        }
+
+        public bool TryGetBusVolume(string busPath, out float volume)
+        {
+            EnsureInitialized();
+            volume = 0f;
+            return _audioManager.TryGetBus(busPath, out Bus bus)
+                && bus.getVolume(out volume) == FMOD.RESULT.OK;
+        }
+
+        public bool TrySetBusVolume(string busPath, float volume)
+        {
+            EnsureInitialized();
+            if (float.IsNaN(volume) || float.IsInfinity(volume) || volume < 0f || volume > 1f)
+                throw new ArgumentOutOfRangeException(nameof(volume), "Bus 볼륨은 0~1이어야 합니다.");
+            return _audioManager.TryGetBus(busPath, out Bus bus)
+                && bus.setVolume(volume) == FMOD.RESULT.OK;
         }
 
         public bool Stop(AudioPlayerId playerId, GameObject requesterObject, int slotIndex,
@@ -350,12 +542,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
             }
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (!_isServiceBound)
-                return;
-
-            BindScene();
+            if (_isServiceBound) BindScene();
         }
 
         private void BindUnboundAudioConsumers()

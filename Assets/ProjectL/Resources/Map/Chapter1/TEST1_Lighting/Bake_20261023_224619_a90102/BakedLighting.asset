@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5993b34b2ca846dca435f3ba5d46ea26, type: 3}
+  m_Name: BakedLighting
+  m_EditorClassIdentifier: 
+  mode: 1
+  atlases:
+  - color: {fileID: 2800000, guid: 0b01f560aa76fd44e9aa31158368e645, type: 3}
+    direction: {fileID: 2800000, guid: e79ee4e8b9d90504f8b7ffa7849af765, type: 3}
+    shadowMask: {fileID: 0}
+  surfaces:
+  - node:
+      indices: 0000000000000000
+      nodeName: LAND1
+      componentIndex: 0
+    mesh: {fileID: -5495902117074765545, guid: 0ae8b6ab97e173b43843e0d2ff8d9067, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 1.0538727, y: 1.0538727, z: -0.20964897, w: -0.20964897}
+  - node:
+      indices: 0100000000000000
+      nodeName: rock3
+      componentIndex: 0
+    mesh: {fileID: 6099771041145418198, guid: 8e504736dd5c1d8498359589fe980e47, type: 3}
+    atlasIndex: 0
+    scaleOffset: {x: 0.025211208, y: 0.025211208, z: 0.733196, w: -0.00117899}
+  lights:
+  - node:
+      indices: 0000000001000000
+      nodeName: Directional Light
+      componentIndex: 0
+    isBaked: 1
+    bakeType: 1
+    mixedMode: 1
+    maskChannel: 0
+    probeIndex: 0

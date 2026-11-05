@@ -83,11 +83,11 @@ namespace ProjectL.Tests.Core
             // 결합 조건을 공격 계산 때가 아니라 프로필 생성(전투 준비 경계)에서 거절한다.
             var pierce = CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 21, CategoryKey.Cannon, new PiercingFalloffTraitSpec(30, 99));
 
-            Assert.Throws<ArgumentException>(() => new CombatAttackProfile(pierce,
+            Assert.DoesNotThrow(() => new CombatAttackProfile(pierce,
                 new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0)));
             Assert.Throws<ArgumentException>(() => new CombatAttackProfile(pierce,
                 new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.All, TargetingSplash.None, 0)));
-            Assert.DoesNotThrow(() => new CombatAttackProfile(pierce,
+            Assert.Throws<ArgumentException>(() => new CombatAttackProfile(pierce,
                 new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0)));
             // 관통 특성이 없으면 지정 방식 제한이 없다.
             Assert.DoesNotThrow(() => new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 21),
@@ -117,6 +117,33 @@ namespace ProjectL.Tests.Core
 
             Assert.That(ScaleSequence(rule, definition, 10, 2), Is.EqualTo(new[] { 10, 5 }));
             Assert.That(rule.CalculateTargetBudget(definition, 10), Is.EqualTo(2));
+        }
+
+        [TestCase(10, 100, 10)]
+        [TestCase(10, 70, 7)]
+        [TestCase(10, 40, 4)]
+        [TestCase(10, 10, 1)]
+        [TestCase(1, 70, 1)]
+        [TestCase(1, 40, 0)]
+        public void ApplyFalloff_RoundsHalfUp(int damage, int remainingPercent, int expected)
+        {
+            Assert.That(PiercingFalloffTraitRule.ApplyFalloff(damage, remainingPercent), Is.EqualTo(expected));
+        }
+
+        /// <summary>예산과 실제 피해가 같은 공식을 쓰므로, 예산은 앞에서부터 양수 피해가 나는 조우 수와 같다.</summary>
+        [Test]
+        public void TargetBudget_EqualsLeadingPositiveFalloffDamage(
+            [Values(0, 1, 2, 3, 10, 37)] int damage,
+            [Values(1, 30, 50, 100)] int reduction,
+            [Values(0, 2, int.MaxValue)] int cap)
+        {
+            var definition = new PiercingFalloffTraitDefinition(reduction, cap);
+            var rule = new PiercingFalloffTraitRule();
+            int positive = 0;
+            while (PiercingFalloffTraitRule.ApplyFalloff(damage, rule.EvaluateRemainingPercent(definition, positive)) > 0)
+                positive++;
+
+            Assert.That(rule.CalculateTargetBudget(definition, damage), Is.EqualTo(Math.Min(cap, positive)));
         }
 
         [Test]
@@ -213,14 +240,9 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
                 3,
-                8,
-                2,
                 30,
-                35,
                 new[] { trait });
         }
 

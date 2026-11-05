@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   methodKey: 3
   shape: 3
-  choiceMode: 2
+  choiceMode: 1
   splash: 0
   splashPercent: 0

@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: PlayerLoadout_1
   m_EditorClassIdentifier: 
   loadoutKey: 1
-  mainCharacter: {fileID: 11400000, guid: 6e89b4521e6a4fcd906d2858ffb9dfcc, type: 2}
+  mainCharacter: {fileID: 11400000, guid: 0ee77c6294c94e17a735e0107395047b, type: 2}
   entries:
-  - unitDefinition: {fileID: 11400000, guid: 0ee77c6294c94e17a735e0107395047b, type: 2}
-    count: 1
   - unitDefinition: {fileID: 11400000, guid: 39a9cd647c4c4d35af33595bbea3064e, type: 2}
     count: 1
-  - unitDefinition: {fileID: 11400000, guid: 920777f51f9347e58e09fef501ed7497, type: 2}
+  - unitDefinition: {fileID: 11400000, guid: 65c5b316864932f44b6be0119a7b4246, type: 2}
     count: 1
+  - unitDefinition: {fileID: 11400000, guid: f7ed96dc828146c28600c5e7b6bc277c, type: 2}
+    count: 1
+  initialDeckGrantIndices: 00000000010000000200000003000000
   startingHandSize: 4
-  startingRunCurrency: 0
+  startingRunCurrency: 5000

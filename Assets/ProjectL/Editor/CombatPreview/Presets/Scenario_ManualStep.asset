@@ -1,0 +1,300 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82182ed9f5b47ecbbf6097708242d49, type: 3}
+  m_Name: Scenario_ManualStep
+  m_EditorClassIdentifier: 
+  input:
+    version: 1
+    stageViewKey: 10000
+    repeat: 0
+    pauseBetweenPackets: 0
+    observationSeconds: 1
+    repeatInterval: 0.5
+    units:
+    - id: owner
+      name: "\uAE54\uB054\uD55C \uB4B7\uC815\uB9AC \uBCF4\uC720\uC790 B"
+      unit:
+        key: 13
+        enemy: 0
+        cell: {x: 3, y: 2}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 1
+      acceleration: 0
+      grants: []
+    - id: ally
+      name: "\uACF5\uACA9\uD558\uB294 \uC544\uAD70 A"
+      unit:
+        key: 10
+        enemy: 0
+        cell: {x: 2, y: 3}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    - id: enemy
+      name: "\uACF5\uACA9 \uB300\uC0C1"
+      unit:
+        key: 17
+        enemy: 1
+        cell: {x: 3, y: 3}
+        direction: 0
+        health: 100
+        maxHealth: 100
+        attack: 20
+        defense: 0
+      ownsAcceleration: 0
+      ownsCleanSweep: 0
+      acceleration: 0
+      grants: []
+    entries:
+    - id: initial
+      name: "\uAD00\uCC30 \uB300\uAE30"
+      kind: 1
+      seconds: 1
+      blocks: []
+    - id: ally_attack
+      name: "\uB2E4\uB978 \uC544\uAD70 \uACF5\uACA9"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: attack_a
+        name: "\uACF5\uACA9"
+        kind: 1
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: ally
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits:
+          - targetId: enemy
+            finalHealth: 90
+        state:
+          unitId: 
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: attack_a_grant
+            sourceId: 
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: 
+          targetIds: []
+          cells: []
+          magnitude: 5
+    - id: gain_packet
+      name: "\uBCF4\uC720\uC790 B\uC758 \uACF5\uACA9\uB825 \uC99D\uAC00"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: gained
+        name: "\uD2B9\uC131 \uBC1C\uB3D9"
+        kind: 3
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: 
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: 
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: gained_grant
+            sourceId: 
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 11400000, guid: 0dbec687d36d49cfb199845fcb4ccd13, type: 2}
+          kind: 90
+          sourceId: owner
+          targetIds:
+          - owner
+          cells: []
+          magnitude: 5
+      - id: grant
+        name: "B\uC5D0\uAC8C \uACF5\uACA9\uB825 +5"
+        kind: 2
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: 
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: owner
+          kind: 1
+          operation: 0
+          acceleration: 0
+          grant:
+            id: clean_bonus
+            sourceId: owner
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: 
+          targetIds: []
+          cells: []
+          magnitude: 5
+    - id: observe
+      name: "\uAD00\uCC30 \uB300\uAE30"
+      kind: 1
+      seconds: 2
+      blocks: []
+    - id: owner_attack
+      name: "B\uC758 \uACF5\uACA9"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: attack_b
+        name: "\uACF5\uACA9"
+        kind: 1
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: owner
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits:
+          - targetId: enemy
+            finalHealth: 80
+        state:
+          unitId: 
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: attack_b_grant
+            sourceId: 
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: 
+          targetIds: []
+          cells: []
+          magnitude: 5
+    - id: expiration
+      name: "\uBA85\uC2DC\uC801\uC778 \uC218\uBA85 \uC885\uB8CC"
+      kind: 0
+      seconds: 1
+      blocks:
+      - id: expire
+        name: "\uBD80\uC5EC \uC81C\uAC70"
+        kind: 2
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: 
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: owner
+          kind: 1
+          operation: 1
+          acceleration: 0
+          grant:
+            id: clean_bonus
+            sourceId: owner
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 0}
+          kind: 90
+          sourceId: 
+          targetIds: []
+          cells: []
+          magnitude: 5
+      - id: expired
+        name: "\uD2B9\uC131 \uBC1C\uB3D9"
+        kind: 3
+        relation: 0
+        movement:
+          unitId: 
+          path: []
+          direction: 0
+        attack:
+          attackerId: 
+          direction: 0
+          targetCell: {x: 3, y: 3}
+          hits: []
+        state:
+          unitId: 
+          kind: 0
+          operation: 0
+          acceleration: 0
+          grant:
+            id: expired_grant
+            sourceId: 
+            trait: 230
+            amount: 5
+            remainingTurns: 1
+        trait:
+          asset: {fileID: 11400000, guid: 0dbec687d36d49cfb199845fcb4ccd13, type: 2}
+          kind: 190
+          sourceId: owner
+          targetIds:
+          - owner
+          cells: []
+          magnitude: 5
+    - id: end
+      name: "\uAD00\uCC30 \uB300\uAE30"
+      kind: 1
+      seconds: 1
+      blocks: []
+    - id: c86b9981a4ea43328d0757c96656cb21
+      name: "\uC218\uB3D9 \uB300\uAE30"
+      kind: 2
+      seconds: 1
+      blocks: []

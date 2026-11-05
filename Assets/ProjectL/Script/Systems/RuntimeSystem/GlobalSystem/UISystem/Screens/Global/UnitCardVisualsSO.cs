@@ -2,8 +2,9 @@ using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using UnityEngine;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 {
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "UnitCardVisualsSO")]
     [CreateAssetMenu(fileName = "UnitCardVisuals", menuName = "ProjectL/UI/Unit Card Visuals")]
     public sealed class UnitCardVisualsSO : ScriptableObject
     {

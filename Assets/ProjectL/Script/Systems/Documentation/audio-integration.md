@@ -1,6 +1,64 @@
 # Audio 연결과 수명
 
-2026-09-27 변경 기준. View/Bootstrap 조립은 이 변경 범위에 포함하지 않는다.
+2026-10-12 변경 기준. Boot의 사용자 작성 AMBGM/SFX 슬롯과 프리셋을 그대로 사용한다.
+
+## 게임 재생 연결
+
+`AudioSystemFactory → IAudioSystemService(AudioSystem) → AudioManager → FmodEventPlayer`
+경로를 사용한다. Player ID는 Manager에 정의된 `AMBGM`, `SFX` 이름으로 연결하며
+새 Player·프리셋·슬롯을 자동 생성하지 않는다.
+
+```csharp
+var audio = resolver.GetService(SystemGroupsService.Global).AudioServiceCommand;
+audio.SetPreset(AmbgmEvent.BGM, 3);  // Night
+audio.Play(SfxEvent.UnitPick, 2);    // Rider
+audio.Play(SfxEvent.UnitAttack, 6);  // ShotGun
+```
+
+| 호출/시점 | Player / Slot | 프리셋 |
+| --- | --- | --- |
+| Title / StageSelect / 배치 / 전투 | AMBGM / BGM | 0 / 1 / 2 / 3 |
+| StageSelect 진입·이탈 | AMBGM / AMB | 없음, 재생·정지 |
+| 유효한 UI 왼쪽 클릭·Submit / Hover 기능이 있는 UI 진입 | AMBGM / UIClick, UIHover | 없음 |
+| 전투 승리 결과 표시 | AMBGM / UIReward | 없음 |
+| 손패·필드 유닛 선택, 실제 턴 시작 | SFX / UnitPick | 직군 |
+| 선택한 배치 유닛·공격 조준 취소 | SFX / UnitCancel | 직군 |
+| 이동 결과의 유닛별 첫 이동 시작 / 사망 사건 표시 | SFX / UnitMovement, UnitDead | 직군 |
+| 성공한 공격 사건 표시 | SFX / UnitAttack | 유닛 종류 |
+| 장애물 Hit / Destroyed 사건 표시 | SFX / ObsDamaged, ObsBroken | 없음 |
+
+BGM은 현재 인스턴스를 유지한 채 프리셋만 바꾸고, 정지 상태일 때만 Play한다.
+전투 결과 확인 버튼이 수락되면 StageSelect 프리셋(1)으로 전환한다.
+단순 화면 Refresh는 SFX를 재생하지 않는다. SFX의 MultiInstance 및 기존 인스턴스
+프리셋 유지 정책은 Inspector 설정을 따른다. 코드에서 재생 모드를 덮어쓰지 않는다.
+
+직군 프리셋은 MainCharacter=0, Base=1, Rider=2, Heavy=3, Cannon=4, Enemy=5다.
+전투 View가 적 소유권을 우선 판정하고, 메인 캐릭터 외 직군은 사건/캐릭터 스냅샷의
+`Stats.Category.Key`로 인덱스를 계산해 AudioSystem에 전달한다. 일반 직군은
+`(int)CategoryKey / 10`이다. None은 재생하지 않는다. GlobalUI 덱은 공통 UI Click/Hover만 재생한다.
+이동음은 OrderedCombatPresentation이 결과마다 유닛의 첫 이동 시작에 한 번 호출한다.
+중간 피해·환경 사건이 끼어도 같은 이동 결과의 다음 칸에서는 다시 재생하지 않는다.
+
+공격 프리셋은 MainCharacter=0(Akimbo), Akimbo=1, Sniper=2, ShotGun=6,
+Gravekeeper=7, CactusCannon=9, Ballista=11이다. Demon은 사용자 요청으로 보류한다.
+이 매핑은 CombatSceneEventPresenter에 있다. FMOD label 값과 프리셋 배열 인덱스는 구분한다.
+AudioSystem의 Play·SetPreset은 성공 시 true를 반환하며, 존재하지 않거나 비활성인 프리셋,
+누락된 Player·슬롯·이벤트, 실제 재생 실패는 예외로 알린다. 초기화 전·종료 후 요청도 예외다.
+인자 오류는 ArgumentException 계열, 구성·재생 상태 오류는 InvalidOperationException이며
+실패한 Player·슬롯·이벤트·프리셋 정보를 포함한다. 기본 Play도 같은 검사를 거친다.
+Play의 프리셋 -1은 프리셋을 변경하지 않고 재생한다는 뜻이며 무음 값이 아니다.
+PlayAll은 모든 대상의 슬롯 구성을 먼저 검사하고, 대상이 없거나 하나라도 재생에 실패하면
+예외를 던진다. 실제 재생 실패 전에 시작한 소리는 되돌리지 않는다.
+정상적인 조회 실패(IsPlaying)·정지·Try API의 반환 계약은 그대로다.
+현재 Object 전용 슬롯은 없으므로 Object 재생은 슬롯 구성 후 추가 연결한다.
+
+UIInputBinding은 UIAudioScope에서 서비스를 받아 유효 입력을 직접 전달한다.
+UISystem이 씬 Canvas와 유지 Global Canvas에 Scope를 연결하고, 동적 자식 입력은 Bind/OnEnable/
+부모 변경 때 이를 상속한다. 포인터 콜백에서는 검색·구독·클로저를 만들지 않는다.
+Hover 중복 진입, 비활성·입력 불가 상태에서는 재생하지 않으며 덱 핀 동작은 유지한다.
+Hover 사운드는 기본적으로 꺼져 있으며 실제 Hover 기능이 있는 슬롯만
+`UIInputBinding.Attach(..., hasHover: true)`로 연결한다. 현재 덱 유닛 항목,
+유닛 카드 시너지·기능 버튼, 상태 아이콘, 아티팩트 항목이 대상이다.
 
 ## 서비스 접근
 
@@ -72,4 +130,7 @@ Shutdown은 중복 호출을 허용하지만 종료한 AudioSystem은 재사용�
 
 AudioSystemTests에 Global 조회 경계, 실패 후 바인딩 재시도, 소비자 해제·종료,
 비활성 소비자의 Ready 처리, ID 중복 및 객체 지정 조회 회귀 테스트를 추가했다.
+2026-10-26: AudioPlaybackFailureTests와 초기화 전·종료 후 요청, UI 입력 오디오 회귀를
+Unity EditMode에서 실행해 15건 통과·실패 0·스킵 0을 확인했다. 기본 재생과 프리셋 변경,
+객체 지정·그룹 재생의 실패 예외를 검사하며, 실제 음향 장치 출력 검증과는 구분한다.
 실제 오디오 출력·Bank 로드·씬 전환·Pause 중첩과 GUI 조작은 Unity PlayMode에서 확인한다.

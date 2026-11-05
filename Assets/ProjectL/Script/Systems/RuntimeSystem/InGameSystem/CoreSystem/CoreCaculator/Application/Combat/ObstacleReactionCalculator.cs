@@ -21,31 +21,39 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly Queue<(StructureCombatFacts Source, ObstacleContentProfile Profile, CombatDamageOrigin Origin)> explosions = new();
         private readonly HashSet<EntityId> destroyed = new();
         private readonly CommandAttackGroups attackGroups;
+        private readonly CombatHitCause sharedHitCause;
+        private readonly CombatDamageApplication damageApplication;
         internal Dictionary<EntityId, int> BlastDamage { get; } = new();
         internal HashSet<EntityId> BlastTargetIds { get; } = new();
         internal HashSet<CellCoord> TerrainQueryCells { get; } = new();
 
         internal ObstacleReactionCalculator(CombatCommandInput input, MovementEnvironmentFacts environment,
-            Dictionary<EntityId, CharacterCombatFacts> characters, Dictionary<EntityId, StructureCombatFacts> structures,
-            List<CombatEvent> events, Dictionary<EntityId, CellCoord> deathAnchors, CommandAttackGroups attackGroups = null)
+            CombatDamageApplication damage, Dictionary<EntityId, StructureCombatFacts> structures,
+            Dictionary<EntityId, CellCoord> deathAnchors, CommandAttackGroups attackGroups = null,
+            CombatHitCause hitCause = null)
         {
-            this.input = input; this.environment = environment; this.characters = characters;
-            this.structures = structures; this.events = events; this.deathAnchors = deathAnchors;
+            damageApplication = damage ?? throw new ArgumentNullException(nameof(damage));
+            // 캐릭터 사전과 사건 목록은 피해 적용 경계와 같은 원본을 쓴다.
+            this.input = input; this.environment = environment; characters = damage.Characters;
+            this.structures = structures; events = damage.Events; this.deathAnchors = deathAnchors;
             this.attackGroups = attackGroups ?? new CommandAttackGroups();
+            // 공격 명령은 공격 원인을 공유한다. 독립 환경 발동에서는 폭발마다 새 원인을 만든다(D7).
+            sharedHitCause = hitCause;
             profiles = input.ObstacleContents.ToDictionary(p => p.EntityId);
         }
 
         internal bool HasProfile(EntityId id) => profiles.ContainsKey(id);
 
-        internal void DamageStructure(EntityId id, int amount, CombatDamageOrigin origin)
+        internal void DamageStructure(EntityId id, int amount, CombatDamageOrigin origin, CombatDamageCause cause = CombatDamageCause.NumericDamage)
         {
             if (!structures.TryGetValue(id, out var before)) throw new InvalidOperationException("피해 대상 구조물이 없습니다.");
-            if (before.Health.IsDead || amount == 0) return;
+            if (!Enum.IsDefined(typeof(CombatDamageCause), cause)) throw new ArgumentOutOfRangeException(nameof(cause));
+            if (before.Health.IsDead || cause == CombatDamageCause.NumericDamage && amount == 0) return;
             var after = new StructureCombatFacts(before.EntityId, before.Definition,
-                new HealthStateSnapshot(Math.Max(0, before.Health.CurrentHealth - Math.Min(before.Health.CurrentHealth, amount)), before.Health.MaxHealth),
+                new HealthStateSnapshot(cause == CombatDamageCause.InstantDefeat ? 0 : Math.Max(0, before.Health.CurrentHealth - Math.Min(before.Health.CurrentHealth, amount)), before.Health.MaxHealth),
                 before.Anchor, before.Rotation, before.OccupiedCells, before.Owner);
             structures[id] = after;
-            events.Add(new CombatStructureEvent(before, after, new[] { origin }));
+            events.Add(new CombatStructureEvent(before, after, new[] { origin }, cause));
             if (!profiles.TryGetValue(id, out var profile)) return;
             var reaction = Select(before.Health.CurrentHealth, after.Health.CurrentHealth);
             if (reaction == ObstacleReactionKind.Destroyed && !destroyed.Add(id)) return;
@@ -73,6 +81,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 큐는 한 명령에만 존재한다. 다음 폭발은 앞선 폭발의 체력 정산이 끝난 최신 사실을 읽는다.
             while (explosions.TryDequeue(out var blast))
             {
+                var hitCause = sharedHitCause ?? new CombatHitCause();
                 var cells = new HashSet<CellCoord>(BarrelCells(blast.Source.Anchor, input.State.BoardWidth, input.State.BoardHeight));
                 foreach (var id in characters.Values.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead &&
                     c.OccupiedCells.Any(cells.Contains)).Select(c => c.EntityId).OrderBy(id => id).ToArray())
@@ -82,17 +91,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     BlastTargetIds.Add(id);
                     TerrainQueryCells.Add(before.Anchor.Value);
                     TerrainQueryCells.Add(blast.Source.Anchor);
+                    RoarHitCounter.Record(characters, id, hitCause, input.State.IsNight);
                     int damage = CombatDamageCalculator.Environment(input, blast.Profile.ExplosionDamage, blast.Origin,
                         before.Anchor, environment).FinalDamage;
-                    damage = CombatDamageCalculator.ApplyHeldDefense(attackGroups, characters, id, damage, blast.Origin, events);
-                    before = characters[id];
-                    if (damage == 0) continue;
-                    int hp = Math.Max(0, before.Health.CurrentHealth - Math.Min(before.Health.CurrentHealth, damage));
-                    var after = hp == 0 ? CombatCommandCalculator.Hurt(before, damage) :
-                        CharacterSettlementCalculator.Copy(before, new HealthStateSnapshot(hp, before.Health.MaxHealth), before.Stats);
-                    characters[id] = after;
-                    if (after.Health.IsDead) deathAnchors[id] = before.Anchor.Value;
-                    CombatCommandEvents.Health(events, before, after, new[] { blast.Origin });
+                    damage = damageApplication.Apply(id, CombatDamageKind.EnvironmentDamage, blast.Origin, damage,
+                        heldDefenseGroups: attackGroups).RemainingDamage;
+                    if (characters[id].Health.IsDead) deathAnchors[id] = before.Anchor.Value;
                     BlastDamage[id] = checked(BlastDamage.GetValueOrDefault(id) + damage);
                 }
                 // 점유 칸이 여러 개 겹쳐도 각 개체는 이 폭발에서 한 번만 정산한다.
@@ -114,22 +118,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return afterHp == 0 ? ObstacleReactionKind.Destroyed : ObstacleReactionKind.Hit;
         }
 
+        // 폭발 칸 모양의 원본은 CombatHazardAreas 하나다(View 호버도 같은 입구를 부른다).
         internal static IReadOnlyList<CellCoord> BarrelCells(CellCoord origin, int width, int height)
         {
-            if (width < 1) throw new ArgumentOutOfRangeException(nameof(width));
-            if (height < 1) throw new ArgumentOutOfRangeException(nameof(height));
-            if (origin.X < 0 || origin.Y < 0 || origin.X >= width || origin.Y >= height)
-                throw new ArgumentOutOfRangeException(nameof(origin));
             var cells = new List<CellCoord>(8);
-            for (int dy = -1; dy <= 1; dy++)
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    if (dx == 0 && dy == 0) continue;
-                    long x = (long)origin.X + dx;
-                    long y = (long)origin.Y + dy;
-                    if (x >= 0 && y >= 0 && x < width && y < height)
-                        cells.Add(new CellCoord((int)x, (int)y));
-                }
+            CombatHazardAreas.PowderBarrelCells(origin, width, height, cells);
             return cells.AsReadOnly();
         }
     }

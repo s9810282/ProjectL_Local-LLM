@@ -13,5 +13,12 @@ MonoBehaviour:
   m_Name: StageNodeVisualDataTable
   m_EditorClassIdentifier: 
   databaseItems:
-  - {fileID: 11400000, guid: cfede0dc576c41e082f03656146cc211, type: 2}
   - {fileID: 11400000, guid: 3d8296a8bde84e3d84f45eaed5c4c45b, type: 2}
+  - {fileID: 11400000, guid: cfede0dc576c41e082f03656146cc211, type: 2}
+  - {fileID: 11400000, guid: 507115dea16547638a3c819408aa5e81, type: 2}
+  - {fileID: 11400000, guid: 3815520c07a88104d80a44dfcf83b550, type: 2}
+  - {fileID: 11400000, guid: 10db00643c65082488650743a03ecf6c, type: 2}
+  - {fileID: 11400000, guid: 9995bf3543ac412a9dd8935248cc58e4, type: 2}
+  - {fileID: 11400000, guid: 08870c1c9b5ddca4cbae237ef8e12744, type: 2}
+  - {fileID: 11400000, guid: 828fcf6287e44e6386fc1553e2ee0870, type: 2}
+  - {fileID: 11400000, guid: c3007e0c6a8a4aceabd9d9a165e9880a, type: 2}

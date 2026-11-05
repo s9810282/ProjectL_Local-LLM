@@ -28,6 +28,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
     /// </remarks>
     public sealed class PlayerLoadoutData : IData
     {
+        public IReadOnlyList<int> InitialDeckGrantIndices { get; }
         public int LoadoutKey { get; }
         public EntityKey MainCharacterKey { get; }
         public IReadOnlyList<PlayerLoadoutEntry> Entries { get; }
@@ -41,11 +42,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
             EntityKey mainCharacterKey,
             PlayerLoadoutEntry[] entries,
             int startingHandSize,
-            int startingRunCurrency = 0)
+            int startingRunCurrency = 0, int[] initialDeckGrantIndices = null)
         {
+            InitialDeckGrantIndices = Array.AsReadOnly((int[])(initialDeckGrantIndices?.Clone() ?? Array.Empty<int>()));
             LoadoutKey = loadoutKey;
             MainCharacterKey = mainCharacterKey;
-            Entries = new ReadOnlyCollection<PlayerLoadoutEntry>(entries ?? Array.Empty<PlayerLoadoutEntry>());
+            Entries = Array.AsReadOnly((PlayerLoadoutEntry[])(entries?.Clone() ?? Array.Empty<PlayerLoadoutEntry>()));
             StartingHandSize = startingHandSize;
             StartingRunCurrency = startingRunCurrency;
         }
@@ -71,6 +73,31 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item
                 // Core RunCharacterDeckSpec과 같이 같은 유닛은 한 줄로 적습니다.
                 if (!keys.Add(entry.UnitKey))
                     throw new InvalidOperationException($"[PlayerLoadoutData] Duplicate entry unit {entry.UnitKey}. LoadoutKey: {LoadoutKey}");
+            }
+        }
+
+        /// <summary>
+        /// 초기 덱 선택 번호의 모양만 검사합니다(E2 인계 §3). 번호는 펼친 지급 순서(메인 먼저, 그다음 항목을 Count만큼)를 가리킵니다.
+        /// DB 표 생성 때만 부릅니다. 새 Run 시작의 <see cref="Validate"/>에 넣으면 Core가 돌려주는 구체 덱 사유보다 예외가 먼저 납니다.
+        /// 덱 규칙(메인 하나·최대 장수·메인 0번)은 Core <c>DeckRules</c>가 원본이라 여기서 다시 검사하지 않습니다.
+        /// </summary>
+        public void ValidateInitialDeckIndices()
+        {
+            if (InitialDeckGrantIndices.Count == 0)
+                throw new InvalidOperationException($"[PlayerLoadoutData] InitialDeckGrantIndices must not be empty. LoadoutKey: {LoadoutKey}");
+
+            int grantCount = 1;
+            foreach (PlayerLoadoutEntry entry in Entries)
+                grantCount += entry.Count;
+
+            var seen = new HashSet<int>();
+            foreach (int index in InitialDeckGrantIndices)
+            {
+                if (index < 0 || index >= grantCount)
+                    throw new InvalidOperationException(
+                        $"[PlayerLoadoutData] Initial deck index {index} is outside the expanded grant range [0, {grantCount}). LoadoutKey: {LoadoutKey}");
+                if (!seen.Add(index))
+                    throw new InvalidOperationException($"[PlayerLoadoutData] Duplicate initial deck index {index}. LoadoutKey: {LoadoutKey}");
             }
         }
     }

@@ -1,0 +1,14 @@
+{
+    "name": "ProjectL.FbxPlacement.Editor.Tests",
+    "rootNamespace": "ProjectL.FbxPlacement.Editor.Tests",
+    "references": ["ProjectL.Tool.Editor", "ProjectL.Tool.Runtime", "Cinemachine", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

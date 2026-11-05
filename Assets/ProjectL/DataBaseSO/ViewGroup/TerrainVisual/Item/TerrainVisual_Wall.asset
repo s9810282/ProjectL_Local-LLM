@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e8a5486f6904e14ade447e5b6ae229c, type: 3}
+  m_Name: TerrainVisual_Wall
+  m_EditorClassIdentifier: 
+  kind: 3
+  visualMode: 0
+  displayName: "\uBCBD"
+  description: "\uCE90\uB9AD\uD130\uC758 \uC774\uB3D9\uACFC \uACF5\uACA9\uC744 \uAC00\uB85C\uB9C9\uC2B5\uB2C8\uB2E4.\n\uD30C\uAD34\uB418\uC9C0
+    \uC54A\uC73C\uBA70, \uB109\uBC31\uC758 \uC601\uD5A5\uC744 \uBC1B\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.\n\uACE0\uC9C0\uB300\uC5D0\uC11C
+    \uC800\uC9C0\uB300\uB97C \uACF5\uACA9\uD560 \uB54C\uB294 <color=#4DA6FF>\uBCBD\uC744
+    \uBB34\uC2DC</color>\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  icon: {fileID: 0}
+  prefab: {fileID: 8281519400227982418, guid: aed31ef059fbab548a9fce6881bebc58, type: 3}
+  localOffset: {x: 0, y: 0, z: 0}
+  localScale: {x: 0.75, y: 0.75, z: 0.75}
+  surfaceHeight: 0
+  tornadoPresentation: {fileID: 0}
+  oneSidePrefab: {fileID: 4121349203403122555, guid: 3916ca761672bd4409def8c96a52c365, type: 3}
+  twoSidePrefab: {fileID: 3691960915017170228, guid: 9753bff8687a0404fa8b1a1cb19aba2d, type: 3}
+  twoSideOppositePrefab: {fileID: 5443033839748878704, guid: b6396dfaf7af6ef44a08625f40f4296a, type: 3}
+  threeSidePrefab: {fileID: 1700936499673282445, guid: 2ae1109fb8a7a6444ba86250dafb52c1, type: 3}
+  fourSidePrefab: {fileID: 0}

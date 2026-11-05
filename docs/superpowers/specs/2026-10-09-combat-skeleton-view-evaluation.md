@@ -1,5 +1,7 @@
 # 전투 골격·View 구조 평가 (2026-10-09)
 
+> **2026-10-10 R4 후속 상태:** 이 평가는 `88c845d0`의 스냅샷이다. Job·Plan 재구성 뒤 진행 판단은 `CombatPlan.Decide`, 진입 수명은 `CombatEntryService`, 사실 읽기는 `CombatProgressReader`, Core 호출·확인은 전투 Job으로 이전됐다. `CombatFlow`·`CombatExitSequence`·guard는 제거됐다. **R2는 `CombatRunEndJob` 분리로 반영**, **M6는 목적지·새 Run 로드아웃을 Plan 한 곳으로 모으고 이탈 허용 목록을 제거해 구조 정리**했다. StageSelect 목적지·로드아웃 1은 임시 값이며 Title·운영 로드아웃 선택은 여전히 후속 작업이다. 현재 계약·상태는 [재구성 설계](2026-10-10-combat-job-plan-restructure-design.md)와 [Task 계획](../plans/2026-10-10-combat-job-plan-restructure-plan.md)을 따른다. 아래 수치·평가·권고는 당시 기록이며 이번에 전체 구조를 재평가한 것은 아니다.
+
 - **기준 코드:** `feature/Yonggeun/Stage` HEAD `88c845d0`. 구조는 [상세 UML](2026-10-09-combat-skeleton-view-detailed-uml.md)에 그렸다.
 - **평가 기준:** [설계 세션 인계 §4](../handoffs/2026-09-30-combat-view-design-session-handoff.md)(SSOT·SOLID·FW 계약·DB 규칙·경계).
 - **방법:** 코드를 정적으로 읽었다. Unity에서 실행하거나 프로파일링하지 않았다. 성능 항목은 **호출 경로와 할당 지점**까지만 확인했고 실제 비용·병목 순위는 정하지 않았다.
@@ -57,6 +59,8 @@
 - **권고:** 다음에 이 파일을 크게 고칠 때 포기 UI를 `CombatAbandonController`(가칭)로 뽑는다. 상태는 확인창 열림 하나, 입구는 `Sync(facts, exitIdle)`·`Open`·`Confirm`·`Cancel`·`Close`. ViewSystem은 생성·Tick 호출·정리 호출만 한다. 이것만으로 약 100줄·필드 6개가 빠진다. 개발 패널도 같은 방식으로 뽑을 수 있다. **지금 단독 작업으로 할 만큼 급하지는 않다.**
 
 **R2. `CombatExitSequence`의 Run 종료 판정이 커질 자리다** (`LC/CombatExitSequence.cs:284-298`)
+
+- **2026-10-10 반영:** `CombatRunEndJob`이 Run 종료 판정·챕터 완료 요청을 맡고, 목적지는 Plan 상수와 연쇄 한 번의 `CombatExitContext`로 전달한다. 기존 `CombatExitSequence`는 제거됐다. 원본은 [재구성 설계 J7](2026-10-10-combat-job-plan-restructure-design.md#j7-이탈-연쇄-k21-유지)이다.
 
 - `EndsRun`은 보스 승리면 `CompleteChapter`를 부르고, 그 결과(다음 챕터·Run 완료·정의 없음)를 해석한다. 정의 없음은 임시로 Run 종료다(K21).
 - S3(챕터 계속)과 Title 화면이 오면 "어디로 갈지"까지 이 메서드가 정하게 된다. 지금은 목적지가 `RunEndDestination`(LifeCycle)과 `_destination`(요청 인자)로 나뉘어 있다.
@@ -152,7 +156,7 @@
 | M3 | 스타일 불일치: 한 줄 여러 문장, 중괄호 없는 블록, 멤버 사이 빈 줄 없음 | `V/OrderedCombatPresentation.cs`, `V/CombatMovementPlayback.cs`, `V/CombatSceneEventPresenter.cs` 일부 | 병합 충돌 위험이 낮을 때 Allman 정리 |
 | M4 | 생성자 인자 null 검사 누락(7개 중 1개만 검사). 잘못 조립하면 `ArgumentNullException` 대신 나중에 `NullReferenceException` | `V/CombatPathInput.cs:42-56` | 코딩 규칙대로 검사 추가 |
 | M5 | 테스트에서만 쓰는 운영 API: LINQ로 배열을 만드는 `Render` | `VD/FieldUnitPresenter.cs:64-65` | 테스트를 `RenderFacts`로 옮기고 삭제 |
-| M6 | 임시 상수 3개가 흩어져 있다: Run 종료 목적지 `Stage`, 이탈 허용 목적지 목록, 새 Run 로드아웃 `1` | `LC/CombatLifeCycle.cs:112`, `LC/CombatExitSequence.cs:300-304`, `LC/Plans/CombatPlan.cs:19` | Title·로드아웃 선택 작업 때 함께 교체(인계 문서 R6) |
+| M6 | 당시 임시 상수 3개가 흩어져 있었다: Run 종료 목적지 `Stage`, 이탈 허용 목적지 목록, 새 Run 로드아웃 `1` | 당시 `LC/CombatLifeCycle.cs:112`, `LC/CombatExitSequence.cs:300-304`, `LC/Plans/CombatPlan.cs:19` | **2026-10-10 구조 정리 완료:** 목적지·로드아웃은 `CombatPlan` 한 곳, guard·허용 목적지 목록은 제거. 임시 값의 운영 교체(Title·로드아웃 선택)는 후속 작업 |
 | M7 | `RecordInputOnly` 분기가 운영 파일 7개, 약 19곳에 흩어져 있다(Flow 2, LifeCycle 2, Policy 4, Router 1, Attack 5, ViewSystem 4, Bootstrap 1) | 상세 UML §4.5 | 지금은 개발 전용이라 허용. 세 번째 모드가 생기면 모드별 정책 객체로 모은다 |
 | M8 | 다른 작업자 파일에 한국어가 아닌 주석 한 줄 | `ViewSystem/StageMap/StageMapEntryFlow.cs:54` | 담당자에게 알림(이 범위 밖) |
 
@@ -225,7 +229,7 @@ Unity Profiler(Deep Profile 끔)로 다음 구간의 **프레임당 GC Alloc·CP
 | 3 | 낡은 주석·요약 위치·null 검사 정리 | M1·M2·M4 | View·골격 | 바로 가능(작은 수정) |
 | 4 | 테스트 전용 운영 코드 제거(`BeginPreparation` 경로, `FieldUnitPresenter.Render`) | E6·M5 | 골격·View(+Core `PrepareBattle`) | 테스트 이전 뒤 |
 | 5 | 포기 UI를 `CombatViewSystem`에서 분리 | R1 | View | 다음에 이 파일을 크게 고칠 때 |
-| 6 | Run 종료 판정·목적지를 작은 판정 객체로 | R2·M6 | 골격 | S3 또는 Title 착수 때 |
+| 6 | Run 종료 판정·목적지 분리 | R2·M6 | 골격 | **2026-10-10 반영:** `CombatRunEndJob` + Plan 상수·이탈 컨텍스트. Title·운영 로드아웃 값 교체는 남음 |
 | 7 | 타임라인 UI 열기/표시 조건 원본 정하기 | E5 | View + UI 작업자 | 1번과 함께 |
 | 8 | 성능 측정 후 사건별 증분 렌더 | §6 | View | X4 측정 결과 |
 | 9 | 스타일 정리 | M3 | View | 충돌 위험이 낮을 때 |

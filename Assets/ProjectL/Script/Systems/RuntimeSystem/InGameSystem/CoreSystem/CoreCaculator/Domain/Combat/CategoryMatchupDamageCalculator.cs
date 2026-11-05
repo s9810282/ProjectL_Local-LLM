@@ -12,7 +12,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// damage * (numerator / denominator)를 정수 안전하게 계산하고 half-up으로 반올림합니다.
         /// 0 피해는 0으로 유지되며 최소 피해 1을 여기서 추가하지 않습니다.
         /// </summary>
-        public static int Apply(int damage, int numerator, int denominator)
+        public static int Apply(int damage, int numerator, int denominator) => Apply(damage, (long)numerator, denominator);
+
+        /// <summary>설정 증가율에 100을 더한 분자도 좁히지 않고 계산합니다. 결과와 중간값의 범위를 검사합니다.</summary>
+        public static int Apply(int damage, long numerator, int denominator)
         {
             if (damage < 0)
                 throw new ArgumentOutOfRangeException(nameof(damage));
@@ -22,7 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 throw new ArgumentOutOfRangeException(nameof(denominator));
 
             // 분모의 절반을 더한 뒤 내림하면 비음수 구간에서 half-up이 된다.
-            long scaled = ((long)damage * numerator) + (denominator / 2);
+            long scaled = checked(((long)damage * numerator) + (denominator / 2));
             long result = scaled / denominator;
 
             if (result > int.MaxValue)

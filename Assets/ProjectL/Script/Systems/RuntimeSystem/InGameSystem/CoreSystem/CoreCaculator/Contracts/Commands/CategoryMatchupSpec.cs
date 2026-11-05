@@ -12,7 +12,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         private static readonly CategoryKey[] OrderedCategories =
         {
-            CategoryKey.Base, CategoryKey.Rider, CategoryKey.Heavy, CategoryKey.Cannon,
+            CategoryKey.Main, CategoryKey.Rider, CategoryKey.Heavy, CategoryKey.Cannon, CategoryKey.Boss,
         };
 
         private readonly Dictionary<int, CategoryMatchupEntry> _entries;
@@ -36,7 +36,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 _entries.Add(key, entry);
             }
 
-            // 네 Category의 모든 조합 16개가 반드시 있어야 한다.
+            // 다섯 Category의 모든 조합 25개가 반드시 있어야 한다. 누락을 1.0으로 추측하지 않는다.
             foreach (CategoryKey attacker in OrderedCategories)
             {
                 foreach (CategoryKey defender in OrderedCategories)
@@ -58,25 +58,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             return new CategoryMatchupSpec(new[]
             {
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Base, 10, 10),
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Rider, 10, 10),
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Heavy, 10, 10),
-                new CategoryMatchupEntry(CategoryKey.Base, CategoryKey.Cannon, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Main, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Rider, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Heavy, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Cannon, 10, 10),
 
-                new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Base, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Main, 10, 10),
                 new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Rider, 10, 10),
                 new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Heavy, 7, 10),
                 new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Cannon, 12, 10),
 
-                new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Base, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Main, 10, 10),
                 new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Rider, 15, 10),
                 new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Heavy, 10, 10),
                 new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Cannon, 9, 10),
 
-                new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Base, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Main, 10, 10),
                 new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Rider, 9, 10),
                 new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Heavy, 11, 10),
                 new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Cannon, 10, 10),
+
+                // Boss가 끼는 조합은 양방향 모두 1.0이다(G10). 기존 16항목은 바꾸지 않는다.
+                new CategoryMatchupEntry(CategoryKey.Boss, CategoryKey.Main, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Boss, CategoryKey.Rider, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Boss, CategoryKey.Heavy, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Boss, CategoryKey.Cannon, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Boss, CategoryKey.Boss, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Main, CategoryKey.Boss, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Rider, CategoryKey.Boss, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Heavy, CategoryKey.Boss, 10, 10),
+                new CategoryMatchupEntry(CategoryKey.Cannon, CategoryKey.Boss, 10, 10),
             });
         }
 

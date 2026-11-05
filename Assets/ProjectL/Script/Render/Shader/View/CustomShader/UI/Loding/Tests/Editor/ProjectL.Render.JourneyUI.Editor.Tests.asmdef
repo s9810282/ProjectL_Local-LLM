@@ -1,0 +1,9 @@
+{
+  "name": "ProjectL.Render.JourneyUI.Editor.Tests",
+  "rootNamespace": "ProjectL.Render.Shader.View.CustomShader.UI.Tests.Editor",
+  "references": ["ProjectL.Render.JourneyUI", "ProjectL.Render.JourneyUI.Editor", "ProjectL.Render.JourneyUI.Integration", "ProjectL.Systems", "Framework", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false,
+  "noEngineReferences": false
+}

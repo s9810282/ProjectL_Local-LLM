@@ -95,7 +95,7 @@ namespace ProjectL.Tests.Core
 
         /// <summary>처치 1명 → 남은 적 하나에 기본 공격과 같은 피해로 추가 공격 1회. 기본 공격 결과와 AP는 바뀌지 않는다.</summary>
         [Test]
-        public void Kill_TriggersOneExtraAttackWithBaseDamage_WithoutChangingAttackResultOrCost()
+        public void Kill_TriggersOneExtraAttackWithBaseDamage_WithoutChangingAttackResult()
         {
             CombatCommandInput input = ChainInput(SingleNoSplash,
                 Enemy(2, new CellCoord(4, 3), 5),
@@ -106,7 +106,6 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Final(result, input, 2).Health.IsDead, Is.True);
             Assert.That(Final(result, input, 3).Health.CurrentHealth, Is.EqualTo(80));
-            Assert.That(Final(result, input, 1).Stats.CurrentActionCost, Is.EqualTo(3), "공격 비용 2만 낸다.");
 
             AttackResult attack = result.Attack.Value;
             Assert.That(attack.Hits.ToArray().Select(h => h.TargetId), Is.EqualTo(new[] { new EntityId(2) }));
@@ -249,7 +248,6 @@ namespace ProjectL.Tests.Core
             Assert.That(Final(result, input, 10).Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(Final(result, input, 1).Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(result.FinalState.Structures.Select(s => s.Health.CurrentHealth), Is.EqualTo(new[] { 100, 100 }));
-            Assert.That(Final(result, input, 1).Stats.CurrentActionCost, Is.EqualTo(3));
         }
 
         /// <summary>기본 공격이 적 본부를 파괴해 전투가 끝나면, 처치가 있어도 추가 공격하지 않는다.</summary>
@@ -284,9 +282,9 @@ namespace ProjectL.Tests.Core
             var projection = MovementProjection.ForArrival(input, projected, events);
             var bindings = CombatCommandEffects.Capture(input.Characters[0], input.Profiles[0]);
 
-            KillChainAttackCalculator.Resolve(input, new CombatEffectEngine(),
+            KillChainAttackCalculator.Resolve(input, input.ActorId, new CombatEffectEngine(),
                 new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())),
-                bindings, 20, projection, projected, new CommandAttackGroups(), new Dictionary<EntityId, CellCoord>());
+                bindings, 20, projection, projected, new CommandAttackGroups(), new Dictionary<EntityId, CellCoord>(), new CombatHitCause(), new HashSet<EntityId>());
 
             Assert.That(events.Count(IsChainActivation), Is.EqualTo(expectedActivations));
         }
@@ -346,30 +344,6 @@ namespace ProjectL.Tests.Core
             Assert.That(projection.FinalState.EnvironmentProgress.RandomState,
                 Is.EqualTo(input.State.EnvironmentProgress.RandomState));
         }
-
-        /// <summary>밤 사망 영혼은 기본 공격 처치와 추가 공격 처치에 각각 한 번씩만 생기고, 각자 사망 위치에 놓인다.</summary>
-        [Test]
-        public void NightDeaths_SpawnOneSoulPerDeathAtEachDeathCell()
-        {
-            CombatCommandInput input = ChainInput(SingleNoSplash,
-                Enemy(2, new CellCoord(4, 3), 5),
-                Enemy(3, new CellCoord(6, 6), 10));
-            var night = new CombatCommandState(8, 8, input.State.Phase, input.ActorId, true,
-                input.State.Structures, input.State.ThornFields, input.State.Timeline);
-            var loadout = new ArtifactLoadoutSnapshot(0, new[]
-            {
-                new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()),
-            });
-            input = CombatCommandTestData.With(input, state: night, artifacts: loadout);
-
-            CombatCommandTransition result = CombatCommandCalculator.Calculate(input, NoRules);
-
-            Assert.That(Final(result, input, 2).Health.IsDead, Is.True);
-            Assert.That(Final(result, input, 3).Health.IsDead, Is.True);
-            Assert.That(result.Field.Final.Entries.Select(s => s.Cell).OrderBy(c => c.X),
-                Is.EqualTo(new[] { new CellCoord(4, 3), new CellCoord(6, 6) }));
-        }
-
         [TestCase(false)]
         [TestCase(true)]
         public void KillChain_IsWallIndependentAndHostileOnly_ButRequiresAcceptedInitialAttack(bool blockedInitial)
@@ -391,7 +365,7 @@ namespace ProjectL.Tests.Core
             else
             {
                 var walls = WallGeometryBuilder.Build(8, 8, input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
-                Assert.That(AttackOcclusionResolver.CheckDirect(new CellCoord(1, 3), new CellCoord(6, 6), walls,
+                Assert.That(AttackOcclusionResolver.CheckDirect(new CellCoord(1, 3), new CellCoord(6, 6), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings),
                     AttackOcclusionSpec.Default), Is.Not.Null);
                 Assert.That(result.BlockedContacts, Is.Empty);
             }
@@ -410,7 +384,7 @@ namespace ProjectL.Tests.Core
             var chars = new[] { actor, input.Characters[1] }.Concat(enemies).ToArray();
             var profiles = input.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(withTrait
-                ? CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Base, new KillChainAttackTraitSpec())
+                ? CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Main, new KillChainAttackTraitSpec())
                 : CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20), method);
             return CombatCommandTestData.With(input, chars, profiles: profiles);
         }
@@ -423,8 +397,7 @@ namespace ProjectL.Tests.Core
             new HealthStateSnapshot(hp, hp), cell, Rotation4.R0, new[] { cell }, Owner.Enemy);
 
         private static CombatCommandState WithStructures(CombatCommandInput input, params StructureCombatFacts[] structures) =>
-            new CombatCommandState(8, 8, input.State.Phase, input.ActorId, false,
-                structures, input.State.ThornFields, input.State.Timeline);
+            new CombatCommandState(8,8,input.State.Phase,false,                structures,input.State.ThornFields,turn: input.State.Turn);
 
         private static CharacterCombatFacts Final(CombatCommandTransition result, CombatCommandInput input, int id)
         {
@@ -454,14 +427,9 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
                 3,
-                8,
-                2,
                 30,
-                35,
                 new[] { trait });
         }
     }

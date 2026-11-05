@@ -12,7 +12,7 @@
 - 계획: [CombatViewBuffer 구현 계획](../plans/2026-09-29-combat-view-buffer-plan.md)
 - 천명님 문서
   - [View 입력 Buffer 제안](2026-09-29-view-input-buffer-core-contract-ko.md)
-  - [캐릭터 Buffer 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md)(G5, Task 7·8)
+  - 캐릭터 Buffer 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)(G5, Task 7·8)
 
 ## 1. 한 줄 요약
 

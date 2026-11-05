@@ -6,6 +6,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base
     /// </summary>
     public abstract class GlobalUIBase : UIBase
     {
+        /// <summary>전체 GlobalUI 열기에 참여할지입니다. 요청형 패널은 개별 요청으로만 엽니다.</summary>
+        public virtual bool OpenWithGlobalUI => true;
+
         public sealed override UIId ParentID => UIId.None;
     }
 }

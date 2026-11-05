@@ -7,8 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public enum CategoryActivationKind
     {
         None = 0,
-        RefundApplied = 10, // 실제 양수 환급이 적용됨
-        DefenseFacingChanged = 20, // 방어 Facing이 갱신됨
-        IncomingDamageReduced = 21, // 피격 피해가 실제로 경감됨
+        // 폐기된 환급(10)과 아군 보호 경감(21)의 사건 번호는 재사용하지 않습니다.
+        DefenseFacingChanged = 20, // 폐기된 방향 방어 이벤트 번호 예약
     }
 }

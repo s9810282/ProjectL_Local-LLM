@@ -51,6 +51,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutl
                 throw new ObjectDisposedException(nameof(AreaOutlineHandle));
 
             meshHandle.Update(data.ToMeshData());
+            MeshRenderer.sortingOrder = data.SortingOrder;
             colorHandle.SetOverrideData(0, MaterialBaseTypeKey.MainColor, data.Color);
             // 점선·흐름 값은 핸들마다 넣는다. DashLength를 쓰면 메시가 루프마다 U를 이미 반복하므로 셰이더 반복 수는 1이다.
             colorHandle.SetOverrideData(0, ColorShaderPropertyKey.AreaOutlineDashEnabled, data.IsDashed ? 1f : 0f);
@@ -74,6 +75,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutl
             meshHandle = null;
             colorHandle = null;
             MeshRenderer.SetPropertyBlock(null, 0);
+            // 풀로 돌아가면 정렬 순서를 기본값으로 되돌려 다음에 빌리는 쪽에 남지 않게 합니다.
+            MeshRenderer.sortingOrder = 0;
             gameObject.SetActive(false);
             IsValid = false;
         }

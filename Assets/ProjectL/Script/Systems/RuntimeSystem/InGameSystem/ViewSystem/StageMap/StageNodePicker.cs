@@ -12,17 +12,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     {
         private readonly Camera _camera;
         private readonly StageMapViewDisplay _display;
-        private readonly LayerMask _nodeMask;
         private readonly float _pickDistance;
 
-        internal StageNodePicker(Camera camera, StageMapViewDisplay display, LayerMask nodeMask, float pickDistance)
+        internal StageNodePicker(Camera camera, StageMapViewDisplay display, float pickDistance)
         {
             if (camera == null)
                 throw new ArgumentNullException(nameof(camera));
 
             _camera = camera;
             _display = display ?? throw new ArgumentNullException(nameof(display));
-            _nodeMask = nodeMask;
             _pickDistance = pickDistance;
         }
 
@@ -33,10 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
                 return false;
 
             Ray ray = _camera.ScreenPointToRay(new Vector3(screenX, screenY, 0f));
-            if (!Physics.Raycast(ray, out RaycastHit hit, _pickDistance, _nodeMask, QueryTriggerInteraction.Collide))
-                return false;
-
-            return _display.TryGetNodeId(hit.collider.transform, out nodeId);
+            return _display.TryPickNode(ray, _pickDistance, out nodeId);
         }
     }
 }

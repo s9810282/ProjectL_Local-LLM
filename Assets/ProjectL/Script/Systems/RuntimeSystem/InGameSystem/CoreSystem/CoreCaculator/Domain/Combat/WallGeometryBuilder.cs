@@ -34,7 +34,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             {
                 if (!remaining.Remove(wall.Cell)) continue;
                 var component = CollectComponent(wall.Cell, byCell, remaining);
-                var run = CreateStraightRun(component, settings);
+                var run = CreateRun(component, settings);
                 runs.Add(run);
                 foreach (var cell in run.Cells) runByCell.Add(cell, run);
             }
@@ -81,19 +81,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return component;
         }
 
-        private static WallRun CreateStraightRun(IReadOnlyList<StaticTerrainFact> component, WallBlockingSpec settings)
+        private static WallRun CreateRun(IReadOnlyList<StaticTerrainFact> component, WallBlockingSpec settings)
         {
             int minX = component.Min(wall => wall.Cell.X), maxX = component.Max(wall => wall.Cell.X);
             int minY = component.Min(wall => wall.Cell.Y), maxY = component.Max(wall => wall.Cell.Y);
-            // 사방 연결 성분에서 한 축이 일정하면 빈틈 없는 한 줄임이 보장된다.
-            if (minX != maxX && minY != maxY)
-                throw InvalidContent("벽 연결 성분은 가로 또는 세로 한 줄이어야 합니다.", component);
-
             const long scale = WallBlockingSpec.TicksPerTile;
             const long halfCell = scale / 2;
-            return new WallRun(checked(minX * scale - halfCell), checked(maxX * scale + halfCell),
-                checked(minY * scale - halfCell), checked(maxY * scale + halfCell), settings.CornerCutTicks,
-                component.Select(wall => wall.Id), component.Select(wall => wall.Cell));
+            long xMin = checked(minX * scale - halfCell), xMax = checked(maxX * scale + halfCell);
+            long yMin = checked(minY * scale - halfCell), yMax = checked(maxY * scale + halfCell);
+            var cells = component.Select(wall => wall.Cell).OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray();
+            var ids = component.Select(wall => wall.Id);
+            // 직선은 기존 단일 형상과 모서리 판정을 그대로 유지한다.
+            if (minX == maxX || minY == maxY)
+                return new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, cells);
+
+            var occupied = new HashSet<CellCoord>(cells);
+            var parts = cells.Select(cell => CreateCellPart(cell, occupied, settings.CornerCutTicks)).ToArray();
+            return new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, cells, parts);
+        }
+
+        private static WallConvexPart CreateCellPart(CellCoord cell, HashSet<CellCoord> occupied, int cut)
+        {
+            bool left = occupied.Contains(new CellCoord(cell.X - 1, cell.Y));
+            bool right = occupied.Contains(new CellCoord(cell.X + 1, cell.Y));
+            bool bottom = occupied.Contains(new CellCoord(cell.X, cell.Y - 1));
+            bool top = occupied.Contains(new CellCoord(cell.X, cell.Y + 1));
+            WallBoundary exterior = WallBoundary.None;
+            if (!left) exterior |= WallBoundary.Left;
+            if (!right) exterior |= WallBoundary.Right;
+            if (!bottom) exterior |= WallBoundary.Bottom;
+            if (!top) exterior |= WallBoundary.Top;
+            // 꼭짓점 주변 네 칸 중 이 칸만 점유한 경우가 바깥 볼록 모서리다.
+            WallCorner corners = WallCorner.None;
+            if (!left && !bottom && !occupied.Contains(new CellCoord(cell.X - 1, cell.Y - 1))) corners |= WallCorner.BottomLeft;
+            if (!left && !top && !occupied.Contains(new CellCoord(cell.X - 1, cell.Y + 1))) corners |= WallCorner.TopLeft;
+            if (!right && !bottom && !occupied.Contains(new CellCoord(cell.X + 1, cell.Y - 1))) corners |= WallCorner.BottomRight;
+            if (!right && !top && !occupied.Contains(new CellCoord(cell.X + 1, cell.Y + 1))) corners |= WallCorner.TopRight;
+            const long scale = WallBlockingSpec.TicksPerTile;
+            const long halfCell = scale / 2;
+            return new WallConvexPart(checked(cell.X * scale - halfCell), checked(cell.X * scale + halfCell),
+                checked(cell.Y * scale - halfCell), checked(cell.Y * scale + halfCell), cut, exterior, corners);
         }
 
         private static void RejectDiagonalContact(IEnumerable<StaticTerrainFact> walls,

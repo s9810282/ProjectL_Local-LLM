@@ -18,18 +18,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int ValidStepCount { get; }
         public CharacterCombatFacts ProjectedActor { get; }
         public IReadOnlyList<CombatEvent> PublicEffects { get; }
-        public int QuotedActionCost { get; }
         public int QuotedDistance { get; }
-        public bool CanReturn { get; }
 
         private MovePreview(
-            bool canMove,
-            MovementFailureReason failureReason,
-            MovementDestination? destination,
-            TraitStatusSnapshot[] projectedTraitStatuses,
-            CategorySnapshot projectedCategory,
-            MovementPathResult pathMovement = null, int validStepCount = 0, CharacterCombatFacts projectedActor = null,
-            IReadOnlyList<CombatEvent> publicEffects = null, int quotedActionCost = 0, bool canReturn = false)
+            bool canMove,            MovementFailureReason failureReason,            MovementDestination? destination,            TraitStatusSnapshot[] projectedTraitStatuses,            CategorySnapshot projectedCategory,            MovementPathResult pathMovement = null,int validStepCount = 0,CharacterCombatFacts projectedActor = null,            IReadOnlyList<CombatEvent> publicEffects = null)
         {
             if (projectedTraitStatuses == null)
                 throw new ArgumentNullException(nameof(projectedTraitStatuses));
@@ -57,7 +49,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ValidStepCount = validStepCount;
             ProjectedActor = projectedActor;
             PublicEffects = Array.AsReadOnly((publicEffects ?? Array.Empty<CombatEvent>()).ToArray());
-            QuotedActionCost = quotedActionCost; QuotedDistance = pathMovement?.RequestedPath.StepCount ?? 0; CanReturn = canReturn;
+            QuotedDistance = pathMovement?.RequestedPath.StepCount ?? 0;
         }
 
         public static MovePreview Success(
@@ -76,15 +68,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 projectedCategory);
         }
 
-        public static MovePreview Success(MovementPathResult pathMovement,
-            TraitStatusSnapshot[] projectedTraitStatuses, CategorySnapshot projectedCategory,
-            CharacterCombatFacts projectedActor = null, IReadOnlyList<CombatEvent> publicEffects = null,
-            int quotedActionCost = 0, bool canReturn = false)
+        public static MovePreview Success(MovementPathResult pathMovement,            TraitStatusSnapshot[] projectedTraitStatuses,CategorySnapshot projectedCategory,            CharacterCombatFacts projectedActor = null,IReadOnlyList<CombatEvent> publicEffects = null)
         {
             if (pathMovement == null) throw new ArgumentNullException(nameof(pathMovement));
             if (projectedCategory == null) throw new ArgumentNullException(nameof(projectedCategory));
-            return new MovePreview(true, MovementFailureReason.None, null, projectedTraitStatuses,
-                projectedCategory, pathMovement, pathMovement.RequestedPath.StepCount, projectedActor, publicEffects, quotedActionCost, canReturn);
+            return new MovePreview(true,MovementFailureReason.None,null,projectedTraitStatuses,                projectedCategory,pathMovement,pathMovement.RequestedPath.StepCount,projectedActor,publicEffects);
         }
 
         public static MovePreview Failure(MovementFailureReason failureReason, int validStepCount = 0,

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
+  m_Name: CombatUnitAnimation_Cowboy
+  m_EditorClassIdentifier: 
+  attackClip: {fileID: 7400000, guid: 7ce74e98596654841b10864529482311, type: 2}
+  attackCompanionClips:
+  - {fileID: 7400000, guid: a2c108413b211cc4ab11164393ae9f6a, type: 2}
+  hitDelay: 0
+  hitClip: {fileID: 0}
+  hitCompanionClips: []

@@ -2,7 +2,7 @@
 
 Date: 2026-10-03. P1 is implemented and verified; P2 and P3 remain pending. No commit or push.
 
-Plan: [implementation plan](../plans/2026-10-03-chapter-continuation-run-completion-implementation-plan.md). Design: [selected design](../specs/2026-10-03-chapter-continuation-run-completion-design.md).
+Plan: implementation plan (Git history: `2026-10-03-chapter-continuation-run-completion-implementation-plan.md`). Design: selected design (Git history: `2026-10-03-chapter-continuation-run-completion-design.md`).
 
 ## Delivered contracts
 

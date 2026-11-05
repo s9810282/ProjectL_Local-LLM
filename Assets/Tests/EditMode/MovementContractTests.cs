@@ -46,14 +46,12 @@ namespace ProjectL.Tests.Core
             var modifier = new PositionTileModifier(actor.Anchor, ids, -2, 5);
             var final = new CharacterCombatFacts(actor.EntityId, actor.OwnedId, actor.CharacterKey, actor.Owner,
                 actor.OwnershipRole, actor.Area, actor.Health, actor.Stats, actor.ReserveSlotIndex, actor.Anchor,
-                actor.Rotation, actor.OccupiedCells, actor.MovementCheckpointAnchor, actor.CommittedMoveDistance,
-                actor.PendingMoveActionCost, 2, 3, 2, 4, modifier);
+                actor.Rotation, actor.OccupiedCells, UnitActionUse.Moved, 2, 3, modifier);
             ids[0] = 9;
             var copied = CombatCommandTestData.With(final, hp: actor.Health.CurrentHealth - 1);
             Assert.That(copied.TemporaryAttackBonus, Is.EqualTo(2));
             Assert.That(copied.TemporaryMaxHealthBonus, Is.EqualTo(3));
-            Assert.That(copied.PendingMoveDistance, Is.EqualTo(2));
-            Assert.That(copied.AttackRefundEligibleMoveCost, Is.EqualTo(4));
+            Assert.That(copied.ActionUse, Is.EqualTo(UnitActionUse.Moved));
             Assert.That(copied.PositionModifier.SameValues(new PositionTileModifier(actor.Anchor,
                 new long[] { 7 }, -2, 5)), Is.True);
             Assert.That(actor.PositionModifier, Is.SameAs(PositionTileModifier.None));
@@ -71,8 +69,7 @@ namespace ProjectL.Tests.Core
             Assert.That(context.VisibleEnvironment.Tiles.Select(tile => tile.Id), Is.EqualTo(new long[] { 7 }));
             Assert.That(context.VisibleEnvironment.Tiles.Single().KnownTo, Is.EqualTo(new[] { Owner.Player }));
             Assert.That(visible.KnownTo, Is.EquivalentTo(new[] { Owner.Player, Owner.Enemy }));
-            Assert.That(context.PendingMoveDistance, Is.EqualTo(actor.PendingMoveDistance));
-            Assert.That(context.AttackRefundEligibleMoveCost, Is.EqualTo(actor.AttackRefundEligibleMoveCost));
+            Assert.That(context.ActionUse, Is.EqualTo(actor.ActionUse));
             Assert.That(context.PositionModifier, Is.SameAs(actor.PositionModifier));
         }
 
@@ -121,29 +118,23 @@ namespace ProjectL.Tests.Core
         {
             var path = new MovementPath(new[] { new CellCoord(1, 1), new CellCoord(2, 1), new CellCoord(2, 2), new CellCoord(3, 2) });
             var entered = new[] { new CellCoord(2, 1), new CellCoord(2, 2) };
-            var result = new MovementPathResult(path, entered, entered[1], 2, 2, MovementStopReason.Dead, true);
+            var result = new MovementPathResult(path,entered,entered[1],2,MovementStopReason.Dead);
             entered[1] = new CellCoord(7, 7);
             Assert.That(result.EnteredCells, Is.EqualTo(new[] { new CellCoord(2, 1), new CellCoord(2, 2) }));
             Assert.That(result.FinalStop, Is.EqualTo(new CellCoord(2, 2)));
             Assert.That(result.DistanceSpent, Is.EqualTo(2));
             Assert.That(result.StopReason, Is.EqualTo(MovementStopReason.Dead));
-            Assert.That(result.ReturnBarrierOccurred, Is.True);
             Assert.Throws<NotSupportedException>(() => ((IList<CellCoord>)result.EnteredCells)[0] = CellCoord.Zero);
         }
 
         [Test]
-        public void Result_RejectsNonPrefixOrUnenteredBilling_AndAllowsForcedFinalStop()
+        public void Result_RejectsNonPrefixOrUnenteredDistance_AndAllowsForcedFinalStop()
         {
             var path = new MovementPath(new[] { CellCoord.Zero, CellCoord.Right, new CellCoord(2, 0) });
-            Assert.Throws<ArgumentException>(() => new MovementPathResult(path, new[] { CellCoord.Up }, CellCoord.Up,
-                1, 1, MovementStopReason.Dead, true));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new MovementPathResult(path, new[] { CellCoord.Right }, CellCoord.Right,
-                1, 2, MovementStopReason.Dead, true));
-            Assert.Throws<ArgumentException>(() => new MovementPathResult(path, new[] { CellCoord.Right }, CellCoord.Right,
-                1, 1, MovementStopReason.Completed, false));
-            var result = new MovementPathResult(path, new[] { CellCoord.Right }, new CellCoord(4, 4),
-                0, 1, MovementStopReason.ForcedRelocation, true);
-            Assert.That(result.ActionCostSpent, Is.Zero);
+            Assert.Throws<ArgumentException>(() => new MovementPathResult(path,new[] { CellCoord.Up },CellCoord.Up,1,MovementStopReason.Dead));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new MovementPathResult(path,new[] { CellCoord.Right },CellCoord.Right,2,MovementStopReason.Dead));
+            Assert.Throws<ArgumentException>(() => new MovementPathResult(path,new[] { CellCoord.Right },CellCoord.Right,1,MovementStopReason.Completed));
+            var result = new MovementPathResult(path,new[] { CellCoord.Right },new CellCoord(4, 4),1,MovementStopReason.ForcedRelocation);
             Assert.That(result.FinalStop, Is.EqualTo(new CellCoord(4, 4)));
         }
 
@@ -151,7 +142,8 @@ namespace ProjectL.Tests.Core
         public void InputCopies_PreserveExactPathAndContext()
         {
             var input = SafeInput();
-            var context = new MovementPreviewContext(1, Owner.Player, input.Characters[0], CombatCommandKind.Move, input.Path);
+            var context = new MovementPreviewContext(1, Owner.Player, input.Characters[0], CombatCommandKind.Move, input.Path,
+                admission: input.State);
             input = CombatCommandComposition.Intent(input, CombatCommandKind.Move, path: input.Path, movementContext: context);
             var copied = CombatCommandComposition.Intent(input, CombatCommandKind.Move);
             Assert.That(copied.Path, Is.SameAs(input.Path));
@@ -161,11 +153,10 @@ namespace ProjectL.Tests.Core
             Assert.That(CombatAttackQueries.WithAim(input, default).Path, Is.SameAs(input.Path));
             Assert.That(CombatAttackQueries.WithAim(input, default).MovementContext, Is.SameAs(context));
             Assert.That(context.Health.CurrentHealth, Is.EqualTo(100));
-            Assert.That(context.CurrentActionCost, Is.EqualTo(20));
             Assert.That(context.OccupiedCells, Is.EqualTo(new[] { new CellCoord(1, 3) }));
             Assert.Throws<NotSupportedException>(() => ((IList<CellCoord>)context.OccupiedCells)[0] = CellCoord.Zero);
             Assert.Throws<ArgumentException>(() => new MovementPreviewContext(1, Owner.Player, input.Characters[0],
-                CombatCommandKind.Move, input.Path, new CellCoord(1, 3)));
+                CombatCommandKind.Attack, input.Path));
         }
 
         [Test]
@@ -176,7 +167,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandComposition.Intent(input, CombatCommandKind.Attack, movementContext: context);
             var payload = PathResult(input.Path);
             var original = input.Characters[0];
-            var moved = CombatCommandTestData.With(original, position: input.Path.Endpoint, ap: 19);
+            var moved = CombatCommandTestData.With(original, position: input.Path.Endpoint, actionUse: UnitActionUse.Moved);
             var moveEvent = new CombatCharacterEvent(CombatEventKind.Moved, original, moved);
             var first = Transition(input, new[] { new CharacterStateChange(original, moved) }, payload, events: new[] { moveEvent });
             var projected = MovementTestData.After(first);
@@ -192,7 +183,7 @@ namespace ProjectL.Tests.Core
             Assert.That(merged.Events, Is.EqualTo(new CombatEvent[] { moveEvent, healthEvent }));
             Assert.That(merged.Characters.Characters.Single().Expected, Is.SameAs(original));
             Assert.That(merged.Characters.Characters.Single().Final.Health.CurrentHealth, Is.EqualTo(99));
-            Assert.That(merged.Characters.Characters.Single().Final.Stats.CurrentActionCost, Is.EqualTo(19));
+            Assert.That(merged.Characters.Characters.Single().Final.ActionUse, Is.EqualTo(UnitActionUse.Moved));
         }
 
         [Test]
@@ -205,8 +196,7 @@ namespace ProjectL.Tests.Core
             var events = new CombatEvent[] { new CombatOutcomeEvent(outcome) };
             // 종료 승패는 Finished 국면과 함께여야 한다(계약 검사).
             var s = input.State;
-            var finished = new CombatCommandState(s.BoardWidth, s.BoardHeight, CombatFlowPhase.Finished, s.ActiveActorId,
-                s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment, s.EnvironmentProgress);
+            var finished = s.With(phase: CombatFlowPhase.Finished);
             var transition = new CombatCommandTransition(input, true, "", changes,
                 new SoulFieldChange(input.Souls, input.Souls), finished, outcome, events: events, pathMovement: payload);
             var completion = new BattleCompletionChanges(changes, outcome,
@@ -229,8 +219,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentException>(() => new CombatCommandTransition(input, true, "", changes, field, input.State, outcome));
 
             var s = input.State;
-            var finished = new CombatCommandState(s.BoardWidth, s.BoardHeight, CombatFlowPhase.Finished, s.ActiveActorId,
-                s.IsNight, s.Structures, s.ThornFields, s.Timeline, s.Turn, s.Environment, s.EnvironmentProgress);
+            var finished = s.With(phase: CombatFlowPhase.Finished);
             var completion = new BattleCompletionChanges(
                 new CharacterChanges(Array.Empty<CharacterStateChange>(), Array.Empty<SoulCountChange>()), outcome,
                 ChapterProgressionResult.Defeat(1, new StageNodeId(2), new StageKey(10)));
@@ -241,55 +230,43 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ReturnPayload_SurvivesComposition_AndRejectsMutationOnRejection()
+        public void MovementPayload_RejectsMutationOnRejection()
         {
             var input = SafeInput();
-            var payload = new CheckpointReturnResult(new CellCoord(1, 3), new CellCoord(1, 3), 6, 6);
+            var payload = PathResult(input.Path);
             var merged = CombatCommandComposition.Merge(input,
-                new[] { Transition(input, Array.Empty<CharacterStateChange>(), returned: payload) });
-            Assert.That(merged.ReturnMovement, Is.SameAs(payload));
+                new[] { Transition(input, Array.Empty<CharacterStateChange>(), path: payload) });
+            Assert.That(merged.PathMovement, Is.SameAs(payload));
             Assert.Throws<ArgumentException>(() => new CombatCommandTransition(input, false, "Blocked",
                 new CharacterChanges(Array.Empty<CharacterStateChange>(), Array.Empty<SoulCountChange>()),
-                new SoulFieldChange(input.Souls, input.Souls), input.State, default, returnMovement: payload));
+                new SoulFieldChange(input.Souls, input.Souls), input.State, default, pathMovement: payload));
             Assert.Throws<ArgumentException>(() => new CombatResult(1, CombatProcessingKind.Command, 1, false,
-                "Blocked", returnMovement: payload));
-            Assert.Throws<ArgumentException>(() => new CombatResult(1, CombatProcessingKind.Command, 1, false,
-                "Blocked", pathMovement: PathResult(input.Path)));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new CheckpointReturnResult(CellCoord.Zero, CellCoord.Right, -1, 1));
+                "Blocked", pathMovement: payload));
         }
 
         [Test]
-        public void Preview_DistinguishesReturnFromMove_AndDoesNotAuthorizeInvalidPrefix()
+        public void Preview_DoesNotAuthorizeInvalidPrefix()
         {
-            var returned = new CheckpointReturnResult(CellCoord.Right, CellCoord.Zero, 0, 3);
-            var response = CombatPreviewResult.ForCheckpointReturn(7,
-                new CheckpointReturnPreview(true, MovementFailureReason.None, returned));
-            Assert.That(response.CheckpointReturn.Return, Is.SameAs(returned));
-            Assert.That(response.Move.HasValue, Is.False);
-            Assert.That(response.RequestNumber, Is.EqualTo(7));
-            Assert.Throws<ArgumentException>(() => new CheckpointReturnPreview(false, MovementFailureReason.None));
-            Assert.Throws<ArgumentException>(() => new CheckpointReturnPreview(false, MovementFailureReason.DestinationOccupied, returned));
             var failed = MovePreview.Failure(MovementFailureReason.DestinationOccupied, 1);
             Assert.That(failed.CanMove, Is.False);
             Assert.That(failed.ValidStepCount, Is.EqualTo(1));
             var path = new MovementPath(new[] { CellCoord.Zero, CellCoord.Right, new CellCoord(2, 0) });
             var success = MovePreview.Success(PathResult(path), Array.Empty<TraitStatusSnapshot>(),
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                CategorySnapshot.CreateStateless(CategoryKey.Main));
             Assert.That(success.PathMovement.RequestedPath, Is.SameAs(path));
             Assert.That(success.ValidStepCount, Is.EqualTo(2));
             Assert.That(success.Destination.HasValue, Is.False);
         }
 
         private static CombatCommandInput SafeInput() =>
-            MovementTestData.SafeRoute(20, 20, 1, new CellCoord(1, 3), new CellCoord(2, 3));
+            MovementTestData.SafeRoute(new CellCoord(1, 3),new CellCoord(2, 3));
 
-        private static MovementPathResult PathResult(MovementPath path) => new(path,
-            path.Cells.Skip(1).ToArray(), path.Endpoint, path.StepCount, path.StepCount, MovementStopReason.Completed, false);
+        private static MovementPathResult PathResult(MovementPath path) => new(path,            path.Cells.Skip(1).ToArray(),path.Endpoint,path.StepCount,MovementStopReason.Completed);
 
         private static CombatCommandTransition Transition(CombatCommandInput input, CharacterStateChange[] changes,
-            MovementPathResult path = null, CheckpointReturnResult returned = null, CombatEvent[] events = null) =>
+            MovementPathResult path = null, CombatEvent[] events = null) =>
             new(input, true, "", new CharacterChanges(changes, Array.Empty<SoulCountChange>()),
                 new SoulFieldChange(input.Souls, input.Souls), input.State, default,
-                events: events, pathMovement: path, returnMovement: returned);
+                events: events, pathMovement: path);
     }
 }

@@ -6,24 +6,30 @@ namespace ProjectL.Tool.Editor
 {
 
     /// <summary>
-    /// FBX Model Import ´Ü°è¿¡¼­ Outline¿ë Æò±Õ NormalÀ» »ı¼ºÇÑ´Ù.
+    /// FBX Model Import ï¿½Ü°è¿¡ï¿½ï¿½ Outlineï¿½ï¿½ ï¿½ï¿½ï¿½ Normalï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
     ///
     /// TEXCOORD3 = Outline Normal
     ///
-    /// ±âÁ¸ Mesh.normalÀº ¼öÁ¤ÇÏÁö ¾Ê´Â´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ Mesh.normalï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
     /// </summary>
     public sealed class OutlineNormalPostprocessor : AssetPostprocessor
     {
-        // Unity Shader ±âÁØ:
+        // Unity Shader ï¿½ï¿½ï¿½ï¿½:
         // TEXCOORD0 = UV0
         // TEXCOORD1 = UV1
         // TEXCOORD2 = UV2
         // TEXCOORD3 = UV3
         private const int OutlineNormalChannel = 3;
 
-        // À§Ä¡ ºñ±³ Çã¿ë ¿ÀÂ÷.
-        // 0.0001 ´ÜÀ§±îÁö °°Àº À§Ä¡·Î Ãë±Ş.
+        // ï¿½ï¿½Ä¡ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+        // 0.0001 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½.
         private const float PositionTolerance = 0.0001f;
+
+        // ê¸°ì¡´ ì„í¬íŠ¸ ìºì‹œì—ë„ í‰ê·  ë…¸ë©€ ì •ê·œí™” ë³´ì™„ì„ ë°˜ì˜í•œë‹¤.
+        public override uint GetVersion()
+        {
+            return 1;
+        }
 
         private void OnPostprocessModel(GameObject root)
         {
@@ -74,7 +80,7 @@ namespace ProjectL.Tool.Editor
                 return;
             }
 
-            // °°Àº À§Ä¡ÀÇ VertexµéÀ» ±×·ìÈ­ÇÑ´Ù.
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ Vertexï¿½ï¿½ï¿½ï¿½ ï¿½×·ï¿½È­ï¿½Ñ´ï¿½.
             Dictionary<Vector3Int, List<int>> vertexGroups =
                 new Dictionary<Vector3Int, List<int>>();
 
@@ -102,8 +108,9 @@ namespace ProjectL.Tool.Editor
                     averageNormal += normals[index];
                 }
 
-                // Æò±Õ Normal Á¤±ÔÈ­
-                if (averageNormal.sqrMagnitude > Mathf.Epsilon)
+                // ï¿½ï¿½ï¿½ Normal ï¿½ï¿½ï¿½ï¿½È­
+                // Normalizeê°€ ì˜ë²¡í„°ë¡œ ë§Œë“œëŠ” ë¯¸ì„¸ ì”ì°¨ëŠ” ê¸°ë³¸ ë°©í–¥ìœ¼ë¡œ ì²˜ë¦¬í•œë‹¤.
+                if (averageNormal.sqrMagnitude > Vector3.kEpsilon * Vector3.kEpsilon)
                 {
                     averageNormal.Normalize();
                 }
@@ -112,15 +119,15 @@ namespace ProjectL.Tool.Editor
                     averageNormal = Vector3.up;
                 }
 
-                // °°Àº À§Ä¡ÀÇ ¸ğµç Vertex¿¡
-                // µ¿ÀÏÇÑ Outline NormalÀ» ±â·ÏÇÑ´Ù.
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ Vertexï¿½ï¿½
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Outline Normalï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
                 foreach (int index in indices)
                 {
                     outlineNormals[index] = averageNormal;
                 }
             }
 
-            // TEXCOORD3¿¡ Vector3 ÇüÅÂ·Î ÀúÀå.
+            // TEXCOORD3ï¿½ï¿½ Vector3 ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½.
             mesh.SetUVs(OutlineNormalChannel, outlineNormals);
         }
 

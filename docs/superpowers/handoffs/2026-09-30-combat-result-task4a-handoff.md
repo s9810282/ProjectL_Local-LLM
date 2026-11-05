@@ -1,6 +1,6 @@
 # Task 4A — 전투 결과 최소 계약과 실제 조회 등록
 
-이 문서는 [사용자 승인 답변](2026-09-30-combat-core-response-to-view.md)과 [이전 계획 Task 4A](../plans/2026-09-29-character-buffer-effect-migration-plan.md)의 Core 제공 범위를 정리한다. View가 Flow·Plan·Job과 호출 연결을 담당하고, Core가 규칙·처리 서비스·결과를 담당한다는 합의는 유지한다. 사용자가 View에 전달할 문서이며, View의 수신·동의나 후속 구현 완료를 주장하지 않는다.
+이 문서는 [사용자 승인 답변](2026-09-30-combat-core-response-to-view.md)과 이전 계획 Task 4A (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)의 Core 제공 범위를 정리한다. View가 Flow·Plan·Job과 호출 연결을 담당하고, Core가 규칙·처리 서비스·결과를 담당한다는 합의는 유지한다. 사용자가 View에 전달할 문서이며, View의 수신·동의나 후속 구현 완료를 주장하지 않는다.
 
 ## 1. 이번에 구현한 API
 

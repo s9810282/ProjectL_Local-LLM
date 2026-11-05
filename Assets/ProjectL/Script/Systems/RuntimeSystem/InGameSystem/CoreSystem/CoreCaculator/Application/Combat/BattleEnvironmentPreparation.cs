@@ -12,13 +12,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static IReadOnlyList<CharacterCombatFacts> Prepare(BattleInitialization initialization,
             IReadOnlyList<CharacterCombatFacts> characters, IReadOnlyList<StructureCombatFacts> structures,
             MainCharacterPersistentState main, EnvironmentSemanticBindings preparedBindings = null,
-            IReadOnlyList<ObstacleContentProfile> obstacleContents = null)
+            IReadOnlyList<ObstacleContentProfile> obstacleContents = null, MovementEnvironmentFacts preparedEnvironment = null)
         {
             if (initialization == null) throw new ArgumentNullException(nameof(initialization));
             if (characters == null) throw new ArgumentNullException(nameof(characters));
             if (main == null) throw new ArgumentNullException(nameof(main));
             var stage = initialization.Stage;
-            var environment = initialization.Environment;
+            // 최초 무작위 배치를 마친 준비 환경이 있으면 그 환경을 검사한다. 정의 환경은 바꾸지 않는다.
+            var environment = preparedEnvironment ?? initialization.Environment;
             var bindings = preparedBindings ?? initialization.EnvironmentBindings;
             obstacleContents ??= Array.Empty<ObstacleContentProfile>();
             CellEnvironmentQuery.ValidateInitialEnvironment(stage.MapWidth, stage.MapHeight, environment);

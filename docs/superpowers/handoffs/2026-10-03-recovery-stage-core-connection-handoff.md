@@ -100,7 +100,7 @@ Paths below are repository-relative. All new C# files/folders include Unity meta
 | P3 composition/cycle | `Assets/Tests/EditMode/Framework/RecoveryRuntimeCompositionTests.cs`; `RecoveryStageCycleTests.cs`; partial declarations and recovery DB query support in `FrameworkRuntimeCompositionTests.cs` / `CoreStageCombatCycleTests.cs` in the same folder |
 | P3 review fix | `BufferSystemGroup.cs` validates registered Event/non-boss metadata before entry installation; `RecoveryEntryPublicationTests.cs` and `RecoveryStageOperationsTests.cs` add six initial/query-mutation boundary regressions. |
 | Pure tests/test doubles | `Assets/Tests/EditMode/ChapterProgressionCommandsTests.cs`; `Assets/Tests/EditMode/Framework/ArtifactEditingServiceTests.cs`, `ChapterResetSpy.cs`, `CombatPlanTests.cs` (mechanical Context additions) |
-| Documentation | [Design](../specs/2026-10-03-recovery-stage-core-connection-design.md), [implementation plan](../plans/2026-10-03-recovery-stage-core-connection-implementation-plan.md), P1/P2 checkpoint reports and this handoff |
+| Documentation | Design (Git history: `2026-10-03-recovery-stage-core-connection-design.md`), implementation plan (Git history: `2026-10-03-recovery-stage-core-connection-implementation-plan.md`), P1/P2 checkpoint reports and this handoff |
 
 No production Job/Flow/View, Combat implementation, Framework API/assembly definition or authored DB asset changed. Incoming FMOD content is preserved; only Unity's additional lastScanTime mutation was restored after verifying it was the sole new asset change. Raw evidence, the task ledger/snapshots and the local feedback attachment copy were subsequently backed up outside the repository, verified by SHA256 and removed from the working tree at the user's request.
 

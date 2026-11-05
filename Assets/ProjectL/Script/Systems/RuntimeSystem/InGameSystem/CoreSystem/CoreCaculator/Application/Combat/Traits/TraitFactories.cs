@@ -45,27 +45,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
     }
 
-    public sealed class MoveAttackDiscountTraitDefinitionFactory : ITraitDefinitionFactory
-    {
-        public TraitKey TraitKey => TraitKey.MoveAttackDiscount;
-        public Type SpecType => typeof(MoveAttackDiscountTraitSpec);
-        public Type DefinitionType => typeof(MoveAttackDiscountTraitDefinition);
-
-        public TraitDefinition BuildDefinition(TraitSpec spec)
-        {
-            if (spec == null)
-                throw new ArgumentNullException(nameof(spec));
-            if (spec is not MoveAttackDiscountTraitSpec moveAttackDiscountTraitSpec)
-            {
-                throw new ArgumentException(
-                    "MoveAttackDiscount Definition을 만들려면 MoveAttackDiscountTraitSpec이 필요합니다.",
-                    nameof(spec));
-            }
-
-            return new MoveAttackDiscountTraitDefinition(moveAttackDiscountTraitSpec.DiscountAmount, moveAttackDiscountTraitSpec.MinimumAttackCost);
-        }
-    }
-
     public sealed class FocusRuntimeStateFactory : ITraitRuntimeStateFactory
     {
         public TraitKey TraitKey => TraitKey.Focus;
@@ -84,27 +63,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             return new FocusRuntimeState();
-        }
-    }
-
-    public sealed class MoveAttackDiscountRuntimeStateFactory : ITraitRuntimeStateFactory
-    {
-        public TraitKey TraitKey => TraitKey.MoveAttackDiscount;
-        public Type DefinitionType => typeof(MoveAttackDiscountTraitDefinition);
-        public Type RuntimeStateType => typeof(MoveAttackDiscountRuntimeState);
-
-        public TraitRuntimeState BuildRuntimeState(TraitDefinition definition)
-        {
-            if (definition == null)
-                throw new ArgumentNullException(nameof(definition));
-            if (definition is not MoveAttackDiscountTraitDefinition)
-            {
-                throw new ArgumentException(
-                    "MoveAttackDiscount RuntimeState를 만들려면 MoveAttackDiscountTraitDefinition이 필요합니다.",
-                    nameof(definition));
-            }
-
-            return new MoveAttackDiscountRuntimeState();
         }
     }
 
@@ -170,7 +128,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             return new ThornFieldTraitDefinition(
                 thornFieldSpec.ThornDamage,
-                thornFieldSpec.LifetimeUnitTurns);
+                thornFieldSpec.LifetimeUnitTurns, thornFieldSpec.DefenseReductionPercent, thornFieldSpec.TickPhase);
         }
     }
 
@@ -276,6 +234,91 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             return new DistanceDamageScaleRuntimeState();
+        }
+    }
+
+    public sealed class NecromancyTraitDefinitionFactory : ITraitDefinitionFactory
+    {
+        public TraitKey TraitKey => TraitKey.Necromancy;
+        public Type SpecType => typeof(NecromancyTraitSpec);
+        public Type DefinitionType => typeof(NecromancyTraitDefinition);
+
+        public TraitDefinition BuildDefinition(TraitSpec spec)
+        {
+            if (spec == null)
+                throw new ArgumentNullException(nameof(spec));
+            if (spec is not NecromancyTraitSpec necromancySpec)
+            {
+                throw new ArgumentException(
+                    "Necromancy Definition을 만들려면 NecromancyTraitSpec이 필요합니다.",
+                    nameof(spec));
+            }
+
+            return new NecromancyTraitDefinition(necromancySpec.SummonedUnitKey,
+                necromancySpec.MaxLivingSummons, necromancySpec.FirstActionDelay);
+        }
+    }
+
+    public sealed class NecromancyRuntimeStateFactory : ITraitRuntimeStateFactory
+    {
+        public TraitKey TraitKey => TraitKey.Necromancy;
+        public Type DefinitionType => typeof(NecromancyTraitDefinition);
+        public Type RuntimeStateType => typeof(NecromancyRuntimeState);
+
+        public TraitRuntimeState BuildRuntimeState(TraitDefinition definition)
+        {
+            if (definition == null)
+                throw new ArgumentNullException(nameof(definition));
+            if (definition is not NecromancyTraitDefinition)
+            {
+                throw new ArgumentException(
+                    "Necromancy RuntimeState를 만들려면 NecromancyTraitDefinition이 필요합니다.",
+                    nameof(definition));
+            }
+
+            return new NecromancyRuntimeState();
+        }
+    }
+
+    public sealed class RoarTraitDefinitionFactory : ITraitDefinitionFactory
+    {
+        public TraitKey TraitKey => TraitKey.Roar;
+        public Type SpecType => typeof(RoarTraitSpec);
+        public Type DefinitionType => typeof(RoarTraitDefinition);
+
+        public TraitDefinition BuildDefinition(TraitSpec spec)
+        {
+            if (spec == null)
+                throw new ArgumentNullException(nameof(spec));
+            if (spec is not RoarTraitSpec roarSpec)
+            {
+                throw new ArgumentException(
+                    "Roar Definition을 만들려면 RoarTraitSpec이 필요합니다.",
+                    nameof(spec));
+            }
+
+            return new RoarTraitDefinition(roarSpec.HitThreshold);
+        }
+    }
+
+    public sealed class RoarRuntimeStateFactory : ITraitRuntimeStateFactory
+    {
+        public TraitKey TraitKey => TraitKey.Roar;
+        public Type DefinitionType => typeof(RoarTraitDefinition);
+        public Type RuntimeStateType => typeof(RoarRuntimeState);
+
+        public TraitRuntimeState BuildRuntimeState(TraitDefinition definition)
+        {
+            if (definition == null)
+                throw new ArgumentNullException(nameof(definition));
+            if (definition is not RoarTraitDefinition)
+            {
+                throw new ArgumentException(
+                    "Roar RuntimeState를 만들려면 RoarTraitDefinition이 필요합니다.",
+                    nameof(definition));
+            }
+
+            return new RoarRuntimeState();
         }
     }
 

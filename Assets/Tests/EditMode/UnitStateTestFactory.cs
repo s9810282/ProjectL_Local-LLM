@@ -21,20 +21,14 @@ namespace ProjectL.Tests.Core
             TileFootprint footprint,
             int maxHealth,
             MoveMethod moveMethod,
-            int moveRange,
-            int moveCost,
             int attackRange,
             int attackPower,
-            int maxActionCost,
-            int attackCost,
             int priority = 0,
-            int delay = 0,
             TraitDefinition[] traits = null,
             UnitRole role = UnitRole.Regular,
-            CategoryKey categoryKey = CategoryKey.Base,
-            int physicalDefense = 0)
+            CategoryKey categoryKey = CategoryKey.Main,
+            int physicalDefense = 0, UnitOwnerEligibility ownerEligibility = UnitOwnerEligibility.Both)
         {
-            bool hasTimelineConfiguration = priority != 0 || delay != 0;
             CategoryDefinition category = Categories.GetRequired(categoryKey);
 
             return new UnitDefinition(
@@ -43,18 +37,12 @@ namespace ProjectL.Tests.Core
                 footprint,
                 maxHealth,
                 moveMethod,
-                moveRange,
-                moveCost,
                 attackRange,
                 category,
                 attackPower,
-                maxActionCost,
-                attackCost,
                 physicalDefense,
                 priority,
-                delay,
-                traits ?? Array.Empty<TraitDefinition>(),
-                hasTimelineConfiguration);
+                traits ?? Array.Empty<TraitDefinition>(), ownerEligibility);
         }
     }
 }

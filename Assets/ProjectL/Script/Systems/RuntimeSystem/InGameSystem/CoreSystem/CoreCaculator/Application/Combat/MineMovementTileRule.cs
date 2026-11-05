@@ -29,21 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 expectedSource: mine, finalSource: mine.WithActive(false));
         }
 
+        // 피해 칸 모양의 원본은 CombatHazardAreas 하나다(View 호버도 같은 입구를 부른다).
         internal static IReadOnlyList<CellCoord> Cells(CellCoord origin, int width, int height)
         {
-            if (width < 1) throw new ArgumentOutOfRangeException(nameof(width));
-            if (height < 1) throw new ArgumentOutOfRangeException(nameof(height));
-            if (origin.X < 0 || origin.Y < 0 || origin.X >= width || origin.Y >= height)
-                throw new ArgumentOutOfRangeException(nameof(origin));
             var cells = new List<CellCoord>(9);
-            for (int dy = -1; dy <= 1; dy++)
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    long x = (long)origin.X + dx;
-                    long y = (long)origin.Y + dy;
-                    if (x >= 0 && y >= 0 && x < width && y < height)
-                        cells.Add(new CellCoord((int)x, (int)y));
-                }
+            CombatHazardAreas.MineCells(origin, width, height, cells);
             return cells.AsReadOnly();
         }
     }

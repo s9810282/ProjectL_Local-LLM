@@ -68,9 +68,13 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
 
         private static void RequireId(int id, string name)
         {
-            if (id <= 0)
-                throw new ArgumentOutOfRangeException(name, "식별자는 양수여야 합니다.");
+            // Core 정의와 인벤토리의 식별자는 0부터 시작할 수 있습니다.
+            if (id < 0)
+                throw new ArgumentOutOfRangeException(name, "식별자는 음수일 수 없습니다.");
         }
+
+        internal bool Matches(ArtifactViewCommandData other) => Kind == other.Kind &&
+            ArtifactId == other.ArtifactId && InstanceId == other.InstanceId && Cell == other.Cell && Rotation == other.Rotation;
 
         private static void RequireRotation(Rotation4 rotation)
         {
@@ -93,7 +97,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
             if (number <= 0)
                 throw new ArgumentOutOfRangeException(nameof(number));
 
-            data.Validate();
+            // 데이터는 Buffer의 Submit이 넣기 전에 검사합니다(로비 리팩토링 2차 설계 N-20). 이 생성자는 Buffer만 부릅니다.
             Number = number;
             Data = data;
         }

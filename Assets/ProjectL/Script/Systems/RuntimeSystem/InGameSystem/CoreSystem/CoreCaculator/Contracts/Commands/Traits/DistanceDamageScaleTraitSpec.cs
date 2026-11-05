@@ -19,6 +19,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             PercentByDistance = DistanceDamageScalePercents.Copy(percentByDistance, nameof(percentByDistance));
         }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            var otherSpec = (DistanceDamageScaleTraitSpec)other;
+            return DistanceDamageScalePercents.SameValues(PercentByDistance, otherSpec.PercentByDistance);
+        }
     }
 
     /// <summary>

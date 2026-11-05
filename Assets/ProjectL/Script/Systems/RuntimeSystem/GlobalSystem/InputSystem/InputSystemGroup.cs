@@ -1,7 +1,7 @@
+using ProjectL.Systems.ServiceKeys.Runtime.Global;
 using ProjectL.Framework.Composition;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
 using ProjectL.Framework.SystemBase;
-using ProjectL.Systems.ServiceKeys;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem
 {
@@ -13,6 +13,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem
         IInputSystemService InputSystemServices { get; }
 
         IInputLayerService InputLayerServices { get; }
+        IInputLayerOverrideService InputLayerOverrides { get; }
+        IKeyBindingService KeyBindings { get; }
     }
 
     #endregion
@@ -30,6 +32,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem
 
         public IInputLayerService InputLayerServices =>
             InputSystemServices;
+        public IInputLayerOverrideService InputLayerOverrides { get; }
+        public IKeyBindingService KeyBindings { get; }
 
         public InputSystemGroup(
             ISystemReader systemReader)
@@ -38,6 +42,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem
             InputSystemServices =
                 SystemReader.ServiceStoreReader.GetService(
                     InputSystemServiceKey.Input);
+            InputLayerOverrides = SystemReader.ServiceStoreReader.GetService(
+                InputSystemServiceKey.LayerOverride);
+            KeyBindings = SystemReader.ServiceStoreReader.GetService(InputSystemServiceKey.KeyBindings);
         }
 
         public void InitData(IServiceModule data)

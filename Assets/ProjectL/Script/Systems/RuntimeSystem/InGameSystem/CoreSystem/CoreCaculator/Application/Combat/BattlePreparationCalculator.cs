@@ -1,4 +1,10 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Deck;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Enhancements;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Items;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Items;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.BootstrapModels;
@@ -20,7 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         public static BattlePreparation Prepare(BattleInitialization initialization,
             IReadOnlyList<OwnedCharacterRecord> owned, MainCharacterPersistentState main,
             IReadOnlyDictionary<CharacterInstanceId, int> souls, InitialDrawPlan draw,
-            IReadOnlyList<CharacterCombatFacts> activeCharacters)
+            IReadOnlyList<CharacterCombatFacts> activeCharacters, RunDeckSnapshot membership = null, long rosterRevision = 0)
         {
             if (initialization == null || owned == null || souls == null || draw == null || activeCharacters == null)
                 throw new ArgumentNullException("전투 정의와 Buffer 사실이 필요합니다.");
@@ -29,23 +35,49 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (activeCharacters.Count != 0)
                 throw new InvalidOperationException("이미 연결된 전투 캐릭터가 있습니다.");
 
+            if (initialization.AttackProfiles.Count > 0)
+            {
+                _ = OwnedUnitSpecResolver.BuildProfiles(initialization.AttackProfiles, owned, initialization.TraitGrowth);
+                // 미래 성장 경로의 전수 검사는 진입 때 한 번 수행하고, 매 명령 조립에서는 현재 이력만 합성한다.
+                foreach (var record in owned.Where(o => o.SpecializationCategory.HasValue))
+                    TraitGrowthCatalogValidator.ValidateSpecialization(initialization.TraitGrowth,
+                        initialization.AttackProfiles.Single(p => p.Definition.Key == record.CharacterKey), record.SpecializationCategory.Value);
+            }
+            var items = new Dictionary<int, ItemDefinition>();
+            var itemRules = ItemRuleRegistry.CreateDefault();
+            foreach (var definition in initialization.ItemDefinitions)
+            {
+                if (!items.TryAdd(definition.Key, definition))
+                    throw new InvalidOperationException("아이템 정의 키가 중복됩니다.");
+                itemRules.GetRequired(definition.Effect);
+            }
+            foreach (var placement in initialization.Stage.InitialEnemyPlacements.Span)
+            {
+                if (!placement.StartingItemKey.HasValue)
+                    continue;
+                if (!items.TryGetValue(placement.StartingItemKey.Value, out var item))
+                    throw new InvalidOperationException("초기 적 아이템 정의가 없습니다.");
+                if (!itemRules.IsAvailable(item.Effect))
+                    throw new InvalidOperationException(itemRules.GetUnavailableReason(item.Effect));
+            }
+
             StageConfig stage = initialization.Stage;
-            if (stage.ReserveCapacity < draw.InitialCount)
+            if (stage.ReserveCapacity <= draw.InitialCount)
                 throw new InvalidOperationException("초기 손패를 담을 공간이 부족합니다.");
 
-            foreach (UnitSpec unit in initialization.Units)
-                if (unit.HasTimelineConfiguration == false)
-                    throw new InvalidOperationException("전투 정의에는 Timeline 수치가 필요합니다.");
-
             var gimmickKeys = new HashSet<StageGimmickKey>();
+            StageGimmickComposition.Default.ValidateDefinitions(stage.StageGimmicks.ToArray());
             foreach (var gimmick in stage.StageGimmicks.Span)
                 if (gimmickKeys.Add(gimmick.GimmickKey) == false ||
                     gimmick.GimmickKey == StageGimmickKey.Railway && stage.RailCells.Length == 0)
                     throw new InvalidOperationException("기믹이 중복되었거나 철도 셀이 없습니다.");
 
             var traits = TraitRegistry.CreateDefault();
-            var catalog = new UnitCatalog(initialization.Units, traits, new CategoryRegistry(initialization.Categories));
+            var categories = new CategoryRegistry(initialization.Categories);
+            var baseUnits = initialization.Units.Select(u => OwnedUnitSpecResolver.ResolveBase(u, initialization.TraitGrowth)).ToArray();
+            var catalog = new UnitCatalog(baseUnits, traits, categories);
             catalog.ValidateCombatReady();
+            var ownedDefinitions = new Dictionary<CharacterInstanceId, UnitDefinition>();
             var roster = new Dictionary<CharacterInstanceId, OwnedCharacterRecord>();
             OwnedCharacterRecord mainRecord = null;
             int subCount = 0;
@@ -55,7 +87,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     throw new InvalidOperationException("보유 목록이 올바르지 않습니다.");
                 roster.Add(record.Id, record);
                 UnitDefinition definition = catalog.GetRequired(record.CharacterKey);
-                ValidateEligibility(definition, Owner.Player, record.Role == CharacterOwnershipRole.Main);
+                if (!record.Growth.IsEmpty || record.SpecializationCategory.HasValue)
+                {
+                    var effective = OwnedUnitSpecResolver.Resolve(initialization.Units.Single(u => u.Key == record.CharacterKey), record, initialization.TraitGrowth);
+                    var effectiveCatalog = new UnitCatalog(new[] { effective }, traits, categories);
+                    effectiveCatalog.ValidateCombatReady();
+                    definition = effectiveCatalog.GetRequired(record.CharacterKey);
+                }
+                ownedDefinitions.Add(record.Id, definition);
+                UnitEligibilityRules.Require(definition, Owner.Player, record.Role == CharacterOwnershipRole.Main);
                 if (souls.TryGetValue(record.Id, out int count) == false || count < 0)
                     throw new InvalidOperationException("보유 캐릭터의 영혼 기록이 필요합니다.");
 
@@ -79,22 +119,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var characters = new List<CharacterCombatFacts>();
             var structures = new List<StructureCombatFacts>();
             int nextId = 1;
-            UnitDefinition mainDefinition = catalog.GetRequired(mainRecord.CharacterKey);
-            CellCoord[] mainCells = Place(mainDefinition.Footprint, initialization.MainAnchor,
-                initialization.MainRotation, Owner.Player, stage, occupied);
-            characters.Add(BattleCharacterCalculator.Create(new EntityId(nextId++), mainDefinition,
-                Owner.Player, mainRecord, main, souls[mainRecord.Id], null,
-                initialization.MainAnchor, initialization.MainRotation, mainCells, traits));
+            UnitDefinition mainDefinition = ownedDefinitions[mainRecord.Id];
+            // 메인은 셔플과 별개로 첫 손패 0번 슬롯에 지급하고, 실제 위치는 최초 배치 명령이 정한다.
+            characters.Add(BattleCharacterCalculator.CreateOwned(new EntityId(nextId++), mainDefinition,
+                mainRecord, main, souls[mainRecord.Id], 0,
+                null, null, Array.Empty<CellCoord>(), traits));
 
+            var victoryTargets = new List<EntityId>();
             foreach (InitialEnemyPlacementSpec placement in stage.InitialEnemyPlacements.Span)
             {
                 UnitDefinition definition = catalog.GetRequired(placement.UnitKey);
-                ValidateEligibility(definition, Owner.Enemy, false);
+                UnitEligibilityRules.Require(definition, Owner.Enemy, false);
+                var effective = baseUnits.Single(u => u.Key == placement.UnitKey);
+                if (!HasAvailableBehavior(effective))
+                    throw new InvalidOperationException(
+                        $"DeferredUnitTurnTiming: 적 유닛 {effective.Key}에게 지금 쓸 수 있는 행동(기본 공격·자발 이동·포효)이 없습니다.");
                 CellCoord[] cells = Place(definition.Footprint, placement.Anchor, placement.Rotation,
                     Owner.Enemy, stage, occupied);
-                characters.Add(BattleCharacterCalculator.Create(new EntityId(nextId++), definition,
-                    Owner.Enemy, null, null, 0, null, placement.Anchor, placement.Rotation, cells, traits));
+                var id = new EntityId(nextId++);
+                if (placement.IsVictoryTarget)
+                    victoryTargets.Add(id);
+                characters.Add(BattleCharacterCalculator.CreateEnemy(id, definition,
+                    placement.Level, placement.Anchor, placement.Rotation, cells, traits,
+                    new CharacterItemState(placement.StartingItemKey, Array.Empty<ItemTemporaryEffect>())));
             }
+            BattleObjective objective = BindObjective(initialization.ObjectiveKind, victoryTargets);
 
             var structureCatalog = new Dictionary<EntityKey, StructureSpec>();
             foreach (StructureSpec definition in initialization.Structures)
@@ -129,32 +178,73 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var bindings = obstacleContents.Count == 0 ? initialization.EnvironmentBindings : new EnvironmentSemanticBindings(initialization.EnvironmentBindings.TerrainSourceIds,
                 initialization.EnvironmentBindings.ObjectSourceIds,
                 initialization.EnvironmentBindings.ObstacleEntityIds.Concat(obstacleContents.Select(p => p.EntityId)).ToArray());
+            // 구조물 점유가 확정된 뒤 최초 토네이도를 배치한다. 기존 깃발 보류 정책은 유지한다.
+            var placed = InitialTornadoPlacementCalculator.Place(initialization, structures, bindings, stage.TimelineSeed);
+            bindings = placed.Bindings;
+            var environment = DeactivateDeferredFlags(placed.Environment);
 
             // 모든 배치 검증 후 초기 지급을 계산하며 서브 상한은 드로우 정책에서 정한다.
             for (int slot = 0; slot < draw.InitialCount; slot++)
             {
                 OwnedCharacterRecord record = roster[draw.Order[slot]];
-                characters.Add(BattleCharacterCalculator.Create(new EntityId(nextId++),
-                    catalog.GetRequired(record.CharacterKey), Owner.Player, record, null,
-                    souls[record.Id], slot, null, null, Array.Empty<CellCoord>(), traits));
+                characters.Add(BattleCharacterCalculator.CreateOwned(new EntityId(nextId++),
+                    ownedDefinitions[record.Id], record, null,
+                    souls[record.Id], slot + 1, null, null, Array.Empty<CellCoord>(), traits));
             }
 
-            var preparedCharacters = BattleEnvironmentPreparation.Prepare(initialization, characters, structures, main, bindings, obstacleContents);
-            return new BattlePreparation(preparedCharacters, new CombatPreparation(stage.MapWidth,
-                stage.MapHeight, stage.ReserveCapacity, stage.NightLength, stage.TimelineSeed,
-                CombatFlowPhase.PlayerInput, draw.Order, draw.InitialCount,
-                stage.PlayerDeploymentDepth, stage.EnemyDeploymentDepth,
-                stage.RailCells.ToArray(), stage.StageGimmicks.ToArray(), initialization.Economy?.ManualDrawGoldCost,
-                initialization.Environment, bindings, obstacleContents,
-                initialStageGold: initialization.Economy?.InitialGold ?? 0, wallBlocking: initialization.WallBlocking), structures, nextId);
+            var preparedCharacters = BattleEnvironmentPreparation.Prepare(initialization, characters, structures, main, bindings, obstacleContents,
+                environment);
+            var preparation = new BattlePreparation(preparedCharacters, new CombatPreparation(stage.MapWidth,
+                stage.MapHeight, stage.ReserveCapacity, stage.TimelineSeed,
+                CombatFlowPhase.PlayerInput, draw.Order, draw.InitialCount, stage.PlayerZone,
+                OwnedUnitSpecResolver.BuildTraitSettings(initialization.Units, owned, initialization.TraitGrowth),
+                stage.RailCells.ToArray(), placed.Definitions.ToArray(),
+                environment, bindings, obstacleContents, wallBlocking: initialization.WallBlocking), structures, nextId,
+                objective: objective, membership: membership, rosterRevision: rosterRevision, environmentProgress: placed.Progress);
+            var state = StageGimmickComposition.Initialize(preparation.CommandState, preparation.Combat.StageGimmicks);
+            return ReferenceEquals(state, preparation.CommandState) ? preparation : new BattlePreparation(preparedCharacters,
+                preparation.Combat, structures, nextId, commandState: state, objective: objective,
+                membership: membership, rosterRevision: rosterRevision);
         }
 
-        private static void ValidateEligibility(UnitDefinition definition, Owner owner, bool isMain)
+        /// <summary>
+        /// 깃발 획득이 보류된 동안 배치된 깃발 원본을 비활성으로 바꾼다. 다른 타일, ID, 진입 순번, 순서는 그대로 둔다.
+        /// </summary>
+        private static MovementEnvironmentFacts DeactivateDeferredFlags(MovementEnvironmentFacts environment)
         {
-            if (definition.Role != (isMain ? UnitRole.MainCharacter : UnitRole.Regular) ||
-                owner == Owner.Player && definition.OwnerEligibility == UnitOwnerEligibility.EnemyOnly ||
-                owner == Owner.Enemy && definition.OwnerEligibility == UnitOwnerEligibility.PlayerOnly)
-                throw new InvalidOperationException("캐릭터 정의의 역할 또는 소유 권한이 맞지 않습니다.");
+            if (DeferredCombatFeatures.IsFlagPickupAvailable ||
+                !environment.Tiles.Any(t => t is FlagSourceFact { Active: true }))
+                return environment;
+            return new MovementEnvironmentFacts(environment.Tiles
+                .Select(t => t is FlagSourceFact flag ? (MovementTileFact)flag.WithActive(false) : t).ToArray());
+        }
+
+        /// <summary>
+        /// 초기 적이 이번 전투에서 한 가지라도 행동할 수 있는지 판단한다. 기본 공격, 자발 이동, 지금 지원하는 반응 특성(포효)을 센다.
+        /// 사령술처럼 보류된 특성만 가진 적은 전투에서 아무것도 하지 않으므로 구성 오류로 본다.
+        /// </summary>
+        private static bool HasAvailableBehavior(UnitSpec authored)
+        {
+            if (authored.Behavior.CanBasicAttack || authored.Behavior.CanMoveVoluntarily)
+                return true;
+            foreach (var trait in authored.Traits.Span)
+                if (trait.TraitKey == TraitKey.Roar && DeferredCombatFeatures.IsTraitAvailable(TraitKey.Roar))
+                    return true;
+            return false;
+        }
+
+        /// <summary>목표 종류와 초기 적 배치 표식을 맞춰 대상 개체 하나에 결합한다. 종류와 표식이 어긋나면 준비를 거절한다.</summary>
+        private static BattleObjective BindObjective(BattleObjectiveKind kind, IReadOnlyList<EntityId> victoryTargets)
+        {
+            if (kind == BattleObjectiveKind.EnemyHeadquartersDestroyed)
+            {
+                if (victoryTargets.Count != 0)
+                    throw new InvalidOperationException("본부 목표 전투에는 지정 보스 표식을 둘 수 없습니다.");
+                return BattleObjective.EnemyHeadquarters;
+            }
+            if (victoryTargets.Count != 1)
+                throw new InvalidOperationException("지정 보스 목표에는 표식이 붙은 초기 적 배치가 정확히 하나 필요합니다.");
+            return BattleObjective.DesignatedBoss(victoryTargets[0]);
         }
 
         private static CellCoord[] Place(TileFootprint footprint, CellCoord anchor, Rotation4 rotation,
@@ -170,9 +260,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 cells[i] = cell;
             }
 
-            if (requireDeploymentZone && new DeploymentZonePolicy(stage.PlayerDeploymentDepth, stage.EnemyDeploymentDepth,
-                stage.MapHeight).CanDeploy(owner, cells) == false)
-                throw new InvalidOperationException("초기 배치가 소유자의 배치 구역을 벗어났습니다.");
+            // 적은 아군 배치 구역 밖이어야 한다. 판정 원본은 DeploymentZonePolicy다.
+            if (requireDeploymentZone && new DeploymentZonePolicy(stage.PlayerZone).CanDeploy(owner, cells) == false)
+                throw new InvalidOperationException("초기 배치가 아군 배치 구역 규칙에 맞지 않습니다.");
 
             return cells;
         }

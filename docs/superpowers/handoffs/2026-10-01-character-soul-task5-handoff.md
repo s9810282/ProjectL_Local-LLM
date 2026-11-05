@@ -2,7 +2,7 @@
 
 - 작성일: 2026-10-01
 - 기준: `feature/Cheon/refactor/core-system`, 작업 시작 `4c376244` 이후 미커밋 변경
-- 범위: [이전 계획 Task 5](../plans/2026-09-29-character-buffer-effect-migration-plan.md). Task 6·7, View Plan·Job 구현은 포함하지 않는다.
+- 범위: 이전 계획 Task 5 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`). Task 6·7, View Plan·Job 구현은 포함하지 않는다.
 - 참고: [Core의 View 답변](2026-09-30-combat-core-response-to-view.md), Task 4A View 답장 `2026-09-30-combat-result-task4a-view-reply.md`.
 
 ## 1. 제공한 경로

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02e0a5c4e7e46deb658edd654bd5a65, type: 3}
+  m_Name: HaboobVisual_Default
+  m_EditorClassIdentifier:
+  cloudEffect: 16
+  cloudPositionOffset: {x: 0, y: 0, z: 0}
+  cloudRotationOffset: {x: 0, y: 0, z: 0}
+  relocationSeconds: 1
+  relocationSoundPreset: -1
+  displayName: "먼지구름"
+  description: "공격자와 지정한 칸이 모두 구름 안이거나 모두 밖이어야 칸을 지정해 공격할 수 있습니다."

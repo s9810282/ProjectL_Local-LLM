@@ -21,10 +21,10 @@ namespace ProjectL.Tests.Core
         private static readonly IMovementTileRule[] Rules = Array.Empty<IMovementTileRule>();
         private static readonly CellCoord Center = new CellCoord(4, 3);
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
-        public void InvalidSingle_DoesNotSettlePendingMovementOrConsumeDiscount(CategoryKey category)
+        public void InvalidSingle_PreservesEligibilityAndDisabledDiscountState(CategoryKey category)
         {
             foreach (string scenario in new[] { "empty", "friendly", "dead", "empty-splash", "friendly-splash" })
             {
@@ -36,12 +36,12 @@ namespace ProjectL.Tests.Core
                     method: Single(TargetingSplash.Radial));
                 AssertRejected(input, scenario.StartsWith("friendly")
                     ? AttackFailureReason.NonHostile : AttackFailureReason.InvalidPrimaryTarget, scenario);
-                Assert.That(input.Characters[0].PendingMoveActionCost, Is.EqualTo(1), scenario);
-                Assert.That(((MoveAttackDiscountTraitStatusSnapshot)input.Characters[0].Stats.TraitStatuses.Span[0]).DiscountArmed, Is.True);
+                Assert.That(input.Characters[0].ActionUse, Is.EqualTo(UnitActionUse.Available), scenario);
+                Assert.That(((AccelerationTraitStatusSnapshot)input.Characters[0].Stats.TraitStatuses.Span[0]).HeldAttackBonus, Is.EqualTo(1));
             }
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         [TestCase(CategoryKey.Cannon)]
@@ -53,12 +53,10 @@ namespace ProjectL.Tests.Core
                     targets: new[] { Target(2, Center, owner == Owner.Player ? Owner.Enemy : Owner.Player) });
                 var result = AssertAccepted(input);
                 Assert.That(result.Attack.Value.Hits.ToArray().Single().TargetId, Is.EqualTo(new EntityId(2)));
-                Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
-                Assert.That(result.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final.Stats.CurrentActionCost, Is.EqualTo(3));
             }
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         [TestCase(CategoryKey.Cannon)]
@@ -72,7 +70,7 @@ namespace ProjectL.Tests.Core
             }
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         public void AlliedStructure_IsNotAnEligiblePrimary(CategoryKey category)
@@ -80,12 +78,12 @@ namespace ProjectL.Tests.Core
 
         [TestCase(false)]
         [TestCase(true)]
-        public void Cannon_EmptyOrFriendlyPrimary_PaysOnce(bool friendly)
+        public void Cannon_EmptyOrFriendlyPrimary_ConsumesAttack(bool friendly)
         {
             var input = Input(CategoryKey.Cannon, targets: friendly ? new[] { Target(2, Center, Owner.Player) } : null);
             var result = AssertAccepted(input);
             Assert.That(result.Attack.Value.Hits.Length, Is.EqualTo(friendly ? 1 : 0));
-            Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
+            Assert.That(result.ActionUseSettlement.FinalActionUse, Is.EqualTo(UnitActionUse.Attacked));
             if (friendly)
             {
                 Assert.That(result.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(20));
@@ -126,9 +124,9 @@ namespace ProjectL.Tests.Core
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, choice, TargetingSplash.None, 0);
             var aim = choice == TargetingChoiceMode.Direction ? AttackAim.ForDirection(AttackDirection.Right) : AttackAim.ForAll();
             var ally = Target(2, new CellCoord(3, 3), Owner.Player);
-            var input = Input(CategoryKey.Base, method: method, aim: aim, targets: new[] { ally });
+            var input = Input(CategoryKey.Main, method: method, aim: aim, targets: new[] { ally });
             AssertRejected(input, choice == TargetingChoiceMode.Direction ? AttackFailureReason.NoEligibleTargets : AttackFailureReason.UnresolvedEmptyAll);
-            input = Input(CategoryKey.Base, method: method, aim: aim, targets: new[] { ally, Target(3, Center) });
+            input = Input(CategoryKey.Main, method: method, aim: aim, targets: new[] { ally, Target(3, Center) });
             Assert.That(AssertAccepted(input).Attack.Value.Hits.ToArray().Select(h => h.TargetId),
                 Is.EqualTo(new[] { new EntityId(3) }));
         }
@@ -136,33 +134,31 @@ namespace ProjectL.Tests.Core
         [Test]
         public void NonCannon_SplashFiltersAlliesAndSelf_WithHostilePrimary()
         {
-            var input = Input(CategoryKey.Base, method: Single(TargetingSplash.Radial), aim: AttackAim.ForCell(new CellCoord(2, 3)),
+            var input = Input(CategoryKey.Main, method: Single(TargetingSplash.Radial), aim: AttackAim.ForCell(new CellCoord(2, 3)),
                 targets: new[] { Target(2, new CellCoord(2, 3)), Target(3, new CellCoord(2, 4), Owner.Player) });
             Assert.That(AssertAccepted(input).Attack.Value.Hits.ToArray().Select(h => h.TargetId), Is.EqualTo(new[] { new EntityId(2) }));
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Cannon)]
-        public void RangeKeepsGeometryWhenUnaffordable_AndZeroDamageIsStillLegal(CategoryKey category)
+        public void RangeKeepsGeometryWithoutBudgetAdmission_AndZeroDamageIsLegal(CategoryKey category)
         {
             var input = Input(category, targets: new[] { Target(2, Center) }, attack: 0);
             Assert.That(AssertAccepted(input).Attack.Value.Hits.Span[0].DamageDealt, Is.Zero);
             var range = CombatCommandCalculator.GetAttackRange(input);
             var chars = input.Characters.ToArray();
-            chars[0] = CombatCommandTestData.With(chars[0], ap: 0);
-            var poor = CombatCommandTestData.With(input, chars);
+            var poor = CombatCommandTestData.With(input, chars, state: input.State.With());
             var poorRange = CombatCommandCalculator.GetAttackRange(poor);
-            Assert.That(poorRange.CanAffordAttack, Is.False);
             Assert.That(poorRange.RangeCells.ToArray(), Is.EqualTo(range.RangeCells.ToArray()));
             Assert.That(poorRange.AttackAims.ToArray(), Is.EqualTo(range.AttackAims.ToArray()));
-            Assert.That(CombatCommandCalculator.Preview(poor, Rules).FailureReason, Is.EqualTo(AttackFailureReason.ActionCostInsufficient));
+            Assert.That(CombatCommandCalculator.Preview(poor, Rules).CanAttack, Is.True);
         }
 
         [Test]
         public void IndirectTargetOutsideRange_RemainsPreviewOnly()
         {
             var primary = new CellCoord(5, 3);
-            var input = Input(CategoryKey.Base, method: Single(TargetingSplash.Radial), aim: AttackAim.ForCell(primary),
+            var input = Input(CategoryKey.Main, method: Single(TargetingSplash.Radial), aim: AttackAim.ForCell(primary),
                 targets: new[] { Target(2, primary), Target(3, new CellCoord(6, 3)) });
             var range = CombatCommandCalculator.GetAttackRange(input);
             Assert.That(range.InRangeTargetIds.ToArray(), Is.EqualTo(new[] { new EntityId(2) }));
@@ -172,14 +168,14 @@ namespace ProjectL.Tests.Core
         [Test]
         public void NonCannonPierce_DoesNotInheritCannonNearExclusion()
         {
-            var input = Input(CategoryKey.Base, pierce: true, targets: new[] { Target(2, new CellCoord(2, 3)) });
+            var input = Input(CategoryKey.Main, pierce: true, aim: AttackAim.ForCell(new CellCoord(2, 3)), targets: new[] { Target(2, new CellCoord(2, 3)) });
             Assert.That(Pierce(input, 1).Select(h => h.Id), Is.EqualTo(new[] { new EntityId(2) }));
         }
 
         [Test]
         public void FilteredCharacter_DoesNotConsumePierceEncounter()
         {
-            var input = Input(CategoryKey.Base, pierce: true, targets: new[] {
+            var input = Input(CategoryKey.Main, pierce: true, targets: new[] {
                 Target(2, new CellCoord(3, 3), Owner.Player), Target(3, Center) });
             var hits = Pierce(input, 1);
             Assert.That(hits.Select(h => h.Id), Is.EqualTo(new[] { new EntityId(3) }));
@@ -189,13 +185,13 @@ namespace ProjectL.Tests.Core
         [Test]
         public void NeutralStructure_RequiresExplicitObstacleEligibilityForNonCannon()
         {
-            var actor = Input(CategoryKey.Base).Characters[0];
+            var actor = Input(CategoryKey.Main).Characters[0];
             var target = Structure(20, Center, Owner.Neutral, obstacle: true);
             Assert.That(AttackTargetEligibility.CanTargetStructure(actor, target, false, default), Is.False);
             Assert.That(AttackTargetEligibility.CanTargetStructure(actor, target, true, default), Is.True);
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         public void EnemyActor_AlsoRejectsEmptyAndOwnSideTargets(CategoryKey category)
@@ -217,7 +213,7 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void CannonPierce_MultiCellStructureStopsEachRayAndAggregatesDamage()
+        public void CannonPierce_MultiCellStructureStopsSingleShot()
         {
             var cells = Enumerable.Range(1, 5).Select(y => new CellCoord(3, y)).ToArray();
             var structure = new StructureCombatFacts(new EntityId(20),
@@ -226,24 +222,24 @@ namespace ProjectL.Tests.Core
                 new HealthStateSnapshot(100, 100), cells[0], Rotation4.R0, cells, Owner.Enemy);
             var input = Input(CategoryKey.Cannon, pierce: true, structures: new[] { structure }, targets: new[] { Target(2, Center) });
             var hits = Pierce(input, 4);
-            Assert.That(hits.Select(h => h.Id.Value), Is.EqualTo(new[] { 20, 20, 20 }));
-            Assert.That(hits.Select(h => h.Ray), Is.EqualTo(new[] { 0, 1, 2 }));
+            Assert.That(hits.Select(h => h.Id.Value), Is.EqualTo(new[] { 20 }));
+            Assert.That(hits.Select(h => h.Ray), Is.EqualTo(new[] { 0 }));
             var attack = AssertAccepted(input).Attack.Value;
             Assert.That(attack.Hits.Length, Is.EqualTo(1));
-            Assert.That(attack.Hits.Span[0].DamageDealt, Is.EqualTo(60));
+            Assert.That(attack.Hits.Span[0].DamageDealt, Is.EqualTo(20));
         }
 
         [Test]
         public void ResolvedSelection_IsImmutableAndFailuresReturnNoSelection()
         {
-            var input = Input(CategoryKey.Base, targets: new[] { Target(2, Center) });
+            var input = Input(CategoryKey.Main, targets: new[] { Target(2, Center) });
             var evaluation = CombatAttackQueries.Selection(input, input.Characters[0], input.Profiles[0]);
             Assert.That(evaluation.FailureReason, Is.EqualTo(AttackFailureReason.None));
             var original = evaluation.Selection;
             var targets = original.Targets.ToArray();
             var characters = original.EligibleCharacters.ToArray();
             var structures = original.EligibleStructures.ToArray();
-            var copy = new ResolvedAttackSelection(original.Cells, original.ReachableCells, targets, characters, structures, original.Policy, original.PierceTrace);
+            var copy = new ResolvedAttackSelection(original.Cells, original.ReachableCells, targets, characters, structures, original.Policy, original.SelectedTargetId);
             targets[0] = default;
             characters[0] = null;
             Assert.That(copy.Targets[0].Key, Is.EqualTo(new EntityId(2)));
@@ -259,15 +255,23 @@ namespace ProjectL.Tests.Core
         {
             var evaluation = CombatAttackQueries.Selection(input, input.Characters[0], input.Profiles[0]);
             Assert.That(evaluation.FailureReason, Is.EqualTo(AttackFailureReason.None));
-            return PierceTargetCollector.ApplyBudget(evaluation.Selection.PierceTrace, budget);
+            var actor = input.Characters[0];
+            var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight, input.State.Environment,
+                input.EnvironmentBindings, input.State.WallBlocking);
+            var delivery = CombatAttackDelivery.Resolve(input, actor, input.Profiles[0], evaluation.Selection,
+                CombatAttackCalculator.CommonAttackDamage(input, actor, input.Profiles[0]), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings));
+            return delivery.PiercingShot.Encounters.ToArray().Take(budget).Select(h => (h.TargetId, h.EncounterIndex, 0)).ToArray();
         }
 
         [Test]
         public void FriendlyBlocker_StopsPierceWithoutTakingDamage()
         {
-            var input = Input(CategoryKey.Base, pierce: true,
+            var input = Input(CategoryKey.Main, pierce: true,
                 structures: new[] { Structure(20, new CellCoord(3, 3), Owner.Player) }, targets: new[] { Target(2, Center) });
-            AssertRejected(input, AttackFailureReason.NoEligibleTargets);
+            var result = AssertAccepted(input).Attack.Value;
+            Assert.That(result.Hits.Length, Is.Zero);
+            Assert.That(result.PrimaryTargetId, Is.EqualTo(new EntityId(2)));
+            Assert.That(result.PiercingShot.StopReason, Is.EqualTo(PiercingShotStopReason.Structure));
         }
 
         [Test]
@@ -329,24 +333,21 @@ namespace ProjectL.Tests.Core
             Owner owner = Owner.Player, int attack = 20, bool pierce = false, bool obstacle = false)
         {
             method ??= pierce
-                ? new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0)
+                ? new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0)
                 : Single();
-            aim ??= pierce ? AttackAim.ForDirection(AttackDirection.Right) : AttackAim.ForCell(Center);
+            aim ??= AttackAim.ForCell(Center);
             var source = CombatCommandTestData.Input(method, aim, empty: true);
-            var snapshot = category == CategoryKey.Rider ? CategorySnapshot.CreateRider(false)
-                : category == CategoryKey.Heavy ? CategorySnapshot.CreateHeavy(Rotation4.R90, false, 50)
-                : CategorySnapshot.CreateStateless(category);
+            var snapshot = CategorySnapshot.CreateStateless(category);
             TraitSpec[] traits = pierce ? new TraitSpec[] { new PiercingFalloffTraitSpec(30, 99) }
-                : pending ? new TraitSpec[] { new MoveAttackDiscountTraitSpec(1, 1) } : Array.Empty<TraitSpec>();
+                : pending ? new TraitSpec[] { new AccelerationTraitSpec(1) } : Array.Empty<TraitSpec>();
             TraitStatusSnapshot[] statuses = pierce ? new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) }
-                : pending ? new TraitStatusSnapshot[] { new MoveAttackDiscountTraitStatusSnapshot(true, true) } : Array.Empty<TraitStatusSnapshot>();
+                : pending ? new TraitStatusSnapshot[] { new AccelerationTraitStatusSnapshot(1) } : Array.Empty<TraitStatusSnapshot>();
             var actor = CombatCommandTestData.With(CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo,
-                new CellCoord(1, 3), owner, attack, pending: pending), category: snapshot, traits: statuses);
+                new CellCoord(1, 3), owner, attack), category: snapshot, traits: statuses);
             var characters = new[] { actor, source.Characters[1] }.Concat(targets ?? Array.Empty<CharacterCombatFacts>()).ToArray();
             var profiles = source.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, attack, category, traits), method);
-            var state = new CombatCommandState(8, 8, owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,
-                actor.EntityId, false, structures ?? Array.Empty<StructureCombatFacts>(), source.State.ThornFields, source.State.Timeline);
+            var state = new CombatCommandState(8,8,owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,false,structures ?? Array.Empty<StructureCombatFacts>(),source.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
             var obstacles = obstacle ? structures.Select(s => new ObstacleContentProfile(s.EntityId, ObstacleContentKind.PowderBarrel, 0)).ToArray()
                 : Array.Empty<ObstacleContentProfile>();
             return new CombatCommandInput(owner == Owner.Player ? 1 : 0, CombatCommandKind.Attack, actor.EntityId, aim.Value, state, characters, profiles,
@@ -355,7 +356,8 @@ namespace ProjectL.Tests.Core
                 processingKind: owner == Owner.Player ? CombatProcessingKind.Command : CombatProcessingKind.Advance,
                 battleInstanceId: obstacle ? 1 : 0,
                 environmentBindings: new EnvironmentSemanticBindings(Array.Empty<long>(), Array.Empty<long>(), obstacles.Select(o => o.EntityId).ToArray()),
-                obstacleContents: obstacles);
+                obstacleContents: obstacles,
+                expectedBattleInstanceId: obstacle ? 1 : 0, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
         }
     }
 }

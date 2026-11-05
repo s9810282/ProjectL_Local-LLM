@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,8 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.StageMap;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.StageSystem;
-using ProjectL.Systems.ServiceKeys;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
 {
@@ -27,6 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         RunCompletionReceipt Completion { get; }
         ChapterContinuationResult CompleteChapter(int chapterKey, StageNodeId bossNodeId);
         ChapterProgressionResult EnterChapter(int chapterKey);
+        /// <summary>
+        /// pin이 있으면 새로 만드는 그래프의 노드 하나에 스테이지를 놓는다. 그래프가 이미 있거나 이어가기 갈래면 예외다.
+        /// pin이 null이면 <see cref="EnterChapter(int)"/>와 같다.
+        /// </summary>
+        ChapterProgressionResult EnterChapter(int chapterKey, ChapterStagePin pin);
         /// <summary>진입 규칙과 데이터를 확인한다. 현재 위치는 기록하지 않는다.</summary>
         ChapterProgressionResult PrepareStageEntry(int chapterKey, StageNodeId targetNodeId);
         /// <summary>실제 진입 준비를 완료한 진행 Job이 호출하여 현재 위치를 기록한다.</summary>
@@ -42,6 +49,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         private readonly IStageGeneratorSystem _generator;
         private readonly StageServiceManager _stageService;
         private readonly IChapterContinuationSource _continuationSource;
+        private readonly ITraitGrowthAvailabilityRead _traitGrowth;
         private ICurrentProgressBufferReadSink _currentRead;
         private ICurrentProgressBufferWriteSink _currentWrite;
         private IStageProgressBufferReadSink _stageRead;
@@ -55,11 +63,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
 
         internal ChapterProgressionCoordinator(
             IStageGeneratorSystem generator,
-            StageServiceManager stageService, IChapterContinuationSource continuationSource = null)
+            StageServiceManager stageService, ITraitGrowthAvailabilityRead traitGrowth,
+            IChapterContinuationSource continuationSource = null)
         {
             _generator = generator ?? throw new ArgumentNullException(nameof(generator));
             _stageService = stageService ?? throw new ArgumentNullException(nameof(stageService));
-            _continuationSource = continuationSource ?? new UnavailableChapterContinuationSource();
+            _traitGrowth = traitGrowth ?? throw new ArgumentNullException(nameof(traitGrowth));
+            // 기본 원본은 챕터(맵) 데이터의 다음 챕터 키다. 개발·시험은 원본을 직접 넘긴다.
+            _continuationSource = continuationSource ?? new StageMapChapterContinuationSource(stageService);
         }
 
         public void PostBindService(ISystemServiceStoreReader resolver)
@@ -250,13 +261,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             return nodes.All(n => n.Depth == 0 || incoming.Contains(n.NodeId));
         }
 
-        public ChapterProgressionResult EnterChapter(int chapterKey)
+        public ChapterProgressionResult EnterChapter(int chapterKey) => EnterChapter(chapterKey, null);
+
+        public ChapterProgressionResult EnterChapter(int chapterKey, ChapterStagePin pin)
         {
             if (chapterKey < 1) throw new ArgumentOutOfRangeException(nameof(chapterKey));
             EnsureBound();
             if (Outcome != RunOutcome.InProgress) return RunEnded();
             if (_currentRead.HasMap && _currentRead.CurrentMapKey != chapterKey)
             {
+                if (pin != null)
+                    throw new InvalidOperationException($"다음 챕터 이어가기에는 스테이지 고정을 쓸 수 없습니다. 챕터 {chapterKey}");
                 if (!_currentRead.HasSelection) return ChapterProgressionResult.Reject(ChapterProgressionFailureReason.ContinuationRejected);
                 var continuation = ContinueChapter(_currentRead.CurrentMapKey, new StageNodeId(_currentRead.CurrentStage.NodeId), chapterKey);
                 if (continuation.Accepted) return ChapterProgressionResult.EnterChapter(chapterKey);
@@ -277,11 +292,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             if (decision.FailureReason == ChapterProgressionFailureReason.StageNotFound)
             {
                 // 그래프는 만들기만 하고, 진입이 승인될 때 맵 선택과 같은 제안으로 등록한다.
-                generated = _generator.PrepareGraph(chapterKey);
+                generated = _generator.PrepareGraph(chapterKey, pin);
                 decision = ChapterProgressionCommands.EnterChapter(
                     chapterKey, currentChapterKey, currentChapterClear,
                     requestedMap.IsClear, generated.Count > 0);
             }
+            if (pin != null && generated.Count == 0)
+                throw new InvalidOperationException($"스테이지 고정은 새로 만드는 그래프에만 쓸 수 있습니다. 챕터 {chapterKey}");
 
             if (Outcome != RunOutcome.InProgress) return RunEnded();
             if (decision.Accepted)
@@ -294,8 +311,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         {
             ChapterProgressionResult decision = EvaluateStageEntry(chapterKey, targetNodeId);
             if (decision.Accepted)
-                _stageService.ValidateEntry(decision.StageKey.Value);
+            {
+                var stage = _stageService.ValidateEntry(decision.StageKey.Value);
+                if (stage.StageData is ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Enhancement.EnhancementStageDetail enhancement &&
+                    enhancement.TrainingPrices == null)
+                    decision = ChapterProgressionResult.Reject(ChapterProgressionFailureReason.EnhancementShopUnavailable);
+            }
             if (Outcome != RunOutcome.InProgress) return RunEnded();
+            if (decision.Accepted)
+            {
+                var fresh = EvaluateStageEntry(chapterKey, targetNodeId);
+                if (!fresh.Accepted) return fresh;
+                if (fresh.StageKey != decision.StageKey)
+                    return ChapterProgressionResult.Reject(ChapterProgressionFailureReason.StageMismatch);
+            }
             return decision;
         }
 
@@ -316,6 +345,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             if (targetNodeId.IsEmpty) throw new ArgumentException("진입할 노드 ID가 필요합니다.", nameof(targetNodeId));
             EnsureBound();
             if (Outcome != RunOutcome.InProgress) return RunEnded();
+            var growth = _traitGrowth.ReadTraitGrowthProgress();
+            if (Outcome != RunOutcome.InProgress) return RunEnded();
+            if (growth.Status == TraitGrowthProgressStatus.ChoiceRequired || growth.Status == TraitGrowthProgressStatus.AwaitingAcknowledgement)
+                return ChapterProgressionResult.Reject(ChapterProgressionFailureReason.PendingTraitGrowth);
             bool isChapterClear = _mapRead.GetMap(chapterKey).IsClear;
             ChapterNodeProgress[] nodes = SnapshotNodes(chapterKey);
             StageNodeId fromNodeId = _currentRead.HasSelection
@@ -337,7 +370,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             return decision;
         }
 
-        /// <summary>외부 조회가 끝난 뒤 DB를 다시 호출하지 않고 최신 Buffer의 진입 규칙을 확인한다.</summary>
+        /// <summary>외부 정의 조회가 끝난 뒤 성장 진행을 포함한 최신 진입 규칙을 다시 확인한다.</summary>
         internal ChapterProgressionResult RevalidateStageEntry(int chapterKey, StageNodeId targetNodeId)
             => EvaluateStageEntry(chapterKey, targetNodeId);
 
@@ -368,6 +401,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         internal ChapterProgressionResult CompleteRecoveryStage(
             int chapterKey, StageNodeId expectedNodeId, StageKey expectedStageKey)
         {
+            var decision = PrepareRecoveryCompletion(chapterKey, expectedNodeId, expectedStageKey);
+            if (decision.Accepted) _buffers.ChapterProgressWriteSink.PublishStageClear(chapterKey, expectedNodeId, expectedStageKey);
+            return decision;
+        }
+
+        internal ChapterProgressionResult PrepareRecoveryCompletion(
+            int chapterKey, StageNodeId expectedNodeId, StageKey expectedStageKey)
+        {
             if (chapterKey < 1) throw new ArgumentOutOfRangeException(nameof(chapterKey));
             if (expectedNodeId.IsEmpty || expectedStageKey.IsEmpty)
                 throw new ArgumentException("완료할 회복 노드와 스테이지 키가 필요합니다.");
@@ -384,7 +425,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             ChapterProgressionResult decision = ChapterProgressionCommands.CompleteRecoveryStage(
                 chapterKey, _currentRead.CurrentMapKey, chapterKey, true,
                 expectedNodeId, expectedStageKey, _mapRead.GetMap(chapterKey).IsClear, SnapshotNodes(chapterKey));
-            if (decision.Accepted) _buffers.ChapterProgressWriteSink.PublishStageClear(chapterKey, expectedNodeId, expectedStageKey);
             return decision;
         }
 

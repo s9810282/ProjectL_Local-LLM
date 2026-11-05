@@ -1,6 +1,6 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
-using ProjectL.Systems.RuntimeSystem.InGameSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Jobs
 {
@@ -10,14 +10,22 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Jobs
     /// </summary>
     internal struct CombatCommandJob : IJobService
     {
-        private readonly IInGameSystemGroupService _service;
+        private readonly ICombatCommandService _commands;
+        private readonly ICombatProgressReader _progress;
+        private readonly int _expectedNumber;
 
         public int Priority { get; }
         public bool IsCompleted { get; private set; }
 
-        internal CombatCommandJob(IInGameSystemGroupService service, int priority)
+        /// <summary>명령 N을 처리하고 같은 실행 안에서 처리 번호가 N 이상이 됐는지 확인합니다(재구성 설계 J3, K4).</summary>
+        internal CombatCommandJob(ICombatCommandService commands, int priority, ICombatProgressReader progress,
+            int expectedNumber)
         {
-            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _commands = commands ?? throw new ArgumentNullException(nameof(commands));
+            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            if (expectedNumber < 1)
+                throw new ArgumentOutOfRangeException(nameof(expectedNumber));
+            _expectedNumber = expectedNumber;
             Priority = priority;
             IsCompleted = false;
         }
@@ -27,11 +35,12 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Jobs
             if (IsCompleted)
                 return;
 
-            if (_service == null)
-                throw new InvalidOperationException("CombatCommandJob requires an in-game service.");
-
-            // false도 정상 반환이다. 실제 처리 기록의 확인은 Flow가 맡는다.
-            _service.CoreGroup.Combat.ProcessNextCommand();
+            // false도 정상 반환이다(K14). 처리했는지는 반환값이 아니라 처리 번호로 본다.
+            _commands.ProcessNextCommand();
+            int handled = _progress.Read().HandledCommandNumber;
+            if (handled < _expectedNumber)
+                throw new InvalidOperationException(
+                    $"[CombatCommandJob] 명령 {_expectedNumber}의 처리가 기록되지 않았습니다(처리 번호 {handled}).");
             IsCompleted = true;
         }
     }

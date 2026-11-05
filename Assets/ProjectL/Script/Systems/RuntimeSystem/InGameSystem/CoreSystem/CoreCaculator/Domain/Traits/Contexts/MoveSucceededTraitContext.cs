@@ -30,17 +30,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// </summary>
         public bool AnchorChanged { get; }
 
-        /// <summary>
-        /// 성공한 이동을 확정하면서 실제로 소비한 행동 비용입니다.
-        /// </summary>
-        public int ActionCostSpent { get; }
 
         public MoveSucceededTraitContext(
-            TraitDefinition traitDefinition,
-            TraitRuntimeState traitRuntimeState,
-            int moveDistance,
-            bool anchorChanged,
-            int actionCostSpent)
+            TraitDefinition traitDefinition,            TraitRuntimeState traitRuntimeState,            int moveDistance,            bool anchorChanged)
         {
             if (traitDefinition == null)
                 throw new ArgumentNullException(nameof(traitDefinition));
@@ -50,14 +42,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 throw new ArgumentException("Trait definition and runtime state keys must match.", nameof(traitRuntimeState));
             if (moveDistance < 0)
                 throw new ArgumentOutOfRangeException(nameof(moveDistance));
-            if (actionCostSpent < 0)
-                throw new ArgumentOutOfRangeException(nameof(actionCostSpent));
 
             TraitDefinition = traitDefinition;
             TraitRuntimeState = traitRuntimeState.Clone();
             MoveDistance = moveDistance;
             AnchorChanged = anchorChanged;
-            ActionCostSpent = actionCostSpent;
+
         }
     }
 }

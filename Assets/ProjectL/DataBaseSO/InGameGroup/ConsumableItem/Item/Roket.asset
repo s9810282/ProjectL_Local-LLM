@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521086def3fd408b9e2d78dff44ea5de, type: 3}
+  m_Name: Roket
+  m_EditorClassIdentifier: 
+  key: 2
+  costGold: 150
+  displayName: "\uB85C\uCF13"
+  description: "\uC801\uC5D0\uAC8C \uCD5C\uB300 \uCCB4\uB825\uC758 20% \uC774\uC0C1\uC758
+    \uD53C\uD574\uB97C \uBC1B\uC558\uC744 \uB54C, \uBC1B\uB294 \uD53C\uD574\uB97C
+    50% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4."
+  effect:
+    rid: 7000000000000000001
+  references:
+    version: 2
+    RefIds:
+    - rid: 7000000000000000001
+      type: {class: RoketItemAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Item.Authoring, asm: ProjectL.Systems}
+      data:
+        triggerDamagePercent: 20
+        reductionPercent: 50

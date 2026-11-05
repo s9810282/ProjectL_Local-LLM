@@ -2,8 +2,9 @@ using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using UnityEngine;
 
-namespace ProjectL.Systems
+namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 {
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "DeckCharacterImagesSO")]
     [CreateAssetMenu(fileName = "DeckCharacterImages", menuName = "ProjectL/UI/Deck Character Images")]
     public sealed class DeckCharacterImagesSO : ScriptableObject
     {

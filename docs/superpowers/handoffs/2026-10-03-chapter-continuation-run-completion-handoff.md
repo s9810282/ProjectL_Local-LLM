@@ -2,7 +2,7 @@
 
 Date: 2026-10-04. P1–P3 implementation, Unity verification and independent review are complete. Changes remain uncommitted. No push.
 
-References: [design](../specs/2026-10-03-chapter-continuation-run-completion-design.md), [implementation plan](../plans/2026-10-03-chapter-continuation-run-completion-implementation-plan.md), [P1 evidence](2026-10-03-chapter-continuation-run-completion-p1-verification.md), [P2 evidence](2026-10-03-chapter-continuation-run-completion-p2-verification.md), [temporary runtime](2026-10-03-temporary-core-runtime.md). P1/P2 documents retain their historical phase status and results; this document records current delivery.
+References: design (Git history: `2026-10-03-chapter-continuation-run-completion-design.md`), implementation plan (Git history: `2026-10-03-chapter-continuation-run-completion-implementation-plan.md`), [P1 evidence](2026-10-03-chapter-continuation-run-completion-p1-verification.md), [P2 evidence](2026-10-03-chapter-continuation-run-completion-p2-verification.md), [temporary runtime](2026-10-03-temporary-core-runtime.md). P1/P2 documents retain their historical phase status and results; this document records current delivery.
 
 ## Available development path
 

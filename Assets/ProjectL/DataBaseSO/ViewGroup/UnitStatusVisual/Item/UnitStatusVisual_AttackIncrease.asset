@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c948482b21d738a8f39179942a0c447, type: 3}
+  m_Name: UnitStatusVisual_AttackIncrease
+  m_EditorClassIdentifier: 
+  unitStatusVisualData:
+    effectKey: 1
+    displayName: "공격력 증가"
+    icon: {fileID: 21300000, guid: 641c915ace38efd49b78016d787ab82b, type: 3}
+    descriptionTemplate: "총 +{0} (부여 +{1}, 다음 공격 보유 +{2})"

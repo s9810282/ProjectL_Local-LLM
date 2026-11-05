@@ -13,11 +13,31 @@ MonoBehaviour:
   m_Name: StageMap_Chapter1
   m_EditorClassIdentifier: 
   mapKey: 1
-  depthCount: 7
+  depthCount: 6
   widthMax: 3
+  widthMin: 2
+  singleFirstLayer: 1
+  firstStageKey: 1120
   additionalConnectionChance: 0.25
   connectionAlgorithm: 0
   nearestConnectionWeight: 10
   otherConnectionWeight: 1
   seed: 192
   randomizeSeedEachRun: 1
+  nextChapterKey: 2
+  combatDistribution:
+    weight: 80
+    minimumCount: 1
+    minDepth: 1
+  shopDistribution:
+    weight: 9
+    minimumCount: 1
+    minDepth: 2
+  recoveryDistribution:
+    weight: 7
+    minimumCount: 1
+    minDepth: 2
+  enhancementDistribution:
+    weight: 7
+    minimumCount: 1
+    minDepth: 2

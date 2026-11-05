@@ -138,7 +138,7 @@ View 입력 ─────────────► CombatViewBuffer ─ReadS
 
 **상태:**
 - 이 Core를 Systems 쪽에서 부르는 코드는 없다. 천명님 계획 §1에서도 확인됐다.
-- 천명님이 "상태는 Buffer, Core는 명령마다 계산"으로 옮기는 중이다([캐릭터 Buffer 이전 계획](../plans/2026-09-29-character-buffer-effect-migration-plan.md)).
+- 천명님이 "상태는 Buffer, Core는 명령마다 계산"으로 옮기는 중이다(캐릭터 Buffer 이전 계획 (Git history: `2026-09-29-character-buffer-effect-migration-plan.md`)).
   - Task 0~2 완료: 캐릭터 보유 기록, `CharacterBuffer`, `CombatStateBuffer` 골격
   - Task 3~8 남음: 드로우·상점, 전투 준비, 영혼, 효과, 전투 상태 기록, View 연결
 

@@ -36,7 +36,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 input.Origin,
                 _definition.ThornDamage,
                 _definition.LifetimeUnitTurns,
-                ThornFieldTraitRule.CalculateApplicationCells(context.SelectedCenter));
+                ThornFieldTraitRule.CalculateApplicationCells(context.SelectedCenter),
+                _definition.DefenseReductionPercent, _definition.TickPhase);
         }
 
         private static void ValidateBoundInput(in EffectRuleInput input)

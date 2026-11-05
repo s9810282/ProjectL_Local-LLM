@@ -17,13 +17,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public MovementTileFact FinalSource { get; }
         /// <summary>규칙이 판단한 보유 효과 변경이다. 조정자는 콘텐츠 종류를 모른 채 기대값을 확인하고 적용한다.</summary>
         public IReadOnlyList<MovementHeldChange> HeldChanges { get; }
+        public IReadOnlyList<MovementDebuffChange> DebuffChanges { get; }
 
         public MovementStepEffects(IReadOnlyList<MovementHealthRequest> damage = null,
             IReadOnlyList<MovementHealthRequest> healing = null,
             IReadOnlyList<MovementForcedMoveRequest> forcedMovement = null,
             MovementTileFact expectedSource = null, MovementTileFact finalSource = null,
             IReadOnlyList<MovementMethodChange> movementMethods = null,
-            IReadOnlyList<MovementHeldChange> heldChanges = null)
+            IReadOnlyList<MovementHeldChange> heldChanges = null,
+            IReadOnlyList<MovementDebuffChange> debuffChanges = null)
         {
             if ((expectedSource == null) != (finalSource == null))
                 throw new ArgumentException("원본 변경에는 기대값과 최종값이 함께 필요합니다.");
@@ -36,6 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ForcedMovement = Copy(forcedMovement);
             MovementMethods = Copy(movementMethods);
             HeldChanges = Copy(heldChanges);
+            DebuffChanges = Copy(debuffChanges);
             ExpectedSource = expectedSource;
             FinalSource = finalSource;
         }

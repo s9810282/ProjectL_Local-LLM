@@ -18,35 +18,32 @@ namespace ProjectL.Tests.Core
     public sealed class TargetingPreviewParityTests
     {
         [Test]
-        public void DirectionWithZeroDamageVictim_RemainsAdmissibleButAiDoesNotScoreIt()
+        public void DirectionWithZeroDamageVictim_RemainsAdmissibleAndAiSelectsIt()
         {
             var method = new TargetingMethodSpec(TargetingShape.Fan, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
             var input = CombatCommandTestData.Input(method, AttackAim.ForDirection(AttackDirection.Right));
             var chars = input.Characters.ToArray();
             var c = chars[0]; var s = c.Stats;
-            var stats = new UnitStatsSnapshot(s.MoveMethod, s.MoveRange, s.MoveCost, s.AppointRange,
-                0, s.PhysicalDefense, s.MaxActionCost, s.AttackCost, s.RemainingMoveRange, s.CurrentActionCost,
-                s.Priority, s.Delay, s.TraitStatuses.ToArray(), s.Category);
+            var stats = new UnitStatsSnapshot(s.MoveMethod,s.MoveRange,s.AppointRange,                0,s.PhysicalDefense,                s.Priority,s.TraitStatuses.ToArray(),s.Category);
             chars[0] = new CharacterCombatFacts(c.EntityId, c.OwnedId, c.CharacterKey, c.Owner, c.OwnershipRole,
-                c.Area, c.Health, stats, c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells,
-                c.MovementCheckpointAnchor, c.CommittedMoveDistance, c.PendingMoveActionCost);
+                c.Area, c.Health, stats, c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells, c.ActionUse);
             input = CombatCommandTestData.With(input, chars);
             Assert.That(CombatCommandCalculator.GetAttackRange(input).AttackAims.ToArray().Any(a => a.Direction == AttackDirection.Right), Is.True);
             Assert.That(CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>()).CanAttack, Is.True);
             Assert.That(CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>()).Targets.ToArray().All(t => t.ExpectedDamage == 0), Is.True);
             Assert.That(new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi.EnemyAiPolicy(
                 new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat.HostilityPolicy(), System.Array.Empty<IMovementTileRule>())
-                .TrySelectAttackAim(input, CombatCommandCalculator.GetAttackRange(input), out _), Is.False);
+                .TrySelectAttackAim(input, CombatCommandCalculator.GetAttackRange(input), out _), Is.True);
         }
 
         [TestCase(AttackDirection.Up)]
         [TestCase(AttackDirection.Right)]
         [TestCase(AttackDirection.Down)]
         [TestCase(AttackDirection.Left)]
-        public void BallistaPreview_AllCardinalGroupsRetainHalfUpFalloff(AttackDirection direction)
+        public void PiercingPreview_AllCardinalAimsRetainHalfUpFalloff(AttackDirection direction)
         {
-            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Direction, TargetingSplash.None, 0);
-            var input = CombatCommandTestData.Input(method, AttackAim.ForDirection(direction), empty: true);
+            var method = new TargetingMethodSpec(TargetingShape.EightDirectionLine, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+            var input = CombatCommandTestData.Input(method, AttackAim.ForCell(new CellCoord(3, 3)), empty: true);
             var baseActor = CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(3, 3), Owner.Player, 21);
             var actor = CombatCommandTestData.With(baseActor, category: CategorySnapshot.CreateStateless(CategoryKey.Cannon),
                 traits: new TraitStatusSnapshot[] { new PiercingFalloffTraitStatusSnapshot(30) });
@@ -57,13 +54,13 @@ namespace ProjectL.Tests.Core
                 CombatCommandTestData.Character(3, EntityKey.Unit_Demon, new CellCoord(3 + step.X * 3, 3 + step.Y * 3), Owner.Enemy) };
             var profiles = input.Profiles.ToArray(); profiles[0] = new CombatAttackProfile(
                 CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 21, CategoryKey.Cannon, new PiercingFalloffTraitSpec(30, 99)), method);
-            input = CombatCommandTestData.With(input, chars, profiles: profiles);
+            input = CombatAttackQueries.WithAim(CombatCommandTestData.With(input, chars, profiles: profiles), AttackAim.ForCell(chars[2].Anchor.Value));
             var preview = CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(preview.Targets.ToArray().Where(t => t.TargetId != input.Characters[1].EntityId)
                 .Select(t => t.ExpectedDamage), Is.EqualTo(new[] { 21, 15 }));
             Assert.That(preview.Targets.ToArray().Select(t => t.TargetHealthAfter), Is.EqualTo(
                 CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>()).Attack.Value.Hits.ToArray().Select(t => t.TargetHealthAfter)));
-            Assert.That(preview.PrimaryTargetId.IsEmpty, Is.True);
+            Assert.That(preview.PrimaryTargetId, Is.EqualTo(new EntityId(2)));
         }
 
         [TestCase(TargetingChoiceMode.Single)]
@@ -84,8 +81,6 @@ namespace ProjectL.Tests.Core
                 Is.EqualTo(result.Attack.Value.Hits.ToArray().Select(h => (h.TargetId, h.Role, h.TargetHealthAfter))));
             Assert.That(preview.DesignatedCells.ToArray(), Is.EqualTo(result.Attack.Value.DesignatedCells.ToArray()));
             Assert.That(preview.AdditionalCells.ToArray(), Is.EqualTo(result.Attack.Value.AdditionalCells.ToArray()));
-            Assert.That(preview.AttackCost, Is.EqualTo(result.Attack.Value.ActionCostSpent));
-            Assert.That(input.Characters[0].Stats.CurrentActionCost, Is.EqualTo(5));
             Assert.That(input.Characters.All(c => c.Health.CurrentHealth == 100), Is.True);
         }
 
@@ -97,13 +92,12 @@ namespace ProjectL.Tests.Core
             Assert.That(preview.PrimaryCell, Is.EqualTo(new CellCoord(4, 3)));
             Assert.That(preview.PrimaryTargetId.IsEmpty, Is.True);
             Assert.That(preview.Targets.Length, Is.Zero);
-            Assert.That(preview.AttackCost, Is.EqualTo(2));
         }
 
-        [TestCase(CategoryKey.Base)]
+        [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
-        public void EmptySinglePreview_NonCannonRejectsWithoutInventingPrimaryOrSpendingCost(CategoryKey category)
+        public void EmptySinglePreview_NonCannonRejectsWithoutInventingPrimary(CategoryKey category)
         {
             var input = CombatCommandTestData.Input(empty: true, category: category);
             var range = CombatCommandCalculator.GetAttackRange(input);
@@ -115,8 +109,6 @@ namespace ProjectL.Tests.Core
             Assert.That(preview.FailureReason, Is.EqualTo(AttackFailureReason.InvalidPrimaryTarget));
             Assert.That(preview.PrimaryTargetId.IsEmpty, Is.True);
             Assert.That(preview.Targets.Length, Is.Zero);
-            Assert.That(preview.AttackCost, Is.Zero);
-            Assert.That(input.Characters[0].Stats.CurrentActionCost, Is.EqualTo(5));
             Assert.That(input.Characters.All(c => c.Health.CurrentHealth == 100), Is.True);
         }
 
@@ -134,19 +126,17 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Range_WhenUnaffordableRetainsCellsTargetsAndGeometricCandidates()
+        public void Range_RetainsGeometryWithoutFundingAdmission()
         {
             var input = CombatCommandTestData.Input();
             var before = CombatCommandCalculator.GetAttackRange(input);
-            var chars = input.Characters.ToArray(); chars[0] = CombatCommandTestData.With(chars[0], ap: 0);
-            var changed = CombatCommandTestData.With(input, chars);
+            var changed = CombatCommandTestData.With(input, state: input.State.With());
             var after = CombatCommandCalculator.GetAttackRange(changed);
             Assert.That(after.Succeeded, Is.True);
-            Assert.That(after.CanAffordAttack, Is.False);
             Assert.That(after.RangeCells.ToArray(), Is.EqualTo(before.RangeCells.ToArray()));
             Assert.That(after.InRangeTargetIds.ToArray(), Is.EqualTo(before.InRangeTargetIds.ToArray()));
             Assert.That(after.AttackAims.ToArray(), Is.EqualTo(before.AttackAims.ToArray()));
-            Assert.That(CombatCommandCalculator.Preview(changed, System.Array.Empty<IMovementTileRule>()).FailureReason, Is.EqualTo(AttackFailureReason.ActionCostInsufficient));
+            Assert.That(CombatCommandCalculator.Preview(changed, System.Array.Empty<IMovementTileRule>()).CanAttack, Is.True);
         }
 
         [Test]
@@ -185,7 +175,9 @@ namespace ProjectL.Tests.Core
             Assert.That(range.AttackAims.ToArray().Select(a => a.Direction), Is.EqualTo(new[] { AttackDirection.Up, AttackDirection.Right }));
             var diagonal = new CombatCommandInput(input.Number, input.Kind, input.ActorId,
                 AttackAim.ForDirection(AttackDirection.UpRight), input.State, input.Characters, input.Profiles,
-                input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts);
+                input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
+                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence,
+                battleInstanceId: input.BattleInstanceId);
             Assert.That(CombatCommandCalculator.Preview(diagonal, System.Array.Empty<IMovementTileRule>()).CanAttack, Is.False);
         }
 
@@ -195,7 +187,7 @@ namespace ProjectL.Tests.Core
             var input = CombatCommandTestData.Input();
             var actor = CombatCommandTestData.With(input.Characters[0], hp: 1);
             var origin = new CellCoord(1, 2);
-            actor = CombatMovementCalculator.CopyMovement(actor, actor.Stats, origin, 0, 0, 0, 0, origin);
+            actor = actor.WithPlacement(actor.Area, actor.ReserveSlotIndex, origin, actor.Rotation, new[] { origin });
             input = CombatCommandTestData.With(input,
                 characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray());
             var moved = CombatCommandCalculator.Calculate(MovementTestData.Route(input, origin, new CellCoord(1, 3)),
@@ -203,11 +195,13 @@ namespace ProjectL.Tests.Core
             input = CombatCommandComposition.Intent(CombatCommandComposition.Project(moved), CombatCommandKind.Attack, input.Aim);
             input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
                 new ThornFieldCellSnapshot(new CellCoord(1, 3), 5, 5)));
+            // 이동한 유닛도 공격 미리보기를 끝까지 계산한다(설계 2026-10-27 이동 후 공격).
+            // 체력 1인 공격자가 가시밭 위에 서 있어도 이미 정산된 이동 위험을 다시 적용하지 않으므로 공격할 수 있다.
             var preview = CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(preview.CanAttack, Is.True);
+            Assert.That(preview.FailureReason, Is.EqualTo(AttackFailureReason.None));
             Assert.That(input.State.ThornFields.Count, Is.EqualTo(1));
             Assert.That(input.Characters[0].Health.CurrentHealth, Is.EqualTo(1));
-            Assert.That(input.Characters[0].Stats.CurrentActionCost, Is.EqualTo(4));
         }
 
         [TestCase(TargetingShape.RadialSquare)]
@@ -218,12 +212,10 @@ namespace ProjectL.Tests.Core
             var input = shape == TargetingShape.Fan ? CombatCommandEffectTests.ActorEffect(
                 new KnockbackTraitSpec(1), new KnockbackTraitStatusSnapshot(1)) : CombatCommandTestData.Input(empty: true);
             var actor = input.Characters[0]; var s = actor.Stats;
-            var stats = new UnitStatsSnapshot(s.MoveMethod, s.MoveRange, s.MoveCost, 1,
-                s.AttackPower, s.PhysicalDefense, s.MaxActionCost, s.AttackCost, s.RemainingMoveRange,
-                s.CurrentActionCost, s.Priority, s.Delay, s.TraitStatuses.ToArray(), s.Category);
+            var stats = new UnitStatsSnapshot(s.MoveMethod,s.MoveRange,1,                s.AttackPower,s.PhysicalDefense,s.Priority,s.TraitStatuses.ToArray(),s.Category);
             actor = new CharacterCombatFacts(actor.EntityId, actor.OwnedId, actor.CharacterKey, actor.Owner,
                 actor.OwnershipRole, actor.Area, actor.Health, stats, null, actor.Anchor, actor.Rotation,
-                actor.OccupiedCells, actor.Anchor.Value, 0, 0);
+                actor.OccupiedCells, UnitActionUse.Available);
             var profiles = input.Profiles.ToArray(); profiles[0] = new CombatAttackProfile(profiles[0].Definition, method);
             var cell = shape == TargetingShape.Fan ? new CellCoord(2, 3) : new CellCoord(2, 4);
             input = CombatCommandTestData.With(input, new[] { actor, input.Characters[1],
@@ -263,7 +255,6 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Attack.Value.PrimaryTargetId.IsEmpty, Is.True);
             Assert.That(result.Attack.Value.Hits.Span[0].Role, Is.EqualTo(AttackTargetRole.Additional));
             Assert.That(result.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(damage));
-            Assert.That(result.Attack.Value.ActionCostSpent, Is.EqualTo(2));
         }
 
         [Test]
@@ -285,17 +276,15 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void AiUnaffordableAttack_HasGeometricCandidatesButSelectsNoAim()
+        public void AiAttack_HasCandidatesAndNeedsNoFunding()
         {
             var input = CombatCommandTestData.Input();
-            var chars = input.Characters.ToArray(); chars[0] = CombatCommandTestData.With(chars[0], ap: 1);
-            input = CombatCommandTestData.With(input, chars);
+            input = CombatCommandTestData.With(input, state: input.State.With());
             var range = CombatCommandCalculator.GetAttackRange(input);
-            Assert.That(range.CanAffordAttack, Is.False);
             Assert.That(range.AttackAims.Length, Is.GreaterThan(0));
-            Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input, range, out _), Is.False);
-            Assert.That(CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>()).CanAttack, Is.False);
-            Assert.That(CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>()).Accepted, Is.False);
+            Assert.That(new EnemyAiPolicy(new HostilityPolicy(), System.Array.Empty<IMovementTileRule>()).TrySelectAttackAim(input, range, out _), Is.True);
+            Assert.That(CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>()).CanAttack, Is.True);
+            Assert.That(CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>()).Accepted, Is.True);
         }
     }
 }

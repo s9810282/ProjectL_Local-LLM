@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26ea4fd452824565937672a0a82b62a7, type: 3}
+  m_Name: CategoryTraitProgressionTable
+  m_EditorClassIdentifier: 
+  databaseItems:
+  - {fileID: 11400000, guid: 7bb8ec50e9254f8ba49cf1207b2f162b, type: 2}
+  - {fileID: 11400000, guid: 6c6219f7ec754eae83de00cd1d3db183, type: 2}
+  - {fileID: 11400000, guid: a45fb7d388c64a7688041d0d9e874bd9, type: 2}
+  - {fileID: 11400000, guid: 78f793129fba468c856cf63a7b247c63, type: 2}

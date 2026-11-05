@@ -161,7 +161,7 @@ API 파일은 `RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatProcessi
 | F3 기록·보존 | Core §13.3 → 총정리 §5.3 | 전달됨 | 천명님: 3·4단계. CombatStateBuffer 우선 검토, 무제한 목록은 전제하지 않음 | 미정 | 미확인 |
 | 소유 경계 K2·병합 방식 | 총정리 §2·§3 | 전달됨 | 천명님(사용자 승인, 2026-09-30): **확정·승인** | 병합 `02b9529a` | §6.5 |
 | R6·R1~R4·준비 입력 출처 | Core §13.1~13.2 → 총정리 §5.1·5.2·5.8 | 전달됨 | 천명님(2026-09-30): 실제 API는 준비뿐, 나머지 멤버는 후속 계약. 번호는 건너뛸 수 있음. G7 일정 미정 | `CoreSystem/CombatSystem/CombatProcessingService.cs`: `ICombatProcessingService.PrepareBattle()` → `CoreGroup.Combat`. Factory에 서비스·모듈 등록. 운영 입력 G7은 미연결 | 준비 Job 연결·테스트 갱신. 병합 후 Unity 검증은 §6.5 |
-| Stage 골드·Run 재화 분리(요청 3) | [Core 요청 2026-10-05](../handoffs/2026-10-05-combat-core-requests-phase6b.md) §1.1 | 전달됨 | 천명님(2026-10-06): **Stage 골드 분리·초기 지급 구현**, Run 시작 재화는 Excel DB 대기([Core 계획](2026-10-06-stage-gold-run-currency-split-plan.md)) | `CombatStateData.StageGold`(드로우 전용), `ICurrencyBufferReadSink` = Run 재화(상점·회복). `CombatViewSystem.BindServices`에서 재화 인자 제거, HUD는 `StageGold` | Core 병합 `459a69e3`, 사용자 확인: 병합 문제 없음(2026-10-06). 골격 코드 변경 없음 |
+| Stage 골드·Run 재화 분리(요청 3) | [Core 요청 2026-10-05](../handoffs/2026-10-05-combat-core-requests-phase6b.md) §1.1 | 전달됨 | 천명님(2026-10-06): **Stage 골드 분리·초기 지급 구현**, Run 시작 재화는 Excel DB 대기(Core 계획 (Git history: `2026-10-06-stage-gold-run-currency-split-plan.md`)) | `CombatStateData.StageGold`(드로우 전용), `ICurrencyBufferReadSink` = Run 재화(상점·회복). `CombatViewSystem.BindServices`에서 재화 인자 제거, HUD는 `StageGold` | Core 병합 `459a69e3`, 사용자 확인: 병합 문제 없음(2026-10-06). 골격 코드 변경 없음 |
 
 기록할 때에는 응답 내용뿐 아니라 제공된 경로·멤버, 등록 여부, 실제 검증 근거를 채운다. 문서를 썼다는 이유로 전달·합의를 완료로 바꾸지 않는다.
 
@@ -823,6 +823,8 @@ T1/G7 운영 DB 준비, 실제 View 표시, F1 런타임 중단, F2 씬 이탈·
 **확인:** 변경한 문서 19개의 로컬 파일/절 링크 328개에 오류가 없다. Mermaid 구조·타입명을 코드와 대조했고, HTML은 오프라인 Chrome에서 7개 탭·6개 도표·확대·인쇄 전환을 확인했다. 도표 밖으로 잘리는 글자와 페이지 스크립트 오류가 없으며 데스크톱·좁은 화면을 시각 점검했다. `git diff --check`도 통과했다. 이번 변경은 문서·HTML뿐이며 Unity·기존 테스트를 다시 실행하지 않았다. 문서 Phase 7은 완료지만 6B 전체와 운영 전투 완료는 아니다. 포기 API·운영 source·재화는 Core 인수, 패배·최종 승리 목적지는 사용자 보류를 유지한다. 커밋·push·외부 발송은 하지 않았다.
 
 ### 6.16 Phase 6B 패배·최종 승리 → 새 Run 준비 후 StageSelect (2026-10-06)
+
+> **2026-10-16 후속 변경:** 이 절은 당시 구현 기록이다. 현재는 **일반 패배·자발적 포기·최종 승리 모두 새 Run 준비 후 로비**다(포기·최종 승리는 2026-10-20 변경). 정책은 [현재 설계 J7](../specs/2026-10-10-combat-job-plan-restructure-design.md#j7-이탈-연쇄-k21-유지), 변경·검증 결과는 [재구성 계획 후속 기록](2026-10-10-combat-job-plan-restructure-plan.md#2026-10-16-일반-패배의-로비-복귀-후속)을 따른다.
 
 - 사용자 결정(설계 §6.4·K21): 패배·최종 승리의 최종 목적지는 Title, 그 화면이 생길 때까지 **새 Run 준비 후 StageSelect**. 최종이 아닌 챕터 클리어는 범위 밖(1a)이지만, 최종 여부를 `EndBattle` 뒤에만 알 수 있어 Core가 다음 챕터를 선택하면 초기화 없이 StageSelect로 간다(방안 A). 연결 정의가 없는 현재 런타임의 `DefinitionUnavailable`은 임시로 Run 종료. 새 Run 로스터는 로드아웃 1(임시 상수).
 - 확인한 Core 사실: Buffer `IRunProgressBufferWriteSink.ResetRunProgress()`(전투·현재 위치·스테이지/맵 진행·로스터·Run 재화·Run 결과 초기화, 맵 등록·Artifact 보유 유지), Core `Characters.InitializeRoster`, `ChapterProgression.CompleteChapter`(전투가 남으면 거절). 패배는 Run 결과 Defeat를 기록해 초기화 없이는 StageSelect의 `EnterChapter`가 거절된다.

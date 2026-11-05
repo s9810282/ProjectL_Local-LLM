@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -30,40 +31,64 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>같은 공격 계산의 미리보기로 기존 점수와 대상 종류 우선순위를 평가한다.</summary>
         internal bool TrySelectAttackAim(CombatCommandInput input, AttackRangeResult range, out AttackAim selected)
+            => TrySelectAttackAim(input, range, out selected, out _);
+
+        internal bool TrySelectAttackAim(CombatCommandInput input, AttackRangeResult range, out AttackAim selected, out EntityId appliedTaunt)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyAttackAim);
             selected = default;
-            if (!range.Succeeded || !range.CanAffordAttack) return false;
+            appliedTaunt = EntityId.Empty;
+            if (!range.Succeeded) return false;
             if (range.AttackerId != input.ActorId) throw new ArgumentException(nameof(range));
             var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
             var units = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead).ToDictionary(c => c.EntityId);
             var structures = input.State.Structures.ToDictionary(s => s.EntityId);
-            bool targetUnits = units.Values.Any(c => _hostilityPolicy.AreHostile(actor.Owner, c.Owner));
+            var taunters = TauntTargeting.Sources(input, actor);
+            var profile = CombatCommandCalculator.RequiredProfile(input, actor);
+            var environment = input.State.Environment.VisibleTo(actor.Owner);
+            var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight,
+                input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
+            var elevation = AttackElevation.From(environment, input.EnvironmentBindings);
+            int commonDamage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            bool Delivers(AttackAim aim, EntityId targetId) => CombatAttackQueries.DeliversTo(input, actor, profile,
+                aim, targetId, commonDamage, environment, walls, elevation);
+            var required = taunters.FirstOrDefault(source => range.AttackAims.ToArray().Any(aim => Delivers(aim, source.EntityId)));
+            // 칠 수 없는 도발 출처에게 갈 수 있으면 이번 행동은 추적 경로가 맡습니다.
+            // 갈 수도 없으면 도발을 지킬 수 없으므로 도발이 없는 것처럼 고릅니다(2026-11-02 결정).
+            if (taunters.Length != 0 && required == null && !ReachableTaunter(input, taunters).IsEmpty) return false;
             bool found = false;
-            (int allies, long damage, int hits, long distance, int y, int x, int direction) best = default;
+            (int allies, int targetKind, long damage, int hits, long distance, int y, int x, int direction) best = default;
             foreach (var aim in range.AttackAims.ToArray())
             {
-                var preview = CombatCommandCalculator.Preview(CombatAttackQueries.WithAim(input, aim), _movementRules, out var projection);
+                if (required != null && !Delivers(aim, required.EntityId)) continue;
+                AttackPreview preview;
+                CombatCommandTransition projection;
+                using (CoreProfiling.Sample(CoreProfileSection.EnemyAimPreview))
+                    preview = CombatCommandCalculator.Preview(CombatAttackQueries.WithAim(input, aim), _movementRules, out projection);
                 if (!preview.CanAttack) continue;
                 var damageByTarget = ProjectedDamage(projection);
+
                 var targetIds = new HashSet<EntityId>(preview.Targets.ToArray().Select(t => t.TargetId));
                 targetIds.UnionWith(damageByTarget.Keys);
-                int allies = 0, hits = 0; long damage = 0;
+                int allies = 0, hits = 0, unitHits = 0; long damage = 0;
                 foreach (var targetId in targetIds)
                 {
                     bool unit = units.TryGetValue(targetId, out var target);
                     Owner owner = unit ? target.Owner : structures[targetId].Owner;
                     if (unit && owner == actor.Owner) allies++;
-                    bool kind = targetUnits ? unit : !unit && structures[targetId].Definition.Key == EntityKey.Structure_Headquarters;
+                    bool kind = unit || structures[targetId].Definition.Key == EntityKey.Structure_Headquarters;
                     long dealt = damageByTarget.GetValueOrDefault(targetId);
-                    if (kind && _hostilityPolicy.AreHostile(actor.Owner, owner) && dealt > 0)
-                    { damage += dealt; hits++; }
+                    // 합법적인 적대 대상은 피해 0이어도 공격한다. 실제 피해량은 선택 동점 해소에만 쓴다.
+                    if (kind && _hostilityPolicy.AreHostile(actor.Owner, owner) )
+                    { damage += dealt; hits++; if (unit) unitHits++; }
                 }
-                if (damage == 0) continue;
-                var rank = Rank(aim, allies, damage, hits, 0);
+                if (hits == 0) continue;
+                var rank = Rank(aim, allies, unitHits > 0 ? 0 : 1, damage, hits, 0);
                 if (found && rank.CompareTo(best) >= 0) continue;
                 found = true; best = rank; selected = aim;
             }
+            if (found && required != null) appliedTaunt = required.EntityId;
             return found;
         }
 
@@ -96,9 +121,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal bool TrySelectPursuitTarget(CombatCommandInput input, out EntityId selected)
+            => TrySelectPursuitTarget(input, out selected, out _);
+
+        internal bool TrySelectPursuitTarget(CombatCommandInput input, out EntityId selected, out EntityId appliedTaunt)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyPursuitTarget);
+            appliedTaunt = EntityId.Empty;
             var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
+            // 갈 수 있는 도발 출처가 있으면 그쪽으로, 없으면 도발을 지킬 수 없으므로 기존 추적 규칙을 따릅니다.
+            var taunter = ReachableTaunter(input, TauntTargeting.Sources(input, actor));
+            if (!taunter.IsEmpty)
+            {
+                selected = appliedTaunt = taunter;
+                return true;
+            }
             var units = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead &&
                 _hostilityPolicy.AreHostile(actor.Owner, c.Owner)).Select(c => (c.EntityId, Anchor: c.Anchor.Value)).ToArray();
             var targets = units.Length > 0 ? units : input.State.Structures.Where(s => !s.Health.IsDead &&
@@ -109,9 +146,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return !selected.IsEmpty;
         }
 
-        private static (int allies, long damage, int hits, long distance, int y, int x, int direction)
-            Rank(AttackAim aim, int allies, long damage, int hits, long distance) =>
-            (allies, -damage, -hits, distance, aim.Cell?.Y ?? 0, aim.Cell?.X ?? 0, (int)aim.Direction);
+        /// <summary>
+        /// 추적 경로가 있는 첫 도발 출처(가까운 순)를 고릅니다. 이미 이동했거나 이동이 막힌 적은 경로가 없습니다.
+        /// 공격 고르기와 추적 고르기가 "도발을 지킬 수 있나"를 같은 판정으로 봅니다.
+        /// </summary>
+        private static EntityId ReachableTaunter(CombatCommandInput input, IEnumerable<CharacterCombatFacts> taunters) =>
+            taunters.Where(source => EnemyMovementPathfinder.TryFind(input, source.EntityId, out _))
+                .Select(source => source.EntityId).DefaultIfEmpty(EntityId.Empty).First();
+
+        private static (int allies, int targetKind, long damage, int hits, long distance, int y, int x, int direction)
+            Rank(AttackAim aim, int allies, int targetKind, long damage, int hits, long distance) =>
+            (allies, targetKind, -damage, -hits, distance, aim.Cell?.Y ?? 0, aim.Cell?.X ?? 0, (int)aim.Direction);
 
         private static long CalculateManhattan(CellCoord left, CellCoord right)
         {

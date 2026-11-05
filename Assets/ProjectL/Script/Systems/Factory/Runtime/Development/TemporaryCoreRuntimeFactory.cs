@@ -1,3 +1,4 @@
+using ProjectL.Systems.ServiceKeys.Runtime;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
 using ProjectL.Framework.Composition;
@@ -6,7 +7,6 @@ using ProjectL.Systems.Factory.Runtime.Buffer;
 using ProjectL.Systems.Factory.Runtime.InGame;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
-using ProjectL.Systems.ServiceKeys;
 
 namespace ProjectL.Systems.Factory.Runtime.Development
 {
@@ -19,8 +19,6 @@ namespace ProjectL.Systems.Factory.Runtime.Development
         public const int ShopNodeId = 5;
         public const int BossBattleNodeId = 4;
         public const int SecondChapterKey = 2;
-        public const int SecondChapterFirstBattleNodeId = 2;
-        public const int SecondChapterBossNodeId = 3;
 
         /// <summary>데이터·서비스 초기화와 시작 로스터·챕터 준비를 마친 런타임을 반환한다. 사용 후 Shutdown을 호출한다.</summary>
         public static FrameworkRuntime Create() => CreateScenario(false);
@@ -39,8 +37,8 @@ namespace ProjectL.Systems.Factory.Runtime.Development
             bufferGroup.ExportServices(builder);
             var buffers = (IBufferQuery)bufferGroup;
             var inGameBuilder = new SystemBuilderHelper();
-            ProjectL.Systems.Factory.Runtime.InGame.Core.InGameCoreSystemFactory.Create(new TemporaryBattleInitializationSource(buffers.CharacterReadSink),
-                withChapterContinuation ? new TemporaryChapterContinuationSource() : null)
+            // 챕터 연결은 기본 원본이 임시 DB의 맵 다음 챕터 키(1 → 2, 2 → 마지막)로 읽는다. 같은 사실을 따로 넘기지 않는다.
+            ProjectL.Systems.Factory.Runtime.InGame.Core.InGameCoreSystemFactory.Create(new TemporaryBattleInitializationSource(buffers.CharacterReadSink))
                 .ExportServices(inGameBuilder);
             new ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.InGameViewSystemGroup(
                 new SystemBuilderHelper().BuildSystemReader(), null).ExportServices(inGameBuilder);
@@ -52,7 +50,7 @@ namespace ProjectL.Systems.Factory.Runtime.Development
                 runtime.PostBindService();
                 runtime.Initialize();
                 var core = runtime.GetService(SystemGroupsService.InGame).CoreGroup;
-                if (!core.Characters.InitializeRoster(1).Succeeded)
+                if (!core.RunStart.StartNewRun(1).Succeeded)
                     throw new InvalidOperationException("임시 시작 로스터를 구성하지 못했습니다.");
                 // Run 재화는 운영처럼 0으로 시작한다. 스테이지 경제의 시작 골드는 전투 준비 때 스테이지 골드로 들어간다.
                 core.Artifacts.InitializeBoard(4, 4);

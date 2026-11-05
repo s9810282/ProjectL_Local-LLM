@@ -16,8 +16,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
     }
 
     /// <summary>
-    /// Flow를 소유하는 게임 진행 구간입니다.
-    /// Module은 로딩 완료 후 실제 Enter/Exit 훅을 실행합니다.
+    /// 진입·Tick·이탈 수명을 제공하는 게임 진행 구간입니다.
+    /// LifeCycleBase 구현은 대상 씬 로딩 완료 때 진입하고, 현재 씬 이탈 콜백에서 정리합니다.
     /// </summary>
     internal interface ILifeCycleModule
     {
@@ -26,12 +26,6 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
         void Enter();
         void Tick(float deltaTime);
         void Exit();
-    }
-
-    /// <summary>로딩 요청 전에 현재 구간이 정상 전환 사전조건을 검사합니다.</summary>
-    internal interface ILifeCycleTransitionGuard
-    {
-        void ValidateTransition(LifeCycleKey? destination);
     }
 
     internal sealed class LifeCycleManager :
@@ -70,8 +64,6 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
             if (ReferenceEquals(_activeModule, nextModule))
                 return;
 
-            (_activeModule as ILifeCycleTransitionGuard)?.ValidateTransition(nextKey);
-
             ILifeCycleModule previousModule = _activeModule;
             _activeModule = nextModule;
             try
@@ -87,18 +79,20 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
 
         public void Exit()
         {
-            (_activeModule as ILifeCycleTransitionGuard)?.ValidateTransition(null);
-            ExitCore();
-        }
-
-        private void ExitCore()
-        {
             if (_activeModule == null)
                 return;
 
             ILifeCycleModule exitingModule = _activeModule;
             _activeModule = null;
-            exitingModule.Exit();
+            try
+            {
+                exitingModule.Exit();
+            }
+            catch
+            {
+                _activeModule = exitingModule;
+                throw;
+            }
         }
 
         #endregion
@@ -112,8 +106,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base
 
         public void Shutdown()
         {
-            // Runtime 종료는 재Tick하지 않는 F1 정리다. 정상 씬 이탈의 완료 대기를 적용하지 않는다.
-            ExitCore();
+            // Manager는 먼저 등록되므로 그룹의 역순 종료에서 자식 Shutdown이 먼저 끝납니다.
+            // 이미 정리한 자식에는 로딩 이탈을 다시 요청하지 않고 활성 참조만 해제합니다.
+            if (_activeModule is ISystemShutdown)
+            {
+                _activeModule = null;
+                return;
+            }
+            Exit();
         }
 
         public void ExportServices(ISystemWriteSink sink)

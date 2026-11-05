@@ -39,8 +39,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     new StageClearedEffectContext(main.EntityId, health, main.Health.MaxHealth));
                 health = evaluated.FinalHealth;
                 if (evaluated.Contributions.Count != 0)
-                    events?.Add(new CombatArtifactEvent(ArtifactActivationCalculator.FromHealing(evaluated)));
+                    events?.Add(new CombatArtifactEvent(ArtifactActivationCalculator.FromHealing(evaluated), CombatArtifactPurpose.Healing));
             }
+            var healed = main.WithHealth(new HealthStateSnapshot(health, main.Health.MaxHealth));
+            if (events != null) CombatCommandEvents.Health(events, main, healed);
             // 임시·위치 최대 체력 기여분은 전투와 함께 끝나고 영혼은 Run 동안 유지된다.
             // 전투 중 위치 기여분이 사라질 때와 같은 규칙(min(현재, 새 최대))을 종료 경계에 적용한다.
             health = Math.Min(health, BattleEndMaxHealth(main, persistent));
@@ -48,6 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var before = settled.Characters[0].Final;
             var cleared = HeldEnvironmentEffects.ClearForBattleEnd(before);
             if (!ReferenceEquals(before, cleared)) events?.Add(new CombatHeldEnvironmentEvent(before, cleared));
+            cleared = CombatTemporaryStateCleanup.Clear(cleared);
+            if (events != null) PositionTileModifierCalculator.RecordNormalization(events, healed, cleared);
             return new CharacterChanges(new[] { new CharacterStateChange(main, cleared) }, settled.Souls, settled.Main);
         }
 
@@ -74,11 +78,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (index >= 0) characters[index] = mainChange;
             else characters.Add(mainChange);
             for (int i = 0; i < characters.Count; i++)
-                characters[i] = new CharacterStateChange(characters[i].Expected,
-                    HeldEnvironmentEffects.ClearForBattleEnd(characters[i].Final));
+            {
+                var cleared = CombatTemporaryStateCleanup.Clear(HeldEnvironmentEffects.ClearForBattleEnd(characters[i].Final));
+                characters[i] = new CharacterStateChange(characters[i].Expected, cleared);
+            }
             var changes = new CharacterChanges(characters, settled.Characters.Souls,
-                new MainCharacterPersistentChange(settled.Characters.Main?.Expected ?? persistent,
-                    completion.Characters.Main.Final));
+                new MainCharacterPersistentChange(main.OwnedId.Value, settled.Characters.Main?.Expected ?? persistent,
+                    completion.Characters.Main.Final), owned: settled.Characters.Owned);
             return new BattleCompletionChanges(new SoulActionChanges(changes, settled.Field,
                 settled.ConsumedSoulIds), outcome, progression);
         }

@@ -7,13 +7,19 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat
 {
-    /// <summary>정확한 선분 진입 순서로 첫 차단 벽을 선택한다. 피해와 대상 자격은 판정하지 않는다.</summary>
+    /// <summary>
+    /// 정확한 선분 진입 순서로 첫 차단 벽을 선택한다. 피해와 대상 자격은 판정하지 않는다.
+    /// 직격의 Wall 무시는 유닛 정책(<see cref="AttackWallDelivery.IgnoreWalls"/>) 또는 고저 조건(<see cref="AttackElevation"/>)에서 온다. 파급은 유닛 정책만 본다.
+    /// </summary>
     internal static class AttackOcclusionResolver
     {
-        internal static AttackBlockedContact CheckDirect(CellCoord attacker, CellCoord contact, WallGeometry walls, AttackOcclusionSpec policy)
+        internal static AttackBlockedContact CheckDirect(CellCoord attacker, CellCoord contact, WallGeometry walls,
+            AttackElevation elevation, AttackOcclusionSpec policy)
         {
+            if (elevation == null) throw new ArgumentNullException(nameof(elevation));
             if (policy == null) throw new ArgumentNullException(nameof(policy));
-            return FindBlock(attacker, contact, walls, AttackOcclusionPhase.Direct, policy.Delivery == AttackWallDelivery.IgnoreWalls);
+            return FindBlock(attacker, contact, walls, AttackOcclusionPhase.Direct,
+                policy.Delivery == AttackWallDelivery.IgnoreWalls || elevation.BypassesWalls(attacker, contact));
         }
 
         internal static AttackBlockedContact CheckPropagation(CellCoord impact, CellCoord contact, WallGeometry walls, AttackOcclusionSpec policy)
@@ -24,13 +30,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
         /// <summary>직접 전달이 성공한 중심에서만 파급을 검사한다. 원본 마스크는 변경하지 않는다.</summary>
         internal static (AttackCellSelection Cells, IReadOnlyList<AttackBlockedContact> BlockedContacts) ResolveCells(
-            CellCoord attacker, AttackCellSelection selected, WallGeometry walls, AttackOcclusionSpec policy)
+            CellCoord attacker, AttackCellSelection selected, WallGeometry walls, AttackElevation elevation, AttackOcclusionSpec policy)
         {
             if (selected == null) throw new ArgumentNullException(nameof(selected));
             if (walls == null) throw new ArgumentNullException(nameof(walls));
+            if (elevation == null) throw new ArgumentNullException(nameof(elevation));
             if (policy == null) throw new ArgumentNullException(nameof(policy));
             var blocked = new List<AttackBlockedContact>();
-            var direct = FilterCells(attacker, selected.DesignatedCells.Span, walls, policy, false, blocked);
+            var direct = FilterCells(attacker, selected.DesignatedCells.Span, walls, AttackOcclusionPhase.Direct,
+                cell => CheckDirect(attacker, cell, walls, elevation, policy), blocked);
             CellCoord? primary = selected.PrimaryCell.HasValue && direct.Length != 0 ? selected.PrimaryCell : null;
             var additional = Array.Empty<CellCoord>();
             if (primary.HasValue)
@@ -49,11 +57,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (walls == null) throw new ArgumentNullException(nameof(walls));
             if (policy == null) throw new ArgumentNullException(nameof(policy));
             var blocked = new List<AttackBlockedContact>();
-            return (FilterCells(impact, cells, walls, policy, true, blocked), blocked.AsReadOnly());
+            return (FilterCells(impact, cells, walls, AttackOcclusionPhase.Propagation,
+                cell => CheckPropagation(impact, cell, walls, policy), blocked), blocked.AsReadOnly());
         }
 
+        /// <summary>
+        /// 벽 점유 칸을 먼저 거르고, 남은 칸은 단계별 선분 검사(<paramref name="checkSegment"/>)로 거른다.
+        /// 단계마다 검사가 다르다: 직격은 유닛 정책 + 고저 조건, 파급은 유닛 정책만(설계 D2).
+        /// </summary>
         private static CellCoord[] FilterCells(CellCoord origin, ReadOnlySpan<CellCoord> cells, WallGeometry walls,
-            AttackOcclusionSpec policy, bool propagation, List<AttackBlockedContact> blocked)
+            AttackOcclusionPhase phase, Func<CellCoord, AttackBlockedContact> checkSegment, List<AttackBlockedContact> blocked)
         {
             var reachable = new List<CellCoord>();
             foreach (var cell in cells)
@@ -62,12 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 if (walls.Occupies(cell))
                 {
                     var occupying = walls.Runs.First(run => run.Cells.Contains(cell));
-                    blocked.Add(new AttackBlockedContact(origin, cell,
-                        propagation ? AttackOcclusionPhase.Propagation : AttackOcclusionPhase.Direct,
-                        occupying.SourceIds, occupying.Cells));
+                    blocked.Add(new AttackBlockedContact(origin, cell, phase, occupying.SourceIds, occupying.Cells));
                     continue;
                 }
-                var contact = propagation ? CheckPropagation(origin, cell, walls, policy) : CheckDirect(origin, cell, walls, policy);
+                var contact = checkSegment(cell);
                 if (contact == null) reachable.Add(cell);
                 else blocked.Add(contact);
             }

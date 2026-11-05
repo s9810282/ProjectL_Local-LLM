@@ -7,25 +7,29 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.StageView
     public readonly struct StageViewCommandData
     {
         public StageViewCommandKind Kind { get; }
+        public int ChapterKey { get; }
         public StageNodeId NodeId { get; }
 
-        private StageViewCommandData(StageViewCommandKind kind, StageNodeId nodeId)
+        private StageViewCommandData(StageViewCommandKind kind, int chapterKey, StageNodeId nodeId)
         {
             Kind = kind;
+            ChapterKey = chapterKey;
             NodeId = nodeId;
         }
 
-        public static StageViewCommandData SelectStageNode(StageNodeId nodeId)
+        public static StageViewCommandData SelectStageNode(int chapterKey, StageNodeId nodeId)
         {
+            if (chapterKey < 1)
+                throw new ArgumentOutOfRangeException(nameof(chapterKey));
             if (nodeId.IsEmpty)
                 throw new ArgumentException("선택한 노드 ID가 필요합니다.", nameof(nodeId));
 
-            return new StageViewCommandData(StageViewCommandKind.SelectStageNode, nodeId);
+            return new StageViewCommandData(StageViewCommandKind.SelectStageNode, chapterKey, nodeId);
         }
 
         internal void Validate()
         {
-            if (Kind != StageViewCommandKind.SelectStageNode || NodeId.IsEmpty)
+            if (Kind != StageViewCommandKind.SelectStageNode || ChapterKey < 1 || NodeId.IsEmpty)
                 throw new ArgumentException("유효한 스테이지 선택 요청이 필요합니다.");
         }
     }

@@ -1,0 +1,32 @@
+Unity 6000.0.73f1
+실제 GPU 출력 비교
+01-transparent-front: 윤곽선이 추가된 픽셀 수 = 1170
+PASS: 반투명 이펙트 앞: 선 표시
+PASS: 상하좌우 바깥 윤곽 모두 표시: 292,292,293,293
+02-effect-behind: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 이펙트 뒤: 선 없음
+03-alpha-zero: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 알파 0: 선 없음
+04-opaque-alpha-zero: 윤곽선이 추가된 픽셀 수 = 1170
+PASS: Opaque는 기본색 알파 0이어도 가림
+05-opaque-clipped: 윤곽선이 추가된 픽셀 수 = 0
+PASS: Opaque 컷아웃 구멍: 선 없음
+06-wall-between: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 연기와 캐릭터 사이 벽: 캐릭터 노출 방지
+07-wall-front: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 연기 앞의 벽: 선 없음
+08-thin: 윤곽선이 추가된 픽셀 수 = 576
+09-thick: 윤곽선이 추가된 픽셀 수 = 2114
+PASS: 굵기 조절: 메시 확장량 증가
+10-unselected-layer: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 선택하지 않은 이펙트 레이어 제외
+11-perspective-front: 윤곽선이 추가된 픽셀 수 = 2028
+PASS: 원근 카메라 앞: 선 표시
+12-perspective-behind: 윤곽선이 추가된 픽셀 수 = 0
+PASS: 원근 카메라 뒤: 선 없음
+13-texture-partial: 윤곽선이 추가된 픽셀 수 = 585
+PASS: 텍스처의 투명한 절반에는 선 없음
+PASS: 부분 가림 위치 일치: 왼쪽 0, 오른쪽 585
+14-cutout-partial: 윤곽선이 추가된 픽셀 수 = 585
+PASS: Opaque 컷아웃 텍스처의 구멍에도 선 없음
+기존 씬/머티리얼/Renderer Data 에셋 수정 없음. 임시 파이프라인 원복.

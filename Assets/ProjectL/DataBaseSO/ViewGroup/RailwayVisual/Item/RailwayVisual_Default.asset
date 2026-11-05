@@ -13,16 +13,21 @@ MonoBehaviour:
   m_Name: RailwayVisual_Default
   m_EditorClassIdentifier: 
   railwayVisualData:
-    trainPrefab: {fileID: 4231442584887248009, guid: c8edceb87dee09b4888da558396ddaab, type: 3}
-    railPrefab: {fileID: 4231442584887248009, guid: c8edceb87dee09b4888da558396ddaab, type: 3}
-    railTilePrefab: {fileID: 4231442584887248009, guid: c8edceb87dee09b4888da558396ddaab, type: 3}
-    controller: {fileID: 0}
-    clip: {fileID: 0}
+    trainHeadPrefab: {fileID: 3241690100717179933, guid: cb5c9fddb4fb1274b92d7ed2cfa841d3, type: 3}
+    trainBodyPrefab: {fileID: 2323463617592482009, guid: 90314b5065509b745a26b377436984ef, type: 3}
+    trainBodyCount: 80
+    railPrefab: {fileID: 3846322698156452841, guid: b572839a3fab16c4eaa2e723ec0e5517, type: 3}
+    railTilePrefab: {fileID: 0}
+    railTileYOffset: -0.2233546
+    railYOffset: 0.045
+    railExtensionCells: 10
+    controller: {fileID: 9100000, guid: 1b8d83f4c6f4d09479f078a0c1f3c7e1, type: 2}
+    clip: {fileID: 7400000, guid: 423b7fc0ea0597b42bfa4d5f172a5839, type: 2}
     effect: 0
     clipEndZ: -250
-    duration: 3
+    duration: 5
     trainWidthInCells: 0.8
-    outsideCells: 16
+    outsideCells: 230
     travelPaddingCells: 18
-    trainModelYaw: 180
+    trainModelYaw: 0
     reverse: 0

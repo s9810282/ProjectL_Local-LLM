@@ -1,0 +1,10 @@
+{
+    "name": "ProjectL.OutlineNormals.Editor.Tests",
+    "rootNamespace": "ProjectL.OutlineNormals.Editor.Tests",
+    "references": ["ProjectL.Tool.Editor"],
+    "includePlatforms": ["Editor"],
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}

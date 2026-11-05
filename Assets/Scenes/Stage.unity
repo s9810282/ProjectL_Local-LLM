@@ -432,8 +432,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08cb7d90dc29359479726944775170fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _targetCamera: {fileID: 330585545}
-  _cameraSO: {fileID: 11400000, guid: 1d50d0ef35734e7d9a87a3453370f36a, type: 2}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -628,11 +626,20 @@ MonoBehaviour:
   - busGuid: '{f51df435-d9c1-4065-a827-d0915dfb2a81}'
     busPath: bus:/PostFX
     pauseOnGamePause: 0
+  - busGuid: '{69c46a4c-ccbc-4543-8d7a-b48957baa623}'
+    busPath: bus:/PostFX/Artifact
+    pauseOnGamePause: 0
+  - busGuid: '{2b907c47-8c84-44d8-9c0c-22937c7b9e07}'
+    busPath: bus:/PostFX/Obstacle
+    pauseOnGamePause: 0
   - busGuid: '{ef5de5af-8a57-446e-b088-cff52c6df72d}'
     busPath: bus:/PostFX/SFX
     pauseOnGamePause: 0
   - busGuid: '{ac0f88bc-b237-430b-9cf2-1aa6fd413dbf}'
     busPath: bus:/PostFX/Unit
+    pauseOnGamePause: 0
+  - busGuid: '{48c1e1ed-4318-4633-9ca3-18c63054de6a}'
+    busPath: bus:/PostFX/Unit/Enemy
     pauseOnGamePause: 0
   - busGuid: '{473cddbc-065a-48b0-a55d-4aaf56122e51}'
     busPath: bus:/Reverb
@@ -1914,8 +1921,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uC2A4\uD14C\uC774\uC9C0 \uD074\uB9AC\uC5B4"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 7bae1bf8549bc4f4381f572c54c195a2, type: 2}
-  m_sharedMaterial: {fileID: 3369463441212404519, guid: 7bae1bf8549bc4f4381f572c54c195a2, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fafc34addbdb70540a92fc18d5a0d866, type: 2}
+  m_sharedMaterial: {fileID: -2358750670107427050, guid: fafc34addbdb70540a92fc18d5a0d866, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2051,8 +2058,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0\uB85C"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 7bae1bf8549bc4f4381f572c54c195a2, type: 2}
-  m_sharedMaterial: {fileID: 3369463441212404519, guid: 7bae1bf8549bc4f4381f572c54c195a2, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fafc34addbdb70540a92fc18d5a0d866, type: 2}
+  m_sharedMaterial: {fileID: -2358750670107427050, guid: fafc34addbdb70540a92fc18d5a0d866, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

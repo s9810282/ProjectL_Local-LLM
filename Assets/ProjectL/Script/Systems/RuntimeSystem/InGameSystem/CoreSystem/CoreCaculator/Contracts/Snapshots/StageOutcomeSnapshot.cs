@@ -19,7 +19,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
             if (outcome == StageOutcome.InProgress && reason != StageOutcomeReason.None)
                 throw new ArgumentException("InProgress의 유효 조합이 아닙니다.", nameof(reason));
-            if (outcome == StageOutcome.Victory && reason != StageOutcomeReason.EnemyHeadquartersDestroyed)
+            if (outcome == StageOutcome.Victory && reason != StageOutcomeReason.EnemyHeadquartersDestroyed &&
+                reason != StageOutcomeReason.DesignatedBossDefeated)
                 throw new ArgumentException("Victory의 유효 조합이 아닙니다.", nameof(reason));
             if (outcome == StageOutcome.Defeat &&
                 reason != StageOutcomeReason.PlayerHeadquartersDestroyed &&

@@ -1,0 +1,243 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c4af9bd96934e3cae5ae59f1998d613, type: 3}
+  m_Name: Combat_Test2
+  m_EditorClassIdentifier: 
+  timelineSeed: 1
+  fieldDefinition: {fileID: 11400000, guid: 76e7c6c20cbf410589dd637d1fa70761, type: 2}
+  unitRoster: {fileID: 11400000, guid: 8d7a8a554bd442a1a1e4aee5a492bb78, type: 2}
+  economy: {fileID: 11400000, guid: fcf75043588945418c434ee40d9ece82, type: 2}
+  objectiveKind: 2
+  initialEnemyPlacements:
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 0
+      y: 8
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 2
+      y: 8
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 6
+      y: 8
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 8
+      y: 8
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: e3fff6ce2cc044c7a30d09eb7b151c36, type: 2}
+    anchor:
+      x: 1
+      y: 7
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: e3fff6ce2cc044c7a30d09eb7b151c36, type: 2}
+    anchor:
+      x: 3
+      y: 7
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: ff6b949c1831e5744aafb95f909d1a7a, type: 2}
+    anchor:
+      x: 6
+      y: 7
+    rotation: 0
+    isVictoryTarget: 1
+    startingItem: {fileID: 0}
+  enemyLoadout: {fileID: 0}
+  enemyLevel: 1
+  structureCatalog: []
+  initialEnemyStructurePlacements: []
+  playerDeploymentCells:
+  - x: 0
+    y: 0
+  - x: 1
+    y: 0
+  - x: 2
+    y: 0
+  - x: 3
+    y: 0
+  - x: 4
+    y: 0
+  - x: 5
+    y: 0
+  - x: 6
+    y: 0
+  - x: 7
+    y: 0
+  - x: 8
+    y: 0
+  - x: 0
+    y: 1
+  - x: 1
+    y: 1
+  - x: 2
+    y: 1
+  - x: 3
+    y: 1
+  - x: 4
+    y: 1
+  - x: 5
+    y: 1
+  - x: 6
+    y: 1
+  - x: 7
+    y: 1
+  - x: 8
+    y: 1
+  - x: 2
+    y: 4
+  - x: 3
+    y: 4
+  - x: 4
+    y: 4
+  mainCharacterAnchor:
+    x: 3
+    y: 0
+  mainCharacterRotation: 0
+  headquarters: {fileID: 11400000, guid: 6719927199564b8f8f0d29d1fb5e25f4, type: 2}
+  enemyHeadquartersAnchor:
+    x: 4
+    y: 7
+  enemyHeadquartersRotation: 0
+  environment:
+    terrainPlacements:
+    - definition: {fileID: 11400000, guid: 1762ad15431f453185f60d628b9ec363, type: 2}
+      sourceId: 100
+      cell:
+        x: 1
+        y: 0
+      knownTo: 0200000001000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 9de13ae14fa848b5b3d0db6799a014d5, type: 2}
+      sourceId: 110
+      cell:
+        x: 6
+        y: 3
+      knownTo: 0200000001000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 115
+      cell:
+        x: 1
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 116
+      cell:
+        x: 0
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 117
+      cell:
+        x: 0
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 118
+      cell:
+        x: 1
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    obstaclePlacements: []
+    objectPlacements: []
+  cornerCutTicks: 128
+  railwayEnabled: 0
+  railway:
+    railCells:
+    - x: 0
+      y: 4
+    - x: 1
+      y: 4
+    - x: 2
+      y: 4
+    - x: 3
+      y: 4
+    - x: 4
+      y: 4
+    - x: 5
+      y: 4
+    - x: 6
+      y: 4
+    - x: 7
+      y: 4
+    - x: 8
+      y: 4
+    firstActivationAfterControllerTurns: 5
+    repeatIntervalControllerTurns: 5
+  rockfall:
+    enabled: 0
+    cooldownControllerTurns: 2
+    warningControllerTurns: 2
+    minimumRockCount: 3
+    maximumRockCount: 5
+    maximumHealthLossPercent: 20
+    bindAffectedSideTurns: 1
+    footprintOffsets:
+    - x: 0
+      y: 0
+  haboob:
+    enabled: 0
+    relocationIntervalControllerTurns: 2
+    warningLeadControllerTurns: 1
+    footprintOffsets:
+    - x: 1
+      y: 0
+    - x: 2
+      y: 0
+    - x: 0
+      y: 1
+    - x: 1
+      y: 1
+    - x: 2
+      y: 1
+    - x: 3
+      y: 1
+    - x: 0
+      y: 2
+    - x: 1
+      y: 2
+    - x: 2
+      y: 2
+    - x: 3
+      y: 2
+    - x: 1
+      y: 3
+    - x: 2
+      y: 3
+  initialWallCells: []
+  staticTerrainPlacements: []

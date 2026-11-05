@@ -19,5 +19,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(maxTargetsPerRay));
             MaxTargetsPerRay = maxTargetsPerRay;
         }
+
+        /// <inheritdoc />
+        protected override bool SameValuesCore(TraitSpec other)
+        {
+            var otherSpec = (PiercingFalloffTraitSpec)other;
+            return ReductionPercentPerTarget == otherSpec.ReductionPercentPerTarget &&
+                MaxTargetsPerRay == otherSpec.MaxTargetsPerRay;
+        }
     }
 }

@@ -3,6 +3,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public enum TraitActivationKind
     {
         None = 0,
+        DamageModified = 140,
+        DefenseBypassed = 150,
+        StatusApplied = 160,
+        StatusConsumed = 170,
+        StatusRemoved = 180,
+        StatusExpired = 190,
+        StatusReset = 200,
+        ShieldGranted = 210,
+        ShieldAbsorbed = 220,
+        ShieldRemoved = 230,
+        ShieldReset = 240,
+        MovementChanged = 250,
+        TrailCreated = 260,
+        TrailChanged = 270,
+        TrailRemoved = 280,
+        KnockbackApplied = 290,
+        KnockbackPrevented = 300,
+        PullApplied = 310,
+        TauntSelected = 320,
+        RangeChanged = 330,
+        DefenseChanged = 340,
+        InstantDefeat = 350,
+        RoarTriggered = 360,
+        HunterTargetSelected = 130, // 행동 종료 또는 참여 때 잠긴 대상의 변경입니다.
+        ArmorBroken = 120, // 타격 뒤 실제 수신자에게 방어 잔존 비율을 추가했습니다.
+        HealthRecovered = 100, // 처치로 실제 회복한 체력을 기록합니다.
+        AttackGranted = 90, // 출처가 있는 공격 기여분을 부여했습니다.
+        FollowUpAttack = 80, // 효과 원본과 대상은 발동 사실에 기록
         FocusGainScheduled = 10, // 포커스 기능 다음 턴에 적용되도록 예약
         FocusStackApplied = 11, // 포커스 중첩이 실제로 적용됨
         FocusReset = 12, // 중첩 리셋
@@ -10,5 +38,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         AttackCostReduced = 21, // 실제 공격에서 비용 감소가 적용됨
         AttackDiscountExpired = 22, // 사용하지 못한 할인이 턴 종료로 사라짐
         KillChainAttack = 70, // 처치로 생긴 추가 공격 1회. 대상은 TargetId, Magnitude는 보유 방어 뒤 최종 피해
+        DamageRedirected = 110, // 접촉 대상을 유지하면서 숫자 피해를 희생 소유자에게 전달했습니다.
     }
 }

@@ -75,25 +75,29 @@ flowchart TD
     Global --> Utility[UtilitySystemGroup]
     Global --> Loading[LodingSystemGroup]
     Global --> Jobs[JobSystemGroup]
+    Global --> Option[OptionInputRouter]
     LifeCycle --> Manager[LifeCycleManager]
     LifeCycle --> Phases[Lobby / Stage / Artifact / Combat]
     InGame --> Core[InGameCoreSystemGroup]
     InGame --> View[InGameViewSystemGroup]
+    View -.->|Input 프로퍼티| Slots[Stage / StageSelection / Artifact / Lobby 슬롯]
     Render --> RenderServices[Effect / Mesh / Color / Light / Outline]
     Jobs --> Register[JobRegisterSystem]
     Jobs --> Runner[JobRunnerSystem]
 ```
 
-화살표는 Factory가 실제 등록하는 포함 관계다. LifeCycle은 Global의 자식이 아니다. 루트 생성 코드는 [FrameworkRuntimeFactory](../Factory/Runtime/RunTimeSystemFactory.cs)에 있으며 Buffer → Global → InGame → LifeCycle 순서로 등록한다. 루트 Shutdown은 역순이다.
+실선 화살표는 Factory가 실제 등록하는 포함 관계다. View의 점선은 별도 Service/Module 등록이 아닌 Input 프로퍼티 접근이다. LifeCycle은 Global의 자식이 아니다. 루트 생성 코드는 [FrameworkRuntimeFactory](../Factory/Runtime/RunTimeSystemFactory.cs)에 있다. 화면 입력 등록 정보를 얻기 위해 InGame 조립 결과를 먼저 한 번 생성하지만, 루트 Export와 InitData 전달은 Buffer → Global → InGame → LifeCycle 순서다. 생성만으로 초기화하지 않으며 루트 Shutdown은 역순이다.
 
-- Global 내부 등록 순서는 Render → Utility → Input → Audio → Loading → UI → Job이다.
+- Global 내부 Export 순서는 Render → Utility → Audio → Input → Loding → UISystem → GlobalUIPresentation → Job → OptionInputRouter다. GlobalUIPresentation은 서비스만 등록하므로 별도 생명주기 모듈은 아니다.
 - LifeCycle 팩토리는 [Factory/Runtime/LifeCycle](../Factory/Runtime/LifeCycle/LifeCycleSystemFactory.cs)에 있다. 초기화는 의존 그룹 다음, 종료는 그들보다 먼저 실행된다.
 - AudioSystem은 GlobalSystemFactory에 등록되어 AudioServiceCommand로 노출된다. AudioBase에는 서비스 인터페이스를 직접 주입한다. FMODPlus의 GUI·스캐너는 Editor 전용 FMODPlus.Editor 어셈블리에 둔다.
-- InGameViewSystemFactory는 빈 Builder로 그룹을 만든다. UIBase 파생체인 LoadingUI·StageUI는 씬 검색과 등록으로 연결한다.
+- InGameViewSystemFactory는 Stage·StageSelection·Artifact·Lobby의 화면별 InputFactory를 한 번씩 호출하고 등록 정보를 합성한다. 각 Factory가 만든 같은 슬롯을 Controller와 ViewGroup.Input에 연결한다. Combat·StageMap·Lobby ViewSystem과 Recovery 요청 수명도 그룹에 조립한다. UIBase 파생체는 기존 씬 검색과 UI 등록 경로로 연결한다.
 - 유지 UI는 `UISystem/Base/GlobalUIBase`를 상속한다. UISystem은 최초 BindScene 완료 전 등록된 유지 루트를 `_globalUIs`에 수집하며, 플레이 중 해당 UI의 루트 GameObject를 DontDestroyOnLoad로 유지한다. 이후 BindScene에서는 저장된 유지 UI를 Registry에 복원하고 열린 루트 상태를 보존한다. GlobalUI를 다시 수집·바인딩하지 않으므로 이후 씬에 추가된 GlobalUI는 목록에 포함되지 않는다.
 - `OpenGlobalUI()`는 초기화·서비스 바인딩 후 저장된 유지 UI만 `OpenUI(id, true)`로 연다. 유지 UI의 개별 `OpenUI(id)`도 같은 방식으로 처리하며, 일반 화면 이력에 넣지 않는다. `CloseUI`·`HideAllUI`로 닫을 수 있고 Shutdown에서 유지 UI 목록과 수집 상태를 초기화한다.
 - RenderSystemFactory는 Outline까지 등록한다. TextEffectSystem·TextureDataSO는 빈 파일이며 실행 연결이 없다.
+- RenderSystemGroup은 TickModules에 Tick을 전달한다. ScreenTransitionSystem은 Framework Initialize에서 C# ScreenTransitionInitModule의 출력 이름·고정 레이어·원 설정을 한 번 읽는다. 외부 Init API는 없고 호출자는 CreateScop으로 Pool의 Scop을 받아 Play(data)한다. 목표 반경의 합성 패스 기록 뒤 Main 컬링을 확정하고, Dispose에서 임시 설정·Handle/Feature Scope와 Scop 자체를 반환한다. Factory는 전환 시스템을 출력 의존 서비스보다 먼저 등록하여 기존 순방향 Shutdown에서도 전환 자원을 먼저 반환한다. 실제 Unity 화면 확인은 대기 중이다.
 - DB Query는 별도 DataBaseFactory에서 생성하여 Runtime.InitData에 전달한다. 루트 런타임 그룹으로 등록하지 않는다.
+- CameraGroup은 버추얼 전용 CameraCatalogSystem, 유지 Unity Camera 전용 UnityCameraCatalogSystem, 버추얼 효과용 CameraEffectSystem을 노출한다. 두 카탈로그는 GameObject 이름으로 조회하며 Unity 출력 카탈로그는 최초 등록 검증 후 플레이 중 카메라 최상위 루트에 DontDestroyOnLoad를 적용한다. 이후 씬 바인딩에 목록·핸들을 유지한다. Factory가 생성·주입하고 그룹은 수명만 전달한다.
 
 ## 3. 공통 조립·조회와 실행
 
@@ -111,7 +115,9 @@ flowchart LR
 
 AddService는 조회할 계약, AddModule은 생명주기 호출 대상을 등록한다. Builder는 한 번 Build한 뒤 닫힌다. Create·Build는 Initialize를 자동 호출하지 않는다.
 
-Runtime은 자신에게 등록된 그룹 중 해당 계약을 구현한 그룹에만 BindScene / InitData / PostBindService / Initialize / Tick / Shutdown을 전달한다. 각 그룹도 자식에게 전달할 단계를 직접 구현한다. 모든 중첩 그룹의 Shutdown이 역순인 것은 아니다. Global·InGame·LifeCycle은 역순이며 Render·Utility는 현재 자식 등록 순서로 종료한다.
+Runtime은 자신에게 등록된 그룹 중 해당 계약을 구현한 그룹에만 BindScene / InitData / PostBindService / Initialize / Tick / Shutdown을 전달한다. 각 그룹도 자식에게 전달할 단계를 직접 구현한다. 모든 중첩 그룹의 Shutdown이 역순인 것은 아니다. Global·Input·InGame·LifeCycle은 역순이며 Render·Utility는 현재 자식 등록 순서로 종료한다.
+
+옵션 Router는 Global의 마지막 모듈이며 옵션을 닫아 편집/capture·입력 override·오디오·timeScale을 복원한 뒤 UI/Input/Audio가 종료된다. 실제 Global 종료는 OptionInputRouter → Job → UI → Loding → Input → Audio → Utility → Render다. Input 내부는 Bridge가 구독·Router를 유지한 채 Suspend하여 마지막 Canceled를 전달하고, 구독·LayerRuntime·복제 에셋 해제 후 InputSystem이 종료된다. 전체 Runtime 종료에서는 앞서 Unbind된 View에 취소를 다시 강제하지 않는다.
 
 루트 resolver가 전달된 소비자의 조회 예:
 
@@ -124,7 +130,16 @@ var render = global.RenderServiceCommand;
 var ui = global.UIServiceCommand;
 var jobs = global.JobServiceCommand.JobRegister;
 jobs.Register(JobRootType.Stage, JobType.Start);
+
+var slots = inGame.ViewGroup.Input;
+var stageSlot = slots.Stage;
+var selectionSlot = slots.StageSelection;
+var artifactSlot = slots.Artifact;
+var lobbySlot = slots.Lobby;
+var optionRequests = global.OptionCloseRequests;
 ```
+
+화면 슬롯과 옵션 닫기 서비스는 루트에 직접 공개하지 않는다. 슬롯은 ViewGroup.Input, 옵션은 Global.OptionCloseRequests를 통해 받는다. 화면 입력 context와 Factory/조립 결과는 별도 Framework 서비스나 모듈이 아니다. 등록 DTO는 목록만 읽기 전용으로 복사하며 Controller와 슬롯 객체를 복제하지 않는다. 현재 책임표와 통합 검증 범위는 [입력 조립 인계](../../../../../docs/superpowers/handoffs/2026-10-17-view-input-composition-framework-share-Hojin.md)를 따른다.
 
 Render / UI / Input / Utility / Loding / Job 키는 Global 내부 Reader에서 사용한다. 루트 `resolver.GetService(SystemGroupsService.Render)`처럼 조회하면 찾지 못한다. Buffer 서비스는 내부 BufferSystemKey와 각 ReadSink/WriteSink 계약을 통해 사용한다.
 
@@ -342,8 +357,8 @@ flowchart LR
 | Global 조립 / 서비스 | [GlobalSystemFactory](../Factory/Runtime/Global/GlobalSystemFactory.cs), [GlobalSystemGroup](../RuntimeSystem/GlobalSystem/GlobalSystemGroup.cs) |
 | LifeCycle 조립 / 전달 | [LifeCycleSystemFactory](../Factory/Runtime/LifeCycle/LifeCycleSystemFactory.cs), [LifeCycleSystemGroup](../RuntimeSystem/LifeCycleSystem/LifeCycleSystemGroup.cs) |
 | DB 생성 | [DataBaseFactory](../Factory/DBFactory/DataBaseFactory.cs) |
-| 실제 키 | [SystemGroupsService](../ServiceKeys/SystemGroupsService.cs), [Buffer·DB 키](../ServiceKeys/DataBaseGroupServiceKey.cs) |
-| 렌더 카메라 검사 | [RenderFeatureCameraFilter](../../Render/Shader/PostProcessing/RenderFeatureCameraFilter.cs) |
+| 실제 키 | [루트 그룹 키](../ServiceKeys/Runtime/SystemGroupsService.cs), [Global 그룹 키](../ServiceKeys/Runtime/Global/GlobalSystemGroupServiceKey.cs), [Buffer 키](../ServiceKeys/Runtime/Buffer), [DB 그룹 키](../ServiceKeys/DBFactory/DataBaseGroupKey.cs), [테이블 키](../ServiceKeys/DBFactory/Group) |
+| 렌더 카메라 검사 | [RenderFeatureCameraFilter](../../Render/RendererFeatures/Core/RenderFeatureCameraFilter.cs) |
 | 임포트 노멀 생성 | [OutlineNormalPostprocessor](../../Tool/Editor/OutlineNormalPostprocessor.cs) |
 
 네 URP RendererFeature는 Game/SceneView만 허용하며 PreviewScene 카메라와 Prefab Stage의 SceneView를 제외한다. OutlineNormalPostprocessor는 모델 임포트 시 동일 위치 정점의 평균 노멀을 UV3에 저장하며 Mesh.normals를 덮어쓰지 않는다.

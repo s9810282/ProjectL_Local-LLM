@@ -39,7 +39,7 @@ namespace ProjectL.Tests.Core
                 {
                     var layer = nodes.Where(n => n.Depth == depth).ToArray();
                     Assert.That(layer.Length, Is.InRange(1, spec.WidthMax));
-                    Assert.That(layer.All(n => spec.RegularStageKeys.Contains(n.StageKey)), Is.True);
+                    Assert.That(layer.All(n => spec.StagePools.SelectMany(p => p.StageKeys).Contains(n.StageKey)), Is.True);
                 }
 
                 var incoming = new HashSet<int>();
@@ -60,8 +60,8 @@ namespace ProjectL.Tests.Core
         [Test]
         public void DepthTwo_ConnectsStartDirectlyToBoss()
         {
-            var nodes = ChapterGraphGenerator.Generate(new ChapterGraphSpec(2, 3, 5, ChapterGraphConnection.Nearest,
-                1f, 1f, 0f, new[] { 10 }, 99));
+            var nodes = ChapterGraphGenerator.Generate(new ChapterGraphSpec(2, 3, 1, false, 5, ChapterGraphConnection.Nearest,
+                1f, 1f, 0f, Pools(10), 99));
 
             Assert.That(nodes.Count, Is.EqualTo(2));
             Assert.That(nodes[0].NextNodeIds, Is.EqualTo(new[] { nodes[1].NodeId }));
@@ -69,13 +69,27 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Spec_CopiesRegularStageKeys()
+        public void Spec_CopiesPoolsInKindOrder()
         {
-            var keys = new List<int> { 10, 11 };
-            var spec = new ChapterGraphSpec(4, 2, 1, ChapterGraphConnection.Random, 1f, 1f, 0f, keys, 99);
-            keys[0] = 500;
+            var pools = new List<ChapterStagePool>
+            {
+                new(new ChapterStageDistributionRule(ChapterStageKind.Shop, 1, 0, 1), new[] { 20 }),
+                new(new ChapterStageDistributionRule(ChapterStageKind.Combat, 1, 0, 1), new[] { 10, 11 })
+            };
+            var spec = new ChapterGraphSpec(4, 2, 1, false, 1, ChapterGraphConnection.Random, 1f, 1f, 0f, pools, 99);
+            pools.Clear();
 
-            Assert.That(spec.RegularStageKeys, Is.EqualTo(new[] { 10, 11 }));
+            Assert.That(spec.StagePools.Select(p => p.Rule.Kind),
+                Is.EqualTo(new[] { ChapterStageKind.Combat, ChapterStageKind.Shop }));
+        }
+
+        [Test]
+        public void ObsoleteConstructor_AlwaysThrowsNotSupported()
+        {
+#pragma warning disable CS0618
+            Assert.Throws<NotSupportedException>(() => new ChapterGraphSpec(4, 2, 1, ChapterGraphConnection.Nearest,
+                1f, 1f, 0f, new[] { 10, 11 }, 99));
+#pragma warning restore CS0618
         }
 
         [TestCase(1, 2, 1f, 1f, 0f, 99, TestName = "DepthBelowTwo")]
@@ -87,23 +101,28 @@ namespace ProjectL.Tests.Core
         [TestCase(4, 2, 1f, 1f, 0f, 0, TestName = "EmptyBossKey")]
         public void Spec_RejectsInvalidValues(int depth, int width, float nearest, float other, float chance, int boss)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ChapterGraphSpec(depth, width, 1,
-                ChapterGraphConnection.WeightedRandom, nearest, other, chance, new[] { 10 }, boss));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ChapterGraphSpec(depth, width, 1, false, 1,
+                ChapterGraphConnection.WeightedRandom, nearest, other, chance, Pools(10), boss));
         }
 
         [Test]
-        public void Spec_RejectsMissingOrInvalidRegularStages()
+        public void Spec_RejectsMissingOrEmptyPools()
         {
-            Assert.Throws<ArgumentNullException>(() => new ChapterGraphSpec(4, 2, 1, ChapterGraphConnection.Nearest,
-                1f, 1f, 0f, null, 99));
-            Assert.Throws<ArgumentException>(() => new ChapterGraphSpec(4, 2, 1, ChapterGraphConnection.Nearest,
-                1f, 1f, 0f, Array.Empty<int>(), 99));
-            Assert.Throws<ArgumentException>(() => new ChapterGraphSpec(4, 2, 1, ChapterGraphConnection.Nearest,
-                1f, 1f, 0f, new[] { 10, 0 }, 99));
+            // null 그대로는 옛 생성자로 묶이므로 형식을 밝힌다.
+            Assert.Throws<ArgumentNullException>(() => new ChapterGraphSpec(4, 2, 1, false, 1, ChapterGraphConnection.Nearest,
+                1f, 1f, 0f, (IReadOnlyList<ChapterStagePool>)null, 99));
+            Assert.Throws<ArgumentException>(() => new ChapterGraphSpec(4, 2, 1, false, 1, ChapterGraphConnection.Nearest,
+                1f, 1f, 0f, Array.Empty<ChapterStagePool>(), 99));
+            Assert.Throws<ArgumentException>(() => new ChapterGraphSpec(4, 2, 1, false, 1, ChapterGraphConnection.Nearest,
+                1f, 1f, 0f, new ChapterStagePool[] { null }, 99));
         }
 
         private static ChapterGraphSpec Spec(int seed, ChapterGraphConnection connection, float chance)
-            => new(6, 3, seed, connection, 3f, 1f, chance, new[] { 10, 11, 12 }, 99);
+            => new(6, 3, 1, false, seed, connection, 3f, 1f, chance, Pools(10, 11, 12), 99);
+
+        // 최소 개수 없이 전투 하나만 쓰는 단순 입력이다. 연결·모양 검사만 본다.
+        private static IReadOnlyList<ChapterStagePool> Pools(params int[] combatKeys)
+            => new[] { new ChapterStagePool(new ChapterStageDistributionRule(ChapterStageKind.Combat, 1, 0, 1), combatKeys) };
 
         private static string[] Describe(IReadOnlyList<ChapterGraphNode> nodes)
             => nodes.Select(n => $"{n.NodeId}:{n.StageKey}:{n.Depth}:{n.WidthIndex}:{string.Join(",", n.NextNodeIds)}").ToArray();

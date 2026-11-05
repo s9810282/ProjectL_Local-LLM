@@ -11,6 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// </summary>
     public sealed class UnitSpec
     {
+        public UnitKillRewardSpec KillReward { get; }
         public EntityKey Key { get; }
         public UnitRole Role { get; }
         public int FootprintWidth { get; }
@@ -18,22 +19,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public ReadOnlyMemory<CellCoord> FootprintLocalCells { get; }
         public int MaxHealth { get; }
         public MoveMethod MoveMethod { get; }
-        public int MoveRange { get; }
-        public int MoveCost { get; }
         public CategoryKey CategoryKey { get; }
+        /// <summary>보유 기록에서 합성한 메인의 추가 병과다. 원본 식별 병과는 바꾸지 않는다.</summary>
+        public CategoryKey? SpecializationCategory { get; }
+        public CategoryKey CombatCategoryKey => SpecializationCategory ?? CategoryKey;
         /// <summary>공격 사거리다. 모양·선택·스플래시는 유닛이 참조하는 지정 방식(TargetingMethodSpec)이 소유한다.</summary>
         public int AttackRange { get; }
         public int AttackPower { get; }
         public int PhysicalDefense { get; }
-        public int MaxActionCost { get; }
-        public int AttackCost { get; }
-        public int ActionPoint => MaxActionCost;
         public int Priority { get; }
-        public int Delay { get; }
-        public bool HasTimelineConfiguration { get; }
         public ReadOnlyMemory<TraitSpec> Traits { get; }
         public UnitOwnerEligibility OwnerEligibility { get; }
         public AttackOcclusionSpec Occlusion { get; }
+        public UnitBehaviorSpec Behavior { get; }
 
         public UnitSpec(
             EntityKey key,
@@ -43,20 +41,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CellCoord[] footprintLocalCells,
             int maxHealth,
             MoveMethod moveMethod,
-            int moveRange,
-            int moveCost,
+
             int attackRange,
             CategoryKey categoryKey,
             int attackPower,
-            int maxActionCost,
-            int attackCost,
+
             int physicalDefense,
             int priority,
-            int delay,
-            bool hasTimelineConfiguration,
+
             IReadOnlyList<TraitSpec> traits,
             UnitOwnerEligibility ownerEligibility = UnitOwnerEligibility.Both,
-            AttackOcclusionSpec occlusion = null)
+            AttackOcclusionSpec occlusion = null,
+            UnitBehaviorSpec behavior = null,
+            UnitKillRewardSpec killReward = null,
+            CategoryKey? specializationCategory = null)
         {
             if (key == EntityKey.None)
                 throw new ArgumentException("엔티티 키는 None이 될 수 없습니다.", nameof(key));
@@ -72,10 +70,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(maxHealth));
             if (moveMethod != MoveMethod.LiftAndPlace)
                 throw new ArgumentOutOfRangeException(nameof(moveMethod), "moveMethod는 LiftAndPlace여야 합니다.");
-            if (moveRange < 0)
-                throw new ArgumentOutOfRangeException(nameof(moveRange));
-            if (moveCost <= 0)
-                throw new ArgumentOutOfRangeException(nameof(moveCost));
             if (attackRange < 0)
                 throw new ArgumentOutOfRangeException(nameof(attackRange));
 
@@ -89,18 +83,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(attackPower));
             if (physicalDefense < 0)
                 throw new ArgumentOutOfRangeException(nameof(physicalDefense));
-            if (maxActionCost < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxActionCost));
-            if (attackCost <= 0)
-                throw new ArgumentOutOfRangeException(nameof(attackCost));
-            if (hasTimelineConfiguration && priority <= 0)
+            if (priority < 0)
                 throw new ArgumentOutOfRangeException(nameof(priority));
-            if (hasTimelineConfiguration && delay <= 0)
-                throw new ArgumentOutOfRangeException(nameof(delay));
             if (traits == null)
                 throw new ArgumentNullException(nameof(traits));
             if (Enum.IsDefined(typeof(UnitOwnerEligibility), ownerEligibility) == false)
                 throw new ArgumentOutOfRangeException(nameof(ownerEligibility));
+            if (specializationCategory.HasValue)
+            {
+                if (role != UnitRole.MainCharacter || categoryKey != CategoryKey.Main ||
+                    ownerEligibility != UnitOwnerEligibility.PlayerOnly ||
+                    specializationCategory != CategoryKey.Rider && specializationCategory != CategoryKey.Heavy &&
+                    specializationCategory != CategoryKey.Cannon)
+                    throw new ArgumentException("플레이어 메인만 Rider·Heavy·Cannon 전투 병과를 선택할 수 있습니다.", nameof(specializationCategory));
+                PlayerMainDefinitionPolicy.Validate(key, role, categoryKey, ownerEligibility);
+            }
 
             CellCoord[] copiedCells = new CellCoord[footprintLocalCells.Length];
             Array.Copy(footprintLocalCells, copiedCells, footprintLocalCells.Length);
@@ -127,6 +124,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 copiedTraits[i] = trait;
             }
 
+            KillReward = killReward;
             Key = key;
             Role = role;
             FootprintWidth = footprintWidth;
@@ -134,20 +132,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             FootprintLocalCells = copiedCells;
             MaxHealth = maxHealth;
             MoveMethod = moveMethod;
-            MoveRange = moveRange;
-            MoveCost = moveCost;
+
             AttackRange = attackRange;
             CategoryKey = categoryKey;
+            SpecializationCategory = specializationCategory;
             AttackPower = attackPower;
             PhysicalDefense = physicalDefense;
-            MaxActionCost = maxActionCost;
-            AttackCost = attackCost;
+
             Priority = priority;
-            Delay = delay;
-            HasTimelineConfiguration = hasTimelineConfiguration;
+
             Traits = copiedTraits;
             OwnerEligibility = ownerEligibility;
             Occlusion = occlusion ?? AttackOcclusionSpec.Default;
+            Behavior = behavior ?? UnitBehaviorSpec.Default;
+            if (categoryKey == CategoryKey.Boss && Behavior.CanMoveVoluntarily)
+                throw new ArgumentException("Boss 자발 이동 허용량은 미정이므로 이동 비활성 정의만 허용합니다.", nameof(behavior));
         }
+
     }
 }

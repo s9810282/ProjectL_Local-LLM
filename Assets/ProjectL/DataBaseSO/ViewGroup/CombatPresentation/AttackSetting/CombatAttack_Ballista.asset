@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac07c2372c9a4448903e3cfed0d6856f, type: 3}
+  m_Name: CombatAttack_Ballista
+  m_EditorClassIdentifier: 
+  projectile: {fileID: 11400000, guid: f556d497a9f82b830525be785bbf09ce, type: 2}
+  codeMotion: {fileID: 11400000, guid: 0267184016da356a2b295ffffcbb790f, type: 2}
+  cues:
+    effects:
+    - effect: 17
+      anchor: 4
+      delay: 0
+      point: 5
+      actorPoint: 0
+      stayInPlace: 0
+      positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 0
+      endSeconds: 0
+    shakes: []
+    sound:
+      anchor: 1
+      delay: 0
+    additionalSounds: []

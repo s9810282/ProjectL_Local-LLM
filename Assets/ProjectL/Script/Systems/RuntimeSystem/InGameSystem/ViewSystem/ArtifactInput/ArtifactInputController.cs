@@ -1,16 +1,18 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.Data;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
 {
-    /// <summary>아티팩트 입력을 해석합니다. 씬·DB·Buffer를 참조하지 않습니다.</summary>
+    /// <summary>
+    /// 아티팩트 입력을 해석합니다. 씬·DB·Buffer를 참조하지 않습니다.
+    /// 누름·뗌·강제 취소 해석은 공용 <see cref="PointerSelectInterpreter"/>가 맡습니다(로비 리팩토링 2차 설계 M-10).
+    /// </summary>
     internal sealed class ArtifactInputController : InputController
     {
         private readonly IArtifactInputReceiver _receiver;
-        private float _pointerX;
-        private float _pointerY;
-        private bool _isPressed;
+        private readonly PointerSelectInterpreter _select = new();
 
         public override string ActionMap => ArtifactInputNames.Map;
 
@@ -30,40 +32,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput
 
         private void OnPointer(InputSnapshot snapshot)
         {
-            // 입력 취소의 기본 좌표로 마지막 포인터 위치를 덮어쓰지 않습니다.
-            if (snapshot.Phase != InputPhase.Performed)
-                return;
-
-            _pointerX = snapshot.Value.X;
-            _pointerY = snapshot.Value.Y;
-            _receiver.PointerMoved(_pointerX, _pointerY);
+            if (_select.TryPointer(snapshot)) _receiver.PointerMoved(_select.X, _select.Y);
         }
 
         private void OnSelect(InputSnapshot snapshot)
         {
-            // Select는 ReleaseOnly입니다. 정상 뗌은 Performed, 강제 종료는 Canceled입니다.
-            if (snapshot.Phase == InputPhase.Canceled)
+            switch (_select.Select(snapshot))
             {
-                if (!_isPressed)
-                    return;
-
-                _isPressed = false;
-                _receiver.SelectCanceled();
-                return;
+                case SelectEdge.Pressed:
+                    _receiver.SelectPressed(_select.X, _select.Y);
+                    break;
+                case SelectEdge.Released:
+                    _receiver.SelectReleased(_select.X, _select.Y);
+                    break;
+                case SelectEdge.Canceled:
+                    _receiver.SelectCanceled();
+                    break;
             }
-
-            bool isPressed = snapshot.Value.ButtonValue;
-            if (isPressed == _isPressed)
-                return;
-
-            // 재진입 콜백에서도 한 번만 전달되도록 상태를 먼저 변경합니다.
-            _isPressed = isPressed;
-            if (isPressed)
-                _receiver.SelectPressed(_pointerX, _pointerY);
-            else if (snapshot.Phase == InputPhase.Performed)
-                _receiver.SelectReleased(_pointerX, _pointerY);
-            else
-                _receiver.SelectCanceled();
         }
     }
 }

@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>Buffer 조회값을 기존 효과 규칙의 입력과 최종 조회값으로 변환한다.</summary>
     internal static class CombatCommandEffects
     {
+        internal static EffectRuleBinding[] CaptureIncoming(CombatCommandInput input, IReadOnlyList<CharacterCombatFacts> characters, CharacterCombatFacts recipient, MovementEnvironmentFacts environment = null,
+            CombatProfileReadSet profileReads = null)
+            => CaptureIncoming(input, characters, recipient, out _, environment, profileReads);
+
+        internal static EffectRuleBinding[] CaptureIncoming(CombatCommandInput input, IReadOnlyList<CharacterCombatFacts> characters,
+            CharacterCombatFacts recipient, out IReadOnlyList<TraitTrailFact> selectedDust, MovementEnvironmentFacts environment = null,
+            CombatProfileReadSet profileReads = null)
+        {
+            var own = Capture(recipient, CombatCommandCalculator.RequiredProfile(input, recipient, profileReads));
+            var auras = characters.Where(c => c.EntityId != recipient.EntityId && !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
+                    c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Entrenchment))
+                .SelectMany(c => Capture(c, CombatCommandCalculator.RequiredProfile(input, c, profileReads)).Where(b => b.Rule is EntrenchmentEffectRule));
+            var bindings = own.Concat(auras).ToList();
+            selectedDust = DustScreenTraitRule.DefenseSourcesAt(recipient, environment ?? input.State.Environment);
+            var dust = selectedDust.FirstOrDefault();
+            if (dust != null)
+            {
+                bindings.RemoveAll(b => b.Origin == dust.Origin);
+                bindings.Add(new EffectRuleBinding(dust.Origin, new DustScreenEffectRule(dust), StatelessEffectStateSnapshot.Instance));
+            }
+            return bindings.ToArray();
+        }
+
         internal static EffectRuleBinding[] Capture(CharacterCombatFacts character, CombatAttackProfile profile)
         {
             var registry = TraitRegistry.CreateDefault();
@@ -35,21 +59,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var status = statuses.Single(s => s.Key == spec.TraitKey);
                 var registration = registry.GetRequiredRegistration(spec.TraitKey);
                 var definition = registration.TraitDefinitionFactory.BuildDefinition(spec);
+                if (!DeferredCombatFeatures.IsTraitAvailable(spec.TraitKey)) continue;
                 bindings.Add(new EffectRuleBinding(TraitEffectOrigin.Create(character.EntityId, spec.TraitKey),
                     registration.EffectRuleFactory(definition), Capture(status)));
             }
             var category = character.Stats.Category;
-            if (category.Key != profile.Definition.CategoryKey)
+            if (category.Key != profile.Definition.CombatCategoryKey ||
+                character.Stats.SpecializationCategory != profile.Definition.SpecializationCategory)
                 throw new InvalidOperationException("캐릭터와 정의의 Category가 다릅니다.");
-            if (category.Key == CategoryKey.Heavy)
-                bindings.Add(new EffectRuleBinding(CategoryEffectOrigin.Create(character.EntityId, category.Key,
-                    CategoryRuleKey.DirectionalArmor), new DirectionalArmorCategoryRule(new DirectionalArmorCategoryRuleDefinition(
-                    category.DamageReductionPercent.Value, category.DefenseFacing.Value)),
-                    new DirectionalArmorEffectStateSnapshot(category.DefenseFacing.Value, category.MovedThisTurn.Value)));
-            if (category.Key == CategoryKey.Rider)
-                bindings.Add(new EffectRuleBinding(CategoryEffectOrigin.Create(character.EntityId, category.Key,
-                    CategoryRuleKey.ManeuverRefund), new ManeuverRefundCategoryRule(new ManeuverRefundCategoryRuleDefinition()),
-                    new ManeuverRefundEffectStateSnapshot(category.RefundUsedThisTurn.Value)));
             if (category.Key == CategoryKey.Cannon)
                 bindings.Add(new EffectRuleBinding(CategoryEffectOrigin.Create(character.EntityId, category.Key,
                     CategoryRuleKey.SafeBombardment),
@@ -61,12 +78,42 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static IEffectStateSnapshot Capture(TraitStatusSnapshot status) => status switch
         {
             FocusTraitStatusSnapshot f => new FocusEffectStateSnapshot(f.ActiveStacks, f.GainScheduled, f.MovedThisTurn),
-            MoveAttackDiscountTraitStatusSnapshot d => new MoveAttackDiscountEffectStateSnapshot(d.FirstMoveConsumed, d.DiscountArmed),
             PiercingFalloffTraitStatusSnapshot => new PiercingFalloffEffectStateSnapshot(),
             ThornFieldTraitStatusSnapshot => new ThornFieldEffectStateSnapshot(),
             KnockbackTraitStatusSnapshot => new KnockbackEffectStateSnapshot(),
             DistanceDamageScaleTraitStatusSnapshot => new DistanceDamageScaleEffectStateSnapshot(),
             KillChainAttackTraitStatusSnapshot => new KillChainAttackEffectStateSnapshot(),
+            NecromancyTraitStatusSnapshot => new NecromancyEffectStateSnapshot(),
+            RoarTraitStatusSnapshot r => new RoarEffectStateSnapshot(r.HitCount),
+            RegenerationTraitStatusSnapshot r => new RegenerationEffectStateSnapshot(r.CompletedEligibleTurnEnds),
+            IntimidationTraitStatusSnapshot => new IntimidationEffectStateSnapshot(),
+            HuntersMarkTraitStatusSnapshot => new HuntersMarkEffectStateSnapshot(),
+            PullTraitStatusSnapshot => new PullEffectStateSnapshot(),
+            ImpactBoltTraitStatusSnapshot => new ImpactBoltEffectStateSnapshot(),
+            StationaryFireTraitStatusSnapshot s => new StationaryFireEffectStateSnapshot(s.MovedThisOwnTurn),
+            AccelerationTraitStatusSnapshot s => new AccelerationEffectStateSnapshot(s.HeldAttackBonus),
+            LeapTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            PositionSwapTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            HunterTraitStatusSnapshot h => new HunterEffectStateSnapshot(h.TargetId, h.SuccessfulRewards),
+            FocusedBombardmentTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            TrackingShotTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            FinishingShotTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            ArmorBreakerTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            DustScreenTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            GroundCompactionTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            ReconSquadTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            SteadfastWillTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            TauntTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            SacrificeTraitStatusSnapshot s => new SacrificeEffectStateSnapshot(s.LastEnemyTurnSequence, s.ActivationsThisEnemyTurn),
+            EntrenchmentTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            CohesionTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            SoloActionTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            AnkleBreakerTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            DisarmTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            MoraleBoostTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            CallOfBloodTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            CleanSweepTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
+            VanguardTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
             _ => throw new InvalidOperationException("공개 특성 상태를 효과 입력으로 변환할 수 없습니다.")
         };
 
@@ -83,28 +130,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         throw new InvalidOperationException("효과 변경의 특성 원본이 다릅니다.");
                     traits[index] = change.FinalState switch
                     {
+                        AccelerationEffectStateSnapshot state => new AccelerationTraitStatusSnapshot(state.HeldAttackBonus),
+                        StationaryFireEffectStateSnapshot state => new StationaryFireTraitStatusSnapshot(state.MovedThisOwnTurn),
+                        SacrificeEffectStateSnapshot s => new SacrificeTraitStatusSnapshot(s.LastEnemyTurnSequence, s.ActivationsThisEnemyTurn),
                         FocusEffectStateSnapshot f => new FocusTraitStatusSnapshot(f.ActiveStacks, f.GainScheduled, f.MovedThisTurn),
-                        MoveAttackDiscountEffectStateSnapshot d => new MoveAttackDiscountTraitStatusSnapshot(d.FirstMoveConsumed, d.DiscountArmed),
                         _ => throw new InvalidOperationException("변경 가능한 특성 상태가 아닙니다.")
                     };
                 }
-                else if (change.FinalState is DirectionalArmorEffectStateSnapshot armor)
-                    category = CategorySnapshot.CreateHeavy(armor.DefenseFacing, armor.MovedThisTurn, category.DamageReductionPercent.Value);
-                else if (change.FinalState is ManeuverRefundEffectStateSnapshot refund)
-                    category = CategorySnapshot.CreateRider(refund.RefundUsedThisTurn);
                 else throw new InvalidOperationException("변경 가능한 Category 상태가 아닙니다.");
             }
-            return With(source, traits: traits, category: category);
+            return AccelerationTraitRule.ProjectChange(source, With(source, traits: traits, category: category));
         }
 
-        internal static UnitStatsSnapshot With(UnitStatsSnapshot s, int? ap = null,
-            TraitStatusSnapshot[] traits = null, CategorySnapshot? category = null, int? remainingMoveRange = null,
-            MoveMethod? moveMethod = null) => new(
-            moveMethod ?? s.MoveMethod, s.MoveRange, s.MoveCost, s.AppointRange, s.AttackPower,
-            s.PhysicalDefense, s.MaxActionCost, s.AttackCost, remainingMoveRange ?? s.RemainingMoveRange, ap ?? s.CurrentActionCost,
-            s.Priority, s.Delay, traits ?? s.TraitStatuses.ToArray(), category ?? s.Category,
-            s.ArtifactAttackBonus, s.EffectiveAttackPower, s.SoulAttackBonus, s.SoulMaxHealthBonus, s.PositionAttackBonus);
-
+        internal static UnitStatsSnapshot With(UnitStatsSnapshot s,
+            TraitStatusSnapshot[] traits = null, CategorySnapshot? category = null,
+            MoveMethod? moveMethod = null) => s.With(moveMethod: moveMethod,
+            traitStatuses: traits, category: category, effectiveAttackPower: s.EffectiveAttackPower);
         internal static void AppendActivations(CombatEffectPlan plan, List<TraitActivationSnapshot> traits,
             List<CategoryActivationSnapshot> categories)
         {

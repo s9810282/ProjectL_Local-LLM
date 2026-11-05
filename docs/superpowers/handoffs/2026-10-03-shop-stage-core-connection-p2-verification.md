@@ -71,4 +71,4 @@ The implementation modifies the existing shop service, coordinator and pure chap
 
 P2 delivers the complete Core consumer API. P3 still needs the named temporary shop scenario and normal battle settlement → caller-owned EndBattle → shop purchase/skip/completion → next battle integration evidence. No P3 factory/data or cycle tests were implemented here. Actual Job/Flow/View/scene adoption, authored production data, rewards and final Run policy remain separate acceptance.
 
-References: [design](../specs/2026-10-03-shop-stage-core-connection-design.md), [implementation plan](../plans/2026-10-03-shop-stage-core-connection-implementation-plan.md), [P1 verification](2026-10-03-shop-stage-core-connection-p1-verification.md).
+References: design (Git history: `2026-10-03-shop-stage-core-connection-design.md`), implementation plan (Git history: `2026-10-03-shop-stage-core-connection-implementation-plan.md`), [P1 verification](2026-10-03-shop-stage-core-connection-p1-verification.md).

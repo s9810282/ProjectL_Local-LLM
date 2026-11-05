@@ -49,8 +49,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 changes.Add(new CharacterStateChange(character, final));
                 if (character.OwnershipRole == CharacterOwnershipRole.Main &&
                     character.Health.CurrentHealth != final.Health.CurrentHealth)
-                    mainChange = new MainCharacterPersistentChange(main,
-                        CharacterSettlementCalculator.WithHealth(main, final.Health.CurrentHealth));
+                    mainChange = new MainCharacterPersistentChange(character.OwnedId.Value, main,
+                        main.WithCurrentHealth(final.Health.CurrentHealth));
             }
 
             return new CharacterChanges(changes, Array.Empty<SoulCountChange>(), mainChange);

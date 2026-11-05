@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -44,7 +45,7 @@ namespace ProjectL.Tests.Core
             TraitSpec[] traits =
             {
                 originalFocus,
-                new MoveAttackDiscountTraitSpec(discountAmount: 1, minimumAttackCost: 1),
+                new RoarTraitSpec(2),
             };
 
             UnitSpec spec = CreateSpec(traits);
@@ -121,7 +122,7 @@ namespace ProjectL.Tests.Core
         {
             UnitSpec spec = CreateSpec(new TraitSpec[]
             {
-                new MoveAttackDiscountTraitSpec(discountAmount: 2, minimumAttackCost: 1),
+                new RoarTraitSpec(2),
                 new FocusTraitSpec(damagePerStack: 3, maxStacks: 2),
             });
 
@@ -134,7 +135,7 @@ namespace ProjectL.Tests.Core
 
             Assert.That(definitions.Length, Is.EqualTo(2));
             Assert.That(definitions[0].TraitKey, Is.EqualTo(TraitKey.Focus));
-            Assert.That(definitions[1].TraitKey, Is.EqualTo(TraitKey.MoveAttackDiscount));
+            Assert.That(definitions[1].TraitKey, Is.EqualTo(TraitKey.Roar));
         }
 
         [Test]
@@ -172,33 +173,23 @@ namespace ProjectL.Tests.Core
             MovePreview movePreview = MovePreview.Success(
                 CreateMovementDestination(),
                 moveStatuses,
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                CategorySnapshot.CreateStateless(CategoryKey.Main));
             AttackPreview attackPreview = AttackPreview.Success(
                 new EntityId(1),
                 new EntityId(2),
                 Rotation4.R0,
-                new ActionCostSettlementSnapshot(2, 2, 0, 0),
+                new UnitActionUseSettlementSnapshot(new EntityId(1),UnitActionUse.Available,UnitActionUse.Attacked),
                 Array.Empty<CellCoord>(),
                 Array.Empty<AttackTargetPreview>(),
                 attackStatuses,
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                CategorySnapshot.CreateStateless(CategoryKey.Main));
             MovementResult movementResult = MovementResult.Success(
-                new EntityId(1),
-                CellCoord.Zero,
-                new CellCoord(1, 0),
-                new[] { new CellCoord(1, 0) },
-                stepDistance: 1,
-                distanceFromCheckpoint: 1,
-                totalMoveActionCost: 1,
-                actionCostDelta: 1,
-                stage,
-                movementActivations,
-                Array.Empty<CategoryActivationSnapshot>());
+                new EntityId(1),                CellCoord.Zero,                new CellCoord(1, 0),                new[] { new CellCoord(1, 0) },                stepDistance: 1,                distanceFromCheckpoint: 1,                stage,                movementActivations,                Array.Empty<CategoryActivationSnapshot>());
             AttackResult attackResult = AttackResult.Success(
                 new EntityId(1),
                 new EntityId(2),
                 Rotation4.R0,
-                new ActionCostSettlementSnapshot(2, 2, 0, 0),
+                new UnitActionUseSettlementSnapshot(new EntityId(1),UnitActionUse.Available,UnitActionUse.Attacked),
                 Array.Empty<CellCoord>(),
                 Array.Empty<AttackHitResult>(),
                 stage,
@@ -211,12 +202,12 @@ namespace ProjectL.Tests.Core
                 stage,
                 turnActivations);
 
-            unitStatuses[0] = new MoveAttackDiscountTraitStatusSnapshot(false, false);
-            moveStatuses[0] = new MoveAttackDiscountTraitStatusSnapshot(false, false);
-            attackStatuses[0] = new MoveAttackDiscountTraitStatusSnapshot(false, false);
-            movementActivations[0] = CreateDiscountActivation();
-            attackActivations[0] = CreateDiscountActivation();
-            turnActivations[0] = CreateDiscountActivation();
+            unitStatuses[0] = new RoarTraitStatusSnapshot(0, 2);
+            moveStatuses[0] = new RoarTraitStatusSnapshot(0, 2);
+            attackStatuses[0] = new RoarTraitStatusSnapshot(0, 2);
+            movementActivations[0] = CreateRoarActivation();
+            attackActivations[0] = CreateRoarActivation();
+            turnActivations[0] = CreateRoarActivation();
 
             Assert.That(unitStats.TraitStatuses.Span[0], Is.SameAs(expectedStatus));
             Assert.That(movePreview.ProjectedTraitStatuses.Span[0], Is.SameAs(expectedStatus));
@@ -235,33 +226,23 @@ namespace ProjectL.Tests.Core
             MovePreview movePreview = MovePreview.Success(
                 CreateMovementDestination(),
                 Array.Empty<TraitStatusSnapshot>(),
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                CategorySnapshot.CreateStateless(CategoryKey.Main));
             AttackPreview attackPreview = AttackPreview.Success(
                 new EntityId(1),
                 new EntityId(2),
                 Rotation4.R0,
-                new ActionCostSettlementSnapshot(2, 2, 0, 0),
+                new UnitActionUseSettlementSnapshot(new EntityId(1),UnitActionUse.Available,UnitActionUse.Attacked),
                 Array.Empty<CellCoord>(),
                 Array.Empty<AttackTargetPreview>(),
                 Array.Empty<TraitStatusSnapshot>(),
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                CategorySnapshot.CreateStateless(CategoryKey.Main));
             MovementResult movementResult = MovementResult.Success(
-                new EntityId(1),
-                CellCoord.Zero,
-                new CellCoord(1, 0),
-                new[] { new CellCoord(1, 0) },
-                stepDistance: 1,
-                distanceFromCheckpoint: 1,
-                totalMoveActionCost: 1,
-                actionCostDelta: 1,
-                stage,
-                Array.Empty<TraitActivationSnapshot>(),
-                Array.Empty<CategoryActivationSnapshot>());
+                new EntityId(1),                CellCoord.Zero,                new CellCoord(1, 0),                new[] { new CellCoord(1, 0) },                stepDistance: 1,                distanceFromCheckpoint: 1,                stage,                Array.Empty<TraitActivationSnapshot>(),                Array.Empty<CategoryActivationSnapshot>());
             AttackResult attackResult = AttackResult.Success(
                 new EntityId(1),
                 new EntityId(2),
                 Rotation4.R0,
-                new ActionCostSettlementSnapshot(2, 2, 0, 0),
+                new UnitActionUseSettlementSnapshot(new EntityId(1),UnitActionUse.Available,UnitActionUse.Attacked),
                 Array.Empty<CellCoord>(),
                 Array.Empty<AttackHitResult>(),
                 stage,
@@ -335,60 +316,14 @@ namespace ProjectL.Tests.Core
                     new TraitActivationSnapshot[] { null }));
         }
 
-
-        [Test]
-        public void PierceRayDetails_AreCopiedAndPreserveIndividuallyRoundedStages()
-        {
-            var previews = new[]
-            {
-                new PierceRayHitPreview(0, 1, 5, 9, 10, 5, 5, 0, 5),
-                new PierceRayHitPreview(1, 0, 5, 9, 10, 5, 5, 0, 5),
-            };
-            var preview = new AttackTargetPreview(new EntityId(2), 10, 4,
-                new[] { new CellCoord(2, 3) }, 10, 9, 10, 0, previews);
-            previews[0] = default;
-            Assert.That(preview.RayHits.Span[0].EncounterIndex, Is.EqualTo(1));
-            Assert.That(preview.ExpectedDamage, Is.EqualTo(10));
-            Assert.That(preview.TargetHealthAfter, Is.Zero);
-            Assert.That(new AttackTargetPreview(new EntityId(2), 1, 4, Array.Empty<CellCoord>()).RayHits.IsEmpty, Is.True);
-        }
-
-        [Test]
-        public void PierceRayDetails_RejectDuplicateRaysInvalidDefaultsAndMismatchedAggregates()
-        {
-            var a = new PierceRayHitPreview(0, 0, 1, 1, 1, 1, 1, 0, 1);
-            var b = new PierceRayHitPreview(1, 0, 1, 1, 1, 1, 1, 0, 1);
-            AttackTargetPreview Preview(PierceRayHitPreview[] hits, int expected = 2) =>
-                new AttackTargetPreview(new EntityId(2), expected, 4, Array.Empty<CellCoord>(), 2, 1, 1, 0, hits);
-            Assert.Throws<ArgumentException>(() => Preview(new[] { a }));
-            Assert.Throws<ArgumentException>(() => Preview(new[] { a, a }));
-            Assert.Throws<ArgumentException>(() => Preview(new[] { a, default(PierceRayHitPreview) }));
-            Assert.Throws<ArgumentException>(() => Preview(new[] { a, b }, 1));
-            Assert.Throws<ArgumentException>(() => Preview(new[] { a,
-                new PierceRayHitPreview(1, 0, 1, 9, 10, 1, 1, 0, 1) }));
-        }
-
-        [Test]
-        public void PierceRayRecords_RejectInvalidIndicesValuesAndSumOverflow()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new PierceRayHitPreview(-1, 0, 1, 1, 1, 1, 1, 0, 1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new PierceRayHitPreview(0, -1, 1, 1, 1, 1, 1, 0, 1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new PierceRayHitPreview(0, 0, 1, 1, 0, 1, 1, 0, 1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new PierceRayHitPreview(0, 0, -1, 1, 1, 1, 1, 0, 1));
-            var large = new PierceRayHitPreview(0, 0, int.MaxValue, 1, 1, int.MaxValue, int.MaxValue, 0, int.MaxValue);
-            var extra = new PierceRayHitPreview(1, 0, 1, 1, 1, 1, 1, 0, 1);
-            Assert.Throws<OverflowException>(() => new AttackTargetPreview(new EntityId(2), int.MaxValue,
-                4, Array.Empty<CellCoord>(), int.MaxValue, 1, 1, 0, new[] { large, extra }));
-        }
-
         [Test]
         public void TraitFreeDefinition_CurrentBattleFactsHaveNoTraitStatuses()
         {
             var registry = TraitRegistry.CreateDefault();
             var definition = new UnitCatalog(new[] { CreateSpec(Array.Empty<TraitSpec>()) }, registry)
                 .GetRequired(EntityKey.Unit_Akimbo);
-            var character = BattleCharacterCalculator.Create(new EntityId(1), definition,
-                Owner.Enemy, null, null, 0, null, CellCoord.Zero, Rotation4.R0, new[] { CellCoord.Zero }, registry);
+            var character = BattleCharacterCalculator.CreateEnemy(new EntityId(1), definition,
+                1, CellCoord.Zero, Rotation4.R0, new[] { CellCoord.Zero }, registry);
             Assert.That(definition.TraitDefinitions.Length, Is.Zero);
             Assert.That(character.Stats.TraitStatuses.Length, Is.Zero);
         }
@@ -402,14 +337,9 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
                 3,
-                8,
-                2,
                 30,
-                35,
                 traits);
         }
 
@@ -419,46 +349,17 @@ namespace ProjectL.Tests.Core
             if (traitStatuses == null)
             {
                 return new UnitStatsSnapshot(
-                    MoveMethod.LiftAndPlace,
-                    moveRange: 5,
-                    moveCost: 1,
-                    appointRange: 4,
-                    attackPower: 3,
-                    physicalDefense: 0,
-                    maxActionCost: 8,
-                    attackCost: 2,
-                    remainingMoveRange: 2,
-                    currentActionCost: 3,
-                    priority: 30,
-                    delay: 35,
-                    traitStatuses: Array.Empty<TraitStatusSnapshot>(),
-                    category: CategorySnapshot.CreateStateless(CategoryKey.Base));
+                    MoveMethod.LiftAndPlace,                    moveRange: 5,                    appointRange: 4,                    attackPower: 3,                    physicalDefense: 0,                    priority: 30,                    traitStatuses: Array.Empty<TraitStatusSnapshot>(),                    category: CategorySnapshot.CreateStateless(CategoryKey.Main));
             }
 
             return new UnitStatsSnapshot(
-                MoveMethod.LiftAndPlace,
-                moveRange: 5,
-                moveCost: 1,
-                appointRange: 4,
-                attackPower: 3,
-                physicalDefense: 0,
-                maxActionCost: 8,
-                attackCost: 2,
-                remainingMoveRange: 2,
-                currentActionCost: 3,
-                priority: 30,
-                delay: 35,
-                traitStatuses,
-                CategorySnapshot.CreateStateless(CategoryKey.Base));
+                MoveMethod.LiftAndPlace,                moveRange: 5,                appointRange: 4,                attackPower: 3,                physicalDefense: 0,                priority: 30,                traitStatuses,                CategorySnapshot.CreateStateless(CategoryKey.Main));
         }
 
         private static MovementDestination CreateMovementDestination()
         {
             return new MovementDestination(
-                new CellCoord(1, 0),
-                new[] { new CellCoord(1, 0) },
-                distance: 1,
-                actionCost: 1);
+                new CellCoord(1, 0),                new[] { new CellCoord(1, 0) },                distance: 1);
         }
 
         private static StageSnapshot CreateStageSnapshot()
@@ -471,13 +372,13 @@ namespace ProjectL.Tests.Core
                 Array.Empty<ReserveSlotSnapshot>());
         }
 
-        private static TraitActivationSnapshot CreateDiscountActivation()
+        private static TraitActivationSnapshot CreateRoarActivation()
         {
             return new TraitActivationSnapshot(
                 new EntityId(1),
                 targetId: null,
-                TraitKey.MoveAttackDiscount,
-                TraitActivationKind.AttackDiscountArmed,
+                TraitKey.Roar,
+                TraitActivationKind.StatusReset,
                 magnitude: 1);
         }
 
@@ -490,14 +391,9 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
                 3,
-                8,
-                2,
-                30,
-                35);
+                30);
         }
 
         private static UnitSpec CreatePreTimelineSpec()
@@ -509,12 +405,8 @@ namespace ProjectL.Tests.Core
                 new[] { CellCoord.Zero },
                 10,
                 MoveMethod.LiftAndPlace,
-                5,
-                1,
                 4,
-                3,
-                8,
-                2);
+                3);
         }
     }
 }

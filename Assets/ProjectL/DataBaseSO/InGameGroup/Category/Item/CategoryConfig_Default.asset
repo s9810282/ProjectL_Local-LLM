@@ -12,5 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d11abeb1877eeb45ad230d39ce2f063f, type: 3}
   m_Name: CategoryConfig_Default
   m_EditorClassIdentifier: 
-  heavyDamageReductionPercent: 50
-  heavyInitialFacing: 0
+  riderDefaultTrait: {fileID: 11400000, guid: fbb509446ea148168d199a15cb029b8c, type: 2}
+  heavyDefaultTrait: {fileID: 11400000, guid: b9c35e1df47b41a69e13d0cc4f07f712, type: 2}
+  mainMovement:
+    movementAllowance: 3
+  riderMovement:
+    movementAllowance: 4
+  heavyMovement:
+    movementAllowance: 3
+  cannonMovement:
+    movementAllowance: 2
+  bossMovement:
+    movementAllowance: 0
+  baseLevelGrowth:
+    maxHealthPerLevel: 0
+    attackPerLevel: 0
+  riderLevelGrowth:
+    maxHealthPerLevel: 1
+    attackPerLevel: 1
+  heavyLevelGrowth:
+    maxHealthPerLevel: 3
+    attackPerLevel: 0
+  cannonLevelGrowth:
+    maxHealthPerLevel: 0
+    attackPerLevel: 2
+  bossLevelGrowth:
+    maxHealthPerLevel: 0
+    attackPerLevel: 0
+  levelProgression:
+    mainExperiencePerLevel: 150
+    subExperiencePerLevel: 100
+    mainMaxHealthGrowth: 3
+    mainAttackGrowth: 1
+    mainDefenseGrowth: 1

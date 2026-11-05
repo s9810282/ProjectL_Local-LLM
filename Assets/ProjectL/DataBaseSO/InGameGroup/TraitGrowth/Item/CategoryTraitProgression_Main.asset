@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0f010cd5d674215826c1326985e1cbf, type: 3}
+  m_Name: CategoryTraitProgression_Main
+  m_EditorClassIdentifier: 
+  category: 10
+  steps:
+  - stepId: 10
+    unlockLevel: 2
+    kind: 1
+  - stepId: 30
+    unlockLevel: 3
+    kind: 1
+  pool:
+  - {fileID: 11400000, guid: 277bba944249451384463655d92b9613, type: 2}
+  - {fileID: 11400000, guid: e0ed9411345043539709c7211f84459c, type: 2}
+  - {fileID: 11400000, guid: d76eb5b6a33040b7a81c256c57645792, type: 2}
+  - {fileID: 11400000, guid: e6ba5a7c9f574155b7da56f54fda005a, type: 2}
+  - {fileID: 11400000, guid: 7374b6f182ab4d6e9101f4c7a98dcd2e, type: 2}
+  - {fileID: 11400000, guid: 6419dc8bb9bc466f8750912ed34f9f30, type: 2}
+  - {fileID: 11400000, guid: ad7898e1a6b54a0dad1a105ba6c968cf, type: 2}
+  - {fileID: 11400000, guid: d18c8619ff0c42269a8e33ab998d3290, type: 2}

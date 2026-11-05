@@ -1,3 +1,5 @@
+> **상대방 기록 보존(코드 미병합):** 상대 커밋 `c1b9b0a`의 문서 내용을 보존했다. 본문의 완료·검증은 당시 브랜치 범위이며 현재 코드의 병합 후 검증을 뜻하지 않는다. 현재 코드에는 아직 상대 변경을 적용하지 않았다. [병합 검토·수정 안내](2026-10-10-stage-map-plan-Hojin.md#4-c1b9b0a-병합-검토-2026-10-11)를 함께 읽는다.
+
 # 전투 View 구현 계획
 
 - 작성일: 2026-10-01 (12차 View 내부 책임 분리 2026-10-05)
@@ -1811,9 +1813,112 @@ VR1~VR5와 §7.48은 사용자 Unity 확인을 마쳤다. 이후 사용자는 �
 - **§7.68 코드 작업 완료.** 남은 것: P2~P7 Unity 확인, 보류(VR6+R5·R6·평가 항목 5), 문서 정리(상세 UML·프로그래머 인계서를 P3~P6 구조로, CLAUDE.md 현재 상태).
 - Core 파일 변경 없음. 커밋·push 없음.
 
-### 7.69 전투 진행 Job·Plan 재구성 (2026-10-10, R1 코드 완료·Unity 확인 대기)
+### 7.69 전투 진행 Job·Plan 재구성 (2026-10-10, R1~R3 사용자 커밋·R3 Unity 확인 완료 통보·R4 완료)
 
-제작자 계획대로 `CombatLifeCycle`을 트리거로 줄이고 판단을 `CombatPlan` 한 곳으로 모은다. 설계는 [재구성 설계](../specs/2026-10-10-combat-job-plan-restructure-design.md), Task·실행 기록은 [재구성 Task 계획](2026-10-10-combat-job-plan-restructure-plan.md)에만 적는다. 착수 조건은 §7.68 P2~P7 Unity 확인 완료다. VR6은 이 재구성 뒤로 둔다.
+제작자 계획대로 `CombatLifeCycle`을 트리거로 줄이고 판단을 `CombatPlan.Decide` 한 곳으로 모았다. 설계는 [재구성 설계](../specs/2026-10-10-combat-job-plan-restructure-design.md), Task·실행 기록은 [재구성 Task 계획](2026-10-10-combat-job-plan-restructure-plan.md)에만 적는다. R3 코드 기준은 `1e7fdda5`이며 사용자가 전체 확인 완료 후 R4 진행을 지시했다. R4는 기존 설계·UML의 기준 이전, 평가 R2·M6 처리 상태, Core 경계 알림과 현재 상태 문서 정리를 완료했다. [민형님 공유 문서](../handoffs/2026-10-10-combat-job-plan-framework-share-minhyeong.md)는 작성 완료·미전달. §7.68의 착수 조건 확인 이력과 R3 검토 메모·검증 출처는 재구성 Task 실행 기록을 따른다. VR6은 Core 타임라인 계약 인수 뒤 별도 작업이다.
+
+### 7.70 레일 표시와 열차 발동 연출 (2026-10-13, RW4 실제 리소스 연결·화면 확인 대기)
+
+사용자가 GridOutline 레일 상시 표시와 레일·기차 프리팹·발동 연출 연결을 요청하고 [설계](../specs/2026-10-12-railway-view-design.md)를 확인한 뒤 RW1~RW4 진행을 지시했다. 상시 표시·열차 사건 코드와 과거 실제 모델·Clip·Controller 연결을 반영했다. 전투 스테이지 11개는 9×9 중앙 가로 레일(x=0~8, y=4)이며 승인된 본부 위치는 기존 x·y=7이다. Task·상태·실행 증거는 [Railway View Task 계획](2026-10-12-railway-view-plan.md)에만 적는다. 독립 Unity 운영 경로 검사와 원본 Test Runner·화면 확인 대기를 구분한다. 설정 안내는 [Railway View 안내](../viewDocs/railway-view-guide.md)다. 가로·세로 직선 여러 개를 지원하며 열차 통과 완료 뒤 기존 피해·사망 사건을 표시한다. Core·FieldCamera·Architecture·Render 내부 코드는 범위 밖이다.
+
+### 7.71 적 행동 간격·이동 회전 연출 (2026-10-13, M3 사용자 확인 완료)
+
+사용자가 적 행동/턴 딜레이, 이동 방향으로 먼저 회전, 최종 이동 칸에서 플레이어 측으로 복귀를 요청했다. 기본 시간은 행동 간 0.2초·턴 전환 0.4초·회전 0.1초로 확정하고 설계대로 M1과 M2 진행을 지시했으며 후속으로 아군 이동 회전도 요청했다. [적 연출 설계](../specs/2026-10-13-enemy-presentation-design.md)에 행동/턴 경계·표시 회전·완료/취소 계약을 정리했으며 Task·상태·실행 기록은 [적 연출 Task 계획](2026-10-13-enemy-presentation-plan.md)에만 둔다. M1 딜레이·M2 회전·M2A 아군 확장 코드와 독립 Unity 검증을 반영했고, 사용자가 M3에서 아군·적 이동 회전과 도착 후 방향 복귀 정상 동작을 확인해 완료로 기록했다. 사용자 화면 확인과 원본 Test Runner 실행 여부는 해당 계획 §5.6에서 구분한다. 사용자가 씬에서 바꾼 기존 이동 시간 0.2초는 보존했다. Core·Buffer·Job/Plan·FieldCamera·Architecture 변경은 범위 밖이다.
+
+### 7.72 이동 범위·경로 편집 고스트 (2026-10-13, Phase 2 연결·자동 검증 완료, 재질 대응 보류)
+
+사용자가 이동 모드 진입 시 가능 범위 표시와 경로 편집 중 원본 유닛 반투명/커서 고스트를 요청했다. [이동 표시 설계](../specs/2026-10-13-movement-planning-feedback-design.md)에 요청 순서·정확한 경로·표시/재질 수명을 정리하고 독립 요청 준비 뒤 Phase 1 범위, 명시적 Phase 2 지시 뒤 편집 수명·커서 고스트·지원 셰이더 투명 변형을 연결했다. Task·상태·실행 증거 원본은 [이동 표시 Task 계획 §4.4](2026-10-13-movement-planning-feedback-plan.md#44-phase-2-연결자동-검증-완료-standard-재질-대응-보류-2026-10-13)다. 코드 연결과 격리 Unity 자동 검증은 완료했으며 URP/Lit·Unlit/고스트의 실제 알파 혼합·복원도 확인했다. 운영 모델에 섞인 Standard 슬롯은 URP 오류색·불투명 상태여서 전체 모델 표현은 미완료다. 사용자는 View 전용 URP/Lit 변환을 추가하지 않고 여기서 멈춘 뒤 기존 재질을 별도로 정리하도록 선택했다. 원본 GameView 확인도 대기한다. Core·Buffer·Flow/Job/Plan·FieldCamera·Architecture·공용 Render/셰이더 변경은 범위 밖이다.
+
+### 7.73 임시 공격 연출 4종 (2026-10-13, C4 코드·자동 검증 완료)
+
+사용자가 일반 총알·근접·Ballista·CatusCannon과 잔류 가시밭의 이식을 요청하고 범위를 확정했다. [임시 공격 설계](../specs/2026-10-13-temporary-attack-presentation-design.md)를 기준으로 C1 기반·C2 곡사/가시밭·C3 일반 총알/박치기 뒤 명시적 C4 지시를 받아 Ballista 실제 관통 경로·접촉별 피해/사망 표시·종점 회수·활시위/재장전을 연결했다. 최소 Core 공격 그룹 게시 변경도 사용자 명시 승인으로 구현하고 인계를 기록했다. Akimbo의 일반 총알 프로필은 사용자가 직접 변경한 것을 보존했다. 상세 Task·실행·검증·한계의 원본은 [공격 Task 계획 §6.4](2026-10-13-temporary-attack-presentation-plan.md#64-c4-ballista)에만 둔다. C4 코드·독립 Unity 자동 검증 완료, 원본 GameView 외형 리뷰 대기. C4 리뷰 지점에서 멈추며 C5는 미착수다.
+
+2026-10-13 후속 요청으로 [공격 설계 §9](../specs/2026-10-13-temporary-attack-presentation-design.md#9-피격사망-모션-추가-설계-2026-10-13)의 피격·사망 모션 추가와 R1·R2 순차 진행 지시를 받았다. R1 피격·공용 자세 뒤 명시적 R2 지시를 받아 사망 모델 유지·넘어짐·풀 반환 코드와 독립 Unity 자동 검증을 완료했다. 상세 구현·검증·미확인 항목의 원본은 [R1 기록 §7.3](2026-10-13-temporary-attack-presentation-plan.md#73-r1-피격공용-자세-완료-2026-10-13)·[R2 기록 §7.4](2026-10-13-temporary-attack-presentation-plan.md#74-r2-사망-모델-유지모션풀-반환-완료-2026-10-13)다. 각 Phase 종료 보고·정지 규칙에 따라 R2 리뷰 지점에서 멈추며 실제 GameView·운영 정상 이탈 통합 인수 C5는 미착수다.
+
+### 7.74 커서 그리드 스냅 (2026-10-13, 사용자 Unity 재생 확인 완료)
+
+사용자가 배치·이동·공격 모드 진입 시 마우스가 그리드에 스냅되기를 요청했다. 스냅 대상은 OS 커서 자체, 필드 밖·UI 위는 지금처럼 자유(U1·U2). 설계 원본은 [커서 그리드 스냅 설계](../specs/2026-10-13-combat-cursor-grid-snap-design.md): 칸이 바뀔 때만 칸 중심으로 커서 이동 + 모드 진입 즉시 한 번, 판단은 새 `CombatCursorSnap`, 장치 호출은 표시 쪽 `ICombatCursorDevice`. 결정 G1~G4 사용자 확인 대기.
+- **결정(2026-10-13):** G1 칸이 바뀔 때만 스냅하고 모드 진입 즉시 스냅은 하지 않는다(진입 순간 커서가 필드 밖·UI 위일 수 있음). G2 새 `CombatCursorSnap`, G3 끌 수 있게(`CombatSceneRoot.snapCursorToGrid`, 기본 켬, 재생 중 Inspector 변경 반영), G4 기록 모드도 스냅.
+- **구현(`C` = `ViewSystem/Combat/`):**
+
+| 파일 | 변경 |
+|---|---|
+| `C/CombatCursorSnap.cs`(+meta, 신규) | 규칙 소유자. 스냅 모드·스냅 켜짐·필드 안·UI/손패 영역 아님(기존 `TryMapPointer`의 취소 영역 판정 재사용)일 때 칸이 직전 스냅 칸과 다르면 칸 중심으로 이동. 이동 실패(포커스 없음)면 기억하지 않아 다음 이동에서 재시도. 비활성·필드 밖이면 기억 비움 |
+| `C/ICombatCursorDevice.cs`(+meta, 신규) | `IsCursorSnapEnabled`·`TryCellCenterToScreen`·`TryWarpCursor` |
+| `C/CombatPointerMapper.cs` | `TryCellCenterToScreen`(격자 안·카메라 앞만), `TryWarpCursor`(`Mouse.current.WarpCursorPosition`, `Application.isFocused`일 때만), 카메라 선택을 `CurrentCamera()` 한 곳으로 |
+| `C/CombatSceneDisplay.cs`·`C/ICombatBattleDisplay.cs` | `ICombatCursorDevice` 구현(해제 뒤 무시), 스냅 켜짐은 SceneRoot 값을 호출마다 읽음 |
+| `C/CombatSceneRoot.cs` | `snapCursorToGrid`(기본 true, Tooltip) |
+| `C/CombatPathInput.cs` | 읽기 전용 `IsPlanning`(Q 뒤 시작 칸 대기 포함) |
+| `C/CombatInputRouter.cs` | `SetCursorSnap`, 활성 조건 `IsCursorSnapMode`(배치 Drag·공격 모드·경로 지정, 각 소유자 상태 읽기만), 포인터 이동 분배 뒤 스냅 호출 |
+| `C/CombatViewSystem.cs` | Attach 때 `CombatCursorSnap(display, display)` 생성·연결 |
+| 테스트 | `CombatCursorSnapTests`(신규 7건: 같은 칸 무시·다른 칸 1회 중심, 이동 뒤 재이벤트 무시, 필드 밖·UI 위 무시·기억 비움 2건, 비활성·다음 모드 첫 칸, 꺼짐, 이동 실패 재시도), `CombatInputRouterTests` 1건(모드 아님·모드 진입만으로는 이동 없음, 공격 모드 중 포인터 이동에만 이동), `CombatViewSystemTests` FakeDisplay 확장 |
+
+- **검증:** MSBuild `ProjectL.Tests.Framework`(새 파일 포함) 오류 0, 변경 파일 새 경고 0. 관리 실행기 203/203(커서 스냅·Router·Interaction·Gate·Policy·MovementDraft 179, MovementFeedback·PathInputCleanup 24). 실제 커서 이동은 **Unity 재생 확인 대기**.
+- **Unity에서 확인할 것:** 배치 Drag(손패 카드 → 필드 첫 칸에서 칸 중심, 칸을 넘을 때마다 중심, 손패 영역·UI 위·필드 밖은 자유), 이동(Q → 시작 칸 진입 시 중심, 경로가 이전과 같게 그려지고 확정됨), 공격(E 직후에는 그대로, 필드에서 움직이면 중심, Direction 조준 정상), 창 포커스를 잃었을 때 커서를 뺏지 않음, 재생 중 `CombatSceneRoot`의 Snap Cursor To Grid를 끄면 이전과 같음, 에디터 Game 뷰에서 칸 중심 위치가 맞는지.
+- 커밋·push 없음.
+
+### 7.75 이동 Drag 입력 (2026-10-13, D1·D2 사용자 Unity 확인 완료)
+
+사용자가 이동 입력을 Q 진입 + 호버 경로 + 클릭 확정에서 유닛 Drag(누름 진입 → 끌어 경로 → 놓아 이동)로 바꾸기로 했다. 설계 원본은 [이동 Drag 입력 설계](../specs/2026-10-13-combat-move-drag-input-design.md): 경로·견적·승인·제출(`CombatMovementInteraction`)은 그대로, `CombatPathInput`의 진입(행위자 앵커 누름)과 확정(놓기)만 바꾼다. 결정 M1(Q 입력 완전 제거)·M2(시작 칸 = 앵커)·M3(확정 불가로 놓기·놓은 뒤 불가 응답은 취소) 사용자 확인 대기.
+- **결정(2026-10-13, 추천안 확정):** M1 Q 입력 완전 제거, M2 Drag 시작 칸 = 활성 아군 행위자 앵커, M3 확정할 수 없는 곳에서 놓기·놓은 뒤 "이동 불가" 응답은 지정 취소(이동 없음).
+- **Task:** D1 Drag 진입·확정과 테스트 → D2 Q 입력 제거(입력 액션·이름·Controller·수신 인터페이스·슬롯·Receiver·Router·테스트)와 `stage-input-guide.md` §2.2 교체.
+- **D1 완료(코드·관리 회귀):** `ViewSystem/Combat/CombatPathInput.cs`
+  - `SelectPressed`: 지정 중이 아니고 누른 칸이 `ActiveActor()`의 앵커면 `BeginPlanning()`(기존 허용·행위자 조건·범위 요청) 뒤 같은 좌표로 `PointerMoved` → 시작 칸 처리. 그 밖·지정 중 누름은 무시.
+  - `SelectReleased`: 시작 전·허용 안 됨이면 취소. 놓은 위치까지 `PointerMoved` 뒤 `_released = true`, `Confirm(놓은 칸)`. 동결·제출이 아니면 취소(M3).
+  - `_released` 상태: 놓은 뒤 포인터 이동 무시, `OnPreview` 뒤 확정이 풀렸으면(놓은 뒤 이동 불가 응답) 취소(M3). `BeginPlanning`·`CancelInputs`·`Detach`에서 초기화.
+  - 경로 로직(`CombatMovementInteraction`·`MovementDraft`·`MovementPointerSampler`)은 변경 없음. Q 관련 주석을 Drag 기준으로 갱신. Q(`MoveMode`)는 D2 전까지 기존처럼 `BeginPlanning`을 부른다.
+  - 테스트: `CombatMovementFeedbackTests` 신규 4건(행위자 칸 누름만 시작·범위 요청, Drag→놓기 제출 1회, 시작 칸 놓기 취소, 놓은 뒤 불가 응답 취소)과 클릭 확정 전제 테스트 7건을 놓기 확정으로 교체(UI·필드 밖 놓기는 취소로 기대 변경), `CombatMovementPlanningInputTests`·`CombatMovementRangeFeedbackTests` 각 1건을 놓기 확정으로, `CombatMovementViewTests.AttackCancellation_…`을 "공격 취소 뒤 행위자 Drag로 바로 경로 지정·놓기 제출"로 교체.
+  - **검증:** MSBuild `ProjectL.Tests.Framework` 오류 0. 관리 실행기 241/241(이동 피드백·경로 정리·지정 입력·범위 피드백·Router·커서 스냅·MovementDraft·Interaction·Policy·Gate). `CombatMovementViewTests`·`CoreStageCombatCycleTests`·`CombatDisplayReuseTests`(씬)는 GameObject가 필요해 **Unity EditMode 대기**.
+
+- **D1 사용자 Unity 확인 완료(2026-10-13).**
+- **D2 완료(코드·관리 회귀):** Q(`MoveMode`) 입력을 입력 단계 전체에서 제거(M1).
+  - `Assets/ProjectL/Input/PlayerInputActions.inputactions`: Combat 맵 `MoveMode` 액션과 `<Keyboard>/q` 바인딩 삭제(JSON 검증 통과, 다른 맵의 `RotateLeft` q 바인딩은 유지).
+  - `StageInput/StageInputNames.Combat.MoveMode`, `CombatInputController` 바인딩, `IStageInputReceiver.MoveModeRequested`, `StageInputReceiverSlot`, `Combat/CombatInputReceiver`, `CombatInputRouter.Request.MoveMode`(분기 포함) 삭제. `CombatViewSystem.IsMoveMode`는 "공격 모드 아님(경로 쪽)"이라는 다른 뜻이라 유지.
+  - 테스트: Q로 시작하던 Unity 테스트(`CombatMovementViewTests` 5곳, `CoreStageCombatCycleTests.PlanMove`, `CombatDisplayReuseTests` 씬 테스트)를 행위자 칸 누름 → 끌기 → 놓기로 교체(입력 라우터 경로는 Select Started=누름, Performed=놓기). `CombatInteractionTests` 3곳(완료 처리 중 차단은 AttackMode로, 경로 포인터 테스트 이름 정리, 모드 정리 케이스는 FocusLost로), `CombatInputReceiverTests`(AttackMode로), `StageInputTests`·`UnityStageInputTests`(MoveMode 이벤트·액션 제거), `Q_` 테스트 이름 정리.
+  - 문서: `viewDocs/stage-input-guide.md` §2.2를 Drag 조작으로 교체, §3 예시·입력 표·§12의 Q·클릭 확정 설명 갱신.
+  - **검증:** MSBuild `ProjectL.Tests.Framework` 오류 0. 관리 실행기 266/266(이동 피드백·경로 정리·지정 입력·범위·Router·커서 스냅·MovementDraft·Interaction·Policy·Gate·StageInput·CombatInputReceiver). `CombatMovementViewTests`·`CoreStageCombatCycleTests`·`CombatDisplayReuseTests`·`UnityStageInputTests`는 **Unity EditMode 대기**.
+  - **알아 둘 동작:** 공격 모드(E) 중에는 전투 포인터가 공격 소유자로 가므로 행위자 칸을 눌러도 이동 Drag가 시작되지 않는다. 우클릭·E로 공격 모드를 끈 뒤 Drag한다(기존 Router 판정 그대로).
+
+### 7.76 전투 행동 버튼(공격·턴 종료·복귀) (2026-10-13, B1·B3 코드·관리 회귀 완료, 씬 연결·Unity 확인 대기)
+
+설계 원본은 [행동 버튼 설계](../specs/2026-10-13-combat-action-buttons-design.md). 키(E·Space·R)와 같은 입력을 Combat 씬 Canvas 버튼으로도 받는다. 복귀(R)는 이미 HUD 버튼이 있어 새로 만드는 것은 공격·턴 종료 두 개다.
+- **결정(2026-10-13, 추천안 확정):** A1 새 `CombatActionPanel`, A2 공격 버튼은 토글(E 키는 재진입 유지), A3 누를 수 없으면 비활성으로 보임, A4 복귀 버튼 소유는 HUD 유지(검토 결과 설계 §7, A6 결정 대기), A5 단축키 표기는 씬 문구.
+- **Task:** B1 패널·표시 계약·가능 여부·UI 가림·입구·동기화와 테스트(코드) → B3 A6 결정 반영(복귀 버튼을 패널로 재구성) → B2 Combat.unity 패널 연결(사용자 에디터, 코드와 함께 해야 진입 가능).
+- **B1 완료(코드·관리 회귀):**
+  - 신규: `ViewSystem/Combat/CombatActionButtons.cs`(표시 값, `Read`), `ICombatActionDisplay.cs`, `ICombatPointerOcclusion.cs`, `Display/CombatActionPanel.cs`(슬롯 0 공격·1 턴 종료, 선택 `attackActiveIndicator`). `.meta` 새 GUID.
+  - `ICombatBattleDisplay`(두 계약 합성)·`CombatSceneDisplay`(전달, `Clear`·`Release`에서 숨김·연결 해제)·`CombatSceneRoot`(`actionPanel` 참조·검증).
+  - `CombatPointerMapper`: UI Raycast를 `HitsUi`로 분리해 `TryMapPointer`와 `IsPointerOverUi`가 공유.
+  - `CombatInteraction.CanEnterAttack`(진입 판단 읽기 전용), `CombatInputRouter.Request.AttackToggle`·`SetPointerOcclusion`(B5: 공격 대상의 UI 위 Select 무시), `CombatInputReceiver.AttackToggleRequested`(키 계약은 변경 없음), `CombatDevLayerController` 선택 인자 `layerChanged`.
+  - `CombatViewSystem`: Attach에서 `BindActions`·`SetPointerOcclusion`, 수신 창구 분배를 `RouteInput`으로(비포인터 입력 뒤 동기화), `SyncActionButtons()`를 `SyncInputToCore`·`SyncSubmissionState`·`FinalizeResult` 끝·`CancelInputPresentation`·개발 Layer 변경 뒤에, `StopInput` 숨김.
+  - 테스트: `CombatInteractionTests` 7건(토글·E 유지·UI 위 공격 무시·기록 모드 UI 위 선택 무시·보임 조건·턴 종료 조건·`CanEnterAttack`), `CombatViewSystemTests` 3건(Attach 연결·배치 숨김, 기록 모드 버튼 = 키 기록, 제출 정지·오류 숨김·포기 확인창 중 무시), `FakeDisplay`에 새 계약.
+  - **검증:** MSBuild `ProjectL.Tests.Framework`(새 파일은 extra.targets로 추가) 오류 0. 관리 실행기 `CombatInteractionTests` 65/65, `CombatInputRouterTests` 20/20, `CombatInputReceiverTests` 6/6, `CombatPanelControllerTests` 9/9. `CombatViewSystemTests`(새 3건 포함)는 GameObject가 필요해 **Unity EditMode 대기**.
+- **B3 완료(코드·관리 회귀, A6 = 사용자 지시 "복귀 버튼도 새 버튼처럼 재구성"):** 설계 §7 결정.
+  - `Display/CombatActionPanel.cs`: `returnButton`(슬롯 2)·`returnText`, `Bind` 세 입구, `ShowReturn`(HUD 문구·캐시 규칙 이전), 복귀 누름 가능 = 보임 그리고 견적 가능, 보임은 세 버튼 공통.
+  - `Display/CombatHud.cs`: 복귀 필드·`BindReturn`·`ShowReturn`·복귀 슬롯 제거(완료 슬롯 번호 1은 유지). `ICombatBattleDisplay.BindReturn` 제거, `ICombatActionDisplay.BindActions`에 `returnToCheckpoint` 추가, `CombatSceneDisplay.SetReturnState` → 패널. `CombatViewSystem._onReturnButton` → `CombatInputReceiver.RequestReturn()`(R 키와 같은 입구).
+  - 테스트: `CombatDisplayReuseTests`의 HUD 복귀 테스트 2건을 패널 테스트로 이전(견적·보임 조합·재연결, 표시 수명 캐시 무효화), 패널 EventSystem 입력 테스트 신규, 할당 0 테스트는 HUD 이동 + 패널 복귀로, Combat.unity 이동 사이클 테스트의 복귀 버튼 조회를 `root.ActionPanel`로. `CombatPointerMappingTests` 해제 뒤 호출을 `BindActions`로. `FakeDisplay.ActionReturn`.
+  - **검증:** MSBuild 오류 0. 관리 실행기 Interaction 65·Router 20·Receiver 6·PanelController 9·MovementFeedback 26 모두 통과. `CombatDisplayReuseTests`·`CombatViewSystemTests`·`CombatPointerMappingTests`는 **Unity EditMode 대기**(씬을 여는 테스트는 B2 연결 뒤에만 통과).
+- **B2(사용자 에디터):** Combat.unity Canvas에 `CombatActionPanel` 오브젝트와 버튼 3개(문구 "공격 (E)"·"턴 종료 (Space)", 복귀는 기존 HUD 복귀 버튼·문구 오브젝트를 패널 아래로 옮겨 재사용), 선택으로 공격 강조 오브젝트를 두고 `CombatSceneRoot.actionPanel`에 연결. **연결 전에는 `ValidateReferences`가 Combat 진입을 멈추고, Combat.unity를 여는 EditMode 테스트(`CombatPointerMappingTests`·`CombatSceneEventPresenterTests`·`TerrainOperationalDisplayTests`·`CombatDisplayReuseTests` 씬 사례 등)도 실패한다.** `Button.onClick`에는 아무것도 연결하지 않는다.
+
+### 7.77 전투 View 구조 리팩토링 R0~R4 (2026-10-14, 상태는 리팩토링 계획에만 기록)
+
+설계 원본은 [구조 리팩토링 설계](../specs/2026-10-14-combat-view-structure-refactor-design.md), Task·실행 기록은 [리팩토링 계획](2026-10-14-combat-view-structure-refactor-plan.md)에만 적는다. 이 절은 시작점 링크다. R0은 Core 새 사건 3종(낙하·포효·소환)에서 전투가 멈추던 문제를 막는다(모르는 사건은 경고 후 건너뜀).
+
+### 7.78 CombatSceneDisplay 후속 리팩토링
+
+방향과 책임 원본은 [후속 설계](../specs/2026-10-14-combat-scene-display-followup-design.md)다. 중복 Attach(SD-A)·재생 계약(SD-B)·비용 대상 이전(SD-C′)·직접 구현 평가(SD-C0)의 이력은 [후속 계획](2026-10-14-combat-scene-display-followup-plan.md)에 남긴다. 사용자 기준인 기능 변경의 독립성에 따른 **조립·기능 분리 SD-D0~D5의 Task·실행 상태는 [조립·기능 분리 계획](2026-10-14-combat-scene-display-composition-plan.md)**에만 기록한다. 단일 표시 입구는 유지하고, 전체 입력 피드백을 한 클래스로 옮기는 SD-C1은 보류한다. §7.77의 R0~R4와 별도 범위다.
+
+### 7.79 커서 그리드 스냅 감도 (2026-10-14, 코드·관리 회귀 완료, Unity 확인 대기)
+
+사용자 요청: 경계를 넘자마자 스냅되는 것을 비율로 조절하고 싶다. 결정은 [커서 그리드 스냅 설계](../specs/2026-10-13-combat-cursor-grid-snap-design.md) G5(추천안 확정).
+- `CombatSceneRoot.cursorSnapThreshold`(`Range(0, .49)`, 기본 0 = 기존 동작), `ICombatCursorDevice.CursorSnapThreshold`, `CombatSceneDisplay`가 씬 값을 호출마다 전달.
+- `CombatCursorSnap.PointerMoved`: 칸이 바뀌어도 `MovementPointerSampler.IsInside(grid, threshold)`가 아니면 옮기지 않고 기억한 칸 유지. 계약 밖 값은 NaN·음수 → 0, 0.49 초과 → 0.49.
+- 테스트: `CombatCursorSnapTests` 감도 6건(기준 0 즉시, 기준 전 대기·이전 칸 유지, 두 축·첫 칸, 잘못된 값 3종). 가짜 장치 2곳에 값 추가.
+- **검증:** MSBuild 오류 0. 관리 실행기 `CombatCursorSnapTests` 13/13, Router 20/20, Interaction 65/65.
+- **Unity 확인:** 재생 중 Combat 씬 `CombatSceneRoot`의 Cursor Snap Threshold를 0 → 0.2 → 0.35로 바꿔 배치 Drag·경로 지정·공격 모드에서 손맛 비교. 기본 0은 이전과 같아야 한다.
+
+### 7.80 전투 View 구조 평가와 개선 계획 SV (2026-10-15, 상태는 SV 계획에만 기록)
+
+평가 원본은 [구조 평가](../specs/2026-10-15-combat-view-structure-evaluation.md)(E1~E23, 검토 에이전트 3개 대조 반영), Task·결정 질문 Q1~Q6·실행 기록은 [SV 계획](2026-10-15-combat-view-structure-improvement-plan.md)에만 적는다. 이 절은 시작점 링크다. SD-D가 정리한 표시 쪽 다음으로 조정자의 입력 쪽(조립·기능별 호출·행동 버튼 시점)과 실패 경로 소유권을 다룬다.
 
 ## 8. 확장 시 주의사항과 필요한 작업
 

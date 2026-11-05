@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.03.00">
 	<object class="Event" id="{c7240cc8-4563-432e-961d-1da0275128b7}">
 		<property name="name">
-			<value>Gravedigger</value>
+			<value>GraveKeeper</value>
 		</property>
 		<property name="outputFormat">
 			<value>0</value>
@@ -45,6 +45,9 @@
 		</relationship>
 	</object>
 	<object class="MixerInput" id="{ca6b1cc2-f7da-4750-8d83-ac9ecedb8d11}">
+		<relationship name="masters">
+			<destination>{21f789db-de75-4e19-b7d2-336f61f0976d}</destination>
+		</relationship>
 		<relationship name="effectChain">
 			<destination>{35362182-156b-47db-b3b0-5a256291f2bb}</destination>
 		</relationship>
@@ -52,7 +55,7 @@
 			<destination>{3338b413-82fe-4148-8894-cc2fe01900d3}</destination>
 		</relationship>
 		<relationship name="output">
-			<destination>{c76f3247-cc7b-4f63-ab00-932026952d0c}</destination>
+			<destination>{ac0f88bc-b237-430b-9cf2-1aa6fd413dbf}</destination>
 		</relationship>
 	</object>
 	<object class="EventAutomatableProperties" id="{efcc0640-5e7b-454a-9669-fc4f67b3efcb}" />

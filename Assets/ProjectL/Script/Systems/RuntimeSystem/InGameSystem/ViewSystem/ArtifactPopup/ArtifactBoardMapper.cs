@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Artifact.Item;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup
@@ -33,6 +35,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup
         {
             return _config.BoardCenter + new Vector3((x - (width - 1) * .5f) * _config.CellSpacing,
                 heightOffset, (y - (height - 1) * .5f) * _config.CellSpacing);
+        }
+
+        /// <summary>
+        /// 아티팩트 모델의 판 로컬 자세를 정합니다. 위치 = 차지한 칸(<paramref name="offset"/> + 각 칸)의 평균 중심 + 모델 높이,
+        /// 회전 = <see cref="BoardRotation.Yaw"/> × 프리팹 회전, 배율 = 프리팹 배율 × 모델 배율입니다. 배치 표시와 드래그 표시의 원본 하나입니다(M-09).
+        /// </summary>
+        internal void ApplyModelPose(Transform model, GameObject prefab, IReadOnlyList<CellCoord> cells, CellCoord offset,
+            Rotation4 rotation, int width, int height)
+        {
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (prefab == null) throw new ArgumentNullException(nameof(prefab));
+            if (cells == null) throw new ArgumentNullException(nameof(cells));
+            if (cells.Count == 0) throw new ArgumentException("[ArtifactBoardMapper] 모델 자세에는 칸이 하나 이상 필요합니다.", nameof(cells));
+            float x = 0f, y = 0f;
+            for (int i = 0; i < cells.Count; i++)
+            {
+                x += offset.X + cells[i].X;
+                y += offset.Y + cells[i].Y;
+            }
+            model.localPosition = CellPosition(x / cells.Count, y / cells.Count, width, height, _config.ModelHeight);
+            model.localRotation = BoardRotation.Yaw(rotation) * prefab.transform.localRotation;
+            model.localScale = prefab.transform.localScale * _config.ModelScale;
         }
 
         internal static bool Contains(CellCoord cell, int width, int height)

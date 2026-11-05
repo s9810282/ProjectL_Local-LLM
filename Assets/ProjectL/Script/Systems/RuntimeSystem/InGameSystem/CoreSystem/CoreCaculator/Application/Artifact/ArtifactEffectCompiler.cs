@@ -18,7 +18,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static CompiledArtifactLoadout Compile(ArtifactLoadoutSnapshot snapshot)
         {
             ReadOnlySpan<ArtifactPlacedEffectSnapshot> effects = snapshot.Effects.Span;
-            var rules = new CompiledArtifactRule[effects.Length];
+            var rules = new List<CompiledArtifactRule>();
             var origins = new HashSet<EffectOriginKey>();
 
             for (int i = 0; i < effects.Length; i++)
@@ -35,12 +35,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (origins.Add(origin) == false)
                     throw Reject(placed, "entryId", "duplicate Origin", snapshot);
 
+                // 유닛 턴 수명의 영혼 생산만 보류하고 정의 검증은 유지한다.
+                if (schema == ArtifactSchema.SoulAltar) continue;
                 ICombatEffectRule rule = CreateRule(schema, placed.Effect);
-                rules[i] = new CompiledArtifactRule(origin, rule);
+                rules.Add(new CompiledArtifactRule(origin, rule));
             }
 
-            Array.Sort(rules, (left, right) => left.Origin.CompareTo(right.Origin));
-            return new CompiledArtifactLoadout(snapshot.Revision, rules);
+            rules.Sort((left, right) => left.Origin.CompareTo(right.Origin));
+            return new CompiledArtifactLoadout(snapshot.Revision, rules.ToArray());
         }
 
         private static void ValidatePlacedIdentity(

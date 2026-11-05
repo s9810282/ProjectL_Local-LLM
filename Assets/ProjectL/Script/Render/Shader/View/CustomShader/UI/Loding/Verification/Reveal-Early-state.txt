@@ -1,0 +1,1 @@
+phase=Revealing rootAlpha=0.84375 rootRect=(x:-500.00, y:-281.50, width:1000.00, height:563.00) windRect=(x:-500.00, y:-281.50, width:1000.00, height:563.00) windCull=False inheritedAlpha=0.84375 shaderPhase=3 rendererDepth=-1 cameraScene=

@@ -25,7 +25,7 @@ namespace ProjectL.Systems.Factory.Runtime.Development
                 throw new InvalidOperationException("임시 전투 공급원은 임시 Core 데이터에만 사용할 수 있습니다.");
             var definition = BattleDefinitionAdapter.Read(database, chapterKey, stageKey.Value, _characters.Owned);
             var profiles = definition.Units.Select(unit => {
-                if (unit.Key != EntityKey.Unit_MainCharacter && unit.Key != EntityKey.Unit_Akimbo)
+                if (unit.Key != EntityKey.Unit_Akimbo && unit.Key != EntityKey.Unit_CactusCannon && unit.Key != EntityKey.Unit_ShotGun)
                     throw new InvalidOperationException("임시 지정 방식을 정의하지 않은 유닛입니다.");
                 return new CombatAttackProfile(unit, new TargetingMethodSpec(
                     TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0));

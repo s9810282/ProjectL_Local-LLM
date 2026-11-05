@@ -12,11 +12,13 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
     public interface IArtifactViewBufferReadSink : IServiceModule
     {
         IReadOnlyList<ArtifactViewCommand> Commands { get; }
+        bool HasPreview { get; }
+        ArtifactViewPreviewRequest Preview { get; }
 
         /// <summary>
         /// 지정 번호보다 큰 첫 요청을 조회합니다.
-        /// handledThrough는 Core 측에서 순서대로 처리 완료한 마지막 번호이며,
-        /// 처리 중 중복 등록 방지도 Core 처리 계층이 관리합니다.
+        /// handledThrough는 Core 측에서 순서대로 처리 완료한 마지막 번호입니다.
+        /// 같은 요청을 두 번 처리하지 않게 막는 것은 로비 실행 계층(LobbyLifeCycle.OnTick이 Runner가 빌 때만 다음 Job을 거는 조건)입니다(N-79).
         /// </summary>
         bool TryGetNextCommand(int handledThrough, out ArtifactViewCommand command);
     }
@@ -27,8 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
         /// <summary>요청을 목록에 보관하고 번호를 반환합니다. Core를 직접 호출하지 않습니다.</summary>
         int Submit(ArtifactViewCommandData command);
 
-        /// <summary>결과를 확인한 요청 하나를 삭제합니다. 이미 없으면 false입니다.</summary>
-        bool RemoveCommand(int number);
+        int SetPreview(ArtifactViewPreviewData preview);
+        void ClearPreview();
+        void RemoveCommandsThrough(int handledNumber);
+        /// <summary>입력을 비워도 발급 번호는 재사용하지 않습니다.</summary>
+        void Clear();
     }
 
     #endregion
@@ -43,8 +48,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
         private readonly List<ArtifactViewCommand> _commands = new();
         private readonly ReadOnlyCollection<ArtifactViewCommand> _readOnlyCommands;
         private int _lastIssuedNumber;
+        private ArtifactViewPreviewRequest _preview;
+        private bool _hasPreview;
 
         public IReadOnlyList<ArtifactViewCommand> Commands => _readOnlyCommands;
+        public bool HasPreview => _hasPreview;
+        public ArtifactViewPreviewRequest Preview => _preview;
 
         public ArtifactViewBuffer()
         {
@@ -54,12 +63,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
         public int Submit(ArtifactViewCommandData command)
         {
             command.Validate();
-            if (_lastIssuedNumber == int.MaxValue)
-                throw new InvalidOperationException("ArtifactViewBuffer 요청 번호를 더 발급할 수 없습니다.");
-
-            int number = _lastIssuedNumber + 1;
+            int number = IssueNumber();
             _commands.Add(new ArtifactViewCommand(number, command));
-            _lastIssuedNumber = number;
             return number;
         }
 
@@ -81,21 +86,43 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView
             return false;
         }
 
-        public bool RemoveCommand(int number)
+        public int SetPreview(ArtifactViewPreviewData preview)
         {
-            if (number <= 0)
-                throw new ArgumentOutOfRangeException(nameof(number));
+            preview.Validate();
+            int number = IssueNumber();
+            _preview = new ArtifactViewPreviewRequest(number, preview);
+            _hasPreview = true;
+            return number;
+        }
 
-            for (int index = 0; index < _commands.Count; index++)
-            {
-                if (_commands[index].Number == number)
-                {
-                    _commands.RemoveAt(index);
-                    return true;
-                }
-            }
+        /// <summary>편집 입력과 프리뷰가 함께 쓰는 요청 번호 공간에서 다음 번호를 발급합니다(로비 리팩토링 2차 설계 N-47).</summary>
+        private int IssueNumber()
+        {
+            if (_lastIssuedNumber == int.MaxValue)
+                throw new InvalidOperationException("[ArtifactViewBuffer] 요청 번호를 더 발급할 수 없습니다.");
+            _lastIssuedNumber++;
+            return _lastIssuedNumber;
+        }
 
-            return false;
+        public void ClearPreview()
+        {
+            _preview = default;
+            _hasPreview = false;
+        }
+
+        public void RemoveCommandsThrough(int handledNumber)
+        {
+            if (handledNumber < 0 || handledNumber > _lastIssuedNumber)
+                throw new ArgumentOutOfRangeException(nameof(handledNumber));
+            int count = 0;
+            while (count < _commands.Count && _commands[count].Number <= handledNumber) count++;
+            _commands.RemoveRange(0, count);
+        }
+
+        public void Clear()
+        {
+            _commands.Clear();
+            ClearPreview();
         }
 
         public void ExportServices(ISystemWriteSink sink)
