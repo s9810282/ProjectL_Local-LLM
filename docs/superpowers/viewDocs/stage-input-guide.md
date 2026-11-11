@@ -133,7 +133,7 @@ Core의 공용 AP·비용·이동 한도·행동 사용 판정을 View에서 다
 
 - `CombatSceneDisplayFactory`가 `Selection/CombatSelectionState`를 만들고 Display가 소유한다. `ICombatSelectionReader`는 정보 대상 `SelectedEntityId`와 살아 있는 필드 아군의 `SelectedActorId`/점유 칸만 제공한다. 적 정보/무선택의 Actor Empty는 정상이다. 선택 상태가 AP/행동 자격을 계산하지 않는다.
 - Display는 Install/완료 Refresh마다 불변 CharacterData 참조 목록을 한 번 복사해 선택과 UnitInfo에 같은 목록을 전달한다. Buffer의 살아 있는 읽기 전용 래퍼를 시점 고정으로 간주하지 않는다. 같은 국면의 턴/결과는 유효 선택을 유지하고 죽음/이탈/국면 변경은 정리한다. UI Hide/Clear는 빌린 선택을 쓰지 않으며 Display Clear/Release/새 Install이 소유 상태를 정리한다.
-- 선택 입력은 명시적 `ICombatUnitInspection`으로 전달한다. AttachCreated와 AttachDisplay 모두 TakeDisplay→BeginUse→첫 표시 순서로 Reader를 연결한다. 전자의 인수 전 반환과 후자의 호출자 보유 책임은 다르므로 두 입구를 단순 치환하지 않는다. StopInput이 종료 화면의 선택을 먼저 지우지 않는다.
+- 선택 입력은 명시적 `ICombatUnitInspection`으로 전달한다. AttachCreated가 TakeDisplay→BeginUse→첫 표시 순서로 Reader를 연결한다(호출자 없던 다른 입구 `AttachDisplay`는 2026-11-05 조정자 나누기 CS6에서 지웠다). StopInput이 종료 화면의 선택을 먼저 지우지 않는다.
 - `Input/CombatInputFactsReader.Read(includeUnhandledCommand, followUp)`는 매번 현재 연결/Buffer를 읽는다. 특정 씬의 Display/Selection을 서비스 수명에 캡처하거나 Tick Facts를 캐시하지 않는다. 선택 ID를 먼저 읽어 빈 범위 관측에 값으로 넘긴다. 이 관측이 Facts를 역호출하면 순환이 되므로 일반 Path의 `Facts.SelectedActorId` 읽기와 구분한다. Preview 요청 번호 일치·P/S·followUp/includeUnhandled 의미는 유지한다.
 - 바인딩에서 확인한 `IUIConfirmationPresentation`을 Sources.Confirmation으로 넘기며 운영 Factory 깊이에서 Text를 캐스팅하지 않는다. 전체 운영 생성은 필수 재료를 검사하고 선택/경로/공격/아이템/호버·같은 가용성 Tracker를 명시적으로 연결한다. 정상 무전투/미연결/반복 해제와 구성 누락은 구분한다.
 - 기존 부분 조립은 시험 어셈블리의 `CombatInputTestFactory.CreateInteraction`만 사용한다. Runtime이 이 도우미를 호출하지 않는다. 새 서비스/키/Builder·루트 Export·화면 등록은 없다. UI 표현 변경은 UnitInfo, 선택 정책은 Selection/Display, 사실 추가는 Reader/Facts/소비자와 필요한 조립에서 처리한다. 공통 수명/Preview 변경은 관련 통합 회귀가 필요하다.
@@ -336,8 +336,8 @@ Configure는 런타임에 한 번이다. 모든 화면의 Controller·Layer·키
 
 ```text
 CombatCameraInputController → 슬롯 → CombatInputReceiver(CameraPanChanged·CameraZoomScrolled)
-  → 조정자 RouteInput(카메라 요청은 선택·가용성·버튼 갈래 없이) → CombatSceneInput.Route → CombatCameraInput(상태 저장)
-조정자 Tick 끝 → CombatSceneInput.TickCamera(facts, characters) → CombatInputPolicy.CanMoveCamera → ICombatCameraControl(CombatCameraView).Zoom·Pan
+  → 입력 분배 CombatSceneInputDriver.Route(카메라 요청은 선택·가용성·버튼 갈래 없이) → CombatSceneInput.Route → CombatCameraInput(상태 저장)
+조정자 Tick 끝 → 입력 분배 TickEnd → CombatSceneInput.TickCamera(facts, characters) → CombatInputPolicy.CanMoveCamera → ICombatCameraControl(CombatCameraView).Zoom·Pan
   → 시점이 바뀌었으면(그 Tick·다음 Tick·줌 렌즈가 옮겨 가는 동안) 마지막 포인터로 CombatInputRouter.RefreshPointer(2026-11-04 평가 C10-01)
 ```
 

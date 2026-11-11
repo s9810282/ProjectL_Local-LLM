@@ -131,7 +131,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             finally
             {
                 // 정리 콜백이 게시한 새 연결은 이전 Detach가 지우지 않습니다.
-                if (ReferenceEquals(_scope, scope)) _scope = null;
+                if (scope != null && ReferenceEquals(_scope, scope))
+                {
+                    _scope = null;
+                    IAudioSystemService audio = Services.Audio;
+                    if (audio.IsPlaying(AmbgmEvent.Lobby)) audio.Stop(AmbgmEvent.Lobby);
+                }
             }
         }
 
@@ -177,6 +182,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
                     IAudioSystemService audio = Services.Audio;
                     audio.SetPreset(AmbgmEvent.BGM, LobbyBgmPreset);
                     if (!audio.IsPlaying(AmbgmEvent.BGM)) audio.Play(AmbgmEvent.BGM);
+                    if (!audio.IsPlaying(AmbgmEvent.Lobby)) audio.Play(AmbgmEvent.Lobby);
                 }
             }
             catch

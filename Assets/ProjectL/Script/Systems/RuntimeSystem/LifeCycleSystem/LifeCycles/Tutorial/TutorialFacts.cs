@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
     /// <see cref="TutorialFactsReader"/>가 실행할 때마다 새로 읽어 만들며 저장하지 않습니다. 판단 시험은 이 묶음을 직접 만들어 넣습니다.
     /// </summary>
     /// <remarks>
-    /// 원본은 튜토리얼 상태 Store(세션·요청), 전투 Buffer(국면·번호·승패·결과), 실행 소유자(만료·표시·정리·입력 독점),
+    /// 원본은 튜토리얼 상태 Store(세션·요청), 전투 Buffer(국면·번호·승패·결과), 실행 소유자(표시·정리·입력 독점), 전투 View의 진행 사실,
     /// 상태 Store의 단계 규칙(단계 종류·통과 조건)입니다. 판단은 <see cref="Plans.TutorialPlan.Decide"/> 한 곳에서만 합니다.
     /// </remarks>
     internal readonly struct TutorialFacts
@@ -28,9 +28,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
             bool hasEnteredCombat = false,
             bool hasPresentedMove = false,
             bool isInputMonopolized = false,
-            bool isTimerExpired = false,
+            bool isCombatViewAttached = false,
+            bool isEntryPresentationPending = false,
+            bool isSubmissionSuspended = false,
+            bool isAbandonRequested = false,
             TutorialViewPresentationKind completedPresentation = TutorialViewPresentationKind.None,
-            bool hasCleanupResult = false)
+            bool hasCleanupResult = false,
+            bool hasPresentedEnemyAttack = false,
+            bool hasPresentedPlayerTurnEnd = false)
         {
             ActiveSession = activeSession;
             NextRequestNumber = nextRequestNumber;
@@ -45,9 +50,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
             HasEnteredCombat = hasEnteredCombat;
             HasPresentedMove = hasPresentedMove;
             IsInputMonopolized = isInputMonopolized;
-            IsTimerExpired = isTimerExpired;
+            IsCombatViewAttached = isCombatViewAttached;
+            IsEntryPresentationPending = isEntryPresentationPending;
+            IsSubmissionSuspended = isSubmissionSuspended;
+            IsAbandonRequested = isAbandonRequested;
             CompletedPresentation = completedPresentation;
             HasCleanupResult = hasCleanupResult;
+            HasPresentedEnemyAttack = hasPresentedEnemyAttack;
+            HasPresentedPlayerTurnEnd = hasPresentedPlayerTurnEnd;
         }
 
         /// <summary>Starting·Running·Ending 세션입니다. 없으면 null입니다.</summary>
@@ -83,10 +93,23 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
         /// <summary>실습 기준점 뒤 같은 전투에서 한 칸 이상 실제 이동이 받아들여지고 그 연출이 끝났는지입니다(설계 §15.5).</summary>
         internal bool HasPresentedMove { get; }
 
+        /// <summary>실습 기준점 뒤 수락된 일반 공격이 적 유닛/넥서스에 명중하고 표시까지 끝났는지입니다.</summary>
+        internal bool HasPresentedEnemyAttack { get; }
+
+        /// <summary>실습 기준점 뒤 수락된 플레이어 턴 종료 명령의 종료 사건 표시가 끝났는지입니다.</summary>
+        internal bool HasPresentedPlayerTurnEnd { get; }
+
         internal bool IsInputMonopolized { get; }
 
-        /// <summary>현재 설명의 자동 진행 시간이 다 됐는지입니다.</summary>
-        internal bool IsTimerExpired { get; }
+        /// <summary>현재 전투 View가 화면에 연결돼 있는지입니다.</summary>
+        internal bool IsCombatViewAttached { get; }
+
+        /// <summary>맵·배치 안내·카드의 진입 연출이 아직 진행 중인지입니다.</summary>
+        internal bool IsEntryPresentationPending { get; }
+
+        internal bool IsSubmissionSuspended { get; }
+
+        internal bool IsAbandonRequested { get; }
 
         /// <summary>현재 단계에 마지막으로 요청한 표시가 끝났으면 그 종류, 아니면 None입니다.</summary>
         internal TutorialViewPresentationKind CompletedPresentation { get; }

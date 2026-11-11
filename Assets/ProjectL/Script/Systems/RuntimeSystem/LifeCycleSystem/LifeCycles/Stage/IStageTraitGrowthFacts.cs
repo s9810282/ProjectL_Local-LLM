@@ -10,8 +10,5 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
         /// Stage가 활성이 아니면 거짓입니다.
         /// </summary>
         bool IsPending { get; }
-
-        /// <summary>증강 흐름이 멈췄는지입니다. 증강 화면은 나갈 길이 없으므로 화면이 오류로 보고합니다.</summary>
-        bool IsGrowthStopped { get; }
     }
 }

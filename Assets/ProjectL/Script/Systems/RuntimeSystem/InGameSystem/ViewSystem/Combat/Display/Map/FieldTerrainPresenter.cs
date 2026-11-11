@@ -23,6 +23,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </summary>
     internal sealed class FieldTerrainPresenter
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemTerrainAppearancePoll = new("Combat.Action.Playback.System.TerrainAppearance.Poll");
+#endif
+
         private sealed class Instance
         {
             internal readonly GameObject GameObject;
@@ -207,16 +212,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (rotations == null) return;
             foreach (EnvironmentVisualRotation rotation in rotations.TerrainRotations)
             {
-                bool found = false;
-                foreach (long id in bindings.TerrainSourceIds)
-                {
-                    if (id == rotation.SourceId)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
+                // 분류 소속은 CombatEnvironmentFacts 한 곳입니다(평가 C1-05).
+                if (!CombatEnvironmentFacts.IsTerrain(bindings, rotation.SourceId))
                     throw new InvalidOperationException($"[FieldTerrainPresenter] Terrain 회전의 Source Id가 Buffer 분류에 없습니다: {rotation.SourceId}.");
             }
         }
@@ -266,7 +263,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal bool IsAppearanceBlockingStart() => _collapses.IsShaking;
 
         /// <summary>무너짐을 진행합니다. 다 무너진 외형은 무너짐 집합이 풀에 돌려줍니다.</summary>
-        internal void TickAppearance(float deltaTime) => _collapses.Tick(deltaTime);
+        internal void TickAppearance(float deltaTime)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePlaybackSystemTerrainAppearancePollSample = _profilePlaybackSystemTerrainAppearancePoll.Auto();
+#endif
+            _collapses.Tick(deltaTime);
+        }
 
         /// <summary>무너짐을 멈춥니다. 무너지는 중인 외형은 남은 연출 없이 바로 돌려줍니다.</summary>
         internal void CancelAppearance() => _collapses.FinishAll();
@@ -340,6 +343,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (instance.GameObject == null) throw new InvalidOperationException("[FieldTerrainPresenter] 진입 대상 지형이 사라졌습니다.");
                 _tiles.TryGetTile(instance.Cell, out Transform tile);
                 targets.Add(new CombatBoardRevealTarget(instance.GameObject.transform, tile));
+            });
+        }
+
+        /// <summary>착지 칸 아래 실제 타일과 그 위 지형을 수집합니다. 공유 타일은 한 번만 움직이며 활성 상태는 바꾸지 않습니다.</summary>
+        internal void CollectEntryGroundTargets(IReadOnlyList<CellCoord> cells, List<Transform> targets)
+        {
+            if (cells == null) throw new ArgumentNullException(nameof(cells));
+            if (targets == null) throw new ArgumentNullException(nameof(targets));
+            if (_isReleased) throw new InvalidOperationException("[FieldTerrainPresenter] 해제된 표시입니다.");
+            var occupied = new HashSet<CellCoord>(cells);
+            var tiles = new HashSet<Transform>();
+            var seen = new HashSet<Transform>(targets);
+            foreach (CellCoord cell in occupied)
+            {
+                if (!_tiles.TryGetTile(cell, out Transform tile)) continue;
+                tiles.Add(tile);
+                if (seen.Add(tile)) targets.Add(tile);
+            }
+            _views.VisitViews(instance =>
+            {
+                bool onTile = _tiles.TryGetTile(instance.Cell, out Transform tile) && tiles.Contains(tile);
+                if (!occupied.Contains(instance.Cell) && !onTile) return;
+                if (instance.GameObject == null)
+                    throw new InvalidOperationException("[FieldTerrainPresenter] 착지 대상 지형이 사라졌습니다.");
+                Transform body = instance.GameObject.transform;
+                if (seen.Add(body)) targets.Add(body);
             });
         }
 

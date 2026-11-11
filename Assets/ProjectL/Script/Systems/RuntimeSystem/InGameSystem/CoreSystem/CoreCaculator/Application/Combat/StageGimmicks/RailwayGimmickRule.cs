@@ -15,6 +15,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         public StageGimmickKey Key => StageGimmickKey.Railway;
 
+        internal static bool IsDue(RailwayGimmickSpec spec, long completedCount) =>
+            completedCount >= spec.FirstActivationAfterControllerTurns &&
+            (completedCount - spec.FirstActivationAfterControllerTurns) % spec.RepeatIntervalControllerTurns == 0;
+
+        public IEnumerator<HazardCellFact?> EnumerateForecast(CombatCommandInput input, StageGimmickSpec definition,
+            StageGimmickId id, long lastBoundaryCount)
+        {
+            var spec = definition as RailwayGimmickSpec ?? throw new InvalidOperationException("기차 설정 형식이 다릅니다.");
+            var cells = input.Battle.RailCells;
+            if (cells.Count == 0) throw new InvalidOperationException("기차 설정에는 레일 칸이 필요합니다.");
+            var unique = new HashSet<CellCoord>();
+            foreach (var cell in cells)
+            {
+                if (!input.State.IsInside(cell) || !unique.Add(cell))
+                    throw new InvalidOperationException("기차 레일 칸이 보드 밖이거나 중복되었습니다.");
+                yield return null;
+            }
+            long count = input.State.Turn.CompletedControllerTurnCount;
+            while (count < lastBoundaryCount)
+            {
+                count = checked(count + 1);
+                if (IsDue(spec, count))
+                    foreach (var cell in cells) yield return new HazardCellFact(id, Key, count, cell, instantDefeat: true);
+                else yield return null;
+            }
+        }
+
         public CombatCommandTransition TryAdvance(CombatCommandInput input, StageGimmickSpec definition, StageGimmickId gimmickId, StageGimmickBoundary? boundary)
         {
             var railway = definition as RailwayGimmickSpec ?? throw new InvalidOperationException("기차 설정 형식이 다릅니다.");
@@ -26,8 +53,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     throw new InvalidOperationException("기차 레일 칸이 보드 밖이거나 중복되었습니다.");
 
             long completed = input.State.Turn.CompletedControllerTurnCount;
-            if (completed < railway.FirstActivationAfterControllerTurns ||
-                (completed - railway.FirstActivationAfterControllerTurns) % railway.RepeatIntervalControllerTurns != 0) return null;
+            if (!IsDue(railway, completed)) return null;
 
             var victims = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead &&
                 c.OccupiedCells.Any(rails.Contains)).OrderBy(c => c.EntityId).ToArray();

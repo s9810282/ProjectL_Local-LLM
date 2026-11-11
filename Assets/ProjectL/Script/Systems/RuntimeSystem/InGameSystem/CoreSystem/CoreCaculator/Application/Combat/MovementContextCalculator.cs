@@ -139,7 +139,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return a.HasExpectedFacts && b.HasExpectedFacts && a.BattleInstanceId == b.BattleInstanceId && a.Observer == b.Observer &&
                 a.ActorId == b.ActorId && a.IntentKind == b.IntentKind && SamePath(a.Path, b.Path) &&
                 a.BoardWidth == b.BoardWidth && a.BoardHeight == b.BoardHeight && a.Phase == b.Phase && a.ControllerPhase == b.ControllerPhase && a.ControllerTurnSequence == b.ControllerTurnSequence &&
-                a.IsNight == b.IsNight && a.StagePhase == b.StagePhase && a.CompletedPlayerTurnCount == b.CompletedPlayerTurnCount && a.ActionUse == b.ActionUse &&
+                a.StagePhase == b.StagePhase && a.CompletedPlayerTurnCount == b.CompletedPlayerTurnCount && a.ActionUse == b.ActionUse &&
                 SameMover(a.Mover, b.Mover) &&
                 (a.PositionSwapPassenger == null ? b.PositionSwapPassenger == null : a.PositionSwapPassenger.SameValues(b.PositionSwapPassenger)) &&
                 SameList(a.Occupancy, b.Occupancy, (x, y) => x.Id == y.Id && x.Owner == y.Owner && x.Cells.SequenceEqual(y.Cells)) &&
@@ -168,6 +168,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var x = a.Stats; var y = b.Stats;
             return SameTarget(a, b) && a.ActionUse == b.ActionUse &&
                 x.MoveMethod == y.MoveMethod && x.MoveRange == y.MoveRange && x.Category.Key == y.Category.Key &&
+                SameList(a.StatusEffects.Entries.OfType<MovementRangeDecreaseStatus>().ToArray(),
+                    b.StatusEffects.Entries.OfType<MovementRangeDecreaseStatus>().ToArray(), (left, right) => left.SameValues(right)) &&
                 SameList(x.TraitStatuses.ToArray().Where(t => t is FocusTraitStatusSnapshot).OrderBy(t => t.Key).ToArray(),
                     y.TraitStatuses.ToArray().Where(t => t is FocusTraitStatusSnapshot).OrderBy(t => t.Key).ToArray(), SameTrait);
         }
@@ -179,6 +181,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 a.Area == b.Area && a.Anchor == b.Anchor && a.Rotation == b.Rotation && a.OccupiedCells.SequenceEqual(b.OccupiedCells) && a.Health.Equals(b.Health) &&
                 a.TemporaryAttackBonus == b.TemporaryAttackBonus && a.TemporaryMaxHealthBonus == b.TemporaryMaxHealthBonus && a.PositionModifier.SameValues(b.PositionModifier) &&
                 a.HeldEnvironment.SameValues(b.HeldEnvironment) && a.TraitEffects.SameValues(b.TraitEffects) &&
+                SameList(x.TraitStatuses.ToArray().OfType<RampageTraitStatusSnapshot>().ToArray(),
+                    y.TraitStatuses.ToArray().OfType<RampageTraitStatusSnapshot>().ToArray(), (left, right) => left.SameValues(right)) &&
                 // 이동 피해가 읽는 특성별 최대 증가율의 합계만 비교하며, 출처·잔여 시간 변경은 별도 게시 경계가 검증합니다.
                 WeaknessExposureRules.EffectivePercent(a.StatusEffects) == WeaknessExposureRules.EffectivePercent(b.StatusEffects) &&
                 (a.Debuffs.DefenseReduction == null ? b.Debuffs.DefenseReduction == null : a.Debuffs.DefenseReduction.SameValues(b.Debuffs.DefenseReduction)) &&

@@ -208,7 +208,6 @@ namespace ProjectL.Tests.Core
 
         [TestCase(CombatEventKind.CombatEntered)]
         [TestCase(CombatEventKind.ControllerTurnStarted)]
-        [TestCase(CombatEventKind.NightEnded)]
         public void LifecycleFactsClearRecords(CombatEventKind kind)
         {
             var first = MovementUndoTestData.Run(WithB(MovementUndoTestData.Route()));

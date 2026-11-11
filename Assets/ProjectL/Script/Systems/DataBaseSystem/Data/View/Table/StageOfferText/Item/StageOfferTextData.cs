@@ -109,9 +109,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
             switch (kind)
             {
                 case StageOfferLineKind.UnitDetails: // {0} 레벨, {1} 보유 수
-                case StageOfferLineKind.EnhancementDetails: // {0} 캐릭터 이름, {1} 설명
                 case StageOfferLineKind.TrainingRank: // {0} 지금 등급, {1} 다음 등급
-                case StageOfferLineKind.TrainingDetails: // {0} 등급 수치 글, {1} 특성 설명
+                case StageOfferLineKind.TrainingDetails: // {0} 효과·수치 변화 글, {1} 특성 기본 설명
                     return 2;
                 case StageOfferLineKind.ItemDetails: // {0} 설명
                 case StageOfferLineKind.RecoveryProjected: // {0} 예상 회복량
@@ -126,6 +125,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
                 case StageOfferLineKind.TraitEnhanceLabel:
                 case StageOfferLineKind.TrainingEmpty:
                 case StageOfferLineKind.TrainingUnitNoTrait:
+                case StageOfferLineKind.TrainingEffectEnabled:
+                case StageOfferLineKind.TrainingEffectDisabled:
                     return 0;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, "[StageOfferTextData] 글 종류가 맞지 않습니다.");
@@ -142,7 +143,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
                 RequireText(SelectButtonText, "selectButtonText");
                 RequireText(_defaultErrorText, "defaultErrorText");
             }
-            if (Target == StageOfferTextTarget.Stage) RequireText(_exitButtonText, "exitButtonText");
+            if (Target == StageOfferTextTarget.Stage)
+            {
+                // 상점·회복·훈련 화면이 모두 쓰는 칸만 DB 생성 때 막습니다(평가 N-58).
+                // 불가·뒤로 버튼 글과 글 종류(lines)는 화면 종류마다 달라 여기서 고를 수 없어 쓰는 순간 검사를 남깁니다.
+                RequireText(_exitButtonText, "exitButtonText");
+                RequireText(_completedButtonText, "completedButtonText");
+                RequireText(_priceFormat, "priceFormat");
+            }
             ValidateTarget();
             ValidateFormat(_goldFormat, "goldFormat", 1);
             ValidateFormat(_priceFormat, "priceFormat", 1);

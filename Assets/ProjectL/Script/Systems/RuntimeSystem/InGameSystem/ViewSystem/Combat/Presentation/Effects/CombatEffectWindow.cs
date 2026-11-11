@@ -22,7 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </para>
     /// <para>
     /// 이펙트를 유닛 아래에 붙이지 않는 이유: 유닛 표시가 꺼지거나 파괴되면 파티클 멈춤 알림이 오지 않거나 풀의 이펙트가 함께 파괴됩니다(설계 E-R1).
-    /// 그래서 따라가는 이펙트도 필드 루트 아래의 받침(<see cref="CombatEffectFollower"/>)에 놓고, 받침이 몸 위치를 읽어 옮깁니다.
+    /// 그래서 따라가는 이펙트도 필드 루트 아래의 받침(<see cref="CombatEffectFollower"/>)에 놓고, 받침이 유닛의 표면 위치를 읽어 옮깁니다.
     /// 받침은 이 창구가 만들고 빌려 주며, 이펙트가 끝나 비면 다시 씁니다.
     /// </para>
     /// <para>
@@ -37,7 +37,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private readonly IEffectSystemServices _effects;
         private readonly Transform _parent;
-        private readonly Func<EntityId, Func<(bool Bound, Vector3? Body)>> _track;
+        private readonly Func<EntityId, Func<(bool Bound, Vector3? Position)>> _track;
+        private readonly Func<Vector3, Vector3> _surfaceOf;
         private Func<EntityId, CategoryKey?> _categoryOf;
         private readonly List<CombatEffectFollower> _followers = new();
         // 행동 끝 큐로 낸 이펙트입니다. 행동 묶음이 먼저 거두고, 남은 것은 결과 끝에 거둡니다(이펙트 끝 규칙 계획 TP-E4).
@@ -51,21 +52,53 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <param name="parent">이펙트를 놓을 부모입니다. 전투 필드 루트(<c>FieldView.CellsRoot</c>)를 넘깁니다.</param>
         /// <param name="track">
-        /// 유닛 하나의 몸 위치 읽기를 줍니다(<c>FieldUnitPresenter.TrackBodyPresence</c>). 표시가 없으면 null이고, 읽기는 "그 표시가 아직 그 유닛에 붙어 있나"와
-        /// 몸 위치(숨었으면 null)를 돌려줍니다(이펙트 따라가기·회수 설계 FE11).
+        /// 유닛 하나의 표면 위치 읽기를 줍니다(<c>FieldUnitPresenter.TrackSurfacePresence</c>). 표시가 없으면 null이고, 읽기는 "그 표시가 아직 그 유닛에 붙어 있나"와
+        /// 표면 위치(숨었으면 null)를 돌려줍니다(이펙트 따라가기·회수 설계 FE11, 표면 기준 EF1).
         /// </param>
-        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent, Func<EntityId, Func<(bool Bound, Vector3? Body)>> track)
+        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent, Func<EntityId, Func<(bool Bound, Vector3? Position)>> track)
+            : this(effects, parent, track, Identity)
+        {
+        }
+
+        /// <summary>표면 투영이 있는 운영 조립입니다. 받침만 표면에 두고 효과의 시작 월드 자리는 보존합니다.</summary>
+        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent,
+            Func<EntityId, Func<(bool Bound, Vector3? Position)>> track, Func<Vector3, Vector3> surfaceOf)
         {
             _effects = effects ?? throw new ArgumentNullException(nameof(effects));
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _track = track ?? throw new ArgumentNullException(nameof(track));
+            _surfaceOf = surfaceOf ?? throw new ArgumentNullException(nameof(surfaceOf));
         }
 
         /// <summary>세션의 Scope를 빌립니다. 창구는 효과만 회수하며 Scope의 최종 수명은 서비스가 소유합니다.</summary>
-        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent, Func<EntityId, Func<(bool Bound, Vector3? Body)>> track, EffectScope scope)
-            : this(effects, parent, track)
+        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent, Func<EntityId, Func<(bool Bound, Vector3? Position)>> track, EffectScope scope)
+            : this(effects, parent, track, scope, Identity)
+        {
+        }
+
+        internal CombatEffectWindow(IEffectSystemServices effects, Transform parent,
+            Func<EntityId, Func<(bool Bound, Vector3? Position)>> track, EffectScope scope, Func<Vector3, Vector3> surfaceOf)
+            : this(effects, parent, track, surfaceOf)
         {
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+        }
+
+        private static Vector3 Identity(Vector3 position) => position;
+
+        /// <summary>이펙트 자리의 XZ 아래 필드 표면입니다. 위치 보정은 부르는 쪽이 이 자리 다음에 적용합니다.</summary>
+        internal Vector3 SurfaceOf(Vector3 worldPosition)
+        {
+            if (_released) throw new ObjectDisposedException(nameof(CombatEffectWindow));
+            return _surfaceOf(worldPosition);
+        }
+
+        /// <summary>현재 유닛 View의 표면 위치입니다. 표시가 없거나 숨었으면 null입니다.</summary>
+        internal Vector3? SurfacePositionOf(EntityId id)
+        {
+            if (_released) throw new ObjectDisposedException(nameof(CombatEffectWindow));
+            Func<(bool Bound, Vector3? Position)> presence = id.IsEmpty ? null : _track(id);
+            (bool Bound, Vector3? Position) current = presence?.Invoke() ?? default;
+            return current.Bound ? current.Position : null;
         }
 
         /// <summary>현재 보인 사실의 병과 조회를 연결마다 한 번 받습니다. 유지 이펙트와 사건 큐가 같은 조회를 씁니다.</summary>
@@ -90,8 +123,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>
-        /// <paramref name="type"/> 이펙트를 월드 자리 <paramref name="at"/>에 냅니다(입구 하나, 설계 EL5). 놓기 값이 따라갈 유닛이면 그 몸 위치를 따라가고
-        /// (위치만, 낸 자리와 몸 위치의 차이는 유지), 그 유닛 표시가 지금 없으면 그 자리에 머뭅니다. 따라가던 표시가 사라지면 바로 멈추고(결정 Q-FE3),
+        /// <paramref name="type"/> 이펙트를 월드 자리 <paramref name="at"/>에 냅니다(입구 하나, 설계 EL5). 놓기 값이 따라갈 유닛이면 받침은 그 유닛의 표면 위치를 따라가고
+        /// (위치만, 낸 자리와 받침 위치의 차이는 유지), 그 유닛 표시가 지금 없으면 그 자리에 머뭅니다. 따라가던 표시가 사라지면 바로 멈추고(결정 Q-FE3),
         /// 숨었을 뿐이면 같이 숨었다가 다시 보이면 같이 보입니다(FE11). 끝은 놓기 값이 정합니다(자연·시간·부르는 쪽이 손잡이로 거둠).
         /// </summary>
         /// <returns>이 이펙트의 손잡이입니다. 거두지 않을 호출은 버려도 됩니다.</returns>
@@ -100,10 +133,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal CombatEffectHandle Play(EffectType type, Pose at, CombatEffectPlacement placement)
         {
             Transform parent = Prepare(type);
-            Func<(bool Bound, Vector3? Body)> presence = placement.Follow.IsEmpty ? null : _track(placement.Follow);
-            (bool Bound, Vector3? Body) now = presence?.Invoke() ?? default;
+            Func<(bool Bound, Vector3? Position)> presence = placement.Follow.IsEmpty ? null : _track(placement.Follow);
+            (bool Bound, Vector3? Position) now = presence?.Invoke() ?? default;
             CombatEffectFollower follower = RentFollower(parent);
-            follower.Begin(now.Bound ? presence : null, now.Body ?? at.position, placement.Seconds);
+            follower.Begin(now.Bound ? presence : null, now.Position ?? _surfaceOf(at.position), placement.Seconds);
             PlayOn(follower, type, at, warnUnending: placement.IsNatural);
             CombatEffectHandle handle = follower.Handle;
             if (placement.ActionBound)

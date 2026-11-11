@@ -32,13 +32,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display")]
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(DrawOrder)]
-    public sealed class FieldView : MonoBehaviour, ICombatTrajectoryCanvas, ICombatKnockbackCanvas
+    public sealed class FieldView : MonoBehaviour, ICombatTrajectoryCanvas, ICombatKnockbackCanvas, ICombatHoverCellFeedback,
+        ICombatGimmickRangeFeedback, ICombatNexusRangeFeedback
     {
         [Tooltip("셀이 놓일 루트. 월드 크기 (1,1,1)이어야 합니다. CellPrefab 모드는 Y축 회전만 허용하고, GridOutline 모드는 회전을 허용하지 않습니다(돌아가 있으면 전투 설치 때 예외).")]
         [SerializeField] private Transform cellsRoot;
 
-        // 칸 강조 색은 쓰임새별 다섯 묶음입니다. 겹치면 호버 > 막힌 벽 > 넉백·끌어오기 도착 > 영향 > 재생 강조 > 예정 경로 > 위험 범위·적 공격 범위·아군 호버 범위·공격 범위 > 이동 범위
-        // > 현재 행위자 > 전투 목표 > 정적 구역 순으로 위가 이깁니다(원본 FieldHighlightLayers). 필드 순서는 인스펙터 묶음만 정하고 우선순위와는 상관없습니다.
+        // 칸 강조 색은 쓰임새별 묶음(정적 구역·호버 칸·입력·미리보기 층·상태 층·기믹 호버 범위·포효 예고·넉백 도착·낙석 경고)에 나눠 둡니다.
+        // 겹칠 때 우선순위는 호버 > 층 표(FieldHighlightLayers의 Rows) 뒤쪽 층 > … > 앞쪽 층 > 정적 구역이고, 그 표 한 곳이 원본입니다. 필드 순서는 인스펙터 묶음만 정하고 우선순위와는 상관없습니다.
         [Header("정적 구역 색 (가장 아래 층)")]
         [Tooltip("아군 배치 구역. CellPrefab 모드는 항상 칸 색, GridOutline 모드는 배치 드래그 중에만 테두리·채우기로 보입니다.")]
         [SerializeField] private Color playerZoneColor = new(0.55f, 0.75f, 1f, 1f);
@@ -83,13 +84,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [SerializeField] private Color activeActorColor = new(1f, 0.95f, 0.3f, 1f);
         [Tooltip("전투 목표(지정 보스)가 점유한 칸. 현재 행위자 아래, 정적 구역 위입니다.")]
         [SerializeField] private Color objectiveTargetColor = new(1f, 0.25f, 0.75f, 1f);
+        [Tooltip("적 본부의 증원 공급 기하 범위입니다. 실제 생성 가능 칸을 뜻하지 않으며, GridOutline 모드는 테두리와 윗면 채우기를 함께 보입니다.")]
+        [SerializeField] private Color nexusReinforcementRangeColor = new(0.6f, 0.35f, 0.9f, 1f);
 
         [Header("기믹·먼지 연막 호버 범위 색")]
         [Tooltip("호버한 토네이도·하붑·Rider 먼지 연막 그룹의 현재 영역입니다. 유닛 범위·이동 경로·공격 조준 아래에 표시하며, GridOutline 모드는 채우기도 이 색입니다.")]
         [SerializeField] private Color gimmickHoverRangeColor = new(0.15f, 0.85f, 0.75f, 1f);
 
+        [Header("포효 예고 색 (포효 예고 설계 RF4)")]
+        [Tooltip("포효 카운터가 1 남은 보스의 포효 범위입니다. 공격·이동 범위 아래에 보이고, 행동 중이 아니어도 보입니다. GridOutline 모드는 채우기도 이 색입니다.")]
+        [SerializeField] private Color roarForecastColor = new(1f, 0.35f, 0.1f, 1f);
+
         [Header("GridOutline 채우기")]
-        [Tooltip("GridOutline 모드에서 칸을 채우는 불투명도입니다. 모든 채우기(배치 구역·범위 일곱·영향·넉백 도착·호버)가 함께 쓰며, 색은 각 강조 색의 RGB를 그대로 쓰고 알파는 강조 색 알파 × 이 값입니다.")]
+        [Tooltip("GridOutline 모드에서 칸을 채우는 불투명도입니다. 모든 채우기(배치 구역·층 표에서 채움인 층·호버)가 함께 쓰며, 색은 각 강조 색의 RGB를 그대로 쓰고 알파는 강조 색 알파 × 이 값입니다.")]
         [SerializeField, Range(0f, 1f)] private float fillAlpha = 0.25f;
 
         [Header("공격 궤적 색 (공격 궤적 설계 TJ8)")]
@@ -107,6 +114,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [SerializeField] private Color knockbackBlockedColor = new(1f, 0.3f, 0.3f, 1f);
         [Tooltip("넉백 면역이라 안 움직이는 대상의 화살표.")]
         [SerializeField] private Color knockbackImmuneColor = new(0.65f, 0.65f, 0.65f, 1f);
+        [Tooltip("막혀 멈춘 곳에서 부딪힘 피해를 받는 대상(작렬)의 화살표. 부딪힘 피해가 없는 막힘은 위 막힘 색입니다.")]
+        [SerializeField] private Color knockbackCollisionColor = new(1f, 0.55f, 0.1f, 1f);
 
         // 강조를 바꾸는 다른 LateUpdate보다 늦게 돌기 위한 실행 순서입니다(GC 끊김 계획 §3.7 L4).
         private const int DrawOrder = 10000;
@@ -189,7 +198,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>
-        /// 칸 높이 표의 바탕을 바닥 타일 윗면 높이로 둡니다. 타일 표가 없으면(타일 방식이 아닌 배경·표시 시험) 모두 바닥(0)입니다.
+        /// 칸 높이 표의 바탕을 바닥 타일 윗면 높이로 둡니다. 타일 표가 없으면(타일 방식이 아닌 배경) 모두 바닥(0)입니다.
         /// <see cref="Build"/>는 같은 크기면 높이 표를 재사용하므로 설치마다 이 입구로 다시 넣습니다(타일 높이 설계 TH6, 계획 P1·§8.7 L8).
         /// 칸 높이는 다음 Refresh의 다시 채우기(지형 SyncSurface)에서 바탕 + 지형으로 바뀝니다. 타일 표 크기가 이 격자와 다르면 조립 오류라 예외입니다(계획 P11).
         /// </summary>
@@ -239,13 +248,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             QueueRepaint(_state.ClearHover());
         }
 
-        /// <summary>한 층의 칸을 바꿉니다. 이동 경로는 입력 순서를 보존하며 순서만 바뀌어도 다시 그립니다.</summary>
+        /// <summary>유닛 호버 범위의 원점이 점유한 칸을 둡니다(빈 목록 = 지움). 범위 테두리의 원점 열기(<see cref="FieldAttackOutlineOpening"/>)가 읽고, 바뀌었을 때만 다시 그립니다.</summary>
         internal void SetHoverRangeSourceCells(IReadOnlyList<CellCoord> cells)
         {
             if (_state.SetHoverRangeSourceCells(cells) && _mapper != null)
                 QueueRefresh();
         }
 
+        /// <summary>한 층의 칸을 바꿉니다. 이동 경로는 입력 순서를 보존하며 순서만 바뀌어도 다시 그립니다.</summary>
         internal void SetLayerCells(FieldHighlightLayer layer, IReadOnlyList<CellCoord> cells)
         {
             if (cells == null)
@@ -504,11 +514,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
         }
 
+        #region 입력 표시 계약 (호버 칸·기믹 범위·본부 범위, 씬 표시 나누기 설계 DS2·P7)
+
+        // 입력이 쓰는 계약의 주인은 필드입니다. 구성 전·정리·해제 뒤에는 Mapper가 없어 아무것도 하지 않습니다(층 API의 규칙).
+        // 씬 로드 한 번에 표시 연결은 하나라 "구성 전"과 "그 연결의 표시가 해제됨"은 운영에서 같은 뜻입니다.
+        void ICombatHoverCellFeedback.SetHoverCell(CellCoord cell, CombatHoverState state, CombatHoverKind kind) => SetHoverCell(cell, state, kind);
+
+        void ICombatHoverCellFeedback.ClearHoverCell() => ClearHoverCell();
+
+        void ICombatGimmickRangeFeedback.ShowGimmickRange(IReadOnlyList<CellCoord> cells) => SetLayerCells(FieldHighlightLayer.GimmickHoverRange, cells);
+
+        void ICombatGimmickRangeFeedback.ClearGimmickRange() => ClearLayer(FieldHighlightLayer.GimmickHoverRange);
+
+        void ICombatNexusRangeFeedback.ShowNexusRange(IReadOnlyList<CellCoord> cells) => SetLayerCells(FieldHighlightLayer.NexusReinforcementRange, cells);
+
+        void ICombatNexusRangeFeedback.ClearNexusRange() => ClearLayer(FieldHighlightLayer.NexusReinforcementRange);
+
+        #endregion
+
         FieldGridMapper ICombatTrajectoryCanvas.Mapper => _mapper;
 
         void ICombatTrajectoryCanvas.ShowAttackTrajectory(Vector3[] localPath, int count, bool blocked)
         {
-            // 구성 전이거나 재질 없는 설정(시험)이면 궤적 부품이 없어 아무것도 하지 않습니다(공격 궤적 계획 P1).
+            // 구성 전이면 궤적 부품이 없어 아무것도 하지 않습니다(운영 설정은 DB 검사가 재질을 강제, 공격 궤적 계획 P1).
             if (_mapper == null || _trajectory == null)
                 return;
 
@@ -525,7 +553,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 throw new ArgumentNullException(nameof(marks));
 
             // 구성 전이면 층 API가 무시하고 표지 부품도 없습니다(부품은 구성 성공 때만 생기고 해제 때 함께 비움).
-            // 화살촉 재질 없는 맨 설정(시험)도 표지 부품이 없어 도착 칸만 칠합니다(넉백 미리보기 설계 P7).
+            // 화살촉 재질이 없는 설정이면 표지 부품이 없어 도착 칸만 칠합니다(운영 설정은 DB 검사가 재질을 강제, 넉백 미리보기 설계 P7).
             SetLayerCells(FieldHighlightLayer.KnockbackDestination, destinations);
             _knockbackMarkers?.Show(marks);
         }
@@ -537,7 +565,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>
-        /// 설정에 궤적 머티리얼이 있으면 궤적 부품을 만들고 구성합니다. 머티리얼이 없는 맨 설정(시험)은 궤적 없이 둡니다.
+        /// 설정에 궤적 머티리얼이 있으면 궤적 부품을 만들고 구성합니다. 머티리얼이 없으면 궤적 없이 둡니다.
         /// 운영 설정은 DB 검사(<see cref="StageFieldViewData.Validate"/>)가 머티리얼을 강제합니다(공격 궤적 계획 P1).
         /// </summary>
         private void BuildTrajectory(StageFieldViewData config, IColorSystemService colors, IMeshSystemService meshes)
@@ -551,7 +579,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>
-        /// 설정에 넉백 화살촉 재질이 있으면 넉백 표지 부품을 만들고 구성합니다. 재질이 없는 맨 설정(시험)은 표지 없이 둡니다.
+        /// 설정에 넉백 화살촉 재질이 있으면 넉백 표지 부품을 만들고 구성합니다. 재질이 없으면 표지 없이 둡니다.
         /// 운영 설정은 DB 검사(<see cref="StageFieldViewData.Validate"/>)가 재질을 강제합니다(공용 화살촉 설계 §1).
         /// </summary>
         private void BuildKnockbackMarkers(StageFieldViewData config, IColorSystemService colors, IMeshSystemService meshes)
@@ -560,7 +588,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 return;
 
             var knockbackMarkers = new FieldKnockbackMarkers(_visualRoot, config, knockbackColor, knockbackBlockedColor,
-                knockbackImmuneColor, meshes, colors);
+                knockbackImmuneColor, knockbackCollisionColor, meshes, colors);
             knockbackMarkers.Build();
             _knockbackMarkers = knockbackMarkers;
         }
@@ -603,7 +631,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             return new FieldHighlightPalette(playerZoneColor, railColor, hoverColor, hoverValidColor,
                 hoverInvalidColor, attackHoverColor, attackHoverValidColor, attackHoverInvalidColor, affectedColor, movementDraftColor, moveRangeColor, attackRangeColor, enemyAttackRangeColor, hazardRangeColor,
-                activeActorColor, objectiveTargetColor, knockbackDestinationColor, allyHoverMoveRangeColor, enemyMoveRangeColor, rockfallWarningColor, fillAlpha, gimmickHoverRangeColor);
+                activeActorColor, objectiveTargetColor, knockbackDestinationColor, allyHoverMoveRangeColor, enemyMoveRangeColor, rockfallWarningColor,
+                nexusReinforcementRangeColor, fillAlpha, gimmickHoverRangeColor, roarForecastColor);
         }
 
         private void ValidateCellsRoot()

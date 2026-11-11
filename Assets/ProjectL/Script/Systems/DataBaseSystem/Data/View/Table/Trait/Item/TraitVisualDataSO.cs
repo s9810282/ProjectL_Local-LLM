@@ -24,8 +24,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         [TextArea(1, 3)]
         [SerializeField] private string defenseReductionDescription;
         [Tooltip("훈련 카드에 나오는 등급 수치 글입니다. {0} 지금, {1} 오르는 양, {2} 다음. 값이 둘인 특성은 {3}·{4}·{5}가 둘째 값입니다. "
-            + "훈련되는 특성에 비우면 그 카드를 그릴 때 멈춥니다.")]
+            + "숫자 줄을 표시하는 훈련 카드에 필수이며, 효과 여부만 표시하는 카드는 사용하지 않습니다.")]
         [SerializeField] private string rankValueFormat;
+        [Tooltip("훈련 카드에 나오는 효과 적용 여부 글입니다. {0} 현재 상태, {1} 다음 상태이며 두 자리를 모두 사용해야 합니다. "
+            + "상태 낱말은 훈련 텍스트 표에서 읽습니다. 효과 여부가 등록된 특성에만 설정합니다.")]
+        [TextArea(1, 3)]
+        [SerializeField] private string rankEffectFormat;
         [Tooltip("이 특성이 발동할 때의 연출입니다. 발동 종류마다 한 줄이고, 줄이 없는 발동은 화면에 아무것도 내지 않습니다(지금과 같음).")]
         [SerializeField] private List<TraitActivationVisual> activations = new();
         [Tooltip("조건이 맞는 동안 몸에 늘 붙어 보이는 이펙트 목록입니다(희생·굳건한 의지 등). 항목마다 조건 하나와 이펙트 하나입니다. "
@@ -49,8 +53,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         public Sprite Icon => icon;
         public string Description => description ?? string.Empty;
         internal string DefenseReductionDescription => defenseReductionDescription ?? string.Empty;
-        /// <summary>등급 수치 글의 꼴입니다. 훈련되지 않는 특성은 비어 있습니다.</summary>
+        /// <summary>등급 수치 글의 꼴입니다. 숫자 줄을 표시하지 않는 특성은 비어 있습니다.</summary>
         internal string RankValueFormat => rankValueFormat;
+        /// <summary>현재·다음 효과 적용 여부를 표시하는 글의 꼴입니다. 숫자 전용 특성은 비어 있습니다.</summary>
+        internal string RankEffectFormat => rankEffectFormat;
         /// <summary>먼지 연막 칸 호버의 전용 설명입니다. 빈 값이면 설명 패널을 열지 않습니다.</summary>
         public string TrailDescription => trailDescription ?? string.Empty;
 
@@ -124,6 +130,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
             if (!IsFinite(trailLocalOffset))
                 throw new InvalidOperationException($"[TraitVisualData] 흔적 위치 보정이 유한한 수가 아닙니다. Key: {key}, Offset: {trailLocalOffset}");
             ValidateRankValueFormat();
+            ValidateRankEffectFormat();
             // 연결마다 새로 만들어 인스펙터에서 고친 값을 다음 DB 생성부터 씁니다.
             _always = BuildAlways();
             if (activations == null)
@@ -150,6 +157,32 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
             catch (FormatException error)
             {
                 throw new InvalidOperationException($"[TraitVisualData] 등급 수치 글의 꼴이 맞지 않습니다. Key: {key}", error);
+            }
+        }
+
+        private void ValidateRankEffectFormat()
+        {
+            if (string.IsNullOrWhiteSpace(rankEffectFormat))
+            {
+                return;
+            }
+
+            // 실제 치환 결과로 확인하므로 이스케이프된 중괄호는 값 자리로 세지 않습니다.
+            const string currentMarker = "\u001F현재효과\u001F";
+            const string nextMarker = "\u001F다음효과\u001F";
+            string formatted;
+            try
+            {
+                formatted = string.Format(rankEffectFormat, currentMarker, nextMarker);
+            }
+            catch (FormatException error)
+            {
+                throw new InvalidOperationException($"[TraitVisualData] rankEffectFormat의 꼴이 맞지 않습니다. Key: {key}", error);
+            }
+
+            if (!formatted.Contains(currentMarker) || !formatted.Contains(nextMarker))
+            {
+                throw new InvalidOperationException($"[TraitVisualData] rankEffectFormat에 현재 {{0}}와 다음 {{1}} 자리가 모두 필요합니다. Key: {key}");
             }
         }
 

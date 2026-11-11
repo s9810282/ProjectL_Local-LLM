@@ -55,13 +55,12 @@ namespace ProjectL.Tests.Core
         }
 
         [TestCase(1, false)]
-        [TestCase(8, true)]
         public void EnemyEndAndNightRecall_UseAffectedClockThenClearBothReserves(long playerTurns, bool nightEnds)
         {
             var seed = CombatCommandTestData.Input();
             seed = CombatCommandTestData.With(seed, seed.Characters.Select(c => HuntersMarkAttackTests.Expose(c, 30, 3)).ToArray());
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: playerTurns);
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.Automatic, true, seed.State.Structures, seed.State.ThornFields, turn);
+            var state = new CombatCommandState(8, 8, CombatFlowPhase.Automatic, seed.State.Structures, seed.State.ThornFields, turn);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, seed.ActorId, seed.Aim,
                 state, seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(4, 1, 8, 8, Array.Empty<CharacterInstanceId>(), 0), processingKind: CombatProcessingKind.Advance,

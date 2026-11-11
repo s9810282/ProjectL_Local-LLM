@@ -22,6 +22,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
     /// </remarks>
     internal sealed class CombatInputRouter
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInputPointerRefreshPoll = new("Combat.Action.Input.PointerRefresh.Poll");
+#endif
+
         /// <summary>외부 입력 콜백의 종류입니다. 콜백마다 클로저를 만들지 않으려고 한 입구로 모읍니다.</summary>
         internal enum Request
         {
@@ -122,8 +127,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                     return;
                 case Request.Cancel:
                 {
-                    if (_interaction.IsAttackActive && RejectTutorialAttackMode())
-                        return;
                     // 가방 아이템을 끄는 중이면 그것만 끝낸다(회수로 가지 않음, 가방 설계 P4).
                     if (_interaction.IsItemDragActive)
                     {
@@ -163,14 +166,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                         _interaction.CancelPresentation();
                     return;
                 case Request.AttackToggle:
-                    if (RejectTutorialAttackMode())
-                        return;
                     // 공격 버튼: 공격 모드 중이면 모드만 끝낸다(공격 모드 중에는 경로가 없으므로 경로는 건드리지 않는다).
                     if (_interaction.IsAttackActive)
                     {
                         _interaction.CancelDragOrAttack(characters);
                         return;
                     }
+                    if (RejectTutorialAttackMode())
+                        return;
                     EnterAttackMode();
                     return;
                 case Request.AttackMode:
@@ -201,6 +204,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// </remarks>
         internal void RefreshPointer(float screenX, float screenY, IReadOnlyList<CharacterData> characters)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInputPointerRefreshPollSample = _profileInputPointerRefreshPoll.Auto();
+#endif
+
             CombatInputFacts facts = _readFacts(false);
             PointerTarget target = _interaction.ResolvePointerTarget(facts.CurrentLayer);
             _interaction.PointerMoved(target, facts, characters, screenX, screenY);

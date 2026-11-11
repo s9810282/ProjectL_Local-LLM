@@ -79,6 +79,31 @@ namespace ProjectL.Tests.Core
             Assert.Throws<OverflowException>(() => ExperienceRules.Gain(Sub(1, 99), int.MaxValue, Spec));
         }
 
+        [TestCase(1, 0, 100, 100)]
+        [TestCase(1, 40, 100, 60)]
+        [TestCase(3, 299, 300, 1)]
+        public void Progress_SubReportsCurrentRequiredAndRemaining(int level, int experience, int required, int remaining)
+        {
+            var progress = ExperienceRules.Progress(Sub(level, experience), Spec);
+
+            Assert.That((progress.IsEnabled, progress.Current, progress.Required, progress.Remaining),
+                Is.EqualTo((true, experience, required, remaining)));
+        }
+
+        [Test]
+        public void Progress_MainUsesMainStep_DisabledIsZero_BrokenRecordThrows()
+        {
+            var main = new OwnedCharacterRecord(new CharacterInstanceId(1), EntityKey.Unit_MainCharacter,
+                CharacterOwnershipRole.Main, 2, 10);
+            var progress = ExperienceRules.Progress(main, Spec);
+            Assert.That((progress.Required, progress.Remaining), Is.EqualTo((300, 290)));
+
+            var disabled = ExperienceRules.Progress(Sub(1, 0), default);
+            Assert.That((disabled.IsEnabled, disabled.Required, disabled.Remaining), Is.EqualTo((false, 0, 0)));
+
+            Assert.Throws<InvalidOperationException>(() => ExperienceRules.Progress(Sub(1, 100), Spec));
+        }
+
         [Test]
         public void Spec_DefaultIsDisabled_AndEnabledValuesAreRangeChecked()
         {

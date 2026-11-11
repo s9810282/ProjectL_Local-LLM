@@ -56,6 +56,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly float _hopHeight;
         // 발동 피드백입니다(큐·몸 글자·줄 고르기). 운영과 특성 연출 확인 도구 모두 넘겨서 필수입니다(이펙트 끝 규칙 계획 TP-E28).
         private readonly CombatTraitFeedbackPlayback _feedback;
+        // 터질 유닛의 몸 유지입니다. 자폭 발동이 시작하면 큐보다 먼저 놓아, 몸이 폭발과 같은 순간에 사라집니다(자폭 깜빡임 설계 SD5).
+        private readonly CombatSelfDestructDeaths _selfDestruct;
         private readonly CombatPositionSwapPresentation _positionSwap;
         // 유닛 행동을 건너뛰거나 고쳐 쓴 줄을 경고한 기록입니다. 사유마다 따로 두고 연결 동안 한 번씩만 남깁니다(묶음 끝 검토 L10).
         private readonly HashSet<(TraitKey Trait, TraitActivationKind Kind)> _childActionWarned = new();
@@ -65,8 +67,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="pieces">조각 실행 재생기입니다. 유닛 행동 실행을 엽니다(유닛 행동 계획 Tf5.1).</param>
         /// <param name="hopHeight">유닛 행동 뛰기 높이입니다(걸음 모양 설정의 뛰기 높이, 계획 TP-21).</param>
         /// <param name="feedback">발동 피드백입니다. 줄(방향까지 본 줄)·큐·몸 글자를 맡습니다.</param>
+        /// <param name="selfDestruct">터질 유닛의 몸 유지입니다(자폭 깜빡임 설계 SD5, 필수).</param>
         internal CombatTraitEventHandler(CombatAttackStart attacks, CombatShownFacts facts, CombatPieceRunPlayer pieces,
-            float hopHeight, CombatTraitFeedbackPlayback feedback, CombatPositionSwapPresentation positionSwap = null)
+            float hopHeight, CombatTraitFeedbackPlayback feedback, CombatSelfDestructDeaths selfDestruct,
+            CombatPositionSwapPresentation positionSwap = null)
         {
             _attacks = attacks ?? throw new ArgumentNullException(nameof(attacks));
             _facts = facts ?? throw new ArgumentNullException(nameof(facts));
@@ -74,6 +78,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 값 조건은 걸음 모양 설정이 이미 검사했습니다(CombatStepLookSettings).
             _hopHeight = hopHeight;
             _feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
+            _selfDestruct = selfDestruct ?? throw new ArgumentNullException(nameof(selfDestruct));
             _positionSwap = positionSwap;
         }
 
@@ -92,6 +97,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 발동 유닛·대상의 몸 자리는 사실 반영 전 보인 사실로 구합니다(순간 큐와 같은 시점).
             for (int i = 0; i < traits.Count; i++)
             {
+                // 자폭 발동이면 깜빡이던 몸을 여기서 내립니다. 큐(폭발)보다 먼저라 몸이 사라지는 프레임에 폭발이 납니다(자폭 깜빡임 설계 SD5).
+                _selfDestruct.Detonate(traits[i]);
                 if (_positionSwap?.TryBegin(effects, i, completed, version) == true)
                 {
                     positionSwapBegun = true;
@@ -114,6 +121,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             }
             // 추가 공격 시작 발동의 공격 연출입니다(특성 시스템 View 계획 Tb.5). 공격 표시는 줄의 덮어쓰기, 없으면 발동 유닛의 일반 공격 표시입니다.
             return positionSwapBegun || childShape != null && _attacks.TryBegin(childShape, childPresentation, completed, version);
+        }
+
+        /// <summary>후속 특성 행동이 같은 유닛의 채널을 사용할 수 있는지입니다. 조기 공격이 그 행동을 생략시키지 않도록 먼저 확인합니다.</summary>
+        internal bool MayUseUnitAction(CombatEffectsEvent effects, EntityId actor)
+        {
+            for (int i = 0; i < effects.Traits.Count; i++)
+            {
+                TraitActivationSnapshot trait = effects.Traits[i];
+                if (trait.ChildAttack != null || CombatAttackShape.IsInterception(trait)) continue;
+                CombatActivationRow row = _feedback.RowOf(effects, i);
+                if (!row.Exists) continue;
+                bool isTarget = false;
+                for (int j = 0; j < trait.TargetIds.Count; j++)
+                    isTarget |= trait.TargetIds[j] == actor;
+                if (row.PositionSwap != null && (trait.SourceUnitId == actor || isTarget)) return true;
+                for (int j = 0; j < row.Actions.Count; j++)
+                    if (row.Actions[j].Actor == CombatUnitActionActor.Source ? trait.SourceUnitId == actor : isTarget)
+                        return true;
+            }
+            return false;
         }
 
         // 추가 공격 시작 발동입니다. 없으면 null입니다. Core는 추가 공격 시작을 발동 하나짜리 사건으로 내므로(AttackResultFactory.AttachChild), 아니면 계약 오류입니다(계획 TP-6).
@@ -196,7 +223,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                         _facts.ReleaseClaimedPlacement(actor);
                         close?.Invoke();
                     }, version))
+                {
+                    _feedback.ActionStarted(trait, version);
                     return;
+                }
                 close?.Invoke();
             }
             _facts.UnclaimPlacement(actor);
@@ -216,7 +246,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 // 행동 끝 이펙트는 이 행동이 끝날 때 묶음이 셉니다(계획 TP-E3). 시작하지 못하면 바로 닫습니다.
                 Action close = group?.Open();
                 if (_pieces.TryBegin(CombatUnitActionComposer.ComposeMoment(actor, action, place, target, _facts.StandingPlaceOf, _hopHeight), close, version))
+                {
+                    _feedback.ActionStarted(trait, version);
                     return;
+                }
                 close?.Invoke();
             }
             if (_actionBusyWarned.Add(key))

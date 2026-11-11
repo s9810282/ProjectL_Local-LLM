@@ -22,8 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var actor = Actor(input);
             bool eligible = input.State.Phase != CombatFlowPhase.Finished && input.State.Turn.StagePhase == StagePhase.Deployment &&
                 actor != null && actor.Owner == Owner.Player && !actor.Health.IsDead &&
-                (actor.Area == CharacterRuntimeArea.Field || actor.Area == CharacterRuntimeArea.Hand) &&
-                (actor.OwnershipRole != CharacterOwnershipRole.Main || !input.State.Turn.MainPlacementLocked);
+                (actor.Area == CharacterRuntimeArea.Field || actor.Area == CharacterRuntimeArea.Hand);
             if (!eligible) return new CombatPlacementPreview(false, Array.Empty<CellCoord>());
             var profile = CombatCommandCalculator.RequiredProfile(input, actor);
             if (profile.Definition.FootprintLocalCells.Length != 1) return new CombatPlacementPreview(false, Array.Empty<CellCoord>());
@@ -99,8 +98,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (returning && events != null) PositionTileModifierCalculator.RecordNormalization(events, c, normalized);
                 c = normalized;
             }
-            var relocated = c.WithPlacement(area: area, reserveSlotIndex: slot, anchor: anchor, rotation: rotation,
-                occupiedCells: anchor.HasValue ? new[] { anchor.Value } : Array.Empty<CellCoord>(), actionUse: UnitActionUse.Deferred);
+            var relocated = RampageApplication.ReconcileChange(c, c.WithPlacement(area: area, reserveSlotIndex: slot, anchor: anchor, rotation: rotation,
+                occupiedCells: anchor.HasValue ? new[] { anchor.Value } : Array.Empty<CellCoord>(), actionUse: UnitActionUse.Deferred));
             if (returning)
             {
                 events?.Add(new CombatCharacterEvent(CombatEventKind.Returned, c, relocated));
@@ -108,18 +107,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             return c.Area != CharacterRuntimeArea.Field || area != CharacterRuntimeArea.Field
                 ? RegenerationTurnApplication.Reset(relocated) : relocated;
-        }
-
-        internal static void RecallForNight(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> projected, List<CombatEvent> events = null)
-        {
-            foreach (var c in projected.Values.OrderBy(c => c.EntityId).ToArray())
-            {
-                if (c.Area != CharacterRuntimeArea.Field || c.Health.IsDead || c.OwnershipRole == CharacterOwnershipRole.Main) continue;
-                int? slot = c.Owner == Owner.Player ? EmptySlot(input, projected.Values) : null;
-                if (slot < 0) throw new InvalidOperationException("밤 종료 회수 공간이 부족합니다.");
-                projected[c.EntityId] = Location(c, c.Owner == Owner.Player ? CharacterRuntimeArea.Hand : CharacterRuntimeArea.EnemyWaiting,
-                    slot, null, null, events);
-            }
         }
 
         /// <param name="allocation">소환수 복귀 추첨이 소비한 소환 난수를 돌려준다. 개체 ID는 바꾸지 않는다.</param>

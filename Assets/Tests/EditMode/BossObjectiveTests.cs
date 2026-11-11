@@ -159,7 +159,7 @@ namespace ProjectL.Tests.Core
         {
             var source = CombatCommandTestData.Input();
             var characters = source.Characters.Select(c => c.EntityId == Boss && !bossAlive ? CombatCommandCalculator.Hurt(c, 1000) : c).ToArray();
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),source.State.ThornFields,                new CombatTurnFacts(StagePhase.Deployment),objective: BattleObjective.DesignatedBoss(Boss));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),source.State.ThornFields,                new CombatTurnFacts(StagePhase.Deployment),objective: BattleObjective.DesignatedBoss(Boss));
             return new CombatCommandInput(1, CombatCommandKind.EnterCombat, source.ActorId, default, state, characters,
                 source.Profiles, source.Main, source.Owned, source.SoulCounts, source.Souls, source.Artifacts,
                 battle: new CombatBattleFacts(10, 37, 0, 0, Array.Empty<CharacterInstanceId>(), 0),
@@ -167,7 +167,7 @@ namespace ProjectL.Tests.Core
         }
 
         private static CombatCommandState WithObjective(CombatCommandState s, BattleObjective objective) =>
-            new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,                s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,objective);
+            new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,objective);
 
         private static StructureCombatFacts Headquarters(bool dead) => new StructureCombatFacts(new EntityId(20),
             new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),

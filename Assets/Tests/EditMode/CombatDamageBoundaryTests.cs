@@ -50,7 +50,7 @@ namespace ProjectL.Tests.Core
             var provider = UnownedHeavy(88, Owner.Player, new CellCoord(1, 1));
             var state = input.State;
             input = CombatCommandTestData.With(input, input.Characters.Concat(new[] { provider }).ToArray(),
-                state: new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,state.IsNight,                    state.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 6) },turn: state.Turn));
+                state: new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,                    state.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 6) },turn: state.Turn));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(94));

@@ -176,7 +176,7 @@ namespace ProjectL.Tests.Core
             var main = CombatCommandTestData.With(source.Characters[1], position: new CellCoord(4, 4));
             var target = CombatCommandTestData.Character(2, EntityKey.Unit_Akimbo, targetCell ?? new CellCoord(3, 1), Owner.Player);
             var characters = new[] { enemy, target, main };
-            var state = new CombatCommandState(5,5,CombatFlowPhase.Automatic,true,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+            var state = new CombatCommandState(5,5,CombatFlowPhase.Automatic,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                     controllerTurnSequence: 2, completedPlayerTurnCount: 1),environment);
             var profiles = source.Profiles.Select(p => p.Definition.Key == enemy.CharacterKey
                 ? new CombatAttackProfile(CombatCommandTestData.Spec(enemy.CharacterKey, 10, category), p.Method) : p).ToArray();

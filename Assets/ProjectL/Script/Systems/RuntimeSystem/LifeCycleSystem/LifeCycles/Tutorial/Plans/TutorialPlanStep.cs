@@ -15,8 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
         StartExplanation = 4,
         /// <summary>표시·전환이 끝난 단계를 다음 대기로 옮기거나 다음 단계에 들어갑니다. Starting의 첫 단계 진입도 이것입니다.</summary>
         Advance = 5,
-        /// <summary>자동 진행 시간이 다 된 설명을 닫기 시작합니다.</summary>
-        Expire = 6,
+        // 6은 제거한 시간 만료 전이의 번호이므로 재사용하지 않습니다.
         /// <summary>통과 조건을 채운 실습에서 다음 단계로 갑니다.</summary>
         PassPractice = 7
     }

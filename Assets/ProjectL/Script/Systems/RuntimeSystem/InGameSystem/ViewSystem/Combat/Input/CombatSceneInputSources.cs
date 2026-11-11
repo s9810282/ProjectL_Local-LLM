@@ -13,7 +13,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
     /// 연결 수명인 표시는 따로 넘깁니다(계획 TP-24).
     /// </summary>
     /// <remarks>
-    /// 조정자가 첫 입력 생성 때 한 번 만듭니다. 표시 표는 <c>InitData</c>가, 나머지는 서비스를 받을 때(<c>BindServices</c>) 생겨서 그 둘이 모두 끝난 뒤이기 때문입니다.
+    /// 조정자가 첫 입력 생성 때 한 번 만듭니다. 표시 표는 <c>InitData</c>가, 나머지는 서비스를 받을 때(조정자의 <c>Bind</c>) 생겨서 그 둘이 모두 끝난 뒤이기 때문입니다.
     /// 두 입구가 다시 불리면 조정자가 이 묶음을 버리고 다음 입력 생성 때 다시 만듭니다.
     /// 입력 객체에 의존이 하나 늘면 이 묶음, 조정자의 생성 자리 하나, 입력 Factory만 고칩니다. 생성 계약·어댑터의 서명은 그대로입니다.
     /// 모든 재료는 필수입니다.
@@ -30,7 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// <param name="text">텍스트 서비스입니다(거절 안내·환경 호버).</param>
         /// <param name="confirmation">바인딩 때 확인한 배치 확인창 표시 계약입니다.</param>
         /// <param name="isInputReady">배치 진입 판단에 쓰는 조정자의 판정식(씬 연결 활성 ∧ 입력 슬롯 연결)입니다.</param>
-        /// <param name="afterConfirmedSubmit">배치 진입·턴 종료(확인창 경로)를 제출한 뒤 행동 버튼을 바로 맞추는 조정자의 입구입니다(계획 TP-21).</param>
+        /// <param name="afterConfirmedSubmit">배치 진입·턴 종료(확인창 경로)를 제출한 뒤 행동 버튼을 바로 맞추는 입구입니다(입력 분배 <c>CombatSceneInputDriver.SyncActionButtons</c>, 계획 TP-21).</param>
         internal CombatSceneInputSources(
             CombatDisplayTables tables,
             ICombatStateBufferReadSink state,

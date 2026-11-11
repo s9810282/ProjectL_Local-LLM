@@ -8,8 +8,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// 셀 하나의 표시 손잡이입니다. 위치·표시 여부와 강조 색만 다룹니다(옛 FieldCellHandle 이식).
     /// </summary>
     /// <remarks>
-    /// 색은 Renderer마다 하나씩 받은 ColorScop으로만 바꿉니다(FW-011·설계 §13.3). ColorScop에는 덮어쓰기 해제가 없어
-    /// 기본 색을 읽어 두었다가 다시 넣습니다. Scope 반환은 ColorSystem.Shutdown이 맡으므로 여기서 Dispose하지 않습니다.
+    /// 색은 Renderer마다 하나씩 받은 색 손잡이(<see cref="IColorHandle"/>, <c>IColorSystemService.CreateColorHandle</c>)로만 바꿉니다(FW-011·설계 §13.3). 손잡이에는 덮어쓰기 해제가 없어
+    /// 기본 색을 읽어 두었다가 다시 넣습니다. 손잡이 반환(Dispose)은 ColorSystem.Shutdown이 맡으므로 여기서 Dispose하지 않습니다.
     /// 새 Render의 키에는 BaseMap이 없어 옛 코드의 텍스처 끄기는 옮기지 않았습니다(색만 곱해집니다).
     /// </remarks>
     internal sealed class FieldCellHandle
@@ -40,7 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     throw new ArgumentException("Renderer 배열에 null이 있습니다.", nameof(renderers));
 
                 _colorScopes[i] = colors.CreateColorHandle(renderers[i])
-                    ?? throw new InvalidOperationException("ColorSystem이 셀 Renderer의 Scope를 만들지 못했습니다.");
+                    ?? throw new InvalidOperationException("ColorSystem이 셀 Renderer의 색 손잡이를 만들지 못했습니다.");
                 _defaultColors[i] = ReadDefaultColors(renderers[i]);
             }
         }

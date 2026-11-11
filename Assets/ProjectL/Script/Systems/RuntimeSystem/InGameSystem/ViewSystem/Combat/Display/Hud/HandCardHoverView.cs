@@ -13,6 +13,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     [RequireComponent(typeof(RectTransform), typeof(Image))]
     public sealed class HandCardHoverView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIHandCardHoverEnter = new("Combat.Action.UI.HandCard.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIHandCardHoverExit = new("Combat.Action.UI.HandCard.HoverExit");
+#endif
+
         private RectTransform _rect;
         private RectTransform _visual;
         private EntityId _entityId;
@@ -69,12 +75,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIHandCardHoverEnterSample = _profileUIHandCardHoverEnter.Auto();
+#endif
+
             if (isActiveAndEnabled && _hoverEnabled && !_entityId.IsEmpty)
                 _hovered = true;
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIHandCardHoverExitSample = _profileUIHandCardHoverExit.Auto();
+#endif
+
             _hovered = false;
         }
 

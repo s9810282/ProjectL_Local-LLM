@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c907719567e420f8ccb06d18e87216d, type: 3}
   m_Name: TraitGrowth_DustScreen
   m_EditorClassIdentifier: 
+  group: 2
   normal:
     rid: 1000
   enhanced:
     rid: -2
   rank2:
-    rid: -2
+    rid: 1100
   rank3:
     rid: -2
   displayName: "\uBA3C\uC9C0 \uC5F0\uB9C9"
@@ -39,3 +40,7 @@ MonoBehaviour:
         attackRangeReduction: 1
         attackDamageReductionPercent: 20
         opposingTurnEndsToExpire: 1
+    - rid: 1100
+      type: {class: DustScreenRankAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item, asm: ProjectL.Systems}
+      data:
+        exemptsAlliedAttackRangePenalty: 1

@@ -256,7 +256,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var validatedBindings = ValidateEnvironmentChange(transition);
             var bindings = transition.EnvironmentBindings == null ? _current.EnvironmentBindings : validatedBindings;
             int sequence = checked(LatestResultSequence + 1);
-            ValidateCreation(before, final, transition.Characters.Created, characters);
+            ValidateCreation(transition, _current.NexusReinforcements, characters);
             var result = new CombatResult(sequence, transition.Input.ProcessingKind, transition.Input.Number,
                 transition.Accepted, transition.Reason, transition.Attack, transition.Outcome,
                 transition.Input.Kind, transition.ActionUseSettlement?.ActorId ?? transition.Input.ActorId, transition.Movement, transition.Events,
@@ -306,10 +306,6 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                 (input.ExpectedBattleInstanceId != input.BattleInstanceId ||
                     input.ExpectedControllerTurnSequence != previousTurn.ControllerTurnSequence))
                 throw new InvalidOperationException("수락된 명령의 전투·진영 턴 식별자가 원본과 다릅니다.");
-            if (nextTurn.NightStartPlayerTurnCount != previousTurn.NightStartPlayerTurnCount &&
-                (input.Kind != CombatCommandKind.EnterCombat || previousTurn.StagePhase != StagePhase.Deployment ||
-                    nextTurn.NightStartPlayerTurnCount != nextTurn.CompletedPlayerTurnCount))
-                throw new InvalidOperationException("밤 시작 기준은 배치에서 전투에 들어갈 때만 갱신할 수 있습니다.");
 
             if (settlement != null)
             {
@@ -526,10 +522,13 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             terrain.Kind == StaticTerrainKind.WeakGround || terrain.Kind == StaticTerrainKind.Cliff;
 
         /// <summary>전투 중 생성의 저장 불변식만 검사한다. 어디에 무엇을 만들지는 Core 계산이 정한다.
-        /// 할당은 빈틈없이 이어지고, 소환 기록은 추가만 되며, 기록과 생성 개체는 1:1이어야 한다.</summary>
-        private static void ValidateCreation(CombatCommandState before, CombatCommandState final,
-            IReadOnlyList<CharacterCombatFacts> created, IReadOnlyList<CharacterCombatFacts> characters)
+        /// 할당은 빈틈없이 이어지고, 소환·증원 기록은 추가만 되며, 기록과 생성 개체는 1:1이어야 한다.</summary>
+        private static void ValidateCreation(CombatCommandTransition transition, NexusReinforcementSpec spec,
+            IReadOnlyList<CharacterCombatFacts> characters)
         {
+            var before = transition.Input.State;
+            var final = transition.FinalState;
+            var created = transition.Characters.Created;
             int count = created.Count;
             if (count != 0 && !before.Allocation.IsAvailable)
                 throw new InvalidOperationException("할당 원본이 없는 전투에서는 개체를 만들 수 없습니다.");
@@ -547,8 +546,11 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             if (next.Count < previous.Count || !next.Take(previous.Count).SequenceEqual(previous))
                 throw new InvalidOperationException("기존 소환 기록을 바꾸거나 지울 수 없습니다.");
             var added = next.Skip(previous.Count).ToArray();
-            if (!new HashSet<EntityId>(added.Select(r => r.SummonedId)).SetEquals(created.Select(c => c.EntityId)))
-                throw new InvalidOperationException("소환 기록과 생성한 개체가 일치하지 않습니다.");
+            var reinforced = ValidateReinforcementCreation(transition, spec);
+            var recorded = new HashSet<EntityId>(added.Select(r => r.SummonedId));
+            if (reinforced.Any(record => !recorded.Add(record.EntityId)) || recorded.Count != count ||
+                !recorded.SetEquals(created.Select(c => c.EntityId)))
+                throw new InvalidOperationException("소환·증원 기록과 생성한 개체가 일치하지 않습니다.");
             foreach (var record in added)
                 if (!characters.Any(c => c.EntityId == record.SummonerId && c.Owner == Owner.Enemy))
                     throw new InvalidOperationException("소환자는 전투의 적 캐릭터여야 합니다.");
@@ -558,6 +560,123 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                     throw new InvalidOperationException("새 개체는 다음 자기 진영 시작까지 행동을 대기해야 합니다.");
             }
         }
+
+        private static IReadOnlyList<NexusReinforcementRecord> ValidateReinforcementCreation(
+            CombatCommandTransition transition, NexusReinforcementSpec spec)
+        {
+            var input = transition.Input;
+            var before = input.State;
+            var final = transition.FinalState;
+            var previous = before.Reinforcements;
+            var next = final.Reinforcements;
+            if (previous.NexusId != next.NexusId || previous.Records.Count > next.Records.Count)
+                throw new InvalidOperationException("기존 넥서스 연결이나 증원 이력을 바꿀 수 없습니다.");
+            if (!ReferenceEquals(previous, next))
+                for (int i = 0; i < previous.Records.Count; i++)
+                    if (!SameReinforcementRecord(previous.Records[i], next.Records[i]))
+                        throw new InvalidOperationException("기존 증원 이력을 바꿀 수 없습니다.");
+
+            int addedCount = next.Records.Count - previous.Records.Count;
+            var origins = final.Turn.EnemyOrigins;
+            var previousOrigins = before.Turn.EnemyOrigins;
+            if (origins.Count - previousOrigins.Count != addedCount ||
+                !origins.Take(previousOrigins.Count).SequenceEqual(previousOrigins))
+                throw new InvalidOperationException("기존 적 재배치 원본은 보존하고 증원마다 원본을 추가해야 합니다.");
+            var evidence = transition.Events.Where(e => e.Kind == CombatEventKind.Reinforced).ToArray();
+            if (evidence.Length != addedCount)
+                throw new InvalidOperationException("증원 이력마다 생성 사건이 하나 필요합니다.");
+            if (addedCount == 0)
+            {
+                if (previous.RandomState != next.RandomState)
+                    throw new InvalidOperationException("증원 생성 없이 증원 난수를 바꿀 수 없습니다.");
+                return Array.Empty<NexusReinforcementRecord>();
+            }
+
+            if (spec == null || !previous.IsEnabled || !transition.Accepted ||
+                input.Kind != CombatCommandKind.StartControllerTurn || input.ProcessingKind != CombatProcessingKind.Advance ||
+                before.Objective.Kind != BattleObjectiveKind.EnemyHeadquartersDestroyed ||
+                before.Phase != CombatFlowPhase.Automatic || before.Turn.StagePhase != StagePhase.Combat ||
+                before.Turn.ControllerPhase != CombatControllerPhase.StartingEnemy ||
+                final.Turn.StagePhase != StagePhase.Combat || final.Turn.ControllerPhase != CombatControllerPhase.Enemy ||
+                !before.Structures.Any(s => s.EntityId == previous.NexusId && s.Owner == Owner.Enemy &&
+                    s.Definition.Key == EntityKey.Structure_Headquarters && !s.Health.IsDead))
+                throw new InvalidOperationException("살아 있는 적 본부의 증원은 적 진영 시작에서만 설치할 수 있습니다.");
+
+            _ = next.RemainingTotal(spec);
+            var start = transition.Events.TakeWhile(e => e.Kind != CombatEventKind.Reinforced)
+                .OfType<CombatTurnEvent>().SingleOrDefault(e => e.Kind == CombatEventKind.ControllerTurnStarted);
+            if (start == null || !start.Expected.SameValues(before.Turn) ||
+                start.Final.ControllerPhase != CombatControllerPhase.Enemy ||
+                start.Final.ControllerTurnSequence != final.Turn.ControllerTurnSequence)
+                throw new InvalidOperationException("증원 사건 앞에 일치하는 적 진영 시작 사건이 필요합니다.");
+
+            var addedOrigins = origins.Skip(previousOrigins.Count).ToDictionary(o => o.EntityId);
+            var created = transition.Characters.Created.ToDictionary(c => c.EntityId);
+            var records = next.Records.Skip(previous.Records.Count).ToArray();
+            for (int i = 0; i < records.Length; i++)
+            {
+                var record = records[i];
+                var key = spec.Pool[record.PoolEntryIndex].UnitKey;
+                if (evidence[i] is not CombatReinforcementEvent evt || evt.NexusId != next.NexusId ||
+                    !SameReinforcementRecord(record, evt.Record) ||
+                    !created.TryGetValue(record.EntityId, out var actor) || !IsReinforcedActor(actor, key) ||
+                    !IsReinforcedActor(evt.Created, key) || evt.Created.Experience.EnemyLevel != spec.EnemyLevel || evt.Created.Health.IsDead ||
+                    evt.Created.Area != CharacterRuntimeArea.Field || evt.Created.Rotation != Rotation4.R0 ||
+                    evt.Created.OccupiedCells.Count != 1 || evt.Created.OccupiedCells[0] != evt.Created.Anchor ||
+                    !addedOrigins.TryGetValue(record.EntityId, out var origin) ||
+                    origin.Anchor != evt.Created.Anchor || origin.Rotation != evt.Created.Rotation)
+                    throw new InvalidOperationException("증원 생성 사실·이력·재배치 원본·사건이 일치하지 않습니다.");
+                ValidateReinforcementPlacementChain(transition.Events, evt, actor);
+            }
+
+            return records;
+        }
+
+        private static void ValidateReinforcementPlacementChain(IReadOnlyList<CombatEvent> events,
+            CombatReinforcementEvent creation, CharacterCombatFacts final)
+        {
+            var current = creation.Created;
+            bool started = false;
+            foreach (var evt in events)
+            {
+                if (ReferenceEquals(evt, creation))
+                {
+                    started = true;
+                    continue;
+                }
+                CharacterCombatFacts expected = null;
+                CharacterCombatFacts next = null;
+                if (evt is CombatCharacterEvent character)
+                {
+                    expected = character.Expected;
+                    next = character.Final;
+                }
+                else if (evt is CombatTraitStateEvent trait)
+                {
+                    expected = trait.Expected;
+                    next = trait.Final;
+                }
+                if (expected == null || (expected.EntityId != current.EntityId && next.EntityId != current.EntityId)) continue;
+                // 효과 사건은 부분 상태를 담을 수 있으므로 식별자와 배치의 연쇄만 대조한다.
+                if (!started || !current.SameIdentity(expected) || !current.SameIdentity(next) ||
+                    !SameCharacterPlacement(current, expected))
+                    throw new InvalidOperationException("증원 생성 이후의 배치 사건이 앞선 사실과 일치하지 않습니다.");
+                current = next;
+            }
+            if (!current.SameIdentity(final) || !SameCharacterPlacement(current, final))
+                throw new InvalidOperationException("증원 최종 배치가 생성 이후의 사건과 일치하지 않습니다.");
+        }
+
+        private static bool SameCharacterPlacement(CharacterCombatFacts a, CharacterCombatFacts b) =>
+            a.Area == b.Area && a.ReserveSlotIndex == b.ReserveSlotIndex && a.Anchor == b.Anchor &&
+            a.Rotation == b.Rotation && a.OccupiedCells.SequenceEqual(b.OccupiedCells);
+
+        private static bool SameReinforcementRecord(NexusReinforcementRecord a, NexusReinforcementRecord b) =>
+            a.EntityId == b.EntityId && a.PoolEntryIndex == b.PoolEntryIndex;
+
+        private static bool IsReinforcedActor(CharacterCombatFacts actor, EntityKey key) =>
+            actor.Owner == Owner.Enemy && !actor.OwnedId.HasValue && actor.CharacterKey == key &&
+            actor.ActionUse == UnitActionUse.Deferred;
 
         internal static void ValidatePlacement(CombatCommandState state, IReadOnlyList<CharacterCombatFacts> characters, int reserveCapacity)
         {

@@ -5,7 +5,8 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
     /// <summary>
-    /// 전투 목표 표시와 유닛 HUD 상태 칸 문구를 정합니다(보스 활성화 설계 D3·D4). 상태를 갖지 않는 순수 계산입니다.
+    /// 전투 목표 대상을 고릅니다(보스 활성화 설계 D3). 상태를 갖지 않는 순수 계산입니다. 부르는 곳은 선택 표시의 목표 강조(<c>CombatSelectionDisplay.SetObjective</c>, <see cref="TargetOf"/>) 하나이고,
+    /// 유닛 HUD 상태 칸 문구(<see cref="ObjectiveStatusKey"/>·<see cref="ObjectiveStatusDescription"/>·<see cref="DescribeTrait"/>, 설계 D4)는 지금 부르는 곳이 없습니다.
     /// </summary>
     /// <remarks>
     /// 목표 대상은 Buffer의 <see cref="BattleObjective"/>로만 고르고 유닛 키·이름·분류로 고르지 않습니다.

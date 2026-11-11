@@ -19,12 +19,12 @@ namespace ProjectL.Tests.Core
                 CombatEventKind.HealthChanged, CombatEventKind.Died, CombatEventKind.Attacked,
                 CombatEventKind.EffectsActivated, CombatEventKind.ArtifactActivated, CombatEventKind.SoulsCollected,
                 CombatEventKind.SoulFieldSettled, CombatEventKind.CombatEntered,
-                CombatEventKind.NightEnded, CombatEventKind.GimmickActivated,
+                CombatEventKind.GimmickActivated,
                 CombatEventKind.StageEnded, CombatEventKind.HealthNormalized, CombatEventKind.MovementSourceChanged,
                 CombatEventKind.ThornConsumed, CombatEventKind.ObstacleReacted, CombatEventKind.HeldEnvironmentChanged,
                 CombatEventKind.ObjectActivated, CombatEventKind.ObjectCreated, CombatEventKind.Relocated,
                 CombatEventKind.TornadoActivated, CombatEventKind.Fell };
-            Assert.That(eventKinds.Select(kind => (int)kind), Is.EqualTo(Enumerable.Range(1, 27).Where(value => value != 4 && value != 13 && value != 14)));
+            Assert.That(eventKinds.Select(kind => (int)kind), Is.EqualTo(Enumerable.Range(1, 27).Where(value => value != 4 && value != 13 && value != 14 && value != 15)));
         }
 
         [Test]

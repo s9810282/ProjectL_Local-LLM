@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c4af9bd96934e3cae5ae59f1998d613, type: 3}
   m_Name: Combat_LD_P23
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   timelineSeed: 1
   fieldDefinition: {fileID: 11400000, guid: 90c60db25ec6e3562929e913a4126623, type: 2}
   unitRoster: {fileID: 11400000, guid: 8d7a8a554bd442a1a1e4aee5a492bb78, type: 2}
@@ -69,6 +69,28 @@ MonoBehaviour:
     startingItem: {fileID: 0}
   enemyLoadout: {fileID: 0}
   enemyLevel: 1
+  nexusReinforcements:
+    enabled: 1
+    spawnCountPerTurn: 1
+    rangePadding: 2
+    fieldEnemyLimit: 4
+    pool:
+    - unitDefinition: {fileID: 11400000, guid: 3ffd5477df6549f4dab7837602762b3b, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 04e21ec1d311c4b40a8366745a3f45ee, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: aec8ab9029280fa44a4419d032c871e7, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 979cda7d873f49fe8c96a6972ea60112, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: acc0a2ae127be0949a209796ab5373d6, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: e9ad3c469ac878241b685603e8b625d2, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 18c4d4a195e532c498fdaa5c553fba3e, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 01f24bba909dcf645add3fd28fd205f6, type: 2}
+      count: 1
   structureCatalog: []
   initialEnemyStructurePlacements: []
   playerDeploymentCells:
@@ -571,5 +593,9 @@ MonoBehaviour:
       y: 3
     - x: 2
       y: 3
+    fixedInitialAnchor: 0
+    initialAnchor:
+      x: 0
+      y: 0
   initialWallCells: []
   staticTerrainPlacements: []

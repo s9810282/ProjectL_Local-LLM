@@ -20,6 +20,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             var bounds = new Rect(viewport.xMin + insetX, viewport.yMin + insetY,
                 Mathf.Max(0f, viewport.width - insetX * 2f), Mathf.Max(0f, viewport.height - insetY * 2f));
             size = new Vector2(Mathf.Clamp(size.x, 0f, bounds.width), Mathf.Clamp(size.y, 0f, bounds.height));
+            // 명시적으로 강조가 없는 설명은 중앙에 둡니다. 대상이 잠시 사라진 설명의 기존 회피 배치는 아래에서 유지합니다.
+            if (!anchor.HasValue && preference == TutorialViewExplanationPlacement.None)
+                return new Rect(bounds.center - size * 0.5f, size);
             Rect best = default;
             float bestOverlap = float.PositiveInfinity;
             int count = anchor.HasValue ? 4 : 9;

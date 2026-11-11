@@ -46,6 +46,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             var summoned = (CombatSummonEvent)e;
             CombatComposition composition = Compose(summoned.Created.EntityId, _abilityMotion, _mapper().WorldUp, _highlight);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEvent = e;
+#endif
             return _pieces.TryBegin(composition, completed, version);
         }
 

@@ -2,6 +2,7 @@ using System;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
@@ -9,6 +10,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
     [CreateAssetMenu(fileName = "TraitGrowthDefinition", menuName = "ProjectL/Database/InGame/TraitGrowthDefinition")]
     internal sealed class TraitGrowthDefinitionDataSO : DatabaseItem
     {
+        [SerializeField] private TraitGrowthGroup group;
         [SerializeReference] private UnitTraitAuthoring normal;
         [SerializeReference] private UnitTraitAuthoring enhanced;
         [SerializeReference] private TraitRankAuthoring rank2;
@@ -24,7 +26,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
             if (normal == null) throw new InvalidOperationException($"기본 특성 정의가 필요합니다: {name}.");
             try
             {
-                return new TraitGrowthDefinitionData(normal.ToData(), enhanced?.ToData(), displayName, description,
+                return new TraitGrowthDefinitionData(group, normal.ToData(), enhanced?.ToData(), displayName, description,
                     enhancedName, enhancedDescription, rank2?.ToValues(), rank3?.ToValues());
             }
             catch (Exception exception) when (exception is InvalidOperationException || exception is ArgumentException)

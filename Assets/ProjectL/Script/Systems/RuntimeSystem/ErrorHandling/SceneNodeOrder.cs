@@ -25,7 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.ErrorHandling
         /// <summary>씬 가상 카메라 수집입니다. View가 카메라 핸들을 빌리기 전입니다. 효과도 같은 씬 수명에서 정리합니다.</summary>
         internal const int BindCameras = -190;
 
-        /// <summary>Combat 씬 루트 찾기·배경 맵 세우기입니다. 카메라 수집보다 앞이라 그 수집에 맵 카메라가 들어갑니다(배경 설계 BD1).</summary>
+        /// <summary>Combat 씬 루트 찾기·배경 맵 세우기입니다. 카메라 수집 전에 배경의 옛 카메라를 차단합니다(씬 공용 카메라 설계 SC6).</summary>
         internal const int CombatBackdrop = BindCameras - 5;
 
         /// <summary>전투 View 연결입니다. CombatLifeCycle의 Enter(수락된 진입 활성화) 뒤입니다.</summary>

@@ -47,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             {
                 if (_sources.TryGetActivation(trait, kind, direction, out TraitActivationVisual activation))
                     row = new CombatActivationRow(activation.Cues, activation.AttackPresentation, activation.UnitActions,
-                        activation.CueTiming, activation.BodyText, _sources.TraitName(trait), activation.PositionSwap);
+                        activation.CueTiming, activation.BodyText, _sources.TraitName(trait), activation.PositionSwap, activation.DeathBlink);
                 else
                     row = direction == CombatActivationDirection.Any ? default : Of(trait, kind, CombatActivationDirection.Any);
                 _rows.Add(key, row);
@@ -57,14 +57,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     }
 
     /// <summary>
-    /// 발동 연출 줄 하나의 값입니다: 큐, 추가 공격 표시 덮어쓰기, 유닛 행동, 선택적 위치 교환 시간 연출입니다.
+    /// 발동 연출 줄 하나의 값입니다: 큐, 추가 공격 표시 덮어쓰기, 유닛 행동, 선택적 위치 교환 시간 연출, 선택적 터지기 전 깜빡임입니다.
     /// 기본값은 "줄 없음"입니다.
     /// </summary>
     internal readonly struct CombatActivationRow
     {
         internal CombatActivationRow(CombatEventCues cues, CombatAttackPresentationData presentation, IReadOnlyList<CombatUnitActionData> actions,
             CombatActivationCueTiming timing = default, CombatBodyTextData text = null, string name = null,
-            CombatPositionSwapVisualData positionSwap = null)
+            CombatPositionSwapVisualData positionSwap = null, CombatDeathBlinkVisualData deathBlink = null)
         {
             Cues = cues ?? throw new ArgumentNullException(nameof(cues));
             Presentation = presentation;
@@ -73,7 +73,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Text = text;
             Name = name;
             PositionSwap = positionSwap;
+            DeathBlink = deathBlink;
         }
+
+        /// <summary>터지기 전 깜빡임입니다(자폭 깜빡임 설계 SD2). 없으면 null이고, 터질 유닛은 지금 사망 반응을 씁니다.</summary>
+        internal CombatDeathBlinkVisualData DeathBlink { get; }
 
         internal CombatActivationCueTiming Timing { get; }
         internal CombatBodyTextData Text { get; }

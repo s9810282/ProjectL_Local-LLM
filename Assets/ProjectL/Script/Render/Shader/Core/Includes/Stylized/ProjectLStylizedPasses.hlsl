@@ -66,7 +66,7 @@ void ProjectLStylizedForwardFrag(ProjectLStylizedVaryings input, out half4 color
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-    ProjectLStylizedClip(input.uv);
+    float dissolveEdge = ProjectLStylizedClip(input.uv);
     ProjectLStylizedSurface surface;
     surface.albedo = ProjectLStylizedBase(input.uv).rgb;
     surface.normalWS = ProjectLStylizedNormal(input.uv, input.normalWS, input.tangentWS);
@@ -87,7 +87,6 @@ void ProjectLStylizedForwardFrag(ProjectLStylizedVaryings input, out half4 color
     half occlusion = lerp(1, SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, input.uv).g, _OcclusionStrength);
     half3 shaded = ProjectLStylizedLighting(data, surface, occlusion) + ProjectLStylizedEmission(input.uv);
 #if defined(PROJECTL_STYLIZED_DISSOLVE)
-    float dissolveEdge = ProjectLStylizedDissolveMask(input.uv).y;
     shaded = lerp(shaded, _DissolveEdgeColor.rgb * _DissolveEdgeIntensity, dissolveEdge);
 #endif
     // 직교 카메라의 clip Z는 거리와 같지 않다. URP의 시점 공간 Fog 경로를 사용한다.
@@ -172,12 +171,11 @@ half4 ProjectLStylizedMetaFrag(ProjectLStylizedVaryings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-    ProjectLStylizedClip(input.uv);
+    float dissolveEdge = ProjectLStylizedClip(input.uv);
     MetaInput meta = (MetaInput)0;
     meta.Albedo = ProjectLStylizedBase(input.uv).rgb;
     meta.Emission = ProjectLStylizedEmission(input.uv);
 #if defined(PROJECTL_STYLIZED_DISSOLVE)
-    float dissolveEdge = ProjectLStylizedDissolveMask(input.uv).y;
     meta.Albedo *= 1.0 - dissolveEdge;
     meta.Emission += _DissolveEdgeColor.rgb * _DissolveEdgeIntensity * dissolveEdge;
 #endif

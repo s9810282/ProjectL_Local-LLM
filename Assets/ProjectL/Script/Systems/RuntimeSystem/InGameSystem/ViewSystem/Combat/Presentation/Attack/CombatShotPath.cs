@@ -32,6 +32,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal static Vector3 ArcTangent(Vector3 from, Vector3 to, Vector3 up, float height, float t) =>
             to - from + up * (height * (4f * (1f - 2f * t)));
 
+        /// <summary>포구가 어디에 있든 이 점을 향하는 방향이 곡사의 출발 접선입니다.</summary>
+        internal static Vector3 ArcLaunchAimPoint(Vector3 to, Vector3 up, float height) =>
+            ArcTangent(Vector3.zero, to, up, height, 0f);
+
         /// <summary>곡사 높이(월드 길이) = 필드 셀 폭 × 외형의 곡사 높이(셀 단위)입니다.</summary>
         internal static float ArcHeight(FieldGridMapper mapper, CombatAttackPresentationData settings)
         {

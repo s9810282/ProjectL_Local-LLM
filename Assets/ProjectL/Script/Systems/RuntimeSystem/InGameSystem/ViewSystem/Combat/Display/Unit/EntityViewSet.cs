@@ -55,11 +55,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             {
                 if (entry.Key != key)
                 {
-                    TView old = entry.View;
-                    entry.View = null;
-                    _return(entry.Key, old);
+                    // 반환·대여가 실패해도 빈 항목(View null, 옛 키)이 남아 끝 정리가 같은 View를 한 번 더 반환하지 않게 먼저 뺍니다(평가 C10-16).
+                    // 성공하면 같은 항목 객체를 다시 넣으므로 할당이 없습니다.
+                    _entries.Remove(id);
+                    _return(entry.Key, entry.View);
                     entry.View = _rent(key);
                     entry.Key = key;
+                    _entries.Add(id, entry);
                 }
 
                 entry.Pass = _pass;

@@ -2,6 +2,27 @@
 
 2026-10-28 사용자 요청. 기존 Combat 씬의 TurnDisplay / TurnText를 사용한다.
 
+## 배치 진입 안내 추가 (2026-11-07)
+
+`ShowDeployment()`는 같은 화면·연출 방식으로 검정 `배치 단계`를 표시한다. D3에서 배치 설정을 별도로 분리했으며, 재생·완료 타이머는 같은 구현을 사용한다. Combat 최초 진입 조합이 맵 완료 뒤 호출하고, `IsShowing`과 `HasCompleted`로 실제 정상 종료를 확인한 다음 카드 순차 등장을 시작한다. 외부 Hide·취소는 정상 완료가 아니므로 다음 카드를 열지 않는다. 플레이어/적 턴 알림의 문구·색·시간과 전투 진행을 기다리지 않는 기존 동작은 유지한다. 배치 안내에 한해서 호출자가 기존 진입 대기를 유지한다.
+
+코드 연결 완료, **컴파일 미확인**. 아래 배치 전용 설정의 초기값은 분리 전과 같다.
+
+### 배치 단계 전용 설정 — D3 (2026-11-07)
+
+Combat 씬 `TurnDisplay > Turn Display UI`의 **배치 단계 연출**에서 조절한다. **플레이어 턴·적 턴 연출**의 기존 필드·씬 값은 유지한다.
+
+| Inspector 값 | 초기값 | 역할 |
+|---|---|---|
+| Deployment Intro Scale | 1.6 | 배치 글자가 처음 나타날 때의 크기 배율 |
+| Deployment Intro Seconds | 0.35 | 원래 크기로 줄어들며 선명해지는 시간 |
+| Deployment Hold Seconds | 3 | 선명한 상태로 유지하는 시간 |
+| Deployment Fade Out Seconds | 0.9 | 사라지는 시간. 종료 후 카드 등장 시작 |
+
+두 종류의 설정은 서로 영향을 주지 않는다. 배치 알림 뒤 카드까지 걸리는 시간을 줄이려면 배치의 Hold/Fade Out Seconds를 줄인다. 총 알림 시간은 배치 Intro + Hold + Fade Out이며 추가 대기는 없다. 각 Show 요청이 설정 종류를 선택하고 Hide 시 선택을 초기화한다. 시간은 0 이상, 배율은 1 이상의 유한값이며 모두 0초인 알림도 다음 Update에서 정상 완료된다.
+
+정적 확인 완료, **컴파일 미확인**. Unity에서 양쪽 설정의 독립성, 표시 도중 종류 변경, 시간 0, 외부 숨김 후 재사용, 알림 완료 뒤 카드 시작을 확인한다. Test 코드·MSBuild·Unity 실행은 하지 않았다.
+
 ## 설계와 작업 범위
 
 단일 Phase: 화면 구현 → 기존 전투 표시 경로에 조립 → 씬 연결 → 컴파일·참조 검증.
@@ -12,7 +33,7 @@
 - CombatSceneDisplay.RefreshCore에서 결과 재생을 마친 Buffer 사실을 Presenter에 전달한다.
 - 실제 Player/Enemy 턴에 진입한 경우만 표시한다. Starting 단계는 시작 처리 대기이므로 표시하지 않는다.
 - 같은 ControllerTurnSequence의 반복 갱신은 다시 열지 않는다. 배치·완료·Clear·Release에서 안내와 표시 이력을 정리한다.
-- ShowPlayerTurn은 검정 `플레이어 턴`, ShowEnemyTurn은 빨강 `적 턴`이다.
+- ShowPlayerTurn은 검정 `아군 턴`, ShowEnemyTurn은 빨강 `적군 턴`이다.
 - ShowEnvironmentTurn은 예약 함수이며 현재 아무 동작도 하지 않는다.
 - 문구와 색을 정한 뒤 OpenUI(ID, true)로 열고 등장·유지·퇴장 연출(아래 "등장·퇴장 연출")이 끝나면 CloseUI(ID)로 닫는다. 활성 상태는 UIBase.Open/Hide만 변경한다.
 - 표시 중 새 전환이 오면 최신 문구로 바꾸고 등장부터 다시 한다. 안내 자체가 전투 진행이나 입력을 대기시키지는 않는다.
@@ -43,4 +64,4 @@ Unity 재생 확인은 사용자 확인 대기다. 외부 컴파일 검증은 Un
 - 유지: 등장 뒤 `holdSeconds`(3초) 그대로.
 - 퇴장: `fadeOutSeconds`(0.9초) 동안 일정하게 투명해진 뒤 CloseUI. 바로 닫기(`Dismiss`: 배치 복귀·전투 완료·Clear)는 연출 없이 닫는다.
 - 투명도는 TurnDisplay 오브젝트의 CanvasGroup(배경·글자 함께). 씬에 없으면 처음 쓸 때 붙이고 Raycast·상호작용을 끈다. 크기는 TurnDisplay 자신의 localScale(처음 값 기준), 숨길 때 원래 크기·불투명으로 되돌린다.
-- 값 네 개는 인스펙터 "등장·퇴장 연출" 칸. 씬 값이 없으면 위 기본값. 플레이어 턴·적 턴 같은 연출. Presenter·Factory·씬·열기/닫기 계약 무변경.
+- 플레이어·적 턴 값 네 개는 인스펙터 "플레이어 턴·적 턴 연출" 칸이다(D3에서 헤더만 변경). 씬 값이 없으면 위 기본값. 배치 단계는 위 D3의 별도 값 네 개를 사용한다. Presenter·Factory·열기/닫기 계약은 유지한다.

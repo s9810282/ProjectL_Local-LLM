@@ -1,0 +1,625 @@
+{
+  "folder": "Logs/EnemyAi/phase-4-reviewed-capture",
+  "frequency": 10000000,
+  "vectorCounts": {
+    "total": 92,
+    "admitted": 67,
+    "precise": 40,
+    "partial": 27
+  },
+  "ratios": {
+    "N5": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "N6": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "N8": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "W8": {
+      "candidates": 5,
+      "admitted": 0,
+      "precise": 0,
+      "partial": 0
+    },
+    "U8": {
+      "candidates": 5,
+      "admitted": 0,
+      "precise": 0,
+      "partial": 0
+    },
+    "A8": {
+      "candidates": 5,
+      "admitted": 0,
+      "precise": 0,
+      "partial": 0
+    },
+    "T8": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "R8": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "X8": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 0,
+      "partial": 5
+    },
+    "H8": {
+      "candidates": 5,
+      "admitted": 0,
+      "precise": 0,
+      "partial": 0
+    },
+    "G16": {
+      "candidates": 5,
+      "admitted": 5,
+      "precise": 5,
+      "partial": 0
+    },
+    "additional": {
+      "candidates": 37,
+      "admitted": 32,
+      "precise": 10,
+      "partial": 22
+    }
+  },
+  "assessmentWarm": {
+    "construct": {
+      "n": 920,
+      "median": 0.0014,
+      "p95": 0.0029,
+      "p99": 0.0051,
+      "max": 0.0492,
+      "over1": 0,
+      "over4": 0
+    },
+    "step": {
+      "n": 254240,
+      "median": 0.0005,
+      "p95": 0.0065,
+      "p99": 0.0274,
+      "max": 12.0903,
+      "over1": 5,
+      "over4": 3
+    },
+    "read": {
+      "n": 920,
+      "median": 0.0002,
+      "p95": 0.0003,
+      "p99": 0.0005,
+      "max": 0.0012,
+      "over1": 0,
+      "over4": 0
+    },
+    "dispose": {
+      "n": 920,
+      "median": 0.0001,
+      "p95": 0.0001,
+      "p99": 0.0001,
+      "max": 0.0001,
+      "over1": 0,
+      "over4": 0
+    }
+  },
+  "assessmentFirst": {
+    "construct": {
+      "n": 92,
+      "median": 0.0014,
+      "p95": 0.0044,
+      "p99": 0.1291,
+      "max": 0.1291,
+      "over1": 0,
+      "over4": 0
+    },
+    "step": {
+      "n": 25424,
+      "median": 0.0005,
+      "p95": 0.007,
+      "p99": 0.0293,
+      "max": 3.9746,
+      "over1": 7,
+      "over4": 0
+    },
+    "read": {
+      "n": 92,
+      "median": 0.0002,
+      "p95": 0.0005,
+      "p99": 0.0055,
+      "max": 0.0055,
+      "over1": 0,
+      "over4": 0
+    },
+    "dispose": {
+      "n": 92,
+      "median": 0.0001,
+      "p95": 0.0001,
+      "p99": 0.0011,
+      "max": 0.0011,
+      "over1": 0,
+      "over4": 0
+    }
+  },
+  "assessmentTimedSum": {
+    "n": 920,
+    "median": 0.1171,
+    "p95": 2.3744,
+    "p99": 2.6297,
+    "max": 16.5342,
+    "over1": 172,
+    "over4": 4
+  },
+  "warmedTails": [
+    {
+      "fixture": "N5-97",
+      "sample": 6,
+      "operation": "step",
+      "workVersion": 11,
+      "phase": "Visibility",
+      "ticks": 46036,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 4.6036,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0003,
+        "p95": 4.6036,
+        "p99": 4.6036,
+        "max": 4.6036,
+        "over1": 1,
+        "over4": 1
+      }
+    },
+    {
+      "fixture": "N5-97",
+      "sample": 6,
+      "operation": "step",
+      "workVersion": 35,
+      "phase": "EffectCoverage",
+      "ticks": 74889,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 7.4889,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0005,
+        "p95": 7.4889,
+        "p99": 7.4889,
+        "max": 7.4889,
+        "over1": 1,
+        "over4": 1
+      }
+    },
+    {
+      "fixture": "R8-1",
+      "sample": 9,
+      "operation": "step",
+      "workVersion": 263,
+      "phase": "Attack/ForcedArrivals",
+      "ticks": 12558,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 1.2558,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0009,
+        "p95": 1.2558,
+        "p99": 1.2558,
+        "max": 1.2558,
+        "over1": 1,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "R8-1",
+      "sample": 10,
+      "operation": "step",
+      "workVersion": 379,
+      "phase": "Attack/CompletionHunterObservation",
+      "ticks": 120903,
+      "gcDelta": 3,
+      "bytes": -1,
+      "ms": 12.0903,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0006,
+        "p95": 12.0903,
+        "p99": 12.0903,
+        "max": 12.0903,
+        "over1": 1,
+        "over4": 1
+      }
+    },
+    {
+      "fixture": "swap",
+      "sample": 4,
+      "operation": "step",
+      "workVersion": 9,
+      "phase": "EffectCoverage",
+      "ticks": 31209,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 3.1209,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0061,
+        "p95": 3.1209,
+        "p99": 3.1209,
+        "max": 3.1209,
+        "over1": 1,
+        "over4": 0
+      }
+    }
+  ],
+  "firstTails": [
+    {
+      "fixture": "T8-1",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 203,
+      "phase": "Attack/DamagePresence",
+      "ticks": 35704,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 3.5704,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0474,
+        "p95": 0.0516,
+        "p99": 0.0516,
+        "max": 0.0516,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "T8-1",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 220,
+      "phase": "Attack/DamagePresence",
+      "ticks": 15308,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 1.5308,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0053,
+        "p95": 0.0211,
+        "p99": 0.0211,
+        "max": 0.0211,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "T8-1",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 227,
+      "phase": "Attack/DamagePresence",
+      "ticks": 21639,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 2.1639,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0102,
+        "p95": 0.0119,
+        "p99": 0.0119,
+        "max": 0.0119,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "T8-1",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 228,
+      "phase": "Attack/DamagePresence",
+      "ticks": 10620,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 1.062,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0118,
+        "p95": 0.0155,
+        "p99": 0.0155,
+        "max": 0.0155,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "terminal-hq",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 158,
+      "phase": "Attack/SacrificePlan",
+      "ticks": 11817,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 1.1817,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0314,
+        "p95": 0.0514,
+        "p99": 0.0514,
+        "max": 0.0514,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "terminal-hq",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 227,
+      "phase": "Attack/CompletionFinish",
+      "ticks": 39746,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 3.9746,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0157,
+        "p95": 0.0261,
+        "p99": 0.0261,
+        "max": 0.0261,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "fixture": "terminal-hq",
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 234,
+      "phase": "Attack/CompletionFinish",
+      "ticks": 32080,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 3.208,
+      "sameWork": {
+        "n": 10,
+        "median": 0.0292,
+        "p95": 0.0322,
+        "p99": 0.0322,
+        "max": 0.0322,
+        "over1": 0,
+        "over4": 0
+      }
+    }
+  ],
+  "assessmentWhole": {
+    "n": 920,
+    "median": 0.0958,
+    "p95": 2.2127,
+    "p99": 2.3715,
+    "max": 4.3459,
+    "over1": 113,
+    "over4": 1
+  },
+  "forecastWarm": {
+    "construct": {
+      "n": 100,
+      "median": 0.0004,
+      "p95": 0.0014,
+      "p99": 0.0019,
+      "max": 0.0025,
+      "over1": 0,
+      "over4": 0
+    },
+    "step": {
+      "n": 3700,
+      "median": 0.0002,
+      "p95": 0.0022,
+      "p99": 0.0042,
+      "max": 0.062,
+      "over1": 0,
+      "over4": 0
+    },
+    "build": {
+      "n": 100,
+      "median": 0.0001,
+      "p95": 0.0001,
+      "p99": 0.0001,
+      "max": 0.0001,
+      "over1": 0,
+      "over4": 0
+    },
+    "lookup": {
+      "n": 12800,
+      "median": 0.0019,
+      "p95": 0.0034,
+      "p99": 0.032,
+      "max": 11.5026,
+      "over1": 1,
+      "over4": 1
+    },
+    "dispose": {
+      "n": 100,
+      "median": 0.0001,
+      "p95": 0.0001,
+      "p99": 0.0002,
+      "max": 0.0002,
+      "over1": 0,
+      "over4": 0
+    }
+  },
+  "forecastFirst": {
+    "construct": {
+      "n": 5,
+      "median": 0.0006,
+      "p95": 0.3401,
+      "p99": 0.3401,
+      "max": 0.3401,
+      "over1": 0,
+      "over4": 0
+    },
+    "step": {
+      "n": 185,
+      "median": 0.0002,
+      "p95": 0.1914,
+      "p99": 2.1517,
+      "max": 3.5582,
+      "over1": 2,
+      "over4": 0
+    },
+    "build": {
+      "n": 5,
+      "median": 0.0001,
+      "p95": 0.0304,
+      "p99": 0.0304,
+      "max": 0.0304,
+      "over1": 0,
+      "over4": 0
+    },
+    "lookup": {
+      "n": 640,
+      "median": 0.0019,
+      "p95": 0.0046,
+      "p99": 0.0067,
+      "max": 2.9681,
+      "over1": 2,
+      "over4": 0
+    },
+    "dispose": {
+      "n": 5,
+      "median": 0.0001,
+      "p95": 0.0456,
+      "p99": 0.0456,
+      "max": 0.0456,
+      "over1": 0,
+      "over4": 0
+    }
+  },
+  "forecastBuildSum": {
+    "n": 100,
+    "median": 0.0164,
+    "p95": 0.0409,
+    "p99": 0.1156,
+    "max": 0.1506,
+    "over1": 0,
+    "over4": 0
+  },
+  "forecastTails": [
+    {
+      "seed": 1,
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 1,
+      "ticks": 21517,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 2.1517,
+      "sameWork": {
+        "n": 20,
+        "median": 0.0005,
+        "p95": 0.0019,
+        "p99": 0.0023,
+        "max": 0.0023,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "seed": 1,
+      "sample": 0,
+      "operation": "step",
+      "workVersion": 31,
+      "ticks": 35582,
+      "gcDelta": 0,
+      "bytes": -1,
+      "ms": 3.5582,
+      "sameWork": {
+        "n": 20,
+        "median": 0.0022,
+        "p95": 0.0273,
+        "p99": 0.0584,
+        "max": 0.0584,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "seed": 1,
+      "sample": 0,
+      "operation": "lookup",
+      "workVersion": 11,
+      "ticks": 29681,
+      "gcDelta": 0,
+      "bytes": -1,
+      "lookupX": 0,
+      "ms": 2.9681,
+      "sameWork": {
+        "n": 20,
+        "median": 0.0044,
+        "p95": 0.0082,
+        "p99": 0.0528,
+        "max": 0.0528,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "seed": 1,
+      "sample": 0,
+      "operation": "lookup",
+      "workVersion": 11,
+      "ticks": 12996,
+      "gcDelta": 0,
+      "bytes": -1,
+      "lookupX": 5,
+      "ms": 1.2996,
+      "sameWork": {
+        "n": 20,
+        "median": 0.0037,
+        "p95": 0.032,
+        "p99": 0.0483,
+        "max": 0.0483,
+        "over1": 0,
+        "over4": 0
+      }
+    },
+    {
+      "seed": 1,
+      "sample": 6,
+      "operation": "lookup",
+      "workVersion": 14,
+      "ticks": 115026,
+      "gcDelta": 3,
+      "bytes": -1,
+      "lookupX": 10,
+      "ms": 11.5026,
+      "sameWork": {
+        "n": 20,
+        "median": 0.002,
+        "p95": 0.0612,
+        "p99": 11.5026,
+        "max": 11.5026,
+        "over1": 1,
+        "over4": 1
+      }
+    }
+  ]
+}

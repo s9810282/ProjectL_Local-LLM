@@ -8,9 +8,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <summary>
     /// 결과 재생 사건의 효과음·배경음 호출입니다(Presenter 분리 설계 S5, 결정 Q-S2 A). 무엇을 낼지는 소리 표(<see cref="CombatEventSounds"/>) 한 곳이 답하고,
     /// 이 클래스는 그 단서를 AudioSystem에 냅니다(조각·조립 설계 BP8, 결정 Q-B4 A). 언제 내는지는 시계를 가진 쪽이 정합니다
-    /// (틀의 사실 반영 전, 사망 조립의 소리 조각, 공격 연출 콜백, 걸음 레인 콜백). 값은 그대로입니다(리팩토링 R4 — Audio 로직은 이 작업 범위가 아님).
-    /// 프리셋 번호는 View DB에서 고르는 <see cref="CombatSoundPresets"/>가 답하고(View 3라운드 W9-2), AudioSystem에는 인덱스만 넘깁니다.
-    /// 오디오·프리셋은 필수입니다(View 3라운드 W9-3). 시험 조립은 아무것도 하지 않는 가짜 오디오를 넘깁니다.
+    /// (틀의 사실 반영 전, 사망 조립의 소리 조각, 공격 연출 콜백, 걸음 레인 콜백).
+    /// 프리셋과 공격 이벤트 슬롯 번호는 View DB에서 고르는 <see cref="CombatSoundPresets"/>가 답하고, AudioSystem에는 인덱스만 넘깁니다.
+    /// 오디오·프리셋은 필수입니다(View 3라운드 W9-3).
     /// </summary>
     internal sealed class CombatEventAudio
     {
@@ -48,6 +48,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             switch (cue.Kind)
             {
+                case CombatSoundCueKind.UnitAttack:
+                    _audio.PlayUnitAttack(cue.AttackSlotIndex);
+                    break;
                 case CombatSoundCueKind.Effect:
                     if (cue.UnitSlot.HasValue) _audio.Play(cue.UnitSlot.Value, cue.Preset);
                     else _audio.Play(cue.Slot, cue.Preset);

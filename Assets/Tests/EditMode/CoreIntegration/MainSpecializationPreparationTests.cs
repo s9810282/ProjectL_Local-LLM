@@ -220,6 +220,7 @@ namespace ProjectL.Tests.CoreIntegration
 
         private static object TraitArgument(Type type, bool changed)
         {
+            if (type == typeof(bool)) return changed;
             if (type == typeof(int)) return changed ? 2 : 1;
             if (type == typeof(long)) return changed ? 2L : 1L;
             if (type == typeof(System.Collections.Generic.IReadOnlyList<int>)) return changed ? new[] { 100, 50 } : new[] { 100 };

@@ -20,8 +20,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CombatTurnFacts CombatTurn { get; }
         public StageOutcomeSnapshot Outcome { get; }
         public EntityId MainCharacterId { get; }
-        public bool MainCharacterPlacementLocked { get; }
-        public int PreparationIndex { get; }
         public ReadOnlyMemory<ThornFieldCellSnapshot> ThornFields { get; }
         public ReadOnlyMemory<ArtifactActivationSnapshot> ArtifactActivations { get; }
 
@@ -33,10 +31,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ReserveSlotSnapshot[] reserveSlots,
             CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
-            EntityId mainCharacterId = default,
-            bool mainCharacterPlacementLocked = false)
+            EntityId mainCharacterId = default)
             : this(mapWidth, mapHeight, currentPhase, entities, reserveSlots, combatTurnSnapshot,
-                outcome, mainCharacterId, mainCharacterPlacementLocked, 1)
+                outcome, mainCharacterId, Array.Empty<ThornFieldCellSnapshot>())
         {
         }
 
@@ -49,34 +46,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
             EntityId mainCharacterId,
-            bool mainCharacterPlacementLocked,
-            int preparationIndex)
-            : this(
-                mapWidth,
-                mapHeight,
-                currentPhase,
-                entities,
-                reserveSlots,
-                combatTurnSnapshot,
-                outcome,
-                mainCharacterId,
-                mainCharacterPlacementLocked,
-                preparationIndex,
-                Array.Empty<ThornFieldCellSnapshot>())
-        {
-        }
-
-        public StageSnapshot(
-            int mapWidth,
-            int mapHeight,
-            StagePhase currentPhase,
-            EntitySnapshot[] entities,
-            ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnFacts combatTurnSnapshot,
-            StageOutcomeSnapshot outcome,
-            EntityId mainCharacterId,
-            bool mainCharacterPlacementLocked,
-            int preparationIndex,
             ThornFieldCellSnapshot[] thornFields,
             ArtifactActivationSnapshot[] artifactActivations = null)
         {
@@ -92,9 +61,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(reserveSlots));
             if (thornFields == null)
                 throw new ArgumentNullException(nameof(thornFields));
-            if (preparationIndex < 1)
-                throw new ArgumentOutOfRangeException(nameof(preparationIndex));
-            PreparationIndex = preparationIndex;
 
             EntitySnapshot[] copiedEntities = new EntitySnapshot[entities.Length];
             Array.Copy(entities, copiedEntities, entities.Length);
@@ -145,7 +111,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CombatTurn = combatTurnSnapshot;
             Outcome = outcome;
             MainCharacterId = mainCharacterId;
-            MainCharacterPlacementLocked = mainCharacterPlacementLocked;
         }
 
         // 구버전 호환용

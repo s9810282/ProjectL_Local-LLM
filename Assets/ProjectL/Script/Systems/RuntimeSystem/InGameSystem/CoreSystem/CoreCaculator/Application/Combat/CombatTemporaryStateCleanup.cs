@@ -29,6 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var cleared = ItemLifetimeCalculator.ClearRoundItems(character, events, reason);
             var traitBefore = cleared;
             cleared = RegenerationTurnApplication.Reset(cleared);
+            cleared = RampageApplication.ResetHistory(cleared);
             if (cleared.StatusEffects.Entries.Count != 0 || cleared.TraitEffects.Shields.Count != 0 || cleared.TraitEffects.CohesionDefenseBonus != 0)
                 cleared = cleared.WithStatusEffects(AppliedStatusRules.ClearForDeathOrBattleEnd(cleared.StatusEffects))
                     .With(traitEffects: CharacterTraitEffects.Empty,

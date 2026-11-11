@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial.Item;
+using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using TMPro;
@@ -27,33 +28,45 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 
         [Tooltip("설명 중 보일 대상 밖을 덮는 그래픽입니다. 색은 정의 데이터의 덮개 색을 씁니다.")]
         [SerializeField] private TutorialViewOverlay overlay;
+        [Tooltip("UI 강조 영역의 점선입니다. 덮개 위, 설명 박스 아래에 둡니다.")]
+        [SerializeField] private TutorialFocusBorderGraphic focusBorder;
+        [Tooltip("각 카드·버튼 자체의 가장자리에 추가하는 점선입니다. 기존 흰 영역 테두리와 별개입니다.")]
+        [SerializeField] private TutorialTargetBorderGraphic targetBorder;
+        [SerializeField] private TutorialHighlightStyle highlightStyle = new();
         [Tooltip("설명 중 화면 전체의 클릭을 막는 투명 막입니다. 보일 대상 위까지 덮고 Raycast Target을 켭니다.")]
         [SerializeField] private Graphic blocker;
         [SerializeField] private GameObject explanationRoot;
         [SerializeField] private TMP_Text explanationText;
-        [Tooltip("배치·이동 실습 중 화면 상단 가운데에 띄우는 안내입니다.")]
+        [Tooltip("실습 중 화면 오른쪽 위 배경 영역에 띄우는 안내입니다.")]
         [SerializeField] private GameObject practiceRoot;
         [SerializeField] private TMP_Text practiceText;
         [Tooltip("이동 실습에서 막힌 조작이 있을 때 잠시 띄우는 안내입니다.")]
         [SerializeField] private GameObject blockedRoot;
         [SerializeField] private TMP_Text blockedText;
-        [Tooltip("게임 창 활성 알림입니다. 늘 켜진 곳(튜토리얼 Canvas 루트)에 둡니다.")]
-        [SerializeField] private TutorialViewFocusNotifier focusNotifier;
         [Tooltip("보일 대상 둘레에 더 비워 둘 여백(Canvas 단위)입니다.")]
         [SerializeField, Min(0f)] private float holePadding = 8f;
         [Tooltip("막힌 조작 안내를 띄워 두는 시간(초)입니다. 시간 배율과 상관없이 셉니다.")]
         [SerializeField, Min(0.1f)] private float blockedNoticeSeconds = 2f;
         [Tooltip("설명 박스와 대상 사이 간격(Canvas 단위)입니다.")]
         [SerializeField, Min(0f)] private float explanationGap = 24f;
-        [Tooltip("설명 박스를 화면 안에 둘 여백(Canvas 단위)입니다.")]
+        [Tooltip("설명 박스의 화면 여백과 실습 안내의 오른쪽 여백(Canvas 단위)입니다.")]
         [SerializeField, Min(0f)] private float screenMargin = 24f;
-        [Tooltip("실습 안내의 화면 상단 여백(Canvas 단위)입니다.")]
-        [SerializeField, Min(0f)] private float practiceTopMargin = 40f;
+        [Tooltip("실습 안내의 화면 상단 여백(Canvas 단위)입니다. 오른쪽 설정 버튼 아래에 배치합니다.")]
+        [SerializeField, Min(0f)] private float practiceTopMargin = 136f;
         [Tooltip("실습 안내와 막힌 조작 안내 사이 간격(Canvas 단위)입니다.")]
         [SerializeField, Min(0f)] private float noticeGap = 16f;
+        [Header("같은 문장일 때의 주의")]
+        [Tooltip("막힌 조작 안내가 실습 안내와 같은 문장이면 상자를 하나 더 띄우지 않고 실습 안내를 흔듭니다. 흔드는 시간(초)입니다.")]
+        [SerializeField, Min(0.05f)] private float practiceWarningSeconds = 0.4f;
+        [Tooltip("실습 안내를 좌우로 흔드는 폭(Canvas 단위)입니다. 흔들림은 끝으로 갈수록 줄어듭니다.")]
+        [SerializeField, Min(0f)] private float practiceWarningShake = 12f;
+        [Tooltip("흔드는 동안 실습 안내 글자 색입니다. 끝나면 원래 색으로 돌아갑니다.")]
+        [SerializeField] private Color practiceWarningColor = new Color(0.85f, 0.15f, 0.1f, 1f);
 
         private readonly Vector3[] _corners = new Vector3[4];
         private readonly Vector3[] _canvasCorners = new Vector3[4];
+        private readonly List<Rect> _layoutObstacles = new();
+        private Action _clearModelHighlights;
         private IUISystemService _ui;
         private bool _shown;
         private float _blockedHideAt = -1f;
@@ -64,15 +77,41 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         private Vector2 _explanationPadding;
         private Vector2 _practicePadding;
         private Vector2 _blockedPadding;
+        // 실습 안내 주의(흔들기)입니다. 끝나는 시각이 음수면 진행 중이 아닙니다. 원래 글자 색은 시작 때 한 번 기억합니다.
+        private float _warningStartedAt;
+        private float _warningEndsAt = -1f;
+        private Color _practiceTextColor;
 
         public TutorialViewUI() => Policy = UIOpenPolicy.Parallel;
 
         public override UIId ID => UIId.Tutorial;
 
-        internal TutorialViewFocusNotifier FocusNotifier => focusNotifier;
+        internal bool IsShown => _shown && isActiveAndEnabled;
+        internal bool IsExplanationShown => IsShown && explanationRoot.activeSelf;
+        internal bool IsPracticeShown => IsShown && practiceRoot.activeSelf;
+        internal TutorialHighlightStyle HighlightStyle => highlightStyle;
 
-        internal bool IsShown => _shown;
-        internal bool IsExplanationShown => _shown && explanationRoot.activeSelf;
+        /// <summary>화면 숨김에서도 표시 소유자의 모델 대여를 즉시 반환하는 명시적 정리 접점입니다.</summary>
+        internal void BindHighlightCleanup(Action cleanup)
+        {
+            if (cleanup != null && _clearModelHighlights != null)
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 모델 강조 정리가 이미 연결됐습니다.");
+            _clearModelHighlights = cleanup;
+        }
+
+        internal void ClearHighlights()
+        {
+            List<Exception> errors = null;
+            if (focusBorder != null)
+                CleanupErrors.Try(focusBorder.Clear, ref errors);
+            if (targetBorder != null)
+                CleanupErrors.Try(targetBorder.Clear, ref errors);
+            if (_clearModelHighlights != null)
+                CleanupErrors.Try(_clearModelHighlights, ref errors);
+            CleanupErrors.ThrowIfAny(errors, "[TutorialViewUI] UIId.Tutorial의 강조 정리에 실패했습니다.");
+        }
+
+        protected override void OnUIHidden() => ClearHighlights();
 
         public override void BindUISystemService(IUISystemService service)
         {
@@ -101,10 +140,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 throw new ArgumentNullException(nameof(screenHoles));
 
             EnsureOpen();
+            ClearHighlights();
             overlay.color = overlayColor;
             overlay.SetScreenHoles(screenHoles, holePadding);
             overlay.gameObject.SetActive(true);
             blocker.gameObject.SetActive(true);
+            EndPracticeWarning();
             practiceRoot.SetActive(false);
             HideBlockedNotice();
             explanationText.text = text;
@@ -114,6 +155,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         /// <summary>설명 박스만 닫습니다. 같은 구간의 다음 설명이 이어지므로 덮개와 막은 둡니다.</summary>
         internal void HideExplanation()
         {
+            ClearHighlights();
             if (_shown)
                 explanationRoot.SetActive(false);
         }
@@ -121,12 +163,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         /// <summary>실습을 통과해 실습 안내를 닫습니다(설계 §15.4).</summary>
         internal void HidePractice()
         {
+            ClearHighlights();
+            EndPracticeWarning();
             if (_shown)
                 practiceRoot.SetActive(false);
         }
 
-        /// <summary>강조 영역과 설명 박스 좌표만 갱신합니다. 열기·완료 알림·설명 시간은 건드리지 않습니다.</summary>
-        internal void RefreshExplanationLayout(IReadOnlyList<Rect> holes, Rect? anchor,
+        /// <summary>강조 영역과 설명 박스 좌표만 갱신합니다. 열기·완료 알림·단계 진행은 건드리지 않습니다.</summary>
+        internal void RefreshExplanationLayout(TutorialFocusFrame frame,
             TutorialViewExplanationPlacement placement, IReadOnlyList<Rect> obstacles)
         {
             if (!IsExplanationShown)
@@ -134,14 +178,37 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             Canvas canvas = GetComponentInParent<Canvas>().rootCanvas;
             float scale = canvas.scaleFactor;
             Rect viewport = canvas.pixelRect;
+            _layoutObstacles.Clear();
+            _layoutObstacles.AddRange(obstacles);
+            foreach (Rect hole in frame.Holes)
+            {
+                // UI와 모델 모두 같은 밝은 영역 바깥에 흰 점선이 있으므로 설명도 그 두께를 피합니다.
+                float padding = holePadding + highlightStyle.BorderThickness;
+                float pixels = padding * scale;
+                _layoutObstacles.Add(Rect.MinMaxRect(hole.xMin - pixels, hole.yMin - pixels,
+                    hole.xMax + pixels, hole.yMax + pixels));
+            }
             Vector2 size = Measure(explanationText, _explanationSize, _explanationPadding, viewport, scale);
-            Rect box = TutorialViewExplanationLayout.Place(viewport, size * scale, anchor, placement,
-                obstacles, explanationGap * scale, screenMargin * scale);
+            Rect box = TutorialViewExplanationLayout.Place(viewport, size * scale, frame.Anchor, placement,
+                _layoutObstacles, explanationGap * scale, screenMargin * scale);
             PlacePanel(explanationRoot, box, scale);
-            overlay.SetScreenHoles(holes, holePadding);
+            overlay.SetScreenHoles(frame.Holes, holePadding);
+            focusBorder.SetScreenRects(frame.Holes, holePadding, highlightStyle);
+            targetBorder.SetTargets(frame.UiTargets, highlightStyle);
+            targetBorder.SetBlink(false, highlightStyle, Time.unscaledTime);
         }
 
-        /// <summary>실습 안내의 본문 높이와 창 크기를 반영해 두 안내가 겹치지 않게 배치합니다.</summary>
+        /// <summary>실습 조작 대상만 표시합니다. 덮개·흰 영역·모델·입력은 바꾸지 않습니다.</summary>
+        internal void RefreshPracticeHighlights(TutorialFocusFrame frame)
+        {
+            if (frame == null) throw new ArgumentNullException(nameof(frame));
+            if (!IsPracticeShown) return;
+            focusBorder.Clear();
+            targetBorder.SetTargets(frame.UiTargets, highlightStyle);
+            targetBorder.SetBlink(true, highlightStyle, Time.unscaledTime);
+        }
+
+        /// <summary>중앙 턴 표시를 가리지 않도록 실습·조작 제한 안내를 오른쪽 위에 쌓습니다.</summary>
         internal void RefreshPracticeLayout()
         {
             if (!_shown || (!practiceRoot.activeSelf && !blockedRoot.activeSelf))
@@ -150,17 +217,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             float scale = canvas.scaleFactor;
             Rect viewport = canvas.pixelRect;
             float top = viewport.yMax - practiceTopMargin * scale;
+            float right = viewport.xMax - screenMargin * scale;
             if (practiceRoot.activeSelf)
             {
                 Vector2 size = Measure(practiceText, _practiceSize, _practicePadding, viewport, scale) * scale;
-                var rect = new Rect(viewport.center.x - size.x * 0.5f, top - size.y, size.x, size.y);
+                var rect = new Rect(right - size.x, top - size.y, size.x, size.y);
                 PlacePanel(practiceRoot, rect, scale);
+                // 주의 흔들림은 배치 뒤에 더합니다. 배치가 매 갱신 자리를 다시 정하므로 흔들림이 쌓이지 않습니다.
+                float shake = PracticeWarningOffset(Time.unscaledTime);
+                if (shake != 0f)
+                    ((RectTransform)practiceRoot.transform).anchoredPosition += new Vector2(shake, 0f);
                 top = rect.yMin - noticeGap * scale;
             }
             if (blockedRoot.activeSelf)
             {
                 Vector2 size = Measure(blockedText, _blockedSize, _blockedPadding, viewport, scale) * scale;
-                PlacePanel(blockedRoot, new Rect(viewport.center.x - size.x * 0.5f,
+                PlacePanel(blockedRoot, new Rect(right - size.x,
                     top - size.y, size.x, size.y), scale);
             }
         }
@@ -208,9 +280,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 throw new ArgumentNullException(nameof(text));
 
             EnsureOpen();
+            ClearHighlights();
             overlay.gameObject.SetActive(false);
             blocker.gameObject.SetActive(false);
             explanationRoot.SetActive(false);
+            EndPracticeWarning();
             practiceText.text = text;
             practiceRoot.SetActive(true);
             RefreshPracticeLayout();
@@ -225,20 +299,68 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 throw new ArgumentNullException(nameof(text));
 
             EnsureOpen();
+            // 위에 떠 있는 실습 안내와 같은 문장이면 같은 상자를 하나 더 쌓지 않고 실습 안내를 흔들어 주의를 줍니다(2026-11-11 사용자).
+            if (practiceRoot.activeSelf && string.Equals(text, practiceText.text, StringComparison.Ordinal))
+            {
+                StartPracticeWarning(now);
+                return;
+            }
             blockedText.text = text;
             blockedRoot.SetActive(true);
             _blockedHideAt = now + blockedNoticeSeconds;
             RefreshPracticeLayout();
         }
 
+        private void StartPracticeWarning(float now)
+        {
+            if (_warningEndsAt < 0f)
+                _practiceTextColor = practiceText.color;
+            _warningStartedAt = now;
+            _warningEndsAt = now + practiceWarningSeconds;
+            practiceText.color = practiceWarningColor;
+            RefreshPracticeLayout();
+        }
+
+        // 지금 시각의 좌우 흔들림(Canvas 단위)입니다. 세 번 왕복하며 끝으로 갈수록 줄어듭니다.
+        private float PracticeWarningOffset(float now)
+        {
+            if (_warningEndsAt < 0f)
+                return 0f;
+            float progress = Mathf.Clamp01((now - _warningStartedAt) / practiceWarningSeconds);
+            return Mathf.Sin(progress * Mathf.PI * 6f) * practiceWarningShake * (1f - progress);
+        }
+
+        /// <summary>실습 안내 주의의 시간이 지났으면 끝냅니다.</summary>
+        internal void EndExpiredPracticeWarning(float now)
+        {
+            if (_warningEndsAt >= 0f && now >= _warningEndsAt)
+                EndPracticeWarning();
+        }
+
+        // 글자 색을 되돌립니다. 위치는 다음 배치가 흔들림 없이 다시 정합니다.
+        private void EndPracticeWarning()
+        {
+            if (_warningEndsAt < 0f)
+                return;
+            _warningEndsAt = -1f;
+            if (practiceText != null)
+                practiceText.color = _practiceTextColor;
+        }
+
         /// <summary>열려 있으면 UISystem으로 닫습니다. 실제 숨김은 <see cref="Hide"/>가 합니다.</summary>
         internal void CloseAll()
         {
-            if (!_shown)
-                return;
-
-            RequireUISystem();
-            _ui.CloseUI(ID);
+            List<Exception> errors = null;
+            CleanupErrors.Try(ClearHighlights, ref errors);
+            if (_shown)
+            {
+                CleanupErrors.Try(() =>
+                {
+                    RequireUISystem();
+                    _ui.CloseUI(ID);
+                }, ref errors);
+            }
+            CleanupErrors.ThrowIfAny(errors, "[TutorialViewUI] UIId.Tutorial을 닫는 중 정리에 실패했습니다.");
         }
 
         public override void Open()
@@ -253,8 +375,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         public override void Hide()
         {
             _shown = false;
-            ResetParts();
-            gameObject.SetActive(false);
+            try { ResetParts(); }
+            finally { gameObject.SetActive(false); }
         }
 
         /// <summary>막힌 조작 안내의 시간이 지났으면 닫습니다.</summary>
@@ -274,6 +396,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         private void Update()
         {
             HideExpiredNotice(Time.unscaledTime);
+            EndExpiredPracticeWarning(Time.unscaledTime);
+            if (targetBorder != null) targetBorder.TickBlink(Time.unscaledTime);
         }
 
         /// <summary>
@@ -284,6 +408,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         internal void ValidateReferences()
         {
             Require(overlay, nameof(overlay));
+            Require(focusBorder, nameof(focusBorder));
+            Require(targetBorder, nameof(targetBorder));
+            if (highlightStyle == null)
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 highlightStyle이 비어 있습니다.");
+            highlightStyle.Validate();
+            if (float.IsNaN(holePadding) || float.IsInfinity(holePadding) || holePadding < 0f)
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 holePadding은 유한한 0 이상 값이어야 합니다.");
+            if (float.IsNaN(practiceWarningSeconds) || float.IsInfinity(practiceWarningSeconds) || practiceWarningSeconds <= 0f
+                || float.IsNaN(practiceWarningShake) || float.IsInfinity(practiceWarningShake) || practiceWarningShake < 0f)
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 practiceWarningSeconds는 유한한 양수, practiceWarningShake는 유한한 0 이상 값이어야 합니다.");
+            if (practiceWarningColor.a <= 0f)
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 practiceWarningColor는 알파가 0보다 커야 글자가 보입니다.");
             Require(blocker, nameof(blocker));
             Require(explanationRoot, nameof(explanationRoot));
             Require(explanationText, nameof(explanationText));
@@ -291,7 +427,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             Require(practiceText, nameof(practiceText));
             Require(blockedRoot, nameof(blockedRoot));
             Require(blockedText, nameof(blockedText));
-            Require(focusNotifier, nameof(focusNotifier));
             if (!blocker.raycastTarget)
                 throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 blocker는 클릭을 막도록 Raycast Target을 켜야 합니다.");
 
@@ -305,7 +440,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 Canvas에 켜진 GraphicRaycaster가 있어야 투명 막이 클릭을 막습니다.");
             if (!Covers(blocker.rectTransform, (RectTransform)root.transform))
                 throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 blocker는 Canvas 전체를 덮어야 합니다(늘이기 앵커, 여백 0).");
+            if (focusBorder.transform.parent != overlay.transform.parent
+                || focusBorder.transform.parent != explanationRoot.transform.parent
+                || focusBorder.transform.GetSiblingIndex() <= overlay.transform.GetSiblingIndex()
+                || focusBorder.transform.GetSiblingIndex() >= explanationRoot.transform.GetSiblingIndex()
+                || !focusBorder.enabled || !focusBorder.gameObject.activeSelf
+                || !Covers(focusBorder.rectTransform, (RectTransform)root.transform))
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 focusBorder는 같은 부모의 Overlay 위/설명 아래에서 Canvas 전체를 덮는 활성 위젯이어야 합니다.");
             RequireNoRaycast(practiceRoot, nameof(practiceRoot));
+            if (targetBorder.transform.parent != focusBorder.transform.parent
+                || targetBorder.transform.GetSiblingIndex() <= focusBorder.transform.GetSiblingIndex()
+                || targetBorder.transform.GetSiblingIndex() >= explanationRoot.transform.GetSiblingIndex()
+                || !targetBorder.enabled || !targetBorder.gameObject.activeSelf
+                || !Covers(targetBorder.rectTransform, (RectTransform)root.transform))
+                throw new InvalidOperationException("[TutorialViewUI] UIId.Tutorial의 targetBorder는 같은 부모의 FocusBorder 위/설명 아래에서 Canvas 전체를 덮는 활성 위젯이어야 합니다.");
             RequireNoRaycast(blockedRoot, nameof(blockedRoot));
         }
 
@@ -352,17 +500,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 
         private void ResetParts()
         {
-            _blockedHideAt = -1f;
-            if (overlay != null)
-                overlay.gameObject.SetActive(false);
-            if (blocker != null)
-                blocker.gameObject.SetActive(false);
-            if (explanationRoot != null)
-                explanationRoot.SetActive(false);
-            if (practiceRoot != null)
-                practiceRoot.SetActive(false);
-            if (blockedRoot != null)
-                blockedRoot.SetActive(false);
+            try { ClearHighlights(); }
+            finally
+            {
+                EndPracticeWarning();
+                _blockedHideAt = -1f;
+                if (overlay != null)
+                    overlay.gameObject.SetActive(false);
+                if (blocker != null)
+                    blocker.gameObject.SetActive(false);
+                if (explanationRoot != null)
+                    explanationRoot.SetActive(false);
+                if (practiceRoot != null)
+                    practiceRoot.SetActive(false);
+                if (blockedRoot != null)
+                    blockedRoot.SetActive(false);
+            }
         }
 
         private static void Require(UnityEngine.Object value, string field)

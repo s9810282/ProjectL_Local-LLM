@@ -83,7 +83,7 @@ namespace ProjectL.Tests.CoreIntegration
                     new TargetingMethodSpec(TargetingShape.CardinalLine, TargetingChoiceMode.Single, TargetingSplash.None, 0));
                 var stats = OwnedCharacterStatsCalculator.Calculate(new[] { profile },
                     UnitSpecAdapter.ReadCategories(ConfiguredMovementBattle.Config), new[] { owned },
-                    null, new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }).Single();
+                    null, new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }, default).Single();
                 Assert.That(stats.HuntersMarkDescription.BonusDamagePercent, Is.EqualTo(percent));
                 Assert.That(stats.HuntersMarkDescription.DurationAffectedSideTurnEnds, Is.EqualTo(1));
                 Assert.That(((HuntersMarkTraitData)((UnitData)original.GetData()).Traits.Single()).BonusDamagePercent,

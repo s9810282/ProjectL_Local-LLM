@@ -27,7 +27,11 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial.Item
         /// <summary>공격 모드로 바꾸는 버튼입니다(슬라이드 19).</summary>
         AttackButton = 9,
         /// <summary>공격 대상이 될 적 유닛입니다(슬라이드 20). 어느 적을 보일지는 표시 코드에서 정합니다(T-6).</summary>
-        EnemyUnits = 10
+        EnemyUnits = 10,
         // 11은 삭제된 UnitInfo 비용 강조 값입니다. 다른 대상으로 재사용하지 않습니다.
+        /// <summary>살아 있는 플레이어 필드 유닛 전체입니다.</summary>
+        PlayerUnits = 12,
+        /// <summary>플레이어 턴 종료 버튼입니다.</summary>
+        EndTurnButton = 13
     }
 }

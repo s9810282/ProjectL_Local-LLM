@@ -9,6 +9,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
     /// <summary>가방 UI·유닛 HUD의 요청을 수명·오류 경계 안에서 아이템 입력으로 전달합니다(가방 설계 P4·P6).</summary>
     internal sealed class CombatItemInput : ICombatItemInput
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIItemSelect = new("Combat.Action.UI.Item.Select");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIItemCancel = new("Combat.Action.UI.Item.Cancel");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIItemUnequip = new("Combat.Action.UI.Item.Unequip");
+#endif
+
         private readonly CombatInteraction _interaction;
         private readonly ICharacterBufferReadSink _characters;
         private readonly Func<bool, CombatInputFacts> _readFacts;
@@ -42,6 +49,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
 
         public void Select(int itemKey)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIItemSelectSample = _profileUIItemSelect.Auto();
+#endif
+
             if (_released || _faults.IsFaulted || !_canReceive()) return;
             try
             {
@@ -55,6 +66,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
 
         public void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIItemCancelSample = _profileUIItemCancel.Auto();
+#endif
+
             if (_released) return;
             try
             {
@@ -68,6 +83,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
 
         public void RequestUnequip(EntityId unitId)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIItemUnequipSample = _profileUIItemUnequip.Auto();
+#endif
+
             if (_released || _faults.IsFaulted || !_canReceive()) return;
             try
             {

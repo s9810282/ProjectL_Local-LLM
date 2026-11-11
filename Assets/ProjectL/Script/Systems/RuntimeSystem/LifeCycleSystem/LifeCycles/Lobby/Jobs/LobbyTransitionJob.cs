@@ -1,5 +1,6 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.LobbyView;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 
@@ -13,14 +14,16 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Jobs
     {
         private readonly LobbyDepartureRequest _request;
         private readonly ILifeCycleManager _manager;
+        private readonly IAudioSystemService _audio;
         // 새 Run Job과 같은 우선순위라 등록 순서대로 그 바로 뒤에 실행됩니다.
         public int Priority => LobbyJobPriority.Departure;
         public bool IsCompleted { get; private set; }
 
-        internal LobbyTransitionJob(LobbyDepartureRequest request, ILifeCycleManager manager)
+        internal LobbyTransitionJob(LobbyDepartureRequest request, ILifeCycleManager manager, IAudioSystemService audio)
         {
             _request = request ?? throw new ArgumentNullException(nameof(request));
             _manager = manager ?? throw new ArgumentNullException(nameof(manager));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
         }
 
         public void Execute()
@@ -39,6 +42,16 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Jobs
                     if (!_manager.HasActiveLifeCycle || !_manager.CurrentKey.Equals(LifeCycleKeys.Lobby))
                         throw new InvalidOperationException("[LobbyTransitionJob] 로비가 활성 구간이 아니라 Stage로 전환할 수 없습니다.");
                     _request.BeginTransition();
+                    _audio.Stop(AmbgmEvent.Lobby);
+                    // 출발 효과음은 선택 연출이라 재생에 실패해도 씬 전환을 계속합니다.
+                    try
+                    {
+                        _audio.Play(AmbgmEvent.RunStart);
+                    }
+                    catch (Exception exception)
+                    {
+                        UnityEngine.Debug.LogWarning($"[LobbyTransitionJob] RunStart 효과음 재생 실패. {exception.Message}");
+                    }
                     // 로딩 표현이 없으면 Change 안의 동기 이탈 검사가 이 Transitioning 요청을 봅니다. 로딩 표현이 있으면 이탈 검사는
                     // 덮기가 끝난 뒤 Tick에서 돌아, 그때 요청은 이미 Completed입니다(로비 리팩토링 2차 설계 N-79).
                     _manager.Change(LifeCycleKeys.Stage);

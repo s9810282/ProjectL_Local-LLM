@@ -148,4 +148,41 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
 
         internal override TraitRankValues ToValues() => new(TraitKey.FocusedBombardment, extraDamagePercent);
     }
+
+    [Serializable]
+    internal sealed class RampageRankAuthoring : TraitRankAuthoring
+    {
+        [SerializeField, Min(0)] private int movementBonus = -1;
+        [SerializeField, Min(0), Tooltip("기본 공격력 보너스 n에 더하는 값입니다.")]
+        private int attackOffset = -1;
+
+        internal override TraitRankValues ToValues() => new(TraitKey.Rampage, movementBonus, attackOffset);
+    }
+
+    [Serializable]
+    internal sealed class DustScreenRankAuthoring : TraitRankAuthoring
+    {
+        [SerializeField] private bool exemptsAlliedAttackRangePenalty;
+
+        internal override TraitRankValues ToValues() => new(TraitKey.DustScreen, 0,
+            exemptsAlliedAttackRangePenalty: exemptsAlliedAttackRangePenalty);
+    }
+
+    [Serializable]
+    internal sealed class SacrificeRankAuthoring : TraitRankAuthoring
+    {
+        [SerializeField] private bool preventsLethalSacrificeDamage;
+        [SerializeField, Min(0)] private int shieldOnActivation;
+
+        internal override TraitRankValues ToValues() => new(TraitKey.Sacrifice, shieldOnActivation,
+            preventsLethalSacrificeDamage: preventsLethalSacrificeDamage);
+    }
+
+    [Serializable]
+    internal sealed class BleedingRankAuthoring : TraitRankAuthoring
+    {
+        [SerializeField, Min(1)] private int damagePerStack;
+
+        internal override TraitRankValues ToValues() => new(TraitKey.Bleeding, damagePerStack);
+    }
 }

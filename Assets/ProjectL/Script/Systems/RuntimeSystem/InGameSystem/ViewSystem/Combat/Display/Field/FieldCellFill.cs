@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// 머티리얼은 칸 채우기 셰이더(ProjectL/Combat/CellFill)이고 색은 <c>_BaseColor</c> 하나만 렌더러마다 넣습니다.
     /// 판 모양 값(격자·칸 지도·안쪽 거리·모서리·구멍)은 <see cref="FieldCellFillStack"/>이 판마다 재질 사본에 넣어 이 객체에 줍니다.
     /// 셰이더가 칸을 오브젝트 좌표로 찾으므로 표시 오브젝트는 부모(칸 루트) 바로 아래 단위 변환으로 둡니다.
-    /// 표시 오브젝트는 <see cref="Build"/> 때 필드 루트 아래에 만들고 <see cref="Release"/> 때 지웁니다.
+    /// 표시 오브젝트는 <see cref="Build"/> 때 부모(칸 루트) 아래에 만들고 <see cref="Release"/> 때 지웁니다.
     /// 정렬 순서(<see cref="FieldSortingOrders.Fill"/>)로 같은 Transparent 큐의 테두리보다 먼저, 아래 깊이 채우기보다 나중에 그립니다.
     /// 어떤 칸을 어떤 색·크기로 채울지와 좌표 계산은 <see cref="FieldCellFillStack"/>이 정하고, 이 객체는 받은 판을 그리기만 합니다.
     /// </remarks>

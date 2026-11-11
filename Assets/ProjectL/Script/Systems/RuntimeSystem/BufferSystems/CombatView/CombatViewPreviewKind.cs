@@ -20,6 +20,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         /// <summary>필드 유닛 하나의 공격 범위 칸 조회. 차례·국면과 무관하고 지형은 플레이어 시점입니다(호버 공격 범위 설계 UR2).</summary>
         UnitAttackRange = 8,
         /// <summary>현재 진영·예산·행동 사용 상태에 따른 일반 행동 가능 여부.</summary>
-        ActionAvailability = 9
+        ActionAvailability = 9,
+        /// <summary>보스가 지금 포효하면 어떻게 되는지의 예고(범위 칸·넉백). 지형은 플레이어 시점입니다(포효 예고 설계 RF2).</summary>
+        RoarForecast = 10
     }
 }

@@ -16,7 +16,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Plans
         /// <summary>전투가 아닌 노드의 맵 명령을 Core에 처리시킵니다.</summary>
         MapCommand,
         ShopCommand,
-        RecoveryCommand
+        RecoveryCommand,
+        AbandonRun
     }
 
     /// <summary>Stage의 다음 할 일 하나입니다. <see cref="StagePlan.Decide"/>가 고릅니다.</summary>

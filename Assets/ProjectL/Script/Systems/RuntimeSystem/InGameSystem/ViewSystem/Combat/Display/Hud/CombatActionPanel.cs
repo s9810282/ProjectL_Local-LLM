@@ -24,6 +24,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     [DisallowMultipleComponent]
     public sealed class CombatActionPanel : UIBase, IUIInputReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIActionPanelClick = new("Combat.Action.UI.ActionPanel.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIActionPanelHoverEnter = new("Combat.Action.UI.ActionPanel.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIActionPanelHoverExit = new("Combat.Action.UI.ActionPanel.HoverExit");
+#endif
+
         public CombatActionPanel() => Policy = UIOpenPolicy.Parallel;
         public override UIId ID => UIId.CombatActionPanel;
 
@@ -62,7 +69,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>설명 강조에 사용할 기존 공격 버튼 영역입니다. 버튼 참조의 원본은 이 패널만 소유합니다.</summary>
         internal RectTransform AttackButtonRect => attackButton != null
             ? (RectTransform)attackButton.transform
-            : throw new InvalidOperationException($"[CombatActionPanel] '{name}'의 필수 참조가 없습니다: {nameof(attackButton)}.");
+            : throw new InvalidOperationException($"[UIId.CombatActionPanel] '{name}'의 필수 참조가 없습니다: {nameof(attackButton)}.");
+
+        /// <summary>설명 강조에 사용할 기존 턴 종료 버튼 영역입니다.</summary>
+        internal RectTransform EndTurnButtonRect => endTurnButton != null
+            ? (RectTransform)endTurnButton.transform
+            : throw new InvalidOperationException($"[UIId.CombatActionPanel] '{name}'의 필수 참조가 없습니다: {nameof(endTurnButton)}.");
 
         protected override void OnUIOpened() => InvalidateShownValues();
 
@@ -97,6 +109,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         void IUIInputReceiver.Click(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIActionPanelClickSample = _profileUIActionPanelClick.Auto();
+#endif
+
             switch (slot)
             {
                 case AttackSlot:
@@ -113,10 +129,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         void IUIInputReceiver.HoverEnter(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIActionPanelHoverEnterSample = _profileUIActionPanelHoverEnter.Auto();
+#endif
+
         }
 
         void IUIInputReceiver.HoverExit(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIActionPanelHoverExitSample = _profileUIActionPanelHoverExit.Auto();
+#endif
+
         }
 
         /// <summary>버튼 보임·누름 가능·공격 이미지·텍스트·강조를 적용합니다. 직전 값과 같으면 다시 쓰지 않습니다.</summary>

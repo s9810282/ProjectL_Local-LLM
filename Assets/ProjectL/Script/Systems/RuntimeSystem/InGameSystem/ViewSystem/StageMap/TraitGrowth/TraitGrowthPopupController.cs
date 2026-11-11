@@ -2,6 +2,7 @@ using System;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.TraitGrowthView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
@@ -20,16 +21,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
     /// 사실은 매번 원본(Buffer·요청 소유자·Stage 사실)에서 읽고, 이 클래스는 지금 그린 제안 참조만 갖습니다.
     /// 다시 연결돼도 Buffer에서 같은 제안을 그리고, 확인하지 않은 결과가 있으면 먼저 확인합니다.
     /// </remarks>
-    internal sealed class TraitGrowthPopupController : IPopupViewController, IStageOfferInput, IDisposable
+    internal sealed class TraitGrowthPopupController : IPopupViewController, IStageOfferInput, IStageMapViewPopup
     {
         private readonly ITraitGrowthStateReadSink _offers;
         private readonly ITraitGrowthResultReadSink _results;
-        private readonly ITraitGrowthViewReadSink _inputs;
         private readonly ITraitGrowthViewWriteSink _writer;
         private readonly ITraitGrowthRequestSubmitter _requests;
         private readonly IStageTraitGrowthFacts _facts;
         private readonly TraitGrowthPopupModelBuilder _models;
         private readonly IStageOfferDisplay _screen;
+        private readonly IAudioSystemService _audio;
         private readonly StagePopupViewLifetime _lifetime;
         // 매 Tick·열기 판단마다 대리자를 새로 만들지 않게 한 번만 만듭니다(검토 L4).
         private readonly Action _tick;
@@ -40,18 +41,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
         private bool? _canSubmit;
 
         internal TraitGrowthPopupController(ITraitGrowthStateReadSink offers, ITraitGrowthResultReadSink results,
-            ITraitGrowthViewReadSink inputs, ITraitGrowthViewWriteSink writer, ITraitGrowthRequestSubmitter requests,
+            ITraitGrowthViewWriteSink writer, ITraitGrowthRequestSubmitter requests,
             IStageTraitGrowthFacts facts, TraitGrowthPopupModelBuilder models, IUISystemService ui,
-            IStageOfferDisplay screen, PopupInputSession input, IPopupViewHost host, RuntimeFaultBoundary faults)
+            IStageOfferDisplay screen, PopupInputSession input, IPopupViewHost host, RuntimeFaultBoundary faults,
+            IAudioSystemService audio)
         {
             _offers = offers ?? throw new ArgumentNullException(nameof(offers));
             _results = results ?? throw new ArgumentNullException(nameof(results));
-            _inputs = inputs ?? throw new ArgumentNullException(nameof(inputs));
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
             _requests = requests ?? throw new ArgumentNullException(nameof(requests));
             _facts = facts ?? throw new ArgumentNullException(nameof(facts));
             _models = models ?? throw new ArgumentNullException(nameof(models));
             _screen = screen ?? throw new ArgumentNullException(nameof(screen));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
             _lifetime = new StagePopupViewLifetime("TraitGrowthPopup", ui, new StageOfferPopupViewScreen(screen), input,
                 this, host, faults);
             _tick = TickCore;
@@ -59,11 +61,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
         }
 
         internal bool IsOpen => _lifetime.IsOpen;
+        bool IStageMapViewPopup.IsOpen => IsOpen;
+        // 증강 결과는 열린 화면이 기다리고 확인합니다. 맵 쪽에서 따로 볼 대기는 없습니다(옛 판정도 상점·회복 대기만 봄).
+        bool IStageMapViewPopup.IsWaiting => false;
+        void IStageMapViewPopup.Start() => Start();
+        void IStageMapViewPopup.Tick() => Tick();
 
         /// <summary>증강 선택이 남아 있는지입니다. 호스트가 열지 판단하고 다음 노드로 가는 것을 막는 데 씁니다(계획 P-TG1).</summary>
         internal bool IsPending => HasUnconsumedResult || _offers.ActiveOffer != null || _facts.IsPending;
 
-        private bool HasUnconsumedResult => _results.HandledCommandNumber > _inputs.AcknowledgedResultNumber;
+        // 결과 번호 비교는 요청 소유자 한 곳이 원본입니다(설계 §2.7 C-12).
+        private bool HasUnconsumedResult => _requests.HasUnacknowledgedResult;
 
         internal void Start() => _lifetime.Start(() =>
         {
@@ -91,9 +99,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
                 if (IsOpen) _lifetime.Close(false);
                 return;
             }
-            // 멈춘 흐름은 제안이 다시 오지 않고 나갈 길도 없어 오류 경계로 올립니다.
-            if (_facts.IsGrowthStopped)
-                throw new InvalidOperationException("[TraitGrowthPopup] 증강 흐름이 멈춰 제안을 받을 수 없습니다.");
             if (_shown && IsOpen) Refresh();
         }
 
@@ -170,7 +175,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
                 throw new InvalidOperationException(
                     $"[TraitGrowthPopup] 여기서 나오면 안 되는 증강 결과입니다: {outcome.FailureReason}, 요청 {result.Number}.");
             _drawnOffer = null;
-            if (!outcome.Succeeded) _screen.ShowError(_models.ErrorText(outcome.FailureReason));
+            if (outcome.Succeeded) _audio.Play(UiEvent.Upgrade);
+            else _screen.ShowError(_models.ErrorText(outcome.FailureReason));
             return true;
         }
 

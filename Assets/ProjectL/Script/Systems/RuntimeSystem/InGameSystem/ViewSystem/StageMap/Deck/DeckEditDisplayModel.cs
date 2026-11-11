@@ -6,7 +6,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
 {
-    /// <summary>편집 화면의 고정 병과 순서입니다. Core의 정규 저장 순서와 구분합니다.</summary>
+    /// <summary>
+    /// 편집 화면의 고정 병과 순서입니다. Core의 정규 저장 순서와 구분합니다.
+    /// 이것은 화면 표시 규칙(병과당 한 칸)이고 Core 덱 규칙이 아닙니다. Core가 받은 덱이 칸에 맞지 않으면 표시 모델이 편집만 막습니다.
+    /// </summary>
     internal static class DeckEditSlotLayout
     {
         internal const int Count = 4;
@@ -74,22 +77,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
 
         /// <summary>Main·Heavy·Rider·Cannon 순서의 고정 네 칸입니다. 빈 슬롯은 null입니다.</summary>
         public IReadOnlyList<DeckEditCardModel> Deck { get; }
-        public string Status { get; }
 
-        /// <summary>덱 후보의 병과별 수입니다(표시용).</summary>
-        public string Categories { get; }
+        /// <summary>편집 입력을 받을 수 있는지입니다. Core 편집 가능과 "덱이 칸에 맞음"이 모두 참이어야 합니다.</summary>
         public bool CanEdit { get; }
         public bool CanConfirm { get; }
 
+        /// <summary>다시 평가 버튼을 보일지입니다(기준이 낡음·준비 안 됨).</summary>
+        public bool CanReevaluate { get; }
+
+        /// <summary>덱 후보가 모두 고정 병과 칸에 놓였는지입니다. 거짓이면 편집이 꺼지고 안내가 뜹니다.</summary>
+        public bool FitsLayout { get; }
+
         internal DeckEditDisplayModel(IReadOnlyList<DeckEditCardModel> owned, IReadOnlyList<DeckEditCardModel> deck,
-            string status, string categories, bool canEdit, bool canConfirm)
+            bool canEdit, bool canConfirm, bool canReevaluate, bool fitsLayout)
         {
             Owned = owned ?? throw new ArgumentNullException(nameof(owned));
             Deck = deck ?? throw new ArgumentNullException(nameof(deck));
-            Status = status ?? string.Empty;
-            Categories = categories ?? string.Empty;
             CanEdit = canEdit;
             CanConfirm = canConfirm;
+            CanReevaluate = canReevaluate;
+            FitsLayout = fitsLayout;
         }
     }
 }

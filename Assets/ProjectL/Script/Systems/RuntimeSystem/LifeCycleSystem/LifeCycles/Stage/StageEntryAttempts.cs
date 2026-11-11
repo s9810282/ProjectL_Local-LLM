@@ -51,8 +51,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
                 return (_jobExpected && !request.IsJobCompleted) || HasInput(input)
                     ? StageCombatEntryState.Waiting : StageCombatEntryState.Done;
             }
-            // Running·Closed·Faulted는 전투 골격 요청에 이름 있는 질문이 없어 단계로 읽습니다(설계 B6, 보고만).
-            if (request.Status == CombatEntryStatus.Closed || request.Status == CombatEntryStatus.Faulted)
+            // 닫힘은 이름 있는 질문(HasExited)으로 읽습니다(평가 N-65). Running·Faulted는 전투 골격 요청에 이름 있는 질문이 없어 단계로 읽습니다(설계 B6, 보고만).
+            if (request.HasExited || request.Status == CombatEntryStatus.Faulted)
             {
                 problem = $"[StageEntry] 요청 {_number}: 전투 진입 요청이 완료·취소 확인 전에 종료됐습니다.";
                 return StageCombatEntryState.Broken;

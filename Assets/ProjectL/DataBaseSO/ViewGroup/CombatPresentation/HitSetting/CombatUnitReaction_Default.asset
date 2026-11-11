@@ -12,18 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac5c7ee12b64b6497edf71f8bd8f709, type: 3}
   m_Name: CombatUnitReaction_Default
   m_EditorClassIdentifier: 
-  hitDuration: 0.18
-  hitCellFraction: 0.05
-  hitAngle: 4
+  hitDuration: 0.35
+  hitCellFraction: 0.7
+  hitAngle: 40
   hitCues:
     effects:
     - effect: 4
       anchor: 1
       delay: 0
       point: 4
+      actorPoint: 0
       stayInPlace: 1
       positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
       rotationOffset: {x: 0, y: 0, z: 0}
+      end: 0
+      endSeconds: 0
     shakes:
     - strength: 0.15
       seconds: 0.15
@@ -31,8 +35,10 @@ MonoBehaviour:
       anchor: 1
       delay: 0
     flash:
-      color: {r: 1, g: 0, b: 0, a: 1}
-      seconds: 0.25
+      color: {r: 0.9716981, g: 0.21542363, b: 0.21542363, a: 1}
+      outlineColor: {r: 3.0000005, g: 0, b: 0, a: 1}
+      outlineWidth: 0.035
+      seconds: 0.4
       anchor: 1
       delay: 0
     presetSounds: []
@@ -44,9 +50,13 @@ MonoBehaviour:
       anchor: 1
       delay: 0
       point: 4
+      actorPoint: 0
       stayInPlace: 1
       positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
       rotationOffset: {x: 0, y: 0, z: 0}
+      end: 0
+      endSeconds: 0
     shakes:
     - strength: 0.3
       seconds: 0.3

@@ -8,7 +8,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
 {
     /// <summary>
     /// 전투 연출의 전역 시간·크기 값입니다(연출 조립 설계 §9 I-5, 결정 Q-R17 A). 유닛별 연출 값은 UnitVisual, 전역 값은 이 설정 하나가 원본입니다.
-    /// 값 조건도 여기 한 곳에 있습니다(카메라 흔들림 시간·모양은 예외로 카메라 효과가 원본, 카메라 연출 조각 설계 K5 결정 A). 표가 만들 때 <see cref = "Validate"/>로 거절하고, 전투 표시 조립과 재생 부품도 같은 조건 함수를 씁니다.
+    /// 수 조건의 원본은 수 규칙(<see cref="CombatPresentationValueRules"/>)이고, 이 설정의 조건 함수(Validate…)는 거기에 문구를 붙입니다. 하위 설정 묶음(보드 등장·Nexus 낙하 등)은 수 규칙을 바로 부릅니다
+    /// (카메라 흔들림 시간·모양은 예외로 카메라 효과가 원본, 카메라 연출 조각 설계 K5 결정 A). 표가 만들 때 <see cref = "Validate"/>로 거절하고, 전투 표시 조립과 재생 부품도 같은 조건 함수를 씁니다.
     /// </summary>
     [Serializable]
     internal sealed class CombatPresentationSettingsData : IData
@@ -27,6 +28,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [Header("전투 진입 적 Nexus 낙하")]
         [SerializeField] private CombatNexusDropSettings nexusDrop = new();
         internal CombatNexusDropSettings NexusDrop => nexusDrop;
+
+        [Header("전투 진입 적 행별 등장")]
+        [Tooltip("그리드 Y가 큰 행부터 적 소환을 시작하는 행 사이 간격입니다(초). 같은 행은 동시에 시작하며, 빈 행은 건너뜁니다. 0이면 전부 동시에 등장합니다.")]
+        [SerializeField, Min(0f)]
+        private float enemyEntryRowGapSeconds = .2f;
+        internal float EnemyEntryRowGapSeconds => enemyEntryRowGapSeconds;
 
         [Header("특성 몸체 텍스트")]
         [SerializeField]
@@ -55,6 +62,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [Tooltip("뛰기 한 번(한 칸)의 시간입니다(초). 유한한 양수여야 합니다. 걸음 모양이 Walk면 쓰지 않습니다.")]
         [SerializeField, Min(.01f)]
         private float hopSeconds = .25f;
+        [Tooltip("작렬처럼 날려 보내는 밀림의 한 칸 시간입니다(초, 작렬 View 설계 CV5). 유한한 양수여야 합니다. 일반 넉백·끌어오기는 위 걷기 값을 씁니다.")]
+        [SerializeField, Min(.01f)]
+        private float flungStepSeconds = .08f;
         [Header("뛰어넘기 구간 연출")]
         [Tooltip("뛰어넘기로 중간 칸을 통과해 다음 착지 칸까지 한 번 도약하는 전체 시간입니다(초). 이동 전 회전과 중간 사건 대기는 제외합니다.")]
         [SerializeField, Min(.01f)]
@@ -152,22 +162,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [Tooltip("기차 앞면이 필드를 빠져나갈 때 기준 크기로 돌아오는 시간입니다(초).")]
         [SerializeField, Min(0f)]
         private float trainZoomOutSeconds = .4f;
-        [Header("아침 화면 전환 (현재 자동 재생 비활성)")]
-        [Tooltip("전투가 끝나 배치로 돌아올 때(아침) 전환이 그리는 레이어 이름입니다. 프로젝트 레이어에 있어야 합니다(없으면 전투 표시 조립이 실패).")]
-        [SerializeField]
-        private string morningTransitionLayer = "AfterRendering";
-        [Tooltip("아침 전환이 옮겨 갈 맵 버추얼 카메라 이름입니다. 맵 프랍 안 카메라 오브젝트 이름과 같아야 합니다(없으면 전투 표시 조립이 실패).")]
-        [SerializeField]
-        private string morningTransitionCamera = "Day Camera";
-        [Tooltip("아침 전환의 스텐실 마스크 색입니다.")]
-        [SerializeField]
-        private Color morningTransitionColor = Color.cyan;
-        [Tooltip("아침 화면 전환 마스크가 바뀌는 속도입니다. 유한한 양수여야 합니다.")]
-        [SerializeField, Min(.01f)]
-        private float transitionChangeSpeed = 30f;
-        [Tooltip("아침 화면 전환 마스크가 바뀌는 양입니다. 유한한 양수여야 합니다.")]
-        [SerializeField, Min(.01f)]
-        private float transitionChangeAmount = 40f;
         [Header("전투 소리 프리셋 (View 3라운드 W9-2)")]
         [Tooltip("적 유닛의 선택·사망 효과음 프리셋입니다. 적은 외형과 상관없이 이 값 하나를 씁니다. -1이면 소리를 내지 않습니다.")]
         [SerializeField, Min(-1)]
@@ -203,6 +197,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         public float HopHeight => hopHeight;
         /// <summary>뛰기 한 번의 시간입니다(초).</summary>
         public float HopSeconds => hopSeconds;
+        /// <summary>날려 가는 밀림(작렬)의 한 칸 시간입니다(초).</summary>
+        public float FlungStepSeconds => flungStepSeconds;
         /// <summary>뛰어넘기 구간 전체의 보간 시간입니다(회전·중간 사건 대기 제외).</summary>
         public float LeapSeconds => leapSeconds;
         /// <summary>뛰어넘기 호의 꼭대기가 구간의 가장 높은 표면보다 더 올라가는 높이입니다.</summary>
@@ -241,11 +237,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         public float TrainZoomRatio => trainZoomRatio;
         public float TrainZoomInSeconds => trainZoomInSeconds;
         public float TrainZoomOutSeconds => trainZoomOutSeconds;
-        public string MorningTransitionLayer => morningTransitionLayer;
-        public string MorningTransitionCamera => morningTransitionCamera;
-        public Color MorningTransitionColor => morningTransitionColor;
-        public float TransitionChangeSpeed => transitionChangeSpeed;
-        public float TransitionChangeAmount => transitionChangeAmount;
         public int EnemyUnitSoundPreset => enemyUnitSoundPreset;
         public int NightBgmPreset => nightBgmPreset;
         public int DayBgmPreset => dayBgmPreset;
@@ -268,7 +259,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             railwayDrop.Validate();
             if (nexusDrop == null) throw new InvalidOperationException("[CombatPresentationSettingsData] Nexus 낙하 설정이 필요합니다.");
             nexusDrop.Validate();
-            ValidateSeconds(bodyTextStackGap, nameof(bodyTextStackGap));
+            ValidateSeconds(enemyEntryRowGapSeconds, nameof(enemyEntryRowGapSeconds));
+            CombatPresentationValueRules.RequireNonNegative(bodyTextStackGap, nameof(bodyTextStackGap));
             // 순서는 옛 씬 검사·능력 동작 생성자와 같습니다. 여러 값이 함께 잘못됐을 때 먼저 알리는 값이 같습니다.
             ValidateStepSeconds(movementStepSeconds, nameof(movementStepSeconds));
             ValidateSeconds(enemyActionGapSeconds, nameof(enemyActionGapSeconds));
@@ -289,11 +281,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             ValidateSeconds(trainZoomInSeconds, nameof(trainZoomInSeconds));
             ValidateSeconds(trainZoomOutSeconds, nameof(trainZoomOutSeconds));
             ValidateStepClimbHop(stepClimbHop, nameof(stepClimbHop));
-            // 화면 전환 값은 이름이 비지 않았는지와 양만 본다. 레이어가 있는지는 전환 설정을 만들 때, 카메라가 있는지는 표시 조립이 맵 카메라 사실로 본다(View 3라운드 W9-1).
-            ValidateName(morningTransitionLayer, nameof(morningTransitionLayer));
-            ValidateName(morningTransitionCamera, nameof(morningTransitionCamera));
-            ValidateTransitionRate(transitionChangeSpeed, nameof(transitionChangeSpeed));
-            ValidateTransitionRate(transitionChangeAmount, nameof(transitionChangeAmount));
             ValidateSoundPreset(enemyUnitSoundPreset, nameof(enemyUnitSoundPreset));
             ValidateBgmPreset(nightBgmPreset, nameof(nightBgmPreset));
             ValidateBgmPreset(dayBgmPreset, nameof(dayBgmPreset));
@@ -322,6 +309,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             ValidateTileCollapseAmount(tileCollapseSinkDepth, nameof(tileCollapseSinkDepth));
             // 추락 작아지기 시작 지점도 맨 뒤에 둡니다(같은 까닭).
             ValidateFallShrinkStart(fallShrinkStart, nameof(fallShrinkStart));
+            // 날려 감 걸음 시간도 맨 뒤에 둡니다(같은 까닭, 작렬 View 설계 CV5).
+            ValidateStepSeconds(flungStepSeconds, nameof(flungStepSeconds));
         }
 
         private static CombatEventCues ReadCues(CombatVisualCueInput input, string name) => (input ?? throw new InvalidOperationException($"[CombatPresentationSettingsData] {name} 칸이 없습니다.")).ToCues();
@@ -335,20 +324,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         {
             if (preset < 0)
                 throw new ArgumentOutOfRangeException(name, preset, "배경음 프리셋은 0 이상이어야 합니다.");
-        }
-
-        /// <summary>화면 전환 레이어·카메라 이름 조건입니다(비어 있지 않음).</summary>
-        private static void ValidateName(string value, string name)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("화면 전환 레이어·카메라 이름은 비어 있으면 안 됩니다.", name);
-        }
-
-        /// <summary>화면 전환 마스크가 바뀌는 속도·양 조건입니다(유한한 양수).</summary>
-        private static void ValidateTransitionRate(float value, string name)
-        {
-            if (!CombatPresentationValueRules.IsPositive(value))
-                throw new ArgumentOutOfRangeException(name, "화면 전환 속도·양은 유한한 양수여야 합니다.");
         }
 
         /// <summary>높이가 다른 칸 사이 걸음의 추가 뜀 높이 조건입니다(유한한 0 이상, 고지대 View 계획 P11). 사건 Presenter 생성자도 이 조건을 씁니다.</summary>

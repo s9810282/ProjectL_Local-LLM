@@ -14,13 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitVisualData:
     key: 26
-    prefab: {fileID: 954244415361327568, guid: 79c7b6b528f2889468309c812f519bc7, type: 3}
-    displayName: "\uC5B8\uB370\uB4DC \uB9C8\uC778\uCE74\uD2B8"
+    prefab: {fileID: 7218930156937943906, guid: adac08525a1cbc441afb51c94ea3a602, type: 3}
+    displayName: "\uC5B8\uB370\uB4DC \uBC29\uD328\uBCD1"
     description: 
     timelineIcon: {fileID: 0}
-    infoIcon: {fileID: 0}
+    infoIcon: {fileID: 686160478, guid: 029c4e9744865f74a949db9b49edf7b0, type: 3}
     attackPresentation: {fileID: 11400000, guid: 3ce031ca2bd64fbfaedaab95933f0636, type: 2}
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
-    animationPresentation: {fileID: 11400000, guid: 9230df80d2864bc08d5e7cf832553cdd, type: 2}
+    animationPresentation: {fileID: 11400000, guid: 90e11029070028041892ead13bbbb4f3, type: 2}
     unitSoundPreset: 3
-    attackSoundPreset: 16
+    attackSoundSlotIndex: 10
+    obstacleHitCues:
+      effects: []
+      shakes: []
+    structureHitCues:
+      effects: []
+      shakes: []
+    obstacleDestroyedCues:
+      effects: []
+      shakes: []

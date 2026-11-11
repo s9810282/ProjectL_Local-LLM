@@ -27,6 +27,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             return primaryCell.HasValue;
         }
 
+        /// <summary>곡사 궤적의 출발 접선 위에 있는 조준점입니다.</summary>
+        internal Vector3 LaunchAimPoint(CombatAttackShape shape, CombatAttackPresentationData settings, FieldGridMapper mapper)
+        {
+            Vector3 landing = ResolveLanding(shape, mapper);
+            return CombatShotPath.ArcLaunchAimPoint(landing, mapper.WorldUp, CombatShotPath.ArcHeight(mapper, settings));
+        }
+
         /// <summary>
         /// 출발 기준점은 실제로 쏘는 길을 따릅니다. 공격 클립이 있으면(클립 길, 곡사 무기 없음) 유닛 위치, 없으면(코드 모션 길) 무기 총구입니다.
         /// 갈래 기준은 공격 처리기가 두 길을 고를 때 보는 사실(공격 클립 유무)과 같습니다. 곡사 높이는 셀 폭 × 외형의 곡사 높이입니다.
@@ -72,7 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             // 외형별 목표점 원본은 이 전략 하나입니다(공격 궤적 구현 평가 P-V1). 곡사는 주 칸이 없으면 답하지 않습니다.
             if (!TryTarget(shape.DeliveryCell, shape.Direction, shape.AffectedCells.Span, mapper, weapon.MuzzlePosition,
                     out Vector3 target))
-                throw new InvalidOperationException("[CombatAttackPlayback] 곡사 공격의 주 셀 사실이 없습니다.");
+                throw new InvalidOperationException("[CombatMortarStyle] 곡사 공격의 주 셀 사실이 없습니다.");
             CombatProjectilePool pool = context.PoolOf(settings.ProjectilePrefab);
             // 곡사 자세는 취소 콜백 없이 빌립니다(옛 공격 재생과 같음). 쓸 수 없음은 무기·애니메이션이 알립니다.
             ICombatAttackUnitPose pose = context.BeginAttackPose(attackerId, null);
@@ -89,12 +96,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal override ICombatShot FireShot(ICombatAttackStyleContext context, CombatAttackShape shape, CombatAttackPresentationData settings,
             Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action hit, Action arrived, int version)
         {
-            if (!TryTarget(shape.DeliveryCell, shape.Direction, shape.AffectedCells.Span, mapper, from, out Vector3 landing))
-                throw new InvalidOperationException("[CombatAttackPlayback] 곡사 공격의 주 셀 사실이 없습니다.");
+            Vector3 landing = ResolveLanding(shape, mapper);
             return context.FireArc(settings.ProjectilePrefab, from, landing, settings.FlightDuration,
                 CombatShotPath.ArcHeight(mapper, settings), mapper.WorldUp, settings.SpinDegreesPerSecond, settings.ProjectileEasing,
                 context.ImpactThen(settings, hit, CombatProjectileContact.Along(from, landing, 1f, up, attackFacing)), arrived, version,
                 settings.ArcRotationMode);
+        }
+
+        private Vector3 ResolveLanding(CombatAttackShape shape, FieldGridMapper mapper)
+        {
+            if (!TryTarget(shape.DeliveryCell, shape.Direction, shape.AffectedCells.Span, mapper, default, out Vector3 landing))
+                throw new InvalidOperationException("[CombatMortarStyle] 곡사 공격의 주 셀 사실이 없습니다.");
+            return landing;
         }
     }
 }

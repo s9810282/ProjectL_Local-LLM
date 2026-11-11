@@ -5,7 +5,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.RenderFe
     public enum RenderFeatureType
     {
         None = 0,
-        StencilBlending = 1,
         VolumetricLight = 2,
         EnvironmentalScreen = 3,
         SobelEdge = 4,

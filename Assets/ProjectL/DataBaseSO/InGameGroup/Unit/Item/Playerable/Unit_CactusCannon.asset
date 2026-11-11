@@ -24,8 +24,8 @@ MonoBehaviour:
   isForcedMovementImmune: 0
   footprintWidth: 1
   footprintHeight: 1
-  maxHealth: 20
-  physicalDefense: 5
+  maxHealth: 15
+  physicalDefense: 2
   targetingMethod: {fileID: 11400000, guid: 4371f404acbc4ef1a5fb07d359e1a48a, type: 2}
   attackRange: 3
   category: 40

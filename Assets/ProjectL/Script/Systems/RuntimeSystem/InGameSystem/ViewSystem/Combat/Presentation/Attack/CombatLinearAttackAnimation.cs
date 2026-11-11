@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+#endif
 using System;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
@@ -14,6 +17,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     internal sealed class CombatLinearAttackAnimation : CombatAttackMotion
     {
         private readonly CombatAttackPresentationData _settings;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private readonly CombatPlaybackProfile _profile;
+
+#endif
         private readonly CombatProjectilePool _pool;
         private readonly Action _fired;
         private readonly Action<CombatProjectileContact> _hit;
@@ -40,6 +47,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new InvalidOperationException("[CombatLinearAttackAnimation] 직선 총알 프로필이 필요합니다.");
             _settings = settings;
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _profile = pool.ProfilingProfile;
+#endif
             _fired = fired ?? throw new ArgumentNullException(nameof(fired));
             _hit = hit;
             _contactProgress = contactProgress;
@@ -76,6 +86,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _contact = CombatProjectileContact.Along(from, to, _hitAt, Up, Facing);
             // 진행률 알림이 있는 발사입니다. 방향 기준 위쪽은 기존 직선 발사와 같은 월드 위쪽입니다(표시 회전 유지).
             // 진행률은 완급 곡선을 지난 경로 진행률이라 접촉 진행률(_hitAt)과 그대로 비교합니다(투사체 완급 설계 EZ4).
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _pool.ProfilingProfile = _profile;
+#endif
             var lease = _pool.FireLinear(from, to, _settings.ProjectileSpeed, Vector3.up, progress =>
             {
                 if (IsCurrent(version) && progress >= _hitAt) SendHit();

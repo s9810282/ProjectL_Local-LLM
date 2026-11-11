@@ -82,7 +82,7 @@ namespace ProjectL.Tool.Editor
 
         public static CombatStageSoVisuals Build() =>
             new CombatStageSoVisuals(CombatStageSoAssets.UnitVisuals(), CombatStageSoAssets.TerrainVisuals(),
-                CombatStageSoAssets.ObjectVisuals(), CombatStageSoAssets.ReadFieldView());
+                CombatStageSoAssets.ObjectVisuals(), CombatStageSoAssets.ReadRegisteredFieldView());
 
         // 유닛·구조물·장애물·본부는 유닛 외형 표에서, 지형·오브젝트는 각자 외형 표에서 찾습니다. 없으면 null입니다.
         public CombatStageSoVisual Of(CombatStageSoLayer layer, string definitionGuid)

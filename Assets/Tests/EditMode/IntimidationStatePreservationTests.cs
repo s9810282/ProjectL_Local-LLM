@@ -87,7 +87,7 @@ namespace ProjectL.Tests.Core
             Assert.That(moved.Accepted, Is.True, moved.Reason);
             Assert.That(MovementTestData.Actor(moved).Anchor, Is.EqualTo(CellCoord.Right));
             AssertPreserved(input.Characters[0], MovementTestData.Actor(moved));
-            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(MovementTestData.After(moved), CombatControllerPhase.StartingPlayer));
+            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(MovementTestData.After(moved), CombatControllerPhase.StartingPlayer), Array.Empty<IMovementTileRule>());
             var nextMove = CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(started), CombatCommandKind.Move, input.ActorId);
             var returned = CombatCommandCalculator.Calculate(MovementTestData.Route(nextMove, CellCoord.Right, CellCoord.Zero), Array.Empty<IMovementTileRule>());
             Assert.That(returned.Accepted, Is.True, returned.Reason);
@@ -109,12 +109,11 @@ namespace ProjectL.Tests.Core
         }
 
         [TestCase(1, false)]
-        [TestCase(8, true)]
         public void EndTurnPreservesDebuff_NightRecallClearsOnlyReturnedRecipients(long completedPlayerTurns, bool nightEnds)
         {
             var seed = MarkAll(CombatCommandTestData.Input());
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: completedPlayerTurns);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,true,                seed.State.Structures,seed.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                seed.State.Structures,seed.State.ThornFields,turn);
             var battle = new CombatBattleFacts(4, 1, 8, 8, Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, seed.ActorId, seed.Aim,
                 state, seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts, battle: battle, processingKind: CombatProcessingKind.Advance,

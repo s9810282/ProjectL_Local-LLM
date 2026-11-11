@@ -19,6 +19,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private readonly IStageViewBufferReadSink _requests;
         private readonly IStageViewBufferWriteSink _requestWriter;
         private readonly IStageMapInteractionFeedback _feedback;
+        private readonly Func<bool> _canEnterNode;
+        private readonly Func<bool> _canInteractWithMap;
         private readonly IStageMapCameraDrag _cameraDrag;
         private readonly IStageMapPointerBlocker _pointerBlocker;
         private readonly Func<bool> _blocksEntry;
@@ -29,20 +31,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private bool _stopped;
         private int _displayedChapter;
 
-        /// <param name="blocksEntry">노드를 눌렀을 때 진입 대신 다른 일을 했으면 참을 돌려줍니다(증강 선택이 남았을 때 화면 다시 띄우기, 계획 P-TG1). 없으면 늘 진입합니다.</param>
+        /// <param name="canEnterNode">노드를 눌러 진입을 요청해도 되는지입니다. <paramref name="canInteractWithMap"/>을 포함하고, 선택 화면이 열려 있어야 참입니다.</param>
+        /// <param name="canInteractWithMap">노드 호버·배경 끌기·휠처럼 맵을 만져도 되는지입니다.</param>
+        /// <param name="blocksEntry">노드를 눌렀을 때 진입 대신 다른 일을 했으면 참을 돌려줍니다(증강 선택이 남았을 때 화면 다시 띄우기, 계획 P-TG1).</param>
+        /// <param name="interceptEntry">노드 명령 대신 출전 미리 이동이 받았으면 참을 돌려줍니다.</param>
+        /// <remarks>운영 의존 넷(끌기·UI 가림·증강 막기·출전 가로채기)은 모두 필수입니다. 빠뜨리면 조용히 꺼지지 않고 만들 때 멈춥니다(평가 N-07).</remarks>
         internal StageMapInteraction(IStageNodePicker picker, IStageViewBufferReadSink requests,
-            IStageViewBufferWriteSink requestWriter, IStageMapInteractionFeedback feedback,
-            IStageMapCameraDrag cameraDrag = null, IStageMapPointerBlocker pointerBlocker = null,
-            Func<bool> blocksEntry = null, Func<int, int, bool> interceptEntry = null)
+            IStageViewBufferWriteSink requestWriter, IStageMapInteractionFeedback feedback, Func<bool> canEnterNode,
+            Func<bool> canInteractWithMap, IStageMapCameraDrag cameraDrag, IStageMapPointerBlocker pointerBlocker,
+            Func<bool> blocksEntry, Func<int, int, bool> interceptEntry)
         {
             _picker = picker ?? throw new ArgumentNullException(nameof(picker));
             _requests = requests ?? throw new ArgumentNullException(nameof(requests));
             _requestWriter = requestWriter ?? throw new ArgumentNullException(nameof(requestWriter));
             _feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
-            _cameraDrag = cameraDrag;
-            _pointerBlocker = pointerBlocker;
-            _blocksEntry = blocksEntry;
-            _interceptEntry = interceptEntry;
+            _canEnterNode = canEnterNode ?? throw new ArgumentNullException(nameof(canEnterNode));
+            _canInteractWithMap = canInteractWithMap ?? throw new ArgumentNullException(nameof(canInteractWithMap));
+            _cameraDrag = cameraDrag ?? throw new ArgumentNullException(nameof(cameraDrag));
+            _pointerBlocker = pointerBlocker ?? throw new ArgumentNullException(nameof(pointerBlocker));
+            _blocksEntry = blocksEntry ?? throw new ArgumentNullException(nameof(blocksEntry));
+            _interceptEntry = interceptEntry ?? throw new ArgumentNullException(nameof(interceptEntry));
         }
 
         /// <summary>포인터 아래 노드입니다. 없으면 0입니다.</summary>
@@ -59,9 +67,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         public void PointerMoved(float screenX, float screenY)
         {
             if (_stopped) return;
+            if (!_canInteractWithMap())
+            {
+                bool held = _pointerOwner != PointerOwner.None;
+                EndSelection();
+                if (held) _pointerOwner = PointerOwner.Blocked;
+                SetHover(0);
+                return;
+            }
             if (_pointerOwner == PointerOwner.Background)
             {
-                _cameraDrag?.MoveDrag(screenX, screenY);
+                _cameraDrag.MoveDrag(screenX, screenY);
                 return;
             }
 
@@ -73,10 +89,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
                 _feedback.HoverMoved(screenX, screenY);
         }
 
+        public void ScrollRequested(float scrollY, float screenX, float screenY)
+        {
+            // 누른 노드가 휠 이동 뒤 다른 위치에서 확정되거나, 드래그 기준점이 바뀌지 않도록 누르는 동안은 무시합니다.
+            if (_stopped || !_canInteractWithMap() || _pointerOwner != PointerOwner.None || !float.IsFinite(scrollY) || scrollY == 0f ||
+                IsBlocked(screenX, screenY)) return;
+            _cameraDrag.Scroll(scrollY, screenX, screenY);
+            // 카메라 적용 전의 노드를 계속 호버하지 않습니다. 다음 포인터 이동에서 새 위치를 집습니다.
+            SetHover(0);
+        }
+
         public void SelectPressed(float screenX, float screenY)
         {
             if (_stopped || _pointerOwner != PointerOwner.None) return;
-            if (IsBlocked(screenX, screenY))
+            if (!_canInteractWithMap() || IsBlocked(screenX, screenY))
             {
                 _pointerOwner = PointerOwner.Blocked;
                 SetHover(0);
@@ -86,6 +112,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             _pressedNodeId = Pick(screenX, screenY);
             if (_pressedNodeId != 0)
             {
+                if (!_canEnterNode())
+                {
+                    _pointerOwner = PointerOwner.Blocked;
+                    _pressedNodeId = 0;
+                    SetHover(0);
+                    return;
+                }
                 _pointerOwner = PointerOwner.Node;
                 _feedback.NodePressed(_pressedNodeId);
                 return;
@@ -93,7 +126,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
             _pointerOwner = PointerOwner.Background;
             SetHover(0);
-            _cameraDrag?.BeginDrag(screenX, screenY);
+            _cameraDrag.BeginDrag(screenX, screenY);
         }
 
         public void SelectReleased(float screenX, float screenY)
@@ -105,7 +138,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             if (owner != PointerOwner.Node)
                 return;
 
-            if (IsBlocked(screenX, screenY))
+            if (!_canEnterNode() || IsBlocked(screenX, screenY))
             {
                 SetHover(0);
                 return;
@@ -147,6 +180,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         /// </summary>
         internal void ClearPointer() => ResetPointer();
 
+        /// <summary>연출 중 호버만 비웁니다. 차단된 누름은 떼기/취소까지 유지합니다.</summary>
+        internal void ClearNodeHover() => SetHover(0);
+
         private void ResetPointer()
         {
             EndSelection();
@@ -159,11 +195,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             _pointerOwner = PointerOwner.None;
             _pressedNodeId = 0;
             if (owner == PointerOwner.Background)
-                _cameraDrag?.EndDrag();
+                _cameraDrag.EndDrag();
         }
 
         private void SetHover(int nodeId)
         {
+            if (nodeId != 0 && !_canInteractWithMap()) nodeId = 0;
             if (nodeId == _hoveredNodeId)
                 return;
 
@@ -173,18 +210,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
         private bool IsBlocked(float screenX, float screenY)
         {
-            return _pointerBlocker != null && _pointerBlocker.IsBlocked(screenX, screenY);
+            return _pointerBlocker.IsBlocked(screenX, screenY);
         }
 
         private void RequestEntry(int nodeId)
         {
             // 처리 전 요청은 Buffer 한 곳에서 판단합니다. 연타·중복 클릭으로 요청이 쌓이지 않습니다.
-            if (_displayedChapter == 0 || _requests.Commands.Count > 0)
+            if (_stopped || !_canEnterNode() || _displayedChapter == 0 || _requests.Commands.Count > 0)
                 return;
             // 증강 선택이 남아 있으면 노드 명령을 쓰지 않습니다. Core도 PendingTraitGrowth로 거절하지만 화면이 먼저 막습니다.
-            if (_blocksEntry != null && _blocksEntry())
+            if (_blocksEntry())
                 return;
-            if (_interceptEntry != null && _interceptEntry(_displayedChapter, nodeId)) return;
+            if (_interceptEntry(_displayedChapter, nodeId)) return;
+
+            if (_stopped || !_canEnterNode()) return;
 
             int number = _requestWriter.Submit(StageViewCommandData.SelectStageNode(_displayedChapter, new StageNodeId(nodeId)));
             _feedback.EntryRequested(nodeId, number);

@@ -49,7 +49,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             vh.Clear();
             _localHoles.Clear();
             for (int i = 0; i < _screenHoles.Count; i++)
-                _localHoles.Add(ToLocal(_screenHoles[i]));
+                _localHoles.Add(TutorialFocusGeometry.ToLocal(rectTransform, _screenHoles[i], _padding));
 
             TutorialViewOverlayCells.Build(rectTransform.rect, _localHoles, _cells);
             Color32 tint = color;
@@ -64,14 +64,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 vh.AddTriangle(start, start + 1, start + 2);
                 vh.AddTriangle(start + 2, start + 3, start);
             }
-        }
-
-        // 튜토리얼 Canvas는 화면 덮개(Overlay)라 카메라 없이 바꾼다.
-        private Rect ToLocal(Rect screen)
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screen.min, null, out Vector2 min);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screen.max, null, out Vector2 max);
-            return Rect.MinMaxRect(min.x - _padding, min.y - _padding, max.x + _padding, max.y + _padding);
         }
     }
 }

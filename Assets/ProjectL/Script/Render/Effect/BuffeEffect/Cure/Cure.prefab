@@ -9758,6 +9758,7 @@ GameObject:
   - component: {fileID: 7506650892895181666}
   - component: {fileID: 2858857012142566556}
   - component: {fileID: 7874298225345083169}
+  - component: {fileID: 8106000000000000003}
   m_Layer: 0
   m_Name: Cure
   m_TagString: Untagged
@@ -14662,6 +14663,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 885bc8863e1d97349a68cf7967c69d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8106000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3619283772303198296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e44d55a73f1f4b55bca6de30913dfeac, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  worldOffset: {x: 0, y: 0.05, z: 0}
 --- !u!1 &5701226058383243694
 GameObject:
   m_ObjectHideFlags: 0

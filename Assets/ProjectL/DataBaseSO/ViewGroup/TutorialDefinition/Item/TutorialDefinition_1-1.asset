@@ -15,14 +15,13 @@ MonoBehaviour:
   tutorialDefinitionData:
     tutorialKey: 1
     displayName: "1-1 \uD29C\uD1A0\uB9AC\uC5BC"
-    targetMapKey: 10000
-    autoAdvanceSeconds: 5
+    targetMapKey: 1
     overlayColor: {r: 0, g: 0, b: 0, a: 0.95}
     steps:
     - stepKey: 8
       kind: 1
-      explanationText: "\uCE74\uB4DC\uB97C \uB4DC\uB798\uADF8 \uD558\uC5EC \uD544\uB4DC\uC5D0
-        \uBC30\uCE58\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      explanationText: "\uCE74\uB4DC\uB97C \uD544\uB4DC\uC758 \uBC30\uCE58 \uAC00\uB2A5\uD55C
+        \uCE78\uC73C\uB85C \uB4DC\uB798\uADF8\uD574 \uC720\uB2DB\uC744 \uBC30\uCE58\uD558\uC138\uC694."
       focusTargets: 01000000
       explanationAnchor: 1
       explanationPlacement: 1
@@ -30,9 +29,11 @@ MonoBehaviour:
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 9
       kind: 1
-      explanationText: "\uBA54\uC778 \uCE90\uB9AD\uD130\uB294 \uBAA8\uB4E0 \uC804\uD22C\uC5D0
+      explanationText: "\uBA54\uC778 \uCE90\uB9AD\uD130\uB294 \uC804\uD22C\uC5D0
         \uBC18\uB4DC\uC2DC \uBC30\uCE58\uD574\uC57C \uD569\uB2C8\uB2E4."
       focusTargets: 02000000
       explanationAnchor: 2
@@ -41,11 +42,12 @@ MonoBehaviour:
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 10
       kind: 1
-      explanationText: "\uBC30\uCE58\uAC00 \uC900\uBE44\uB418\uC5C8\uB2E4\uBA74 \uC804\uD22C
-        \uC9C4\uC785 \uBC84\uD2BC\uC73C\uB85C \uC804\uD22C\uB97C \uC2DC\uC791\uD560
-        \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      explanationText: "\uBC30\uCE58\uB97C \uB9C8\uCCE4\uB2E4\uBA74 \uC804\uD22C
+        \uC9C4\uC785 \uBC84\uD2BC\uC73C\uB85C \uC804\uD22C\uB97C \uC2DC\uC791\uD558\uC138\uC694."
       focusTargets: 03000000
       explanationAnchor: 3
       explanationPlacement: 1
@@ -53,6 +55,8 @@ MonoBehaviour:
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 12
       kind: 2
       explanationText: 
@@ -62,9 +66,11 @@ MonoBehaviour:
       practiceGoal: 1
       inputRestriction: 0
       practiceGuideText: "\uBA54\uC778 \uCE90\uB9AD\uD130\uB97C \uD3EC\uD568\uD574
-        \uC720\uB2DB\uC744 \uBC30\uCE58\uD55C \uB4A4, \uC804\uD22C \uC9C4\uC785 \uBC84\uD2BC\uC744
+        \uC720\uB2DB\uC744 \uBC30\uCE58\uD55C \uB4A4 \uC804\uD22C \uC9C4\uC785 \uBC84\uD2BC\uC744
         \uB204\uB974\uC138\uC694."
       blockedInputText: 
+      practiceDeploymentTargets: 0100000003000000
+      practiceCombatTargets: 
     - stepKey: 13
       kind: 1
       explanationText: "\uC801 \uB125\uC11C\uC2A4\uB97C \uD30C\uAD34\uD558\uBA74
@@ -76,6 +82,8 @@ MonoBehaviour:
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 14
       kind: 1
       explanationText: "\uBA54\uC778 \uCE90\uB9AD\uD130\uC758 \uCCB4\uB825\uC774
@@ -87,38 +95,48 @@ MonoBehaviour:
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 15
       kind: 1
-      explanationText: "\uD604\uC7AC \uC774 \uC720\uB2DB\uC758 \uD134\uC785\uB2C8\uB2E4."
-      focusTargets: 07000000
-      explanationAnchor: 7
+      explanationText: "\uD50C\uB808\uC774\uC5B4 \uD134\uC5D0\uB294 \uD589\uB3D9\uD560
+        \uC544\uAD70\uC744 \uACE8\uB77C \uC870\uC791\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      focusTargets: 0c000000
+      explanationAnchor: 12
       explanationPlacement: 4
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 16
       kind: 1
-      explanationText: "\uC720\uB2DB\uC744 \uC6D0\uD558\uB294 \uD0C0\uC77C\uB85C
-        \uB4DC\uB798\uADF8\uD558\uBA74 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
-      focusTargets: 0700000008000000
-      explanationAnchor: 7
+      explanationText: "\uC6C0\uC9C1\uC77C \uC544\uAD70\uC744 \uC120\uD0DD\uD558\uACE0,
+        \uC720\uB2DB\uC744 \uC774\uB3D9 \uAC00\uB2A5\uD55C \uCE78\uAE4C\uC9C0 \uB4DC\uB798\uADF8\uD558\uC138\uC694."
+      focusTargets: 0c000000
+      explanationAnchor: 12
       explanationPlacement: 4
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 17
       kind: 1
-      explanationText: "\uC774\uB3D9\uC5D0\uB294 \uD589\uB3D9 \uCF54\uC2A4\uD2B8\uAC00
-        \uC18C\uBAA8\uB429\uB2C8\uB2E4."
-      focusTargets: 08000000
-      explanationAnchor: 8
+      explanationText: "\uAC01 \uC720\uB2DB\uC758 \uD134\uC5D0 \uC774\uB3D9 \uBC0F
+        \uACF5\uACA9\uC744 \uC218\uD589\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC720\uB2DB\uC740
+        \uACF5\uACA9\uD558\uAE30 \uC804 \uAE4C\uC9C0 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      focusTargets: 0c000000
+      explanationAnchor: 12
       explanationPlacement: 4
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 18
       kind: 2
       explanationText: 
@@ -127,41 +145,113 @@ MonoBehaviour:
       explanationPlacement: 0
       practiceGoal: 2
       inputRestriction: 1
-      practiceGuideText: "\uD604\uC7AC \uD589\uB3D9 \uC720\uB2DB\uC744 \uB4DC\uB798\uADF8\uD574
-        \uD55C \uCE78 \uC774\uC0C1 \uC774\uB3D9\uD558\uC138\uC694."
-      blockedInputText: "\uBA3C\uC800 \uC720\uB2DB\uC744 \uC774\uB3D9\uD558\uC138\uC694."
+      practiceGuideText: "\uC544\uAD70\uC744 \uD55C \uCE78 \uC774\uC0C1 \uC774\uB3D9\uD558\uC138\uC694.
+        \uC6C0\uC9C1\uC77C \uC218 \uC5C6\uB2E4\uBA74 \uB2E4\uB978 \uC544\uAD70\uC744
+        \uC120\uD0DD\uD558\uAC70\uB098 \uD134\uC744 \uC885\uB8CC\uD574 \uB2E4\uC2DC
+        \uC2DC\uB3C4\uD558\uC138\uC694."
+      blockedInputText: "\uBA3C\uC800 \uC544\uAD70\uC744 \uD55C \uCE78 \uC774\uC0C1
+        \uC774\uB3D9\uD558\uC138\uC694."
+      practiceDeploymentTargets: 0100000003000000
+      practiceCombatTargets: 
     - stepKey: 19
       kind: 1
-      explanationText: "\uACF5\uACA9 \uBC84\uD2BC\uC744 \uB20C\uB7EC \uACF5\uACA9
-        \uBAA8\uB4DC\uB85C \uC804\uD658\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
-      focusTargets: 0700000009000000
+      explanationText: "\uACF5\uACA9\uD560 \uC544\uAD70\uC744 \uC120\uD0DD\uD55C
+        \uB4A4 \uACF5\uACA9 \uBC84\uD2BC\uC73C\uB85C \uACF5\uACA9 \uBAA8\uB4DC\uB97C
+        \uCF1C\uC138\uC694."
+      focusTargets: 09000000
       explanationAnchor: 9
       explanationPlacement: 1
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 20
       kind: 1
-      explanationText: "\uACF5\uACA9 \uC0C1\uD0DC\uC5D0\uC11C \uB300\uC0C1\uC744
-        \uD074\uB9AD\uD558\uBA74 \uACF5\uACA9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
-      focusTargets: 070000000a00000008000000
-      explanationAnchor: 7
+      explanationText: "\uACF5\uACA9 \uBC94\uC704\uC640 \uBBF8\uB9AC\uBCF4\uAE30\uB97C
+        \uD655\uC778\uD558\uACE0 \uC801 \uB610\uB294 \uB125\uC11C\uC2A4\uB97C \uD5A5\uD574
+        \uACF5\uACA9\uD558\uC138\uC694. \uC720\uB2DB\uC5D0 \uB530\uB77C \uCE78\uC774\uB098
+        \uBC29\uD5A5\uC744 \uC9C0\uC815\uD569\uB2C8\uB2E4."
+      focusTargets: 0a00000004000000
+      explanationAnchor: 10
       explanationPlacement: 4
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
     - stepKey: 21
       kind: 1
-      explanationText: "\uACF5\uACA9\uC5D0\uB3C4 \uD589\uB3D9 \uCF54\uC2A4\uD2B8\uAC00
-        \uC18C\uBAA8\uB418\uBA70, \uD544\uC694\uD55C \uCF54\uC2A4\uD2B8\uAC00 \uB0A8\uC544
-        \uC788\uB2E4\uBA74 \uC774\uD6C4\uC5D0\uB3C4 \uD589\uB3D9\uC744 \uC774\uC5B4\uAC08
-        \uC218 \uC788\uC2B5\uB2C8\uB2E4."
-      focusTargets: 08000000
-      explanationAnchor: 8
+      explanationText: "\uACF5\uACA9\uD560 \uB300\uC0C1\uC774 \uB2FF\uC9C0 \uC54A\uC73C\uBA74
+        \uC774\uB3D9\uD558\uAC70\uB098 \uB2E4\uB978 \uC544\uAD70\uC744 \uC120\uD0DD\uD558\uC138\uC694.
+        \uD589\uB3D9\uC744 \uB9C8\uCE5C \uC544\uAD70\uC740 \uB2E4\uC74C \uD50C\uB808\uC774\uC5B4
+        \uD134\uC5D0 \uB2E4\uC2DC \uD589\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      focusTargets: 0c00000009000000
+      explanationAnchor: 12
       explanationPlacement: 4
       practiceGoal: 0
       inputRestriction: 0
       practiceGuideText: 
       blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
+    - stepKey: 22
+      kind: 2
+      explanationText: 
+      focusTargets: 
+      explanationAnchor: 0
+      explanationPlacement: 0
+      practiceGoal: 3
+      inputRestriction: 2
+      practiceGuideText: "\uC801 \uB610\uB294 \uB125\uC11C\uC2A4\uC5D0 \uACF5\uACA9\uC744
+        \uD55C \uBC88 \uB9DE\uD788\uC138\uC694. \uD544\uC694\uD558\uBA74 \uC774\uB3D9\uD558\uAC70\uB098
+        \uD134\uC744 \uC885\uB8CC\uD574 \uB2E4\uC2DC \uC2DC\uB3C4\uD558\uC138\uC694."
+      blockedInputText: "\uC801 \uB610\uB294 \uB125\uC11C\uC2A4\uB97C \uACF5\uACA9\uD558\uC138\uC694.
+        \uC774\uB3D9\uACFC \uD134 \uC885\uB8CC\uB85C \uB2E4\uC2DC \uC2DC\uB3C4\uD560
+        \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+      practiceDeploymentTargets: 0100000003000000
+      practiceCombatTargets: 090000000d000000
+    - stepKey: 23
+      kind: 1
+      explanationText: "\uD589\uB3D9\uC744 \uB9C8\uCCE4\uB2E4\uBA74 \uD134 \uC885\uB8CC\uB97C
+        \uB204\uB974\uC138\uC694. \uC801\uC774 \uD589\uB3D9\uD55C \uB4A4 \uB2E4\uC74C
+        \uD50C\uB808\uC774\uC5B4 \uD134\uC774 \uC2DC\uC791\uB429\uB2C8\uB2E4."
+      focusTargets: 0d000000
+      explanationAnchor: 13
+      explanationPlacement: 1
+      practiceGoal: 0
+      inputRestriction: 0
+      practiceGuideText: 
+      blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 
+    - stepKey: 24
+      kind: 2
+      explanationText: 
+      focusTargets: 
+      explanationAnchor: 0
+      explanationPlacement: 0
+      practiceGoal: 4
+      inputRestriction: 0
+      practiceGuideText: "\uB2E4\uB978 \uC544\uAD70 \uC720\uB2DB\uC744 \uD589\uB3D9\uC2DC\uD0A8
+        \uD6C4 \uD134 \uC885\uB8CC \uBC84\uD2BC\uC744 \uB20C\uB7EC\uBD05\uC2DC\uB2E4."
+      blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 0d000000
+    - stepKey: 25
+      kind: 1
+      explanationText: "\uAE30\uBCF8 \uC870\uC791 \uC2E4\uC2B5\uC744 \uB9C8\uCCE4\uC2B5\uB2C8\uB2E4.
+        \uAC01 \uD50C\uB808\uC774\uC5B4 \uD134\uC774 \uC2DC\uC791\uB418\uBA74 \uC544\uAD70\uC740
+        \uB2E4\uC2DC \uD589\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC774\uC81C
+        \uC804\uD22C\uB97C \uC774\uC5B4\uAC00\uC138\uC694."
+      focusTargets: 
+      explanationAnchor: 0
+      explanationPlacement: 0
+      practiceGoal: 0
+      inputRestriction: 0
+      practiceGuideText: 
+      blockedInputText: 
+      practiceDeploymentTargets: 
+      practiceCombatTargets: 

@@ -22,6 +22,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
     internal sealed class CategoryTraitProgressionDataSO : DatabaseItem
     {
         [SerializeField] private CategoryKey category;
+        [SerializeField, Min(1)] private int commonWeight = CategoryTraitProgressionSpec.DefaultCommonWeight;
+        [SerializeField, Min(1)] private int categoryWeight = CategoryTraitProgressionSpec.DefaultCategoryWeight;
         [SerializeField] private List<TraitGrowthStepAuthoring> steps = new();
         [SerializeField] private List<TraitGrowthDefinitionDataSO> pool = new();
         public override IData GetData()
@@ -34,8 +36,18 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
                 if (ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.DeferredCombatFeatures.GetTraitUnavailableReason(trait.Key) == "ImplementationPending")
                     throw new InvalidOperationException($"{name}, Trait {trait.Key}: ImplementationPending.");
             }
-            return new CategoryTraitProgressionData(category, steps.Select(s => s.ToSpec()).ToArray(),
-                pool.Select(p => p.Key).ToArray());
+            try
+            {
+                return new CategoryTraitProgressionData(category, steps.Select(s => s.ToSpec()).ToArray(),
+                    pool.Select(p => p.Key).ToArray(), commonWeight, categoryWeight);
+            }
+            catch (ArgumentException exception) when (
+                exception.ParamName == nameof(commonWeight) || exception.ParamName == nameof(categoryWeight))
+            {
+                throw new InvalidOperationException(
+                    $"병과 성장 가중치 설정이 올바르지 않습니다: {name} (commonWeight={commonWeight}, categoryWeight={categoryWeight}).",
+                    exception);
+            }
         }
     }
 }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_LavaCannon
+  m_EditorClassIdentifier:
+  traitVisualData:
+    key: 470
+    displayName: "용암포"
+    icon: {fileID: 0}
+    description: "기본 공격에 맞은 적에게 화염과 이동력 감소를 겁니다."
+    activations: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}

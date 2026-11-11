@@ -97,7 +97,7 @@ namespace ProjectL.Tests.Core
                     new AccelerationTraitStatusSnapshot(3), new RegenerationTraitStatusSnapshot(10, 2, 1),
                     new StationaryFireTraitStatusSnapshot(true), new HunterTraitStatusSnapshot(new EntityId(99), 2),
                     new SacrificeTraitStatusSnapshot(3, 1) }), heldEnvironment: new CharacterHeldEnvironmentState(41, true, 7),
-                items: new CharacterItemState(1, new[] { new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5, 0) }))
+                items: new CharacterItemState(1, new[] { new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5) }))
                 .WithStatusEffects(statuses);
         }
 

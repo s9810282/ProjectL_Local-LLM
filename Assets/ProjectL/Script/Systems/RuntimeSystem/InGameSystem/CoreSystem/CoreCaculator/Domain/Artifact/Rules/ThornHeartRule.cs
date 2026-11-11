@@ -15,9 +15,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             ReflectionDamage = reflectionDamage;
         }
 
-        internal int EvaluateDamage(bool isNight, bool hasEnemyDirectHitOnAlly)
+        internal int EvaluateDamage(bool inCombat, bool hasEnemyDirectHitOnAlly)
         {
-            return isNight && hasEnemyDirectHitOnAlly
+            return inCombat && hasEnemyDirectHitOnAlly
                 ? ReflectionDamage
                 : 0;
         }

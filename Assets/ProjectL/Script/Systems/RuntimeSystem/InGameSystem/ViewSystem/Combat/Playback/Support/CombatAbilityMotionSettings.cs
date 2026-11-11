@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// </summary>
     internal sealed class CombatAbilityMotionSettings
     {
-        /// <summary>모든 동작이 바로 끝나는 값입니다. 설정을 넘기지 않은 조립(시험 등)에서 씁니다.</summary>
+        /// <summary>모든 동작이 바로 끝나는 값입니다. 지금 쓰는 곳은 없습니다(운영은 <see cref="From"/>).</summary>
         internal static CombatAbilityMotionSettings Instant { get; } = new(0f, 0f, 0f, 0f, 0f, 0f, 1f);
 
         internal CombatAbilityMotionSettings(float summonRiseDelaySeconds, float summonRiseSeconds, float summonRiseDepth,

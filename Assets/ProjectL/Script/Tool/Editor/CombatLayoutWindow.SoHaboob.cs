@@ -11,7 +11,7 @@ namespace ProjectL.Tool.Editor
         private void DrawSoHaboobFootprint(List<Vector2Int> offsets)
         {
             EditorGUILayout.LabelField("하붑 영역 모양(상대 좌표)");
-            EditorGUILayout.LabelField("왼쪽 X · 오른쪽 Y / 고정 배치 위치가 아닌 영역 안의 칸입니다.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("왼쪽 X · 오른쪽 Y: 구름 모양 안의 상대 좌표입니다. 맵에서의 시작 위치는 '시작 위치 지정'으로 정합니다.", EditorStyles.wordWrappedMiniLabel);
             for (int i = 0; i < offsets.Count; i++)
             {
                 int index = i;
@@ -52,7 +52,7 @@ namespace ProjectL.Tool.Editor
                         SoChange("하붑 시작 위치 변경", () => haboob.initialAnchor = new Vector2Int(haboob.initialAnchor.x, y));
                 }
             }
-            EditorGUILayout.LabelField("모양의 상대 좌표 (0,0) — 모양을 감싸는 상자의 왼쪽 아래 — 이 이 칸에 놓입니다. 끄면 전투마다 무작위이고, 이동은 늘 무작위입니다.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("시작 X/Y는 모양을 감싸는 상자의 왼쪽 아래 기준점(상대 좌표 0,0)입니다. 맵 클릭·끌어 놓기는 누른 칸을 구름 가운데 근처로 맞춥니다. 시작 위치 지정을 끄거나 비우면 하붑 사용 여부는 유지하고, 하붑을 사용할 때 무작위로 시작합니다. 이후 이동은 늘 무작위입니다.", EditorStyles.wordWrappedMiniLabel);
             var cells = haboob.StartCells();
             if (cells != null)
                 EditorGUILayout.LabelField($"덮는 칸: x {cells.Min(cell => cell.x)}~{cells.Max(cell => cell.x)}, y {cells.Min(cell => cell.y)}~{cells.Max(cell => cell.y)} (맵에 구름 색으로 표시)", EditorStyles.wordWrappedMiniLabel);
@@ -104,7 +104,7 @@ namespace ProjectL.Tool.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 string start = haboob.fixedInitialAnchor ? $"({haboob.initialAnchor.x}, {haboob.initialAnchor.y})" : "무작위";
-                GUILayout.Label($"하붑: {(haboob.enabled ? "켜짐" : "꺼짐")} · 시작 위치: {start}", EditorStyles.miniLabel, GUILayout.ExpandWidth(false));
+                GUILayout.Label($"하붑: {(haboob.enabled ? "켜짐" : "꺼짐")} · 시작 기준점: {start}", EditorStyles.miniLabel, GUILayout.ExpandWidth(false));
                 using (new EditorGUI.DisabledScope(!haboob.fixedInitialAnchor))
                     if (GUILayout.Button("시작 위치 비우기(무작위로)", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) ClearSoHaboobStart();
                 if (GUILayout.Button("모양·세부 설정", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) OpenSoGimmick(true);

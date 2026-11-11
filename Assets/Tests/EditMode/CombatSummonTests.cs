@@ -139,7 +139,7 @@ namespace ProjectL.Tests.Core
             var characters = source.Characters.Append(boss).Concat(extra).ToArray();
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                 controllerTurnSequence: 2, completedPlayerTurnCount: 3, summons: records);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,true,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                turn,new MovementEnvironmentFacts(objects),                allocation: nextId == 0 ? null : new CombatAllocationFacts(nextId, CombatAllocationFacts.InitialSummonRandomState));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                turn,new MovementEnvironmentFacts(objects),                allocation: nextId == 0 ? null : new CombatAllocationFacts(nextId, CombatAllocationFacts.InitialSummonRandomState));
             var gravekeeper = new CombatAttackProfile(UnitSpecTestFactory.Create(EntityKey.Unit_Gravekeeper, 1, 1, new[] { CellCoord.Zero },
                 10, MoveMethod.LiftAndPlace, 1, 10, 30, Array.Empty<TraitSpec>(), categoryKey: CategoryKey.Rider),
                 new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0));

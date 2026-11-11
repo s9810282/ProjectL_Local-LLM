@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.Common;
+using ProjectL.Systems.DataBaseSystem.Data.Render.Table.Effect.Enum;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
@@ -28,8 +29,11 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
             [Tooltip("비워 두면 프리팹 이름을 표시합니다.")]
             [SerializeField] private string displayName;
 
+            [Tooltip("클리어 때 재생할 파괴 효과 키입니다. 프리팹은 Render Effect DB에서 연결합니다.")]
+            [SerializeField] private EffectType breakEffect;
+
             internal StageNodeVisualData ToData() =>
-                new(stageKey, stageType, mapRole, visualPrefab, displayName, rotationOffset);
+                new(stageKey, stageType, mapRole, visualPrefab, displayName, breakEffect, rotationOffset);
         }
     }
 }

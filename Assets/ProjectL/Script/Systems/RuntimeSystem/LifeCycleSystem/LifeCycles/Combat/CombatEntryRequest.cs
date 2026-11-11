@@ -124,6 +124,19 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
         public bool IsTargetOf(int chapterKey, int nodeId, int stageKey) =>
             Result != null && Result.Accepted && IsTargetOf(chapterKey, nodeId) && Result.StageKey.Value == stageKey;
 
+        /// <summary>
+        /// 이 요청의 Combat 씬 로딩에서 만든 첫 동작 준비입니다(첫 동작 Core 준비 계획 FU-P7). 붙기 전이면 null입니다.
+        /// 전투 Plan이 첫 동작 준비 Job을 만들 때만 읽습니다. 공개 계약(<see cref="ICombatEntryService"/>)은 넓히지 않습니다.
+        /// </summary>
+        internal CombatFirstUseLoadingPreparation FirstUsePreparation { get; private set; }
+
+        /// <summary>활성 요청에 이번 씬 로딩의 첫 동작 준비를 붙입니다. 진입 서비스만 부릅니다.</summary>
+        internal void AttachFirstUsePreparation(CombatFirstUseLoadingPreparation preparation)
+        {
+            Require(CombatEntryStatus.Active);
+            FirstUsePreparation = preparation ?? throw new ArgumentNullException(nameof(preparation));
+        }
+
         internal MapCombatPresentationState ReadMapPresentationState() => Kind == CombatEntryKind.Direct
             ? MapCombatPresentationState.Ready
             : _mapPresentation?.ReadState() ?? MapCombatPresentationState.Abandoned;

@@ -20,7 +20,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         KnockbackImmunity = 12,
         WeaknessExposure = 13,
         /// <summary>도발 범위 안의 AI 진영 유닛입니다. 도발한 유닛을 우선 공격·추격합니다(값 없음, 조건이 맞는 동안).</summary>
-        Taunted = 14
+        Taunted = 14,
+        Fire = 15,
+        Bleeding = 16,
+        MovementRangeDecrease = 17,
+        Rampage = 18,
+        /// <summary>적 전용 재구성 중입니다. 이동·공격 불가, 자기 진영 턴 시작을 정해진 횟수 지나면 부활합니다.</summary>
+        Reconstructing = 19
     }
 
     public enum StatusEffectClassification
@@ -36,10 +42,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StatusEffectKey.AttackIncrease or StatusEffectKey.DefenseIncrease or
             StatusEffectKey.OutgoingDamageIncrease or StatusEffectKey.IncomingDamageDecrease or
             StatusEffectKey.Shield or StatusEffectKey.MovementRangeIncrease or
-            StatusEffectKey.KnockbackImmunity => StatusEffectClassification.Buff,
+            StatusEffectKey.KnockbackImmunity or StatusEffectKey.Rampage or
+            StatusEffectKey.Reconstructing => StatusEffectClassification.Buff,
             StatusEffectKey.AttackDecrease or StatusEffectKey.DefenseDecrease or
             StatusEffectKey.AttackRangeDecrease or StatusEffectKey.Disarm or
-            StatusEffectKey.Bind or StatusEffectKey.WeaknessExposure or StatusEffectKey.Taunted => StatusEffectClassification.Debuff,
+            StatusEffectKey.Bind or StatusEffectKey.WeaknessExposure or StatusEffectKey.Taunted or
+            StatusEffectKey.Fire or StatusEffectKey.Bleeding or StatusEffectKey.MovementRangeDecrease => StatusEffectClassification.Debuff,
             _ => throw new ArgumentOutOfRangeException(nameof(key))
         };
     }

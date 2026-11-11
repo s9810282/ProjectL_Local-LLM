@@ -56,7 +56,7 @@ PrefabInstance:
     - target: {fileID: 6246635131781899862, guid: c8edceb87dee09b4888da558396ddaab, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 58f381bf48e649b29d01d0efc9687c95, type: 2}
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -127,6 +127,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 9d680d6676e0baf4c81aa3edee0b6081, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 6ccaecec335588241bfe92a522a0cc93, type: 2}
     - target: {fileID: 919132149155446097, guid: 9d680d6676e0baf4c81aa3edee0b6081, type: 3}
       propertyPath: m_Name
       value: tripo_convert_a33616b2-9c16-41f6-b31f-dda0b63eb0e1

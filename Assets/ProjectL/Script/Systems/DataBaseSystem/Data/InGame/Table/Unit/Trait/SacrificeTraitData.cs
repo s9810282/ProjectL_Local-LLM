@@ -9,18 +9,23 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         public override TraitKey TraitKey => TraitKey.Sacrifice;
         public int RadiusCells { get; }
         public int MaxTriggersPerEnemyTurn { get; }
+        public bool PreventsLethalSacrificeDamage { get; }
+        public int ShieldOnActivation { get; }
 
-        public SacrificeTraitData(int radiusCells, int maxTriggersPerEnemyTurn)
+        public SacrificeTraitData(int radiusCells, int maxTriggersPerEnemyTurn,
+            bool preventsLethalSacrificeDamage = false, int shieldOnActivation = 0)
         {
             RadiusCells = radiusCells;
             MaxTriggersPerEnemyTurn = maxTriggersPerEnemyTurn;
+            PreventsLethalSacrificeDamage = preventsLethalSacrificeDamage;
+            ShieldOnActivation = shieldOnActivation;
         }
 
         public override void Validate()
         {
             try
             {
-                _ = new SacrificeTraitSpec(RadiusCells, MaxTriggersPerEnemyTurn);
+                _ = new SacrificeTraitSpec(RadiusCells, MaxTriggersPerEnemyTurn, PreventsLethalSacrificeDamage, ShieldOnActivation);
             }
             catch (ArgumentException exception)
             {

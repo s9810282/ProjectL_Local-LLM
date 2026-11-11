@@ -3,6 +3,7 @@ using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Recovery;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
@@ -21,10 +22,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
         private readonly IRecoveryOptionVisualTableQuery _visuals;
         private readonly IStageOfferTextTableQuery _texts;
         private readonly RuntimeFaultBoundary _faults;
+        private readonly IAudioSystemService _audio;
 
         internal RecoveryPopupViewFactory(ICurrentProgressBufferReadSink current, IRecoveryStateReadSink state,
             IRecoveryRequestStatus status, IRecoveryRequestSubmitter requests, IUISystemService ui,
-            IRecoveryOptionVisualTableQuery visuals, IStageOfferTextTableQuery texts, RuntimeFaultBoundary faults)
+            IRecoveryOptionVisualTableQuery visuals, IStageOfferTextTableQuery texts, RuntimeFaultBoundary faults,
+            IAudioSystemService audio)
         {
             _current = current ?? throw new ArgumentNullException(nameof(current));
             _state = state ?? throw new ArgumentNullException(nameof(state));
@@ -34,6 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             _visuals = visuals ?? throw new ArgumentNullException(nameof(visuals));
             _texts = texts ?? throw new ArgumentNullException(nameof(texts));
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
         }
         internal RecoveryPopupController Create(IStageOfferDisplay screen, PopupInputSession input,
             IPopupViewHost host, Action mapChanged, StageMapSelectionPresentation selection)
@@ -41,7 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             if (_faults.IsFaulted)
                 throw new InvalidOperationException("[RecoveryPopup] 정지한 런타임에는 팝업을 만들 수 없습니다.");
             return new RecoveryPopupController(_current, _state, _status, _requests, _ui, screen, input, host,
-                mapChanged, Report, _faults, new RecoveryPopupModelBuilder(_visuals, _texts), _texts,
+                mapChanged, Report, _faults, new RecoveryPopupModelBuilder(_visuals, _texts), _texts, _audio,
                 (selection ?? throw new ArgumentNullException(nameof(selection))).Observe(new StageOfferPopupViewScreen(screen)));
         }
 

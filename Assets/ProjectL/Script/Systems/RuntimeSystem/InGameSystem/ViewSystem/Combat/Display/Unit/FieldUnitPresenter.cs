@@ -29,11 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// 값만 받아 ID별 기존 View를 다시 쓰고, 새 대상만 빌리고 사라진 대상만 돌려줍니다(W19).
     /// </summary>
     /// <remarks>
-    /// Buffer·Core를 모릅니다. 외형은 View DB(UnitVisual)의 프리팹을 종류별 풀로 만듭니다.
+    /// 그리는 값은 Buffer 캐릭터 사실(<c>CharacterData</c>)과 Core 계산기의 표시 값(HUD 공격력 <c>CombatEffectiveStatsCalculator.AttackPower</c>)에서 읽고 판단은 하지 않습니다. 외형은 View DB(UnitVisual)의 프리팹을 종류별 풀로 만듭니다.
     /// 부르는 쪽은 원하는 표시 상태만 말하고 View 찾기는 여기서 합니다(<see cref="SetHiddenEntity"/>, 설계 §3).
     /// 재생 쪽의 유닛 표시 채널(자세·서는 자리·크기·걸음 배치·표시 회전·사망 유지·이동 투명도)은 창구(<see cref="Presentation"/>)가 소유하고,
     /// 사실 그리기는 그 창구에 소유 사실(배치 유지·회전 덮기)을 묻습니다(연출 조립 설계 B13). 사망 모션이 유지하는 대여는 완료 뒤 기존 풀로 반환합니다.
-    /// 피해 숫자·비용·예상 체력 같은 HUD 일시 피드백은 <see cref="HudFeedback"/>이 소유합니다(설계 §9 I-2).
+    /// 피해 숫자·공격 예상 체력 같은 HUD 일시 피드백은 <see cref="HudFeedback"/>이 소유합니다(설계 §9 I-2).
     /// </remarks>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display")]
     [DisallowMultipleComponent]
@@ -44,6 +44,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [Tooltip("체력 숫자 템플릿(TextMeshPro 3D 텍스트). 씬에 비활성으로 두고 연결합니다.")]
         [SerializeField] private TMP_Text healthLabelTemplate;
         [SerializeField] private Vector3 healthLabelOffset = new(0f, 1.5f, 0f);
+        [Header("Unit Action Cursor")]
+        [Tooltip("아군 행동 가능 표시용 월드 프리팹입니다.")]
+        [SerializeField] private GameObject unitActionCursorPrefab;
+        [Tooltip("유닛 원점에서 커서 형상 중심까지의 월드 위치 보정입니다.")]
+        [SerializeField] private Vector3 unitActionCursorOffset = new(0f, 2.2f, 0f);
+        [Tooltip("이동을 마치고 공격 행동이 남은 유닛의 커서 색입니다. 미이동 색은 프리팹 머티리얼을 따릅니다.")]
+        [SerializeField] private Color unitActionCursorMovedColor = new(1f, 0.75f, 0.15f, 1f);
         [Header("Unit HUD")]
         [SerializeField] private UnitHUD unitHudPrefab;
         internal UnitDamageText DamageTemplate => unitHudPrefab != null ? unitHudPrefab.DamageTemplate :
@@ -78,18 +85,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private CombatUnitHudFeedback _hudFeedback;
         private IConsumableItemVisualTableQuery _itemVisuals;
         private CombatUnitStatuses _statuses;
+        // 사실 → 보일 모습(재구성 연출 설계 RE2). 그리기마다 대리자를 만들지 않게 처음 Configure에서 한 번 만듭니다.
+        private Func<CharacterCombatFacts, GameObject> _resolveAppearance;
+        private CombatUnitActionCursorPresenter _actionCursors;
         // HUD 아이템 아이콘 우클릭의 해제 입구입니다(가방 설계 P6). 입력이 표시보다 늦게 만들어져 조정자가 따로 겁니다.
         private Action<EntityId> _itemUnequip;
         private UnitHUDLayer _hudLayer;
         // 덱 hover 계약은 유지하지만 HUD의 화살표 표시는 제거되었다.
         public void SetDeckHoveredUnit(EntityId id) { }
-
-        private ICategoryVisualTableQuery _categories;
-        internal void ConfigureHUDCategories(ICategoryVisualTableQuery categories)
-        {
-            _categories = categories ?? throw new ArgumentNullException(nameof(categories));
-            ForgetHudFacts();
-        }
 
         private readonly List<UnitHUDStatus> _hudStatuses = new();
         private IColorSystemService _movementColors;
@@ -142,17 +145,48 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _hudLayer = hudLayer;
             _bodyShapes.Clear();
             _presentationValues.Clear();
-            // HUD 내용은 사실과 표로 정해지므로 표가 바뀔 수 있는 Configure 뒤에는 모두 다시 씁니다(GH3).
+            // HUD 내용은 사실과 표로 정해지므로 표가 바뀔 수 있는 Configure 뒤에는 모두 다시 씁니다(GH3). 상태가 정하는 모습도 같습니다.
             ForgetHudFacts();
+            _resolveAppearance ??= ResolveAppearance;
             _views ??= new EntityViewSet<FieldUnitView>(Rent, Return);
+            // 특성 미리보기 씬도 이 Presenter를 사용하지만 행동 커서는 운영 전투에서만 요청합니다.
+            if (unitActionCursorPrefab != null)
+                _actionCursors ??= new CombatUnitActionCursorPresenter(CursorAnchorOf, unitActionCursorPrefab,
+                    unitActionCursorOffset, unitActionCursorMovedColor);
+        }
+
+        internal void ValidateActionCursorReference()
+        {
+            if (unitActionCursorPrefab == null)
+                throw new InvalidOperationException("[FieldUnitPresenter] Combat 씬의 Unit Action Cursor 프리팹 연결이 필요합니다.");
+        }
+
+        internal void RefreshActionCursors(IReadOnlyList<CharacterData> characters, CombatTurnFacts turn, CombatFlowPhase phase,
+            EntityId selectedActorId) =>
+            (_actionCursors ?? throw new InvalidOperationException("[FieldUnitPresenter] 전투 행동 커서 프리팹 연결과 Configure가 필요합니다."))
+            .Refresh(characters, turn, phase, selectedActorId);
+
+        private Transform CursorAnchorOf(EntityId id)
+        {
+            if (_views == null || !_views.TryGet(id, out FieldUnitView view) || view == null)
+                return null;
+            return view.transform;
         }
 
         // 만든 표시 모두의 HUD 사실 기억을 비웁니다.
         private void ForgetHudFacts()
         {
             for (int i = 0; i < _createdViews.Count; i++)
-                if (_createdViews[i] != null) _createdViews[i].ForgetHudFacts();
+            {
+                if (_createdViews[i] == null) continue;
+                _createdViews[i].ForgetHudFacts();
+                _createdViews[i].ForgetStatusAppearance();
+            }
         }
+
+        // 원본은 상태 줄 표 한 곳입니다(계획 TP-3). 모습을 정하는 상태가 없으면 null(원래 모습)입니다.
+        private GameObject ResolveAppearance(CharacterCombatFacts character) =>
+            _statuses.TryGetAppearance(character, out GameObject prefab) ? prefab : null;
 
         /// <summary>
         /// 전투 설치 때 한 번, 키마다 <paramref name="counts"/>만큼 표시와 HUD를 미리 만들어 풀에 넣습니다(GC 끊김 설계 GH6, 계획 TP-6).
@@ -205,6 +239,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 bool bound = view != null && view.EntityId == id && view.BodyTrackingVersion == version &&
                     _views != null && _views.TryGet(id, out var current) && ReferenceEquals(current, view);
                 return (bound, bound && view.isActiveAndEnabled ? view.transform.TransformPoint(local) : (Vector3?)null);
+            };
+        }
+
+        /// <summary>
+        /// 효과 Follow 받침의 표면 위치입니다. 현재 유닛 View의 XZ를 따라가되 높이는 필드의 표면 높이 표에서 읽습니다.
+        /// 도약·자세 연출로 유닛 루트가 높아져도 받침은 표면에 남습니다. 반환·숨김 수명은 몸 추적과 같습니다.
+        /// </summary>
+        internal Func<(bool Bound, Vector3? Position)> TrackSurfacePresence(EntityId id, FieldGridMapper mapper)
+        {
+            if (mapper == null) throw new ArgumentNullException(nameof(mapper));
+            if (_views == null || !_views.TryGet(id, out FieldUnitView view) || view == null) return null;
+            int version = view.BodyTrackingVersion;
+            return () =>
+            {
+                bool bound = view != null && view.EntityId == id && view.BodyTrackingVersion == version &&
+                    _views != null && _views.TryGet(id, out FieldUnitView current) && ReferenceEquals(current, view);
+                return (bound, bound && view.isActiveAndEnabled
+                    ? mapper.OnSurface(view.transform.position) : (Vector3?)null);
             };
         }
 
@@ -346,11 +398,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             new(CenterOf(facts.OccupiedCells, facts.Anchor.Value, mapper),
                 presentation.TryGetFacing(facts.EntityId, out Quaternion facing) ? facing : ModelRotation(facts.Owner, facts.Rotation, mapper));
 
-        /// <summary>첫 화면에 그려진 필드 적만 수집합니다. 손패·사망·구조물은 포함하지 않습니다.</summary>
-        internal void CollectEntryEnemies(IReadOnlyList<CharacterData> characters, List<FieldUnitView> targets)
+        /// <summary>첫 화면의 필드 적과 같은 순서의 기준 칸 Y를 수집합니다. 손패·사망·구조물은 포함하지 않습니다.</summary>
+        internal void CollectEntryEnemies(IReadOnlyList<CharacterData> characters, List<FieldUnitView> targets, List<int> gridRows)
         {
             if (characters == null) throw new ArgumentNullException(nameof(characters));
             if (targets == null) throw new ArgumentNullException(nameof(targets));
+            if (gridRows == null) throw new ArgumentNullException(nameof(gridRows));
             foreach (CharacterData character in characters)
             {
                 CharacterCombatFacts facts = character.ToFacts();
@@ -358,22 +411,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (_views == null || !_views.TryGet(facts.EntityId, out FieldUnitView view) || view == null)
                     throw new InvalidOperationException($"[FieldUnitPresenter] 진입할 적 표시가 없습니다: {facts.EntityId}");
                 targets.Add(view);
+                gridRows.Add(facts.Anchor.Value.Y);
             }
         }
 
-        /// <summary>첫 화면의 살아 있는 적 Nexus만 수집합니다. 배경 장식·아군 본부·다른 구조물은 포함하지 않습니다.</summary>
-        internal void CollectEntryNexuses(IReadOnlyList<StructureCombatFacts> structures, List<FieldUnitView> targets)
+        /// <summary>첫 화면의 살아 있는 적 Nexus와 착지할 점유 칸을 수집합니다. 배경 장식·아군 본부·다른 구조물은 포함하지 않습니다.</summary>
+        internal void CollectEntryNexuses(IReadOnlyList<StructureCombatFacts> structures, List<FieldUnitView> targets,
+            List<CellCoord> occupiedCells)
+        {
+            if (structures == null) throw new ArgumentNullException(nameof(structures));
+            if (targets == null) throw new ArgumentNullException(nameof(targets));
+            if (occupiedCells == null) throw new ArgumentNullException(nameof(occupiedCells));
+            foreach (StructureCombatFacts structure in structures)
+            {
+                if (!IsEnemyNexus(structure) || structure.Health.IsDead) continue;
+                if (_views == null || !_views.TryGet(structure.EntityId, out FieldUnitView view) || view == null)
+                    throw new InvalidOperationException($"[FieldUnitPresenter] 진입할 적 Nexus 표시가 없습니다: {structure.EntityId}");
+                targets.Add(view);
+                occupiedCells.AddRange(structure.OccupiedCells);
+            }
+        }
+
+        /// <summary>
+        /// 첫 화면의 살아 있는 보드 위 구조물(장애물·본부 등)을 수집합니다(평가 C10-06). 적 Nexus는 낙하가 맡을 때(<paramref name="includeEnemyNexus"/>가 false)
+        /// 빼고, 낙하가 꺼졌으면 다른 구조물과 함께 넣습니다. 적 Nexus를 가르는 조건은 <see cref="CollectEntryNexuses"/>와 같은 <see cref="IsEnemyNexus"/>입니다.
+        /// </summary>
+        internal void CollectEntryStructures(IReadOnlyList<StructureCombatFacts> structures, bool includeEnemyNexus, List<FieldUnitView> targets)
         {
             if (structures == null) throw new ArgumentNullException(nameof(structures));
             if (targets == null) throw new ArgumentNullException(nameof(targets));
             foreach (StructureCombatFacts structure in structures)
             {
-                if (structure.Owner != Owner.Enemy || structure.Definition.Key != EntityKey.Structure_Headquarters || structure.Health.IsDead) continue;
+                if (structure.Health.IsDead || (!includeEnemyNexus && IsEnemyNexus(structure))) continue;
                 if (_views == null || !_views.TryGet(structure.EntityId, out FieldUnitView view) || view == null)
-                    throw new InvalidOperationException($"[FieldUnitPresenter] 진입할 적 Nexus 표시가 없습니다: {structure.EntityId}");
+                    throw new InvalidOperationException($"[FieldUnitPresenter] 진입할 구조물 표시가 없습니다: {structure.EntityId}");
                 targets.Add(view);
             }
         }
+
+        private static bool IsEnemyNexus(StructureCombatFacts structure) =>
+            structure.Owner == Owner.Enemy && structure.Definition.Key == EntityKey.Structure_Headquarters;
 
         /// <summary>필드에 있는 살아 있는 캐릭터와 구조물을 그립니다.</summary>
         internal void Render(IReadOnlyList<CharacterData> characters, IReadOnlyList<StructureCombatFacts> structures, FieldGridMapper mapper)
@@ -410,7 +487,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
                     FieldUnitView view = _views.Acquire(character.EntityId, character.CharacterKey);
                     view.Bind(character.EntityId, character.CharacterKey);
-                    view.SetEntityCartoon(character.Owner == Owner.Enemy && character.Health.MaxHealth > 0);
+                    view.SetCartoonMaterialFallback(character.Owner == Owner.Enemy && character.Health.MaxHealth > 0);
                     EnsureUnitHud(view, character.CharacterKey, isStructure: false);
                     // 사망 Final은 Excluded로 위치가 없어도 기존 표시 대여의 자세만 유지합니다.
                     // 걸음 보간 중인 유닛은 보간이 Transform을 소유하므로 위치·회전을 그대로 둡니다(이동 접촉 설계 M5 (a)).
@@ -423,6 +500,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                         character.Health.CurrentHealth,
                         character.Health.MaxHealth,
                         character.EntityId != _hiddenEntityId);
+                    // 걸린 상태가 정하는 모습(재구성 중 잔해 등)입니다. 사실 객체가 같으면 상태를 다시 읽지 않습니다(설계 §9.2).
+                    // 사망을 붙잡은 동안은 그대로 둡니다. 사망 사실은 반응 시작 직후 반영되고 상태가 지워져 있어, 맞추면 잔해가 반응 도중 원래 모델로 돌아갑니다(Q-RE2 A).
+                    if (!heldDeath) view.SyncStatusAppearance(character, _resolveAppearance);
                     RenderUnitHud(view, character);
                 }
 
@@ -434,7 +514,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
                     FieldUnitView view = _views.Acquire(structure.EntityId, structure.Definition.Key);
                     view.Bind(structure.EntityId, structure.Definition.Key);
-                    view.SetEntityCartoon(structure.Owner == Owner.Enemy && structure.Health.MaxHealth > 0);
+                    view.SetCartoonMaterialFallback(structure.Owner == Owner.Enemy && structure.Health.MaxHealth > 0);
                     EnsureUnitHud(view, structure.Definition.Key, isStructure: true);
                     bool showHealthHud = view.Hud != null &&
                         (structure.Owner == Owner.Enemy || ObstacleContentProfile.IsNativeObstacleKey(structure.Definition.Key));
@@ -467,8 +547,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             using var sample = ApplyHudMarker.Auto();
             UnitHUD hud = view.Hud;
             if (hud == null) return;
-            if (_categories == null)
-                throw new InvalidOperationException("[FieldUnitPresenter] HUD의 Category Visual 표 연결이 필요합니다.");
             // HUD 내용은 이 사실(불변)과 전투 동안 바뀌지 않는 표로만 정해집니다. 같은 사실 객체를 이미 썼으면 보이기만 맞추고 다시 쓰지 않습니다(GC 끊김 설계 GH3).
             // 사건마다 모든 유닛을 다시 그려도 HUD는 사실이 바뀐 유닛만 씁니다. 위치·체력 숫자는 view.Apply가 지금처럼 늘 맞춥니다.
             if (view.ShowsHudFacts(character))
@@ -477,12 +555,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 return;
             }
             hud.ValidateReferences();
-            Sprite category = _categories.GetCategoryVisual(character.Stats.Category.Key).Icon;
             var unitVisual = _visuals.GetUnitVisual(character.CharacterKey);
             view.ShowUnitHud(true);
             hud.SetUnit(character);
-            hud.SetInfo(category,
-                unitVisual.DisplayName,
+            hud.SetInfo(unitVisual.DisplayName,
                 CombatEffectiveStatsCalculator.AttackPower(character),
                 character.TraitEffects.ActiveShieldTotal);
             _hudStatuses.Clear();
@@ -493,6 +569,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _statuses.AddTo(character, _hudStatuses);
             hud.SetStatuses(_hudStatuses);
             view.RememberHudFacts(character);
+        }
+
+        internal void SetHudActionAvailability(EntityId entityId, CombatActionAvailability availability)
+        {
+            if (_views != null && _views.TryGet(entityId, out FieldUnitView view) && view != null && view.Hud != null)
+            {
+                view.Hud.SetActionAvailability(availability);
+                return;
+            }
+
+            // 사망·풀 반환 뒤의 숨김은 이미 정리된 HUD에도 요청할 수 있습니다.
+            if (availability != null)
+                throw new InvalidOperationException($"[FieldUnitPresenter] UIId.UnitHUDLayer, '{entityId}': 행동 상태를 표시할 유닛 HUD가 필요합니다.");
         }
 
         /// <summary>준비 성공 때만 계측 기준을 고정합니다. 선택 원본이나 별도 자원 풀로 쓰지 않습니다.</summary>
@@ -558,8 +647,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _itemUnequip?.Invoke(id);
         }
 
-        /// <summary>Core가 계산한 Forecast 순서를 표시값으로 옮긴다. 정렬/Timeline 계산은 하지 않는다.</summary>
-
         /// <summary>지정한 개체의 View만 숨깁니다(Drag 중 원본 숨김 등). Core 상태는 바꾸지 않습니다.</summary>
         internal void SetHiddenEntity(EntityId entityId)
         {
@@ -579,6 +666,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>그린 View를 모두 풀에 돌려줍니다. 여러 번 불려도 안전합니다.</summary>
         internal void Release()
         {
+            _actionCursors?.Clear();
             _preparedCounts.Clear();
             SetDeckHoveredUnit(EntityId.Empty);
             List<Exception> errors = null;
@@ -617,6 +705,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// </summary>
         internal void ReleasePools()
         {
+            _actionCursors?.Release();
+            _actionCursors = null;
             List<Exception> errors = null;
             foreach (FieldUnitView view in _createdViews.ToArray())
                 CleanupErrors.Try(() => DiscardView(view), ref errors);
@@ -637,6 +727,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 return $"{nameof(FieldUnitPresenter)}.{nameof(unitsRoot)}";
             if (healthLabelTemplate == null)
                 return $"{nameof(FieldUnitPresenter)}.{nameof(healthLabelTemplate)}";
+            // 피해 숫자 틀(DamageTemplate)·선택 유닛 준비와 같은 참조입니다. 운영과 특성 미리보기가 모두 이 검사를 지나게 합니다(평가 C10-17).
+            if (unitHudPrefab == null)
+                return $"{nameof(FieldUnitPresenter)}.{nameof(unitHudPrefab)}";
             return null;
         }
 
@@ -644,6 +737,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             target = null;
             if (_views == null || !_views.TryGet(id, out var view) || view == null)
+                return false;
+            target = view;
+            return true;
+        }
+
+        /// <summary>그 ID가 지금 대여 중인 표시의 강조 계약입니다(튜토리얼 강조). 켜짐 여부와 관계없습니다. 없으면 false입니다.</summary>
+        internal bool TryGetHighlightTarget(EntityId id, out ICombatUnitHighlightTarget target)
+        {
+            target = null;
+            if (_views == null || !_views.TryGet(id, out FieldUnitView view) || view == null)
                 return false;
             target = view;
             return true;
@@ -781,6 +884,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             List<Exception> errors = null;
             if (view != null)
             {
+                _actionCursors?.Hide(view.transform);
                 try { HudFeedback.OnReturned(view.EntityId); }
                 catch (Exception error) { (errors ??= new List<Exception>()).Add(error); }
                 try { Presentation.OnReturned(view.EntityId); }
@@ -794,7 +898,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     catch (Exception discard) { errors.Add(discard); }
                 }
             }
-            if (_rentedCounts.TryGetValue(key, out int count)) _rentedCounts[key] = count - 1;
+            // 빈 반환(C# null)만 대여 수를 줄이지 않습니다(평가 C10-16). 외부에서 파괴된 View(Unity null)도 대여 계측 수명은 끝냅니다
+            // (CombatUnitPreparationLease 정리와 같은 약속).
+            if (!ReferenceEquals(view, null) && _rentedCounts.TryGetValue(key, out int count)) _rentedCounts[key] = count - 1;
             CleanupErrors.ThrowIfAny(errors, "[FieldUnitPresenter] 유닛 반환에 실패했습니다.");
         }
 
@@ -802,6 +908,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             _createdViews.Remove(view);
             if (view == null) return;
+            _actionCursors?.Forget(view.transform);
             List<Exception> errors = null;
             CleanupErrors.Try(() => view.gameObject.SetActive(false), ref errors);
             CleanupErrors.Try(view.ReleaseUnitHud, ref errors);
@@ -849,7 +956,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void EnsureUnitHud(FieldUnitView view, EntityKey key, bool isStructure)
         {
-            if (view.Hud != null || unitHudPrefab == null) return;
+            if (view.Hud != null) return;
+            // 빠진 HUD 프리팹은 진입 참조 검사(FindMissingReference)가 막습니다. 여기서 조용히 건너뛰지 않습니다(평가 C10-17).
+            if (unitHudPrefab == null) throw new InvalidOperationException("[FieldUnitPresenter] unitHudPrefab 연결이 필요합니다.");
             using var sample = HudMarker.Auto();
             if (_hudLayer == null) throw new InvalidOperationException("[FieldUnitPresenter] UnitHUDLayer 연결이 필요합니다.");
             bool isObstacle = ObstacleContentProfile.IsNativeObstacleKey(key);

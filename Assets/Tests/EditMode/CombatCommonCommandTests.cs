@@ -54,7 +54,7 @@ namespace ProjectL.Tests.Core
         public void Placement_Return_IsFree_AndMainCannotBeReturned()
         {
             var i = CombatCommandTestData.Input(empty: true);
-            var deployment = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                i.State.Structures,i.State.ThornFields,                new CombatTurnFacts(StagePhase.Deployment));
+            var deployment = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                i.State.Structures,i.State.ThornFields,                new CombatTurnFacts(StagePhase.Deployment));
             var r = CombatCommandCalculator.Calculate(Command(CombatCommandKind.ReturnUnit, i, deployment), System.Array.Empty<IMovementTileRule>());
             Assert.That(r.Accepted, Is.True, r.Reason);
             var final = r.Characters.Characters.Single().Final;
@@ -69,7 +69,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Command(CombatCommandKind.PlaceUnit);
             var turn = new CombatTurnFacts(StagePhase.Deployment);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                input.State.Structures,input.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                input.State.Structures,input.State.ThornFields,turn);
             input = Recommand(input, state: state, cell: new CellCoord(2, 0),
                 battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0));
             Assert.That(CombatPlacementCalculator.Preview(input).CanPlace, Is.True);
@@ -97,7 +97,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Command(CombatCommandKind.PlaceUnit);
             var blocker = CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(1, 1), Owner.Enemy);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
             input = Recommand(input, state: state, characters: input.Characters.Concat(new[] { blocker }).ToArray(), cell: new CellCoord(x, y),
                 battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0));
             Assert.That(CombatPlacementCalculator.Preview(input).CanPlace, Is.False);
@@ -115,7 +115,7 @@ namespace ProjectL.Tests.Core
             var hand = new CharacterCombatFacts(new EntityId(3), new CharacterInstanceId(3), EntityKey.Unit_Akimbo,
                 Owner.Player, CharacterOwnershipRole.Sub, CharacterRuntimeArea.Hand, actor.Health, actor.Stats,
                 0, null, null, Array.Empty<CellCoord>(), UnitActionUse.Available);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
             input = Recommand(input, state: state, characters: new[] { actor, input.Characters[1], hand },
                 battle: new CombatBattleFacts(1, 37, 0, 0, Array.Empty<CharacterInstanceId>(), 0));
             var rejected = CombatCommandCalculator.Calculate(input, System.Array.Empty<IMovementTileRule>());
@@ -135,7 +135,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Command(CombatCommandKind.ReturnUnit);
             var main = input.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment, mainPlacementLocked: true));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                input.State.Structures,input.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
             var returned = CombatCommandCalculator.Calculate(Recommand(input, state: state, actorId: main.EntityId), System.Array.Empty<IMovementTileRule>());
             Assert.That(returned.Accepted, Is.False);
             var placed = CombatCommandCalculator.Calculate(Recommand(input, kind: CombatCommandKind.PlaceMainCharacter, state: state, cell: new CellCoord(1, 0)), System.Array.Empty<IMovementTileRule>());
@@ -154,9 +154,9 @@ namespace ProjectL.Tests.Core
             var b = CombatCommandTestData.Character(3, EntityKey.Unit_Demon, new CellCoord(2, 7), Owner.Enemy);
             var waiting = new[] { a, b }.Select(c => CombatPlacementCalculator.Location(c, CharacterRuntimeArea.EnemyWaiting, null, null, null)).ToArray();
             var hq = Headquarters(new CellCoord(0, 7));
-            var turn = new CombatTurnFacts(StagePhase.Deployment, 2, true,
+            var turn = new CombatTurnFacts(StagePhase.Deployment,
                 enemyOrigins: new[] { new CombatEnemyOrigin(a.EntityId, a.Anchor.Value, Rotation4.R90), new CombatEnemyOrigin(b.EntityId, b.Anchor.Value, Rotation4.R0) });
-            var state = new CombatCommandState(blocked ? 3 : 4,8,CombatFlowPhase.PlayerInput,false,                new[] { hq },input.State.ThornFields,turn,                new MovementEnvironmentFacts(new MovementTileFact[] {
+            var state = new CombatCommandState(blocked ? 3 : 4,8,CombatFlowPhase.PlayerInput,                new[] { hq },input.State.ThornFields,turn,                new MovementEnvironmentFacts(new MovementTileFact[] {
                     new DestinationTileModifierFact(7, new CellCoord(3, 7), true, new[] { Owner.Enemy }, 3, 5) }));
             input = Recommand(input, state: state, characters: new[] { main }.Concat(waiting).ToArray(),
                 battle: new CombatBattleFacts(8, 37, 7, 1, Array.Empty<CharacterInstanceId>(), 0));
@@ -245,24 +245,20 @@ namespace ProjectL.Tests.Core
             Assert.That(result.FinalState.SameValues(input.State), Is.True);
         }
 
-        [TestCase(1)]
-        [TestCase(2)]
-        public void EnterCombat_LocksMainAndDefersUnitsUntilPlayerStart(int preparationIndex)
+        [Test]
+        public void EnterCombat_DefersUnitsUntilPlayerStart()
         {
             var source = Command(CombatCommandKind.EnterCombat);
-            var before = source.State.With(isNight: false,
-                turn: new CombatTurnFacts(StagePhase.Deployment, preparationIndex),
+            var before = source.State.With(
+                turn: new CombatTurnFacts(StagePhase.Deployment),
                 structures: new[] { Headquarters(new CellCoord(6, 6)) });
             var entered = CombatCommandCalculator.Calculate(Recommand(source, state: before), Array.Empty<IMovementTileRule>());
             Assert.That(entered.Accepted, Is.True, entered.Reason);
             Assert.That(entered.FinalState.Turn.ControllerPhase, Is.EqualTo(CombatControllerPhase.StartingPlayer));
-            Assert.That(entered.FinalState.Turn.MainPlacementLocked, Is.True);
-            Assert.That(entered.FinalState.Turn.PreparationIndex, Is.EqualTo(preparationIndex));
             Assert.That(CombatCommandComposition.Project(entered).Characters.All(c => c.ActionUse == UnitActionUse.Deferred), Is.True);
-            var started = CombatTurnCalculator.BeginControllerTurn(CombatCommandComposition.Project(entered));
+            var started = CombatTurnCalculator.BeginControllerTurn(CombatCommandComposition.Project(entered), Array.Empty<IMovementTileRule>());
             Assert.That(started.FinalState.Turn.ControllerPhase, Is.EqualTo(CombatControllerPhase.Player));
             Assert.That(CombatCommandComposition.Project(started).Characters.All(c => c.ActionUse == UnitActionUse.Available), Is.True);
-            Assert.That(before.Turn.MainPlacementLocked, Is.False);
         }
 
         [Test]
@@ -270,7 +266,7 @@ namespace ProjectL.Tests.Core
         {
             var source = Command(CombatCommandKind.EnterCombat);
             var main = source.Characters[1];
-            var before = source.State.With(isNight: false, turn: new CombatTurnFacts(StagePhase.Deployment),
+            var before = source.State.With( turn: new CombatTurnFacts(StagePhase.Deployment),
                 structures: new[] { Headquarters(new CellCoord(6, 6)) });
             var input = Recommand(source, state: before, characters: new[] { main });
             var entered = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
@@ -281,7 +277,6 @@ namespace ProjectL.Tests.Core
             Assert.That(rejected.Accepted, Is.False);
             Assert.That(rejected.Reason, Is.EqualTo("InvalidEnemyHeadquarters"));
             Assert.That(rejected.Characters.Characters, Is.Empty);
-            Assert.That(before.Turn.MainPlacementLocked, Is.False);
             Assert.That(main.ActionUse, Is.EqualTo(UnitActionUse.Available));
         }
 
@@ -304,7 +299,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Command(CombatCommandKind.EndPlayerTurn);
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player,
-                controllerTurnSequence: 1, completedPlayerTurnCount: long.MaxValue, nightStartPlayerTurnCount: long.MaxValue);
+                controllerTurnSequence: 1, completedPlayerTurnCount: long.MaxValue);
             input = Recommand(input, state: input.State.With(turn: turn));
             Assert.Throws<OverflowException>(() => CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>()));
             Assert.That(input.State.Turn.CompletedPlayerTurnCount, Is.EqualTo(long.MaxValue));
@@ -372,8 +367,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Attack.HasValue, Is.True);
             Assert.That(result.PathMovement, Is.Null);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(terminal ? StageOutcome.Defeat : StageOutcome.InProgress));
-            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.NightEnded ||
-                e.Kind == CombatEventKind.ControllerTurnStarted), Is.False);
+            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.ControllerTurnStarted), Is.False);
             Assert.That(input.Characters[1].Health.CurrentHealth, Is.EqualTo(mainHealth));
         }
 
@@ -401,23 +395,6 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Attack.HasValue, Is.True);
             Assert.That(result.PathMovement, Is.Null);
             Assert.That(MovementTestData.Actor(result).ActionUse, Is.EqualTo(UnitActionUse.Attacked));
-        }
-
-        [Test]
-        public void NightRecallCapacityFailure_LeavesFactsUnchanged()
-        {
-            var source = Command(CombatCommandKind.EndPlayerTurn);
-            var actor = source.Characters[0].With(actionUse: UnitActionUse.Moved);
-            var hand = new CharacterCombatFacts(new EntityId(3), new CharacterInstanceId(3), EntityKey.Unit_Akimbo,
-                Owner.Player, CharacterOwnershipRole.Sub, CharacterRuntimeArea.Hand, actor.Health, actor.Stats,
-                0, null, null, Array.Empty<CellCoord>());
-            var input = EnemyControllerPhaseTests.Input(source, CombatControllerPhase.Enemy, completed: 8,
-                characters: new[] { actor, source.Characters[1], hand });
-            input = Recommand(input, automatic: true, battle: new CombatBattleFacts(1, 37, 0, 0, Array.Empty<CharacterInstanceId>(), 0));
-            Assert.Throws<InvalidOperationException>(() => CombatTurnCalculator.EndEnemyPhase(input, Array.Empty<IMovementTileRule>()));
-            Assert.That(actor.ActionUse, Is.EqualTo(UnitActionUse.Moved));
-            Assert.That(actor.Area, Is.EqualTo(CharacterRuntimeArea.Field));
-            Assert.That(input.State.Turn.PreparationIndex, Is.EqualTo(1));
         }
 
         internal static CombatCommandInput Move(params CellCoord[] cells) =>

@@ -253,6 +253,8 @@ GameObject:
   - component: {fileID: 594652445}
   - component: {fileID: 594652446}
   - component: {fileID: 594652447}
+  - component: {fileID: 594652448}
+  - component: {fileID: 594652449}
   m_Layer: 0
   m_Name: AudioManager
   m_TagString: Untagged
@@ -279,6 +281,10 @@ MonoBehaviour:
     displayName: Unit
   - key: d2641c0dc8f0434a8965f8d5b8b0a08a
     displayName: SFX
+  - key: e3e84ae27af049a4bae97ac2064f3f5a
+    displayName: UnitAttack
+  - key: de18f2546c2c497b9a7e3345f35f3fd1
+    displayName: UI
   busCatalogs:
   - {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
   busPauseSettings:
@@ -505,7 +511,7 @@ MonoBehaviour:
     parameterAutomations: []
     parameterPresets: []
     currentPresetIndex: -1
-  - slotName: Event Slot 6
+  - slotName: GameStart
     displayName: GameStart
     selectedEventPath: event:/UI/GameStart
     selectedEventGuid: '{e9cddcbb-1fb5-408a-a208-932cc0972233}'
@@ -520,7 +526,7 @@ MonoBehaviour:
     parameterAutomations: []
     parameterPresets: []
     currentPresetIndex: -1
-  - slotName: Event Slot 7
+  - slotName: MarkDebuff
     displayName: Mark
     selectedEventPath: event:/PostFX/SFX/Unit/D_Buff/Mark
     selectedEventGuid: '{9a325c61-c937-464a-90ad-273a1a8a9778}'
@@ -535,10 +541,115 @@ MonoBehaviour:
     parameterAutomations: []
     parameterPresets: []
     currentPresetIndex: -1
-  - slotName: Event Slot 7
+  - slotName: StageChanger
     displayName: StageChanger
     selectedEventPath: event:/BGM/StageChanger
     selectedEventGuid: '{78889dcf-03c6-429c-a0af-ba176c09efa3}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: RunStart
+    displayName: RunStart
+    selectedEventPath: event:/UI/RunStart
+    selectedEventGuid: '{b3fe8b08-4ed9-4b03-b445-451d9a3bde36}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: UseMoney
+    displayName: UseMoney
+    selectedEventPath: event:/UI/UseMoney
+    selectedEventGuid: '{148cac4e-8097-4f5c-9568-636be163dd2c}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: CardShuffle
+    displayName: CardShuffle
+    selectedEventPath: event:/UI/CardShuffle
+    selectedEventGuid: '{9e9bd4c4-ecae-47f2-958c-9df6b418b416}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: LobbyAMB
+    displayName: Lobby
+    selectedEventPath: event:/PostFX/AMB/Lobby
+    selectedEventGuid: '{ea0fbe89-7f38-43b6-87ef-d231d342b55f}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: LoadScreen
+    displayName: Loading
+    selectedEventPath: event:/PostFX/AMB/Loading
+    selectedEventGuid: '{4b22cfce-d931-4964-93c7-cb4735e90beb}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 13
+    displayName: Enter
+    selectedEventPath: event:/PostFX/SFX/Artifact/Enter
+    selectedEventGuid: '{84e4aa9c-1836-43bf-9fb7-006f70a9c639}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 14
+    displayName: LobbyWalk
+    selectedEventPath: event:/PostFX/SFX/Unit/LobbyWalk
+    selectedEventGuid: '{3859d59c-f139-46b3-be2c-2658c4b693df}'
     playbackMode: 0
     playOnStart: 0
     attachToGameObject: 1
@@ -843,6 +954,20 @@ MonoBehaviour:
       - Heavy
       - Cannon
       - Enemy
+    - name: MoveAmount
+      idString: 811032282:2644107401
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - One
+      - OverTow
     parameterAutomations: []
     parameterPresets:
     - presetId: 00a6c7ada7d84692a0d1e95910f9abbc
@@ -941,6 +1066,38 @@ MonoBehaviour:
       maxValue: 5
       labelValue: Enemy
       labelIndex: 5
+    - presetId: 9908669ddea74a989e88e7f204436237
+      targetParameterName: MoveAmount
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 1
+      labelValue: One
+      labelIndex: 0
+    - presetId: c7e41121c2fc438fa6aef11ec68e376b
+      targetParameterName: MoveAmount
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 1
+      labelValue: OverTow
+      labelIndex: 1
     currentPresetIndex: -1
   - slotName: UnitDead
     displayName: Dead
@@ -1070,337 +1227,6 @@ MonoBehaviour:
       maxValue: 5
       labelValue: Enemy
       labelIndex: 5
-    currentPresetIndex: -1
-  - slotName: UnitAttack
-    displayName: Attack
-    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/Attack
-    selectedEventGuid: '{7ced36ab-72ec-4ec6-a94b-d3a7d8914a5f}'
-    playbackMode: 1
-    playOnStart: 0
-    attachToGameObject: 1
-    stopMode: 1
-    restartIfAlreadyPlaying: 1
-    maxInstances: 8
-    stealOldestInstance: 1
-    parameterOverrides:
-    - name: AbilityActive
-      idString: 1342662476:929127323
-      kind: 2
-      scope: 0
-      isReadOnly: 0
-      isAutomatic: 0
-      min: 0
-      max: 1
-      defaultValue: 0
-      useOverride: 0
-      value: 0
-      labels:
-      - False
-      - True
-    - name: UnitDetailType
-      idString: 3541570850:1740262346
-      kind: 2
-      scope: 0
-      isReadOnly: 0
-      isAutomatic: 0
-      min: 0
-      max: 17
-      defaultValue: 0
-      useOverride: 0
-      value: 0
-      labels:
-      - Akimbo
-      - Sniper
-      - Batender
-      - Cowboy
-      - Hammer
-      - Shotgun
-      - GraveKeeper
-      - Umbrella
-      - Catus
-      - Minecart
-      - Balistar
-      - Pickel
-      - Shovel
-      - E_Cannon
-      - Boss_1
-      - Shield
-      - Explosion
-      - Impact
-    parameterAutomations: []
-    parameterPresets:
-    - presetId: 85c5cf25516f4693a86b8dabbe48f843
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 0
-      minValue: 0
-      maxValue: 17
-      labelValue: Akimbo
-      labelIndex: 0
-    - presetId: ceece55b5ed040c9a885efec22d601ca
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 0
-      minValue: 0
-      maxValue: 17
-      labelValue: Akimbo
-      labelIndex: 0
-    - presetId: a4543871a6434a13b4d241220630d171
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 1
-      minValue: 0
-      maxValue: 17
-      labelValue: Sniper
-      labelIndex: 1
-    - presetId: 3ea2d65334e14f0aa2988bf8399efa50
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 2
-      minValue: 0
-      maxValue: 17
-      labelValue: Batender
-      labelIndex: 2
-    - presetId: e5dbb519ad42473484e4fcfb3f82ab6c
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 3
-      minValue: 0
-      maxValue: 17
-      labelValue: Cowboy
-      labelIndex: 3
-    - presetId: a8fc80c95af04985a9569503791cbdb4
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 4
-      minValue: 0
-      maxValue: 17
-      labelValue: Hammer
-      labelIndex: 4
-    - presetId: 20b058385cce477b93075e2323798c1e
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 5
-      minValue: 0
-      maxValue: 17
-      labelValue: Shotgun
-      labelIndex: 5
-    - presetId: edafcec4ecb044f8914da27951925cf6
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 6
-      minValue: 0
-      maxValue: 17
-      labelValue: GraveKeeper
-      labelIndex: 6
-    - presetId: 9e63911b1dae4e18ab796e5bc23879b5
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 7
-      minValue: 0
-      maxValue: 17
-      labelValue: Umbrella
-      labelIndex: 7
-    - presetId: 531c5f9ca0d44510b03517c54a770974
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 8
-      minValue: 0
-      maxValue: 17
-      labelValue: Catus
-      labelIndex: 8
-    - presetId: 476bbdd5e8e14172b60aef431c5fef67
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 9
-      minValue: 0
-      maxValue: 17
-      labelValue: Minecart
-      labelIndex: 9
-    - presetId: c3c1c171c47b422d843e182c5e9de5d4
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 10
-      minValue: 0
-      maxValue: 17
-      labelValue: Balistar
-      labelIndex: 10
-    - presetId: cd1aa4055234426da6aaa847105e6f46
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 11
-      minValue: 0
-      maxValue: 17
-      labelValue: Pickel
-      labelIndex: 11
-    - presetId: 2a642c3eec9d412fba06888ca76bc3b7
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 12
-      minValue: 0
-      maxValue: 17
-      labelValue: Shovel
-      labelIndex: 12
-    - presetId: f044d9db82cd4157909640a95516db91
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 13
-      minValue: 0
-      maxValue: 17
-      labelValue: E_Cannon
-      labelIndex: 13
-    - presetId: 9eeae6b1560a44d284a3a2e13c7b1ee3
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 14
-      minValue: 0
-      maxValue: 17
-      labelValue: Boss_1
-      labelIndex: 14
-    - presetId: 01861a934b834aa0bfa136b515506d75
-      targetParameterName: UnitDetailType
-      enabled: 1
-      applyMode: 0
-      durationSeconds: 1
-      updateInterval: 0.05
-      loop: 0
-      onlyWhenPlaying: 1
-      applyToPlayingInstances: 0
-      randomizeStart: 0
-      curveMode: 0
-      oneShotValue: 15
-      minValue: 0
-      maxValue: 17
-      labelValue: Shield
-      labelIndex: 15
     currentPresetIndex: -1
   - slotName: ObsDamaged
     displayName: Damaged
@@ -1698,6 +1524,68 @@ MonoBehaviour:
       labelValue: Bomb
       labelIndex: 2
     currentPresetIndex: -1
+  - slotName: Event Slot 12
+    displayName: Fall
+    selectedEventPath: event:/PostFX/SFX/Unit/Fall
+    selectedEventGuid: '{a6f539ff-4df0-4bfb-9612-470c5ab385e9}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 13
+    displayName: Movement
+    selectedEventPath: event:/PostFX/SFX/Unit/Movement
+    selectedEventGuid: '{c4efcc2a-bb89-4444-b7e0-abbe804c9a33}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Category
+      idString: 584323627:900261421
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 5
+      defaultValue: 1
+      useOverride: 1
+      value: 0
+      labels:
+      - None
+      - Base
+      - Rider
+      - Heavy
+      - Cannon
+      - Enemy
+    - name: MoveAmount
+      idString: 811032282:2644107401
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - One
+      - OverTow
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
   playerKey:
     key: a1ee485028f04a57b7b693d1f72be58f
   legacyPlayerId: 
@@ -1917,8 +1805,455 @@ MonoBehaviour:
     parameterAutomations: []
     parameterPresets: []
     currentPresetIndex: -1
+  - slotName: Event Slot 9
+    displayName: StageDeploy
+    selectedEventPath: event:/PostFX/SFX/StageDeploy
+    selectedEventGuid: '{0fe60e5a-8fd2-47b0-a85c-eb8c41309300}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 10
+    displayName: MapDeploy
+    selectedEventPath: event:/PostFX/SFX/Tile/MapDeploy
+    selectedEventGuid: '{32615d1d-b486-4f2a-8173-fe2fb82ef797}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 11
+    displayName: RailDeploy
+    selectedEventPath: event:/PostFX/SFX/Tile/RailDeploy
+    selectedEventGuid: '{d07c5128-8d2e-4e1b-b42f-da2ae28935f8}'
+    playbackMode: 1
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
   playerKey:
     key: d2641c0dc8f0434a8965f8d5b8b0a08a
+  legacyPlayerId: 
+--- !u!114 &594652448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: Event Slot 0
+    displayName: Akimbo
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Akimbo
+    selectedEventGuid: '{d478e58b-29e8-42bd-8ffb-c642c11052c8}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 1
+    displayName: Ballistar
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Ballistar
+    selectedEventGuid: '{1a21eae3-0fb2-4505-ac01-3eb0fc7ee9c2}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 2
+    displayName: Catus
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Catus
+    selectedEventGuid: '{2d26dc92-d394-4f92-bcd1-51cb2345d7bc}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 3
+    displayName: Cowboy
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Cowboy
+    selectedEventGuid: '{5acb6b2b-da6f-4fe2-be83-efd892d0b2f9}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 4
+    displayName: GraveKeeper
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/GraveKeeper
+    selectedEventGuid: '{c7240cc8-4563-432e-961d-1da0275128b7}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 5
+    displayName: Hammer
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Hammer
+    selectedEventGuid: '{d7938bf9-fa97-4654-a0a8-75fa14d1b235}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 6
+    displayName: Shotgun
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Shotgun
+    selectedEventGuid: '{c9f1121b-7299-4c0a-954e-482f6953acf4}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 7
+    displayName: Sniper
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Sniper
+    selectedEventGuid: '{91648ba7-e5f5-4c9d-8074-8c02fd35cc68}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 8
+    displayName: E_Cannon
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/E_Cannon
+    selectedEventGuid: '{43902a02-959d-4afe-81ee-3c5992c1b5eb}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 9
+    displayName: Pickel
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Pickel
+    selectedEventGuid: '{dd14c6d9-800c-4db2-8c43-25eda82f05c3}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 10
+    displayName: Sheld
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Sheld
+    selectedEventGuid: '{030c8968-fc72-4911-845a-259ec89fe005}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 11
+    displayName: Shovel
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Shovel
+    selectedEventGuid: '{3fd76325-9d49-4e0d-8253-d579e8ca1e1c}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 12
+    displayName: Boss_Stage1
+    selectedEventPath: event:/PostFX/SFX/Unit/AttackEvents/EachUnit/Enemy/Boss_Stage1
+    selectedEventGuid: '{f66c4deb-54c2-4f6e-9ca9-1481ed792460}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  playerKey:
+    key: e3e84ae27af049a4bae97ac2064f3f5a
+  legacyPlayerId: 
+--- !u!114 &594652449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594652442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6a887f0024e57f4da1a7e26fdcf51c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 45f7866c81c923f4c958d1538e3e0881, type: 2}
+  loadCatalogBanksOnEnable: 1
+  unloadCatalogBanksOnDisable: 1
+  stopAllSlotsOnDisable: 1
+  stopAllSlotsOnDestroy: 1
+  eventSlots:
+  - slotName: Event Slot 0
+    displayName: ChangeTurn
+    selectedEventPath: event:/UI/ChangeTurn
+    selectedEventGuid: '{d0ff3370-69e3-40d4-b29c-f962c122829c}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: Turn
+      idString: 379271614:717875228
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - Player
+      - Enemy
+    parameterAutomations: []
+    parameterPresets:
+    - presetId: e49a708cdc674cf6adf73810fc39ebec
+      targetParameterName: Turn
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 0
+      minValue: 0
+      maxValue: 1
+      labelValue: Player
+      labelIndex: 0
+    - presetId: 84e55ce0319a455899f9b88fe94174d4
+      targetParameterName: Turn
+      enabled: 1
+      applyMode: 0
+      durationSeconds: 1
+      updateInterval: 0.05
+      loop: 0
+      onlyWhenPlaying: 1
+      applyToPlayingInstances: 0
+      randomizeStart: 0
+      curveMode: 0
+      oneShotValue: 1
+      minValue: 0
+      maxValue: 1
+      labelValue: Enemy
+      labelIndex: 1
+    currentPresetIndex: -1
+  - slotName: Event Slot 1
+    displayName: Heal
+    selectedEventPath: event:/UI/Heal
+    selectedEventGuid: '{d7316e12-4456-40f3-9dca-72deeff73967}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides:
+    - name: HPIncrease
+      idString: 2509493126:4242263701
+      kind: 2
+      scope: 0
+      isReadOnly: 0
+      isAutomatic: 0
+      min: 0
+      max: 1
+      defaultValue: 0
+      useOverride: 0
+      value: 0
+      labels:
+      - Heal
+      - MaxUp
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 2
+    displayName: ScrollClose
+    selectedEventPath: event:/UI/ScrollClose
+    selectedEventGuid: '{3aa5be04-829a-4f10-a7c2-b062529695da}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 3
+    displayName: ScrollOpen
+    selectedEventPath: event:/UI/ScrollOpen
+    selectedEventGuid: '{64dfdb3a-a033-42ec-a051-44808775ceba}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 4
+    displayName: Upgrade
+    selectedEventPath: event:/UI/Upgrade
+    selectedEventGuid: '{64cd412b-ab11-4e25-a096-e215c4fd8226}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 5
+    displayName: StageWin
+    selectedEventPath: event:/UI/StageWin
+    selectedEventGuid: '{0a236600-f397-4ab9-9273-e85fcf559597}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  - slotName: Event Slot 6
+    displayName: StageDefeat
+    selectedEventPath: event:/UI/StageDefeat
+    selectedEventGuid: '{b543755b-c14b-4c35-a4db-585f575f23b9}'
+    playbackMode: 0
+    playOnStart: 0
+    attachToGameObject: 1
+    stopMode: 1
+    restartIfAlreadyPlaying: 1
+    maxInstances: 8
+    stealOldestInstance: 1
+    parameterOverrides: []
+    parameterAutomations: []
+    parameterPresets: []
+    currentPresetIndex: -1
+  playerKey:
+    key: de18f2546c2c497b9a7e3345f35f3fd1
   legacyPlayerId: 
 --- !u!1 &654743868
 GameObject:
@@ -2332,7 +2667,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 65.70001}
+  m_AnchoredPosition: {x: 0, y: -305}
   m_SizeDelta: {x: 320, y: 88}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1150315876
@@ -2865,7 +3200,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 161.7}
+  m_AnchoredPosition: {x: 0, y: -200}
   m_SizeDelta: {x: 320, y: 88}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1802596100

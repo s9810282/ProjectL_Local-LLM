@@ -7,8 +7,7 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts
 {
     /// <summary>
-    /// 입력 중 초안과 견적만 표시하는 계약입니다. 이동 범위 표시(<see cref="ICombatMovementRangeFeedback"/>)와
-    /// 이동 범위 표시 계약을 상속합니다.
+    /// 입력 중 이동 초안과 견적만 표시하는 계약입니다. 이동 범위 표시 계약(<see cref="ICombatMovementRangeFeedback"/>)을 상속합니다.
     /// </summary>
     internal interface ICombatMovementFeedback : ICombatMovementRangeFeedback
     {

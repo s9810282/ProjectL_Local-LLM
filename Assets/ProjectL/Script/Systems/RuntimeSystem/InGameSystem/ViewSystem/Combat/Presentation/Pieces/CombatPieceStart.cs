@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
     /// <summary>
     /// 조각이 내는 신호입니다(조각·조립 설계 BP1·BP2 보충). 뜻의 원본은 클립 설계 AC6 신호 표입니다. 다른 신호는 쓰는 조립이 생길 때 더하고,
-    /// 번호는 들어온 순서대로 붙입니다(시험은 번호에 기대지 않음).
+    /// 번호는 들어온 순서대로 붙입니다(번호 값에 기대는 코드는 없음).
     /// </summary>
     /// <remarks>
     /// <see cref="End"/>는 실행이 냅니다. 그 밖의 신호는 조각이 맥락의 신호 입구(<see cref="CombatPieceContext.SignalCallback"/>)로 냅니다.
@@ -27,7 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         End = 1,
 
         /// <summary>
-        /// 대상이 맞는 순간입니다(Gate 해제와 같은 순간, 카메라 연출 조각 설계 K4). 정면 공격 조각(<see cref="CombatFacingAttackPiece"/>),
+        /// 대상이 맞는 순간입니다(Gate 해제와 같은 순간, 카메라 연출 조각 설계 K4). 정면 공격 조각(<see cref="CombatFacingAttackPiece"/>), 코드 모션 조각(<see cref="CombatCodeMotionPiece"/>, 코드 모션 공격),
         /// 해제 조각(<see cref="CombatReleasePiece"/>, 근접 클립 공격), 접촉 집계(<see cref="CombatVolleyReleasePiece"/>, 원거리 클립 공격)가 냅니다.
         /// 내는 조각은 <b>대상을 해제한 뒤</b> 냅니다(<see cref="CombatHitMoment.ReleaseThenSignal"/>). 해제가 연 피격 사건과
         /// 이 신호로 시작한 항목(카메라 흔들림 등)이 같은 순간에 보이게 하는 규칙이고, 이 문서가 원본입니다(클립 계획 §0.6 CK4).

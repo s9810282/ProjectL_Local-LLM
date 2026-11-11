@@ -30,6 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
     /// <summary>
     /// 덱 편집 초안 하나입니다(Run 덱 설계 §5.3). 후보 ID와 그것을 평가할 기준 스냅샷을 함께 가집니다.
     /// 덱 규칙은 판단하지 않고 Core 평가·확정 결과만 반영합니다. 새 버전을 평가되지 않은 초안에 몰래 붙이지 않습니다.
+    /// 다만 화면 표시 규칙(병과당 한 칸, <see cref="DeckEditSlotLayout"/>)은 있습니다. 칸에 놓을 수 없는 덱은 표시 모델이 편집만 막습니다.
     /// </summary>
     internal sealed class DeckEditDraft
     {
@@ -40,6 +41,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
         internal DeckEditDraftState State { get; private set; } = DeckEditDraftState.NotReady;
         internal DeckReadStatus ReadStatus { get; private set; } = DeckReadStatus.NotReady;
         internal DeckFailureReason Reason { get; private set; }
+        private DeckFailureReason _placementRejection;
 
         /// <summary>가장 최근에 받은 편집 가능 여부입니다. 기준 스냅샷 또는 평가·확정 결과의 현재 상태에서 옵니다.</summary>
         internal DeckEditAvailability Availability { get; private set; }
@@ -66,6 +68,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
 
         internal bool CanEdit => Basis != null && State != DeckEditDraftState.NotReady &&
             State != DeckEditDraftState.Stale && State != DeckEditDraftState.Unavailable;
+
+        /// <summary>다시 평가하면 풀리는 상태(기준이 낡음·아직 준비 안 됨)인지입니다. 다시 평가 버튼을 이때만 보입니다.</summary>
+        internal bool CanReevaluate => State == DeckEditDraftState.Stale || State == DeckEditDraftState.NotReady;
 
         internal bool CanConfirm => Basis != null && State == DeckEditDraftState.Valid &&
             Availability != null && Availability.CanEdit && !Committed;
@@ -113,7 +118,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
             }
             if (target >= 0) replacement[target] = id;
             else replacement.Add(id);
-            Committed = false;
+            // 확정 표지는 놓기가 수락돼 후보가 실제로 바뀔 때 지웁니다(ApplyEvaluation).
             _pendingRequest = new DeckEditRequest(Basis.RunId, Basis.RosterRevision, Basis.DeckRevision, replacement);
             return _pendingRequest;
         }
@@ -164,6 +169,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
             }
         }
 
+        /// <summary>
+        /// 놓기(교체) 평가 결과를 반영합니다. 덱 규칙으로 거절되면 현재 후보의 평가 상태는 그대로 두고 거절 사유만 따로 남깁니다(평가 C-08).
+        /// 기준이 낡음·편집 불가 같은 초안 전체의 상태 변화는 일반 평가처럼 반영합니다.
+        /// </summary>
+        internal void ApplyPlacementEvaluation(DeckEvaluationResult result)
+        {
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (!ReferenceEquals(result.Request, _pendingRequest)) return;
+            if (StateFor(result.Reason, result.Current) == DeckEditDraftState.Invalid)
+            {
+                _pendingRequest = null;
+                UpdateAvailability(result.Current);
+                _placementRejection = result.Reason;
+                return;
+            }
+            ApplyEvaluation(result);
+        }
+
+        /// <summary>마지막 놓기 거절 사유를 꺼내고 지웁니다. 안내는 한 번만 띄웁니다.</summary>
+        internal DeckFailureReason TakePlacementRejection()
+        {
+            DeckFailureReason reason = _placementRejection;
+            _placementRejection = DeckFailureReason.None;
+            return reason;
+        }
+
         private bool SameCandidates(IReadOnlyList<CharacterInstanceId> ids)
         {
             if (ids.Count != _candidates.Count) return false;
@@ -191,6 +222,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
             State = DeckEditDraftState.NotReady;
             ReadStatus = DeckReadStatus.NotReady;
             Reason = DeckFailureReason.None;
+            _placementRejection = DeckFailureReason.None;
             Availability = null;
             Committed = false;
         }
@@ -221,15 +253,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
         private void Apply(DeckFailureReason reason, DeckRuleState current)
         {
             Reason = reason;
-            bool currentReady = current != null && current.Status == DeckReadStatus.Ready;
-            if (currentReady && current.Availability != null) Availability = current.Availability;
+            UpdateAvailability(current);
+            State = StateFor(reason, current);
+        }
+
+        private void UpdateAvailability(DeckRuleState current)
+        {
+            if (current != null && current.Status == DeckReadStatus.Ready && current.Availability != null)
+                Availability = current.Availability;
+        }
+
+        private DeckEditDraftState StateFor(DeckFailureReason reason, DeckRuleState current)
+        {
             // 거절이든 수락이든 원본 버전이 기준과 다르면 낡은 초안입니다.
-            if (currentReady && !MatchesBasis(current))
-            {
-                State = DeckEditDraftState.Stale;
-                return;
-            }
-            State = reason switch
+            if (current != null && current.Status == DeckReadStatus.Ready && !MatchesBasis(current))
+                return DeckEditDraftState.Stale;
+            return reason switch
             {
                 DeckFailureReason.None => DeckEditDraftState.Valid,
                 DeckFailureReason.StaleRun or DeckFailureReason.StaleRoster or DeckFailureReason.StaleDeck or

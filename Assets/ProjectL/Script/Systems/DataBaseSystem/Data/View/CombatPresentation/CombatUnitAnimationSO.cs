@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
@@ -14,12 +15,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         [Header("공격")]
         [Tooltip("공격 클립(주 클립, 몸)입니다. ClipStart·ClipEvent·ClipEnd를 하나씩 찍고 ClipEvent2·3은 필요할 때만 더합니다. 비워 두면 공격은 코드 모션입니다. 넣을 수 있는 공격 표시 종류는 외형 표 검사(CombatUnitAnimationRules)가 정합니다.")]
         [SerializeField] private AnimationClip attackClip;
+        [Tooltip("공격 주 클립·부속 클립과 클립 이벤트의 재생 배율입니다. 1은 기본, 2는 두 배, 0.5는 절반 속도입니다. 유한한 양수여야 합니다. 투사체 속도·이펙트 자체 속도·별도 초 단위 지연은 바꾸지 않습니다.")]
+        [SerializeField, Min(0.01f)] private float attackSpeed = 1f;
         [Tooltip("공격 클립과 같은 시각으로 같이 재생할 부속 클립(무기 등)입니다. 이벤트를 찍지 않고, 공격 클립과 다른 뼈만 움직입니다. 비워도 됩니다.")]
         [SerializeField] private AnimationClip[] attackCompanionClips = Array.Empty<AnimationClip>();
         [Tooltip("이벤트 타이밍 뒤 대상이 맞기까지의 초. 피격자의 피격 모션이 이때 시작합니다. 원거리(직선·곡사)는 0으로 둡니다(맞는 순간은 투사체가 정함, 규칙은 CombatUnitAnimationRules)")]
         [SerializeField, Min(0f)] private float hitDelay;
         [Tooltip("선택 발사 목록입니다. 비우면 ClipEvent에서 기본 지점 0으로 한 발을 쏩니다. 넣으면 이 목록만 사용하며 원거리 공격 클립에서만 허용합니다.")]
         [SerializeField] private CombatClipShotEntry[] shots = Array.Empty<CombatClipShotEntry>();
+        [Tooltip("기존 순차 재생 또는 지정한 선행 특성 연출 시작 기준입니다. 공격 클립 시작 시각만 설정합니다.")]
+        [SerializeField] private CombatAttackAnimationStartMode attackAnimationStartMode;
+        [Tooltip("이 공격에 속한 선행 발동 중 시작 기준으로 사용할 Kind 하나입니다.")]
+        [SerializeField] private TraitActivationKind attackAnimationStartKind = TraitActivationKind.PullApplied;
+        [Tooltip("지정 Kind의 실제 연출 실행 시작부터 공격 클립을 시작하기까지의 초입니다. 0은 동시 시작입니다.")]
+        [SerializeField, Min(0f)] private float attackAnimationStartDelaySeconds;
         // 옛 칸 soundDelay·attackEffect·effectDelay는 공격 묶음의 큐(소리 시점·이펙트)로 옮겼다(범용 연출 구조 계획 Gd.3). YAML의 옛 키는 다시 저장할 때 지운다.
         [Header("피격")]
         [Tooltip("피격 클립(주 클립, 몸)입니다. 비워 두면 피격은 코드 반응만 씁니다.")]
@@ -30,6 +39,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// <summary>입력을 검사하고 매번 새 불변 값을 만듭니다(DB 규칙 P2). 피격 선딜레이는 공격 클립이 있을 때만 봅니다.</summary>
         internal CombatUnitAnimationData CreateData()
         {
+            if (!CombatPresentationValueRules.IsPositive(attackSpeed))
+                throw Invalid($"{nameof(attackSpeed)} — {CombatPresentationValueRules.PositiveRule}");
+            string startError = CombatAttackAnimationStartData.FindError(attackAnimationStartMode,
+                attackAnimationStartKind, attackAnimationStartDelaySeconds);
+            if (startError != null)
+                throw Invalid(startError);
+            var animationStart = new CombatAttackAnimationStartData(attackAnimationStartMode,
+                attackAnimationStartKind, attackAnimationStartDelaySeconds);
+            if (animationStart.UsesSelectedTrait && attackClip == null)
+                throw Invalid("attackAnimationStartMode — 지정 Kind 모드는 주 공격 클립(attackClip)이 있어야 합니다");
             if (attackClip == null && shots != null && shots.Length > 0)
                 throw Invalid("발사 목록(shots)은 주 공격 클립(attackClip)이 있어야 합니다");
             if (attackClip == null && hitClip == null && !HasAny(attackCompanionClips) && !HasAny(hitCompanionClips))
@@ -43,7 +62,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                     throw Invalid($"{nameof(hitDelay)} — {CombatClipAttackData.DelayRule}");
                 try
                 {
-                    attack = new CombatClipAttackData(ReadClip(attackClip, attackCompanionClips, nameof(attackClip)), hitDelay, ReadShots());
+                    attack = new CombatClipAttackData(ReadClip(attackClip, attackCompanionClips, nameof(attackClip)), hitDelay, ReadShots(), animationStart, attackSpeed);
                 }
                 catch (ArgumentException error)
                 {

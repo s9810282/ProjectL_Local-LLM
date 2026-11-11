@@ -6,7 +6,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
         None = 0,
         UnitDetails = 1,
         ItemDetails = 2,
-        EnhancementDetails = 3,
+        // 3은 삭제된 옛 강화 상품 문구 번호로 비워 둡니다.
         RecoveryProjected = 4,
         TraitGrowthHeader = 5,
         TraitAcquireLabel = 6,
@@ -18,6 +18,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
         TrainingUnitTraits = 12,
         TrainingUnitNoTrait = 13,
         TrainingTraitPrompt = 14,
-        RecoveryMaxHealthProjected = 15
+        RecoveryMaxHealthProjected = 15,
+        TrainingEffectEnabled = 16,
+        TrainingEffectDisabled = 17
     }
 }

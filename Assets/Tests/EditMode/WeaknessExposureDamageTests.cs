@@ -55,7 +55,7 @@ namespace ProjectL.Tests.Core
             var characters = input.Characters.ToDictionary(c => c.EntityId);
             characters[target.EntityId] = target;
             var events = new List<CombatEvent>();
-            var damage = new CombatDamageApplication(new[] { new ItemDefinition(2, new RoketItemSpec(20, 50)) }, 0, characters, events, input);
+            var damage = new CombatDamageApplication(new[] { new ItemDefinition(2, new RoketItemSpec(20, 50)) }, characters, events, input);
             var outcome = damage.Apply(target.EntityId, CombatDamageKind.OrdinaryAttack, new CombatDamageOrigin(CellCoord.Zero, input.ActorId, 1), 100);
             Assert.That(outcome.ActualHealthLoss, Is.EqualTo(15));
             Assert.That(outcome.After.Health.CurrentHealth, Is.EqualTo(585));

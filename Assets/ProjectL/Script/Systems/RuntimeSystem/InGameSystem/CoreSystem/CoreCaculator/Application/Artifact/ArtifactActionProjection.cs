@@ -27,6 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (consumed.Count == 0)
                 return new SoulActionChanges(new CharacterChanges(Array.Empty<CharacterStateChange>(),
                     Array.Empty<SoulCountChange>()), field, consumed);
+            final = RampageApplication.ReconcileChange(input.Character, final);
             MainCharacterPersistentChange main = null;
             if (input.Main != null)
             {

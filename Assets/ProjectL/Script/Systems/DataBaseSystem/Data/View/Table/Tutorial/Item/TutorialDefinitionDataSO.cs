@@ -17,8 +17,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial.Item
         [SerializeField] private string displayName;
         [Tooltip("이 맵(장)에서 처음 들어가는 전투에 튜토리얼을 실행합니다(설계 §15.12). 1장 = 1.")]
         [SerializeField, Min(1)] private int targetMapKey = 1;
-        [Tooltip("설명 하나가 표시된 뒤 자동으로 넘어가기까지의 시간(초)입니다. 창이 비활성인 동안은 세지 않습니다.")]
-        [SerializeField] private float autoAdvanceSeconds = 5f;
         [Tooltip("설명 중 보일 대상 밖을 덮는 색입니다. 검정색, 투명도 5%(불투명도 95%, 알파 0.95)가 기준입니다.")]
         [SerializeField] private Color overlayColor = new(0f, 0f, 0f, 0.95f);
         [SerializeField] private List<TutorialStepData> steps = new();
@@ -26,7 +24,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial.Item
         public int TutorialKey => tutorialKey;
         public string DisplayName => displayName ?? string.Empty;
         public int TargetMapKey => targetMapKey;
-        public float AutoAdvanceSeconds => autoAdvanceSeconds;
         public Color OverlayColor => overlayColor;
         public IReadOnlyList<TutorialStepData> Steps => steps ?? (IReadOnlyList<TutorialStepData>)Array.Empty<TutorialStepData>();
 
@@ -53,8 +50,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial.Item
                 throw new InvalidOperationException($"[TutorialDefinitionData] {at}: 이름이 비어 있습니다.");
             if (targetMapKey < 1)
                 throw new InvalidOperationException($"[TutorialDefinitionData] {at}: 대상 맵 키는 1 이상이어야 합니다. Value: {targetMapKey}");
-            if (!(autoAdvanceSeconds > 0f) || float.IsInfinity(autoAdvanceSeconds))
-                throw new InvalidOperationException($"[TutorialDefinitionData] {at}: 자동 진행 시간은 0보다 큰 유한 값이어야 합니다. Value: {autoAdvanceSeconds}");
             if (!IsUnit(overlayColor.r) || !IsUnit(overlayColor.g) || !IsUnit(overlayColor.b) || !IsUnit(overlayColor.a))
                 throw new InvalidOperationException($"[TutorialDefinitionData] {at}: 덮개 색의 각 값은 0~1이어야 합니다. Value: {overlayColor}");
             if (Steps.Count == 0)

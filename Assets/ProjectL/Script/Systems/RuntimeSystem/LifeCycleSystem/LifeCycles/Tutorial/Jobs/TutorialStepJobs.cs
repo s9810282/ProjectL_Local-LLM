@@ -42,7 +42,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Job
 
     /// <summary>
     /// 다음 대기로 넘어갑니다(설계 §8 WaitReason 표). Starting은 첫 단계에 들어가고,
-    /// 표시가 끝난 설명은 확인·만료를, 표시가 끝난 실습은 통과 조건을 기다리며, 닫기가 끝난 설명은 다음 단계에 들어갑니다.
+    /// 표시가 끝난 설명은 사용자 확인을, 표시가 끝난 실습은 통과 조건을 기다리며, 닫기가 끝난 설명은 다음 단계에 들어갑니다.
     /// </summary>
     internal sealed class TutorialAdvanceJob : TutorialSessionJob
     {
@@ -68,8 +68,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Job
             switch (completed)
             {
                 case TutorialViewPresentationKind.Explanation when session.StepKind == TutorialStepKind.Explanation:
-                    Sources.Store.InstallSession(TutorialSessionChanges.Wait(session, TutorialWaitReason.ContinueOrTimeout));
-                    Sources.Execution.StartTimer(session.SessionId, session.StepRevision, session.TutorialKey);
+                    Sources.Store.InstallSession(TutorialSessionChanges.Wait(session, TutorialWaitReason.Continue));
                     break;
                 case TutorialViewPresentationKind.Transition when session.StepKind == TutorialStepKind.Explanation:
                     TutorialProgression.EnterNextStep(Sources, session);
@@ -78,28 +77,6 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Job
                     Sources.Store.InstallSession(TutorialSessionChanges.Wait(session, TutorialWaitReason.PracticeGoal));
                     break;
             }
-        }
-    }
-
-    /// <summary>
-    /// 자동 진행 시간이 다 된 설명을 닫기 시작합니다(설계 §6.1·§15.4). 사용자 확인과 같은 전환이며 확인 명령으로 꾸미지 않습니다.
-    /// 확인이 먼저 받아들여졌으면 이미 전환 중이므로 바꾸지 않습니다.
-    /// </summary>
-    internal sealed class TutorialExpireJob : TutorialSessionJob
-    {
-        internal TutorialExpireJob(TutorialPlanSources sources, int sessionId, int stepRevision, int priority)
-            : base(sources, sessionId, stepRevision, priority)
-        {
-        }
-
-        protected override void Run(TutorialSessionSnapshot session)
-        {
-            if (!session.CanContinue || !Sources.Execution.IsTimerExpired(session.SessionId, session.StepRevision))
-                return;
-
-            TutorialSessionSnapshot closing = TutorialSessionChanges.Wait(session, TutorialWaitReason.Presentation);
-            Sources.Store.InstallSession(closing);
-            TutorialProgression.Present(Sources, closing, TutorialViewPresentationKind.Transition);
         }
     }
 

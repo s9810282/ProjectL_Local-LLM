@@ -18,36 +18,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public static WallGeometry Build(int width, int height, MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, WallBlockingSpec settings)
         {
+            WallGeometry geometry = null;
+            foreach (var _ in BuildSteps(width, height, environment, bindings, settings, value => geometry = value)) { }
+            return geometry;
+        }
+
+        internal static IEnumerable<string> BuildSteps(int width, int height, MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, WallBlockingSpec settings, Action<WallGeometry> completed)
+        {
             if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
             if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
             if (environment == null) throw new ArgumentNullException(nameof(environment));
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            var walls = environment.Tiles.OfType<StaticTerrainFact>()
-                .Where(tile => tile.Kind == StaticTerrainKind.Wall).OrderBy(tile => tile.Id).ToArray();
-            var byCell = ValidateWalls(width, height, walls, bindings);
-            var remaining = new HashSet<CellCoord>(byCell.Keys);
-            var runs = new List<WallRun>();
-            var runByCell = new Dictionary<CellCoord, WallRun>();
-            foreach (var wall in walls)
+            var walls = new SortedDictionary<long, StaticTerrainFact>();
+            foreach (var tile in environment.Tiles)
             {
-                if (!remaining.Remove(wall.Cell)) continue;
-                var component = CollectComponent(wall.Cell, byCell, remaining);
-                var run = CreateRun(component, settings);
-                runs.Add(run);
-                foreach (var cell in run.Cells) runByCell.Add(cell, run);
+                if (tile is StaticTerrainFact wall && wall.Kind == StaticTerrainKind.Wall) walls.Add(wall.Id, wall);
+                yield return "WallGeometrySource";
             }
-            RejectDiagonalContact(walls, byCell, runByCell);
-            return new WallGeometry(runs);
-        }
-
-        private static Dictionary<CellCoord, StaticTerrainFact> ValidateWalls(int width, int height,
-            IEnumerable<StaticTerrainFact> walls, EnvironmentSemanticBindings bindings)
-        {
-            var terrainIds = new HashSet<long>(bindings.TerrainSourceIds);
+            var terrainIds = new HashSet<long>();
+            foreach (var id in bindings.TerrainSourceIds)
+            {
+                terrainIds.Add(id);
+                yield return "WallGeometryBinding";
+            }
             var byCell = new Dictionary<CellCoord, StaticTerrainFact>();
-            foreach (var wall in walls)
+            var remaining = new HashSet<CellCoord>();
+            foreach (var wall in walls.Values)
             {
                 if (!wall.Active || !wall.KnownTo.Contains(Owner.Player) || !wall.KnownTo.Contains(Owner.Enemy))
                     throw InvalidContent("벽은 활성 상태이며 양측에 공개되어야 합니다.", new[] { wall });
@@ -58,46 +57,75 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 if (byCell.TryGetValue(wall.Cell, out var existing))
                     throw InvalidContent("같은 셀에 벽 원본을 중복 배치할 수 없습니다.", new[] { existing, wall });
                 byCell.Add(wall.Cell, wall);
+                remaining.Add(wall.Cell);
+                yield return "WallGeometryValidate";
             }
-            return byCell;
-        }
-
-        private static List<StaticTerrainFact> CollectComponent(CellCoord first,
-            IReadOnlyDictionary<CellCoord, StaticTerrainFact> byCell, HashSet<CellCoord> remaining)
-        {
-            var component = new List<StaticTerrainFact>();
-            var pending = new Queue<CellCoord>();
-            pending.Enqueue(first);
-            while (pending.Count != 0)
+            var runs = new List<WallRun>();
+            var runByCell = new Dictionary<CellCoord, WallRun>();
+            foreach (var wall in walls.Values)
             {
-                var cell = pending.Dequeue();
-                component.Add(byCell[cell]);
-                foreach (var offset in CardinalOffsets)
+                yield return "WallGeometryComponent";
+                if (!remaining.Remove(wall.Cell)) continue;
+                var occupied = new HashSet<CellCoord>();
+                var cells = new SortedSet<(int Y, int X)>();
+                var ids = new List<long>();
+                int minX = wall.Cell.X, maxX = minX, minY = wall.Cell.Y, maxY = minY;
+                var pending = new Queue<CellCoord>();
+                pending.Enqueue(wall.Cell);
+                while (pending.Count != 0)
                 {
-                    var neighbor = new CellCoord(checked(cell.X + offset.X), checked(cell.Y + offset.Y));
-                    if (remaining.Remove(neighbor)) pending.Enqueue(neighbor);
+                    var cell = pending.Dequeue();
+                    occupied.Add(cell);
+                    cells.Add((cell.Y, cell.X));
+                    ids.Add(byCell[cell].Id);
+                    minX = Math.Min(minX, cell.X);
+                    maxX = Math.Max(maxX, cell.X);
+                    minY = Math.Min(minY, cell.Y);
+                    maxY = Math.Max(maxY, cell.Y);
+                    foreach (var offset in CardinalOffsets)
+                    {
+                        var neighbor = new CellCoord(checked(cell.X + offset.X), checked(cell.Y + offset.Y));
+                        if (remaining.Remove(neighbor)) pending.Enqueue(neighbor);
+                    }
+                    yield return "WallGeometryCell";
+                }
+                const long scale = WallBlockingSpec.TicksPerTile;
+                const long halfCell = scale / 2;
+                long xMin = checked(minX * scale - halfCell), xMax = checked(maxX * scale + halfCell);
+                long yMin = checked(minY * scale - halfCell), yMax = checked(maxY * scale + halfCell);
+                var ordered = new List<CellCoord>();
+                var parts = new List<WallConvexPart>();
+                bool straight = minX == maxX || minY == maxY;
+                foreach (var item in cells)
+                {
+                    var cell = new CellCoord(item.X, item.Y);
+                    ordered.Add(cell);
+                    if (!straight) parts.Add(CreateCellPart(cell, occupied, settings.CornerCutTicks));
+                    yield return "WallGeometryPart";
+                }
+                var run = straight
+                    ? new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, ordered)
+                    : new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, ordered, parts);
+                runs.Add(run);
+                yield return "WallGeometryRun";
+                foreach (var cell in run.Cells)
+                {
+                    runByCell.Add(cell, run);
+                    yield return "WallGeometryIndex";
                 }
             }
-            return component;
-        }
-
-        private static WallRun CreateRun(IReadOnlyList<StaticTerrainFact> component, WallBlockingSpec settings)
-        {
-            int minX = component.Min(wall => wall.Cell.X), maxX = component.Max(wall => wall.Cell.X);
-            int minY = component.Min(wall => wall.Cell.Y), maxY = component.Max(wall => wall.Cell.Y);
-            const long scale = WallBlockingSpec.TicksPerTile;
-            const long halfCell = scale / 2;
-            long xMin = checked(minX * scale - halfCell), xMax = checked(maxX * scale + halfCell);
-            long yMin = checked(minY * scale - halfCell), yMax = checked(maxY * scale + halfCell);
-            var cells = component.Select(wall => wall.Cell).OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray();
-            var ids = component.Select(wall => wall.Id);
-            // 직선은 기존 단일 형상과 모서리 판정을 그대로 유지한다.
-            if (minX == maxX || minY == maxY)
-                return new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, cells);
-
-            var occupied = new HashSet<CellCoord>(cells);
-            var parts = cells.Select(cell => CreateCellPart(cell, occupied, settings.CornerCutTicks)).ToArray();
-            return new WallRun(xMin, xMax, yMin, yMax, settings.CornerCutTicks, ids, cells, parts);
+            foreach (var wall in walls.Values)
+            {
+                foreach (var offset in DiagonalOffsets)
+                {
+                    var neighbor = new CellCoord(checked(wall.Cell.X + offset.X), checked(wall.Cell.Y + offset.Y));
+                    if (byCell.TryGetValue(neighbor, out var other) && runByCell[wall.Cell] != runByCell[neighbor])
+                        throw InvalidContent("서로 다른 벽 연결 성분은 대각선으로 접할 수 없습니다.", new[] { wall, other });
+                }
+                yield return "WallGeometryDiagonal";
+            }
+            completed(new WallGeometry(runs, runByCell));
+            yield return "WallGeometryComplete";
         }
 
         private static WallConvexPart CreateCellPart(CellCoord cell, HashSet<CellCoord> occupied, int cut)
@@ -123,17 +151,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 checked(cell.Y * scale - halfCell), checked(cell.Y * scale + halfCell), cut, exterior, corners);
         }
 
-        private static void RejectDiagonalContact(IEnumerable<StaticTerrainFact> walls,
-            IReadOnlyDictionary<CellCoord, StaticTerrainFact> byCell, IReadOnlyDictionary<CellCoord, WallRun> runByCell)
-        {
-            foreach (var wall in walls)
-            foreach (var offset in DiagonalOffsets)
-            {
-                var neighbor = new CellCoord(checked(wall.Cell.X + offset.X), checked(wall.Cell.Y + offset.Y));
-                if (byCell.TryGetValue(neighbor, out var other) && runByCell[wall.Cell] != runByCell[neighbor])
-                    throw InvalidContent("서로 다른 벽 연결 성분은 대각선으로 접할 수 없습니다.", new[] { wall, other });
-            }
-        }
 
         private static ArgumentException InvalidContent(string reason, IEnumerable<StaticTerrainFact> sources)
         {

@@ -14,16 +14,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     /// </remarks>
     internal sealed class CombatClipData
     {
+        /// <summary>검사된 불변 시각을 보관합니다. 재생 커서는 이 시각 객체를 공유합니다. 시각 규칙은 <see cref="CombatClipTimings"/>가 만들 때 봅니다.</summary>
         /// <param name="companions">같이 재생할 부속 클립입니다. 없으면 null 또는 빈 목록입니다. 생성 때 복사합니다.</param>
-        /// <exception cref="ArgumentOutOfRangeException">세 시각이 <see cref="FindTimeError"/>의 규칙에 맞지 않을 때입니다.</exception>
         /// <exception cref="ArgumentException">부속 목록이 <see cref="FindCompanionError"/>의 규칙에 맞지 않을 때입니다.</exception>
-        internal CombatClipData(AnimationClip clip, float startTime, float eventTime, float endTime,
-            IReadOnlyList<AnimationClip> companions = null)
-            : this(clip, new CombatClipTimings(startTime, eventTime, endTime), companions)
-        {
-        }
-
-        /// <summary>검사된 불변 시각을 보관합니다. 재생 커서는 이 시각 객체를 공유합니다.</summary>
         internal CombatClipData(AnimationClip clip, CombatClipTimings timings, IReadOnlyList<AnimationClip> companions = null)
         {
             if (clip == null) throw new ArgumentNullException(nameof(clip));
@@ -51,14 +44,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 
         /// <summary>끝 이벤트(<see cref="CombatAnimationEvents.ClipEnd"/>) 시각(초)이며 재생 길이입니다.</summary>
         internal float EndTime => Timings.EndTime;
-
-        /// <summary>
-        /// 기존 세 시각 검사 입구입니다. 규칙은 <see cref="CombatClipTimings.FindTimeError"/> 하나를 사용합니다.
-        /// 맞으면 null, 아니면 이유입니다. 클립 길이는 <see cref="CombatClipEvents.ReadTimings"/>가 따로 봅니다.
-        /// 운영 생성자와 커서는 검사된 <see cref="CombatClipTimings"/>를 공유하고 이 입구는 기존 호출에 남깁니다.
-        /// </summary>
-        internal static string FindTimeError(float startTime, float eventTime, float endTime) =>
-            CombatClipTimings.FindTimeError(startTime, eventTime, endTime);
 
         /// <summary>
         /// 부속 목록 모양 규칙의 원본입니다(설계 6차 AC18, 계획 P14). 빈 칸이 없고, 같은 클립이 두 번 없고, 주 클립과 같은 클립이 없어야 합니다.

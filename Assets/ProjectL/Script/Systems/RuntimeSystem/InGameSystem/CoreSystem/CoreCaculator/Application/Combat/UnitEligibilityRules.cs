@@ -15,6 +15,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 owner == Owner.Player && definition.OwnerEligibility == UnitOwnerEligibility.EnemyOnly ||
                 owner == Owner.Enemy && definition.OwnerEligibility == UnitOwnerEligibility.PlayerOnly)
                 throw new InvalidOperationException("캐릭터 정의의 역할 또는 소유 권한이 맞지 않습니다.");
+            if (owner == Owner.Player)
+                foreach (var trait in definition.TraitDefinitions.Span)
+                    if (TraitOwnerPolicy.IsEnemyOnly(trait.TraitKey))
+                        throw new InvalidOperationException($"플레이어 캐릭터는 적 전용 특성을 가질 수 없습니다: {definition.Key}, {trait.TraitKey}.");
         }
     }
 }

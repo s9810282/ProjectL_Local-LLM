@@ -16,4 +16,4 @@ MonoBehaviour:
     effectType: 6
     effectPoolInitializeCount: 1
     effectPoolMaxCount: 9
-    prefab: {fileID: 983593035897304150, guid: 6ccdf874d7c2a03478ffdd52267d5669, type: 3}
+    prefab: {fileID: 2858040955458476890, guid: c32131902fbaeea46b3ad2277f581f75, type: 3}

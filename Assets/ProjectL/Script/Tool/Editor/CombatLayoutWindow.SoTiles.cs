@@ -167,10 +167,11 @@ namespace ProjectL.Tool.Editor
             List<CombatStageSoTileKind> kinds = SoTileKinds(tiles.tileSetGuid);
             if (SoInt("가로 칸 수", tiles.columns, out int columns)) ResizeSoTiles(tiles, columns, tiles.rows, kinds);
             if (SoInt("세로 칸 수", tiles.rows, out int rows)) ResizeSoTiles(tiles, tiles.columns, rows, kinds);
-            if (SoVector2("타일 크기", tiles.tileSize, out Vector2 size)) SoChange("타일 크기 변경", () => tiles.tileSize = size);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.Vector2Field("타일 제작 규격 (공통)", CombatMapAuthoringMetrics.TileSize);
             if (SoVector3("타일 위치(MapTileRoot)", tiles.offset, out Vector3 offset)) SoChange("타일 위치 변경", () => tiles.offset = offset);
             if (SoVector2Int("기준 타일", tiles.anchorTile, out Vector2Int anchor)) SoChange("기준 타일 변경", () => tiles.anchorTile = anchor);
-            SoNote("가로·세로는 배경 구멍의 최대 크기(필드 크기와 따로)이고, 타일 크기는 0보다 큰 소수도 지원합니다. 칸 높이·바닥 교체 대상은 칸 중심 아래 타일입니다. " +
+            SoNote("가로·세로는 배경 구멍의 최대 크기(필드 크기와 따로)입니다. 공통 제작 규격의 타일과 배경을 운영 필드 간격에 같은 배율로 맞춥니다. 칸 높이·바닥 교체 대상은 칸 중심 아래 타일입니다. " +
                    "기준 타일은 게임 (0,0) 칸이 놓일 타일 칸이고, 화면 기준 좌하단 타일이 (0,0)입니다(배경 회전과 무관). 칸마다 종류는 '바닥 타일' 작업 영역에서 칠합니다.");
             DrawSoTileKinds(tiles, kinds);
             DrawSoTileFitMessages(SoTileFit(view, out _));
@@ -275,6 +276,8 @@ namespace ProjectL.Tool.Editor
                 CancelSoWorkspaceInput(); soTileMode = mode;
                 Repaint(); GUIUtility.ExitGUI();
             }
+            EditorGUILayout.LabelField(SoTileToolHint(), EditorStyles.wordWrappedMiniLabel);
+            DrawSoHelpLink("바닥 타일 사용법", SoHelpTopic.Tiles);
             if (soTileMode == SoTilePaint)
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -308,6 +311,20 @@ namespace ProjectL.Tool.Editor
                 using (new EditorGUI.DisabledScope(!hasClip || soTileSelection.Count == 0))
                     if (GUILayout.Button(hasClip ? $"붙여넣기 (Ctrl+V) · {soTileClip.cells.Count}칸" : "붙여넣기 (Ctrl+V)", GUILayout.Width(170))) PasteSoTiles(fit, tiles);
                 GUILayout.FlexibleSpace();
+            }
+            EditorGUILayout.LabelField("바닥 타일의 선택 모드에서는 타일 종류·회전만 복사합니다. 배치 복사와 클립보드가 분리되며 기믹 설정은 담지 않습니다. 검사는 필요 없습니다. 숫자·글자 입력 중에는 격자를 눌러 포커스를 옮긴 뒤 Ctrl+C/V를 사용하세요.", EditorStyles.wordWrappedMiniLabel);
+            if (soTileSelection.Count == 0) EditorGUILayout.LabelField("선택한 타일이 없습니다. 격자에서 복사할 타일 또는 붙일 목적지를 고르세요.", EditorStyles.wordWrappedMiniLabel);
+            if (soTileClip.cells.Count == 0) EditorGUILayout.LabelField("붙여넣을 타일이 없습니다. 선택한 타일을 먼저 복사하세요.", EditorStyles.wordWrappedMiniLabel);
+        }
+
+        // 도구 줄과 빠른 사용법이 같은 현재 타일 모드 안내를 사용합니다.
+        private string SoTileToolHint()
+        {
+            switch (soTileMode)
+            {
+                case SoTilePaint: return "칠하기: 종류를 고른 뒤 클릭·끌기 · Shift+끌기: 사각형 · 종류·회전 복사는 선택 모드에서";
+                case SoTileRotate: return "선택: 클릭·끌기 / Ctrl로 추가 / Shift+끌기로 사각형 · R/Shift+R: 회전 · Ctrl+C/V: 타일 복사·붙여넣기 · Ctrl+A: 전체 · Esc: 취소";
+                default: return "기준 타일: 클릭한 타일에 게임 (0,0) 칸이 놓이도록 지정 · 타일 복사는 선택 모드에서";
             }
         }
 
@@ -1017,8 +1034,16 @@ namespace ProjectL.Tool.Editor
             CombatStageSoVisuals visuals = SoVisualsOrNull(out error);
             if (visuals == null) return null;
             CombatStageSoFieldView fieldView = visuals.FieldView;
-            return CombatStageSoTileFit.Of(view.tiles, !fieldView.Approximate, view.rotationOffset, SoBackdropScale(view),
-                soField.Columns, soField.Rows, fieldView.CellWidth, fieldView.CellLength);
+            try
+            {
+                return CombatStageSoTileFit.Of(view.tiles, !fieldView.Approximate, view.rotationOffset, SoBackdropScale(view),
+                    soField.Columns, soField.Rows, fieldView.CellWidth, fieldView.CellLength);
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return null;
+            }
         }
 
         // 외형 표(필드 보기 포함)입니다. 3D와 같은 캐시를 쓰고 '목록 새로고침'이 비웁니다(설계 P-UT17).
@@ -1031,10 +1056,16 @@ namespace ProjectL.Tool.Editor
             return soVisuals;
         }
 
-        // 게임의 배경 배율입니다: 맵 프리팹 배율 × 배율 보정(StageViewPropPresenter.Show). 타일 방식은 맵 프리팹(gameObject)을 씁니다.
-        private static Vector3 SoBackdropScale(CombatStageSoView view)
+        // 타일 방식은 캐시된 운영 필드 보기 값을 공통 배율 계산에 전달합니다.
+        private Vector3 SoBackdropScale(CombatStageSoView view)
         {
             var prefab = CombatStageSoAssets.Load(view.gameObjectGuid) as GameObject;
+            if (CombatStageSoBackground.UsesTiles(SoBackgroundMode(view)))
+            {
+                CombatStageSoVisuals visuals = SoVisualsOrNull(out string problem);
+                if (visuals == null) throw new InvalidOperationException(problem);
+                return CombatMapScaleEditor.Resolve(prefab, visuals.FieldView, view.tiles);
+            }
             return prefab != null ? Vector3.Scale(prefab.transform.localScale, view.scaleOffset) : view.scaleOffset;
         }
 

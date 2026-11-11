@@ -14,7 +14,7 @@ namespace ProjectL.Systems
     /// <summary>
     /// 실제 DatabaseCatalogSO와 FrameworkRuntime을 사용해 렌더 기능을 확인하는 씬용 Runner입니다.
     /// </summary>
-    public sealed partial class TestRuner : MonoBehaviour
+    public sealed class TestRuner : MonoBehaviour
     {
         [SerializeField] private DatabaseCatalogSO databaseCatalog;
         [SerializeField] private bool areaOutlineTestsEnabled = true;
@@ -50,7 +50,6 @@ namespace ProjectL.Systems
             try
             {
                 runtime.Tick(Time.deltaTime);
-                UpdateScreenTransitionTests();
 
                 if (updateEveryFrame)
                     ApplyOutline();
@@ -102,7 +101,6 @@ namespace ProjectL.Systems
                 }
 
                 isRunning = true;
-                InitializeScreenTransitionTests(global);
                 ApplyOutline();
                 Debug.Log("[TestRuner] Framework tests ready.", this);
             }
@@ -160,7 +158,6 @@ namespace ProjectL.Systems
         public void StopRunner()
         {
             isRunning = false;
-            StopScreenTransitionTests();
 
             areaOutlineHandle?.Dispose();
             areaOutlineHandle = null;

@@ -1,5 +1,6 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 {
@@ -30,7 +31,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             CombatCompletionDisplay completionDisplay = CombatCompletionDisplay.None,
             bool isAbandonRequested = false,
             RunOutcome runOutcome = RunOutcome.InProgress,
-            bool isEntryPresentationPending = false)
+            bool isEntryPresentationPending = false,
+            AdvancePreparationState preparation = AdvancePreparationState.NotRequired)
         {
             HasBattle = hasBattle;
             BattleInstanceId = battleInstanceId;
@@ -49,9 +51,13 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             IsAbandonRequested = isAbandonRequested;
             RunOutcome = runOutcome;
             IsEntryPresentationPending = isEntryPresentationPending;
+            Preparation = preparation;
         }
 
         public bool HasBattle { get; }
+
+        /// <summary>Core 자동 진행 서비스가 현재 원본에 대해 계산한 준비 상태다. Buffer 원본으로 저장하지 않는다.</summary>
+        public AdvancePreparationState Preparation { get; }
 
         public long BattleInstanceId { get; }
 

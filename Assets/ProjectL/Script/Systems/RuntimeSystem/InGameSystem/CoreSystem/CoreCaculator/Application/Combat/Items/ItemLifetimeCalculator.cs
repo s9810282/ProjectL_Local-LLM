@@ -6,9 +6,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 {
     public static class ItemLifetimeCalculator
     {
-        public static CharacterCombatFacts ClearRoundItems(CharacterCombatFacts source) =>
-            ClearRoundItems(source, null, ItemEventReason.RoundEnded);
-
         internal static CharacterCombatFacts ClearRoundItems(CharacterCombatFacts source,
             List<CombatEvent> events, ItemEventReason reason)
         {

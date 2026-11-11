@@ -12,7 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private Transform _root;
 
         /// <summary>프리팹과 표시 보정은 DB 생성 때 검사가 끝난 맵 표시 설정 값입니다(검사 후속 정리 R-f).</summary>
-        internal void ShowAt(GameObject prefab, Transform nodeRoot, Vector3 offset, float yaw, float scale)
+        internal void ShowAt(GameObject prefab, Transform nodeRoot, Vector3 offset, float yaw, float scale,
+            Vector3 landingOffset)
         {
             Transform anchor = RequireAnchor(nodeRoot);
             if (_root == null)
@@ -42,9 +43,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             else
             {
                 _root.SetParent(anchor, true);
-                _root.localPosition = Vector3.zero;
                 _root.localScale = Vector3.one;
             }
+            _root.localPosition = landingOffset;
             _root.gameObject.SetActive(true);
         }
 
@@ -68,12 +69,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             return _root;
         }
 
-        internal void CompleteMove(Transform destination)
+        internal void CompleteMove(Transform destination, Vector3 landingOffset)
         {
             if (_root == null)
                 throw new InvalidOperationException("[StageCurrentMarkerView] 이동 중인 마커가 없습니다.");
             _root.SetParent(RequireAnchor(destination), true);
-            _root.localPosition = Vector3.zero;
+            _root.localPosition = landingOffset;
             _root.localScale = Vector3.one;
         }
 

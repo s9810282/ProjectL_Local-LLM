@@ -32,7 +32,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         internal GameObject Prefab => projectilePrefab;
 
         // 투사체 소리입니다(투사체·피격 소리 설계 PS1·PS3). 무엇을 낼지(프리셋)는 투사체가 주인이고, 언제는 기준 시점(발사 = Cue, 착탄 = Hit) + 지연입니다.
-        // 값 조건의 원본은 공격 값 객체 생성자입니다. 재생은 큐 붙이기가 하고, 효과음 슬롯은 소리 표(CombatEventSounds)에서 연결 대기입니다.
+        // 값 조건의 원본은 공격 값 객체 생성자입니다. 재생은 큐 붙이기가 합니다. 착탄은 Unit 플레이어의 BulletFall 슬롯에 연결돼 있고, 비행 슬롯만 소리 표(CombatEventSounds)에서 연결 대기입니다.
         internal int ImpactSoundPreset => impactSoundPreset;
         internal float ImpactSoundDelay => impactSoundDelay;
         internal int FlightSoundPreset => flightSoundPreset;

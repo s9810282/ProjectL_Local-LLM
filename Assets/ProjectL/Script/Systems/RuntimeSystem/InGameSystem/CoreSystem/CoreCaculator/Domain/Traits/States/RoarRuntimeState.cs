@@ -3,7 +3,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.States
 {
-    /// <summary>포효의 밤 피격 횟수다. 낮에도 보존하고 포효가 발동할 때 0으로 되돌린다(G6-2).</summary>
+    /// <summary>포효 카운터다(밤 피격·진영 턴 종료로 쌓임, 이름은 옛 "피격 횟수" 그대로). 낮에도 보존하고 포효가 발동할 때 0으로 되돌린다(G6-2).</summary>
     public sealed class RoarRuntimeState : TraitRuntimeState
     {
         public int HitCount { get; private set; }

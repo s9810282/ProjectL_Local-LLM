@@ -232,7 +232,7 @@ namespace ProjectL.Tests.Core
                         _targetCells, Owner.Player) }
                     : Array.Empty<StructureCombatFacts>();
                 var environment = _maze ? EnemyMovementPathTests.Maze() : null;
-                var state = new CombatCommandState(Size, Size, CombatFlowPhase.Automatic, true,
+                var state = new CombatCommandState(Size, Size, CombatFlowPhase.Automatic,
                     structures, Array.Empty<ThornFieldCellSnapshot>(),
                     new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                         controllerTurnSequence: 2, completedPlayerTurnCount: 1), environment);

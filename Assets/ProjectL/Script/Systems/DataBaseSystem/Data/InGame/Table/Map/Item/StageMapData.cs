@@ -30,7 +30,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
         /// 그 맵의 일반 스테이지인지는 그래프를 만들 때(ChapterGraphSpec) 검사합니다.
         /// </summary>
         public int FirstStageKey { get; }
+        /// <summary>한 갈래인 노드가 바로 옆 다음 층 노드에 한 갈래 더 이어질 확률(0~1)입니다. 규칙은 ChapterGraphSpec 문서를 따릅니다.</summary>
         public float AdditionalConnectionChance { get; }
+        /// <summary>맵 전체에 둘 갈래 노드의 최소 수입니다. 0이면 보장하지 않습니다.</summary>
+        public int MinimumBranchCount { get; }
         public StageConnectionAlgorithm ConnectionAlgorithm { get; }
         public float NearestConnectionWeight { get; }
         public float OtherConnectionWeight { get; }
@@ -51,6 +54,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
             bool singleFirstLayer,
             int firstStageKey,
             float additionalConnectionChance,
+            int minimumBranchCount,
             StageConnectionAlgorithm connectionAlgorithm,
             float nearestConnectionWeight,
             float otherConnectionWeight,
@@ -72,6 +76,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
             SingleFirstLayer = singleFirstLayer;
             FirstStageKey = firstStageKey;
             AdditionalConnectionChance = additionalConnectionChance;
+            MinimumBranchCount = minimumBranchCount;
             ConnectionAlgorithm = connectionAlgorithm;
             NearestConnectionWeight = nearestConnectionWeight;
             OtherConnectionWeight = otherConnectionWeight;
@@ -96,7 +101,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
             int seed,
             bool randomizeSeedEachRun,
             int nextChapterKey)
-            : this(mapKey, depthCount, widthMax, 1, false, 0, additionalConnectionChance, connectionAlgorithm, nearestConnectionWeight,
+            : this(mapKey, depthCount, widthMax, 1, false, 0, additionalConnectionChance, 0, connectionAlgorithm, nearestConnectionWeight,
                 otherConnectionWeight, seed, randomizeSeedEachRun, nextChapterKey, Array.Empty<ChapterStageDistributionRule>())
         {
         }
@@ -116,6 +121,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
                 throw new InvalidOperationException($"MapKey {MapKey}는 중간 층이 없어 첫 층 스테이지 {FirstStageKey}를 놓을 수 없습니다.");
             if (float.IsNaN(AdditionalConnectionChance) || AdditionalConnectionChance < 0 || AdditionalConnectionChance > 1)
                 throw new InvalidOperationException("Additional connection chance must be between 0 and 1.");
+            if (MinimumBranchCount < 0)
+                throw new InvalidOperationException($"MapKey {MapKey}의 맵당 최소 갈래 수는 0 이상이어야 합니다: {MinimumBranchCount}.");
             if (!System.Enum.IsDefined(typeof(StageConnectionAlgorithm), ConnectionAlgorithm) ||
                 NearestConnectionWeight <= 0 || OtherConnectionWeight <= 0)
                 throw new InvalidOperationException("Stage connection settings are invalid.");

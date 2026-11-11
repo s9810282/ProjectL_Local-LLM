@@ -29,7 +29,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
             if (hunterAttackBonus < 0) throw new ArgumentOutOfRangeException(nameof(hunterAttackBonus));
-            return checked(AppliedStatusRules.AttackIncrease(character.StatusEffects) + hunterAttackBonus + AccelerationTraitRule.Held(character.Stats));
+            return checked(AppliedStatusRules.AttackIncrease(character.StatusEffects) + hunterAttackBonus +
+                AccelerationTraitRule.Held(character.Stats) + RampageTraitRule.AttackBonus(character));
         }
 
         /// <summary>특성 기여분만 다시 계산하며 기본·영혼·아이템·위치 값은 보존합니다.</summary>

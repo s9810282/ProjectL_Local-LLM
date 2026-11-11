@@ -100,6 +100,8 @@ namespace ProjectL.Tests.Core
                 yield return Row(new CombatCharacterEvent(kind, a, final, tornadoSourceId: kind == CombatEventKind.Relocated ? 1 : (long?)null),
                     kind == CombatEventKind.Moved ? CombatChangeEvidenceKind.OrdinaryMove : kind == CombatEventKind.Returned ? CombatChangeEvidenceKind.Return : CombatChangeEvidenceKind.Effect, new[] { 1 });
             }
+            // 재구성: 맞기 전 사실 → 최대 체력 사실 하나로 남는다(체력·사망 사건 없음).
+            yield return Row(new CombatCharacterEvent(CombatEventKind.Reconstructed, hurt, a), CombatChangeEvidenceKind.Effect, new[] { 1 });
             var spec = new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 1, new[] { CellCoord.Zero }, 10, false, 0);
             var structure = new StructureCombatFacts(new EntityId(5), spec, new HealthStateSnapshot(10, 10), new CellCoord(4, 4), Rotation4.R0, new[] { new CellCoord(4, 4) });
             foreach (var hp in new[] { 5, 0 })
@@ -143,6 +145,10 @@ namespace ProjectL.Tests.Core
             yield return Row(new CombatGimmickEvent(new RailwayGimmickActivationSnapshot(new StageGimmickId(1), new[] { a.Anchor.Value, new CellCoord(7, 7) }, new[] { a.EntityId })),
                 CombatChangeEvidenceKind.Effect, new[] { 1 }, companions: new CombatCharacterEvent(CombatEventKind.Died, a, dead));
             yield return Row(new CombatSummonEvent(new CombatSummonRecord(a.EntityId, new EntityId(7), TraitKey.Necromancy), a), CombatChangeEvidenceKind.Effect, new[] { 1 });
+            var reinforced = CombatCommandTestData.Character(8, EntityKey.Unit_Demon, new CellCoord(4, 3),
+                Owner.Enemy, actionUse: UnitActionUse.Deferred);
+            yield return Row(new CombatReinforcementEvent(new EntityId(7), new NexusReinforcementRecord(reinforced.EntityId, 0),
+                reinforced), CombatChangeEvidenceKind.Effect, new[] { 8 });
             yield return Row(new CombatItemEvent(1, a.EntityId, a.EntityId, ItemEventStage.AfterDamage, ItemEventReason.DuplicateEffect, 0, 1, null, CombatDamageKind.OrdinaryAttack, ItemActivationKind.TemporaryEffect), CombatChangeEvidenceKind.Effect, new[] { 1 });
             yield return Row(new CombatItemEvent(1, a.EntityId, null, ItemEventStage.Equipment, ItemEventReason.Equipped, 0, null, 1), CombatChangeEvidenceKind.Effect, new[] { 1 });
             yield return Row(new CombatItemEvent(1, a.EntityId, null, ItemEventStage.Lifecycle, ItemEventReason.Death, 0, 1, null), CombatChangeEvidenceKind.Effect, new[] { 1 });
@@ -150,7 +156,7 @@ namespace ProjectL.Tests.Core
             var owned = new OwnedCharacterRecord(a.OwnedId.Value, a.CharacterKey, a.OwnershipRole.Value);
             var grown = new OwnedCharacterRecord(a.OwnedId.Value, a.CharacterKey, a.OwnershipRole.Value, 1, 10);
             yield return Row(CombatExperienceEvent.Applied(a.EntityId, new OwnedCharacterChange(owned, grown), 10, 0), CombatChangeEvidenceKind.Effect, new[] { 1 });
-            foreach (var kind in new[] { CombatEventKind.CombatEntered, CombatEventKind.ControllerTurnStarted, CombatEventKind.PlayerTurnEnded, CombatEventKind.EnemyPhaseEnded, CombatEventKind.NightEnded })
+            foreach (var kind in new[] { CombatEventKind.CombatEntered, CombatEventKind.ControllerTurnStarted, CombatEventKind.PlayerTurnEnded, CombatEventKind.EnemyPhaseEnded })
                 yield return Row(new CombatTurnEvent(kind, default, new CombatTurnFacts(StagePhase.Deployment),
                     new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1)), CombatChangeEvidenceKind.Lifecycle, Array.Empty<int>());
             yield return Row(new CombatOutcomeEvent(new StageOutcomeSnapshot(StageOutcome.Victory, StageOutcomeReason.EnemyHeadquartersDestroyed)), CombatChangeEvidenceKind.Lifecycle, Array.Empty<int>());

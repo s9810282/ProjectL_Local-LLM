@@ -1,0 +1,61 @@
+# Phase 7 item 3 rendered Unity validation
+
+Run date 2026-11-08. Checkout `feature/Cheon/Core/NewCombatSytem` at `9d8c9ce456db95e8e0aff766240af47353f18f46` with the existing item 1 and item 2 worktree changes.
+
+## Disposition
+
+Rendered Editor verification ran. Gameplay activation remains blocked. On the matched authored five-enemy opening, immediate Advance produced unit actions and the Utility path ended both enemy sides without publishing a unit action. Cold preparation frames and observed readiness latency exceed the planned targets. The historical N8 allocation remains above the 2 MiB side target. The user deferred further N8 allocation work unless a later issue warrants another look. Keep immediate Advance as the default.
+
+## Setup and comparability
+
+- Unity 6000.0.73f1, interactive Play Mode, Direct3D 11, RTX 3070 Ti Laptop, VSync off and target frame rate unset. The matched authored stage 1124 traces and stage 1122 stress run used a 979 × 496 Game view. Diagnostics with other resolutions are labeled separately.
+- The normal startup path loaded the Boot and Combat scenes with database definitions, chapter 1 and loadout 1. The driver placed the Main character at the stage's legal deployment cell, entered combat and submitted two End Turn inputs through the existing Combat View command buffer. No additional player units were deployed. Cancellation used the same View service entry used by the confirmed abandon flow. Input was scripted at those boundaries. Physical input, the confirmation widget itself, visual signoff, target Player builds and the formal user View acceptance remain pending.
+- The five-enemy captures used authored stage 1124, 13 × 13 map, seed 1, Main at (6,2) with 25 HP. The initial state fingerprint matches exactly in both `flow.tsv` files. Subsequent positions diverge because different actions were published. Stage 1122 used six authored enemies. A seven-enemy chapter 1 boss run adds observational evidence at 1920 × 1080.
+- A process-local Editor-only composition override enabled Utility for named diagnostic runs. The temporary driver and configuration edits were removed after capture. The recorded game did render, and its actual result publication and presentation counters were observed. Custom marker CSVs were exported in Unity from the native captures for per-frame timing and nested JIT attribution.
+
+## Authored battle results
+
+| Case | Enemy side 1 | Enemy side 2 | Presentation and timing |
+|---|---|---|---|
+| 1124 immediate | Four unit actions, all movement | Five unit actions, one attack | `P=S` at both player-input returns. End-to-end observed windows 9.7358 s and 14.0542 s. |
+| 1124 Utility | Zero unit actions, one side end with tornado | Zero unit actions, one side end with tornado | `P=S` at both player-input returns. Windows 6.2820 s and 5.1752 s. |
+| 1122 Utility, six enemies | Zero unit actions, one side end | Zero unit actions, one side end | Both sides returned to player input. Railway activation appeared at the player turn boundary in the second capture. Windows 3.7632 s and 7.7558 s. |
+| Chapter 1 Utility boss, seven enemies | Zero unit actions | Zero unit actions | Three sides returned to input. Haboob and rockfall advanced, with health and trait changes in the second side. No roar or terminal result occurred. |
+
+These windows include command lead-in and result presentation. The number of actual unit actions differs, so the shorter Utility windows cannot establish equivalent-work speedup. The captures establish the publication difference. They do not identify which candidate scores or admission checks caused the absence of Utility unit actions.
+
+## Performance and first attack
+
+Nearest-rank p95 and p99 below are over native main-thread frames containing `Core.Calc.EnemyPreparation`. The four sets contain exactly one preparation scope per active frame. `Ready delay` is elapsed game observation time from the first live frame with a session to its first Ready frame. Each sampled side supplies one completed decision, so this sample cannot estimate a stable population p95. Each observed value exceeds its corresponding normal 150 ms or stress 300 ms target.
+
+| Case | Active frames | Prep p95 / p99 / max (ms) | Frames over 4 ms | Ready delay (ms) | Allocations inside prep scope |
+|---|---:|---:|---:|---:|---:|
+| 1124 Utility, cold side 1 | 104 | 5.2012 / 7.8414 / 8.2066 | 10 | 1,767.41 | 6.5707 MiB |
+| 1124 Utility, side 2 | 42 | 1.0690 / 1.1124 / 1.1124 | 0 | 685.06 | 6.6192 MiB |
+| 1122 Utility, cold side 1 | 101 | 4.9194 / 7.8272 / 7.8784 | 10 | 1,680.23 | 7.1205 MiB |
+| 1122 Utility, side 2 | 42 | 1.1122 / 1.1172 / 1.1172 | 0 | 680.00 | 7.0312 MiB |
+
+The standard cold maximum contains 7.0561 ms of nested `Mono.JIT`. The six-enemy cold maximum contains 6.6517 ms. JIT accounts for most of every preparation frame over 4 ms in those two cold captures. The slowest recorded non-preemptible preparation atom was 8.2056 ms in standard play, with a 0.3341 ms maximum in its second side. G-atom and G-frame remain unmet across cold play. The allocation column sums native main-thread `GC.Alloc` size metadata under preparation, excluding actual execution. These live scenarios are separate from the historical 8-enemy N8 service fixture and should not replace its 5.03 MiB result or its unresolved allocations. Native frame CSVs also retain render markers and Editor timing. They do not establish target-device FPS.
+
+The first published authored 1124 attack occurred on the immediate path in side 2 at game frame 3085, result 15. Its `Core.Calc.EnemyActionExecution` was 12.0912 ms with 9.1625 ms of nested JIT in raw side-2 frame 217. Earlier in the same process the first unit action was a Move, whose execution took 32.7598 ms with 26.1809 ms of nested JIT in raw side-1 frame 121. The authored Utility capture never published an attack. Neither authored trace reproduces the N5 first-use preparation Step at version 1644. The last N5 fixture value remains 28.3714 ms, with the historical native attribution of 29.9697 ms JIT out of 34.6675 ms. The corrected adjacent immediate run also captured its first attack execution at 14.0945 ms, including 10.5780 ms of JIT, in raw side-1 frame 132. The adjacent Utility execution markers are associated with side-end settlement. Target Player cold behavior remains unmeasured.
+
+## Flow validation
+
+| Check | Disposition | Rendered evidence |
+|---|---|---|
+| F1 | Partial. Action coverage and behavior acceptance unmet. | Render frames continued through five-, six- and seven-enemy thinking. Both authored 1124 paths and the larger Utility battles returned to the player after publishing and presenting the side-end result. Immediate unit actions each waited for the previous result. Utility published no unit actions in the matched authored opening or the corrected adjacent attack case, leaving its unit-action presentation sequence unverified. |
+| F2 | Passed in the observed Editor cases. | The four native Utility captures each contain at most one preparation marker per frame. In `1124-stale-input`, three reads at frame 1624 all returned `FrameDeferred` and the slice count stayed at 1. The replacement decision became Ready at 1828 and published at 1830. Normal 1124 published each end two frames after Ready. |
+| F3 | Passed for the observed source change and battle release. | In `1124-stale-input` the diagnostic gold edit 5,000 → 5,001 while preparation was pending left result sequence 5 unchanged. At frame 1625 the old session was absent from the service. The replacement prepared and published result 6, then returned to player input. Abandon also released the active session without a stale unit result. |
+| F4 | Unverified. The rejection and fallback were not reproduced. | The first two hidden-terrain setups collided with an authored tornado-group source ID and were rejected before battle entry. `1124-hidden-grouped-id` reserved the group member IDs, loaded the hidden sandstorm variant and finished the side. Utility selected `EndEnemyPhase` at frame 1990 and did not submit an attack. There is no rejected attempt to evaluate and no F4 pass. |
+| F5 | Mixed. Full acceptance remains open. | While preparing, the View request was accepted at sequence 5. No new combat result appeared, preparation was released, and the Lobby was observed. The first Ready attempt accepted at sequence 5 and released preparation with no attack. The driver's 180-second Play Mode watchdog expired before a Lobby observation, and the owned Editor subsequently exited abnormally after the driver's Edit Mode restore. In `1124-abandon-ready-repeat`, profiling stopped after release and the same request kept sequence 5 unchanged. The Lobby was reached 123.6507 seconds after the request. The earlier preparing case returned in 62.0803 seconds. Both durations include the complete observed return window. Keep the timed-out first Ready attempt in the result set. |
+| F6 | Roar observed. Terminal evidence below. | `boss-roar` armed actor 8 between the player end and enemy controller start. Result 5 contained ControllerTurnStarted, EffectsActivated, TraitStateChanged and Roared, and presentation reached 5 before the enemy-side end. The side returned to player input. The preparation session began at frame 2103 with presentation already at 5. The terminal diagnostic confirmed completion with no preparation retained. |
+| F7 | Hazard and recall order observed. Terminal short circuit observed. | `1124-short-night` used a one-turn diagnostic night and added due railway and rockfall to the authored tornado stage. Result 6 contained EnemyPhaseEnded → TornadoAdvanced → Railway activation → RockfallAdvanced → NightEnded → five Returned events. Presentation reached 6 in Deployment. In `1124-short-night-terminal`, the due railway covered the Main character. Result 6 contained TornadoAdvanced → Railway activation → death events → StageEnded, with no subsequent RockfallAdvanced, NightEnded or Returned. `Finished` reported a completion and no active preparation. Presentation reached result 6 at frame 3275, with result sequence still 6 and preparation absent. |
+| F8 | Passed in the observed no-action sides. | Authored 1124 and the stress captures published one enemy-side end per side, with no repeated empty result. Each reached the following player input. This demonstrates finite progression when the policy chooses no unit action. |
+
+The first adjacent-attack setup placed the Demon at (6,3), occupied by authored wall source 15. The normal coexistence validator rejected that diagnostic and it produced no usable combat sample. The corrected paired setup used the clear cells (4,2) and (4,3). Both paths loaded and completed the turn from the same initial state. Immediate Advance published the first attack at frame 1768, result 6. Utility published `EndEnemyPhase` without any unit action. This confirms the behavior difference when an opponent starts in attack range. The cause inside the Utility candidate evaluation has not been isolated.
+
+## Evidence and restore
+
+- Root `Logs/EnemyAi/phase-7-live-item3/`. Each case contains `launch-config.txt`, a changed-source hash manifest, `flow.tsv`, `history.tsv`, rendered game-frame observations, screenshots when the scene loaded, native captures, and completion state when available. Use `*-profiler-markers.csv` to check JIT and allocation attribution and `*-profiler-frames.csv` for retained native frame counts. The six standard and six-enemy raw traces imported successfully with 480–1,703 valid main-thread frames apiece. A second successful export imported six additional diagnostic traces. The project's existing Profiler menu exported the first matched immediate and Utility sides to `Logs/ProfilerExport/20261108-045804/` and `Logs/ProfilerExport/20261108-045824/` respectively, with 1,134 and 765 retained frames.
+- The original Core factory and night predicate files were restored byte for byte. Temporary diagnostic scripts and their metadata were removed from Assets and their source was archived under the evidence root. The pre-existing 121 changed C# file hashes match the item 2 manifest exactly, and `git diff --check` passed. Unity-generated font assets were restored to their verified entry hashes. No new Core regression run was substituted for this rendered validation.
+

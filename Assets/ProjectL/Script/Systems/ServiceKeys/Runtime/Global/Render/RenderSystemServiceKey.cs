@@ -7,7 +7,6 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.RenderFeatur
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutlineSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.DrawPointLineSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.SelectOutlineSystem;
-using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.ScreenTransitionSystem;
 
 namespace ProjectL.Systems.ServiceKeys.Runtime.Global.Render
 {
@@ -36,8 +35,5 @@ namespace ProjectL.Systems.ServiceKeys.Runtime.Global.Render
 
         public static readonly SystemGroupKey<IRenderFeatureSystemService> RenderFeatureSystem =
             new(nameof(RenderFeatureSystem));
-
-        public static readonly SystemGroupKey<IScreenTransitionSystemService> ScreenTransitionSystem =
-            new(nameof(ScreenTransitionSystem));
     }
 }

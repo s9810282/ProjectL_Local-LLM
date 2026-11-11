@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_SelfDestruct
+  m_EditorClassIdentifier: 
+  traitVisualData:
+    key: 500
+    displayName: "\uC790\uD3ED"
+    icon: {fileID: 1548316610, guid: 3e088d6f9756a03409c9fd42c77f40aa, type: 3}
+    description: "\uD53C\uD574\uB85C \uC4F0\uB7EC\uC9C0\uBA74 \uC8FC\uBCC0 8\uCE78\uC5D0
+      \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    defenseReductionDescription: 
+    rankValueFormat: 
+    rankEffectFormat: 
+    activations:
+    - kind: 390
+      direction: 0
+      cueTiming: 0
+      bodyText:
+        enabled: 0
+        textSource: 0
+        overrideText: 
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 20
+          anchor: 1
+          delay: 0
+          point: 7
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 1
+          endSeconds: 5
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+      deathBlink:
+        enabled: 1
+        color: {r: 1, g: 0, b: 0, a: 1}
+        pulses: 3
+        seconds: 1.25
+        peakStrength: 1
+        lastPulseRatio: 0.15
+        pulseCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: -0.9548545
+            outSlope: -0.9548545
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5276984
+            value: 0.4961248
+            inSlope: -1.0026476
+            outSlope: -1.0026476
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: -1.0504407
+            outSlope: -1.0504407
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

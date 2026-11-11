@@ -1,3 +1,7 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
@@ -16,6 +20,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </remarks>
     internal sealed class CombatProjectileFlights
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatPlaybackProfile Profile { get; set; } = CombatEventProfiler.Unknown;
+
+#endif
         private readonly Transform _root;
         private readonly Func<int> _generation;
         private readonly Dictionary<GameObject, CombatProjectilePool> _pools = new();
@@ -44,6 +52,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 pool = new CombatProjectilePool(prefab, _root);
                 _pools.Add(prefab, pool);
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            pool.ProfilingProfile = Profile;
+#endif
             return pool;
         }
 

@@ -50,7 +50,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Vector3 to = CombatShotPath.Raise(target, up, settings.ProjectileHeight);
             float contact = context.LinearContactProgress(shape, from, to, mapper);
             if (!float.IsFinite(contact))
-                throw new InvalidOperationException("[CombatAttackPlayback] 직선 출처 발사의 히트 진행률이 유한하지 않습니다.");
+                throw new InvalidOperationException("[CombatLinearStyle] 직선 출처 발사의 히트 진행률이 유한하지 않습니다.");
             float hitAt = Mathf.Clamp01(contact);
             // 방향 기준 위쪽은 직선 코드 모션과 같은 월드 위쪽입니다(표시 회전 유지).
             return context.FireLinear(settings.ProjectilePrefab, from, to, settings.ProjectileSpeed, Vector3.up, hitAt, settings.ProjectileEasing,

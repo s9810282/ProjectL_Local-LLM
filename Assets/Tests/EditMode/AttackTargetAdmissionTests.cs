@@ -347,7 +347,7 @@ namespace ProjectL.Tests.Core
             var characters = new[] { actor, source.Characters[1] }.Concat(targets ?? Array.Empty<CharacterCombatFacts>()).ToArray();
             var profiles = source.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, attack, category, traits), method);
-            var state = new CombatCommandState(8,8,owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,false,structures ?? Array.Empty<StructureCombatFacts>(),source.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures ?? Array.Empty<StructureCombatFacts>(),source.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
             var obstacles = obstacle ? structures.Select(s => new ObstacleContentProfile(s.EntityId, ObstacleContentKind.PowderBarrel, 0)).ToArray()
                 : Array.Empty<ObstacleContentProfile>();
             return new CombatCommandInput(owner == Owner.Player ? 1 : 0, CombatCommandKind.Attack, actor.EntityId, aim.Value, state, characters, profiles,

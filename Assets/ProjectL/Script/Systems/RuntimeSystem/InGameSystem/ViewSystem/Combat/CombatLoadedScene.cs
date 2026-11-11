@@ -45,13 +45,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
                     $"[CombatViewSystem] Combat 씬에는 CombatSceneRoot가 하나 있어야 합니다. 찾은 수: {roots.Length}");
 
             Root = roots[0];
+            Root.ValidateCameraReferences();
             _backdrop = _factory.CreateBackdrop(Root, tables);
             // 보드 크기는 바닥 타일을 필드 칸 경계에 맞출 때 씁니다. 전투 준비가 씬 전환보다 먼저라 이 시점에 읽힙니다(타일 맞춤 계획 P9).
             _backdrop.Show(values.CurrentStageKey, values.TryReadBoardSize(out UnityEngine.Vector2Int board) ? (UnityEngine.Vector2Int?)board : null);
         }
 
         /// <summary>
-        /// 그 루트에 세운 배경입니다. 씬 로드 때 찾은 루트가 아니면(다른 루트로 직접 붙이는 시험 조립) 남의 배경 카메라를 쓰지 않게 null입니다.
+        /// 그 루트에 세운 배경입니다. 씬 로드 때 찾은 루트가 아니면 다른 씬의 배경을 쓰지 않게 null입니다(운영 연결은 늘 씬 로드 때 찾은 루트로 붙어 이 갈래를 타지 않습니다).
         /// </summary>
         internal StageViewPropPresenter BackdropFor(CombatSceneRoot root) => ReferenceEquals(root, Root) ? _backdrop : null;
 

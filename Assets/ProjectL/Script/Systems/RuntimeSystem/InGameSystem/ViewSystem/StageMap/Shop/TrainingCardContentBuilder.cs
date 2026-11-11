@@ -4,7 +4,6 @@ using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
@@ -29,7 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             _traits = traits ?? throw new ArgumentNullException(nameof(traits));
         }
 
-        internal string UnitName(OwnedCharacterRecord unit) => _findName(unit.CharacterKey) ?? unit.CharacterKey.ToString();
+        internal string UnitName(OwnedCharacterRecord unit) => _findName(unit.CharacterKey);
 
         /// <summary>유닛 단계 카드입니다. 훈련할 특성이 없으면 잠깁니다.</summary>
         internal StageOfferCardContent Unit(OwnedCharacterRecord unit, IReadOnlyList<string> traitNames, StageOfferTextData text)
@@ -56,24 +55,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             if (!_traits.TryGetTraitVisual(offer.TraitKey, out var visual))
                 throw new InvalidOperationException($"[ShopPopup] 특성 외형 행이 없습니다: {offer.TraitKey}");
             return new StageOfferCardContent(visual.Icon, offer.Name, text.FormatPrice(offer.Price),
-                text.FormatLine(StageOfferLineKind.TrainingDetails, ValueLine(visual, offer), offer.Description),
+                text.FormatLine(StageOfferLineKind.TrainingDetails, TrainingTraitValueFormatter.Format(visual, offer, text), offer.Description),
                 purchased ? text.CompletedButtonText : text.SelectButtonText, !locked, purchased,
                 text.FormatLine(StageOfferLineKind.TrainingRank, offer.CurrentRank, offer.NextRank));
-        }
-
-        // 수치는 Core 값을 옮기고 낱말은 특성 외형 표의 글입니다. 산 카드도 산 단계의 값을 그대로 씁니다.
-        private static string ValueLine(TraitVisualData visual, TrainingChoiceSnapshot offer)
-        {
-            if (string.IsNullOrWhiteSpace(visual.RankValueFormat))
-                throw new InvalidOperationException($"[ShopPopup] 특성 외형의 등급 수치 글이 비었습니다: {offer.TraitKey}");
-            TraitRankValues current = offer.CurrentValues
-                ?? throw new InvalidOperationException($"[ShopPopup] 훈련 상품에 지금 수치가 없습니다: {offer.TraitKey}");
-            TraitRankValues next = offer.NextValues
-                ?? throw new InvalidOperationException($"[ShopPopup] 훈련 상품에 다음 수치가 없습니다: {offer.TraitKey}");
-            int second = current.SecondAmount ?? 0;
-            int nextSecond = next.SecondAmount ?? 0;
-            return string.Format(visual.RankValueFormat, current.Amount, next.Amount - current.Amount, next.Amount,
-                second, nextSecond - second, nextSecond);
         }
     }
 }

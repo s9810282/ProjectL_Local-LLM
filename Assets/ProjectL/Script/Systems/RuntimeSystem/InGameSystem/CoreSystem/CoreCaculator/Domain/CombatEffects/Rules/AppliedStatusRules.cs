@@ -19,8 +19,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (incoming is WeaknessExposureStatus exposure) return WeaknessExposureRules.Apply(current, exposure);
             if (incoming is AttackDecreaseStatus && current.Entries.Any(s => s is AttackDecreaseStatus)) return current;
             IEnumerable<AppliedStatus> retained = current.Entries;
-            if (incoming is ActionRestrictionStatus) retained = retained.Where(s => s is not ActionRestrictionStatus || s.Key != incoming.Key);
+            if (incoming is ActionRestrictionStatus restriction)
+            {
+                // 같은 키 제한은 출처와 상관없이 하나다. 남은 횟수가 긴 쪽이 남고, 같으면 새 것으로 바꾼다.
+                var existing = current.Entries.OfType<ActionRestrictionStatus>().SingleOrDefault(s => s.Key == incoming.Key);
+                if (existing != null && existing.RemainingAffectedSideTurnEnds > restriction.RemainingAffectedSideTurnEnds) return current;
+                retained = retained.Where(s => s is not ActionRestrictionStatus || s.Key != incoming.Key);
+            }
             else if (incoming is ShieldStatus) retained = retained.Where(s => s is not ShieldStatus || s.Origin != incoming.Origin);
+            // 재구성 중 상태는 하나다(전투당 한 번 발동).
+            else if (incoming is ReconstructionStatus) retained = retained.Where(s => s is not ReconstructionStatus);
             else if (incoming is not AttackIncreaseStatus && incoming is not AttackDecreaseStatus && incoming is not DefenseDecreaseStatus)
                 throw new ArgumentException("아직 지원하지 않는 효과 부여입니다.", nameof(incoming));
             var result = new StatusEffectSet(retained.Append(incoming).ToArray());

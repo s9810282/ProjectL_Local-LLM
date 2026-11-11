@@ -38,6 +38,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             IReadOnlyList<StructureCombatFacts> physicalStructures, AttackTargetingPolicy policy, WallGeometry walls,
             AttackElevation elevation, AttackOcclusionSpec occlusion)
         {
+            PiercingShotTrace trace = null;
+            foreach (var _ in CollectSingleSteps(origin, aim, actorCells, width, height, eligibleCharacters, eligibleStructures,
+                physicalStructures, policy, walls, elevation, occlusion, value => trace = value)) { }
+            return trace;
+        }
+
+        internal static IEnumerable<string> CollectSingleSteps(CellCoord origin, CellCoord aim,
+            IReadOnlyList<CellCoord> actorCells, int width, int height,
+            IReadOnlyList<CharacterCombatFacts> eligibleCharacters, IReadOnlyList<StructureCombatFacts> eligibleStructures,
+            IReadOnlyList<StructureCombatFacts> physicalStructures, AttackTargetingPolicy policy, WallGeometry walls,
+            AttackElevation elevation, AttackOcclusionSpec occlusion, Action<PiercingShotTrace> completed)
+        {
             if (actorCells == null) throw new ArgumentNullException(nameof(actorCells));
             if (actorCells.Count == 0) throw new ArgumentException("공격자의 점유 셀이 필요합니다.", nameof(actorCells));
             if (eligibleCharacters == null) throw new ArgumentNullException(nameof(eligibleCharacters));
@@ -73,7 +85,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 if (blocker == null)
                 {
                     // 벽 뒤의 진단 수집을 계속해도 실제 이동과 종점은 첫 벽에서 고정한다. 고저 조건은 칸마다 판정한다(설계 D3).
-                    blocker = AttackOcclusionResolver.CheckDirect(origin, cell, walls, elevation, occlusion);
+                    foreach (var phase in AttackOcclusionResolver.CheckDirectSteps(origin, cell, walls, elevation, occlusion,
+                        value => blocker = value)) yield return phase;
                     endpoint = cell;
                     if (blocker == null) traveled.Add(cell);
                     else stopReason = PiercingShotStopReason.Wall;
@@ -81,7 +94,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 // 빈 칸과 인접 제외 칸도 이동 경로에 남기며 벽 검사를 생략하지 않는다.
                 if (actorCells.Contains(cell) ||
                     policy.ExcludesAdjacentDirectCells && CannonAppointExclusionCalculator.IsForbidden(actorCells, cell))
+                {
+                    yield return "DeliveryPierceCell";
                     continue;
+                }
 
                 if (!walls.Occupies(cell))
                 {
@@ -99,10 +115,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 if (physicalStructures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell)))
                 {
                     if (blocker == null) stopReason = PiercingShotStopReason.Structure;
+                    yield return "DeliveryPierceCell";
                     break;
                 }
+                yield return "DeliveryPierceCell";
             }
-            return new PiercingShotTrace(origin, aim, step, traveled, encounters, endpoint, stopReason, blocked);
+            completed(new PiercingShotTrace(origin, aim, step, traveled, encounters, endpoint, stopReason, blocked));
+            yield return "DeliveryPierceTrace";
         }
     }
 }

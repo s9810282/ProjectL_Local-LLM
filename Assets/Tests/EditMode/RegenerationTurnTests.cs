@@ -48,7 +48,7 @@ namespace ProjectL.Tests.Core
             source = Regeneration(source, EntityKey.Unit_Demon, 9, 40, 100);
             source = CombatCommandTestData.With(source, characters: source.Characters
                 .Select(c => c.With(actionUse: UnitActionUse.Moved)).ToArray());
-            var result = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(source, phase));
+            var result = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(source, phase), Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             foreach (var before in source.Characters)
             {
@@ -78,20 +78,6 @@ namespace ProjectL.Tests.Core
                     e.Final.Health.CurrentHealth > e.Expected.Health.CurrentHealth), Is.False);
             }
             Assert.That(input.Characters[0].Health.CurrentHealth, Is.EqualTo(health));
-        }
-
-        [Test]
-        public void EighthEnemyCompletion_DoesNotHealPersistentMain()
-        {
-            var source = Regeneration(CombatCommandTestData.Input(empty: true), EntityKey.Unit_MainCharacter, 20, 60, 100);
-            source = CombatCommandTestData.With(source, main: source.Main.WithCurrentHealth(60),
-                characters: source.Characters.Where(c => c.OwnershipRole == CharacterOwnershipRole.Main).ToArray());
-            var input = EnemyControllerPhaseTests.Input(source, CombatControllerPhase.Enemy, completed: 8);
-            var result = CombatTurnCalculator.EndEnemyPhase(input, Array.Empty<IMovementTileRule>());
-            Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(result.FinalState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(CombatCommandComposition.Project(result).Main.CurrentHealth, Is.EqualTo(60));
-            Assert.That(result.Events.OfType<CombatCharacterEvent>().Any(e => e.Kind == CombatEventKind.HealthChanged), Is.False);
         }
 
         [Test]
@@ -159,7 +145,7 @@ namespace ProjectL.Tests.Core
                 Assert.That(result.Outcome.IsStageEnded, Is.True);
                 Assert.That(recoveries, Is.Empty);
                 Assert.That(result.FinalState.Phase, Is.EqualTo(CombatFlowPhase.Finished));
-                Assert.That(CombatTurnCalculator.BeginControllerTurn(final).Accepted, Is.False);
+                Assert.That(CombatTurnCalculator.BeginControllerTurn(final, Array.Empty<IMovementTileRule>()).Accepted, Is.False);
             }
             else
             {

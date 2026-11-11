@@ -8,6 +8,7 @@ using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using UnityEngine;
@@ -140,6 +141,7 @@ namespace ProjectL.Tests.CoreIntegration
         private TraitGrowthDefinitionDataSO Definition(UnitTraitAuthoring authoring)
         {
             var result = Create<TraitGrowthDefinitionDataSO>();
+            Set(result, "group", TraitGrowthGroup.Common);
             Set(result, "normal", authoring);
             return result;
         }

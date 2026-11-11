@@ -81,6 +81,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             for (int i = 0; i < hit.Count; i++)
                 AddDrop(composition, sinks, settings, mapper, hit[i], hitDelay);
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEvent = e;
+#endif
             return _pieces.TryBegin(composition, completed, version);
         }
 

@@ -18,7 +18,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public static CombatEntryResult Success(StageSnapshot currentStage)
         {
-            if (currentStage == null) throw new ArgumentNullException(nameof(currentStage));
+            if (currentStage == null) 
+                throw new ArgumentNullException(nameof(currentStage));
+
             return new CombatEntryResult(true, CombatEntryFailureReason.None, currentStage);
         }
 
@@ -27,7 +29,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (failureReason == CombatEntryFailureReason.None ||
                 Enum.IsDefined(typeof(CombatEntryFailureReason), failureReason) == false)
                 throw new ArgumentOutOfRangeException(nameof(failureReason));
-            if (currentStage == null) throw new ArgumentNullException(nameof(currentStage));
+
+            if (currentStage == null) 
+                throw new ArgumentNullException(nameof(currentStage));
 
             return new CombatEntryResult(false, failureReason, currentStage);
         }

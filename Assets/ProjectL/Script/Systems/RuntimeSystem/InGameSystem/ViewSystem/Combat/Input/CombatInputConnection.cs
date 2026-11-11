@@ -12,8 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
     /// 행동 버튼(공격·턴 종료·복귀)도 수신 창구로 들어가므로 그 입구를 여기서 내줍니다.
     /// </summary>
     /// <remarks>
-    /// 수명은 서비스 수명입니다. 조정자가 서비스를 받을 때(<c>BindServices</c>) 한 번 만들고, 씬 연결마다 바꾸지 않습니다(계획 TP-22).
-    /// 목표 Layer를 정하는 것은 조정자(정책)이고, 이 객체는 받은 목표로 슬롯 연결·Layer 변경·해제만 합니다.
+    /// 수명은 서비스 수명입니다. 조정자가 서비스를 받을 때(<c>Bind</c>) 한 번 만들고, 씬 연결마다 바꾸지 않습니다(계획 TP-22).
+    /// 목표 Layer를 정하는 것은 입력 분배(<c>CombatSceneInputDriver.SyncInputLayer</c>, 정책 <c>CombatInputPolicy</c>)이고, 이 객체는 받은 목표로 슬롯 연결·Layer 변경·해제만 합니다.
     /// </remarks>
     internal sealed class CombatInputConnection
     {
@@ -23,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <param name="canReceive">조정자의 이름 있는 수명 판정(씬 연결 활성)입니다. 수신 창구가 입구에서 묻습니다.</param>
         /// <param name="isConfirmOpen">전투 입력을 막는 확인창이 열렸는지입니다. 수신 창구가 입구에서 묻습니다.</param>
-        /// <param name="route">입구 검사를 통과한 입력을 넘길 곳입니다(조정자의 입력 분배).</param>
+        /// <param name="route">입구 검사를 통과한 입력을 넘길 곳입니다(입력 분배 <see cref="CombatSceneInputDriver.Route"/>에 조정자가 그 순간의 연결을 붙여 넘김).</param>
         /// <param name="cancelPresentation">입력 중 표시(Drag·모드·선택·미리보기)를 정리하는 조정자의 입구입니다. Layer를 바꾸거나 풀 때 부릅니다.</param>
         internal CombatInputConnection(
             IStageInputReceiverSlot slot,
@@ -47,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             ReturnPressed = Receiver.RequestReturn;
         }
 
-        /// <summary>입력 수신 창구입니다. 조정자의 시험 입구(<c>CombatViewSystem.Input</c>)도 이것을 돌려줍니다.</summary>
+        /// <summary>입력 수신 창구입니다. 씬 루트의 BattleChanger 입력 연결이 이것을 받습니다(조정자가 루트 구독 때 넘김).</summary>
         internal CombatInputReceiver Receiver { get; }
 
         /// <summary>입력 슬롯에 연결돼 있는지입니다(수신 창구의 값).</summary>

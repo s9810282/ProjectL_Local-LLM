@@ -14,7 +14,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>막혀서 덜 가거나 못 가는 대상입니다.</summary>
         Blocked = 2,
         /// <summary>넉백 면역이라 안 움직이는 대상입니다.</summary>
-        Immune = 3
+        Immune = 3,
+        /// <summary>막혀 멈춘 곳에서 부딪힘 피해를 받는 대상입니다(작렬, 작렬 View 설계 CV6).</summary>
+        Collision = 4
     }
 
     /// <summary>

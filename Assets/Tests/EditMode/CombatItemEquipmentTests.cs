@@ -101,9 +101,9 @@ namespace ProjectL.Tests.Core
             if (mode == "hand") actor = CombatPlacementCalculator.Location(actor, CharacterRuntimeArea.Hand, 0, null, null);
             if (mode == "dead") actor = CombatCommandCalculator.Hurt(actor, 100);
             actor = ItemCharacterChanges.WithItems(actor, new CharacterItemState(equipped,
-                new[] { new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5, 0) }));
+                new[] { new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5) }));
             characters[Array.FindIndex(characters, c => c.EntityId == actor.EntityId)] = actor;
-            var state = new CombatCommandState(8,8,mode == "ended" ? CombatFlowPhase.Finished : CombatFlowPhase.PlayerInput,false,Array.Empty<StructureCombatFacts>(),original.State.ThornFields,                new CombatTurnFacts(mode == "combat" ? StagePhase.Combat : StagePhase.Deployment,
+            var state = new CombatCommandState(8,8,mode == "ended" ? CombatFlowPhase.Finished : CombatFlowPhase.PlayerInput,Array.Empty<StructureCombatFacts>(),original.State.ThornFields,                new CombatTurnFacts(mode == "combat" ? StagePhase.Combat : StagePhase.Deployment,
                     controllerPhase: mode == "combat" ? CombatControllerPhase.Player : CombatControllerPhase.None));
             return new CombatCommandInput(1, kind, actor.EntityId, default, state, characters, original.Profiles,
                 original.Main, original.Owned, original.SoulCounts, original.Souls, original.Artifacts,

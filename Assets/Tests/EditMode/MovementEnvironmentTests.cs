@@ -66,7 +66,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Route();
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 3, 2) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 3, 2) },s.Turn,s.Environment));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(8));
@@ -235,7 +235,7 @@ namespace ProjectL.Tests.Core
             var hq = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 5, false, 0),
                 new HealthStateSnapshot(5, 5), new CellCoord(6, 5), Rotation4.R0, new[] { new CellCoord(6, 5) });
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,new[] { hq },s.ThornFields,s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,new[] { hq },s.ThornFields,s.Turn,s.Environment));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(expected));
             Assert.That(result.PathMovement.DistanceSpent, Is.EqualTo(1));

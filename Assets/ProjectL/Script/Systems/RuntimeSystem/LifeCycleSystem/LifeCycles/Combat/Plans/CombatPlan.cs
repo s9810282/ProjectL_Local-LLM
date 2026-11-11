@@ -4,6 +4,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -22,6 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
     /// (개선 설계 §5.1, 골격 점검 설계 K-1). 상태는 갖지 않습니다.
     /// 진입은 진입 서비스가 <see cref="JobType.Entry"/>로 걸고 [진입] → [진입 전환]이며(골격 점검 설계 K-2),
     /// 맵 진입이 착지 전이면 착지 게시 때 <see cref="JobType.EntryTransition"/>이 전환을 다시 겁니다.
+    /// Combat 씬 로딩 준비 단계(가림 중)에서는 진입 서비스의 준비가 <see cref="JobType.FirstUsePrepare"/>로 첫 동작 Core 준비를 겁니다(첫 동작 Core 준비 계획).
     /// 이탈은 [정리·표시] → [떠나기]입니다. 전투가 남은 채 나가면 <see cref="JobType.ExitCheck"/>가 확인합니다.
     /// 이탈 목적지와 챕터 완료가 필요한 결과의 판정도 여기 한 곳에 둡니다(설계 J7, 개선 설계 §4.4).
     /// </remarks>
@@ -69,6 +71,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
                     return Entry(service, lifeCycles);
                 case JobType.EntryTransition:
                     return EntryTransition(lifeCycles);
+                case JobType.FirstUsePrepare:
+                    return FirstUsePrepare(service, lifeCycles);
                 default:
                     // 처리·정리·전환은 Next의 Job이 실행 순간 판단해 만든다(BuildStep). 따로 등록하는 경로는 없다(재구성 R3).
                     throw new ArgumentOutOfRangeException(nameof(jobType), jobType, "Unknown Combat job type.");
@@ -94,6 +98,20 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
             if (request == null || !request.IsAwaitingLanding)
                 throw new InvalidOperationException("CombatPlan: 착지를 기다리는 전투 진입 요청이 없습니다.");
             return new List<IJobService> { new CombatEntryTransitionJob(request, RequireManager(lifeCycles), 0) };
+        }
+
+        /// <summary>
+        /// 현재 진입 요청에 붙은 첫 동작 준비로 Core 준비 Job 하나를 만듭니다(첫 동작 Core 준비 계획 FU-b).
+        /// 진입 서비스가 만든 Combat 씬 로딩 준비가 시작할 때 겁니다. 시작된 준비가 없으면 거절합니다(진입·착지 전환과 같은 꼴).
+        /// </summary>
+        private static List<IJobService> FirstUsePrepare(IInGameSystemGroupService service, ILifeCycleSystemGroupService lifeCycles)
+        {
+            CombatFirstUseLoadingPreparation preparation = RequireEntry(lifeCycles).Current?.FirstUsePreparation;
+            if (preparation == null || !preparation.IsRunning)
+                throw new InvalidOperationException("CombatPlan: 시작된 첫 동작 준비가 없습니다.");
+            ICombatFirstUsePreparation core = service.CoreGroup?.CombatFirstUse
+                ?? throw new InvalidOperationException("CombatPlan: 첫 동작 Core 준비 서비스가 없습니다.");
+            return new List<IJobService> { new CombatFirstUsePrepareJob(core, preparation, 0) };
         }
 
         /// <summary>
@@ -158,7 +176,22 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
 
             // 13. 자동 국면은 연출이 끝난 뒤 한 걸음씩 진행한다.
             if (facts.Phase == CombatFlowPhase.Automatic)
-                return new CombatStep(CombatStepKind.Advance, facts.LatestResultSequence);
+            {
+                switch (facts.Preparation)
+                {
+                    case AdvancePreparationState.NotRequired:
+                        return new CombatStep(CombatStepKind.Advance, facts.LatestResultSequence);
+                    case AdvancePreparationState.Required:
+                    case AdvancePreparationState.Preparing:
+                        return new CombatStep(CombatStepKind.PrepareAdvance, facts.LatestResultSequence);
+                    case AdvancePreparationState.Ready:
+                        return new CombatStep(CombatStepKind.PreparedAdvance, facts.LatestResultSequence);
+                    case AdvancePreparationState.FrameDeferred:
+                        return CombatStep.Nothing;
+                    default:
+                        throw new InvalidOperationException($"CombatPlan: 알 수 없는 준비 상태입니다: {facts.Preparation}");
+                }
+            }
 
             // 14. PlayerInput 대기, Finished, None.
             return CombatStep.Nothing;
@@ -198,6 +231,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
 
             ICombatProgressReader progress = context.Progress;
             CombatProgressFacts facts = progress.Read();
+            if (facts.HasCompletion || facts.IsAbandonRequested || !facts.HasBattle)
+                context.Advance.CancelPreparation();
             CombatStep step = Decide(in facts);
             switch (step.Kind)
             {
@@ -220,6 +255,10 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
                     return new List<IJobService> { new CombatPreviewJob(context.Preview, 0, progress, step.Number) };
                 case CombatStepKind.Advance:
                     return new List<IJobService> { new CombatAdvanceJob(context.Advance, 0, progress, step.Number) };
+                case CombatStepKind.PrepareAdvance:
+                    return new List<IJobService> { new CombatPrepareAdvanceJob(context.Advance, 0, progress, step.Number) };
+                case CombatStepKind.PreparedAdvance:
+                    return new List<IJobService> { new CombatPreparedAdvanceJob(context.Advance, 0, progress, step.Number) };
                 default:
                     throw new InvalidOperationException($"CombatPlan: 알 수 없는 단계입니다: {step}");
             }

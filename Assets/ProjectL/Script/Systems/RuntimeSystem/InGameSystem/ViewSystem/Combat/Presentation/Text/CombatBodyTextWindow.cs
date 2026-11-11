@@ -11,6 +11,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>프리팹 대여의 시간과 화면 투영만 진행하는 비차단 창구입니다.</summary>
     internal sealed class CombatBodyTextWindow : ICombatPresentationPlayer
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemBodyTextPoll = new("Combat.Action.Playback.System.BodyText.Poll");
+#endif
+
         // 전투 설치 때 프리팹마다 미리 만들 글자 수입니다(GC 끊김 계획 TP-6). 한 발동에 원인·대상 둘이 함께 뜨는 일이 흔해 둘입니다.
         private const int PrewarmedPerPrefab = 2;
         private readonly CombatBodyTextResources _resources;
@@ -61,13 +66,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         internal void Show(EntityId unit, string text, CombatBodyTextData data)
         {
+            TryShow(unit, text, data);
+        }
+
+        /// <summary>표시 대상이 있어 글자 실행을 시작했는지입니다. 화면 투영 시점이나 픽셀 가시성 판정은 아닙니다.</summary>
+        internal bool TryShow(EntityId unit, string text, CombatBodyTextData data)
+        {
             if (_released)
                 throw new ObjectDisposedException(nameof(CombatBodyTextWindow));
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
             Func<Vector3?> position = _track(unit);
             if (position == null)
-                return;
+                return false;
             GameObject prefab = data.PrefabOverride != null ? data.PrefabOverride : _defaultPrefab;
             if (prefab == null)
                 throw new InvalidOperationException("[CombatBodyText] Prefab Override 또는 Body Text Prefab이 필요합니다.");
@@ -81,6 +92,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 Canvas.willRenderCanvases += Project;
                 _subscribed = true;
             }
+            return true;
         }
 
         private void Project()
@@ -123,6 +135,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         public bool Tick(in CombatPlaybackFrame frame)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePlaybackSystemBodyTextPollSample = _profilePlaybackSystemBodyTextPoll.Auto();
+#endif
+
             for (int i = _active.Count - 1; i >= 0; i--)
             {
                 Entry entry = _active[i];
@@ -193,6 +209,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
             if (errors != null)
                 throw new AggregateException("[CombatBodyText] 텍스트 회수에 실패했습니다.", errors);
+        }
+
+        internal void Hide()
+        {
+            try
+            {
+                Cancel();
+            }
+            finally
+            {
+                if (_resources.Root != null)
+                    _resources.Root.gameObject.SetActive(false);
+            }
         }
 
         public void Release()

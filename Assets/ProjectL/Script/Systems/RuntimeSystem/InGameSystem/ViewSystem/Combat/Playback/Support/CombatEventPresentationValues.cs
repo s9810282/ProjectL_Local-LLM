@@ -6,7 +6,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <summary>
     /// 사건 Presenter의 연출 값 묶음입니다(View 3라운드 W9-3, 결정 Q-V27 A). 운영 값의 원본은 View DB 설정 표입니다(<see cref="From"/>).
     /// 값 조건 검사는 이 생성자 한 곳에서 하며 설정 표의 조건 함수를 부릅니다. 소리 프리셋은 값이 아니라 표 조회라 여기 두지 않습니다.
-    /// 시험 조립은 생성자로 필요한 값만 정합니다(시험 도우미 <c>CombatViewSystemTests.EventValues</c>).
+    /// 이 생성자를 부르는 곳은 <see cref="From"/> 하나라(운영·특성 확인 표시 모두), 선택 인자(fallMotion·stepLook·leapMotion)도 늘 설정 값으로 채워집니다.
     /// </summary>
     internal sealed class CombatEventPresentationValues
     {
@@ -17,6 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="abilityMotion">보스 능력(소환·포효) 동작 값입니다.</param>
         /// <param name="cameraMotion">포효 줌·흔들림과 기차 흔들림·줌 값입니다(피격·사망 흔들림은 반응 묶음 큐, 범용 연출 구조 설계 G7). "연출 없음"은 <see cref="CombatCameraMotionSettings.None"/>입니다.</param>
         /// <param name="stepClimbHop">높이가 다른 칸 사이 걸음의 뜀 높이입니다(유한한 0 이상).</param>
+        /// <param name="flungStepSeconds">날려 가는 밀림(작렬)의 한 칸 시간입니다(유한한 양수, 작렬 View 설계 CV5).</param>
         /// <param name="fallMotion">낭떠러지 추락 연출 값입니다(임시). 넘기지 않으면 바로 끝나는 값(<see cref="CombatFallMotionSettings.Instant"/>)이고,
         /// 운영 조립(<see cref="From"/>)은 늘 설정 값을 넘깁니다.</param>
         /// <param name="stepLook">자발 이동의 걸음 모양과 뛰기 값입니다(걸음 모양 설계 ST4). 넘기지 않으면 걷기(<see cref="CombatStepLookSettings.Walk"/>, 지금과 같음)이고,
@@ -24,7 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="leapMotion">실제 뛰어넘기 발동 구간 전체의 시간·높이입니다. 생략하면 View 설정의 기본값을 씁니다.</param>
         internal CombatEventPresentationValues(float stepSeconds, float enemyActionGapSeconds, float enemyTurnGapSeconds,
             float movementTurnSeconds, CombatAbilityMotionSettings abilityMotion, CombatCameraMotionSettings cameraMotion,
-            float stepClimbHop, CombatFallMotionSettings fallMotion = null, CombatStepLookSettings stepLook = null,
+            float stepClimbHop, float flungStepSeconds, CombatFallMotionSettings fallMotion = null, CombatStepLookSettings stepLook = null,
             CombatLeapMotionSettings leapMotion = null)
         {
             // 순서는 옛 사건 Presenter 생성자와 같습니다. 여러 값이 함께 잘못됐을 때 먼저 알리는 값이 같습니다.
@@ -33,6 +34,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatEnemyPresentationPacing.ValidateSeconds(movementTurnSeconds, nameof(movementTurnSeconds));
             CombatEnemyPresentationPacing.ValidateSeconds(enemyActionGapSeconds, nameof(enemyActionGapSeconds));
             CombatEnemyPresentationPacing.ValidateSeconds(enemyTurnGapSeconds, nameof(enemyTurnGapSeconds));
+            ValidateStepSeconds(flungStepSeconds, nameof(flungStepSeconds));
+            FlungStepSeconds = flungStepSeconds;
             StepSeconds = stepSeconds;
             EnemyActionGapSeconds = enemyActionGapSeconds;
             EnemyTurnGapSeconds = enemyTurnGapSeconds;
@@ -52,6 +55,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         internal CombatAbilityMotionSettings AbilityMotion { get; }
         internal CombatCameraMotionSettings CameraMotion { get; }
         internal float StepClimbHop { get; }
+        /// <summary>날려 가는 밀림(작렬)의 한 칸 시간입니다. 걸음 모양 표가 읽습니다.</summary>
+        internal float FlungStepSeconds { get; }
         internal CombatFallMotionSettings FallMotion { get; }
         internal CombatStepLookSettings StepLook { get; }
         internal CombatLeapMotionSettings LeapMotion { get; }
@@ -62,7 +67,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             return new CombatEventPresentationValues(settings.MovementStepSeconds, settings.EnemyActionGapSeconds,
                 settings.EnemyTurnGapSeconds, settings.MovementTurnSeconds, CombatAbilityMotionSettings.From(settings),
-                CombatCameraMotionSettings.From(settings), settings.StepClimbHop, CombatFallMotionSettings.From(settings),
+                CombatCameraMotionSettings.From(settings), settings.StepClimbHop, settings.FlungStepSeconds, CombatFallMotionSettings.From(settings),
                 CombatStepLookSettings.From(settings), CombatLeapMotionSettings.From(settings));
         }
 

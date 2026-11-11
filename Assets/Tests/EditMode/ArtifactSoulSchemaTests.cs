@@ -145,7 +145,7 @@ namespace ProjectL.Tests.Core
                 },
                 condition = new ArtifactConditionData
                 {
-                    type = ArtifactConditionType.IsNight,
+                    type = ArtifactConditionType.InCombat,
                     comparison = ArtifactComparisonType.LessThan,
                 },
                 target = new ArtifactTargetData

@@ -30,6 +30,10 @@ MonoBehaviour:
       enabled: 1
       height: 30
       seconds: 0.8
+      impactDepth: 0.5
+      impactDownSeconds: 0.16
+      impactReturnSeconds: 0.44
+    enemyEntryRowGapSeconds: 0.4
     bodyTextPrefab: {fileID: 1000, guid: fe4f5cbde67449fe84c930bfd774df1e, type: 3}
     bodyTextStackGap: 28
     movementStepSeconds: 0.2
@@ -38,6 +42,7 @@ MonoBehaviour:
     voluntaryStepLook: 1
     hopHeight: 0.3
     hopSeconds: 0.25
+    flungStepSeconds: 0.08
     leapSeconds: 0.5
     leapHeight: 1
     enemyActionGapSeconds: 0.8
@@ -69,7 +74,6 @@ MonoBehaviour:
     trainZoomInSeconds: 0.5
     trainZoomOutSeconds: 0.4
     morningTransitionLayer: AfterRendering
-    morningTransitionCamera: Day Camera
     morningTransitionColor: {r: 0, g: 1, b: 1, a: 1}
     transitionChangeSpeed: 30
     transitionChangeAmount: 40

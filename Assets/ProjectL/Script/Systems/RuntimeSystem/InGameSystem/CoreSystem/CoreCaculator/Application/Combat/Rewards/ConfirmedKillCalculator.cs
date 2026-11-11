@@ -12,7 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     internal static class ConfirmedKillCalculator
     {
         internal static IReadOnlyList<CreditedKill> Collect(CombatCommandInput input,
-            IReadOnlyDictionary<EntityId, CharacterCombatFacts> projected, IReadOnlyList<CombatEvent> events)
+            IReadOnlyDictionary<EntityId, CharacterCombatFacts> projected, IReadOnlyList<CombatEvent> events,
+            CombatCommandState sourceState)
         {
             var kills = projected.Values.Where(c => c.Owner == Owner.Enemy && c.Health.IsDead).ToArray();
             if (kills.Length == 0)
@@ -42,8 +43,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var reward = profile?.Definition.KillReward ?? throw new InvalidOperationException(
                     $"처치된 적 {victim.EntityId}의 보상 정의가 없습니다.");
                 if (!reward.IsEligible) continue;
+                bool reinforced = sourceState.Reinforcements.Contains(victim.EntityId);
                 creditedKills.Add(new CreditedKill(victim.EntityId, recipient.Value,
-                    projected[recipient.Value].OwnedId.Value, reward.Gold, reward.Experience));
+                    projected[recipient.Value].OwnedId.Value, reinforced ? 0 : reward.Gold, reinforced ? 0 : reward.Experience));
             }
             return creditedKills.AsReadOnly();
         }

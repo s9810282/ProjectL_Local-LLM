@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
@@ -34,10 +35,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
         {
             if (offer == null) throw new ArgumentNullException(nameof(offer));
             StageOfferTextData text = _texts.TraitGrowth;
-            // 유닛을 모르면 줄과 얼굴 없이 설명만 그립니다. 외형 행이 없으면 이름은 키, 얼굴은 없음입니다.
+            // 유닛을 모르면 줄과 얼굴 없이 설명만 그립니다. 유닛은 아는데 외형 행이 없으면 예외입니다(팝업마다 같은 정책, 평가 N-23).
             OwnedCharacterRecord record = _characters.TryGetOwned(offer.OwnedId, out var owned) ? owned : null;
             UnitVisualData visual = null;
-            if (record != null) _units.TryGetUnitVisual(record.CharacterKey, out visual);
+            if (record != null && !_units.TryGetUnitVisual(record.CharacterKey, out visual))
+                throw new KeyNotFoundException($"[TraitGrowthPopup] 유닛 외형이 등록되지 않았습니다: {record.CharacterKey}");
             // 골드를 쓰지 않고 반드시 골라야 하므로 골드 칸과 나가기를 끕니다(R4).
             _model.Reset(text.EventName, Description(text, offer, record, visual), string.Empty, false, false);
             // 얼굴은 덱 편집·유닛 카드와 같은 유닛 외형 InfoIcon입니다(비어 있으면 얼굴 칸이 꺼집니다).
@@ -91,7 +93,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
             UnitVisualData visual)
         {
             if (record == null) return text.EventDescription;
-            string name = visual != null ? visual.DisplayName : record.CharacterKey.ToString();
+            string name = visual.DisplayName;
             return text.EventDescription + "\n" +
                 text.FormatLine(StageOfferLineKind.TraitGrowthHeader, name, record.Level, KindLabel(text, offer.Kind));
         }

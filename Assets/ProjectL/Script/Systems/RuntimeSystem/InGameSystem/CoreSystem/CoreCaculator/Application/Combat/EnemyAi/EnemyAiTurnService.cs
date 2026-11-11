@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -13,45 +12,47 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi
 {
 
-    internal sealed class EnemyAiTurnService
+    internal static class EnemyAiTurnService
     {
-        /// <summary>
-        /// 한 적 턴을 사실 기반으로 계산하고 최종 변경 하나만 반환한다.
-        /// 적도 이동 → 공격을 할 수 있으므로, 이동한 적은 다음 계산에서 이 순회가 다시 골라 공격만 시도한다.
-        /// </summary>
-        internal static CombatCommandTransition Calculate(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
+        internal static CombatCommandTransition Calculate(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
+            EnemyDecisionDiagnostics diagnostics = null, bool immediateCompatibility = true, EnemyDecisionSideCache sideCache = null)
         {
-            if (input.ProcessingKind != CombatProcessingKind.Advance || input.State.Phase != CombatFlowPhase.Automatic ||
-                input.State.Turn.ControllerPhase != CombatControllerPhase.Enemy)
-                throw new InvalidOperationException("자동 적 진영 턴의 입력이 아닙니다.");
             using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyTurn);
-            // 대기 반응이 전투를 끝낼 수 있으므로 적 진영 종료·밤 정산보다 먼저 처리한다.
-            var pendingRoars = BossRoarCalculator.PendingBosses(input);
-            if (pendingRoars.Count != 0)
-                return BossRoarCalculator.TryRoar(input, pendingRoars[0], rules);
-            var policy = new EnemyAiPolicy(new HostilityPolicy(), rules);
-            foreach (var actor in input.Characters.Where(c => c.Owner == Owner.Enemy &&
-                c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead && UnitActionUseRules.CanStartAttack(c.ActionUse)).OrderBy(c => c.EntityId))
+            var pending = BossRoarCalculator.PendingBosses(input);
+            if (pending.Count > 0) return BossRoarCalculator.TryRoar(input, pending[0], rules);
+
+            using var session = immediateCompatibility
+                ? EnemyDecisionSession.BeginImmediateCompatibility(input, rules, EnemyDecisionSettings.Default, diagnostics)
+                : new EnemyDecisionSession(input, rules, EnemyDecisionSettings.Default, diagnostics, sideCache);
+            while (true)
             {
-                var current = CombatCommandComposition.Intent(input.WithActor(actor.EntityId), CombatCommandKind.Attack);
-                var range = CombatCommandCalculator.GetAttackRange(current);
-                if (policy.TrySelectAttackAim(current, range, out var aim, out var tauntSource))
+                while (!session.IsReady) session.Step();
+                var decision = session.Decision;
+                var result = Execute(input, decision, rules);
+                if (result.Accepted || decision.Kind == EnemyDecisionKind.EndEnemyPhase)
                 {
-                    var attack = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(current, CombatCommandKind.Attack, aim), rules);
-                    if (attack.Accepted) return CombatCommandComposition.Merge(input, new[] { RecordTaunt(attack, actor, tauntSource) });
-                    // 적이 볼 수 있는 사실로 고른 공격이 숨은 사실 때문에 거절되면 다른 조준을 더 찾지 않고 추격 이동을 시도한다.
+                    if (result.Accepted && decision.Kind == EnemyDecisionKind.Attack)
+                        session.Diagnostics.SelectedAim = decision.Aim;
+                    return result;
                 }
-                // 이미 이동한 적은 공격만 남는다. 다시 이동하지 않는다.
-                if (!UnitActionUseRules.CanStartMove(actor.ActionUse)) continue;
-                if (policy.TrySelectPursuitTarget(current, out var target, out var pursuitTaunt) &&
-                    EnemyMovementPathfinder.TryFind(current, target, out var path))
-                {
-                    var movement = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(current, CombatCommandKind.Move, path: path), rules);
-                    // 계산 한 번에 수락된 행동 하나만 돌려준다. 숨은 환경에 의해 거절된 후보는 현재 계산에서만 건너뛴다.
-                    if (movement.Accepted) return CombatCommandComposition.Merge(input, new[] { RecordTaunt(movement, actor, pursuitTaunt) });
-                }
+                session.RejectSelected(result.Reason);
             }
-            return CombatTurnCalculator.EndEnemyPhase(input, rules);
+        }
+
+        /// <summary>선택된 행동의 실제 정산과 도발 사건 순서를 기존 명령 소유자에게 맡긴다.</summary>
+        internal static CombatCommandTransition Execute(CombatCommandInput input, EnemyDecision decision,
+            IReadOnlyList<IMovementTileRule> rules)
+        {
+            if (decision.Kind == EnemyDecisionKind.EndEnemyPhase)
+                return CombatTurnCalculator.EndEnemyPhase(input, rules);
+            var kind = decision.Kind == EnemyDecisionKind.Attack ? CombatCommandKind.Attack : CombatCommandKind.Move;
+            var actorInput = CombatCommandComposition.Intent(input.WithActor(decision.ActorId), kind, decision.Aim, path: decision.Path);
+            CombatCommandTransition transition;
+            using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
+                transition = CombatCommandCalculator.Calculate(actorInput, rules);
+            if (!transition.Accepted) return transition;
+            var actor = input.Characters.Single(c => c.EntityId == decision.ActorId);
+            return CombatCommandComposition.Merge(input, new[] { RecordTaunt(transition, actor, decision.TauntSourceId) });
         }
 
         private static CombatCommandTransition RecordTaunt(CombatCommandTransition transition, CharacterCombatFacts actor, EntityId source)

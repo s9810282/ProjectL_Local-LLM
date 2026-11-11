@@ -50,6 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         Rockfall,
         /// <summary>하붑입니다. 구름 칸마다 연기를 맞춥니다(하붑 View 계획 Hb.5).</summary>
         Haboob,
+        /// <summary>적 본부 증원의 생성 시점 사실을 보입니다.</summary>
+        Reinforcement,
     }
 
     /// <summary>적 연출 간격의 종류입니다(형식 표의 열). 간격 값과 상태 기계는 <c>CombatEnemyPresentationPacing</c>이 맡습니다.</summary>
@@ -71,19 +73,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         Turn,
     }
 
-    /// <summary>사건이 거는 단계 화면 전환입니다(형식 표의 열). 전환 재생은 <c>CombatPhaseTransitionPresenter</c>가 맡습니다.</summary>
-    internal enum CombatPhaseTransitionKind
-    {
-        None = 0,
-        /// <summary>밤(전투)으로 들어갑니다.</summary>
-        Night,
-        /// <summary>아침으로 돌아옵니다.</summary>
-        Morning,
-    }
-
     /// <summary>
     /// "이 사건 형식은 무엇인가"의 원본입니다(View 2라운드 W7-1, 옛 사건 경로 표를 넓힘). 한 줄 = 사건 형식 하나의 사실 지식이고,
-    /// 경로·처리기 칸·행동 시작·출처를 여는 사건·행위자·주체·피해 근원·공격 출처·이동 사건·간격 종류·머묾·화면 전환·사건 순간을 모두 이 표가 답합니다.
+    /// 경로·처리기 칸·행동 시작·출처를 여는 사건·행위자·주체·피해 근원·공격 출처·이동 사건·간격 종류·머묾·사건 순간을 모두 이 표가 답합니다.
     /// 사건 형식과 사건 값만 보고 답하므로 표시 상태와 무관합니다.
     /// </summary>
     /// <remarks>
@@ -119,6 +111,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Row<CombatSummonEvent>(CombatEventHandlerSlot.Summon, isActionStart: true,
                 actor: e => e.Record.SummonerId,
                 pacing: _ => CombatEventPacing.Action, holdsWhenShownOnly: true),
+            Row<CombatReinforcementEvent>(CombatEventHandlerSlot.Reinforcement,
+                subject: e => e.Created.EntityId),
             Row<CombatCharacterEvent>(CombatEventHandlerSlot.Character,
                 route: CharacterRoute,
                 subject: e => e.Final?.EntityId ?? e.Expected?.EntityId ?? EntityId.Empty,
@@ -127,10 +121,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     || e.Kind == CombatEventKind.Relocated),
             Row<CombatTurnEvent>(CombatEventHandlerSlot.Turn, isActionStart: true,
                 actor: e => e.ActorId,
-                pacing: _ => CombatEventPacing.Turn,
-                transition: e => e.Kind == CombatEventKind.CombatEntered ? CombatPhaseTransitionKind.Night
-                    : e.Kind == CombatEventKind.NightEnded ? CombatPhaseTransitionKind.Morning
-                    : CombatPhaseTransitionKind.None),
+                pacing: _ => CombatEventPacing.Turn),
             // 끌어오기는 Core의 실제 경로만 대상의 이동 레인에서 보입니다(Core/View 인계 2026-10-26). 피해 근원이 없어 동시 묶음에 들지 않고
             // 뒤따르는 지형·피격·체력 사건의 장벽이 됩니다. 같은 걸음의 일반 Moved 사건은 Core가 내지 않습니다.
             Row<CombatPullEvent>(CombatEventHandlerSlot.Pull,
@@ -153,9 +144,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Row<CombatArtifactEvent>(CombatEventHandlerSlot.Facts),
             Row<CombatGimmickEvent>(CombatEventHandlerSlot.Facts,
                 route: e => e.Activation is RailwayGimmickActivationSnapshot ? CombatEventRoute.Railway : CombatEventRoute.Event),
-            Row<CombatOutcomeEvent>(CombatEventHandlerSlot.Facts,
-                transition: e => e.Outcome.Outcome == StageOutcome.Victory ? CombatPhaseTransitionKind.Morning
-                    : CombatPhaseTransitionKind.None),
+            Row<CombatOutcomeEvent>(CombatEventHandlerSlot.Facts),
             // 순간 칸(이펙트 창구 확장 설계 EC7, 계획 P15): 소리 표와 큐가 함께 읽습니다. 어느 갈래가 순간인지는 이 표에만 둡니다.
             // 정적 지형 바뀜은 약한 지반 붕괴만 순간입니다. 진입 기록·다른 종류 바뀜에는 소리·큐가 없습니다(갈래 판정 CombatTerrainChanges).
             Row<CombatMovementSourceEvent>(CombatEventHandlerSlot.Facts,
@@ -322,13 +311,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// </summary>
         internal static bool OverlapsUnitRuns(CombatEvent e) => RowOf(e)?.OverlapsUnitRuns ?? false;
 
-        /// <summary>사건이 거는 단계 화면 전환입니다. 없으면 <see cref="CombatPhaseTransitionKind.None"/>입니다.</summary>
-        internal static CombatPhaseTransitionKind TransitionOf(CombatEvent e)
-        {
-            TypeRow row = RowOf(e);
-            return row?.Transition != null ? row.Transition(e) : CombatPhaseTransitionKind.None;
-        }
-
         /// <summary>
         /// 사건 순간에 소리·연출 큐가 붙는 사건이면 그 순간 값을 줍니다(이펙트 창구 확장 설계 EC7, 계획 P15). 소리 표(사건 소리)와
         /// 순간 큐 내는 곳이 이 질문 하나를 읽습니다. 순간이 아닌 사건·갈래면 false입니다.
@@ -443,7 +425,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Func<T, bool> isMovement = null,
             Func<T, CombatEventPacing> pacing = null,
             bool holdsWhenShownOnly = false,
-            Func<T, CombatPhaseTransitionKind> transition = null,
             Func<T, CombatEventMoment?> moment = null,
             Func<T, bool> opensAttackSource = null,
             bool overlapsUnitRuns = false)
@@ -451,7 +432,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             return new TypeRow(typeof(T), handlerSlot, isActionStart, holdsWhenShownOnly, overlapsUnitRuns,
                 Wrap(route), Wrap(actor), Wrap(subject), Wrap(origins), Wrap(attackSource), Wrap(isMovement), Wrap(pacing),
-                Wrap(transition), Wrap(moment), Wrap(opensAttackSource));
+                Wrap(moment), Wrap(opensAttackSource));
         }
 
         // 형식별 함수를 사건 함수로 감쌉니다. 표를 만들 때 한 번만 부릅니다.
@@ -496,7 +477,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 Func<CombatEvent, CombatAttackSource?> attackSource,
                 Func<CombatEvent, bool> isMovement,
                 Func<CombatEvent, CombatEventPacing> pacing,
-                Func<CombatEvent, CombatPhaseTransitionKind> transition,
                 Func<CombatEvent, CombatEventMoment?> moment,
                 Func<CombatEvent, bool> opensAttackSource)
             {
@@ -512,7 +492,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 AttackSource = attackSource;
                 IsMovement = isMovement;
                 Pacing = pacing;
-                Transition = transition;
                 Moment = moment;
                 OpensAttackSource = opensAttackSource;
             }
@@ -529,7 +508,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             internal Func<CombatEvent, CombatAttackSource?> AttackSource { get; }
             internal Func<CombatEvent, bool> IsMovement { get; }
             internal Func<CombatEvent, CombatEventPacing> Pacing { get; }
-            internal Func<CombatEvent, CombatPhaseTransitionKind> Transition { get; }
             internal Func<CombatEvent, CombatEventMoment?> Moment { get; }
             internal Func<CombatEvent, bool> OpensAttackSource { get; }
         }

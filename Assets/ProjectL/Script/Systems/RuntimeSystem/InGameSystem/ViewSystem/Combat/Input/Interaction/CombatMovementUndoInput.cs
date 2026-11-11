@@ -7,6 +7,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// <summary>현재 선택의 최신 Core 응답만 사용하는 이동 되돌리기 입력입니다.</summary>
     internal sealed class CombatMovementUndoInput
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUndoMoveRequest = new("Combat.Action.Interaction.UndoMove.Request");
+#endif
+
         private readonly CombatActionAvailabilityTracker _availability;
         private readonly CombatCommandGate _gate;
         private readonly Func<bool, CombatInputFacts> _readFacts;
@@ -26,6 +31,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>버튼과 키가 같은 최신 응답으로 한 번 제출합니다. 대기는 기존 Gate가 소유합니다.</summary>
         internal bool Request()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUndoMoveRequestSample = _profileInteractionUndoMoveRequest.Auto();
+#endif
+
             CombatInputFacts facts = _readFacts(true);
             CombatActionAvailability answer = ReadAnswer(facts);
             if (answer == null)

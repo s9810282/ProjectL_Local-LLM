@@ -61,7 +61,7 @@ namespace ProjectL.Tests.Core
             Assert.That(Final(first, 1).Debuffs.Intimidation, Is.Null);
             foreach (var id in new[] { 2, 3, 4 }) AssertDebuff(Final(first, id), 20);
             var afterFirst = CombatCommandComposition.Project(first);
-            var restarted = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(afterFirst, CombatControllerPhase.StartingPlayer));
+            var restarted = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(afterFirst, CombatControllerPhase.StartingPlayer), Array.Empty<IMovementTileRule>());
             var second = Run(CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(restarted),
                 CombatCommandKind.Attack, input.ActorId, input.Aim));
             Assert.That(second.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(15));
@@ -79,7 +79,7 @@ namespace ProjectL.Tests.Core
             Assert.That(first.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(expected));
             Assert.That(Final(first, 1).PositionModifier.AttackBonus, Is.EqualTo(bonus));
             var afterFirst = CombatCommandComposition.Project(first);
-            var restarted = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(afterFirst, CombatControllerPhase.StartingPlayer));
+            var restarted = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(afterFirst, CombatControllerPhase.StartingPlayer), Array.Empty<IMovementTileRule>());
             var second = Run(CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(restarted).WithActor(input.ActorId),
                 CombatCommandKind.Attack, input.ActorId, input.Aim));
             Assert.That(second.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(15 + bonus));
@@ -197,7 +197,7 @@ namespace ProjectL.Tests.Core
             {
                 CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(3, 3), Owner.Enemy),
                 CombatCommandTestData.Character(3, EntityKey.Unit_Demon, new CellCoord(4, 3), Owner.Player)
-            }).ToArray(), new CombatCommandState(8,8,input.State.Phase,false,                new[] { structure },input.State.ThornFields,turn: input.State.Turn));
+            }).ToArray(), new CombatCommandState(8,8,input.State.Phase,                new[] { structure },input.State.ThornFields,turn: input.State.Turn));
             input = AddTrait(AddTrait(input, new PiercingFalloffTraitSpec(30, 99), new PiercingFalloffTraitStatusSnapshot(30)),
                 new IntimidationTraitSpec(20), new IntimidationTraitStatusSnapshot(20));
             var result = Run(input);
@@ -265,7 +265,7 @@ namespace ProjectL.Tests.Core
             actor = CombatCommandCalculator.Copy(actor, actor.Health, CombatCommandEffects.With(actor.Stats,
                 traits: new TraitStatusSnapshot[] { new IntimidationTraitStatusSnapshot(percent) }));
             var characters = input.Characters.Where(c => c.EntityId != input.ActorId).Prepend(actor).ToArray();
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                input.State.Structures,input.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (CombatFlowPhase.PlayerInput) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                input.State.Structures,input.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (CombatFlowPhase.PlayerInput) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
             return new CombatCommandInput(input.Number + 1, CombatCommandKind.Attack, actor.EntityId, input.Aim, state, characters,
                 input.Profiles.Select(p => p.Definition.Key == actor.CharacterKey ? new CombatAttackProfile(
                     CombatCommandTestData.Spec(actor.CharacterKey, 15, CategoryKey.Main, new IntimidationTraitSpec(percent)), p.Method) : p).ToArray(),

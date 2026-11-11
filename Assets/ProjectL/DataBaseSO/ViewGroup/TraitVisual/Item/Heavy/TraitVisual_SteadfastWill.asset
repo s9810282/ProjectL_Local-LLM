@@ -16,7 +16,8 @@ MonoBehaviour:
     key: 330
     displayName: "\uAD73\uAC74\uD55C \uC758\uC9C0"
     icon: {fileID: 21300000, guid: ec42ba0af6168c34ea8fc5922949ff16, type: 3}
-    description: "넉백에 밀려나지 않습니다. \n끌어오기에는 적용되지 않습니다."
+    description: "\uB109\uBC31\uC5D0 \uBC00\uB824\uB098\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.
+      \n\uB04C\uC5B4\uC624\uAE30\uC5D0\uB294 \uC801\uC6A9\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
     defenseReductionDescription: 
     rankValueFormat: 
     activations: []
@@ -24,7 +25,7 @@ MonoBehaviour:
     - condition: 0
       effect:
         effect: 10
-        positionOffset: {x: 0, y: -0.35, z: 0}
+        positionOffset: {x: 0, y: 0, z: 0}
         riderYOffset: 0
         rotationOffset: {x: 0, y: 60, z: 0}
     trailPrefab: {fileID: 0}

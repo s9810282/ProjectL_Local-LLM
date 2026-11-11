@@ -49,6 +49,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
         bool TryGetSession(int sessionId, out TutorialSessionSnapshot session);
 
         /// <summary>
+        /// 이번 런타임에 그 정의를 마지막 단계까지 마친(Completed) 세션이 있는지입니다. 보존된 종료 세션에서 계산합니다.
+        /// 중간에 끊긴 회차(Cancelled·Faulted)는 세지 않습니다. 게임을 다시 실행하면 기록이 없습니다(2026-11-11 사용자).
+        /// </summary>
+        bool HasCompleted(int tutorialKey);
+
+        /// <summary>
         /// 활성 세션이 전투 입력에 거는 제한입니다(설계 §5). 정의의 단계 순서와 현재 단계·대기 이유로 매번 계산합니다.
         /// 제한 실습 단계이거나, 그 실습을 통과한 뒤 바로 다음 설명이 시작 조건을 기다리는 동안 이어집니다.
         /// </summary>
@@ -196,6 +202,18 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
         public bool TryGetSession(int sessionId, out TutorialSessionSnapshot session)
         {
             return _sessions.TryGetValue(sessionId, out session);
+        }
+
+        // 따로 기록을 두지 않고 보존된 세션을 훑는다. Combat 화면 연결 때 한 번 읽어 세션 수가 적다.
+        public bool HasCompleted(int tutorialKey)
+        {
+            foreach (TutorialSessionSnapshot session in _sessions.Values)
+            {
+                if (session.TutorialKey == tutorialKey && session.Status == TutorialSessionStatus.Completed)
+                    return true;
+            }
+
+            return false;
         }
 
         public void Initialize(IReadOnlyList<TutorialDefinitionInfo> definitions,

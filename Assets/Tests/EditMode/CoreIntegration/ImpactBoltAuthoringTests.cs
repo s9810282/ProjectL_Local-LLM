@@ -213,7 +213,7 @@ namespace ProjectL.Tests.CoreIntegration
                     growth: new OwnedTraitGrowth(new[] { new TraitGrowthSelection(1, TraitKey.ImpactBolt) })) };
             var stats = OwnedCharacterStatsCalculator.Calculate(BattleDefinitionAdapter.ReadAttackProfiles(authoring.Database(), new[] { basis }),
                 UnitSpecAdapter.ReadCategories(ConfiguredMovementBattle.Config),
-                owned, null, owned.ToDictionary(o => o.Id, _ => 0), catalog);
+                owned, null, owned.ToDictionary(o => o.Id, _ => 0), default, catalog);
             Assert.That(stats.Select(s => s.ImpactBoltDescription.DistanceCells), Is.EqualTo(new[] { 1, 2 }));
             Assert.That(((ImpactBoltTraitSpec)basis.Traits.Span[0]).DistanceCells, Is.EqualTo(1));
             // 설정 묶음도 개체별 최종값이며, 전투 준비와 같은 resolver 결과와 값이 같다.
@@ -224,11 +224,11 @@ namespace ProjectL.Tests.CoreIntegration
                     OwnedUnitSpecResolver.Resolve(basis, owned[i], catalog).Traits.ToArray().Select(t => (t, TraitOrigin.Unit)))), Is.True);
             var first = stats[0];
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(first.OwnedId, first.CharacterKey, first.Role,
-                first.Level, first.SoulCount, first.Stats, first.AttackPattern, first.TraitSettings, null));
+                first.Level, first.Experience, first.SoulCount, first.Stats, first.AttackPattern, first.TraitSettings, null));
             var s = first.Stats;
             var noTraits = new CharacterBaselineStatsSnapshot(s.CurrentHealth,s.MaxHealth,s.AttackPower,s.PhysicalDefense,                s.MoveMethod,s.MoveRange,s.AttackRange,s.Priority,s.CategoryKey,Array.Empty<TraitKey>());
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(first.OwnedId, first.CharacterKey, first.Role,
-                first.Level, first.SoulCount, noTraits, first.AttackPattern, TraitSettingsSet.Empty, null, impactBoltDescription: first.ImpactBoltDescription));
+                first.Level, first.Experience, first.SoulCount, noTraits, first.AttackPattern, TraitSettingsSet.Empty, null, impactBoltDescription: first.ImpactBoltDescription));
         }
 
         [Test]

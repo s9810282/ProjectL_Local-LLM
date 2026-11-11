@@ -28,6 +28,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Descriptions.Tr
                     DescriptionToken<TraitSpec>.From<CohesionTraitSpec>("아군당보호막량", value => value.ShieldAmountPerAlly),
                     DescriptionToken<TraitSpec>.From<CohesionTraitSpec>("반경", value => value.RadiusCells),
                     DescriptionToken<TraitSpec>.From<CohesionTraitSpec>("초기화주기", value => value.ResetEveryControllerTurnEnds)),
+                [TraitKey.CrashImpact] = new(
+                    DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("날아가는거리", value => value.DistanceCells),
+                    DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("벽피해율", value => value.WallDamagePercent),
+                    DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("유닛피해율", value => value.UnitDamagePercent)),
                 [TraitKey.Disarm] = new(
                     DescriptionToken<TraitSpec>.From<DisarmTraitSpec>("지속횟수", value => value.DurationAffectedSideTurnEnds)),
                 [TraitKey.DustScreen] = new(
@@ -80,7 +84,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Descriptions.Tr
                     DescriptionToken<TraitSpec>.From<RegenerationTraitSpec>("회복량", value => value.HealAmount),
                     DescriptionToken<TraitSpec>.From<RegenerationTraitSpec>("회복주기", value => value.HealEveryOwnSideTurnEnds)),
                 [TraitKey.Roar] = new(
-                    DescriptionToken<TraitSpec>.From<RoarTraitSpec>("필요피격횟수", value => value.HitThreshold)),
+                    DescriptionToken<TraitSpec>.From<RoarTraitSpec>("필요피격횟수", value => value.HitThreshold),
+                    DescriptionToken<TraitSpec>.From<RoarTraitSpec>("피격당카운트", value => value.CountPerHit),
+                    DescriptionToken<TraitSpec>.From<RoarTraitSpec>("자기턴종료카운트", value => value.CountPerOwnSideTurnEnd),
+                    DescriptionToken<TraitSpec>.From<RoarTraitSpec>("상대턴종료카운트", value => value.CountPerOpposingSideTurnEnd)),
                 [TraitKey.Sacrifice] = new(
                     DescriptionToken<TraitSpec>.From<SacrificeTraitSpec>("반경", value => value.RadiusCells),
                     DescriptionToken<TraitSpec>.From<SacrificeTraitSpec>("최대발동횟수", value => value.MaxTriggersPerEnemyTurn)),

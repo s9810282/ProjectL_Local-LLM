@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPanel;
+using ProjectL.Systems.ServiceKeys.Runtime;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -93,10 +94,36 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public bool IsOpen => _isOpen;
         public ScrollPanelPresentation ScrollPresentation => scrollPresentation != null ? scrollPresentation :
             throw new InvalidOperationException("[DeckEditUI] 두루마리 scrollPresentation 참조가 필요합니다.");
-        public bool IsDepartureConfirmationOpen => combatConfirmUI != null && combatConfirmUI.IsOpen;
+        public bool IsDepartureConfirmationOpen => combatConfirmUI.IsOpen;
         public int DeckSlotCount => deckSlots.Length;
         public int ChangingSlotIndex => _changingSlot;
         public event Action<bool> OpenStateChanged;
+
+        /// <summary>런타임 씬 연결과 에디터 도구에서 덱 상세 패널의 정렬용 Canvas 구성을 확인합니다.</summary>
+        /// <returns>별도 정렬을 사용하는 상세 패널의 Canvas입니다. 공통 Canvas를 쓰면 null입니다.</returns>
+        public Canvas ValidateChildCanvases()
+        {
+            Canvas slotInfoCanvas = null;
+            foreach (Canvas childCanvas in GetComponentsInChildren<Canvas>(true))
+            {
+                Transform canvasTransform = childCanvas.transform;
+                if (slotInfoCanvas != null || panel == null || slotInfoPanel == null ||
+                    canvasTransform == panel.transform || !canvasTransform.IsChildOf(panel.transform) ||
+                    slotInfoPanel.transform.parent != canvasTransform || canvasTransform.childCount != 1)
+                {
+                    throw new InvalidOperationException(
+                        $"[DeckEditUI] UIId.DeckSlotInfo의 Canvas '{childCanvas.name}'는 Panel 안에서 slotInfoPanel만 직접 감싸야 합니다.");
+                }
+                if (!childCanvas.overrideSorting || childCanvas.GetComponent<GraphicRaycaster>() == null)
+                {
+                    throw new InvalidOperationException(
+                        $"[DeckEditUI] UIId.DeckSlotInfo의 Canvas '{childCanvas.name}'에 Override Sorting과 GraphicRaycaster가 필요합니다.");
+                }
+
+                slotInfoCanvas = childCanvas;
+            }
+            return slotInfoCanvas;
+        }
 
         private void Awake() => Prepare();
 
@@ -111,6 +138,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public override void BindUIService(ISystemServiceStoreReader resolver)
         {
             if (resolver == null) throw new ArgumentNullException(nameof(resolver));
+            ScrollPresentation.BindAudio(resolver.GetService(SystemGroupsService.Global).AudioServiceCommand);
         }
 
         public void BindOpenRequest(Action open) => _open = open;
@@ -125,27 +153,17 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public void BindDeparture(IDeckCombatInput input)
         {
             _departure = input;
-            if (combatConfirmUI != null) combatConfirmUI.BindInput(input);
+            combatConfirmUI.BindInput(input);
         }
 
         public void RenderDeparture(bool visible, bool canStart)
         {
             CancelChangeMode();
             CancelDrag();
-            if (visible && (startCombatButton == null || combatConfirmUI == null))
-                throw new InvalidOperationException("[DeckEditUI] 출전에는 startCombatButton과 combatConfirmUI 연결이 필요합니다.");
-            if (visible)
-            {
-                Canvas containingCanvas = GetComponentInParent<Canvas>(true);
-                if (panel == null || containingCanvas == null ||
-                    !combatConfirmUI.transform.IsChildOf(panel.transform) ||
-                    combatConfirmUI.GetComponentInParent<Canvas>(true) != containingCanvas)
-                    throw new InvalidOperationException("[DeckEditUI] combatConfirmUI는 Panel 아래에 있고 DeckEditUI와 같은 부모 Canvas를 사용해야 합니다.");
-            }
+            // 출전 버튼·확인창의 연결과 위치는 씬 연결 때 Validate가 검사했습니다.
             _canStart = visible && canStart;
             confirmButton.gameObject.SetActive(!visible);
             closeButton.gameObject.SetActive(!visible);
-            if (startCombatButton == null) return;
             startCombatButton.gameObject.SetActive(visible);
             startCombatButton.interactable = _canStart;
         }
@@ -217,6 +235,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             RefreshInfo();
 
             confirmButton.interactable = _canConfirm;
+            // 다시 평가하면 풀리는 상태(낡음·준비 안 됨)일 때만 보입니다(평가 C-06).
+            reevaluateButton.gameObject.SetActive(model.CanReevaluate);
         }
 
         private void RenderOwned()
@@ -316,15 +336,19 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         {
         }
 
-        private void Prepare()
+        /// <summary>
+        /// 필수 구성을 상태를 바꾸지 않고 검사합니다. 씬 연결 때 선택 패널 검사가 부르고(평가 C-26), 준비도 이것부터 부릅니다.
+        /// 출전 버튼·확인창은 출전에서 늘 쓰므로 필수입니다.
+        /// </summary>
+        internal void Validate()
         {
-            if (_prepared) return;
             if (contentFrame == null || !contentFrame.IsChildOf(ScrollPresentation.ContentRoot))
                 throw new InvalidOperationException("[DeckEditUI] contentFrame은 두루마리 ContentRoot 안에 있어야 합니다.");
             if (panel == null || openButton == null || closeButton == null || confirmButton == null ||
-                reevaluateButton == null || deckSlots == null || deckSlots.Length != DeckEditSlotLayout.Count)
+                reevaluateButton == null || startCombatButton == null || combatConfirmUI == null ||
+                deckSlots == null || deckSlots.Length != DeckEditSlotLayout.Count)
                 throw new InvalidOperationException(
-                    "[DeckEditUI] Panel, 열기·닫기·확정·다시 평가 버튼, 덱 칸 참조가 필요합니다.");
+                    "[DeckEditUI] Panel, 열기·닫기·확정·다시 평가·출전 버튼, 출전 확인창, 덱 칸 참조가 필요합니다.");
             ValidateOwnedList();
             if (ownedFilter == null)
                 throw new InvalidOperationException("[DeckEditUI] UIId.DeckEdit: ownedFilter 설정이 필요합니다.");
@@ -341,6 +365,17 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                         throw new InvalidOperationException($"[DeckEditUI] UIId.DeckEdit: deckSlots[{previous}]와 [{i}]가 같은 슬롯입니다.");
                 deckSlots[i].Validate();
             }
+            Canvas containingCanvas = GetComponentInParent<Canvas>(true);
+            if (containingCanvas == null || !combatConfirmUI.transform.IsChildOf(panel.transform) ||
+                combatConfirmUI.GetComponentInParent<Canvas>(true) != containingCanvas)
+                throw new InvalidOperationException("[DeckEditUI] combatConfirmUI는 Panel 아래에 있고 DeckEditUI와 같은 부모 Canvas를 사용해야 합니다.");
+            combatConfirmUI.Validate();
+        }
+
+        private void Prepare()
+        {
+            if (_prepared) return;
+            Validate();
             slotInfoPanel.BindInput(this);
             var cancelBinding = panel.GetComponent<DeckEditCancelBinding>();
             if (cancelBinding == null) cancelBinding = panel.AddComponent<DeckEditCancelBinding>();
@@ -348,7 +383,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             UIInputBinding.Attach(openButton, this, OpenSlot);
             UIInputBinding.Attach(closeButton, this, CloseSlot);
             UIInputBinding.Attach(confirmButton, this, ConfirmSlot);
-            if (startCombatButton != null) UIInputBinding.Attach(startCombatButton, this, StartCombatSlot);
+            UIInputBinding.Attach(startCombatButton, this, StartCombatSlot);
             UIInputBinding.Attach(reevaluateButton, this, ReevaluateSlot);
             ownedFilter.Bind(this, FirstOwnedFilterSlot);
             for (int i = 0; i < deckSlots.Length; i++)

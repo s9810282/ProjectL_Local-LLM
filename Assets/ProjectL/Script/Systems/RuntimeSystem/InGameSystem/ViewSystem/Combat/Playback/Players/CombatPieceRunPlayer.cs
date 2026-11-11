@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
@@ -5,7 +8,9 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ordering;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Movement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Players
@@ -37,6 +42,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly Func<int> _currentFrame;
         private readonly Action<CombatPieceRun> _onEnded;
         private readonly Action<CombatPieceRun> _onUnavailable;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatEventProfiler Profiler { get; set; }
+
+#endif
         private readonly List<CombatPieceRun> _runs = new();
         private readonly List<CombatPieceRun> _tickSnapshot = new();
         private CombatPieceRun _actionRun;
@@ -74,6 +83,37 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="version">사건을 시작한 재생 세대입니다.</param>
         internal bool TryBegin(CombatComposition composition, Action completed, int version)
         {
+            return TryBeginCore(composition, completed, version, _lifetime, false, _onUnavailable, out _);
+        }
+
+        /// <summary>선행 사건을 막지 않는 조기 공격 실행입니다. 자원·Tick·해제는 같은 실행 목록이 맡습니다.</summary>
+        internal bool TryBeginDeferredAttack(CombatComposition composition, ICombatSourceLifetime lifetime,
+            int version, Action<CombatPieceRun> unavailable, out CombatPieceRun run)
+        {
+            if (composition == null || composition.Scope != CombatPieceScope.Action || !composition.Completion.IsSource)
+                throw new ArgumentException("출처가 있는 공격 행동 조립이 필요합니다.", nameof(composition));
+            return TryBeginCore(composition, null, version, lifetime ?? throw new ArgumentNullException(nameof(lifetime)),
+                true, unavailable ?? throw new ArgumentNullException(nameof(unavailable)), out run);
+        }
+
+        internal bool HasActionRun => _actionRun != null;
+
+        /// <summary>바로 그 조기 실행만 행동 슬롯에 합류시킵니다. 다른 실행의 슬롯을 덮어쓰지 않습니다.</summary>
+        internal void JoinDeferredAttack(CombatPieceRun run)
+        {
+            if (run == null) throw new ArgumentNullException(nameof(run));
+            if (_actionRun != null && !ReferenceEquals(_actionRun, run))
+                throw new InvalidOperationException("다른 행동 실행이 끝나기 전에 조기 공격을 합류할 수 없습니다.");
+            if (run.IsActive)
+            {
+                if (!_runs.Contains(run)) throw new InvalidOperationException("소유하지 않은 조기 공격 실행입니다.");
+                _actionRun = run;
+            }
+        }
+
+        private bool TryBeginCore(CombatComposition composition, Action completed, int version,
+            ICombatSourceLifetime lifetime, bool deferred, Action<CombatPieceRun> unavailable, out CombatPieceRun run)
+        {
             if (composition == null) throw new ArgumentNullException(nameof(composition));
             if (_unavailable)
                 throw new InvalidOperationException("[CombatPieceRunPlayer] 표시가 사라진 실행이 있어 새 실행을 시작할 수 없습니다.");
@@ -82,10 +122,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             if (composition.Scope == CombatPieceScope.Unit && FindUnitRun(composition.Subject) != null)
                 throw new InvalidOperationException($"[CombatPieceRunPlayer] 같은 유닛의 실행이 아직 끝나지 않았습니다: {composition.Subject}");
 
-            var run = new CombatPieceRun(composition, _window, _camera, _lifetime, _generation, _mapper, _currentFrame, completed, version,
-                _onEnded, _onUnavailable);
+            run = new CombatPieceRun(composition, _window, _camera, lifetime, _generation, _mapper, _currentFrame, completed, version,
+                _onEnded, unavailable);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            run.Profile = Profiler?.Of(composition) ?? CombatEventProfiler.Unknown;
+#endif
             _runs.Add(run);
-            if (composition.Scope == CombatPieceScope.Action)
+            if (composition.Scope == CombatPieceScope.Action && !deferred)
                 _actionRun = run;
             bool started;
             try
@@ -112,7 +155,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 행동 실행(포효·소환) 중에는 막습니다. 포효가 히트로 사건 완료를 알린 뒤(겹침 허용 프로필)에만 Gate 규칙으로 허용된 사건이 겹칩니다(설계 §6 Q1).
             if (_actionRun != null && !(query.AllowsOverlap && _overlap.AllowsOverlap))
                 return CombatStartBlock.PieceBusy;
+            // 밀림과 함께 가는 피격(넉백 피격 연출, 임시)은 그 유닛의 밀림 걸음과, 그 사이에 끼는 그 유닛의 사실·특성 발동 사건을 막지 않습니다.
+            // 맞는 순간 함께 밀리기 시작합니다(같은 유닛 사건은 차례로 재생돼, 끼인 사건이 막히면 밀림 걸음도 그 뒤로 밀립니다 — 2026-11-11 진단 로그).
+            if (PassesPushAlongsideHit(query.Item))
+                return CombatStartBlock.None;
             return CombatSubjectBlocking.Blocks(query, this) ? CombatStartBlock.PieceSubject : CombatStartBlock.None;
+        }
+
+        // 그 사건의 주체가 밀림과 함께 가는 피격 실행(CombatComposition.AllowsSubjectPush)을 가진 유닛이고, 그 실행과 겹쳐도 되는 사건인지입니다.
+        // 겹쳐도 되는 것: 밀림 걸음, 캐릭터 사건이 아닌 사건(특성 발동·상태 등 — 그 유닛의 자세·유닛 실행을 새로 열지 않음).
+        // 기다리는 것: 그 유닛의 다른 캐릭터 사건(피격·사망·재배치 — 반응·유닛 실행을 열어 이 실행과 다툼), 행동 사건, 공격 출처를 여는 사건.
+        // 그 유닛의 유닛 실행은 이것 하나뿐입니다(유닛 실행은 주체마다 하나). 행동 실행 막기는 위에서 이미 봤습니다.
+        private bool PassesPushAlongsideHit(CombatEvent item)
+        {
+            if (item == null || CombatEventTypeTable.IsActionStart(item) || CombatEventTypeTable.OpensAttackSource(item) ||
+                !CombatEventTypeTable.TryGetSubject(item, out EntityId subject) ||
+                FindUnitRun(subject)?.Composition.AllowsSubjectPush != true)
+                return false;
+            return item is not CombatCharacterEvent character ||
+                character.Kind == CombatEventKind.Moved && !CombatMovementKinds.IsSelfDriven(CombatMovementKinds.Of(character));
         }
 
         /// <summary>프레임 번호를 올립니다. 이 프레임에 신호로 바뀐 항목은 이 프레임 시간을 받지 않습니다(설계 BP2 규칙 2, B14 O4).</summary>
@@ -156,7 +217,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             List<Exception> errors = null;
             for (int i = 0; i < runs.Length; i++)
                 CleanupErrors.Try(runs[i].Cancel, ref errors);
-            CleanupErrors.ThrowIfAny(errors, CombatSceneEventPresenter.CleanupFailureMessage);
+            CleanupErrors.ThrowIfAny(errors, "[CombatPieceRunPlayer] 조각 실행 정리에 실패했습니다.");
         }
 
         public void Release() => Cancel();

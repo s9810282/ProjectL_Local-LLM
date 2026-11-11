@@ -29,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </para>
     /// <para>
     /// 경로 입력은 정지(<see cref="Stop"/>) 때 연결을 끊고, 이름 입구용 참조를 놓습니다. 목록의 경로 어댑터는 끊긴 경로를 다시 부르지 않습니다(<see cref="CombatPathInput.IsDetached"/>).
-    /// 경로 입력 없이 만들면(배치·공격만 검증하는 조립) 경로 위임은 아무것도 하지 않습니다(정지 뒤와 같은 상태).
+    /// 정지 뒤 경로 위임은 아무것도 하지 않습니다. 기능 여섯은 모두 생성 때 필수입니다(평가 C5-02).
     /// </para>
     /// </remarks>
     internal sealed class CombatInteraction
@@ -51,56 +51,50 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         private readonly PlacementDragInteraction _placement;
         private readonly AttackTargetingInteraction _attack;
-        // 이동 경로·복귀 입력입니다. 이름 입구(복귀·취소·이동 모드 끝)와 읽기 멤버가 씁니다. 정지 때 Detach하고 null로 둡니다.
+        // 이동 경로·복귀 입력입니다. 이름 입구(복귀·취소·이동 모드 끝)와 읽기 멤버가 씁니다.
+        // 생성 때는 필수지만 정지 때 Detach하고 null로 두므로, 쓰는 곳 셋은 null 갈래를 남깁니다(F2, 평가 C5-02 P1).
         private CombatPathInput _path;
-        // 공격 모드에서 시작한 Drag를 경로로 넘기는 소유자입니다(View 2라운드 W5-5). 몸짓 없이 만들면 null입니다.
+        // 공격 모드에서 시작한 Drag를 경로로 넘기는 소유자입니다(View 2라운드 W5-5).
         private readonly CombatAttackDragHandover _handover;
-        // 가방 아이템 드래그입니다. 없으면(배치·공격만 검증하는 조립) 아이템 위임은 아무것도 하지 않습니다.
+        // 가방 아이템 드래그입니다.
         private readonly CombatItemDragInteraction _item;
         // 수명 메서드가 도는 소유자 목록입니다(View 2라운드 W5-1). 순서는 생성자 한 곳이 정합니다.
         private readonly CombatInputOwner[] _owners;
         // 포인터 대상마다 그 대상을 받는 소유자입니다. 대상 하나에 소유자는 하나입니다(P10).
         private readonly Dictionary<CombatInputRouter.PointerTarget, CombatInputOwner> _byTarget;
-        // 배경 소유자(유닛 호버 범위)가 있는지입니다. 없으면 배경 허용 값을 계산하지 않습니다.
-        private readonly bool _hasBackground;
 
         /// <summary>
         /// 이미 만든 입력 기능 객체를 묶습니다. 기능 객체 생성과 의존성 연결은 <c>CombatSceneInputFactory</c>가 합니다(구조 개선 SV5).
         /// 받은 기능의 소유자로 목록과 대상 표를 만듭니다. 같은 포인터 대상을 받는 소유자가 둘이면 예외입니다(P10).
         /// </summary>
-        /// <param name="path">이동 경로 입력입니다. 없으면 null이며 경로 위임은 아무것도 하지 않습니다.</param>
-        /// <param name="attackDrag">공격 Drag 몸짓입니다. 있으면 경로로 넘기는 소유자를 만들어 목록 맨 앞에 둡니다(View 2라운드 W5-5).</param>
-        /// <param name="item">가방 아이템 드래그입니다. 없으면 null입니다(가방 설계 P4).</param>
-        /// <param name="rangeHover">유닛 호버 공격 범위입니다. 없으면 null입니다(호버 공격 범위 설계 UR6).</param>
-        internal CombatInteraction(PlacementDragInteraction placement, AttackTargetingInteraction attack, CombatPathInput path = null,
-            CombatAttackDragGesture attackDrag = null, CombatItemDragInteraction item = null, CombatUnitRangeHover rangeHover = null)
+        /// <param name="path">이동 경로 입력입니다. 필수이고, 정지 뒤에는 놓습니다.</param>
+        /// <param name="attackDrag">공격 Drag 몸짓입니다. 경로로 넘기는 소유자를 만들어 목록 맨 앞에 둡니다(View 2라운드 W5-5).</param>
+        /// <param name="item">가방 아이템 드래그입니다(가방 설계 P4).</param>
+        /// <param name="rangeHover">유닛 호버 공격 범위입니다(호버 공격 범위 설계 UR6). 배경 소유자는 이것 하나입니다.</param>
+        internal CombatInteraction(PlacementDragInteraction placement, AttackTargetingInteraction attack, CombatPathInput path,
+            CombatAttackDragGesture attackDrag, CombatItemDragInteraction item, CombatUnitRangeHover rangeHover)
         {
             _placement = placement ?? throw new ArgumentNullException(nameof(placement));
             _attack = attack ?? throw new ArgumentNullException(nameof(attack));
-            _path = path;
-            _handover = attackDrag == null ? null : new CombatAttackDragHandover(attackDrag, path, attack);
-            _item = item;
+            // 운영 조립(CombatSceneInputFactory)은 여섯 기능을 늘 넘깁니다(평가 C5-02). 빠진 인자는 넘겨받기를 만들기 전에 이름으로 알립니다.
+            _path = path ?? throw new ArgumentNullException(nameof(path));
+            if (attackDrag == null)
+                throw new ArgumentNullException(nameof(attackDrag));
+            _item = item ?? throw new ArgumentNullException(nameof(item));
+            if (rangeHover == null)
+                throw new ArgumentNullException(nameof(rangeHover));
+            _handover = new CombatAttackDragHandover(attackDrag, path, attack);
 
             // 목록 순서(TP-2): 넘겨받기 → 경로 → 아이템 → 배치 → 공격 → 호버.
-            var owners = new List<CombatInputOwner>(6);
-            if (_handover != null)
-                owners.Add(_handover.InputOwner);
-            if (path != null)
-                owners.Add(path.InputOwner);
-            if (item != null)
-                owners.Add(item.InputOwner);
-            owners.Add(placement.InputOwner);
-            owners.Add(attack.InputOwner);
-            if (rangeHover != null)
-                owners.Add(rangeHover.InputOwner);
-            _owners = owners.ToArray();
+            _owners = new[]
+            {
+                _handover.InputOwner, path.InputOwner, item.InputOwner, placement.InputOwner, attack.InputOwner, rangeHover.InputOwner,
+            };
 
             _byTarget = new Dictionary<CombatInputRouter.PointerTarget, CombatInputOwner>();
             for (int i = 0; i < _owners.Length; i++)
             {
                 CombatInputOwner owner = _owners[i];
-                if (owner.IsBackground)
-                    _hasBackground = true;
                 if (owner.Target == CombatInputRouter.PointerTarget.None)
                     continue;
                 if (_byTarget.ContainsKey(owner.Target))
@@ -110,7 +104,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         /// <summary>가방 아이템을 끌고 있는지입니다(읽기 전용, 아이템 소유자 값). 포인터 대상 판정이 읽습니다.</summary>
-        internal bool IsItemDragActive => _item != null && _item.IsDragging;
+        internal bool IsItemDragActive => _item.IsDragging;
 
         /// <summary>공격 모드인지입니다. 입력 대상 판정이 읽습니다.</summary>
         internal bool IsAttackActive => _attack.IsActive;
@@ -176,7 +170,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         internal void CancelDeckSelection() => _placement.CancelDeckSelection();
 
         internal bool CanSelectItem(in CombatInputFacts facts, int itemKey) =>
-            _item != null && !_placement.IsDragging && _item.CanSelect(facts, itemKey);
+            !_placement.IsDragging && _item.CanSelect(facts, itemKey);
 
         /// <summary>가방 아이템을 집습니다. 집을 수 있을 때만 다른 소유자의 표현(배치 호버·고스트 등)을 먼저 정리합니다.</summary>
         internal void SelectItem(in CombatInputFacts facts, int itemKey)
@@ -187,11 +181,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _item.Select(facts, itemKey);
         }
 
-        internal void CancelItemSelection() => _item?.Cancel();
+        internal void CancelItemSelection() => _item.Cancel();
 
-        /// <summary>HUD 아이템 아이콘 우클릭 해제입니다(가방 설계 P6). 아이템 입력이 없는 조립에서는 하지 않습니다. 제출했으면 true입니다.</summary>
+        /// <summary>HUD 아이템 아이콘 우클릭 해제입니다(가방 설계 P6). 제출했으면 true입니다.</summary>
         internal bool RequestItemUnequip(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, EntityId unitId) =>
-            _item != null && _item.RequestUnequip(facts, characters, unitId);
+            _item.RequestUnequip(facts, characters, unitId);
 
         /// <summary>
         /// 배치 Layer에서 마지막으로 받은 포인터 위치입니다(가방 설계 P6). 우클릭 취소에는 좌표가 없어 Router가 UI 위인지 볼 때 읽습니다.
@@ -204,18 +198,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         /// <summary>
         /// 새 공격 Drag가 소유한 입력만 먼저 처리합니다. 클릭과 소유권 없는 release는 기존 배분으로 보냅니다.
-        /// 넘겨받기 소유자에 위임합니다(View 2라운드 W5-5). 몸짓 없이 만든 조립에서는 처리하지 않습니다(false).
+        /// 넘겨받기 소유자에 위임합니다(View 2라운드 W5-5).
         /// </summary>
         internal bool TryHandleAttackDragPointer(CombatInputRouter.Request request, float screenX, float screenY, bool blockedByUi) =>
-            _handover != null && _handover.TryHandlePointer(request, screenX, screenY, blockedByUi);
+            _handover.TryHandlePointer(request, screenX, screenY, blockedByUi);
 
         internal void PointerMoved(CombatInputRouter.PointerTarget target, in CombatInputFacts facts,
             IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
             var input = new CombatPointerInput(facts, characters, screenX, screenY);
             OwnerOf(target)?.PointerMoved(input);
-            if (!_hasBackground)
-                return;
             // 소유자가 이 위치를 먼저 처리한 뒤 배경(호버 범위)을 맞춘다. 다른 소유자가 포인터를 쓰는 동안에는 내려놓기만 한다.
             bool canShow = IsRangeHoverTarget(target);
             for (int i = 0; i < _owners.Length; i++)
@@ -232,7 +224,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             var input = new CombatPointerInput(facts, characters, screenX, screenY);
             OwnerOf(target)?.SelectPressed(input);
             // 누름이 Drag·경로 지정을 시작했으면 배경(호버 범위)을 내려놓는다(그 소유자가 슬롯과 범위 층을 쓴다).
-            if (_hasBackground && IsInputOwnerActive)
+            if (IsInputOwnerActive)
                 YieldBackground();
         }
 
@@ -243,7 +235,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             OwnerOf(target)?.SelectReleased(input);
         }
 
-        /// <summary>포인터 대상을 받는 소유자입니다. 없으면(그 기능이 없는 조립, None) null입니다.</summary>
+        /// <summary>포인터 대상을 받는 소유자입니다. 대상이 None이면 null입니다.</summary>
         private CombatInputOwner OwnerOf(CombatInputRouter.PointerTarget target) =>
             _byTarget.TryGetValue(target, out CombatInputOwner owner) ? owner : null;
 
@@ -252,7 +244,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         #region 정리·전환
 
         /// <summary>
-        /// 선택이 강제로 끝났습니다(Layer 전환·Unbind 등). 경로 입력을 먼저 취소하고 배치·아이템 Drag만 끝냅니다. 명령은 기록하지 않습니다.
+        /// 선택이 강제로 끝났습니다(Layer 전환·Unbind 등). 모든 소유자에 목록 순서로 알립니다: 공격 Drag 넘겨받기 무효화 → 경로 입력 취소 → 아이템·배치 Drag 취소 → 유닛 호버 지우기(공격 조준은 할 일 없음). 명령은 기록하지 않습니다.
         /// </summary>
         internal void SelectCanceled()
         {
@@ -264,7 +256,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// 취소 키: Drag 중이면 Drag를, 아니면 공격 모드를 끝낸 뒤 경로를 취소합니다(경로는 취소 뒤 복귀 견적을 다시 요청).
         /// 공격 모드가 먼저 끝나야 견적이 같은 호출에서 다시 요청됩니다. 대기는 지우지 않습니다.
         /// </summary>
-        internal void Cancel(IReadOnlyList<CharacterData> characters = null)
+        internal void Cancel(IReadOnlyList<CharacterData> characters)
         {
             CancelDragOrAttack(characters);
             _path?.Cancel();
@@ -280,9 +272,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>
         /// 공격 버튼의 끄기: Drag 중이면 Drag를, 아니면 공격 모드만 끝냅니다. 경로는 건드리지 않습니다(행동 버튼 설계 A2).
         /// </summary>
-        internal void CancelDragOrAttack(IReadOnlyList<CharacterData> characters = null)
+        internal void CancelDragOrAttack(IReadOnlyList<CharacterData> characters)
         {
-            _handover?.Invalidate();
+            _handover.Invalidate();
             if (IsItemDragActive)
                 _item.Cancel();
             else if (_placement.IsDragging)
@@ -297,7 +289,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         internal void LeaveMoveMode()
         {
-            _handover?.Invalidate();
+            _handover.Invalidate();
             _path?.LeaveMoveMode();
         }
 
@@ -316,7 +308,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         internal void AttackModeRequested(in CombatInputFacts facts)
         {
             // 들어갈 수 없어도 넘겨받기 몸짓은 끝낸다(옛 묶음과 같이 진입 판단 앞, 계획 검증 F10).
-            _handover?.Invalidate();
+            _handover.Invalidate();
             if (!_attack.CanEnter(facts, out EntityId actor))
             {
                 _attack.NotifyEntryRejected(facts);
@@ -355,7 +347,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         /// <summary>
-        /// 조정자가 연결 입력 묶음의 입구(<see cref="CombatSceneInput.TickInteraction"/>)로 매 Tick 부르는 입력 기능의 입구 하나입니다(View 2라운드 W5-3, 평가 C8-01).
+        /// 입력 분배(<c>CombatSceneInputDriver.TickInputs</c>)가 연결 입력 묶음의 입구(<see cref="CombatSceneInput.TickInteraction"/>)로 매 Tick 부르는 입력 기능의 입구 하나입니다(View 2라운드 W5-3, 평가 C8-01).
         /// 감시 단계(<see cref="Poll(CombatPreviewResult, in CombatInputFacts, IReadOnlyList{CharacterData})"/>) 뒤,
         /// 새 응답이 왔으면(<paramref name="answered"/>) <b>그때</b> <paramref name="readAnswerFacts"/>로 응답 사실을 읽어 응답 단계(<see cref="PreviewAnswered"/>)를 돕니다.
         /// 응답 사실은 감시 단계가 바꾼 슬롯을 반영해야 해서 감시 뒤에 읽습니다.
@@ -363,7 +355,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <param name="facts">감시 단계에 쓰는 이번 Tick의 사실입니다.</param>
         /// <param name="latestPreview">마지막 응답(번호 무관)입니다. 없으면 null입니다.</param>
         /// <param name="answered">이번 Tick에 현재 요청의 새 응답이 왔는지입니다.</param>
-        /// <param name="readAnswerFacts">응답 단계의 사실을 읽는 공급자입니다(조정자가 한 번 만든 대리자).</param>
+        /// <param name="readAnswerFacts">응답 단계의 사실을 읽는 공급자입니다(입력 분배가 한 번 만든 대리자).</param>
         internal void Tick(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, CombatPreviewResult latestPreview,
             bool answered, Func<CombatInputFacts> readAnswerFacts)
         {
@@ -379,12 +371,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// 감시 단계입니다. 전경 소유자에게 마지막 응답을 주어 자기 요청의 수명을 확인·재시도하게 하고(경로의 응답 소비·이동 모드 범위·복귀 견적, 평가 E4),
         /// 그 뒤 배경 소유자(호버 공격 범위)를 맞춥니다(호버 공격 범위 설계 UR6). 응답이 없으면 null입니다.
         /// 배치·공격의 응답 전달(<see cref="PreviewAnswered"/>)과는 규칙이 달라 두 단계로 둡니다(View 2라운드 W5-3).
+        /// 밖에서는 <see cref="Tick"/>만 부릅니다(평가 C5-02).
         /// </summary>
-        internal void Poll(CombatPreviewResult latestPreview, in CombatInputFacts facts, IReadOnlyList<CharacterData> characters)
+        private void Poll(CombatPreviewResult latestPreview, in CombatInputFacts facts, IReadOnlyList<CharacterData> characters)
         {
             Poll(latestPreview);
-            if (!_hasBackground)
-                return;
             // 전경 감시 뒤의 실시간 상태(공격 모드·아이템 드래그)로 판단한다. facts의 대상은 감시 전에 읽은 사본이라 쓰지 않는다(평가 C4-13).
             var target = ResolvePointerTarget(facts.CurrentLayer);
             bool canShow = IsRangeHoverTarget(target);
@@ -396,10 +387,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         /// <summary>
-        /// 전경 소유자만 감시합니다(사실 없이 부르는 조립·시험용). 사실이 없으므로 배경 소유자는 돌지 않습니다.
-        /// 조정자는 <see cref="Tick"/>을 부릅니다.
+        /// 전경 소유자만 감시합니다. 감시 단계가 맨 먼저 부르는 단계이고, 사실을 받지 않으므로 배경 소유자는 돌지 않습니다.
         /// </summary>
-        internal void Poll(CombatPreviewResult latestPreview)
+        private void Poll(CombatPreviewResult latestPreview)
         {
             for (int i = 0; i < _owners.Length; i++)
                 _owners[i].Poll(latestPreview);

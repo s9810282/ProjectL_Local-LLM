@@ -31,7 +31,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatAttackProfile profile, ResolvedAttackSelection selection, int commonDamage,
             WallGeometry walls, AttackElevation elevation)
         {
-            if (!profile.UsesPiercingShot) return ResolveDirect(actor, profile, selection, commonDamage);
+            ResolvedAttackDelivery delivery = null;
+            foreach (var _ in ResolveSteps(input, actor, profile, selection, commonDamage, walls, elevation,
+                value => delivery = value)) { }
+            return delivery;
+        }
+
+        internal static IEnumerable<string> ResolveSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, ResolvedAttackSelection selection, int commonDamage, WallGeometry walls,
+            AttackElevation elevation, Action<ResolvedAttackDelivery> completed)
+        {
+            if (!profile.UsesPiercingShot)
+            {
+                foreach (var phase in ResolveDirectSteps(actor, profile, selection, commonDamage, completed)) yield return phase;
+                yield break;
+            }
             var engine = new CombatEffectEngine();
             var bindings = CombatCommandEffects.Capture(actor, profile);
             var initial = engine.EvaluatePierceFalloff(bindings, new PierceFalloffEffectContext(commonDamage, 0));
@@ -48,30 +62,45 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var aim = selection.Cells.PrimaryCell.Value;
             int budget = initial.TargetBudget.Value;
             if (budget == 0)
-                return Piercing(new PiercingShotDelivery(initial.Contributions[0].Origin, origin,
+            {
+                foreach (var phase in PiercingSteps(new PiercingShotDelivery(initial.Contributions[0].Origin, origin,
                     aim, step, Array.Empty<CellCoord>(), Array.Empty<PiercingShotEncounter>(), origin, PiercingShotStopReason.TargetBudget),
-                    actor, selection, commonDamage, null);
+                    actor, selection, commonDamage, null, completed)) yield return phase;
+                yield break;
+            }
 
             // 사거리는 조준 칸(지정)만 제한한다. 관통 진행은 보드 끝까지다.
-            var trace = PierceTargetCollector.CollectSingle(origin, aim, actor.OccupiedCells,
+            PiercingShotTrace trace = null;
+            foreach (var phase in PierceTargetCollector.CollectSingleSteps(origin, aim, actor.OccupiedCells,
                 input.State.BoardWidth, input.State.BoardHeight, selection.EligibleCharacters, selection.EligibleStructures, input.State.Structures,
-                selection.Policy, walls, elevation, profile.Occlusion);
-            var encounters = trace.Encounters.Take(budget).Select(hit => new PiercingShotEncounter(hit.Id,
-                hit.Encounter, hit.Cell, engine.EvaluatePierceFalloff(bindings,
-                    new PierceFalloffEffectContext(commonDamage, hit.Encounter)).RemainingPercent)).ToArray();
+                selection.Policy, walls, elevation, profile.Occlusion, value => trace = value)) yield return phase;
+            var encounters = new List<PiercingShotEncounter>();
+            foreach (var hit in trace.Encounters.Take(budget))
+            {
+                encounters.Add(new PiercingShotEncounter(hit.Id, hit.Encounter, hit.Cell, engine.EvaluatePierceFalloff(bindings,
+                    new PierceFalloffEffectContext(commonDamage, hit.Encounter)).RemainingPercent));
+                yield return "DeliveryPierceFalloff";
+            }
             var endpoint = trace.Endpoint;
             var reason = trace.StopReason;
-            var traveled = trace.TraveledCells.ToArray();
-            if (encounters.Length == budget && !(trace.StopReason == PiercingShotStopReason.Structure &&
-                    encounters[encounters.Length - 1].Cell == trace.Endpoint))
+            bool trim = encounters.Count == budget && !(trace.StopReason == PiercingShotStopReason.Structure &&
+                encounters[encounters.Count - 1].Cell == trace.Endpoint);
+            if (trim)
             {
-                endpoint = encounters[encounters.Length - 1].Cell;
+                endpoint = encounters[encounters.Count - 1].Cell;
                 reason = PiercingShotStopReason.TargetBudget;
-                int length = Array.IndexOf(traveled, endpoint) + 1;
-                traveled = traveled.Take(length).ToArray();
             }
-            return Piercing(new PiercingShotDelivery(initial.Contributions[0].Origin,
-                origin, aim, trace.Step, traveled, encounters, endpoint, reason), actor, selection, commonDamage, trace.BlockedContacts);
+            var traveled = new List<CellCoord>();
+            foreach (var cell in trace.TraveledCells)
+            {
+                traveled.Add(cell);
+                yield return "DeliveryPierceRoute";
+                if (trim && cell == endpoint) break;
+            }
+            if (trim && (traveled.Count == 0 || traveled[traveled.Count - 1] != endpoint)) traveled.Clear();
+            foreach (var phase in PiercingSteps(new PiercingShotDelivery(initial.Contributions[0].Origin,
+                origin, aim, trace.Step, traveled.ToArray(), encounters.ToArray(), endpoint, reason), actor, selection, commonDamage,
+                trace.BlockedContacts, completed)) yield return phase;
         }
 
         /// <summary>현재 공격력으로 피해를 다시 계산하되 이미 확정한 관통 조우와 감쇠 비율은 보존합니다.</summary>
@@ -97,31 +126,63 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 일반 공격의 직접 전달이다. 지정 대상마다 역할에 맞는 적용 비율과 피해 출발 칸을 정한다.
         /// 맞는 대상은 선택 칸(주 칸 + 스플래시) 안에서만 나온다. 적 추적 조준 후보(<see cref="CombatAttackQueries.AimsThatCanHit"/>)가 이 성질을 쓰므로, 바꾸면 그쪽도 고친다.
         /// </summary>
-        private static ResolvedAttackDelivery ResolveDirect(CharacterCombatFacts actor, CombatAttackProfile profile,
-            ResolvedAttackSelection selection, int commonDamage)
+        private static IEnumerable<string> ResolveDirectSteps(CharacterCombatFacts actor, CombatAttackProfile profile,
+            ResolvedAttackSelection selection, int commonDamage, Action<ResolvedAttackDelivery> completed)
         {
             var reachable = selection.ReachableCells;
-            var hits = selection.Targets.Select(target => target.Value == AttackTargetRole.Additional
-                ? new DeliveredAttackHit(target.Key, target.Value, commonDamage, profile.Method.SplashPercent, reachable.PrimaryCell)
-                : new DeliveredAttackHit(target.Key, target.Value, commonDamage, 100, actor.Anchor));
-            return new ResolvedAttackDelivery(hits, DirectAffectedCells(reachable));
+            var hits = new List<DeliveredAttackHit>();
+            foreach (var target in selection.Targets)
+            {
+                hits.Add(target.Value == AttackTargetRole.Additional
+                    ? new DeliveredAttackHit(target.Key, target.Value, commonDamage, profile.Method.SplashPercent, reachable.PrimaryCell)
+                    : new DeliveredAttackHit(target.Key, target.Value, commonDamage, 100, actor.Anchor));
+                yield return "DeliveryDirectHit";
+            }
+            CellCoord[] cells = null;
+            foreach (var phase in DirectAffectedCellSteps(reachable, value => cells = value)) yield return phase;
+            completed(new ResolvedAttackDelivery(hits, cells));
+            yield return "DeliveryDirectComplete";
         }
 
         /// <summary>
         /// 직접 전달이 덮는 칸이다: 가림을 적용한 지정·추가 칸, 중복 제거, 행·열 순서. 대상이 없는 지정의 표시 칸(포효 범위)도 이 식 하나를 쓴다.
         /// </summary>
-        internal static CellCoord[] DirectAffectedCells(AttackCellSelection reachable) =>
-            reachable.DesignatedCells.ToArray().Concat(reachable.AdditionalCells.ToArray())
-                .Distinct().OrderBy(c => c.Y).ThenBy(c => c.X).ToArray();
+        internal static IEnumerable<string> DirectAffectedCellSteps(AttackCellSelection reachable, Action<CellCoord[]> completed)
+        {
+            var cells = new SortedSet<(int Y, int X)>();
+            foreach (var mask in new[] { reachable.DesignatedCells, reachable.AdditionalCells })
+                for (int i = 0; i < mask.Length; i++)
+                {
+                    var cell = mask.Span[i];
+                    cells.Add((cell.Y, cell.X));
+                    yield return "DeliveryDirectCell";
+                }
+            var result = new CellCoord[cells.Count];
+            int index = 0;
+            foreach (var cell in cells)
+            {
+                result[index++] = new CellCoord(cell.X, cell.Y);
+                yield return "DeliveryDirectCellOutput";
+            }
+            completed(result);
+        }
 
         /// <summary>관통 조우마다 감쇠를 적용한 피격을 만든다. 선택한 개체만 Primary이고 나머지는 Effect다.</summary>
-        private static ResolvedAttackDelivery Piercing(PiercingShotDelivery record, CharacterCombatFacts actor,
-            ResolvedAttackSelection selection, int commonDamage, IEnumerable<AttackBlockedContact> blockedContacts)
+        private static IEnumerable<string> PiercingSteps(PiercingShotDelivery record, CharacterCombatFacts actor,
+            ResolvedAttackSelection selection, int commonDamage, IEnumerable<AttackBlockedContact> blockedContacts,
+            Action<ResolvedAttackDelivery> completed)
         {
-            var hits = record.Encounters.ToArray().Select(encounter => new DeliveredAttackHit(encounter.TargetId,
-                encounter.TargetId == selection.SelectedTargetId ? AttackTargetRole.Primary : AttackTargetRole.Effect,
-                PiercingFalloffTraitRule.ApplyFalloff(commonDamage, encounter.RemainingPercent), 100, actor.Anchor));
-            return new ResolvedAttackDelivery(hits, record.TraveledCells.ToArray(), record, blockedContacts);
+            var hits = new List<DeliveredAttackHit>();
+            for (int i = 0; i < record.Encounters.Length; i++)
+            {
+                var encounter = record.Encounters.Span[i];
+                hits.Add(new DeliveredAttackHit(encounter.TargetId,
+                    encounter.TargetId == selection.SelectedTargetId ? AttackTargetRole.Primary : AttackTargetRole.Effect,
+                    PiercingFalloffTraitRule.ApplyFalloff(commonDamage, encounter.RemainingPercent), 100, actor.Anchor));
+                yield return "DeliveryPierceHit";
+            }
+            completed(new ResolvedAttackDelivery(hits, record.TraveledCells.ToArray(), record, blockedContacts));
+            yield return "DeliveryPierceComplete";
         }
     }
 }

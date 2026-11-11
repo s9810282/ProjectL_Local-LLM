@@ -69,7 +69,7 @@ namespace ProjectL.Tests.Core
             var cells = new[] { hitBoss ? new CellCoord(4, 3) : CellCoord.Zero,
                 hitMain ? new CellCoord(7, 7) : new CellCoord(0, 1) };
             var input = Input(5, cells);
-            var state = new CombatCommandState(input.State.BoardWidth,input.State.BoardHeight,input.State.Phase,input.State.IsNight,input.State.Structures,input.State.ThornFields,                input.State.Turn,objective: BattleObjective.DesignatedBoss(new EntityId(2)));
+            var state = new CombatCommandState(input.State.BoardWidth,input.State.BoardHeight,input.State.Phase,input.State.Structures,input.State.ThornFields,                input.State.Turn,objective: BattleObjective.DesignatedBoss(new EntityId(2)));
             input = input.WithWorld(state, input.Characters, input.Main, input.SoulCounts, input.Souls, input.EnvironmentBindings);
             var result = CombatGimmickCalculator.TryAdvance(input);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(expected));
@@ -106,35 +106,12 @@ namespace ProjectL.Tests.Core
             Assert.That(result.FinalState.Turn.ControllerPhase, Is.EqualTo(CombatControllerPhase.StartingEnemy));
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void LastEnemyEndChecksRailwayBeforeRecall_AndTerminalStopsNightCleanup(bool killMain)
-        {
-            var input = Input(15, new[] { killMain ? new CellCoord(7, 7) : new CellCoord(1, 3) }, first: 16);
-            var t = input.State.Turn;
-            var turn = new CombatTurnFacts(StagePhase.Combat, t.PreparationIndex, true, CombatControllerPhase.Enemy,
-                t.ControllerTurnSequence, 8, 0, t.EnemyOrigins, t.Summons, 15);
-            var state = input.State.With(phase: CombatFlowPhase.Automatic, turn: turn);
-            input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, EntityId.Empty, default, state,
-                input.Characters, input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
-                battle: input.Battle, processingKind: CombatProcessingKind.Advance, battleInstanceId: input.BattleInstanceId);
-            var result = CombatTurnCalculator.EndEnemyPhase(input, Array.Empty<IMovementTileRule>());
-            Assert.That(result.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(16));
-            Assert.That(result.Events[0].Kind, Is.EqualTo(CombatEventKind.EnemyPhaseEnded));
-            Assert.That(result.Events[1], Is.TypeOf<CombatGimmickEvent>());
-            Assert.That(result.Events[2].Kind, Is.EqualTo(CombatEventKind.Died));
-            Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.NightEnded), Is.EqualTo(killMain ? 0 : 1));
-            Assert.That(result.FinalState.Turn.PreparationIndex, Is.EqualTo(killMain ? 1 : 2));
-            Assert.That(result.FinalState.Phase, Is.EqualTo(killMain ? CombatFlowPhase.Finished : CombatFlowPhase.PlayerInput));
-            if (killMain) Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.Returned), Is.False);
-        }
-
         private static CombatCommandInput Input(long count, CellCoord[] cells, int first = 5, int repeat = 5)
         {
             var source = CombatCommandTestData.Input();
             var turn = source.State.Turn;
-            var state = source.State.With(turn: new CombatTurnFacts(turn.StagePhase, turn.PreparationIndex, turn.MainPlacementLocked,
-                turn.ControllerPhase, turn.ControllerTurnSequence, turn.CompletedPlayerTurnCount, turn.NightStartPlayerTurnCount,
+            var state = source.State.With(turn: new CombatTurnFacts(turn.StagePhase,
+                turn.ControllerPhase, turn.ControllerTurnSequence, turn.CompletedPlayerTurnCount,
                 turn.EnemyOrigins, turn.Summons, count));
             var battle = new CombatBattleFacts(8, 42, 2, 2, Array.Empty<CharacterInstanceId>(), 0, cells,
                 new StageGimmickSpec[] { new RailwayGimmickSpec(first, repeat) });

@@ -9,6 +9,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using UnityEditor;
@@ -60,6 +61,7 @@ namespace ProjectL.Tests.CoreIntegration
                 Set(enhanced, "healEveryOwnSideTurnEnds", 3);
                 using (var serialized = new SerializedObject(copy))
                 {
+                    serialized.FindProperty("group").intValue = (int)TraitGrowthGroup.Common;
                     serialized.FindProperty("normal").managedReferenceValue = normal;
                     serialized.FindProperty("enhanced").managedReferenceValue = enhanced;
                     serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -128,6 +130,7 @@ namespace ProjectL.Tests.CoreIntegration
             Set(sourceEnhanced, "durationAffectedSideTurnEnds", 2);
             CoreAuthoringFixture.Set(original, "normal", sourceNormal);
             CoreAuthoringFixture.Set(original, "enhanced", sourceEnhanced);
+            CoreAuthoringFixture.Set(original, "group", TraitGrowthGroup.Common);
             var copy = fixture.Clone(original);
             using (var serialized = new SerializedObject(copy))
             {

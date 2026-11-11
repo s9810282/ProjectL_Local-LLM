@@ -17,6 +17,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
     /// </remarks>
     internal sealed class CombatEndTurnConfirmation : IUIConfirmationReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEndTurnAccept = new("Combat.Action.UI.EndTurn.Accept");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEndTurnDecline = new("Combat.Action.UI.EndTurn.Decline");
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEndTurnRequest = new("Combat.Action.UI.EndTurn.Request");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEndTurnRespond = new("Combat.Action.UI.EndTurn.Respond");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEndTurnClose = new("Combat.Action.UI.EndTurn.Close");
+#endif
+
         private readonly ICharacterBufferReadSink _characters;
         private readonly IUIConfirmationPresentation _presentation;
         private readonly Func<bool> _canEndTurn;
@@ -32,8 +45,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             Func<bool> canEndTurn, Func<bool> asksConfirmation, Action endTurn, Action cancelInputs, RuntimeFaultBoundary faults)
         {
             _characters = characters ?? throw new ArgumentNullException(nameof(characters));
-            // 표시를 쓰지 않는 시험 조립은 생략할 수 있지만 확인이 필요한 요청에서는 누락을 오류로 보고합니다(배치 확인창과 같음).
-            _presentation = presentation;
+            // 운영은 늘 넘깁니다(입력 재료 묶음이 null을 거절). 쓰는 곳마다 다시 보지 않도록 생성 때 막습니다(배치 확인창과 같음, 평가 C5-02).
+            _presentation = presentation ?? throw new ArgumentNullException(nameof(presentation));
             _canEndTurn = canEndTurn ?? throw new ArgumentNullException(nameof(canEndTurn));
             _asksConfirmation = asksConfirmation ?? throw new ArgumentNullException(nameof(asksConfirmation));
             _endTurn = endTurn ?? throw new ArgumentNullException(nameof(endTurn));
@@ -41,10 +54,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
         }
 
-        internal bool IsOpen => _presentation?.IsConfirmationOpen(this) ?? false;
+        internal bool IsOpen => _presentation.IsConfirmationOpen(this);
 
         /// <summary>필드에 살아 있는 아군 중 이번 턴에 아직 아무 행동도 하지 않은 유닛의 수입니다.</summary>
-        internal int CountIdleUnits()
+        private int CountIdleUnits()
         {
             int count = 0;
             var characters = _characters.Characters;
@@ -64,6 +77,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         /// </summary>
         internal void Request()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEndTurnRequestSample = _profileUIEndTurnRequest.Auto();
+#endif
+
             if (IsOpen) return;
             int idle = _canEndTurn() && _asksConfirmation() ? CountIdleUnits() : 0;
             if (idle == 0)
@@ -71,8 +88,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
                 _endTurn();
                 return;
             }
-            if (_presentation == null)
-                throw new InvalidOperationException("[CombatEndTurnConfirmation] 턴 종료 확인에 IUIConfirmationPresentation이 필요합니다.");
             _cancelInputs();
             if (_canEndTurn())
                 _presentation.ShowConfirmation($"아직 행동하지 않은 유닛이 {idle}명 있습니다. 턴을 종료할까요?", this);
@@ -80,6 +95,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
 
         public void Respond(bool accepted)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileDecision = (accepted ? _profileUIEndTurnAccept : _profileUIEndTurnDecline).Auto();
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEndTurnRespondSample = _profileUIEndTurnRespond.Auto();
+#endif
+
             try
             {
                 if (accepted && _canEndTurn()) _endTurn();
@@ -92,6 +115,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             if (IsOpen && !_canEndTurn()) Close();
         }
 
-        internal void Close() => _presentation?.HideConfirmation(this);
+        internal void Close()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEndTurnCloseSample = _profileUIEndTurnClose.Auto();
+#endif
+            _presentation.HideConfirmation(this);
+        }
     }
 }

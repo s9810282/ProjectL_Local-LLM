@@ -31,6 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSys
             RegisterDispatcher<Color>(MaterialOvrridFunction.OverrideColor);
             RegisterDispatcher<int>(MaterialOvrridFunction.OverrideInt);
             RegisterDispatcher<Vector4>(MaterialOvrridFunction.OverrideVector);
+            RegisterDispatcher<Texture>((block, id, texture) => block.SetTexture(id, texture));
         }
 
         // ������: Render�� �޾ƿͼ� MaterialPropertyBlock�� ���� �� ����

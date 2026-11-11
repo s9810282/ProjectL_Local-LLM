@@ -31,7 +31,7 @@ namespace ProjectL.Tests.Core
                 ? new CategorySpec(c.Key,c.RuleSpecs.ToArray(),5,new CategoryLevelGrowth(2, 1)) : c).ToArray();
             var owned = new[] { MainRecord(), Sub(SubId, level) };
             var souls = Souls((MainId, 0), (SubId, 0));
-            var query = OwnedCharacterStatsCalculator.Calculate(Profiles(), categories, owned, MainState(), souls);
+            var query = OwnedCharacterStatsCalculator.Calculate(Profiles(), categories, owned, MainState(), souls, default);
             var original = Initialization();
             var initialization = new BattleInitialization(original.Stage, original.MainAnchor, original.MainRotation,
                 original.Units, original.Structures, categories);
@@ -64,7 +64,7 @@ namespace ProjectL.Tests.Core
             var owned = new OwnedCharacterRecord(SubId, unit.Key, CharacterOwnershipRole.Sub);
 
             var result = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(unit), Categories(),
-                new[] { owned }, null, Souls((SubId, 0)));
+                new[] { owned }, null, Souls((SubId, 0)), default);
 
             var description = result.Single().ThornFieldDescription;
             Assert.That(description, Is.Not.Null);
@@ -85,9 +85,12 @@ namespace ProjectL.Tests.Core
             var method = new TargetingMethodSpec(TargetingShape.CardinalLine, TargetingChoiceMode.Single, TargetingSplash.Cross, 50);
 
             var row = OwnedCharacterStatsCalculator.Calculate(new[] { new CombatAttackProfile(unit, method) }, Categories(),
-                new[] { Sub(SubId) }, null, Souls((SubId, 0))).Single();
+                new[] { Sub(SubId) }, null, Souls((SubId, 0)), new LevelProgressionSpec(150, 100, 10, 3, 1, 1)).Single();
 
             Assert.That(row.Stats.AttackRange, Is.EqualTo(2));
+            // 넘긴 경험치 설정으로 다음 레벨 진행값을 싣는다(서브 레벨 1 = 요구량 100).
+            Assert.That((row.Experience.IsEnabled, row.Experience.Current, row.Experience.Required, row.Experience.Remaining),
+                Is.EqualTo((true, 0, 100, 100)));
             Assert.That(row.AttackPattern.Method, Is.SameAs(method));
             Assert.That(row.AttackPattern.RangeCells, Is.EqualTo(new[]
             {
@@ -111,10 +114,10 @@ namespace ProjectL.Tests.Core
             Assert.That(item.TraitSettings.TryGet<FocusTraitSpec>(out _), Is.True);
 
             var error = Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey,
-                item.Role, item.Level, item.SoulCount, item.Stats, item.AttackPattern, TraitSettingsSet.Empty, null));
+                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, TraitSettingsSet.Empty, null));
             Assert.That(error.ParamName, Is.EqualTo("traitSettings"));
             Assert.Throws<ArgumentNullException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey,
-                item.Role, item.Level, item.SoulCount, item.Stats, item.AttackPattern, null, null));
+                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, null, null));
         }
 
         [TestCase(true, false)]
@@ -125,7 +128,7 @@ namespace ProjectL.Tests.Core
             var description = hasPayload ? new ThornFieldTraitStatusSnapshot(17, 9, 40, UnitTurnTickPhase.Started) : null;
 
             var error = Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(
-                SubId, EntityKey.Unit_CactusCannon, CharacterOwnershipRole.Sub, 1, 0, stats, Pattern(), hasTrait ? new TraitSettingsSet(new (TraitSpec, TraitOrigin)[] { (new ThornFieldTraitSpec(17, 9, 40, UnitTurnTickPhase.Started), TraitOrigin.Unit) }) : TraitSettingsSet.Empty,
+                SubId, EntityKey.Unit_CactusCannon, CharacterOwnershipRole.Sub, 1, new ExperienceProgressSnapshot(false, 0, 0), 0, stats, Pattern(), hasTrait ? new TraitSettingsSet(new (TraitSpec, TraitOrigin)[] { (new ThornFieldTraitSpec(17, 9, 40, UnitTurnTickPhase.Started), TraitOrigin.Unit) }) : TraitSettingsSet.Empty,
                 description));
 
             Assert.That(error.ParamName, Is.EqualTo("thornFieldDescription"));
@@ -182,12 +185,12 @@ namespace ProjectL.Tests.Core
         public void EmptyRoster_ReturnsEmptyWithoutDefinitions()
         {
             var result = OwnedCharacterStatsCalculator.Calculate(Array.Empty<CombatAttackProfile>(), Array.Empty<CategorySpec>(),
-                Array.Empty<OwnedCharacterRecord>(), null, new Dictionary<CharacterInstanceId, int>());
+                Array.Empty<OwnedCharacterRecord>(), null, new Dictionary<CharacterInstanceId, int>(), default);
 
             Assert.That(result.Count, Is.Zero);
             Assert.Throws<InvalidOperationException>(() => OwnedCharacterStatsCalculator.Calculate(
                 Array.Empty<CombatAttackProfile>(), Array.Empty<CategorySpec>(), Array.Empty<OwnedCharacterRecord>(),
-                MainState(), new Dictionary<CharacterInstanceId, int>()));
+                MainState(), new Dictionary<CharacterInstanceId, int>(), default));
         }
 
         [Test]
@@ -197,13 +200,13 @@ namespace ProjectL.Tests.Core
             var souls = Souls((MainId, 0));
 
             Assert.Throws<ArgumentNullException>(() => OwnedCharacterStatsCalculator.Calculate(
-                null, Categories(), owned, MainState(), souls));
+                null, Categories(), owned, MainState(), souls, default));
             Assert.Throws<ArgumentNullException>(() => OwnedCharacterStatsCalculator.Calculate(
-                Profiles(), null, owned, MainState(), souls));
+                Profiles(), null, owned, MainState(), souls, default));
             Assert.Throws<ArgumentNullException>(() => OwnedCharacterStatsCalculator.Calculate(
-                Profiles(), Categories(), null, MainState(), souls));
+                Profiles(), Categories(), null, MainState(), souls, default));
             Assert.Throws<ArgumentNullException>(() => OwnedCharacterStatsCalculator.Calculate(
-                Profiles(), Categories(), owned, MainState(), null));
+                Profiles(), Categories(), owned, MainState(), null, default));
         }
 
         [TestCase("MissingDefinition")]
@@ -257,7 +260,7 @@ namespace ProjectL.Tests.Core
             }
 
             Assert.Throws<InvalidOperationException>(() =>
-                OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls));
+                OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls, default));
         }
 
         [Test]
@@ -266,7 +269,7 @@ namespace ProjectL.Tests.Core
             var units = new[] { MainSpec(), SubSpec(maxHealth: int.MaxValue) };
 
             Assert.Throws<OverflowException>(() => OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(units), Categories(),
-                new[] { MainRecord(), Sub(SubId) }, MainState(), Souls((MainId, 0), (SubId, 1))));
+                new[] { MainRecord(), Sub(SubId) }, MainState(), Souls((MainId, 0), (SubId, 1)), default));
         }
 
         [Test]
@@ -306,7 +309,7 @@ namespace ProjectL.Tests.Core
             OwnedCharacterRecord[] owned = { MainRecord(), Sub(SubId), Sub(SecondSubId, level: 2) };
             MainCharacterPersistentState main = MainState();
             var souls = Souls((MainId, 2), (SubId, 3), (SecondSubId, 1));
-            var query = OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls);
+            var query = OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls, default);
             var prepared = BattlePreparationCalculator.Prepare(Initialization(), owned, main, souls,
                 new InitialDrawPlan(new[] { SubId, SecondSubId }), Array.Empty<CharacterCombatFacts>());
 
@@ -354,7 +357,7 @@ namespace ProjectL.Tests.Core
             var units = new[] { MainSpec(), sub, EnemySpec() };
             OwnedCharacterRecord[] owned = { MainRecord(), Sub(SubId) };
             var souls = Souls((MainId, 0), (SubId, 0));
-            var query = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(units), Categories(), owned, MainState(), souls)
+            var query = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(units), Categories(), owned, MainState(), souls, default)
                 .Single(c => c.OwnedId == SubId);
             var original = Initialization();
             var prepared = BattlePreparationCalculator.Prepare(new BattleInitialization(original.Stage, original.MainAnchor,
@@ -375,19 +378,19 @@ namespace ProjectL.Tests.Core
             var item = Calculate(new[] { MainRecord(), Sub(SubId) }, MainState(), Souls((MainId, 0), (SubId, 0)))
                 .Single(c => c.OwnedId == SubId);
             Assert.That(item.TraitAvailability.Select(a => a.Key), Is.EqualTo(item.Stats.TraitKeys.ToArray()));
-            Assert.That(new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role, item.Level, item.SoulCount,
+            Assert.That(new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role, item.Level, item.Experience, item.SoulCount,
                 item.Stats, item.AttackPattern, item.TraitSettings, null).TraitAvailability, Is.Empty);
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role,
-                item.Level, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null,
+                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null,
                 traitAvailability: new[] { new TraitAvailabilitySnapshot(TraitKey.Knockback, "", "") }));
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role,
-                item.Level, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null, traitAvailability: new[] {
+                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null, traitAvailability: new[] {
                     item.TraitAvailability[0], item.TraitAvailability[0] }));
         }
 
         private static IReadOnlyList<OwnedCharacterStatsSnapshot> Calculate(OwnedCharacterRecord[] owned,
             MainCharacterPersistentState main, Dictionary<CharacterInstanceId, int> souls) =>
-            OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls);
+            OwnedCharacterStatsCalculator.Calculate(Profiles(), Categories(), owned, main, souls, default);
 
         private static MainCharacterPersistentState MainState() => new(18, 30, 15);
 

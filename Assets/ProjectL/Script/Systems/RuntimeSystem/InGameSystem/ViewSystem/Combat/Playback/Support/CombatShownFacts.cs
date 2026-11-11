@@ -271,8 +271,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         internal CombatEvent ForPresentation(CombatEvent item)
         {
             if (item is not CombatCharacterEvent character) return item;
-            bool healthOnly = character.Kind == CombatEventKind.HealthChanged || character.Kind == CombatEventKind.HealthNormalized ||
-                character.Kind == CombatEventKind.Died;
+            bool healthOnly = CombatCharacterHits.ChangesHealthOnly(character);
             if (healthOnly && _placements.PreservesPlacement(character.Final.EntityId))
                 return new CombatCharacterEvent(character.Kind, AtShownPlacement(character.Expected), AtShownPlacement(character.Final),
                     character.DamageOrigins, character.TornadoSourceId, character.DamageCause, character.MovementCause, character.TornadoContact);
@@ -292,7 +291,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CharacterCombatFacts AtArrival(CharacterCombatFacts facts) => facts.Area == CharacterRuntimeArea.Field
                 ? facts.WithPlacement(facts.Area, null, shown.Anchor, shown.Rotation, shown.OccupiedCells)
                 : facts;
-            return new CombatCharacterEvent(character.Kind, AtArrival(character.Expected), AtArrival(character.Final), character.DamageOrigins);
+            // 사건의 나머지 칸(피해 원인 등)은 위치 보존 갈래와 같이 모두 넘깁니다(평가 C10-13).
+            return new CombatCharacterEvent(character.Kind, AtArrival(character.Expected), AtArrival(character.Final),
+                character.DamageOrigins, character.TornadoSourceId, character.DamageCause, character.MovementCause, character.TornadoContact);
         }
 
         private CharacterCombatFacts AtShownPlacement(CharacterCombatFacts facts)
@@ -326,6 +327,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             SyncPersistent();
             _rendered?.Invoke();
         }
+
+        /// <summary>
+        /// 유닛 위치·회전만 지금 보인 사실로 다시 그립니다. 유지 이펙트·그린 뒤 알림은 건드리지 않습니다(취소 정리용, 평가 G1-01·G1-02).
+        /// 모든 대여가 되돌려진 뒤 부르면, 걸음·끌어오기 보간 중이던 유닛과 서는 자리에 있던 수호자가 사실 칸 자리로 돌아갑니다.
+        /// </summary>
+        internal void RenderUnits() => _units.RenderFacts(_characters, _structures, _mapper());
 
         /// <summary>
         /// 유닛을 다시 그리지 않고 유지 이펙트만 지금 보인 사실로 맞춥니다. 보인 사실이 아닌 입력(공격 모드 대상)이 바뀌었을 때 씁니다(계획 Ed.3).

@@ -34,5 +34,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         PullNoMovement = 42, // 아군에게 실제 이동이 없는 지정
         Disarmed = 50,
         HaboobDesignationBlocked = 51,
+        Reconstructing = 52, // 적 전용 재구성 중(이동·공격 불가)
     }
 }

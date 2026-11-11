@@ -207,6 +207,12 @@ ICombatPresentationPiece
 - 값 원본 → §6 Q-B5. 반응을 조립에 넣는 방식 → §6 Q-B7.
 - 범위: 유닛 피격만이다. 구조물·장애물 피격("일부만", 요구 3)과 사망 플래시는 다음에 더한다.
   - 기록: Q-B5 A(반응 SO에 플래시 값)로는 "구조물은 플래시만, 모션 없음"을 바로 표현하지 못한다. 반응 SO가 모션과 플래시를 함께 갖기 때문이다. 구조물을 다룰 때 플래시 값을 모션과 따로 고를 수 있게 나눌지 정한다.
+- **보충(2026-11-11): 피격 외곽선.** 사용자 "아웃라인으로 Flash 색보다 더 쨍한 빨간색" → 권장안(몸 플래시 유지 + 같은 페이드) 수락. 컴파일 미확인, 새 시험 없음.
+  - 쓰는 것: 유닛 재질(Cartoon)의 Outline 패스 `_OutlineColor`·`_OutlineWidth`. 조명 없이 색을 그대로 그려(안개만) 몸 색보다 진하고, HDR 밝기가 1보다 크면 블룸으로 빛난다. GlobalSystem `SelectOutlineSystem`은 대상의 `MeshFilter` 메시만 복사해 SkinnedMeshRenderer 유닛에는 맞지 않아 쓰지 않는다. 유닛 프리팹 13개 모두 Cartoon 재질·Outline 패스 켜짐(11-11 대조).
+  - 값: 플래시 칸에 `outlineColor`(HDR)·`outlineWidth`(0이면 외곽선은 그대로). 피격 모습(몸 색·외곽선 색·폭)은 불변 값 `CombatFlashLook` 하나이고, 시점 값(`CombatFlashCue`)이 그것을 갖는다. 외형 대여 `ICombatUnitFlash.SetFlash(look, strength)`는 시점을 모른다.
+  - 섞는 규칙은 외형 소유자 `UnitModelAppearance.RendererState.Apply` 한 곳이다. 외곽선 바탕 = 강조 층(튜토리얼 `BeginOutline`)이 있으면 그 외곽선, 없으면 재질 외곽선이고, 피격 외곽선을 세기(1 → 0, 몸 색과 같은 선형)만큼 섞는다. 강조 대여와 다른 층이라 둘이 겹쳐도 예외가 없고, 플래시가 끝나면 강조 외곽선으로 돌아온다. 외곽선 칸이 없는 재질 슬롯은 건너뛴다(강조 대여의 `RequireOutlineSupport`처럼 멈추지 않음).
+  - 기본 반응 에셋 값: `outlineColor` (1.5, 0, 0) HDR·`outlineWidth` 0.035(재질 기본 0.015~0.02), 시간은 몸 플래시와 같은 칸(지금 0.4초).
+  - 다른 작업자 줄: `UnitModelAppearance`의 외곽선 층(`Apply` 서명·외곽선 쓰기 줄)은 호진님 `feabb4484`(튜토리얼) 줄이다 → [호진님 공유](../handoffs/2026-11-11-combat-hit-outline-hojin-share.md)(미전달).
 
 ## 3. 겹침 규칙 보존 (설계 B14에서 바뀌는 행)
 

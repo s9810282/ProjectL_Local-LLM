@@ -76,7 +76,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatEventCues cues = CuesOf(moment);
             if (cues.IsEmpty)
                 return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            TryPlayAccent(cues, PointsOf(moment), profilingEvent: e);
+#else
             PlayAccent(cues, PointsOf(moment));
+#endif
         }
 
         /// <summary>
@@ -87,15 +91,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="actionGroup">행동 끝 큐(<c>UnitAction</c>)를 거둘 발동 묶음입니다(특성 발동 큐만, 이펙트 끝 규칙 계획 TP-E3). 없으면 결과 끝에 거둡니다.</param>
         internal void PlayAccent(CombatEventCues cues, CombatCuePoints points, CombatEffectActionGroup actionGroup = null)
         {
+            TryPlayAccent(cues, points, actionGroup);
+        }
+
+        /// <summary>실제 항목이 있는 큐 실행을 열었는지입니다. 기존 큐 내부 지연은 그대로 적용합니다.</summary>
+        internal bool TryPlayAccent(CombatEventCues cues, CombatCuePoints points, CombatEffectActionGroup actionGroup = null
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            , CombatEvent profilingEvent = null
+#endif
+        )
+        {
             if (cues == null) throw new ArgumentNullException(nameof(cues));
 
             CombatComposition composition = CombatComposition.ForAccent();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEvent = profilingEvent;
+#endif
             CombatCueComposer.Add(composition, new CombatCueAnchors(), cues, points,
                 new CombatCueSinks(_effects, _camera, null, null, actionGroup: actionGroup));
             if (composition.IsEmpty)
-                return;
+                return false;
             if (!_pieces.TryBegin(composition, null, _generation()))
                 throw new InvalidOperationException("[CombatMomentCuePlayback] 빌릴 채널이 없는 곁들임 실행은 늘 시작해야 합니다.");
+            return true;
         }
 
         private CombatEventCues CuesOf(in CombatEventMoment moment)

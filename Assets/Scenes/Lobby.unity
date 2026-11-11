@@ -2313,8 +2313,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldRoot: {fileID: 9800000101}
-  lobbyRoot: {fileID: 187812004}
-  cellPrefab: {fileID: 2609134966355294635, guid: 9a36e9f1ca8e4444586b4d29e6191cfd, type: 3}
+  floorPrefab: {fileID: 2609134966355294635, guid: 9a36e9f1ca8e4444586b4d29e6191cfd, type: 3}
 --- !u!114 &9700000007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3309,8 +3308,8 @@ Transform:
   m_GameObject: {fileID: 9800000100}
   serializedVersion: 2
   m_LocalRotation: {x: -0.027249983, y: 0.008167886, z: -0.026805757, w: 0.9992358}
-  m_LocalPosition: {x: 0.95844495, y: 12.072657, z: -12.081349}
-  m_LocalScale: {x: 1.2857143, y: 1.2857143, z: 1.2857143}
+  m_LocalPosition: {x: 4.15644, y: 12.63315, z: -8.31754}
+  m_LocalScale: {x: 0.534, y: 0.534, z: 0.534}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

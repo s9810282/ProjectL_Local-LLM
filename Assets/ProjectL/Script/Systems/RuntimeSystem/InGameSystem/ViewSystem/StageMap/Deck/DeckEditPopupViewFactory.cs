@@ -13,20 +13,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
         private readonly IRunDeckService _deck;
         private readonly IUISystemService _ui;
         private readonly RuntimeFaultBoundary _faults;
+        private readonly StageMapViewNotice _notice;
 
-        internal DeckEditPopupViewFactory(IRunDeckService deck, IUISystemService ui, RuntimeFaultBoundary faults)
+        internal DeckEditPopupViewFactory(IRunDeckService deck, IUISystemService ui, RuntimeFaultBoundary faults,
+            StageMapViewNotice notice)
         {
             _deck = deck ?? throw new ArgumentNullException(nameof(deck));
             _ui = ui ?? throw new ArgumentNullException(nameof(ui));
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
+            _notice = notice ?? throw new ArgumentNullException(nameof(notice));
         }
 
-        internal DeckEditPopupController Create(IDeckEditDisplay screen, PopupInputSession input,
-            IPopupViewHost host, Func<bool> canOpen)
+        internal DeckEditPopupController Create(IDeckEditDisplay screen, IDeckCombatDisplay departureScreen,
+            PopupInputSession input, IPopupViewHost host, Func<bool> canOpen)
         {
             if (_faults.IsFaulted)
                 throw new InvalidOperationException("[DeckEditPopup] 정지한 런타임에는 팝업을 만들 수 없습니다.");
-            return new DeckEditPopupController(_deck, _ui, screen, input, host, canOpen, _faults);
+            return new DeckEditPopupController(_deck, _ui, screen, departureScreen, input, host, canOpen, _faults, _notice);
         }
     }
 }

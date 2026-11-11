@@ -117,6 +117,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item
                 trait.Validate();
                 if (!traitKeys.Add(trait.TraitKey))
                     throw new InvalidOperationException($"[UnitData] Duplicate trait {trait.TraitKey}. Key: {Key}");
+                // 적 전용 특성은 적 전용 유닛만 가진다. Both 유닛도 플레이어 진영에 나갈 수 있어 거절한다.
+                if (TraitOwnerPolicy.IsEnemyOnly(trait.TraitKey) && OwnerEligibility != UnitOwnerEligibility.EnemyOnly)
+                    throw new InvalidOperationException($"[UnitData] Enemy-only trait {trait.TraitKey} requires EnemyOnly owner eligibility. Key: {Key}");
             }
         }
     }

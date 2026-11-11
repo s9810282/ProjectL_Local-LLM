@@ -29,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             int tied = candidates.TakeWhile(c => c.Distance == candidates[0].Distance).Count();
             int selected = ItemTargetRandom.NextIndex(context.RandomState, tied, out uint finalState);
             return ItemRuleDecision.ApplyEffect(candidates[selected].Candidate.TargetId,
-                new ItemTemporaryEffect(definition.Key, ItemStatKind.Priority, spec.PriorityPenalty, context.PreparationIndex), finalState);
+                new ItemTemporaryEffect(definition.Key, ItemStatKind.Priority, spec.PriorityPenalty), finalState);
         }
 
         private static decimal DistanceSquared(CellCoord from, CellCoord to)

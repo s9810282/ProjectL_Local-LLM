@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
@@ -20,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 마지막 포인터 좌표, 원하는 유닛, 자기 요청 번호, 답을 받은 유닛, 그린 위험 칸, 건너뛴 이동 모드 행위자, 표시 중 여부만 소유합니다. 모두 표시 캐시이며 원본이 아닙니다.
+    /// 마지막 포인터 좌표, 원하는 유닛, 자기 요청 번호와 판, 답을 받은 유닛, 이 판에 받은 답, 그린 위험 칸, 건너뛴 이동 모드 행위자, 표시 중 여부만 소유합니다. 모두 표시 캐시이며 원본이 아닙니다.
     /// 다른 입력 소유자(배치·아이템 Drag, 공격 모드, 경로 지정)가 활성인지는 묶음(<see cref="CombatInteraction"/>)이 판단해 넘깁니다.
     /// 그 동안에는 표시·요청을 내려놓고(<see cref="Suspend"/>), 다시 비활성이 되면 마지막 포인터로 다시 판단합니다.
     /// </para>
@@ -30,9 +33,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// 포인터 콜백은 칸 집기·유닛 찾기·위험 찾기만 하고, 요청은 유닛이 바뀔 때만 냅니다. 같은 위험 칸 안에서는 다시 찾지 않습니다(위험 범위 계획 P7).
     /// 지뢰가 터지거나 화약통이 부서지는 일은 결과 재생에서만 생기고, 재생 전에 내려놓은 뒤 다시 집으므로 그린 위험 칸이 낡지 않습니다.
     /// </para>
+    /// <para>
+    /// 받은 유닛 범위 답은 (전투 번호, 조회 판 <see cref="CombatInputFacts.QueryRevision"/>, 유닛)마다 기억합니다(성능 계획 P4·Q-FP2 a).
+    /// 같은 판에서 같은 유닛을 다시 집으면 Core에 묻지 않고 기억한 답으로 그립니다. 답은 전투 사실에서만 나오므로, 판이 그대로면 답도 그대로입니다.
+    /// 판이나 전투가 바뀌면 지난 판의 답은 쓰지 않고, 새 판의 답을 기억할 때 모두 버립니다. 포인터를 잊을 때(<see cref="Clear"/>)도 버립니다.
+    /// 한 판 안에서 기억하는 수는 그 판에 집은 유닛 수를 넘지 않습니다.
+    /// 요청한 판과 답을 받은 판이 다르면 그리기는 지금처럼 하되 기억하지 않습니다.
+    /// </para>
     /// </remarks>
     internal sealed class CombatUnitRangeHover
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUnitHoverPointerMoved = new("Combat.Action.Interaction.UnitHover.PointerMoved");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUnitHoverPoll = new("Combat.Action.Interaction.UnitHover.Poll");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUnitHoverSuspend = new("Combat.Action.Interaction.UnitHover.Suspend");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUnitHoverClear = new("Combat.Action.Interaction.UnitHover.Clear");
+        // 기억한 답으로 그린 횟수를 Profiler에서 셉니다(P4 효과 확인).
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionUnitHoverRemembered = new("Combat.Action.Interaction.UnitHover.Remembered");
+#endif
+
         private readonly ICombatViewBufferWriteSink _input;
         private readonly ICombatViewBufferReadSink _requests;
         private readonly ICombatStateBufferReadSink _state;
@@ -52,8 +72,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private CombatRangeTone _wantedTone = CombatRangeTone.Ally;
         private int _requestNumber;
         private EntityId _requestUnit;
+        // 자기 요청을 낸 판입니다. 답을 받은 판과 같을 때만 답을 기억합니다.
+        private long _requestBattle;
+        private long _requestRevision;
         // 지금 사실로 답을 받은 유닛입니다(성공·실패 모두). 같은 유닛이면 다시 요청하지 않습니다(R-b).
         private EntityId _answeredUnit;
+        // 이 판에 받은 유닛 범위 답입니다(P4). 내려놓아도 남습니다. 다른 판의 답은 쓰지 않고, 새 판의 답을 기억할 때나 포인터를 잊을 때 비웁니다.
+        private readonly RememberedAnswers _answers = new();
         // 환경 위험의 피해 칸 작업 목록(재사용)과 마지막으로 위험을 찾은 유닛 없는 칸입니다(설계 §8 HZ4, 계획 P7). 찾은 결과가 없어도 같은 칸이면 다시 찾지 않습니다.
         private readonly List<CellCoord> _hazardCells = new(9);
         private bool _hazardChecked;
@@ -95,6 +120,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         internal void PointerMoved(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters,
             float screenX, float screenY, bool ownersIdle)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUnitHoverPointerMovedSample = _profileInteractionUnitHoverPointerMoved.Auto();
+#endif
+
             _hasPointer = true;
             _screenX = screenX;
             _screenY = screenY;
@@ -112,6 +141,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         internal void Poll(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, bool ownersIdle)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUnitHoverPollSample = _profileInteractionUnitHoverPoll.Auto();
+#endif
+
             if (!ownersIdle || !CombatInputPolicy.CanInspectUnit(facts, _gate.HasPending))
             {
                 Suspend();
@@ -137,24 +170,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 return false;
 
             EntityId unit = _requestUnit;
+            bool sameSource = _requestBattle == facts.BattleInstanceId && _requestRevision == facts.QueryRevision;
             ClearOwnedRequest();
-            if (!answer.UnitRange.HasValue || answer.UnitRange.Value.UnitId != unit || unit != _wanted
-                || !CombatInputPolicy.CanInspectUnit(facts, _gate.HasPending) || unit == _moveMode.MoveModeActorId)
+            if (!answer.UnitRange.HasValue || answer.UnitRange.Value.UnitId != unit)
                 return true;
 
-            _answeredUnit = unit;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.UnitAttackRange).Auto();
+#endif
             var range = answer.UnitRange.Value;
             CellCoord[] attackCells = range.Succeeded ? range.RangeCells.ToArray() : Array.Empty<CellCoord>();
             CellCoord[] moveCells = range.MoveCells.ToArray();
-            if (attackCells.Length > 0 || moveCells.Length > 0)
-            {
-                _feedback.ShowHoverRange(attackCells, moveCells, _wantedTone, _wanted);
-                _shown = true;
-            }
-            else
-            {
-                Hide();
-            }
+            // 지금 그리지 않는 답이어도 같은 판이면 기억합니다. 그 유닛을 다시 집을 때 묻지 않습니다.
+            if (sameSource)
+                _answers.Remember(facts.BattleInstanceId, facts.QueryRevision, unit, attackCells, moveCells);
+            if (unit != _wanted || !CombatInputPolicy.CanInspectUnit(facts, _gate.HasPending) || unit == _moveMode.MoveModeActorId)
+                return true;
+
+            _answeredUnit = unit;
+            ShowUnitRange(attackCells, moveCells);
             return true;
         }
 
@@ -164,14 +198,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         internal void Suspend()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUnitHoverSuspendSample = _profileInteractionUnitHoverSuspend.Auto();
+#endif
+
             Release();
             _needsPick = _hasPointer;
         }
 
-        /// <summary>내려놓고 포인터도 잊습니다(포커스 상실·강제 선택 종료·정지). 새 포인터 입력 전에는 다시 판단하지 않습니다.</summary>
+        /// <summary>내려놓고 포인터와 기억한 답도 잊습니다(포커스 상실·강제 선택 종료·정지). 새 포인터 입력 전에는 다시 판단하지 않습니다.</summary>
         internal void Clear()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUnitHoverClearSample = _profileInteractionUnitHoverClear.Auto();
+#endif
+
             Release();
+            _answers.Clear();
             _hasPointer = false;
             _needsPick = false;
         }
@@ -205,7 +248,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 _wanted = unit.EntityId;
                 _wantedTone = unit.Owner == Owner.Enemy ? CombatRangeTone.Enemy : CombatRangeTone.Ally;
             }
+            if (_answeredUnit != _wanted && ShowRemembered(facts))
+                return;
             TryRequest(facts);
+        }
+
+        // 이 판에 받은 답이 있으면 묻지 않고 그 답으로 그리고 답을 받은 것으로 둡니다(P4).
+        private bool ShowRemembered(in CombatInputFacts facts)
+        {
+            if (!_answers.TryGet(facts.BattleInstanceId, facts.QueryRevision, _wanted, out RememberedAnswer answer))
+                return false;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionUnitHoverRememberedSample = _profileInteractionUnitHoverRemembered.Auto();
+#endif
+            _answeredUnit = _wanted;
+            ShowUnitRange(answer.AttackCells, answer.MoveCells);
+            return true;
+        }
+
+        // 유닛의 이동 칸과 공격 칸을 그립니다. 둘 다 비면 그리지 않습니다.
+        private void ShowUnitRange(CellCoord[] attackCells, CellCoord[] moveCells)
+        {
+            if (attackCells.Length > 0 || moveCells.Length > 0)
+            {
+                _feedback.ShowHoverRange(attackCells, moveCells, _wantedTone, _wanted);
+                _shown = true;
+            }
+            else
+            {
+                Hide();
+            }
         }
 
         // 유닛이 없는 칸입니다. 같은 칸을 이미 찾았으면 그대로 두고, 아니면 앞의 표시·요청을 내려놓고 그 칸의 위험 피해 칸을 바로 그립니다.
@@ -236,18 +308,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 || !CombatInputPolicy.CanInspectUnit(facts, _gate.HasPending))
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _requestNumber = CombatInputProfiler.SetPreview(_input, CombatViewPreviewData.UnitAttackRange(_wanted));
+#else
             _requestNumber = _input.SetPreview(CombatViewPreviewData.UnitAttackRange(_wanted));
+#endif
             _requestUnit = _wanted;
+            _requestBattle = facts.BattleInstanceId;
+            _requestRevision = facts.QueryRevision;
         }
 
         // 자기 요청이 슬롯에서 밀려났으면 기다림을 끝냅니다. 슬롯이 다시 한가할 때 새로 요청합니다(R-a).
         private void ForgetLostRequest()
         {
             if (_requestNumber != 0 && (!_requests.HasPreview || _requests.Preview.Number != _requestNumber))
-            {
-                _requestNumber = 0;
-                _requestUnit = EntityId.Empty;
-            }
+                ForgetRequest();
         }
 
         private void Release()
@@ -284,8 +359,63 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private void ClearOwnedRequest()
         {
             _input.ClearPreview(_requestNumber);
+            ForgetRequest();
+        }
+
+        // 자기 요청의 번호·유닛·판을 함께 잊습니다. 요청 식별은 이 넷이 한 묶음입니다.
+        private void ForgetRequest()
+        {
             _requestNumber = 0;
             _requestUnit = EntityId.Empty;
+            _requestBattle = 0;
+            _requestRevision = 0;
+        }
+
+        // 한 유닛의 범위 답입니다. 배열은 답을 받을 때 만든 것을 그대로 쥐고 바꾸지 않습니다.
+        private readonly struct RememberedAnswer
+        {
+            internal RememberedAnswer(CellCoord[] attackCells, CellCoord[] moveCells)
+            {
+                AttackCells = attackCells;
+                MoveCells = moveCells;
+            }
+
+            internal CellCoord[] AttackCells { get; }
+            internal CellCoord[] MoveCells { get; }
+        }
+
+        // 한 판(전투 번호, 조회 판)에 받은 유닛 범위 답입니다(P4). 다른 판의 답은 돌려주지 않고, 다른 판의 답을 기억할 때 지난 판의 답을 모두 버립니다.
+        private sealed class RememberedAnswers
+        {
+            private readonly Dictionary<EntityId, RememberedAnswer> _byUnit = new();
+            private long _battle;
+            private long _revision;
+
+            internal bool TryGet(long battle, long revision, EntityId unit, out RememberedAnswer answer)
+            {
+                answer = default;
+                return IsCurrent(battle, revision) && _byUnit.TryGetValue(unit, out answer);
+            }
+
+            internal void Remember(long battle, long revision, EntityId unit, CellCoord[] attackCells, CellCoord[] moveCells)
+            {
+                if (revision <= 0)
+                    return;
+                if (!IsCurrent(battle, revision))
+                    Reset(battle, revision);
+                _byUnit[unit] = new RememberedAnswer(attackCells, moveCells);
+            }
+
+            internal void Clear() => Reset(0, 0);
+
+            private bool IsCurrent(long battle, long revision) => _battle == battle && _revision == revision;
+
+            private void Reset(long battle, long revision)
+            {
+                _byUnit.Clear();
+                _battle = battle;
+                _revision = revision;
+            }
         }
 
         /// <summary>

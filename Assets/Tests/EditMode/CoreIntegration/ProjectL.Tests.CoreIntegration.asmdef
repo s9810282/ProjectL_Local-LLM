@@ -1,7 +1,7 @@
 {
     "name": "ProjectL.Tests.CoreIntegration",
     "rootNamespace": "ProjectL.Tests.CoreIntegration",
-    "references": ["Framework", "ProjectL.Systems", "ProjectL.Core.Contracts", "ProjectL.Core.Application", "Unity.ugui"],
+    "references": ["Framework", "ProjectL.Systems", "ProjectL.Core.Contracts", "ProjectL.Core.Application", "Unity.ugui", "UnityEngine.TestRunner"],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

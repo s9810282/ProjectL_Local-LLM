@@ -27,16 +27,16 @@ namespace ProjectL.Tests.Core
             var characters = input.Characters.ToDictionary(c => c.EntityId);
             var cause = new CombatHitCause();
 
-            Assert.That(RoarHitCounter.Record(characters, Boss, cause, isNight: true), Is.True);
-            Assert.That(RoarHitCounter.Record(characters, Boss, cause, isNight: true), Is.False);
-            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), isNight: false), Is.False);
-            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), isNight: true), Is.True);
+            Assert.That(RoarHitCounter.Record(characters, Boss, cause, inCombat: true), Is.True);
+            Assert.That(RoarHitCounter.Record(characters, Boss, cause, inCombat: true), Is.False);
+            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), inCombat: false), Is.False);
+            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), inCombat: true), Is.True);
             // 포효 Trait가 없는 대상은 세지 않는다.
-            Assert.That(RoarHitCounter.Record(characters, BossRoarTests.Player, new CombatHitCause(), isNight: true), Is.False);
+            Assert.That(RoarHitCounter.Record(characters, BossRoarTests.Player, new CombatHitCause(), inCombat: true), Is.False);
             Assert.That(RoarHitCounter.HitCount(characters[Boss]), Is.EqualTo(2));
 
             characters[Boss] = CombatCommandCalculator.Copy(characters[Boss], new HealthStateSnapshot(0, 100), characters[Boss].Stats);
-            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), isNight: true), Is.False);
+            Assert.That(RoarHitCounter.Record(characters, Boss, new CombatHitCause(), inCombat: true), Is.False);
         }
 
         [Test]
@@ -49,14 +49,6 @@ namespace ProjectL.Tests.Core
             var boss = BossRoarTests.Final(result, Boss);
             Assert.That(boss.Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(RoarHitCounter.HitCount(boss), Is.EqualTo(1));
-        }
-
-        [Test]
-        public void DayAttack_DoesNotCount()
-        {
-            var result = Calculate(BossRoarTests.Input(2, night: false));
-
-            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, Boss)), Is.EqualTo(2));
         }
 
         [Test]

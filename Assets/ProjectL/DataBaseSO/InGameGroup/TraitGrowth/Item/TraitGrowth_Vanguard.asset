@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c907719567e420f8ccb06d18e87216d, type: 3}
   m_Name: TraitGrowth_Vanguard
   m_EditorClassIdentifier: 
+  group: 1
   normal:
     rid: 1000
   enhanced:
@@ -23,7 +24,7 @@ MonoBehaviour:
   displayName: "\uC120\uBD09\uC7A5"
   description: "\uC544\uAD70\uC758 \uCCAB \uACF5\uACA9\uC744 \uD558\uBA74 \uB2E4\uB978
     \uBC30\uCE58\uB41C \uC544\uAD70\uC758 \uACF5\uACA9\uB825\uC744 \uC774\uBC88 \uD134
-    \uB3D9\uC548 1 \uC62C\uB9BD\uB2C8\uB2E4."
+    \uB3D9\uC548 2 \uC62C\uB9BD\uB2C8\uB2E4."
   enhancedName: 
   enhancedDescription: 
   references:
@@ -34,7 +35,7 @@ MonoBehaviour:
     - rid: 1000
       type: {class: VanguardTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
       data:
-        attackBonus: 1
+        attackBonus: 2
         durationControllerTurnEnds: 1
     - rid: 1100
       type: {class: VanguardRankAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item, asm: ProjectL.Systems}
@@ -43,4 +44,4 @@ MonoBehaviour:
     - rid: 1200
       type: {class: VanguardRankAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item, asm: ProjectL.Systems}
       data:
-        attackBonus: 9
+        attackBonus: 7

@@ -324,7 +324,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
         {
             if (_faults.IsFaulted || _shutdownStarted) return;
             // 씬 등록 뒤, 최초 View 연결 전에 한 번만 초기화합니다. 일반 Open은 선택된 자식을 유지합니다.
-            // 이력 제외는 Combat 씬 안의 버튼 수명이며 GlobalUI의 씬 간 보존과는 별개입니다.
+            // 이력 제외는 Combat 씬 안의 UI 루트 수명이며 GlobalUI의 씬 간 보존과는 별개입니다.
             _ui.OpenUI(UIId.Deck, true);
             if (_faults.IsFaulted || _shutdownStarted) return;
             _ui.CloseChildUI(UIId.Deck);
@@ -342,9 +342,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
             _globalUI.ShowCombat();
             if (_faults.IsFaulted || _shutdownStarted) return;
             _ui.OpenUI(UIId.NightChecker, true);
-            if (_faults.IsFaulted || _shutdownStarted) return;
-            // 일반 진입과 개발 직행 모두 View 연결이 끝나면 덱 카드 목록을 엽니다.
-            _ui.OpenChildUI(UIId.Deck, UIId.UnitCard);
+            // 덱 카드는 맵 등장→배치 안내를 마친 뒤 전투 진입 표시가 엽니다.
         }
 
         private void OnApplicationQuit()

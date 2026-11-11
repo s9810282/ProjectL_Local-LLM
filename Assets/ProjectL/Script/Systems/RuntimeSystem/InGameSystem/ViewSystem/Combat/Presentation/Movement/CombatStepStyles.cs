@@ -8,7 +8,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// 이동 종류 → 걸음 모양 표입니다(걸음 모양 설계 ST2, 계획 P6). 종류 하나에 모양 하나이고, 만들 때 열거의 모든 값에 모양이 있는지 검사합니다
     /// (빠지면 전투 표시 조립에서 실패합니다). 값이 설정 표에서 오므로 공격 종류 표(<c>CombatAttackStyles</c>)와 달리 인스턴스입니다.
     /// </summary>
-    /// <remarks>새 이동 종류는 열거 값 하나 + 성질 한 줄(<see cref="CombatMovementKinds"/>) + 모양 클래스 하나 + 이 표 한 줄입니다. 걸음 레인·배치 대여·접촉 게이트·이동 표시는 바뀌지 않습니다(설계 ST6).</remarks>
+    /// <remarks>
+    /// 새 이동 종류는 열거 값 하나 + 성질 한 줄(<see cref="CombatMovementKinds"/>) + 이 표 한 줄입니다. 모양은 있는 모양 클래스를 다른 값으로 다시 쓰거나
+    /// (날려 감 = 걷기를 짧은 한 칸 시간으로, 작렬 View 설계 CV5), 새 꼴이면 모양 클래스 하나를 더합니다. 걸음 레인·배치 대여·접촉 게이트·이동 표시는 바뀌지 않습니다(설계 ST6).
+    /// </remarks>
     internal sealed class CombatStepStyles
     {
         private static readonly CombatMovementKind[] Kinds = (CombatMovementKind[])System.Enum.GetValues(typeof(CombatMovementKind));
@@ -17,11 +20,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <param name="voluntary">자발 이동의 모양입니다(설정이 고름).</param>
         /// <param name="forced">밀림의 모양입니다.</param>
-        internal CombatStepStyles(CombatStepStyle voluntary, CombatStepStyle forced)
+        /// <param name="flung">날려 가는 밀림(작렬)의 모양입니다.</param>
+        internal CombatStepStyles(CombatStepStyle voluntary, CombatStepStyle forced, CombatStepStyle flung)
         {
             _styles = new CombatStepStyle[TableSize()];
             _styles[(int)CombatMovementKind.Voluntary] = voluntary ?? throw new ArgumentNullException(nameof(voluntary));
             _styles[(int)CombatMovementKind.Forced] = forced ?? throw new ArgumentNullException(nameof(forced));
+            _styles[(int)CombatMovementKind.Flung] = flung ?? throw new ArgumentNullException(nameof(flung));
             for (int i = 0; i < Kinds.Length; i++)
             {
                 if (_styles[(int)Kinds[i]] == null)
@@ -31,6 +36,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>
         /// 사건 Presenter 값 묶음으로 만듭니다. 밀림은 늘 걷기이고(설계 Q-ST2), 걷기 하나를 밀림과(모양이 Walk면) 자발 이동이 함께 씁니다.
+        /// 날려 감(작렬)은 같은 걷기를 짧은 한 칸 시간으로 씁니다(작렬 View 설계 CV5, 높이 다른 칸 뜀은 공유).
         /// 이 규칙과 걸음 모양(Walk·Hop) → 모양 클래스 대응은 여기 한 곳입니다(계획 P5).
         /// </summary>
         internal static CombatStepStyles From(CombatEventPresentationValues values)
@@ -44,7 +50,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 CombatStepLook.Hop => new CombatHopStepStyle(look.HopSeconds, look.HopHeight),
                 _ => throw new ArgumentOutOfRangeException(nameof(values), look.Look, "[CombatStepStyles] 모르는 걸음 모양입니다."),
             };
-            return new CombatStepStyles(voluntary, walk);
+            return new CombatStepStyles(voluntary, walk, new CombatWalkStepStyle(values.FlungStepSeconds, values.StepClimbHop));
         }
 
         /// <summary>그 이동 종류의 모양입니다. 걸음을 시작할 때 한 번 부릅니다. 모르는 종류면 예외입니다.</summary>

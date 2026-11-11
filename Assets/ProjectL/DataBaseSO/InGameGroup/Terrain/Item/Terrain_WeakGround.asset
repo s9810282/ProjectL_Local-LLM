@@ -13,8 +13,11 @@ MonoBehaviour:
   m_Name: Terrain_WeakGround
   m_EditorClassIdentifier: 
   kind: 4
-  entryThreshold: 1
+  entryThreshold: 2
   attackBonus: 0
   maxHealthBonus: 0
   firstActivationAfterUnitTurns: 3
   repeatIntervalUnitTurns: 3
+  tornadoSideLength: 3
+  tornadoDiagonalDistance: 3
+  tornadoWarningLeadControllerTurns: 1

@@ -38,7 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _positionSwap = positionSwap;
         }
 
-        /// <summary>걸음 하나를 그 유닛의 레인에서 시작합니다. <paramref name="completed"/>는 걸음 사건 완료 통지입니다(동시 처리 설계 C6).</summary>
+        // 이 결과의 위치 교환 쌍 계획을 따라가는 세션입니다. 결과 준비 때 만들고 취소 때 비웁니다.
         private CombatPlacementBatchPlan.Session _placements;
 
         internal void Prepare(CombatResult result) => PreparePlacements(CombatPlacementBatchPlan.Build(result));
@@ -52,6 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _facts.ForgetHeldPlacements();
         }
 
+        /// <summary>걸음 하나를 그 유닛의 레인에서 시작합니다. <paramref name="completed"/>는 걸음 사건 완료 통지입니다(동시 처리 설계 C6).</summary>
         internal void BeginStep(CombatCharacterEvent step, Action completed)
         {
             if (_positionSwap?.TrySuppressStep(step) == true)
@@ -80,18 +81,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _motion.BeginStep(step, kind, gap == 0f, _mapper(), completed);
         }
 
-        internal void BeginMovement(CombatCharacterEvent firstStep)
-        {
-            if (_positionSwap?.SuppressesStep(firstStep) != true)
-                _motion.NotifyMovementStarted(firstStep);
-        }
-
         // 걸음의 이동 종류는 여기서 묻습니다(걸음 모양 설계 ST1, 계획 P11). 판정 원본은 Core 이동 원인을 읽는 CombatMovementKinds.Of 하나이고
         // 적 행동 간격도 같은 판정을 부릅니다(특성 시스템 View 계획 R4·TP-7). 종류의 성질도 CombatMovementKinds가 정합니다(계획 §6 M1).
         private static CombatMovementKind KindOf(CombatCharacterEvent step) => CombatMovementKinds.Of(step);
 
         /// <summary>
-        /// 경로 끝 방향 복귀입니다. 스스로 하는 이동이고 필드에 살아 있는 유닛만 복귀합니다.
+        /// 경로 끝 방향 복귀입니다. 필드에 살아 있는 유닛만 복귀합니다. 스스로 하는 이동은 원래 방향으로 돌고,
+        /// 밀린 경로는 젖힌 자세(표시 회전, 넉백 피격 연출 — 임시)가 남았을 때만 젖히는 시간 동안 폅니다(레인의 <c>BeginStraighten</c>).
         /// 접촉으로 사건 완료가 일찍 온 마지막 걸음은 아직 보간 중입니다(<paramref name="interpolating"/>). 방향 복귀를 보간 끝 뒤로 미루고 바로 완료합니다(이동 접촉 설계 M3).
         /// 이동자 사실은 보간 끝에 그리므로 그때는 걸음의 끝 사실로 판단합니다. 접촉 묶음이 없는 걸음은 보간 끝 뒤에 여기 옵니다.
         /// </summary>
@@ -103,8 +99,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 return;
             }
             var facts = interpolating ? lastStep.Final : _facts.FindCharacter(lastStep.Final.EntityId);
-            if (!CombatMovementKinds.IsSelfDriven(KindOf(lastStep)) || facts == null || facts.Health.IsDead ||
-                facts.Area != CharacterRuntimeArea.Field || !_presentation.TryGetRotation(facts.EntityId, out _))
+            bool selfDriven = CombatMovementKinds.IsSelfDriven(KindOf(lastStep));
+            if (facts == null || facts.Health.IsDead ||
+                facts.Area != CharacterRuntimeArea.Field || !_presentation.TryGetRotation(facts.EntityId, out _) ||
+                !selfDriven && !_presentation.TryGetFacing(facts.EntityId, out _))
             {
                 completed();
                 return;
@@ -115,7 +113,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 completed();
                 return;
             }
-            _motion.BeginFacingRestore(facts, completed, _mapper());
+            if (selfDriven)
+                _motion.BeginFacingRestore(facts, completed, _mapper());
+            else
+                _motion.BeginStraighten(facts, completed, _mapper());
         }
 
         /// <summary>복귀한 유닛의 표시 회전을 지우고 복귀 사실을 반영해 다시 그립니다.</summary>

@@ -53,6 +53,6 @@ namespace ProjectL.Tests.Core
         }
 
         internal static CharacterCombatFacts Mark(CharacterCombatFacts c) => ItemCharacterChanges.WithItems(c,
-            new CharacterItemState(c.Items.EquippedItemKey, c.Items.Effects.Append(new ItemTemporaryEffect(3, ItemStatKind.Priority, 10, 1)).ToArray()));
+            new CharacterItemState(c.Items.EquippedItemKey, c.Items.Effects.Append(new ItemTemporaryEffect(3, ItemStatKind.Priority, 10)).ToArray()));
     }
 }

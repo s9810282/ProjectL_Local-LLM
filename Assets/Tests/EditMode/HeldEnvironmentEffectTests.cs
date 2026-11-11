@@ -181,7 +181,7 @@ namespace ProjectL.Tests.Core
             var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0));
             var chars = i.Characters.Select(c => c.EntityId == i.ActorId ? HeldEnvironmentEffects.AcquireBadge(c, 41) : c).ToArray();
             var s = i.State;
-            var input = CombatCommandTestData.With(i, chars, new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 2, 7), new ThornFieldCellSnapshot(new CellCoord(2, 0), 2, 7) },s.Turn,s.Environment));
+            var input = CombatCommandTestData.With(i, chars, new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 2, 7), new ThornFieldCellSnapshot(new CellCoord(2, 0), 2, 7) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -287,7 +287,6 @@ namespace ProjectL.Tests.Core
             Assert.That(expired.Stats.EffectiveAttackPower, Is.EqualTo(c.Stats.EffectiveAttackPower));
         }
 
-        [TestCase(8, true)]
         [TestCase(1, false)]
         public void NightEnd_ExpiresSuppliesBeforeRecallIncludingMain(long completedPlayerTurns, bool expires)
         {
@@ -295,7 +294,7 @@ namespace ProjectL.Tests.Core
             var characters = i.Characters.Select(c => HeldEnvironmentEffects.WithHeldState(c,
                 new CharacterHeldEnvironmentState(41, true, 7))).ToArray();
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: completedPlayerTurns);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,true,                i.State.Structures,i.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                i.State.Structures,i.State.ThornFields,turn);
             var battle = new CombatBattleFacts(4, 1, 8, 8,
                 Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, i.ActorId, i.Aim,

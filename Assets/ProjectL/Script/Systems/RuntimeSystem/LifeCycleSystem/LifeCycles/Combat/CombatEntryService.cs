@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 {
@@ -29,6 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
         private IJobRunner _runner;
         private IJobRegisterSystem _register;
         private ILodingSystemService _loading;
+        private ILodingRegisterService _loadingRegister;
         private IStageViewBufferReadSink _mapInput;
         private IStageCommandResultReadSink _mapResults;
         private CombatEntryRequest _current;
@@ -94,6 +96,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             var global = resolver.GetService(SystemGroupsService.Global);
             BindServices(global.JobServiceCommand.JobRunner, global.JobServiceCommand.JobRegister,
                 global.LodingServiceCommand.LodingService);
+            _loadingRegister = global.LodingServiceCommand.LodingRegisterService;
             var buffers = resolver.GetService(BufferSystemKey.Buffer);
             _mapInput = buffers.StageViewReadSink;
             _mapResults = buffers.StageCommandResults;
@@ -109,10 +112,27 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 
         public void Initialize()
         {
-            if (_register == null)
+            if (_register == null || _loadingRegister == null)
                 throw new InvalidOperationException("[CombatEntryService] 서비스를 받기 전에 초기화할 수 없습니다.");
+            // 첫 동작 Core 준비는 Combat 씬 로딩 준비 단계(가림 중)에서 건다(첫 동작 Core 준비 계획 §2).
+            // InGame 그룹이 먼저 초기화되므로 View 선택 유닛 준비 다음 차례다(FU-P10).
+            _loadingRegister.RegisterScenePreparation(SceneIndices.Combat, new LodingPreparationNode(CreateFirstUsePreparation));
             _ready = true;
         }
+
+        // 로딩 시스템이 Combat 씬 준비 차례에 부릅니다. Combat 씬은 진입 전환으로만 열리므로 활성 요청이 없으면 예외입니다(FU-P16).
+        private ILodingPreparation CreateFirstUsePreparation()
+        {
+            // 서비스 준비·오류 없음·활성 요청을 함께 보는 IsActive 하나로 판단한다.
+            if (!IsActive)
+                throw new InvalidOperationException("[CombatEntryService] 활성 전투 진입 요청 없이 Combat 씬 준비를 만들 수 없습니다.");
+            CombatEntryRequest entry = _current;
+            var preparation = new CombatFirstUseLoadingPreparation(RequestFirstUseJob);
+            entry.AttachFirstUsePreparation(preparation);
+            return preparation;
+        }
+
+        private void RequestFirstUseJob() => _register.Register(JobRootType.Combat, JobType.FirstUsePrepare);
 
         public void Shutdown()
         {
@@ -128,6 +148,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             _runner = null;
             _register = null;
             _loading = null;
+            _loadingRegister = null;
         }
 
         public CombatEntryRequest RequestEntry(int chapterKey, StageNodeId nodeId) =>

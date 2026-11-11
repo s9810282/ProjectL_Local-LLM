@@ -1,5 +1,15 @@
 # UnitCard 공용 상세 패널 설계·Task (2026-11-02)
 
+## 2026-11-09 병종 특성 버튼
+
+두 상세창의 공용 특성 표시 위젯에서 기존 스냅샷의 `TraitOrigin.Category` 항목을 `CategoryAbility`에 전달한다. 공개 계약은 병종 특성을 유닛당 최대 하나 제공한다. 아이콘과 설명은 기존 `UnitCardTraitContent`의 View DB 표시값을 쓴다. 특성이 없으면 버튼을 숨긴다. 호버하는 동안 버튼 자식 Panel에 이름과 설명을 표시하며 Panel 그래픽은 포인터 입력을 받지 않는다. 버튼 이탈·비활성화·대상 전환 시 설명을 닫는다. 같은 대상이 갱신되면 열린 설명도 갱신한다.
+
+`CategoryAbility`는 등록된 화면의 자식 위젯이다. DeckSlotInfo(46, DeckEdit, Parallel)와 CombatCardInfo(47, UnitCard, Exclusive)가 준비 시 검증하고 `UIInputBinding`을 한 번 연결한다. 두 화면의 개폐는 기존 UISystem 이력을 따른다(FW-008/009). 서비스 생성·등록은 GlobalSystemFactory의 Global Builder, 보관과 접근은 GlobalSystemGroup.UIServiceCommand, 상위 Export는 GlobalSystemGroup, 화면 주입은 UISystem.BindScene의 기존 경로를 쓴다(FW-001~003). 프리팹이 참조를 조립하고 공용 위젯이 분류·호버를 맡는다(S). 기존 특성 출처와 표시값을 공유하며(SSOT/O), UIBase 개폐 계약을 유지하고(L), 버튼은 기존 명시적 입력 수신자에 연결된다(I/D). 버튼의 동작이나 외형 변경은 상세창 특성 위젯과 프리팹에서 확인할 수 있다.
+
+단일 Phase의 Task 순서는 공용 버튼과 호버 표시 연결, 두 프리팹 직렬화 및 남아 있는 레벨 텍스트 연결, 프리팹·씬 참조 정적 점검이다.
+
+구현 완료. 두 프리팹의 fileID·계층·레벨 참조와 StageSelect·Combat·DeckEdit의 프리팹 참조를 정적으로 점검했다. 컴파일 미확인. Unity에서 병종 특성이 있는 유닛의 아이콘·호버 진입/이탈, 특성이 없는 유닛의 버튼 숨김, 유닛 전환·화면 닫기 뒤 설명 초기화, 남은 레벨 텍스트를 확인한다.
+
 ## 설계
 
 사용자가 추가한 `Prefabs/UI/ScrollContentFrame.prefab`을 Combat 씬 Canvas에 한 번 배치한다. 기본은 비활성이다. 카드별 InfoPannel·AbilityPannel과 그 직렬화 필드·개폐·특성 입력 구현을 제거하고, 기존 InfoButton이 공용 상세 패널로 직접 요청한다. 카드 본체의 배치 선택·드래그와 필드 호버 입력은 유지한다. 손패 상세 입력 추가는 이번 범위가 아니다.
@@ -65,3 +75,10 @@ SSOT는 기존 특성 표시값이며 개수 정책/영역 선택은 DeckSlotInf
 - Phase 2 구현 완료. 상한 예외를 제거했고 3개 이상은 기존 3칸 영역을 사용한다. 4번째부터 3번 슬롯의 전체 계층을 복제하고 원본보다 앞선 sibling index에 두어 원본이 앞에 그려지게 했다. 내부 참조는 원본과 복제본의 자식 인덱스로 대응한다.
 - 생성 수는 지금까지 필요했던 최대 추가 수만 유지한다. 다시 열기/동일 수 갱신은 재사용하고, 감소한 초과 슬롯은 아이콘·이름·설명을 비운 뒤 숨긴다. 씬/패널 부모 파괴가 복제본도 해제한다. 프리팹·UI 등록·선택·클릭 전용 입력·Core는 변경하지 않았다.
 - 정적 호출/개수 제한 잔여·UTF-8/LF·git diff --check를 확인했다. 복제 원본 Ability.prefab에는 독립 UIBase가 없어 추가 UI 등록도 필요하지 않다. Test 코드 작성/실행·MSBuild·Unity 실행은 수행하지 않았다. 컴파일 미확인. Phase 2 종료 후 리뷰에서 멈춘다.
+
+## Portrait Mask 계층 허용 (2026-11-07)
+
+- 사용자 요청: CombatCardInfo의 PortraitArea와 Portrait 사이에 Mask용 중간 오브젝트를 허용한다. 기존 이름·초상화의 동일 직계 부모 검증이 이 구성을 거부했다.
+- 공용 DeckSlotInfoStats에서 이름의 부모를 PortraitArea 기준으로 사용하고, 초상화가 그 아래 자손이면 허용하도록 검증만 변경한다. PortraitArea 자체를 초상화로 연결하거나 다른 영역/화면의 초상화를 연결하면 기존과 같이 구성 예외를 던진다. 직렬화된 필드와 필수 참조·텍스트 중복 검증은 유지한다.
+- SSOT·SOLID·독립성: 표시 참조는 기존 직렬화 필드만 사용한다. 새 계층 조회·상태·서비스 없이 기본 표시 위젯의 저작 검증에 한정하며 Core·입력·조립은 수정하지 않는다. Mask는 등록된 화면 내부 위젯이므로 별도 UIBase 등록이 필요하지 않다. UIId·부모·Policy, 생성/등록/바인딩·IUISystemService 개폐·재사용/씬 해제 수명과 기존 Factory → Global 내부 등록 → Group/Context 제공 경로는 그대로다.
+- 정적 확인 범위는 공용 위젯 호출과 기존 프리팹의 이름·초상화 참조/부모 계층이다. Test 코드 작성/실행·MSBuild·Unity 실행은 수행하지 않는다. 컴파일 미확인. Unity에서 Combat 진입과 PortraitArea → PortraitMask → Portrait 표시, 기존 DeckEdit 표시를 확인한다.

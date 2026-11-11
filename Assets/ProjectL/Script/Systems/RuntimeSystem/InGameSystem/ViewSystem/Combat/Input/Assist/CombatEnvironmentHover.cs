@@ -12,11 +12,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
     /// <summary>환경 설명·현재 영역과 클릭한 토네이도 도착 영역의 표시입니다. 칸 집기와 표시 수명을 공유하며 규칙·Buffer를 변경하지 않습니다.</summary>
     internal sealed class CombatEnvironmentHover
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionEnvironmentHoverPointerMoved = new("Combat.Action.Interaction.EnvironmentHover.PointerMoved");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionEnvironmentHoverPin = new("Combat.Action.Interaction.EnvironmentHover.Pin");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionEnvironmentHoverUnpin = new("Combat.Action.Interaction.EnvironmentHover.Unpin");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionEnvironmentHoverPoll = new("Combat.Action.Interaction.EnvironmentHover.Poll");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionEnvironmentHoverClear = new("Combat.Action.Interaction.EnvironmentHover.Clear");
+#endif
+
         private readonly ICombatPointerPicker _picker;
         private readonly ICombatPointerOcclusion _occlusion;
         private readonly CombatEnvironmentText _formatter;
         private readonly IUITextPresentation _text;
         private readonly ICombatGimmickRangeFeedback _range;
+        private readonly CombatNexusRangeHover _nexusRange;
         private readonly List<CellCoord> _rangeCells = new(16);
         private readonly List<CellCoord> _selectedCells = new(16);
         private CellCoord? _pendingClickCell;
@@ -39,17 +49,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
         private uint _pointerHideVersion;
 
         internal CombatEnvironmentHover(ICombatPointerPicker picker, ICombatPointerOcclusion occlusion,
-            CombatEnvironmentText formatter, IUITextPresentation text, ICombatGimmickRangeFeedback range)
+            CombatEnvironmentText formatter, IUITextPresentation text, ICombatGimmickRangeFeedback range,
+            CombatNexusRangeHover nexusRange)
         {
             _picker = picker ?? throw new ArgumentNullException(nameof(picker));
             _occlusion = occlusion ?? throw new ArgumentNullException(nameof(occlusion));
             _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
             _text = text ?? throw new ArgumentNullException(nameof(text));
             _range = range ?? throw new ArgumentNullException(nameof(range));
+            _nexusRange = nexusRange ?? throw new ArgumentNullException(nameof(nexusRange));
         }
 
         internal void PointerMoved(float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionEnvironmentHoverPointerMovedSample = _profileInteractionEnvironmentHoverPointerMoved.Auto();
+#endif
+
             _screenX = screenX;
             _screenY = screenY;
             _hasPointer = true;
@@ -59,6 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
         /// <summary>기존 행동과 유닛 선택 뒤 남은 빈 칸 클릭만 받습니다. 현재 사실은 다음 Refresh에서 읽습니다.</summary>
         internal void SelectPressed(float screenX, float screenY, IReadOnlyList<CharacterData> characters, bool canSelect)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionEnvironmentHoverPinSample = _profileInteractionEnvironmentHoverPin.Auto();
+#endif
+
             if (characters == null) throw new ArgumentNullException(nameof(characters));
             CancelSelection();
             PointerMoved(screenX, screenY);
@@ -72,6 +92,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
 
         internal void CancelSelection()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionEnvironmentHoverUnpinSample = _profileInteractionEnvironmentHoverUnpin.Auto();
+#endif
+
             if (_pendingClickCell.HasValue || _selectedCells.Count > 0) _cached = false;
             _pendingClickCell = null;
             _selectedCells.Clear();
@@ -81,6 +105,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
 
         internal void Refresh(CombatStateData state, int resultSequence, bool allowed, bool canSelect = true)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionEnvironmentHoverPollSample = _profileInteractionEnvironmentHoverPoll.Auto();
+#endif
+
             if (!allowed || state == null)
             {
                 CancelSelection();
@@ -148,6 +176,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
                     _selectionShown = false;
                 }
             }
+            _nexusRange.Refresh(state, cell);
             _cell = cell;
             _sequence = resultSequence;
             _cachedState = state;
@@ -157,6 +186,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
         /// <summary>UnHover·포커스 손실·씬 해제입니다. 이후 새 포인터 입력 전에는 다시 열지 않습니다.</summary>
         internal void Clear()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionEnvironmentHoverClearSample = _profileInteractionEnvironmentHoverClear.Auto();
+#endif
+
             CancelSelection();
             _hasPointer = false;
             Hide();
@@ -173,6 +206,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
         {
             _cached = false;
             _cachedState = null;
+            _nexusRange.Clear();
             ShowSelectionOrHideRange();
             HideText();
         }

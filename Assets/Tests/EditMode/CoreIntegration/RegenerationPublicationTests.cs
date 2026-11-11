@@ -117,35 +117,6 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         [Test]
-        public void NightRecall_PublishesZeroCadenceForReturnedSub_AndRetainsFieldMainProgress()
-        {
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new RegenerationSource(3, passive: true));
-            CharacterCombatFacts captured = null;
-            for (int ending = 1; ending <= 8; ending++)
-            {
-                Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Phase, Is.EqualTo(CombatFlowPhase.PlayerInput),
-                    $"ending={ending}, MainHP={battle.Main.Health.CurrentHealth}, ActorHP={battle.Actor.Health.CurrentHealth}");
-                battle.Submit(battle.EndPlayerTurn());
-                if (ending == 8) captured = battle.Actor;
-                battle.AdvanceToPlayerOrDay();
-            }
-            Assert.That(battle.Actor.Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            Assert.That(Status(battle.Actor).CompletedEligibleTurnEnds, Is.Zero);
-            Assert.That(battle.Main.Area, Is.EqualTo(CharacterRuntimeArea.Field));
-            Assert.That(Status(battle.Main).CompletedEligibleTurnEnds, Is.EqualTo(2));
-            Assert.That(Status(captured).CompletedEligibleTurnEnds, Is.EqualTo(2));
-            Assert.That(battle.Buffers.CombatResultReadSink.TryGetLatest(out var result), Is.True);
-            var returned = result.Events.OfType<CombatCharacterEvent>().Single(e => e.Kind == CombatEventKind.Returned && e.Final.EntityId == battle.Actor.EntityId);
-            Assert.That(Status(returned.Expected).CompletedEligibleTurnEnds, Is.EqualTo(2));
-            Assert.That(Status(returned.Final).CompletedEligibleTurnEnds, Is.EqualTo(2));
-            var reset = result.Events.OfType<CombatTraitStateEvent>().Last(e => e.Final.EntityId == battle.Actor.EntityId);
-            Assert.That(Status(reset.Expected).CompletedEligibleTurnEnds, Is.EqualTo(2));
-            Assert.That(Status(reset.Final).CompletedEligibleTurnEnds, Is.Zero);
-            var ordered = result.Events.ToArray();
-            Assert.That(Array.IndexOf(ordered, reset), Is.GreaterThan(Array.IndexOf(ordered, returned)));
-        }
-
-        [Test]
         public void PostBattleEnhancement_ConstructsFreshZeroCadence_WithoutLiveReplacement()
         {
             using var game = new TraitGrowthTestRuntime(initialLevel: 1);

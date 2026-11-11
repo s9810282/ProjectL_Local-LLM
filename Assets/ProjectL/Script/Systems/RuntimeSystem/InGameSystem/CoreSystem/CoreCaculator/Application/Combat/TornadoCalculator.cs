@@ -19,17 +19,55 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>칸 진입과 완료된 진영 턴 경계에서 실행되는 명령 내부 지형 계산이다.</summary>
     public static class TornadoCalculator
     {
+        /// <summary>현재 공개 영역에 예정된 도착 위치가 닿는지 난수 없이 검사한다.</summary>
+        internal static IEnumerable<bool> AssessmentEntryContacts(CombatCommandInput input, CharacterCombatFacts unit,
+            IEnumerable<CellCoord> anchors)
+        {
+            if (input.Battle == null || input.State.Turn.StagePhase != StagePhase.Combat ||
+                input.State.Phase == CombatFlowPhase.Finished) yield break;
+            foreach (var entry in input.State.Gimmicks.Entries)
+            {
+                yield return false;
+                if (entry is not TornadoGimmickState group || UnitBehaviorRules.IsForcedMovementImmune(input, unit)) continue;
+                var spec = (TornadoGimmickSpec)input.Battle.GimmickDefinitions[group.Id.Value - 1];
+                foreach (var member in spec.Members)
+                {
+                    yield return false;
+                    if (!member.KnownTo.Contains(unit.Owner)) continue;
+                    var center = group.Members.Single(state => state.SourceId == member.SourceId).Center;
+                    foreach (var anchor in anchors)
+                        yield return Touches(unit, center, member.SideLength, anchor - unit.Anchor.Value);
+                }
+            }
+        }
+
         internal static bool ResolveGroupedEntry(MovementProjection projection, EntityId mover, CellCoord enteredCell,
             IReadOnlyList<IMovementTileRule> rules)
         {
-            if (!ContactEligible(projection)) return false;
+            bool thrown = false;
+            foreach (var _ in ResolveGroupedEntrySteps(projection, mover, enteredCell, rules, value => thrown = value)) { }
+            return thrown;
+        }
+
+        internal static IEnumerable<string> ResolveGroupedEntrySteps(MovementProjection projection, EntityId mover,
+            CellCoord enteredCell, IReadOnlyList<IMovementTileRule> rules, Action<bool> completed)
+        {
+            using (var observation = projection.BeginCurrentInput())
+            {
+                while (!observation.IsComplete)
+                {
+                    observation.Step();
+                    yield return "TornadoContactObservation";
+                }
+                if (!ContactEligible(observation.Result.State, projection)) yield break;
+            }
             var group = projection.Gimmicks.Entries.OfType<TornadoGimmickState>().SingleOrDefault();
-            if (group == null) return false;
+            if (group == null) yield break;
             var unit = projection.Character(mover);
-            if (unit.Health.IsDead || unit.Area != CharacterRuntimeArea.Field || unit.Anchor != enteredCell) return false;
+            if (unit.Health.IsDead || unit.Area != CharacterRuntimeArea.Field || unit.Anchor != enteredCell) yield break;
             var spec = (TornadoGimmickSpec)projection.Input.Battle.GimmickDefinitions[group.Id.Value - 1];
             var permitted = spec.Members.Where(m => !projection.TornadoObserver.HasValue || m.KnownTo.Contains(projection.TornadoObserver.Value)).ToArray();
-            if (!permitted.Any(m => Touches(unit, group.Members.Single(s => s.SourceId == m.SourceId).Center, m.SideLength))) return false;
+            if (!permitted.Any(m => Touches(unit, group.Members.Single(s => s.SourceId == m.SourceId).Center, m.SideLength))) yield break;
             bool owns = projection.TornadoResolution == null;
             if (owns)
             {
@@ -44,21 +82,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     unit = projection.Character(mover);
                     if (projection.Terminal || unit.Health.IsDead || unit.Area != CharacterRuntimeArea.Field || unit.Anchor != enteredCell) break;
-                    Throw(projection, group.Id, member, mover, rules);
+                    foreach (var phase in ThrowSteps(projection, group.Id, member, mover, rules)) yield return phase;
+                    yield return "TornadoContactMember";
                 }
             }
             finally
             {
                 if (owns) projection.TornadoResolution = null;
             }
-            return resolution.Thrown.Count(pair => pair.UnitId == mover) != before;
+            completed(resolution.Thrown.Count(pair => pair.UnitId == mover) != before);
+            yield return "TornadoContactComplete";
         }
 
         internal static bool ContactEligible(MovementProjection projection)
         {
-            var state = projection.CurrentInput().State;
-            return state.Turn.StagePhase == StagePhase.Combat && state.Phase != CombatFlowPhase.Finished && !projection.Terminal;
+            return ContactEligible(projection.CurrentInput().State, projection);
         }
+
+        private static bool ContactEligible(CombatCommandState state, MovementProjection projection) =>
+            state.Turn.StagePhase == StagePhase.Combat && state.Phase != CombatFlowPhase.Finished && !projection.Terminal;
 
         internal static void ResolveSweepCenter(MovementProjection projection, StageGimmickId id, TornadoMemberSpec spec,
             CellCoord center, int step, IReadOnlyList<IMovementTileRule> rules)
@@ -71,33 +113,52 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var recipient in recipients)
             {
                 if (projection.Terminal) break;
-                Throw(projection, id, spec, recipient, rules);
+                foreach (var _ in ThrowSteps(projection, id, spec, recipient, rules)) { }
             }
         }
 
         internal static IReadOnlyList<CellCoord> GroupedLandingCandidates(CombatCommandInput input, EntityId mover)
         {
-            var unit = input.Characters.Single(c => c.EntityId == mover);
-            return Cells(input.State.BoardWidth, input.State.BoardHeight).Where(cell => cell != unit.Anchor &&
-                MovementRouteValidator.CanOccupy(input, cell, new[] { mover })).ToArray();
+            var candidates = new List<CellCoord>();
+            foreach (var _ in LandingSteps(input, mover, candidates)) { }
+            return candidates.ToArray();
         }
 
-        private static bool Touches(CharacterCombatFacts unit, CellCoord center, int side) =>
-            !unit.Health.IsDead && unit.Area == CharacterRuntimeArea.Field &&
-            unit.OccupiedCells.Any(c => Math.Abs((long)c.X - center.X) <= side / 2 && Math.Abs((long)c.Y - center.Y) <= side / 2);
+        private static IEnumerable<string> LandingSteps(CombatCommandInput input, EntityId mover, List<CellCoord> candidates)
+        {
+            var unit = input.Characters.Single(c => c.EntityId == mover);
+            var ignored = new[] { mover };
+            foreach (var cell in Cells(input.State.BoardWidth, input.State.BoardHeight))
+            {
+                if (cell != unit.Anchor && MovementRouteValidator.CanOccupy(input, cell, ignored)) candidates.Add(cell);
+                yield return "TornadoLandingCell";
+            }
+        }
 
-        private static void Throw(MovementProjection projection, StageGimmickId id, TornadoMemberSpec spec, EntityId target,
+        private static bool Touches(CharacterCombatFacts unit, CellCoord center, int side, CellCoord offset = default) =>
+            !unit.Health.IsDead && unit.Area == CharacterRuntimeArea.Field &&
+            unit.OccupiedCells.Any(c => Math.Abs((long)c.X + offset.X - center.X) <= side / 2 &&
+                Math.Abs((long)c.Y + offset.Y - center.Y) <= side / 2);
+
+        private static IEnumerable<string> ThrowSteps(MovementProjection projection, StageGimmickId id, TornadoMemberSpec spec, EntityId target,
             IReadOnlyList<IMovementTileRule> rules)
         {
             var group = (TornadoGimmickState)projection.Gimmicks.Get(id);
             var storm = group.Members.Single(m => m.SourceId == spec.SourceId);
             var unit = projection.Character(target);
-            if (!Touches(unit, storm.Center, spec.SideLength) || projection.TornadoResolution.Thrown.Contains((spec.SourceId, target))) return;
-            var current = projection.CurrentInput();
-            if (UnitBehaviorRules.IsForcedMovementImmune(current, unit, projection.ProfileReads)) return;
+            if (!Touches(unit, storm.Center, spec.SideLength) || projection.TornadoResolution.Thrown.Contains((spec.SourceId, target))) yield break;
+            using var observation = projection.BeginCurrentInput();
+            while (!observation.IsComplete)
+            {
+                observation.Step();
+                yield return "TornadoThrowObservation";
+            }
+            var current = observation.Result;
+            if (UnitBehaviorRules.IsForcedMovementImmune(current, unit, projection.ProfileReads)) yield break;
             if (unit.OccupiedCells.Count != 1) throw new NotSupportedException("다중 셀 토네이도 이동에는 전체 점유 배치 지원이 필요합니다.");
-            var candidates = GroupedLandingCandidates(current, target);
-            if (candidates.Count == 0) return;
+            var candidates = new List<CellCoord>();
+            foreach (var phase in LandingSteps(current, target, candidates)) yield return phase;
+            if (candidates.Count == 0) yield break;
             var destination = candidates[projection.ChooseRandom(candidates.Count)];
             // 실제 이동이 확정된 뒤 중첩 착지보다 먼저 표시한다.
             projection.TornadoResolution.Thrown.Add((spec.SourceId, target));
@@ -106,15 +167,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new TornadoContactOrigin(id, spec.SourceId, storm.Center, step));
             // 과거 도착 의존은 새 이동의 도착 완료 근거가 아니다. 중첩 착지가 새로 기록한 값만 재사용한다.
             projection.ArrivalCells.Remove(target);
+            yield return "TornadoRelocation";
             if (!projection.ResolveForcedTerrainEntry(target, destination))
             {
-                projection.ReconcilePresence(new[] { unit.Anchor.Value, destination });
-                MovementEnvironmentCalculator.ResolveEntry(projection, destination, rules, target);
+                foreach (var phase in projection.ReconcilePresenceSteps(new[] { unit.Anchor.Value, destination })) yield return phase;
+                foreach (var phase in MovementEnvironmentCalculator.ResolveEntrySteps(projection, destination, rules, target)) yield return phase;
                 var actual = projection.Character(target);
                 if (!projection.Terminal && !actual.Health.IsDead && actual.Area == CharacterRuntimeArea.Field && actual.Anchor == destination &&
                     (!projection.ArrivalCells.TryGetValue(target, out var settled) || settled != destination))
-                    projection.ResolveForcedArrival(target);
+                    foreach (var phase in projection.ResolveForcedArrivalSteps(target, _ => { })) yield return phase;
                 projection.ResolveDeathBoundary();
+                yield return "TornadoDeaths";
             }
         }
 

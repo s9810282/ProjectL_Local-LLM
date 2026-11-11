@@ -28,7 +28,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             return new LobbyViewPopups(new ILobbyPopupFactory[]
             {
                 new LobbyDeckPopupFactory(services.UI, root.UI.DeckScreen, faults),
-                new LobbyArtifactPopupFactory(new ArtifactPopupViewFactory(faults, services.Artifact))
+                new LobbyArtifactPopupFactory(new ArtifactPopupViewFactory(faults, services.Artifact), services.Audio)
             });
         }
 

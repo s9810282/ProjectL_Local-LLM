@@ -37,7 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var s = actor.Stats;
             var stats = s.With(effectiveAttackPower: checked(s.AttackPower + s.ArtifactAttackBonus + next.AttackBonus + s.TraitAttackBonus),
                 positionAttackBonus: next.AttackBonus);
-            return actor.With(health: health, stats: stats, positionModifier: next);
+            return RampageApplication.ReconcileChange(actor, actor.With(health: health, stats: stats, positionModifier: next));
         }
 
         internal static void RecordNormalization(List<CombatEvent> events, CharacterCombatFacts before,

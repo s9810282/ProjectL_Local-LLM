@@ -1,5 +1,6 @@
 using System;
 using ProjectL.Framework.DataBase;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
@@ -55,13 +56,84 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
             [Tooltip("마커가 이동할 때 뛰어오르는 높이입니다. 0이면 뛰지 않습니다.")]
             [SerializeField, Min(0f)] private float markerJumpHeight = 0.8f;
 
+            [Header("Node Visit")]
+            [SerializeField] private MarkerVisitInput markerVisit = new();
+
             [Header("Picking")]
             [SerializeField, Min(1f)] private float pickDistance = 1000f;
+
+            [Header("Node Drop")]
+            [Tooltip("챕터 최초 표시 때 플레이어부터 뻗는 선의 도착에 맞추는 낙하 연출입니다.")]
+            [SerializeField] private NodeDropInput nodeDrop = new();
+
+            [Header("Map Intro")]
+            [Tooltip("챕터 최초 표시의 선 전개와 카메라 왕복 시간입니다. 낙하는 같은 시간표에 맞춥니다.")]
+            [SerializeField] private MapIntroInput mapIntro = new();
+
+            [Header("Camera Focus")]
+            [Tooltip("노드 이동 전 구간에 카메라가 동행하고 로딩 중 복귀 구도를 맞춥니다.")]
+            [SerializeField] private CameraFocusInput cameraFocus = new();
+
+            [Header("Node Hover")]
+            [Tooltip("건물 윤곽선과 선택 가능한 연결선의 색상·두께·전환 시간입니다.")]
+            [SerializeField] private StageNodeHoverStyleSO hoverStyle;
 
             internal StageMapViewData ToData() => new(depthSpacing, widthSpacing, nodeScale, buildingHeight,
                 lineHeight, lineWidth, connectionPrefab, startVisualPrefab,
                 currentMarkerPrefab, markerOffset, markerYaw, markerScale, markerMoveDuration, markerJumpHeight,
-                pickDistance, lineColor);
+                pickDistance, lineColor, nodeDrop != null ? nodeDrop.ToData() :
+                    throw new InvalidOperationException("[StageMapViewDataSO] Node Drop 설정이 필요합니다."),
+                mapIntro != null ? mapIntro.ToData() :
+                    throw new InvalidOperationException("[StageMapViewDataSO] Map Intro 설정이 필요합니다."),
+                cameraFocus != null ? cameraFocus.ToData() :
+                    throw new InvalidOperationException("[StageMapViewDataSO] Camera Focus 설정이 필요합니다."),
+                markerVisit != null ? markerVisit.ToData() :
+                    throw new InvalidOperationException("[StageMapViewDataSO] Marker Visit 설정이 필요합니다."),
+                hoverStyle != null ? hoverStyle.GetData() :
+                    throw new InvalidOperationException("[StageMapViewDataSO] Node Hover의 Hover Style 에셋을 연결해야 합니다."));
+        }
+
+        [Serializable]
+        private sealed class MarkerVisitInput
+        {
+            [Tooltip("출발 노드와 이어진 선 쪽으로 건물 끝에서 더 띄우는 맵 로컬 여백입니다.")]
+            [SerializeField, Min(0.001f)] private float frontClearance = 0.4f;
+            [SerializeField, Min(0f)] private float settleJumpHeight = 0.2f;
+            [SerializeField, Min(0.001f)] private float settleJumpSeconds = 0.25f;
+
+            internal StageMarkerVisitData ToData() => new(frontClearance, settleJumpHeight, settleJumpSeconds);
+        }
+
+        [Serializable]
+        private sealed class CameraFocusInput
+        {
+            [SerializeField] private bool enabled = true;
+            [Tooltip("플레이어 바닥 위치의 화면 높이입니다. 아래 0, 위 1이며 맵 끝에서는 이동 범위가 우선합니다.")]
+            [SerializeField, Range(0.01f, 0.99f)] private float playerViewportY = 0.35f;
+
+            internal StageMapCameraFocusData ToData() => new(enabled, playerViewportY);
+        }
+
+        [Serializable]
+        private sealed class NodeDropInput
+        {
+            [SerializeField] private bool enabled = true;
+            [SerializeField, Min(0f)] private float height = 20f;
+            [SerializeField, Min(0f)] private float seconds = 0.8f;
+            internal StageNodeDropData ToData() => new(enabled, height, seconds);
+        }
+
+        [Serializable]
+        private sealed class MapIntroInput
+        {
+            [SerializeField] private bool enabled = true;
+            [SerializeField, Min(0f)] private float startHoldSeconds = 0.6f;
+            [SerializeField, Min(0.01f)] private float revealSeconds = 7f;
+            [SerializeField, Min(0f)] private float bossHoldSeconds = 0.9f;
+            [SerializeField, Min(0f)] private float returnSeconds = 2.2f;
+
+            internal StageMapIntroData ToData() => new(enabled, startHoldSeconds, revealSeconds,
+                bossHoldSeconds, returnSeconds);
         }
     }
 }

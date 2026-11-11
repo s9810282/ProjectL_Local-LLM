@@ -64,7 +64,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 CombatViewPreviewKind.UnitPlacement => CombatCommandKind.PlaceUnit,
                 CombatViewPreviewKind.Move or CombatViewPreviewKind.MoveRange => CombatCommandKind.Move,
                 CombatViewPreviewKind.Attack or CombatViewPreviewKind.AttackRange or CombatViewPreviewKind.UnitAttackRange
-                    => CombatCommandKind.Attack,
+                    or CombatViewPreviewKind.RoarForecast => CombatCommandKind.Attack,
                 CombatViewPreviewKind.ActionAvailability => CombatCommandKind.Attack,
                 _ => throw new ArgumentOutOfRangeException(nameof(request))
             };
@@ -86,6 +86,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 // 기본 갈래가 배치 계산이므로 새 종류는 여기에 명시한다(빠뜨리면 예외 없이 배치 미리보기가 돈다).
                 CombatViewPreviewKind.UnitAttackRange => CombatPreviewResult.ForUnitAttackRange(request.Number,
                     CombatCommandCalculator.GetUnitAttackRange(input)),
+                CombatViewPreviewKind.RoarForecast => CombatPreviewResult.ForRoarForecast(request.Number,
+                    CombatCommandCalculator.GetRoarForecast(input, _movementRules)),
                 _ => CombatPreviewResult.ForPlacement(request.Number, CombatPlacementCalculator.Preview(input))
             };
             // 계산 중 요청이 바뀌었거나 전투가 정리·교체됐으면 오래된 응답을 게시하지 않는다.

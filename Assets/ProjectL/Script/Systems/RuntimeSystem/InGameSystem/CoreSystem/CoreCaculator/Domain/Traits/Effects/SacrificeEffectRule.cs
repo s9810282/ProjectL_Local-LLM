@@ -14,6 +14,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         private readonly SacrificeTraitDefinition _definition;
         private readonly SacrificeTraitRule _rule;
 
+        internal bool PreventsLethalSacrificeDamage => _definition.PreventsLethalSacrificeDamage;
+        internal int ShieldOnActivation => _definition.ShieldOnActivation;
+
         internal SacrificeEffectRule(SacrificeTraitDefinition definition, SacrificeTraitRule rule)
         {
             _definition = definition ?? throw new ArgumentNullException(nameof(definition));

@@ -63,7 +63,7 @@ namespace ProjectL.Tests.Core
                 events.Add(new CombatItemEvent(1, new EntityId(1), null, ItemEventStage.Equipment, reason, 0,
                     reason == ItemEventReason.Equipped ? null : reason == ItemEventReason.Replaced ? 2 : 1,
                     reason is ItemEventReason.Equipped or ItemEventReason.Replaced ? 1 : null));
-            foreach (var reason in new[] { ItemEventReason.Death, ItemEventReason.RoundEnded, ItemEventReason.BattleEnded })
+            foreach (var reason in new[] { ItemEventReason.Death, ItemEventReason.BattleEnded })
                 events.Add(new CombatItemEvent(1, new EntityId(1), null, ItemEventStage.Lifecycle, reason, 0, 1, null));
             Assert.That(events.Select(e => e.Stage).Distinct(), Is.EquivalentTo(Enum.GetValues(typeof(ItemEventStage))));
             Assert.That(events.Select(e => e.Reason).Distinct(), Is.EquivalentTo(Enum.GetValues(typeof(ItemEventReason))));
@@ -148,6 +148,32 @@ namespace ProjectL.Tests.Core
                     Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(a.EntityId, null, TraitKey.GroundCompaction, kind, 1, targetCells: new[] { trail.Cell })),
                         new CombatMovementSourceEvent(kind == TraitActivationKind.TrailCreated ? null : trail,
                             kind == TraitActivationKind.TrailCreated ? trail : trail.WithRemainingOpposingTurnEnds(kind == TraitActivationKind.TrailRemoved ? 0 : 1)) } };
+            // 자폭 폭발: 실제로 맞은 대상의 체력 사건이 함께 있어야 한다.
+            yield return new Sample { Kind = TraitActivationKind.SelfDestructExploded, Actors = new[] { 1 }, RequiresCompanion = true,
+                Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(new EntityId(2), null, TraitKey.SelfDestruct,
+                        TraitActivationKind.SelfDestructExploded, 5, new[] { a.EntityId })),
+                    new CombatCharacterEvent(CombatEventKind.HealthChanged, a, a.WithHealth(new HealthStateSnapshot(95, 100))) } };
+            // 작렬 부딪힘: 체력 사건이 있는 받는 쪽만 실제 변화다. 피해가 모두 막혀도 부딪힘 자체는 관찰로 읽는다.
+            yield return new Sample { Kind = TraitActivationKind.CrashImpactCollided, Actors = new[] { 1 },
+                Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(new EntityId(2), null, TraitKey.CrashImpact,
+                        TraitActivationKind.CrashImpactCollided, 10, new[] { a.EntityId }, new[] { a.Anchor.Value + new CellCoord(1, 0) })),
+                    new CombatCharacterEvent(CombatEventKind.HealthChanged, a, a.WithHealth(new HealthStateSnapshot(95, 100))) } };
+            // 재구성 시작: 재구성 사건이 함께 있어야 한다.
+            yield return new Sample { Kind = TraitActivationKind.ReconstructionStarted, Actors = new[] { 1 }, RequiresCompanion = true,
+                Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(a.EntityId, null, TraitKey.Reconstruction,
+                        TraitActivationKind.ReconstructionStarted, 10, new[] { a.EntityId })),
+                    new CombatCharacterEvent(CombatEventKind.Reconstructed, a.WithHealth(new HealthStateSnapshot(10, 100)), a) } };
+            // 재구성 끝(부활): 재구성 중 상태가 풀린 특성 상태 사건이 함께 있어야 한다.
+            var reconstructing = a.WithStatusEffects(new StatusEffectSet(new AppliedStatus[] { new ReconstructionStatus(Origin(TraitKey.Reconstruction), 1) }));
+            yield return new Sample { Kind = TraitActivationKind.ReconstructionEnded, Actors = new[] { 1 }, RequiresCompanion = true,
+                Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(a.EntityId, null, TraitKey.Reconstruction,
+                        TraitActivationKind.ReconstructionEnded, 0, new[] { a.EntityId })),
+                    new CombatTraitStateEvent(reconstructing, a) } };
+            // 시체 밀기: 위치 사건 없이 경로만 남기며 출처의 사망 사실이 함께 있어야 한다.
+            yield return new Sample { Kind = TraitActivationKind.CorpseDisplaced, RequiresCompanion = true,
+                Events = new CombatEvent[] { Wrap(new TraitActivationSnapshot(a.EntityId, null, TraitKey.SelfDestruct,
+                        TraitActivationKind.CorpseDisplaced, 1, targetCells: new[] { a.Anchor.Value, a.Anchor.Value + new CellCoord(1, 0) })),
+                    new CombatCharacterEvent(CombatEventKind.Died, a, a.WithHealth(new HealthStateSnapshot(0, 100))) } };
         }
     }
 }

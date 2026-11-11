@@ -66,7 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int width, int height, ref uint random)
         {
             Validate(spec, state, width, height, TornadoGimmickPhase.Cooldown);
-            return LockWarning(spec, state, width, height, checked(state.NextBoundaryCount + spec.WarningLeadControllerTurns), ref random);
+            return LockWarning(spec, state, width, height, TravelAfterWarning(spec, state.NextBoundaryCount), ref random);
         }
 
         internal static (TornadoMemberState State, IReadOnlyList<CellCoord> Path) CompleteTravel(TornadoMemberSpec spec,
@@ -76,13 +76,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var path = TornadoGeometry.Travel(state.Center, spec.SideLength, spec.DiagonalDistance, width, height, state.LockedDirection.Value);
             var center = path[path.Count - 1];
             int sign = TornadoGeometry.InwardHorizontalSign(center, spec.SideLength, width, state.HorizontalSign);
-            long nextTravel = checked(state.NextBoundaryCount + spec.RepeatIntervalControllerTurns);
+            long nextWarning = WarningAfterTravel(spec, state.NextBoundaryCount);
             var next = new TornadoMemberState(state.SourceId, center, sign, TornadoGimmickPhase.Cooldown,
-                nextTravel - spec.WarningLeadControllerTurns, null);
+                nextWarning, null);
             if (spec.WarningLeadControllerTurns == spec.RepeatIntervalControllerTurns)
-                next = LockWarning(spec, next, width, height, nextTravel, ref random);
+                next = LockWarning(spec, next, width, height, TravelAfterWarning(spec, nextWarning), ref random);
             return (next, path);
         }
+
+        internal static long TravelAfterWarning(TornadoMemberSpec spec, long warningBoundary) =>
+            checked(warningBoundary + spec.WarningLeadControllerTurns);
+
+        internal static long WarningAfterTravel(TornadoMemberSpec spec, long travelBoundary) =>
+            checked(travelBoundary + spec.RepeatIntervalControllerTurns) - spec.WarningLeadControllerTurns;
 
         private static TornadoMemberState LockWarning(TornadoMemberSpec spec, TornadoMemberState state,
             int width, int height, long travelAt, ref uint random)

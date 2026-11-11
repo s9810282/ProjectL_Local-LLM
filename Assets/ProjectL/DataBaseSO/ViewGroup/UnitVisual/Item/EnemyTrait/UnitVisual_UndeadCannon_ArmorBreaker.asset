@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_UndeadCannon_ArmorBreaker
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 84
+    prefab: {fileID: 6100122028875175176, guid: 8ede678263fe3d142bb0a1838cd6d20b, type: 3}
+    displayName: "\uC5B8\uB370\uB4DC \uD3EC\uBCD1"
+    description: 
+    timelineIcon: {fileID: 0}
+    infoIcon: {fileID: 21300000, guid: 0e389fc0b72e89044b5176d1cef4d4b6, type: 3}
+    attackPresentation: {fileID: 11400000, guid: bdbf1dc8760f6cd489b5cc0c5418c499, type: 2}
+    reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
+    animationPresentation: {fileID: 11400000, guid: 9230df80d2864bc08d5e7cf832553cdd, type: 2}
+    unitSoundPreset: 4
+    attackSoundPreset: 14
+    obstacleHitCues:
+      effects: []
+      shakes: []
+    structureHitCues:
+      effects: []
+      shakes: []
+    obstacleDestroyedCues:
+      effects: []
+      shakes: []

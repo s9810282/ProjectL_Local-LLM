@@ -16,7 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         public CombatViewCommandKind Kind { get; }
         /// <summary>배치·회수·이동·공격의 주체입니다. 주체가 없는 명령은 Empty입니다.</summary>
         public EntityId EntityId { get; }
-        /// <summary>메인 배치·유닛 배치·이동의 목표 칸입니다.</summary>
+        /// <summary>메인 배치·유닛 배치의 목표 칸입니다. 이동은 칸 대신 경로(<see cref="Path"/>)를 씁니다.</summary>
         public CellCoord Cell { get; }
         /// <summary>메인 배치·유닛 배치의 방향입니다.</summary>
         public Rotation4 Rotation { get; }

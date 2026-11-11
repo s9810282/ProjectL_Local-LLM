@@ -6,8 +6,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
     /// <summary>기존 특성 등록을 연결합니다. 대상 표식의 설치 시점은 공격 경계가 소유합니다.</summary>
-    internal sealed class HuntersMarkEffectRule : ICombatEffectRule
+    internal sealed class HuntersMarkEffectRule : IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         internal HuntersMarkEffectRule(HuntersMarkTraitDefinition definition, HuntersMarkTraitRule rule)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));

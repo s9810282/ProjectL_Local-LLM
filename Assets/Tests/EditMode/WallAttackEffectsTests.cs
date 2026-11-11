@@ -70,7 +70,7 @@ namespace ProjectL.Tests.Core
             var input = MovementTestData.SafeRoute(new CellCoord(6, 2),new CellCoord(6, 3));
             input = WallMovementTests.WithWalls(input, Wall(71, WallCell));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,s.IsNight,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(6, 3), 5, 9) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(6, 3), 5, 9) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(91));
@@ -156,7 +156,7 @@ namespace ProjectL.Tests.Core
             input = WallMovementTests.WithWalls(input, Wall(71, WallCell));
             if (!oldField) return input;
             var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,s.IsNight,                s.Structures,new[] { new ThornFieldCellSnapshot(WallCell, 3, 11) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
+            return CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(WallCell, 3, 11) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
         }
 
         private static int FinalHealth(CombatCommandTransition result, CombatCommandInput input, int id) =>

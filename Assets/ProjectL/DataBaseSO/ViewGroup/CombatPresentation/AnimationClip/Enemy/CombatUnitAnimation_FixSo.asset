@@ -13,7 +13,12 @@ MonoBehaviour:
   m_Name: CombatUnitAnimation_FixSo
   m_EditorClassIdentifier: 
   attackClip: {fileID: 7400000, guid: d37f27a45accb1147b82f711efb376e0, type: 2}
+  attackSpeed: 2
   attackCompanionClips: []
   hitDelay: 0
+  shots: []
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
   hitClip: {fileID: 0}
   hitCompanionClips: []

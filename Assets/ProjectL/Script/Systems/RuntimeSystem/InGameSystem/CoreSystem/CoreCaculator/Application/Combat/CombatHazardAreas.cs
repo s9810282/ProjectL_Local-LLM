@@ -21,7 +21,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>화약통의 폭발 칸: 기준 칸을 뺀 둘레 8칸이다.</summary>
-        public static void PowderBarrelCells(CellCoord origin, int width, int height, ICollection<CellCoord> into)
+        public static void PowderBarrelCells(CellCoord origin, int width, int height, ICollection<CellCoord> into) =>
+            SurroundingCells(origin, width, height, into);
+
+        /// <summary>기준 칸을 뺀 둘레 8칸이다. 화약통 폭발과 사망 특성(자폭·공포)이 같은 모양을 쓴다.</summary>
+        public static void SurroundingCells(CellCoord origin, int width, int height, ICollection<CellCoord> into)
         {
             Validate(origin, width, height, into);
             AddSquare(origin, width, height, includeCenter: false, into);

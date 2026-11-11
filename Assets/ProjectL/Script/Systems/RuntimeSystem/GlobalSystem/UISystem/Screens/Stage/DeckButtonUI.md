@@ -1,5 +1,28 @@
 # 유지 덱 연결 (2026-10-16)
 
+## 현재 정책 — 배치 전용·자동 등장 (2026-11-07)
+
+아래 버튼 전환·Exclusive 설명은 이전 이력이다. 현재 DeckButton·CloseDeck 오브젝트와 자식·컴포넌트는 보존하고 비활성화만 했다. 코드가 버튼을 자동으로 다시 켜거나 입력을 바인딩하지 않는다. DeckButtonUI는 기존 UIId.Deck 루트와 카드 참조 검증을 유지한다.
+
+최초 진입은 맵 완료→기존 TurnDisplay의 검정 `배치 단계` 안내→네 카드 A안 순차 등장→입력 허용이다. DeckCardList의 Entrance는 Card Seconds 0.28·Stagger Seconds 0.07이며 기존 Fan Layout 최종 배치를 유지한다. 진입 동안 내부 CardFan CanvasGroup으로 클릭·Submit·정보·Hover를 억제한다. 시간 진행은 Combat 진입 Tick 한 곳에서 한다.
+
+UnitCard 정책은 Parallel로 바뀌어 배치 중 필드 정보창과 함께 보인다. 전투·완료에는 목록과 카드 상세를 닫고 이후 배치 복귀에는 자동으로 연다. 국면별 개폐는 CombatDeploymentPresentation이 맡으며 CombatUnitInfo는 정보 표시만 맡는다. 튜토리얼의 진입 완료 대기는 사용자 지시로 별도 작업이다.
+
+코드·씬 연결 완료, **컴파일 미확인**. Unity에서 최초 순서·카드 배치/호버·정보 고정·전투 숨김·배치 복귀를 확인한다.
+
+### Entrance 모드 추가 — D2 (2026-11-07)
+
+Combat 씬 `DeckUI > DeckPannel`의 `Deck Card List > Entrance > Mode`에서 선택한다. `Rise`는 기존 아래에서 한 장씩 상승, `Fan Spread`는 첫 카드 위치를 기준으로 좁게 접힌 네 장의 간격과 회전을 왼쪽부터 펼친다. 프리팹 기본값/직렬화 0은 Rise, 현재 Combat 씬은 FanSpread(1)로 지정했다.
+
+- `Card Seconds` 0.28: 각 카드의 이동·회전 시간. `Stagger Seconds` 0.07: 다음 카드 시작 간격. 두 모드 공통이다.
+- `Folded Spacing Ratio` 0.12: 최종 간격/각도 차이 대비 접힌 비율. 작을수록 왼쪽에 모인다.
+- `Fan Lift Ratio` 0.12: 카드 높이 대비 시작 시 내려둔 거리.
+- `Fan Reveal Seconds` 0.10: 전체 네 장의 짧은 상승·선명화. 펼침과 동시 진행하며 총 시간은 네 장 순차 시간과 이 값 중 큰 값이다.
+
+최종 부채꼴 설정·순서·크기·Hover, 시작 알림·대기·취소 계약은 유지한다. 숨김/취소 뒤 alpha=1과 입력 상태를 복원한다. 새 설정과 자세 계산만 추가했으며 Test 코드·MSBuild·Unity 실행은 하지 않았다. **컴파일 미확인**. 두 모드 비교·최종 자세 동일성·시간 0·취소 후 재진입을 Unity에서 확인한다.
+
+## 이전 연결 기록
+
 DeckButtonUI는 계속 활성인 제어 루트에 둡니다. 실제 DeckButton과 DeckPannel은 그 아래의 형제입니다.
 
 ```text
@@ -14,7 +37,7 @@ GlobalUICanvas
       └─ CloseDeck (Button)
 ```
 
-DeckButtonUI의 Open Button, Close Button, Cards를 연결합니다. DeckCardList의 Initial Instances에 UnitCard_1~4 네 장을 화면 순서대로 연결합니다. 카드의 위치와 크기는 프리팹에서 작성하며 코드가 다시 배치하지 않습니다.
+DeckButtonUI의 Open Button, Close Button, Cards를 연결합니다. DeckCardList의 Initial Instances에 UnitCard_1~4 네 장을 화면 순서대로 연결합니다. 카드의 기본 크기·배율은 프리팹을 사용하고, 위치·회전·호버는 DeckCardList의 Fan Layout 설정이 담당합니다(2026-11-06 변경, 아래 기록).
 
 DeckCardList는 UIGroup의 소유권·멤버 바인딩을 사용합니다. 그룹은 UIId.UnitCard, 부모는 UIId.Deck으로 UISystem에 등록하며, 네 UnitCardUI는 그룹 멤버라 개별 등록하지 않습니다. 따라서 카드들의 UIId가 같아도 중복 등록되지 않습니다.
 
@@ -60,3 +83,19 @@ StageSelect에 진입할 때마다 DeckPannel을 닫고 DeckButton을 표시한�
 관련 Unity EditMode 테스트 281건 통과. 마지막 디스크 확인에서 HUD.prefab의 사용자 Arrow가 사라진 것을 확인했고, 사용자 재저장 뒤 Image 참조를 다시 연결했다.
 
 2026-10-17 메인 수동 배치 허용: UnitCard_1도 클릭·Submit·드래그 배치 선택을 허용한다. 필드의 메인은 기존 MainCharacterPlacement/PlaceMainCharacter 경로로 재배치하고, 손패 서브만 PlaceUnit 경로를 사용한다. 메인을 덱에서 선택한 경우에도 필드 출처를 유지해 결과 갱신 시 선택이 취소되지 않게 하며, 덱 닫기·취소는 메인 손패 반환 명령을 만들지 않는다. 기존 Core 배치 규칙은 변경하지 않았다. 런타임·테스트 컴파일 통과, Unity EditMode 91건 통과.
+
+## 부채꼴 배치·호버 (2026-11-06)
+
+- 입력은 사용자가 이번 작업에서 선택한 기존 역할을 유지한다. 본체 클릭·Submit·드래그는 배치 선택, 내부 정보 버튼은 공용 상세 고정·해제다. 다른 카드 Hover로 고정된 상세를 변경하지 않는다. 카드 본체 클릭으로 정보를 고정하는 일반 규약의 이번 작업 예외다.
+- DeckCardList가 생성·수명·입력 조립을 소유하고, 직렬화된 내부 클래스 DeckCardFanLayout이 기하 계산·보간·그리기 순서만 담당한다. 설정 변경은 Fan Layout 안에서 끝나고 Buffer·배치 규칙·InputSystem은 수정하지 않는다.
+- 네 장은 메인부터 `+22 / +7.33 / -7.33 / -22`도(Unity Z 회전), 중앙이 높은 아치로 배치한다. 기본 카드 폭의 25%를 겹치되 패널 너비가 부족하면 간격을 줄인다. 기본은 중앙 하단이다. Fan Layout의 bool SerializeField `alignBottomLeft`를 체크하면 좌측 하단, 해제하면 중앙 하단으로 패널 X 앵커·Pivot을 맞춘다. Y 앵커와 기존 패널 슬라이드 경로는 유지한다.
+- Hover는 카드 높이의 30% 상승, 원래 배율의 1.5배, 회전 0도로 0.16초 동안 보간한다. Time.unscaledDeltaTime을 사용한다. 배치 드래그 중에는 강조·필드 Arrow를 억제하고 드래그 종료 후 실제 Hover에 맞춰 복귀한다.
+- Fan Layout의 `yOffset`(기본 0)은 네 UnitCard와 각 카드의 입력 영역에만 더한다. 양수는 위, 음수는 아래로 이동하며 부채꼴·Hover에도 유지된다. DeckCardList 자체의 Y, 닫기 버튼·상세창, 기존 패널 슬라이드 목표값은 변경하지 않는다.
+- Scene 또는 Prefab Mode에서 DeckCardList를 선택하면 전용 DeckCardListEditor가 기존 카드에 기본 부채꼴 배치를 미리 적용한다. Fan Layout의 Y Offset·정렬·각도·간격·아치 변경은 재생 없이 Scene 뷰에 반영된다. 런타임과 같은 배치 계산을 사용하며 Undo/Redo·씬 저장·프리팹 변경 기록을 지원한다. 호버 애니메이션은 Play Mode에서 확인한다.
+- 편집 미리보기는 카드 RectTransform만 수정하고, 패널의 정렬 이동은 카드 좌표로 환산해 표시한다. 따라서 편집 중 패널 위치·닫기 버튼·Left 복귀 위치를 덮어쓰지 않는다. 재생 시에는 기존 패널 정렬 경로가 적용되므로 카드의 최종 위치는 동일하다. CardFan·CardSlot 생성, 입력 바인딩, UIGroup 멤버 초기화, Buffer 조회, 상세창 연결 검증은 편집 미리보기에서 실행하지 않는다. 원본 에셋은 Prefab Mode로 열어 편집하며 Project 창에서 에셋을 선택한 것만으로 수정하지 않는다.
+- 편집 확장의 경계: 부채꼴 기하 변경은 DeckCardFanLayout의 공통 계산에, Undo·Prefab 변경 기록은 DeckCardListEditor에 둔다. DeckCardList의 편집 전용 호출만 둘을 연결하고 Player 빌드에서는 제외한다. 실행 중 카드 입력·서비스 등록·수명 소유권은 기존 경로를 유지한다. 미리보기 후 재생 진입, Y Offset 양수/음수, 좌측/중앙 전환 반복, Undo/Redo, Prefab Mode 저장·재열기를 Unity 확인 항목에 추가한다.
+- Awake의 PrepareCards에서 참조·설정을 검증한 뒤 CardFan과 네 CardSlot을 만든다. 기존 UnitCardUI를 슬롯 자식으로 옮기고 기본 크기·배율을 보관한다. 고정 입력 영역과 움직이는 카드의 합집합은 DeckCardHoverBinding의 ICanvasRaycastFilter로 처리한다. 포인터 콜백에서 별도 Raycast나 할당을 하지 않는다.
+- 카드 본체와 슬롯 배경 Button 모두 UIInputBinding의 같은 명시적 수신자·슬롯으로 한 번 바인딩한다. 빈 슬롯은 Raycast를 받지 않고, 배경은 본체의 배치 interactability를 따른다. 배치 불가 카드의 정보 Hover는 기존 계약상 허용하므로 DeckCardHoverBinding은 Button.interactable과 독립적이다. 슬롯 배경은 Navigation.None으로 두고, 배경 클릭 수신자는 실제 카드 Button으로 선택을 옮겨 이후 키보드·게임패드 Submit 대상을 맞춘다.
+- Hover 슬롯만 CardFan 안에서 가장 앞에 그리며, 해제 시 원래 슬롯 순서로 복원한다. UIGroup의 등록 목록·덱 순서는 바꾸지 않는다. 카드 교체·비움, 패널 숨김·부모 비활성화, 서비스 재바인딩 시 Hover와 보간을 초기화한다. CardFan·CardSlot은 기존 화면 내부 위젯이며 별도 UIId나 서비스 등록을 추가하지 않는다.
+- 등록·조회 경로는 기존 DeckButtonUI(UIId.Deck) → DeckCardList(UIId.UnitCard, Parent Deck, Exclusive) → 그룹 멤버 UnitCardUI 네 장이다. CombatCardInfoUI(UIId.CombatCardInfo, Parent UnitCard)와 IUISystemService 개폐 경로도 유지한다. Global 하위 서비스의 루트 Export·직접 조회는 추가하지 않는다.
+- 검증 상태: 코드·프리팹 연결 정적 확인만 수행. 프로젝트 지침에 따라 Test 코드 작성·MSBuild·Unity 실행은 하지 않았다. **컴파일 미확인**. Unity에서 네 장 순서·양끝 각도, 경계 Hover 유지와 빠른 전환, 정보 고정 후 다른 카드 Hover, 본체 클릭·Submit·드래그 배치, 드래그 중 억제·복귀, 숨김/재열기·씬 전환 재사용, Align Bottom Left 체크/해제 배치와 화면 비율을 확인한다.

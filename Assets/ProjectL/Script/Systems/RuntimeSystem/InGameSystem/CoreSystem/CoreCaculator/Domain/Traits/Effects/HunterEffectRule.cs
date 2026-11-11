@@ -10,8 +10,14 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class HunterEffectRule : ICombatEffectRule
+    internal sealed class HunterEffectRule : IEffectOrderedHitRule, IEffectAssessmentCoverageRule, IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.RandomOutcome;
+
+        public bool RequiresOrderedHits => true;
+
         private readonly HunterTraitDefinition _definition;
         private readonly HunterTraitRule _rule;
         internal HunterEffectRule(HunterTraitDefinition definition, HunterTraitRule rule)

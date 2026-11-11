@@ -4925,6 +4925,7 @@ GameObject:
   - component: {fileID: 9145316374152419767}
   - component: {fileID: 7289603957079350280}
   - component: {fileID: 7329751222448622151}
+  - component: {fileID: 8106000000000000004}
   m_Layer: 0
   m_Name: Increased movement
   m_TagString: Untagged
@@ -4941,7 +4942,7 @@ Transform:
   m_GameObject: {fileID: 7586019429797183157}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.13575196, y: 0.00000023841858, z: -0.5689831}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9829,6 +9830,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 885bc8863e1d97349a68cf7967c69d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8106000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7586019429797183157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e44d55a73f1f4b55bca6de30913dfeac, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  worldOffset: {x: 0, y: 0.05, z: 0}
 --- !u!1 &7678357710268657379
 GameObject:
   m_ObjectHideFlags: 0

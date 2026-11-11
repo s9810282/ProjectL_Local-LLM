@@ -12,9 +12,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatUnitMotionSet _motion;
         private readonly CombatShownFacts _facts;
         private readonly Func<FieldGridMapper> _mapper;
+        private readonly CombatPreAttackPresentationStarts _preAttackStarts;
 
-        internal CombatPullEventHandler(CombatUnitMotionSet motion, CombatShownFacts facts, Func<FieldGridMapper> mapper)
+        internal CombatPullEventHandler(CombatUnitMotionSet motion, CombatShownFacts facts, Func<FieldGridMapper> mapper,
+            CombatPreAttackPresentationStarts preAttackStarts = null)
         {
+            _preAttackStarts = preAttackStarts;
             _motion = motion ?? throw new ArgumentNullException(nameof(motion));
             _facts = facts ?? throw new ArgumentNullException(nameof(facts));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -30,7 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             {
                 _facts.RetainPullArrival(movement.TargetId);
                 completed?.Invoke();
-            });
+            }, _preAttackStarts?.CapturePullStart((CombatPullEvent)e, version));
             return true;
         }
     }

@@ -28,6 +28,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
     /// </remarks>
     internal sealed class CombatCameraInput
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraPointerMoved = new("Combat.Action.Interaction.Camera.PointerMoved");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraApply = new("Combat.Action.Interaction.Camera.Apply");
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraPan = new("Combat.Action.Interaction.Camera.Pan");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraZoom = new("Combat.Action.Interaction.Camera.Zoom");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraPoll = new("Combat.Action.Interaction.Camera.Poll");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraClear = new("Combat.Action.Interaction.Camera.Clear");
+#endif
+
         private readonly ICombatCameraControl _camera;
         private readonly ICombatPointerOcclusion _occlusion;
         private readonly Func<Vector2> _screenSize;
@@ -51,11 +65,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         }
 
         /// <summary>이동 키 방향이 바뀌었습니다(x = 오른쪽, y = 위). 모두 떼면 (0, 0)입니다.</summary>
-        internal void PanChanged(float x, float y) => _keyDirection = new Vector2(x, y);
+        internal void PanChanged(float x, float y)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraPanSample = _profileInteractionCameraPan.Auto();
+#endif
+            _keyDirection = new Vector2(x, y);
+        }
 
         /// <summary>휠을 굴렸습니다. 값의 크기는 보지 않고 한 번 = 한 칸, 위 = 줌인으로 셉니다(계획 P1).</summary>
         internal void Scrolled(float delta)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraZoomSample = _profileInteractionCameraZoom.Auto();
+#endif
+
             if (delta > 0f)
                 ++_zoomSteps;
             else if (delta < 0f)
@@ -65,6 +89,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         /// <summary>포인터가 움직였습니다(화면 좌표). 가장자리 이동은 이 마지막 위치를 봅니다.</summary>
         internal void PointerMoved(float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraPointerMovedSample = _profileInteractionCameraPointerMoved.Auto();
+#endif
+
             _pointer = new Vector2(screenX, screenY);
             _hasPointer = true;
         }
@@ -80,6 +108,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         /// <summary>창 포커스를 잃었거나 입력을 정지합니다. 누른 키·쌓인 휠·마지막 포인터를 모두 잊고, 포인터 다시 집기도 멈춥니다.</summary>
         internal void Clear()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraClearSample = _profileInteractionCameraClear.Auto();
+#endif
+
             _keyDirection = Vector2.zero;
             _zoomSteps = 0;
             _hasPointer = false;
@@ -98,6 +130,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         /// </returns>
         internal bool Tick(bool canMove, float deltaTime)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraPollSample = _profileInteractionCameraPoll.Auto();
+#endif
+
             int steps = _zoomSteps;
             _zoomSteps = 0;
             bool changed = false;
@@ -109,6 +145,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
             }
             if (canMove)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var applySample = _profileInteractionCameraApply.Auto();
+#endif
                 if (steps != 0 && _camera.Zoom(steps))
                 {
                     _zoomSettleSeconds = Mathf.Max(_zoomSettleSeconds, _camera.ZoomSeconds);

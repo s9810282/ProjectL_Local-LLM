@@ -13,20 +13,23 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace ProjectL.Tests.CoreIntegration
 {
-    /// <summary>실제 덱 프리팹과 UISystem 경로에서 공용 상세창 표시·입력·수명을 확인합니다.</summary>
+    /// <summary>StageSelect 씬의 덱 화면과 UISystem 경로에서 공용 상세창 표시·입력·수명을 확인합니다.</summary>
     public sealed class DeckSlotInfoPanelTests
     {
         private static readonly TraitKey[] Keys =
             { TraitKey.DoubleShot, TraitKey.LuckyBullet, TraitKey.ChainExplosion, TraitKey.ImpactBolt, TraitKey.Vanguard };
-        private GameObject _canvas;
+        private Scene _scene;
         private GameObject _eventsObject;
         private DeckEditUI _view;
         private DeckSlotInfoUI _info;
@@ -38,14 +41,13 @@ namespace ProjectL.Tests.CoreIntegration
         public void SetUp()
         {
             _previousEvents = EventSystem.current;
+            _scene = EditorSceneManager.OpenPreviewScene(SceneIndices.StagePath);
+            _view = _scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<DeckEditUI>(true)).Single();
+            using (var serialized = new SerializedObject(_view))
+                _info = (DeckSlotInfoUI)serialized.FindProperty("slotInfoPanel").objectReferenceValue;
             _icon = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero);
             _eventsObject = new GameObject("상세창 시험 입력", typeof(DeckMainPolicyTestEventSystem));
             EventSystem.current = _eventsObject.GetComponent<EventSystem>();
-            _canvas = new GameObject("상세창 시험 Canvas", typeof(RectTransform), typeof(Canvas));
-            ((RectTransform)_canvas.transform).sizeDelta = new Vector2(1920f, 1080f);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ProjectL/Prefabs/UI/Deck/DeckEditUI.prefab");
-            _view = Object.Instantiate(prefab, _canvas.transform).GetComponent<DeckEditUI>();
-            _info = _view.GetComponentInChildren<DeckSlotInfoUI>(true);
             _view.BindInput(new Input());
             _ui = new UISystem();
             _ui.AddUI(UIId.StageSelect, new Parent());
@@ -57,14 +59,14 @@ namespace ProjectL.Tests.CoreIntegration
             _ui.Initialize();
             _ui.OpenUI(UIId.StageSelect);
             _view.Render(Model());
-            _ui.OpenUI(UIId.DeckEdit);
+            OpenDeck();
         }
 
         [TearDown]
         public void TearDown()
         {
             if (_ui != null) _ui.Shutdown();
-            if (_canvas != null) Object.DestroyImmediate(_canvas);
+            if (_scene.IsValid()) EditorSceneManager.ClosePreviewScene(_scene);
             if (_eventsObject != null) Object.DestroyImmediate(_eventsObject);
             if (_icon != null) Object.DestroyImmediate(_icon);
             if (_previousEvents != null) EventSystem.current = _previousEvents;
@@ -100,36 +102,52 @@ namespace ProjectL.Tests.CoreIntegration
         [TestCase(3)]
         [TestCase(4)]
         [TestCase(5)]
-        public void Abilities_ShowAllContentsInExactlyOneArea(int count)
+        public void Abilities_ShowAllContentsInOrderAndScrollToLast(int count)
         {
             var query = new Traits(_icon);
+            ScrollRect scroll = Ref<ScrollRect>("abilities.scroll");
+            RectTransform content = scroll.content;
+            Transform unitSlots = Ref<RectTransform>("abilities.unit.template.root").parent;
             _info.Render(Card(1, count), "시험", null, query);
-            GridLayoutGroup area = Area(count >= 3 ? 3 : 2);
-            Assert.That(area.gameObject.activeSelf, Is.True);
-            Assert.That(Area(count >= 3 ? 2 : 3).gameObject.activeSelf, Is.False);
-            Assert.That(area.constraintCount, Is.EqualTo(count >= 3 ? 3 : 2));
-            var shown = area.transform.Cast<Transform>().Where(t => t.gameObject.activeSelf).ToArray();
+            var shown = unitSlots.Cast<RectTransform>().Where(slot => slot.gameObject.activeSelf).ToArray();
             Assert.That(shown.Length, Is.EqualTo(count));
             for (int i = 0; i < count; i++)
             {
-                Transform content = shown[i].Find("Content");
-                Assert.That(TextComponent(content.Find("Name")), Is.EqualTo("특성 " + Keys[i]));
-                Assert.That(TextComponent(content.Find("Description")), Is.EqualTo("설명 " + Keys[i]));
-                Assert.That(content.Find("Icon").GetComponent<Image>().sprite, Is.EqualTo(query.GetTraitVisual(Keys[i]).Icon));
+                Assert.That(TextComponent(shown[i].Find("Name")), Is.EqualTo("특성 " + Keys[i]));
+                Assert.That(TextComponent(shown[i].Find("Description")), Is.EqualTo("설명 " + Keys[i]));
+                Assert.That(shown[i].Find("Icon").GetComponent<Image>().sprite, Is.EqualTo(query.GetTraitVisual(Keys[i]).Icon));
                 Assert.That(shown[i].GetComponent<Button>(), Is.Null);
             }
-            _info.Open();
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)area.transform);
+            _ui.OpenUI(UIId.DeckSlotInfo);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
             var bounds = new Vector3[4];
-            foreach (Transform slot in shown)
+            Rect contentRect = content.rect;
+            float nextTop = contentRect.yMax;
+            foreach (RectTransform slot in shown)
             {
-                ((RectTransform)slot).GetWorldCorners(bounds);
+                slot.GetWorldCorners(bounds);
                 foreach (Vector3 point in bounds)
                 {
-                    Vector3 local = area.transform.InverseTransformPoint(point);
-                    Rect rect = ((RectTransform)area.transform).rect;
-                    Assert.That(local.x, Is.InRange(rect.xMin - .1f, rect.xMax + .1f));
-                    Assert.That(local.y, Is.InRange(rect.yMin - .1f, rect.yMax + .1f));
+                    Vector3 local = content.InverseTransformPoint(point);
+                    Assert.That(local.x, Is.InRange(contentRect.xMin - .1f, contentRect.xMax + .1f));
+                    Assert.That(local.y, Is.InRange(contentRect.yMin - .1f, nextTop + .1f));
+                }
+                nextTop = content.InverseTransformPoint(bounds[0]).y;
+            }
+            if (count == Keys.Length)
+            {
+                Rect viewportRect = scroll.viewport.rect;
+                Assert.That(contentRect.height, Is.GreaterThan(viewportRect.height));
+                Assert.That(scroll.scrollSensitivity, Is.GreaterThan(0f));
+                ExecuteEvents.Execute(scroll.gameObject, new PointerEventData(EventSystem.current)
+                {
+                    scrollDelta = Vector2.down * (contentRect.height / scroll.scrollSensitivity)
+                }, ExecuteEvents.scrollHandler);
+                shown[count - 1].GetWorldCorners(bounds);
+                foreach (Vector3 point in bounds)
+                {
+                    Vector3 local = scroll.viewport.InverseTransformPoint(point);
+                    Assert.That(local.y, Is.InRange(viewportRect.yMin - .1f, viewportRect.yMax + .1f));
                 }
             }
         }
@@ -138,21 +156,22 @@ namespace ProjectL.Tests.CoreIntegration
         public void Abilities_ManyToFewClearsHiddenDataAndReusesClones()
         {
             var query = new Traits(_icon);
+            Transform unitSlots = Ref<RectTransform>("abilities.unit.template.root").parent;
             _info.Render(Card(1, 5), "많음", null, query);
-            GridLayoutGroup three = Area(3);
-            Transform extra = three.transform.GetChild(4);
+            var originalSlots = unitSlots.Cast<RectTransform>().ToArray();
+            Assert.That(originalSlots.Length, Is.EqualTo(5));
             _info.Render(Card(2, 1), "적음", null, query);
-            Assert.That(three.gameObject.activeSelf, Is.False);
-            foreach (Transform slot in three.transform)
+            Assert.That(originalSlots[0].gameObject.activeSelf, Is.True);
+            foreach (RectTransform slot in originalSlots.Skip(1))
             {
                 Assert.That(slot.gameObject.activeSelf, Is.False);
-                Assert.That(TextComponent(slot.Find("Content/Name")), Is.Empty);
-                Assert.That(TextComponent(slot.Find("Content/Description")), Is.Empty);
-                Assert.That(slot.Find("Content/Icon").GetComponent<Image>().sprite, Is.Null);
+                Assert.That(TextComponent(slot.Find("Name")), Is.Empty);
+                Assert.That(TextComponent(slot.Find("Description")), Is.Empty);
+                Assert.That(slot.Find("Icon").GetComponent<Image>().sprite, Is.Null);
             }
             _info.Render(Card(1, 5), "다시", null, query);
-            Assert.That(three.transform.childCount, Is.EqualTo(5));
-            Assert.That(three.transform.GetChild(4), Is.SameAs(extra));
+            Assert.That(unitSlots.Cast<RectTransform>().ToArray(), Is.EqualTo(originalSlots));
+            Assert.That(originalSlots.All(slot => slot.gameObject.activeSelf), Is.True);
         }
 
         [TestCase(false)]
@@ -182,7 +201,7 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(_info.gameObject.activeSelf, Is.True);
             _ui.CloseUI(UIId.DeckEdit);
             Assert.That(_info.gameObject.activeInHierarchy, Is.False);
-            _ui.OpenUI(UIId.DeckEdit);
+            OpenDeck();
             Dispatch(first.gameObject, false);
             Assert.That(_info.gameObject.activeSelf, Is.True);
         }
@@ -231,11 +250,20 @@ namespace ProjectL.Tests.CoreIntegration
         private string Text(string property) => TextValue(Ref<Component>(property));
         private static string TextValue(Component text) => (string)text.GetType().GetProperty("text").GetValue(text);
         private static string TextComponent(Transform target) => TextValue(target.GetComponents<Component>().Single(c => c != null && c.GetType().Name == "TextMeshProUGUI"));
-        private GridLayoutGroup Area(int columns) => Ref<GridLayoutGroup>($"abilities.area{columns}.layout");
         private Button DeckInfo()
         {
             var slot = (DeckEditSlotView)new SerializedObject(_view).FindProperty("deckSlots").GetArrayElementAtIndex(1).objectReferenceValue;
             return (Button)new SerializedObject(slot).FindProperty("infoButton").objectReferenceValue;
+        }
+
+        private void OpenDeck()
+        {
+            _ui.OpenUI(UIId.DeckEdit);
+            // EditMode에서는 연출 프레임을 기다리지 않고 입력이 열리는 완료 상태를 적용합니다.
+            var presentation = _view.ScrollPresentation;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            presentation.GetType().GetField("_progress", flags).SetValue(presentation, 1f);
+            presentation.GetType().GetMethod("Apply", flags).Invoke(presentation, null);
         }
 
         private static void Dispatch(GameObject target, bool submit)
@@ -245,7 +273,7 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         private static DeckEditDisplayModel Model() => new(new[] { Card(2, 0, false, 8) },
-            new[] { null, Card(1, 0, true), null, null }, string.Empty, string.Empty, true, true);
+            new[] { null, Card(1, 0, true), null, null }, true, true, false, true);
 
         private static DeckEditCardModel Card(int id, int count, bool inDeck = false, int level = 7) => new(
             new CharacterInstanceId(id), EntityKey.Unit_Akimbo, level,

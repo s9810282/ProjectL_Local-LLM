@@ -1,4 +1,14 @@
-# 전투 Core 변경·View–Core 경계 인계 — 2026-11-02 갱신 (특성 표시 순서·출처 공개·특성 설정값 공개·Description 수치 요청 특성 답)
+# 전투 Core 변경·View–Core 경계 인계 — 2026-11-11 갱신 (StageSelect 런 포기 구현 §5.86·§71, 이전: 재구성 공격 미리보기 칸 §5.85)
+
+> **2026-11-11 StageSelect 런 포기 (사용자 승인으로 Core 포함 구현, 컴파일 미확인, 미전달):** `IRunAbandonService`로 맵에서 현재 런을 정리하고 Stage 흐름으로 로비에 복귀합니다(§5.86·§71).
+
+> **2026-11-11 재구성 공격 미리보기 칸(View 작업에서 Core 수정, 사용자 명시 지시 "Q-RE4 직접 구현", 컴파일 미확인, 미전달):** `AttackHitResult.TargetReconstructed`·`AttackTargetPreview.TargetReconstructs`를 더했다(§5.85). 추가만이고 끝 선택 인자라 기존 호출·시험은 그대로다.
+
+> **2026-11-10 적 전용 특성 재구성·자폭·공포(Core 구현 완료, View 대응 필요, 미전달):** 새 특성 키 셋·상태 하나·사건 하나·발동 넷·거절 이유 하나가 생겼다(§67). 운영 적 유닛에는 아직 붙지 않아 화면에는 나오지 않는다. 기획이 특성을 붙이기 전에 View가 상태 `Reconstructing`(19) 표시 변환부터 등록해야 한다 — 없으면 재구성 중인 유닛이 HUD에 나오는 순간 `CombatEffectFormatters`가 예외를 낸다.
+
+> **2026-11-10 범위 정정·§66 요청 철회:** 사용자가 대상을 공격 시 선행 발동 특성으로 한정했다. 현재 Pull/PullApplied, Vanguard·CleanSweep/AttackGranted는 결과 요약과 사건의 동일 객체 참조·선행 순서로 연결할 수 있어 신규 Core 계약을 선행 조건으로 요구하지 않는다. 앞선 광범위 요청은 미전달 상태에서 철회했다. §65의 별도 발동–상태 연결 요청은 유지한다. 구현은 계속 보류하며 이번 변경은 문서만이다.
+
+> **2026-11-05 특성 발동 → 상태 연결 공개 요청(View 질문, 미전달):** 평가 C1-57. View가 사본 표로 짐작하는 "이 발동이 건 상태"를 Core가 함께 공개해 줄 수 있는지 여쭙니다(§65). 코드 변경 없음.
 
 > **2026-11-02 특성 표시 순서·출처 공개(Core 구현):** 10-29 특성 획득 순서 표시 요청에 답하고 출처를 더했습니다(§5.82). `TraitSettingsSet.Display`가 표시 순서의 키와 출처(유닛 기본·병과 고유·레벨업 획득)를 싣습니다. 전투 정보창의 특성 칸 2개 고정 예외(유닛 클릭 때 멈춤)는 View 몫이며 이 변경과 독립입니다. Core·CoreIntegration 시험 통과(새 실패 0), 커밋 전, 미전달입니다.
 
@@ -21,7 +31,7 @@
 > View 작업에서 DB-SO를 새 Framework/Systems 구조에 맞게 재구성한다. 이 문서는 그중 **Core 작업에 영향을 주는 내용**과 **Core 작업자에게 확인받을 사항**을 전달한다.
 > 상세 설계는 [DB-SO 재구성 설계](../specs/2026-09-24-db-so-ingame-view-group-design.md)에, 옛 에셋 값은 [고아 에셋 인벤토리](../specs/2026-09-24-view-db-orphan-asset-inventory.md)에 있다.
 
-- 작성일: 2026-09-24 (최종 갱신 2026-11-02, 게임 Description 수치 공개 요청 §64 추가)
+- 작성일: 2026-09-24 (최종 갱신 2026-11-11, 재구성 공격 미리보기 칸 §5.85)
 - 작성: View 작업
 - **2026-10-05 최신 Core 요청은 [별도 요청 문서](2026-10-05-combat-core-requests-phase6b.md)가 원본이다.** `e0b02cc7` 병합본과 골격 6B F1 작업 기준으로 남은 요청·담당·검증 조건을 정리했다. 아래 예전 요청의 해결 여부를 현재 미완료 상태로 읽지 않는다. 외부 전달·답변은 아직 확인하지 않았다.
 - 기준 브랜치: `develop`
@@ -1130,6 +1140,77 @@ The user confirmed that they will implement Tornado and explicitly instructed di
 - 계산·비교 순서(`UnitDefinition`·`UnitStatsSnapshot.TraitStatuses`·`CharacterBaselineStatsSnapshot.TraitKeys`)는 그대로다.
 - View가 읽는 법: 전투 `CombatStateData.TraitSettings.For(유닛).Display` 순서로 돌고 상태는 `Stats.TraitStatuses`에서 키로 찾는다. 전투 밖 `OwnedCharacterStatsSnapshot.TraitSettings.Display` 순서, 사용 가능 여부·등급은 지금처럼 키로. 출처를 어떻게 보일지는 UI가 정한다.
 - 시험: 바뀐 호출 천명 5곳(`TraitSettingsSetTests`·`BattleTraitSettingsTests:62`·`OwnedCharacterStatsCalculatorTests:103`·`ImpactBoltAuthoringTests:222`·`BattleTraitSettingsPublicationTests:31`, 확인 내용 그대로), 새 `TraitDisplayOriginTests`(7)·`TraitSettingsSetTests` 사례 3·통합 1. Core + CoreIntegration 5,503개 중 실패 25 — 기준선(5,492개 중 25)과 같은 목록, 새 실패 0.
+
+### 5.83 포효 예고 조회 (2026-11-11, View 작업, 사용자 "확인하면서 권장안대로 진행해" = Q-RF1 A 이 세션이 Core 구현, 컴파일 미확인, 새 시험 없음, 시험 변경 없음, 미전달)
+
+설계 [roar-forecast-design](../specs/2026-11-10-combat-roar-forecast-design.md) RF2, 계획 [roar-forecast-plan](../plans/2026-11-10-combat-roar-forecast-plan.md) RF-a·TP-1~TP-8. 사용자 요청은 "포효 카운트가 1 남으면 바닥에 포효 범위, 밀릴 유닛은 밀치기 미리보기처럼"이다. 언제 보일지는 View가 정하고, Core는 "지금 포효하면"의 답만 준다.
+
+- 새 조회: 미리보기 종류 `CombatViewPreviewKind.RoarForecast = 10`(요청 값 `CombatViewPreviewData.RoarForecast(boss)`) → `CombatPreviewService`가 공격 종류 입력으로 조립 → `CombatCommandCalculator.GetRoarForecast(input, rules)` → `BossRoarCalculator.Forecast`. 응답 `CombatPreviewResult.RoarForecast`(새 형식 `Contracts/Results/RoarForecastResult.cs`: 성공·실패 이유·보스·범위 칸·대상이 있을 때의 `AttackPreview`).
+- 계산: 실제 포효(`TryRoar`)와 같은 순서(카운터 되돌림 → 전체 지정 반응 공격)를 공개 미리보기로 돌린다. 카운터는 보지 않는다. 전투 끝 `StageEnded`, 밤 전투 아님 `WrongPhase`, 유닛 없음 `EntityNotFound`, 죽음·필드 밖 `NotInCombat`, 재구성 `Reconstructing`, 무장 해제 `Disarmed`. 포효 특성이 없는 유닛을 물으면 예외.
+- 천명님 코드에서 바뀐 줄(동작은 기존 호출 모두 같음):
+  - `BossRoarCalculator`: 조건 둘(`PhaseFailure`·`UnitFailure`)·카운터 되돌림(`ResetCounter`)·전체 지정 검사(`RequireAllProfile`)를 꺼내 `PendingBosses`·`TryRoar`·`Forecast`가 같이 씀(조건식·되돌림 전이는 옛 것과 같음).
+  - `CombatAttackQueries.RestrictionFailure` 새 입구: `IntrinsicUnitReadiness`의 재구성·무장 해제 두 줄을 옮김(같은 결과).
+  - 공개 미리보기 관찰자 끝 선택 인자 `previewObserver`: `CombatAttackCalculation` 생성자 → `CombatAttackCalculator.Run`·`ExecuteSteps` → `CommandAttackPlan.PreviewObserver`(비우면 공격자 진영 = 옛 동작) → `PullAttackCalculator` 재구성 계획이 이어받음 → `CommandAttackProjection`의 토네이도 관찰자. 같은 대입이 두 줄 있던 `CommandAttackProjection:213-214`는 한 줄로. 이유: 보스를 공격자로 공개 미리보기를 돌리면 적 시점이라 플레이어가 모르는 지형이 드러날 수 있다(호버 조회 Q-UR2 A와 같은 원칙). 입력 전체를 플레이어 시점으로 투영하는 길은 벽 형상 예외(§5.52와 같은 원인)라 쓰지 않음.
+  - `AttackResultFactory`: 반응 공격도 공개 미리보기일 때는 `AttackPreview`를 만든다(`reaction && !plan.PublicPreview`일 때만 비움). 실제 포효는 공개 미리보기가 꺼져 있어 그대로.
+- 확인 부탁(천명님): ① 반응 + 공개 미리보기 조합은 처음 쓰는 길이다 — `AttackPreview.FromFacts` 검사(전체 지정, 대상 미리보기, 넉백 대상 포함)가 반응 결과에서도 통과하는지. ② 예고는 공개 미리보기 규칙(자폭·공포 끔, 시체 넉백 없음, 피격 카운트 안 셈)을 따른다 — 실제 포효와 다를 수 있는 곳은 이 셋뿐이라고 보았다.
+- 시험: `CommandAttackPlan` 생성자를 부르는 기존 시험 여섯(`AttackProjectionResumptionTests` 등)은 끝 선택 인자라 그대로 컴파일된다. 새 시험 없음(View 작업 지시).
+- Buffer: `CombatViewPreviewKind`의 `ActionAvailability = 9`(천명님 줄) 뒤에 쉼표를 붙이고 `RoarForecast = 10`을 더했다. 값 9는 그대로다.
+- View 쪽(2026-11-11 완료, 사용자 Unity 확인 문제 없음): 카운터가 1 남은 동안 플레이어 입력에서만 묻고(적 턴·재생 중 없음), 범위는 바닥 층, 넉백은 공격 조준 넉백 미리보기와 같은 화살표로 그린다(조준이 넉백을 그리는 동안은 조준 먼저). 계획 RF-b·RF-c.
+
+### 5.84 전투 첫 동작 Core 준비 서비스 (2026-11-10, 사용자 지시 "우리측에서 작업하는 걸로 하고…" — View 작업에서 Core 변경, 컴파일 미확인, 새 시험 없음, 시험 변경 없음, 미전달)
+
+- 원본: [첫 동작 Core 준비 계획](../plans/2026-11-10-combat-first-use-preparation-plan.md) FU-a·FU-b, [작업 문서](2026-11-10-combat-first-use-preparation-core-work.md), 요청·결정은 §68.
+- 목적: 첫 배치·공격·이동·적 턴의 Core 안 JIT(측정 합계 약 436ms)를 Combat 씬 로딩 화면이 가린 동안 미리 끝낸다. 게임 결과·Buffer·사건·난수는 바꾸지 않는다.
+- 새 Core 파일 셋:
+  - `CombatSystem/ICombatFirstUsePreparation.cs`: `bool PrepareNext()`. 남은 단계 하나를 돌리고, 더 남았으면 true다.
+  - `CombatSystem/CombatFirstUsePreparationService.cs`: 조립기·이동 규칙만 받는다. 게시 협력자가 없으므로 구조상 Buffer에 쓸 수 없다.
+    - 첫 호출에서 지금 Buffer의 전투로 시작 입력을 조립한다.
+    - 전투 번호가 바뀌면 처음부터 다시 한다.
+    - 끝까지 마치면 인스턴스 수명 동안 다시 하지 않는다(정적 상태 없음).
+  - `CoreCaculator/Application/Combat/CombatFirstUseRehearsal.cs`: public 클래스이고, 표면은 생성자와 `RunNext()`뿐이다.
+    - 가상 연쇄 순서: 메인 배치 → 손패 서브 배치(최대 6) → 전투 시작 → 플레이어 입력까지 자동 진행 → 첫 아군의 행동 가능 여부·유닛 공격 범위·이동 범위 → 공격 종류마다 공격 범위·공격 미리보기 → 한 걸음 이동 미리보기·명령 → 공격 명령 → 턴 종료 → 적 턴 자동 진행.
+    - 칸·조준은 Core 조회 결과(배치 구역·배치 미리보기·이동 범위·공격 범위)에서 첫 값을 쓴다. 결과는 모두 버린다.
+    - 가상 세계는 `CombatCommandComposition.Project`로 잇는다.
+    - 다음 행동의 입력은 서비스가 맞는 기대 턴 순번·처리 종류로 새로 조립하고, 가상 세계를 `WithWorld`·`WithPersistentFacts`로 그 위에 옮긴다. `CombatCommandInput` 계약은 바꾸지 않았다.
+    - 거절은 예외가 아니다. 이어 갈 상태가 없으면 남은 의존 단계를 건너뛴다.
+    - 공격은 사거리 안 대상(`InRangeTargetIds`)이 선 칸을 먼저 조준하고, 대상이 있는 아군으로 공격 명령을 계산한다. 첫 턴에 맞히지 못하면 적 턴 뒤 한 번 더 공격한다. 이동 명령은 `MovementContextCalculator.Matches`가 참일 때만 계산한다(명령 처리와 같은 순서). 묶음 끝 검토 반영(2026-11-11).
+- 기존 Core 파일 셋:
+  - `CoreProfilerMarkers`: `Core.Combat.FirstUse` 마커.
+  - `CoreProfiling`: `CoreProfileSection.FirstUseRehearsal`를 끝에 더했다. 측정기가 `Core.Calc.FirstUseRehearsal` 마커를 자동으로 만든다.
+  - `InGameCoreSystemGroup`: 계약 멤버 `CombatFirstUse`와 해석 줄 하나.
+- 연결 줄: `Factory/Runtime/InGame/Core/CombatSystemFactory.cs` 한 줄, `InGameCoreSystemServiceKey.CombatFirstUse`. 민형님 Factory 공유 §54에도 적었다.
+- 전제(2026-11-10 확인): Core 계산기는 입력만으로 계산한다. `CoreCaculator/Application`·`Domain`·`CombatSystem`에 readonly가 아닌 정적 필드나 정적 컬렉션 캐시가 없다. 그래서 결과를 버리면 남는 상태가 없다고 본다. 계산기에 정적 캐시를 더할 때는 준비 유무로 결과가 달라지지 않게 해야 한다.
+- **Core 작업자께:** 다음 입구의 서명이나 뜻을 바꾸면 리허설도 맞춰야 한다.
+  - `CombatCommandCalculator`·`CombatMovementCalculator`·`MovementContextCalculator`·`CombatPlacementCalculator`의 공개 입구
+  - `CombatCommandComposition.Project`·`Intent`
+  - `CombatCommandInput.WithWorld`·`WithPersistentFacts`·`WithActor`
+  - 새 규칙 때문에 가상 연쇄가 거절되면 덮는 경로만 줄고 게임 결과는 같다.
+- 실패 처리: 준비 중 예외는 오류 경계(F1)로 간다(계획 FU-P4).
+- 부르는 쪽(전투 골격, 우리 영역):
+  - Combat 씬 로딩 준비 `LifeCycles/Combat/CombatFirstUseLoadingPreparation`과 Job `Jobs/CombatFirstUsePrepareJob`
+  - `CombatPlan.Register`의 `JobType.FirstUsePrepare`(= 10) 갈래
+  - `CombatEntryService` 준비 등록, `CombatEntryRequest` internal 멤버
+- 확인 대기: Unity 컴파일, 직행·맵 진입 로딩, 두 번째 전투, 첫 동작 측정(계획 FU-c).
+
+### 5.85 재구성 공격 미리보기 칸 (2026-11-11, View 작업, 사용자 "Q-RE4 직접 구현", 컴파일 미확인, 새 시험 없음, 시험 변경 없음, 미전달)
+
+- 배경: 적 전용 재구성(§67)이 발동할 공격을 호버하면 대상 예상 체력 `TargetHealthAfter` = 최대 체력이라, UnitHUD가 현재 체력으로 잘라 "피해 없음"처럼 보였다. 미리보기 대상에 재구성 여부 칸이 없어 View가 알 수 없었다(체력 수로 짐작하면 위스키처럼 맞은 뒤 회복과 구분이 안 됨). 설계 [reconstruction-view-design](../specs/2026-11-11-combat-reconstruction-view-design.md) RE3·§5, 계획 [reconstruction-view-plan](../plans/2026-11-11-combat-reconstruction-view-plan.md) RE-c.
+- 바꾼 것(모두 추가):
+  - `Domain/Traits/Rules/ReconstructionTraitRule.cs`: `Triggered(before, after)` = `CanTrigger(before)` ∧ 뒤 사실 살아 있음 ∧ 재구성 사용함. 판정 원본은 이 규칙 하나다.
+  - `Application/Combat/CommandAttackLedger.cs`: `BeginScope`가 입력 캐릭터 목록 참조만 쥐고, `CaptureHitHealth`가 체력을 고정한 대상마다 `Triggered`(범위 시작 사실, 지금 사실)로 판정해 재구성된 캐릭터 집합을 만든다(재구성이 있을 때만 집합 생성 — 적 AI 후보 평가도 지나는 길이라 명령마다 모든 캐릭터를 훑지 않음). 읽기 `Reconstructed(id)`(고정 전에는 예외, `HitHealth`와 같은 규칙).
+  - `Contracts/Results/AttackHitResult.cs`: 속성 `TargetReconstructed`, 두 생성자 끝 선택 인자 `targetReconstructed = false`(내용 생성자가 넘김).
+  - `Application/Combat/AttackResultFactory.cs`: `CreateHit`과 보조 행이 `ledger.Reconstructed(id)`를 넘긴다(`SingleOutcome`은 그대로 거짓).
+  - `Contracts/Results/AttackTargetPreview.cs`: 속성 `TargetReconstructs`. 피격 결과에서 만드는 생성자가 복사하고, 큰 생성자는 끝 선택 인자 `targetReconstructs = false`로 받는다. 넉백·작렬 부딪힘 보조 행(`AttackResultFactory`)이 `ledger.Reconstructed(id)`를 넘긴다(View 묶음 끝 검토 M2).
+- 바뀌지 않은 것: 계산·사건·결과 검사(`CombatChangeEvidenceReader`는 새 칸을 보지 않음), 공개 생성자 기존 서명(`new AttackHitResult(` 23곳·`new AttackTargetPreview(` 13곳 그대로), 시험.
+- 피격 체력 고정 시점(비용 정산 뒤, 강제 도착·연쇄 공격 전) 뒤에 일어난 재구성(예: 연쇄 공격으로 쓰러진 경우)은 이 칸에 들지 않는다. 체력 칸과 같은 시점 규칙이다.
+- View가 읽는 곳: `CombatUnitHudFeedback.ShowAttackHealthPreview` — `TargetReconstructs`면 예상 체력 0(치명 예상).
+- 천명님 확인 부탁: ① 칸 이름·자리(결과·미리보기 둘), ② 판정을 재구성 규칙 함수에 둔 것, ③ 고정 시점 밖의 재구성을 빼는 것.
+
+### 5.86 StageSelect 런 포기 (2026-11-11, 사용자 승인으로 Core 수정, 컴파일 미확인)
+
+- `RunSystem/RunAbandonService.cs`의 `TryAbandonRun(expectedRunId)`는 비어 있거나 다른 Run ID, 종료된 런, 준비·활성 전투가 남은 경우를 거절한다. 수락 시 기존 `IRunProgressBufferWriteSink.ResetRunProgress()`로 런을 정리한다. 종료 요약은 이전 값을 유지하며 이 요청으로 새 요약을 생성하지 않는다.
+- `InGameCoreSystemFactory`가 서비스 객체를 만들고 Core 내부 Builder에 `IRunAbandonService`와 바인딩 모듈을 등록한다. `InGameCoreSystemServiceKey.RunAbandon`으로 Core Group이 보관하며 `StagePlan`이 `InGame.CoreGroup.RunAbandon`을 `StageRunAbandonJob`에 넘긴다. 상위 Export는 기존 그룹 단위다.
+- 전투에서 포기할 때는 기존 전투 완료 경로를 쓴다. Stage의 UI와 이탈 연결은 §71에 있다.
 
 ## 6. Buffer B1 (View 작업에서 구현, Core 작업자 확인 요청)
 
@@ -2672,3 +2753,127 @@ SSOT·SOLID 5원칙·JMH/FW·기능 독립성과 권장 구현 순서는 분석 
 - 설명 전용 DTO를 특성마다 만들지 않고 기존 `TraitSpec` 형식을 그대로 공개했다(§64.2의 "선택적 생성자 인자를 계속 늘리는 형태보다 일관된 구성" 요청, §64.5 분석의 "공통 불변 형태" 권장에 대한 답).
 - 남은 것: 훈련 현재/다음·증강 후보 결과 설정, 아이템, 유물, 환경 규칙값 — 아직이다(설계 §8). 지뢰 문구·규칙 불일치는 기획 결정 사항이다.
 - View 인계: [특성 설정값 공개 View 인계](2026-11-02-trait-settings-view-handoff.md). 옛 특성별 설명 속성 정리를 View에 요청했다.
+
+## 65. 특성 발동 → 상태 연결 사실 공개 요청 (2026-11-05, 평가 C1-57, 질문, 미전달)
+
+- 배경: 2026-11-04 전투 View 평가 중간 C1-57. View는 특성 발동(`TraitActivationSnapshot`) 뒤 따라오는 상태 사건 가운데 어느 것이 그 발동이 건 상태인지를 사본 표로 짐작한다(`DataBaseSystem/Data/View/CombatPresentation/CombatTraitFeedbackProfiles.cs` 38-48, `ViewSystem/Combat/Playback/Support/CombatTraitStateEvidence.cs` 48-80).
+  - CleanSweep → 공격력 증가(`AttackIncreaseStatus`)
+  - ReconSquad·HuntersMark → 약점 노출(`WeaknessExposure`)
+  - 가속 → 보유 공격 보너스(`HeldAttackBonus`)
+- 지금은 Core 규칙과 맞는다. Core가 상태 형식이나 부여 방식을 바꾸면 그 특성의 상태 이펙트·몸 위 글자가 빠진다(`CombatTraitFeedbackPlayback.Begin`이 경고를 한 번 남겨 완전히 조용하지는 않음).
+- 요청: `TraitActivationSnapshot` 또는 `CombatTraitStateEvent`가 그 발동이 부여·변경한 상태 항목(효과 출처 키 `EffectOriginKey`와 상태 식별)을 함께 공개해 줄 수 있는가.
+  - 공개하면: View는 판독기 셋을 출처 기반 판독기 하나로 바꾸고 프로필 표의 증거 열을 지운다(약 60줄, View 쪽).
+  - 공개하지 않으면: 지금 사본 표를 받아들인다고 기록만 남긴다. View 쪽 변경 없음.
+- 같은 질문을 천명님 특성 공유 문서 §7에도 적었다. 코드 변경 없음, 미전달.
+
+## 66. 공격 시 선행 특성 연결 조사·광범위 요청 철회 (2026-11-10)
+
+### 66.1 정정 이력
+
+처음에는 도발·근원 없는 발동·추가 공격 등 모든 특성의 소속과 역할을 공개하는 관계 DTO를 요청했다. 사용자가 대상을 **공격 시 선행 발동하는 특성**으로 좁히도록 정정했고, 그 범위의 생산 경로와 Buffer 전달을 다시 조사했다. 앞선 요청은 외부에 전달하지 않았으며 현재 범위의 필수 Core 작업에서 철회한다. 이 정정은 §65의 특성 발동–상태 연결 요청과 별개다.
+
+### 66.2 좁힌 범위와 연결 근거
+
+- 대상은 Pull/PullApplied, Vanguard/AttackGranted, CleanSweep/AttackGranted다. 발동 조건·수치를 View가 계산하지 않고 실제 공개 사건만 읽는다.
+- CombatAttackCalculator는 사건에 있던 발동 객체를 traitRows에 담고 AttackResultFactory·AttackResult는 그 객체 참조를 보존한다.
+- CombatEffectsEvent·CombatCommandTransition·CombatResult는 배열만 복사한다. CombatCommandComposition과 CombatStateBuffer 공개도 동일 사건/발동 참조를 전달한다.
+- 최종 결과 안에서 대상 발동의 동일 객체 참조가 해당 공격의 TraitActivations와 사건 목록에 유일하게 나타나고 그 사건이 공격 출처보다 앞이면 소속과 선행 순서를 확정할 수 있다.
+- Vanguard/CleanSweep의 ResultOrigin이 없어도 위 연결은 가능하다. 공격자와 발동자가 같은지로 제한하지 않는다.
+- Pull의 이동 연출은 AttackResult.Pull과 CombatPullEvent.Movement의 동일 참조로 시작 실행에 연결한다.
+
+### 66.3 제외와 유지보수 조건
+
+- 도발, 이동·턴·피격·사망·처치 발동, Hunter 재선택, 공격 후 발동, 독립 추가 공격 시작, 가로채기는 새 시작 기준의 대상이 아니다.
+- 요약에 속하고 앞에 있다는 조건만 사용하면 Hunter 재선택이나 당김 중 처치 보상을 잘못 포함할 수 있다. 현재 지원하는 (특성, 발동 종류) 목록을 View 적용 범위 한 곳에 둔다. 효과 규칙·발동 조건을 복제하는 표는 아니다.
+- 발동 값 비교·가까운 다음 공격·AttackGroup 단독으로 참조 누락을 보정하지 않는다. 중복 소속/필요한 발생 누락은 검증 오류다.
+- 이 설계는 확인된 현재 인메모리 전달을 사용한다. 깊은 복사·직렬화 복원 등 다른 전달 경로로 바뀌면 참조 기반 대응도 재검토한다. 그때 안정 ID가 필요하면 필요한 범위만 요청한다. 현재는 신규 Core 구현 요청이 없다.
+
+### 66.4 작업 상태
+
+[설계](../specs/2026-11-10-pull-attack-animation-sync-design.md)와 [계획](../plans/2026-11-10-pull-attack-animation-sync-plan.md)을 정정했다. 타이밍은 유닛의 CombatUnitAnimation에서 특성 연출 시작 기준 공격 클립 시작 지연으로 설정하는 방향이다.
+
+사용자는 구현을 보류했다. 이번 작업은 정적 조사·문서 변경이며 Core/View 코드·SO·클립 수정, Test 작성, MSBuild, Unity 재생, 커밋·push·외부 전달 없음. **컴파일 미확인.**
+
+## 67. 적 전용 특성 재구성·자폭·공포 — View 인계 (2026-11-10, Core 구현 완료, 미전달)
+
+설계 [enemy-death-traits-design](../specs/2026-11-10-enemy-death-traits-design.md)·계획 [enemy-death-traits-plan](../plans/2026-11-10-enemy-death-traits-plan.md). Core만 바꿨고 View 코드는 고치지 않았다. 운영 적 유닛에는 세 특성이 아직 없어서(기획이 단계를 지정하기 전) 지금 화면에는 나오지 않는다.
+
+### 67.1 기획이 특성을 붙이기 전에 View가 할 것
+
+| 우선 | 할 것 | 이유 |
+|---|---|---|
+| 1 | 상태 `StatusEffectKey.Reconstructing`(19, 버프)의 HUD 표시 변환·상태 외형·설명 갈래 | 없으면 재구성 중인 유닛이 HUD에 나오는 순간 `CombatEffectFormatters`가 "표시 변환이 등록되지 않았습니다: Reconstructing"으로 멈춘다(도발당함 14 때와 같은 짝). |
+| 2 | 사건 형식 표에 `CombatEventKind.Reconstructed`(49) 한 줄 | 없으면 경고 후 건너뛴다(연출 없음). 체력 0 → 최대 전환은 결과 끝 사실 그리기에만 반영된다. |
+| 3 | 특성 외형 표에 `Reconstruction 490`·`SelfDestruct 500`·`Fear 510`(아이콘·이름·설명) | HUD·정보창 특성 칸 |
+| 4 | 발동 370·380·390·400 연출 줄, 거절 이유 52 | 아래 표 |
+
+### 67.2 키·상태·사건
+
+| 바뀐 것 | Core 사실 | View 제안 |
+|---|---|---|
+| 특성 키 | `Reconstruction 490`(단계 1~3), `SelfDestruct 500`(단계 1~3), `Fear 510`. 적 전용이다(플레이어 소유·성장 후보·병과 기본 특성에서 거절). 상태 스냅샷 `ReconstructionTraitStatusSnapshot(Level, Used)`, `SelfDestructTraitStatusSnapshot(Level)`, `FearTraitStatusSnapshot`. | 특성 외형 표 등록. 재구성 `Used`(전투당 1회 사용함)를 칸에 보일지 결정. |
+| 상태 키 | `Reconstructing 19`(버프). `ReconstructionStatus(RemainingOwnTurnStarts)`, 읽기 모델 `ReconstructionEffectSnapshot`. 재구성 중에는 이동·공격 불가, 피해·강제 이동은 받는다. 남은 수는 그 유닛 자기 진영 턴 시작마다 1 준다. | 상태 외형·HUD 설명(남은 자기 턴 시작 수). |
+| 사건 `Reconstructed 49` | `CombatCharacterEvent` 맞기 전 사실 → 재구성 사실(체력 최대·재구성 중·사용함, Lv2부터 최대 체력 50% 보호막). 그 맞음에는 `HealthChanged`·`Died`가 없다. 공격 피해에서는 피해 출처가 있고, 낙석에서는 없다. 마무리 사격 즉사도 버틴다 — 즉사 발동(`InstantDefeat`)은 그대로 나오고 그 뒤에 370·`Reconstructed`가 온다(사망 사건 없음). 공격 범위 응답의 즉사 대상 목록에는 재구성 보유자도 들어간다. | 쓰러졌다 일어나는 연출(HP가 0까지 떨어졌다 가득 차는 표시). |
+| 발동 `ReconstructionStarted 370` | 출처·대상 = 재구성 유닛, 크기 = 잃은 HP(맞기 전 현재 HP). 공격 피해에서는 `Reconstructed` 사건 바로 앞, 낙석에서는 모든 낙석 수신자 사건 뒤. | 재구성 시작 연출 |
+| 발동 `ReconstructionEnded 380` | 진영 턴 시작에 부활할 때, 그 유닛의 상태 사건(재구성 해제) 바로 앞. 남은 수만 줄 때는 상태 사건만 나온다. | 부활 연출 |
+| 발동 `SelfDestructExploded 390` | 출처 = 죽은 자폭 유닛, 크기 = 폭발 피해(사망 직전 공격력 × 50/75/110%), `TargetIds` = 실제로 바뀐 개체(없어도 사건은 남음), `TargetCells` = 주변 8칸, `TargetCell` = 사망 칸. 뒤에 대상별 체력·구조물 사건(물리 칸 = 사망 칸, 귀속 = 자폭 유닛)이 따른다. | 폭발 이펙트(칸 목록), 피격은 뒤 사건대로 |
+| 공포 `StatusApplied 160`(키 `Fear`) | 출처 = 죽은 공포 유닛, 대상 = 실제로 상태가 바뀐 유닛, `TargetCells` = [사망 칸]. 뒤에 무장 해제·속박 상태 사건(출처 = 공포 특성). 바뀐 대상이 없으면 사건이 없다. 같은 키 행동 제한은 남은 횟수가 긴 쪽이 남는다. | 공포 두 상태를 출처 특성 이름으로 묶어 보일지 결정. `Disarm` 설명이 지금 "행동 제한"이다. |
+| 발동 `CorpseDisplaced 400` | 넉백 공격으로 죽은 자폭·공포 보유자의 시체 경로. 출처 = 죽은 유닛, 키 = 자폭(있으면)·아니면 공포, 크기 = 칸 수, `TargetCells` = 시작 → 끝. 위치 사건은 없다. 넉백 단계에서 나오고, 폭발·공포는 끝 칸 기준이다. 공개 미리보기에는 없다. | 사망 연출 뒤 시체를 끝 칸까지 미는 연출 |
+| 부활 넉백(재구성 Lv3) | 진영 턴 시작의 부활 직후, 주변 8칸의 한 칸 캐릭터(진영 무관)를 EntityId 순으로 바깥 한 칸. 강제 이동 `Moved`(`MovementCause` = 강제 + `Reconstruction`), 발동 `KnockbackApplied`(출처 = 부활 유닛, 키 `Reconstruction`, 크기 1, 대상 = 실제로 밀린 유닛). 공격 결과의 넉백 요약(`AttackResult.Knockbacks`)은 없다. 굳건한 의지로 막히면 `KnockbackPrevented`(출처 = 막은 유닛). 여러 칸 유닛·구조물·장애물은 밀지 않는다. | 기존 넉백 연출 재사용 |
+| 거절 이유 | `MovementFailureReason.Reconstructing = 52`, `AttackFailureReason.Reconstructing = 52`. 무장 해제·발목 꺾기보다 먼저 판정한다. | 적 전용이라 플레이어 안내는 거의 없다. 모르는 값에서 예외를 내는 switch가 있으면 갈래 추가. |
+
+### 67.3 사건 순서
+
+- 자폭·공포는 명령 완료 정산에서 나온다. 같은 결과 안에서 원 공격·이동·넉백·낙석 사건이 모두 끝난 뒤, 영혼·보상 사건 앞이다. 연쇄 폭발은 바퀴마다 이어 붙는다. 공격 동시 묶음에 섞지 않는다.
+- 낙석: 충돌 사건 → 수신자별 체력(재구성이면 `Reconstructed`)·속박 → 재구성 발동(370) → 자폭·공포. 낙석 사망은 이제 자폭·공포를 발동한다. 기차·낭떠러지 낙사는 발동하지 않는다.
+- 진영 턴 시작: 턴 시작 사건 → 특성 수명 → 재구성 감소·부활(380 + 상태 사건) → 부활 넉백 → 지속 피해 → 자폭·공포(밀려 죽은 경우).
+
+### 67.4 미리보기·AI
+
+- 공개 공격 미리보기는 재구성을 반영한다(최대 체력, `Reconstructed`·370). 자폭·공포·시체 밀기는 넣지 않는다.
+- AI는 재구성·자폭·공포를 모형화하지 않는다. 재구성 중인 적은 행동 후보가 없다.
+
+### 67.5 운영 활성화 순서
+
+View 등록(67.1) → Unity 확인 → 기획이 적 유닛 DB에 특성·단계 지정(적 전용 자격만 허용, 수치표는 Core `EnemyDeathTraitLevels` 한 곳) → `DataBaseAssetTests`.
+
+## 68. 첫 배치·공격·이동 초기 실행과 대기 Tick 조사 요청 — 2026-11-10
+
+사용자가 첫 동작 끊김 개선과 대기 Tick의 힙 할당·람다 점검을 요청했다. Core 직접 수정 승인은 없으므로 이 항목은 **요청·미전달**이며 구현 완료가 아니다. 원본은 `Logs/ProfilerExport/20261110-212514-765-4380a2dc`다.
+
+- 배치 프레임 1404: CPU 182.041ms, JIT self 합계 141.468ms. Core.Command 135.534ms 내부 Calculate 89.748ms / Publish 44.960ms. 첫 실행 비용을 정상 반복 계산 비용으로 혼동하지 않는다.
+- 공격 미리보기 2552: CPU 160.653ms, JIT self 127.285ms, Core.Preview 138.291ms. 공격 실행 2630: CPU 108.314ms, JIT self 48.349ms. 이동 2832: CPU 91.135ms, JIT self 38.934ms.
+- 요청: 상태를 바꾸지 않는 명시적 준비가 Core에 필요한지, 운영 빌드/두 번째 실행에서도 남는 계산 비용이 무엇인지 담당자가 검토한다. View에서 가짜 배치·공격·이동 명령을 실행하거나 Core 내부 reflection으로 강제 JIT하지 않는다. 게임 결과/난수/Buffer를 오염시키는 워밍업은 금지한다.
+- InGameCoreSystemGroup.Tick의 IReadOnlyList TickModules foreach는 열거자 박싱 후보다. LifeCycleSystemGroup/InGameSystemGroup/InGameViewSystemGroup에도 같은 형태가 있다. 런타임 Update 아래 128B/frame 관측과 정합적이나 할당 호출 스택으로 확정한 것은 아니다. 소유자 확인 뒤 인덱스 순회 등으로 제거하고 재측정 요청한다. Architecture/Core 영역은 이번에 수정하지 않았다.
+- View의 계측 마커 일괄 생성은 별도로 P1에서 지연 캐시로 개선한다. 전체 계획과 경계는 `plans/2026-11-10-combat-first-use-performance-plan.md`다. Test/MSBuild/Unity 실행 없음, 컴파일 미확인.
+- **추가(2026-11-10): 첫 동작 Core 준비 작업 문서** [2026-11-10-combat-first-use-preparation-core-work.md](2026-11-10-combat-first-use-preparation-core-work.md). Core 단계별 첫 실행 JIT(합계 약 436ms)를 정리했다. 상태를 바꾸지 않는 Core 준비 서비스(`ICombatFirstUsePreparation.PrepareNext`, 가칭)를 전투 골격 Job이 Combat 씬 로딩 준비 단계에서 부르는 안이다. 정할 것은 D1~D7이다. 할지 말지는 사용자가 판단하며(2026-11-10), 그 전에는 요청이 아니고 **미전달**이다. Core 코드 변경 없음.
+- **결정(2026-11-10 사용자 "우리측에서 작업하는 걸로 하고 Job에 거는 시점까지 계획으로 잡아"):** 천명님께 요청하지 않고 이 작업에서 Core까지 고친다(사용자 명시 지시 예외). Task 계획은 [plans/2026-11-10-combat-first-use-preparation-plan.md](../plans/2026-11-10-combat-first-use-preparation-plan.md)이다(FU-0~FU-c, 코드 착수 전). 고칠 Core 파일은 여섯이다. 새 파일 셋(`ICombatFirstUsePreparation`·`CombatFirstUsePreparationService`·`CombatFirstUseRehearsal`)과 기존 파일 셋(`CoreProfilerMarkers` 마커, `CoreProfiling` 구간 열거 값, `InGameCoreSystemGroup` 멤버·해석 줄)이다. 측정기는 열거 이름으로 마커를 자동으로 만들어 이름 줄은 따로 필요 없다(계획 FU-0). 계획은 7기준 점검(계획 §7) 뒤 확정했다(2026-11-10 사용자 "문제 없는 지 체크하고 확정"). 연결 줄은 `CombatSystemFactory`·`InGameCoreSystemServiceKey`다. 구현하면 §5 새 항목에 기록하고 천명님 공유를 쓴다.
+- **절 번호(2026-11-10):** 원래 §67로 썼으나, 원격의 천명님 §67(적 전용 특성 재구성·자폭·공포 View 인계)과 번호가 겹쳐 원격 커밋을 받으며 §68로 옮겼다. 내용은 그대로다.
+- **구현(2026-11-10, 사용자 "쭉 진행해"):** Core 준비 서비스와 전투 골격 연결을 넣었다. Core 변경 기록은 §5.84다. 컴파일 미확인, 미전달.
+- **측정(2026-11-11):** 반영분 Unity 컴파일 성공(Editor.log 00:20). 새 기록 `20261111-002203-127-35b7ea71`에서 준비를 뺀 Core 마커 안 JIT가 약 436ms → 56ms다. 첫 배치 182 → 77ms이고, 남은 Core JIT 29.7ms는 게시 경로(D3, 그대로 둠)다. 비교 표는 첫 동작 계획 "FU-c 비교".
+
+## 69. 유닛 범위 조회 답의 원본 약속 — 2026-11-11 (View 기대 기록, 요청 하나 선택, 미전달)
+
+View 호버(`Input/Interaction/CombatUnitRangeHover`)가 성능 계획 P4로 유닛 범위 조회 답(`CombatPreviewResult.UnitRange`, `UnitAttackRangeResult`)을 (전투 번호, `CombatStateBuffer.QueryRevision`, 유닛)마다 기억한다. 같은 판에서 같은 유닛을 다시 호버하면 Core에 묻지 않는다. 요청한 판과 답을 받은 판이 같을 때만 기억한다.
+
+- **View가 기대하는 것:** 유닛 범위 답은 `QueryRevision`이 덮는 사실에서만 나온다. 판이 같으면 같은 유닛의 답도 같다.
+- **지금 코드로 확인한 것(2026-11-11 검토):** 답은 `CombatAttackQueries.UnitRange`가 입력 조립(`CombatInputAssembler.Assemble`)의 캐릭터 사실·CommandState·영혼 필드·보유 기록·메인 상태·아티팩트·재고·재화로 계산한다. 전투 중 이것을 바꾸는 길은 `BattleTransactions`의 수락 명령, 캐릭터·영혼 변경, 완료뿐이고 모두 판을 올린다. 거절 명령은 사실을 바꾸지 않는다. 판은 전투 설치 때 1이 되고 늘기만 하며, `EndBattle`이 0으로 돌린다(View는 0인 판의 답을 기억하지 않는다).
+- **깨지는 경우:** 나중에 전투 중 재고·아티팩트·재화 등을 판을 올리지 않고 바꾸는 길이 생기면, A → B → A 호버에서 A의 옛 범위가 보인다. Core의 적 판단 도장(`EnemyDecisionSourceStamp`)은 판 밖의 원본을 따로 대조하므로 같은 생각은 아니다.
+- **천명님께 부탁(둘 중 하나):** ① 위 약속을 지켜 주고, 판 밖에서 조회 원본을 바꾸는 길을 만들면 알려 준다. ② 또는 행동 가용성처럼 `UnitAttackRangeResult`에 답을 만든 판(`SourceRevision`)을 실어 준다. 그러면 View는 그 값으로 기억한다. 지금은 ①로 충분하다고 본다.
+- Core 파일 변경 없음. 기록은 성능 계획 "P4 구현".
+
+## 70. 작렬(CrashImpact) View 대응 — 2026-11-11 (인계 답, 요청 없음, 미전달)
+
+천명님 `810dfc682`와 [작렬 View 인계](2026-11-10-crash-impact-view-handoff.md)를 받아 View 쪽을 맞췄다. 설계 [crash-impact-view-design](../specs/2026-11-11-combat-crash-impact-view-design.md), 계획 [crash-impact-view-plan](../plans/2026-11-11-combat-crash-impact-view-plan.md). Core 파일 변경 없음.
+
+- **인계 §4 답 ① 재생 순서:** View 사건 형식 표가 발동 사건의 근원을 `ResultOrigin`에서 읽어, 부딪힘 발동과 부딪힘 피해가 같은 근원 열쇠로 한 동시 묶음이 되고 직접 타격 묶음과 따로 재생된다. 코드 변경 없이 "타격 → 날아감 → 부딪힘 피해"로 보일 것으로 본다(Unity 재생 확인 대기).
+- **② 바로 옆이 막힌 경우:** 이동 사건 없이 `KnockbackApplied`(Magnitude 0)와 부딪힘 발동만 와도 View는 그대로 받는다(날기 시작 줄은 두지 않음).
+- **View가 Core 계약으로 기대하는 것:** 발동 사실의 `TargetCells`·`TargetCell`과 부딪힘 피해 근원의 `PhysicalCell`은 맵 밖일 수 있다. 맞은 방향은 칸 좌표 차이로 구해 맵 밖 근원 칸도 받는다(`CombatHitDirection`). View는 특성 발동 이펙트 자리를 정할 때 맵 밖 칸을 건너뛴다(`CombatCuePoints.ForActivation`). 그 밖의 사건(순간 큐 등)은 맵 밖 칸이면 계약 위반으로 보고 예외를 낸다.
+- **View가 읽는 값:** 걸음 사건의 `MovementCause.TraitKey == CrashImpact`(날아가는 걸음 모양), 넉백 요약 `Collision`(미리보기 표지 색), `CrashImpactTraitSpec`의 거리·두 비율(설명 토큰 — `TraitDescriptionBindings`에 한 줄, 천명님이 쓴 줄이 있는 파일이라 알림).
+- 요청 없음.
+
+## 71. StageSelect 런 포기 — 2026-11-11 (Core·View 구현, 컴파일 미확인, 미전달)
+
+- 사용자 승인 범위는 StageSelect 런 포기에 필요한 Core 변경이다. Core 계약은 §5.86, Task와 확인 목록은 [StageSelect 런 포기 계획](../plans/2026-11-11-stage-select-run-abandon-plan.md)에 있다.
+- `OptionUI`가 기존 `ConfirmUI`에서 Stage 전용 문구로 Y 확인을 받고 `LifeCycle.StageRunAbandon`에 요청한다. `StageLifeCycle`은 맵 준비·로딩·Runner·전투 진입·착지 대기를 확인한다. 수락 시 옵션을 닫고 `StagePlan`이 포기를 우선 실행한다.
+- Core가 런을 정리하고 Runner가 비면 `StageLifeCycle`이 로비로 전환한다. 새 런은 로비에서 출발할 때 시작한다. 기존 종료 요약·누적 명성·영구 유물을 유지한다.

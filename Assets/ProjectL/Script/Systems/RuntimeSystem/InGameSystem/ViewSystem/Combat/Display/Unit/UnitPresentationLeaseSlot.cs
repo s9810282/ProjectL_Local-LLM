@@ -3,7 +3,7 @@ using System;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
     /// <summary>
-    /// 유닛 표시 대여 칸 하나의 수명 규칙입니다(클립 계획 T10a, 결정 Q-AC11 A). <see cref="FieldUnitView"/>의 채널(자세·크기·플래시·클립)이 같이 씁니다.
+    /// 유닛 표시 대여 칸 하나의 수명 규칙입니다(클립 계획 T10a, 결정 Q-AC11 A). <see cref="FieldUnitView"/>의 채널(자세·서는 자리·크기·플래시·클립)이 같이 씁니다.
     /// </summary>
     /// <remarks>
     /// <para>규칙은 셋입니다. ① 칸에는 대여 하나만 있습니다. ② 지난 대여의 복원(늦은 복원)은 아무 일도 하지 않습니다(같은 대여 객체를 다시 쓰지 않으므로 참조로 가립니다).

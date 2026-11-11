@@ -62,7 +62,7 @@ namespace ProjectL.Tests.Core
                 1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100),
                 cell, Rotation4.R0, new[] { cell }, Owner.Player);
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,new[] { structure },s.ThornFields,s.Turn));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,new[] { structure },s.ThornFields,s.Turn));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(100));
@@ -75,7 +75,7 @@ namespace ProjectL.Tests.Core
         {
             var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 5, 5) },s.Turn));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 5, 5) },s.Turn));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Final(result, input.ActorId).Health.CurrentHealth, Is.EqualTo(95));
@@ -134,7 +134,7 @@ namespace ProjectL.Tests.Core
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20, category,
                 new ThornFieldTraitSpec(5, 5)), method);
             var s = source.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,                owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,s.IsNight,                s.Structures,s.ThornFields,s.Turn);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,                owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,                s.Structures,s.ThornFields,s.Turn);
             return new CombatCommandInput(owner == Owner.Player ? 1 : 0, CombatCommandKind.Attack, actor.EntityId, source.Aim,
                 state, characters, profiles, source.Main,
                 characters.Where(c => c.OwnedId.HasValue).Select(c => new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray(),

@@ -36,31 +36,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal List<MovementDamageExecution> DamageExecutions { get; } = new();
         internal IReadOnlyList<MovementEffectUse> MovementEffectUses => MovementDamageExecution.Collect(DamageExecutions);
         internal CombatProfileReadSet ProfileReads { get; }
-        internal int PreparationIndex { get; }
         internal Dictionary<EntityId, CharacterCombatFacts> Characters { get; }
         internal List<CombatEvent> Events { get; }
 
-        internal CombatDamageApplication(IReadOnlyList<ItemDefinition> definitions, int preparationIndex,
+        internal CombatDamageApplication(IReadOnlyList<ItemDefinition> definitions,
             Dictionary<EntityId, CharacterCombatFacts> characters, List<CombatEvent> events, CombatCommandInput traitInput = null,
             bool captureMovementUses = true, CombatProfileReadSet profileReads = null)
         {
             _traitInput = traitInput;
             _captureMovementUses = captureMovementUses;
             ProfileReads = profileReads;
-            if (preparationIndex < 0) throw new ArgumentOutOfRangeException(nameof(preparationIndex));
             _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
-            PreparationIndex = preparationIndex;
             Characters = characters ?? throw new ArgumentNullException(nameof(characters));
             Events = events ?? throw new ArgumentNullException(nameof(events));
         }
 
-        /// <summary>명령 입력의 정의 목록과 준비 순번으로 만든다. 입력과 다른 상태로 진행하는 투영은 생성자를 직접 쓴다.</summary>
+        /// <summary>명령 입력의 정의 목록으로 만든다. 입력과 다른 상태로 진행하는 투영은 생성자를 직접 쓴다.</summary>
         internal static CombatDamageApplication For(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> characters, List<CombatEvent> events, bool captureMovementUses = true,
             CombatProfileReadSet profileReads = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            return new CombatDamageApplication(input.ItemDefinitions, input.State.Turn.PreparationIndex, characters, events, input, captureMovementUses, profileReads);
+            return new CombatDamageApplication(input.ItemDefinitions, characters, events, input, captureMovementUses, profileReads);
         }
 
         /// <summary>
@@ -71,16 +68,43 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int damageBeforeItems, IReadOnlyList<CombatDamageOrigin> eventOrigins = null, bool deferTraitKills = false,
             IReadOnlyList<TraitTrailFact> usedDustSources = null, AttackTraitScope traitScope = null, CharacterCombatFacts damageActor = null,
             int? numericInput = null, CommandAttackGroups heldDefenseGroups = null, bool resolvedHeldProtection = false,
-            IReadOnlyList<(CombatDamageOrigin Origin, int Input)> resolvedHeldAbsorptions = null)
+            IReadOnlyList<(CombatDamageOrigin Origin, int Input)> resolvedHeldAbsorptions = null, SacrificeHitUpgrade? sacrificeUpgrade = null)
+        {
+            CombatDamageOutcome result = default;
+            foreach (var phase in ApplySteps(recipientId, kind, origin, damageBeforeItems, value => result = value,
+                eventOrigins, deferTraitKills, usedDustSources, traitScope, damageActor, numericInput, heldDefenseGroups,
+                resolvedHeldProtection, resolvedHeldAbsorptions, sacrificeUpgrade)) { }
+            return result;
+        }
+
+        /// <summary>피해 전후의 상태 정산을 각각 끝낸 뒤 다음 피해 단계로 진행한다.</summary>
+        internal IEnumerable<string> ApplySteps(EntityId recipientId, CombatDamageKind kind, CombatDamageOrigin origin,
+            int damageBeforeItems, Action<CombatDamageOutcome> completed, IReadOnlyList<CombatDamageOrigin> eventOrigins = null, bool deferTraitKills = false,
+            IReadOnlyList<TraitTrailFact> usedDustSources = null, AttackTraitScope traitScope = null, CharacterCombatFacts damageActor = null,
+            int? numericInput = null, CommandAttackGroups heldDefenseGroups = null, bool resolvedHeldProtection = false,
+            IReadOnlyList<(CombatDamageOrigin Origin, int Input)> resolvedHeldAbsorptions = null, SacrificeHitUpgrade? sacrificeUpgrade = null)
         {
             if (origin == null) throw new ArgumentNullException(nameof(origin));
-            if (_traitInput != null) TraitPresenceReconciler.ApplyAndRecord(_traitInput, Characters, Events, origin, ProfileReads);
+            if (sacrificeUpgrade.HasValue && sacrificeUpgrade.Value.RecipientId != recipientId)
+                throw new ArgumentException("희생 피해의 실제 수신자와 보호자가 다릅니다.", nameof(sacrificeUpgrade));
+            using (var presence = BeginReconcilePresence(origin))
+            {
+                while (presence != null && !presence.IsComplete)
+                {
+                    presence.Step();
+                    yield return "DamagePresence";
+                }
+            }
             int eventStart = Events.Count;
             var before = Characters[recipientId];
             int numeric = numericInput ?? damageBeforeItems;
             CharacterCombatFacts attacker = origin.CreditedCharacterId is EntityId attackerId &&
                 Characters.TryGetValue(attackerId, out var source) ? source : null;
-            if (before.Health.IsDead) return new CombatDamageOutcome(before, before, damageBeforeItems, 0, 0);
+            if (before.Health.IsDead)
+            {
+                completed(new CombatDamageOutcome(before, before, damageBeforeItems, 0, 0));
+                yield break;
+            }
 
             // 공격은 대상 산식의 비율 단계에서 처리합니다. 환경·반사는 같은 엔진을 이 공통 경계에서 한 번 통과합니다.
             if (_traitInput != null && kind != CombatDamageKind.OrdinaryAttack && kind != CombatDamageKind.ExtraAttack && kind != CombatDamageKind.ReactionAttack)
@@ -103,7 +127,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 before = Characters[recipientId];
             }
             else if (resolvedHeldProtection) damageBeforeItems = 0;
-            var context = new ItemDamageContext(kind, attacker, before, damageBeforeItems, PreparationIndex);
+            var context = new ItemDamageContext(kind, attacker, before, damageBeforeItems);
             int remainingDamage = damageBeforeItems;
             var recipient = before;
             CharacterStateChange affectedTarget = null;
@@ -136,13 +160,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 CombatCommandEvents.TraitState(Events, recipient, protectedRecipient, origin);
                 recipient = protectedRecipient;
             }
-            int actualHealthLoss = Math.Min(recipient.Health.CurrentHealth, remainingDamage);
+            yield return "DamageProtection";
+            int actualHealthLoss = sacrificeUpgrade.HasValue
+                ? SacrificeDamageSettlement.LimitHealthLoss(recipient.Health.CurrentHealth, remainingDamage, sacrificeUpgrade.Value)
+                : Math.Min(recipient.Health.CurrentHealth, remainingDamage);
             var damaged = actualHealthLoss == 0 ? recipient
                 : actualHealthLoss == recipient.Health.CurrentHealth ? CombatCommandCalculator.Hurt(recipient, remainingDamage)
                 : CharacterSettlementCalculator.Copy(recipient,
                     new HealthStateSnapshot(recipient.Health.CurrentHealth - actualHealthLoss, recipient.Health.MaxHealth), recipient.Stats);
             var healthOrigins = eventOrigins ?? new[] { origin };
-            CombatCommandEvents.Health(Events, recipient, damaged, healthOrigins);
+            int reconstructionRecovery = 0;
+            if (damaged.Health.IsDead && ReconstructionTraitRule.CanTrigger(recipient))
+            {
+                // 치명 피해를 재구성으로 버틴다. 사망 사건을 만들지 않으므로 처치 보상·처치 연쇄·사망 특성이 일어나지 않는다.
+                // 잃은 체력은 그대로 기록하고, 최대치까지 되돌린 양은 회복으로 기록해 공격 결과 체력 검사와 맞춘다(설계 §4.2).
+                var reconstructed = ReconstructionTraitRule.Trigger(recipient);
+                CombatCommandEvents.Trait(Events, recipientId, TraitKey.Reconstruction, TraitActivationKind.ReconstructionStarted,
+                    actualHealthLoss, new[] { recipientId }, origin: origin);
+                Events.Add(new CombatCharacterEvent(CombatEventKind.Reconstructed, recipient, reconstructed, healthOrigins));
+                reconstructionRecovery = reconstructed.Health.CurrentHealth;
+                damaged = reconstructed;
+            }
+            else CombatCommandEvents.Health(Events, recipient, damaged, healthOrigins);
             // 체력 사건과 같은 출처 목록을 남겨, 넣은 피해의 귀속이 처치 귀속과 같은 출처를 보게 한다(스테이지 기록 설계 D4).
             if (actualHealthLoss > 0)
                 _stageDamage.Add(new CombatStageDamageEntry(recipientId, healthOrigins, actualHealthLoss));
@@ -168,22 +207,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     CombatCommandEvents.Health(Events, damaged, recipient);
                 }
             }
+            yield return "DamageHealth";
             recipient = DiscardOnDeath(recipient);
 
             if (!ReferenceEquals(before, recipient)) Characters[recipientId] = recipient;
             if (affectedTarget != null) Characters[affectedTarget.Final.EntityId] = affectedTarget.Final;
-            RecordRecovery(recipientId, recovery);
+            RecordRecovery(recipientId, checked(recovery + reconstructionRecovery));
             if (remainingDamage > 0) _appliedDamage[recipientId] = checked(_appliedDamage.GetValueOrDefault(recipientId) + remainingDamage);
             // 후속 귀속 문맥을 만드는 호출자는 문맥 설치 뒤 같은 정산 경계를 호출합니다.
             if (!deferTraitKills) SettleTraitKills(eventStart);
-            if (_traitInput != null) TraitPresenceReconciler.ApplyAndRecord(_traitInput, Characters, Events, origin, ProfileReads);
+            yield return "DamageKills";
+            using (var presence = BeginReconcilePresence(origin))
+            {
+                while (presence != null && !presence.IsComplete)
+                {
+                    presence.Step();
+                    yield return "DamagePresence";
+                }
+            }
+            if (sacrificeUpgrade.HasValue)
+            {
+                var settled = Characters[recipientId];
+                var shielded = SacrificeDamageSettlement.GrantShield(settled, sacrificeUpgrade.Value);
+                if (!ReferenceEquals(settled, shielded))
+                {
+                    Characters[recipientId] = shielded;
+                    CombatCommandEvents.TraitState(Events, settled, shielded, origin);
+                    CombatCommandEvents.Trait(Events, recipientId, TraitKey.Sacrifice, TraitActivationKind.ShieldGranted,
+                        sacrificeUpgrade.Value.ShieldOnActivation, new[] { recipientId }, origin: origin);
+                }
+            }
             RecordMovementUses(before, origin, kind, numeric, exposureInput, exposure, usedDustSources,
                 traitScope, damageActor, eventStart);
             // 여러 가시 출처는 기존의 개별 배지 처리와 단일 합산 피해를 유지합니다. 막힌 양수 입력도 같은 노출 선택 근거를 사용합니다.
             foreach (var absorbed in resolvedHeldAbsorptions ?? Array.Empty<(CombatDamageOrigin Origin, int Input)>())
+            {
                 RecordMovementUses(before, absorbed.Origin, kind, absorbed.Input, absorbed.Input, exposure, null, null, null, eventStart);
-            return new CombatDamageOutcome(before, Characters[recipientId], remainingDamage, actualHealthLoss, recovery,
-                damageBeforeItems, usesExposure ? exposure : null);
+                yield return "DamageAbsorptionEvidence";
+            }
+            completed(new CombatDamageOutcome(before, Characters[recipientId], remainingDamage, actualHealthLoss, recovery,
+                damageBeforeItems, usesExposure ? exposure : null));
         }
 
 
@@ -221,17 +284,66 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>숫자 피해·아이템 피격·보호막을 거치지 않고 실제 HP를 사망 사실로 바꿉니다.</summary>
         internal CombatDamageOutcome Defeat(EntityId recipientId, CombatDamageOrigin origin)
         {
+            CombatDamageOutcome result = default;
+            foreach (var phase in DefeatSteps(recipientId, origin, value => result = value)) { }
+            return result;
+        }
+
+        internal IEnumerable<string> DefeatSteps(EntityId recipientId, CombatDamageOrigin origin, Action<CombatDamageOutcome> completed)
+        {
             if (origin == null) throw new ArgumentNullException(nameof(origin));
             var before = Characters[recipientId];
-            if (before.Health.IsDead) return new CombatDamageOutcome(before, before, 0, 0, 0);
+            if (before.Health.IsDead)
+            {
+                completed(new CombatDamageOutcome(before, before, 0, 0, 0));
+                yield break;
+            }
             int eventStart = Events.Count;
-            var final = DiscardOnDeath(CombatCommandCalculator.Hurt(before, before.Health.CurrentHealth));
-            Characters[recipientId] = final;
-            Events.Add(new CombatCharacterEvent(CombatEventKind.Died, before, final, new[] { origin }, damageCause: CombatDamageCause.InstantDefeat));
-            _stageDamage.Add(new CombatStageDamageEntry(recipientId, new[] { origin }, before.Health.CurrentHealth));
-            SettleTraitKills(eventStart);
-            if (_traitInput != null) TraitPresenceReconciler.ApplyAndRecord(_traitInput, Characters, Events, origin, ProfileReads);
-            return new CombatDamageOutcome(before, Characters[recipientId], 0, before.Health.CurrentHealth, 0);
+            if (ReconstructionTraitRule.CanTrigger(before))
+            {
+                // 즉사(마무리 사격 등)도 재구성이 버틴다(2026-11-10 사용자 결정, Q-ED1 바뀜). 사망이 아니므로 처치 정산을 하지 않는다.
+                var reconstructed = ReconstructionTraitRule.Trigger(before);
+                CombatCommandEvents.Trait(Events, recipientId, TraitKey.Reconstruction, TraitActivationKind.ReconstructionStarted,
+                    before.Health.CurrentHealth, new[] { recipientId }, origin: origin);
+                Events.Add(new CombatCharacterEvent(CombatEventKind.Reconstructed, before, reconstructed, new[] { origin }));
+                Characters[recipientId] = reconstructed;
+                _stageDamage.Add(new CombatStageDamageEntry(recipientId, new[] { origin }, before.Health.CurrentHealth));
+                RecordRecovery(recipientId, reconstructed.Health.CurrentHealth);
+            }
+            else
+            {
+                var final = DiscardOnDeath(CombatCommandCalculator.Hurt(before, before.Health.CurrentHealth));
+                Characters[recipientId] = final;
+                Events.Add(new CombatCharacterEvent(CombatEventKind.Died, before, final, new[] { origin }, damageCause: CombatDamageCause.InstantDefeat));
+                _stageDamage.Add(new CombatStageDamageEntry(recipientId, new[] { origin }, before.Health.CurrentHealth));
+                SettleTraitKills(eventStart);
+            }
+            yield return "DefeatKills";
+            using (var presence = BeginReconcilePresence(origin))
+            {
+                while (presence != null && !presence.IsComplete)
+                {
+                    presence.Step();
+                    yield return "DefeatPresence";
+                }
+            }
+            completed(new CombatDamageOutcome(before, Characters[recipientId], 0, before.Health.CurrentHealth, 0));
+        }
+
+        /// <summary>현재 명령에서 이미 받은 영구 처치 보상까지 포함해 보유 조건을 맞춥니다.</summary>
+        internal void ReconcilePresence(CombatDamageOrigin origin = null)
+        {
+            using var work = BeginReconcilePresence(origin);
+            if (work == null) return;
+            while (!work.IsComplete) work.Step();
+        }
+
+        internal TraitPresenceReconciler.Reconciliation BeginReconcilePresence(CombatDamageOrigin origin = null)
+        {
+            if (_traitInput == null) return null;
+            var current = _ownedChanges.Count == 0 ? _traitInput : _traitInput.WithPersistentFacts(ProjectOwned(_traitInput.Owned),
+                _traitInput.ItemInventory, _traitInput.GoldBalance, _traitInput.FameBalance);
+            return TraitPresenceReconciler.BeginReconcile(current, Characters, Events, origin, ProfileReads);
         }
 
         private CharacterCombatFacts DiscardOnDeath(CharacterCombatFacts recipient)

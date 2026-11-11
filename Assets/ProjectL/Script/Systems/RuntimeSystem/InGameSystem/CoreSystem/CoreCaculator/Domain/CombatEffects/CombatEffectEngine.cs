@@ -12,6 +12,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 {
     internal sealed class CombatEffectEngine : ICombatEffectEngine
     {
+        public bool RequiresOrderedHits(IReadOnlyList<EffectRuleBinding> bindings)
+        {
+            if (bindings == null) throw new ArgumentNullException(nameof(bindings));
+            foreach (var binding in bindings)
+                if (binding.Rule is IEffectOrderedHitRule { RequiresOrderedHits: true }) return true;
+            return false;
+        }
+
         public EffectAttackTargetingEvaluation EvaluateAttackTargeting(IReadOnlyList<EffectRuleBinding> bindings)
         {
             EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
@@ -274,6 +282,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return new EffectKillChainAttackEvaluation(
                 contributions.ToArray(),
                 expectations.ToArray());
+        }
+
+        public EffectDeathTraitEvaluation EvaluateDeathTraits(IReadOnlyList<EffectRuleBinding> bindings)
+        {
+            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
+            var contributions = new List<EffectDeathTraitContribution>();
+            foreach (EffectRuleBinding binding in ordered)
+            {
+                if (binding.Rule is not IEffectDeathTraitRule rule) continue;
+                var contribution = rule.EvaluateDeath(new EffectRuleInput(binding.Origin, binding.ExpectedState));
+                if (contribution.Origin != binding.Origin)
+                    throw new InvalidOperationException("사망 특성 기여의 원본이 바인딩과 다릅니다.");
+                contributions.Add(contribution);
+            }
+            return new EffectDeathTraitEvaluation(contributions.ToArray());
         }
 
         /// <summary>

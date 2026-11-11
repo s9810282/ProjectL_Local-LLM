@@ -64,6 +64,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 environmentProgress: new EnvironmentProgressFacts(progress.NextObjectEntryOrdinal, progress.NextSourceId, random));
         }
 
+        internal IEnumerable<HazardCellFact?> ForecastSteps(CombatCommandInput input, long lastBoundaryCount)
+        {
+            var definitions = input.Battle?.GimmickDefinitions;
+            if (definitions == null) yield break;
+            ValidateDefinitions(definitions);
+            foreach (var rule in _rules)
+            {
+                for (int i = 0; i < definitions.Count; i++)
+                {
+                    yield return null;
+                    if (definitions[i].GimmickKey != rule.Key) continue;
+                    using var child = rule.EnumerateForecast(input, definitions[i], new StageGimmickId(i + 1), lastBoundaryCount);
+                    while (child.MoveNext()) yield return child.Current;
+                }
+            }
+        }
+
         internal CombatCommandTransition TryAdvance(CombatCommandInput input, StageGimmickBoundary? boundary)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));

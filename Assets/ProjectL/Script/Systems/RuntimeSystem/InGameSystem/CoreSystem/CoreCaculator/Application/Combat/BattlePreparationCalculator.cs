@@ -35,6 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (activeCharacters.Count != 0)
                 throw new InvalidOperationException("이미 연결된 전투 캐릭터가 있습니다.");
 
+            ValidateNexusReinforcements(initialization);
             if (initialization.AttackProfiles.Count > 0)
             {
                 _ = OwnedUnitSpecResolver.BuildProfiles(initialization.AttackProfiles, owned, initialization.TraitGrowth);
@@ -199,12 +200,54 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 CombatFlowPhase.PlayerInput, draw.Order, draw.InitialCount, stage.PlayerZone,
                 OwnedUnitSpecResolver.BuildTraitSettings(initialization.Units, owned, initialization.TraitGrowth),
                 stage.RailCells.ToArray(), placed.Definitions.ToArray(),
-                environment, bindings, obstacleContents, wallBlocking: initialization.WallBlocking), structures, nextId,
+                environment, bindings, obstacleContents, wallBlocking: initialization.WallBlocking,
+                nexusReinforcements: initialization.NexusReinforcements), structures, nextId,
                 objective: objective, membership: membership, rosterRevision: rosterRevision, environmentProgress: placed.Progress);
             var state = StageGimmickComposition.Initialize(preparation.CommandState, preparation.Combat.StageGimmicks);
             return ReferenceEquals(state, preparation.CommandState) ? preparation : new BattlePreparation(preparedCharacters,
                 preparation.Combat, structures, nextId, commandState: state, objective: objective,
                 membership: membership, rosterRevision: rosterRevision);
+        }
+
+        private static void ValidateNexusReinforcements(BattleInitialization initialization)
+        {
+            var spec = initialization.NexusReinforcements;
+            if (spec == null)
+                return;
+
+            if (initialization.ObjectiveKind != BattleObjectiveKind.EnemyHeadquartersDestroyed)
+                throw new InvalidOperationException("넥서스 증원은 적 본부 파괴 목표에서만 사용할 수 있습니다.");
+
+            // 이 배치 목록의 구조물은 준비 때 적 소유로 최대 체력에서 시작한다.
+            int nexusCount = 0;
+            foreach (var placement in initialization.Stage.InitialEnemyStructurePlacements.Span)
+                if (placement.StructureKey == EntityKey.Structure_Headquarters)
+                    nexusCount++;
+            if (nexusCount != 1)
+                throw new InvalidOperationException("넥서스 증원에는 적 본부가 정확히 하나 필요합니다.");
+
+            foreach (var entry in spec.Pool)
+            {
+                var unit = initialization.Units.SingleOrDefault(candidate => candidate.Key == entry.UnitKey)
+                    ?? throw new InvalidOperationException($"증원 풀에 필요한 유닛 정의가 없습니다: {entry.UnitKey}.");
+                ValidateReinforcementUnit(unit);
+                var profile = initialization.AttackProfiles.SingleOrDefault(candidate =>
+                    !candidate.OwnedId.HasValue && candidate.Definition.Key == entry.UnitKey)
+                    ?? throw new InvalidOperationException($"증원 풀에 필요한 기본 공격 프로필이 없습니다: {entry.UnitKey}.");
+                if (!ReferenceEquals(unit, profile.Definition))
+                    ValidateReinforcementUnit(profile.Definition);
+            }
+        }
+
+        private static void ValidateReinforcementUnit(UnitSpec unit)
+        {
+            if (unit.Role != UnitRole.Regular || unit.OwnerEligibility == UnitOwnerEligibility.PlayerOnly)
+                throw new InvalidOperationException($"증원 유닛 {unit.Key}의 역할 또는 적 소유 권한이 맞지 않습니다.");
+            if (unit.CategoryKey == CategoryKey.Boss)
+                throw new InvalidOperationException($"보스 {unit.Key}는 증원 풀에 등록할 수 없습니다.");
+            var cells = unit.FootprintLocalCells.Span;
+            if (unit.FootprintWidth != 1 || unit.FootprintHeight != 1 || cells.Length != 1 || cells[0] != CellCoord.Zero)
+                throw new InvalidOperationException($"증원 유닛 {unit.Key}는 한 칸만 점유해야 합니다.");
         }
 
         /// <summary>

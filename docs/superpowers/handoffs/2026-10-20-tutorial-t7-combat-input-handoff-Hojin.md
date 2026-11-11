@@ -1,11 +1,22 @@
-# T-7 튜토리얼 이동 실습 입력 — 전투 View 전달 메모
+# 튜토리얼 공격·턴 종료 실습 입력 — T-7 후속 전투 View 전달 메모 (2026-11-10 갱신)
 
 - 작성자: 호진(이호진)
 - 작성: 2026-10-20. 전달용 문서이며 외부 발송은 하지 않았다.
 - 정책 원본: [튜토리얼 설계 §15.10](../specs/2026-10-18-tutorial-buffer-job-public-contract-design-Hojin.md#1510-전투-view-수정--이동-실습-이동만-허용전투-작업자-동의).
 - Task·검증 원본: [구현 계획 §9·§12.12](../plans/2026-10-19-tutorial-implementation-plan-Hojin.md).
 
-- **현재 정책은 2026-10-26 V4-g, 현재 입력 구조 인계는 문서 끝의 V5-d를 따른다(미전달).** 아래 10-20의 턴 종료/빈 범위 제한과 각 Phase의 미확인은 과거 이력이다. 새 Core의 이동 실습은 수동 턴 종료로 회복하며, 미완료 실습의 Deployment에서는 정상 조건의 전투 재진입을 허용한다. V4-n과 V5-a/b/c는 각각 사용자 정상 보고로 인수했고 실행/정적 근거·확인 한계는 [5라운드 계획 §10](../plans/2026-10-26-combat-view-stage-round5-plan.md#10-v5-d-최종-인수와-잔여-2026-10-26)에 둔다.
+- **현재 정책은 아래 2026-11-10 Phase B를 따른다(미전달).** V4-g/V5-d를 포함한 이전 정책·검증은 당시 이력이다. 새 코드의 컴파일·재생을 이전 인수 기록으로 대신하지 않는다.
+
+## 2026-11-10 Phase B — 새 실습과 전환 입력 제한 (미전달)
+
+- 정책 원본은 [최신 규칙 교체 설계 §4·§5](../specs/2026-11-10-tutorial-current-rules-refresh-design-Hojin.md#5-입력-제한과-막힘-회복), 실행·검수 상태는 [새 계획 §9.3](../plans/2026-11-10-tutorial-current-rules-refresh-plan-Hojin.md#93-phase-b-구현정적-검수--2026-11-10)이다. **컴파일 미확인, Unity 재생 미확인.**
+- 목표 AttackEnemyOnce/EndPlayerTurnOnce를 추가했다. 공격은 실제 적/넥서스 Hit(0피해 포함), 턴 종료는 수락된 EndPlayerTurn의 PlayerTurnEnded 사건과 표시 완료로 판단한다. 판정은 Tutorial FactsReader/Plan이 맡고 입력 코드가 성공을 결정하지 않는다. 전투 종료가 먼저면 대상 조회를 하지 않고 기존 중단으로 정리한다.
+- 제한의 원본은 Tutorial Buffer, 허용표는 CombatInputPolicy다. MoveOnly는 이동·턴 종료, AttackPractice는 이동·공격·되돌리기·턴 종료, EndTurnOnly는 턴 종료만 허용한다. 허용 Preview는 설계 표를 따르며 EndTurnOnly는 새 Preview가 없다.
+- MoveOnly/AttackPractice의 같은 전투 실습 대기 중 Deployment에서는 메인/서브 배치·회수·전투 진입과 대응 배치 Preview를 허용한다. 실습 안내 표시 중/통과 뒤 설명 시작 대기는 Pending=false라 새 명령·Preview를 모두 막는다. 수락된 결과와 적 자동 진행은 계속된다.
+- 정보 선택은 기존 CanSelectUnit 경로로 유지하고 공격 범위 Preview는 CanInspectUnit/CanPreview로 따로 제한한다. 취소와 이미 켜진 공격 모드 끄기는 제한 여부와 분리했다. 새 모드 진입·제출은 기존 Gate를 거친다. 키의 금지 시도는 기존 안내를 쓰며 버튼 가용성/호버에서 반복 안내하지 않는다.
+- 제한 중 턴 종료 확인창 생략, 일반 전투의 확인창은 기존 CombatEndTurnEntry 계약을 유지한다. Core·FieldCamera·Architecture·입력 Action 에셋·씬/UI 프리팹은 B에서 수정하지 않았다. 새 서비스/등록도 없다.
+- 검수에서 발견한 금지 이동 안내 누락은 B2e 완료 보완으로 반영했다. CombatPathInput에서 선택 아군 앵커를 누르고 다른 정상 필드 칸에 놓는 시도만 기존 안내를 한 번 요청한다. 같은 칸 정보 클릭·호버·UI/필드 밖 놓기·취소/해제·중복 release는 제외한다. Factory는 기존 ReportBlockedInput 인수 전달만 추가했다. 재생 미확인이므로 D 연결 후 이 구분을 확인해야 한다.
+- Unity 확인은 기존 이동 실습의 턴 종료→배치 회복→재진입, 통과 전후 추가 입력 차단, 일반 정보/취소/전투 입력 회귀부터다. 새 공격·턴 종료 실습은 Phase D에서 실제 17단계 정의를 연결한 뒤 0피해·빗나감·넥서스/전투 종료·회복용 이전 턴 종료·늦은 응답을 확인한다. 현재 13단계를 새 실습 재생 성공으로 간주하지 않는다.
 
 ## 적용 동작
 

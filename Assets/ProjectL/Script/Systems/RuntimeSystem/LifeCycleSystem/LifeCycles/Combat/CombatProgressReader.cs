@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
 {
@@ -32,6 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
         private ICurrentProgressBufferReadSink _current;
         private IRunProgressBufferReadSink _run;
         private ICombatProgressView _view;
+        private ICombatAdvanceService _advance;
 
         public void PostBindService(ISystemServiceStoreReader resolver)
         {
@@ -41,9 +43,10 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             // IBufferQuery는 모든 싱크를 노출하므로 여기서 필요한 것만 꺼내 보관한다.
             IBufferQuery buffers = resolver.GetService(BufferSystemKey.Buffer);
             // 전투 View가 없는 조립(View 그룹 없음)도 바인딩은 통과하고, 실제로 읽을 때 확인한다.
-            ICombatProgressView view = resolver.GetService(SystemGroupsService.InGame).ViewGroup?.Combat?.Progress;
+            var inGame = resolver.GetService(SystemGroupsService.InGame);
+            ICombatProgressView view = inGame.ViewGroup?.Combat?.Progress;
             Bind(buffers.CombatStateReadSink, buffers.CombatResultReadSink, buffers.CombatViewReadSink,
-                buffers.CurrentProgressReadSink, buffers.RunProgressReadSink, view);
+                buffers.CurrentProgressReadSink, buffers.RunProgressReadSink, view, inGame.CoreGroup.CombatAdvance);
         }
 
         /// <summary>필요한 읽기 싱크와 View를 보관합니다(테스트 입구이기도 합니다). View는 없을 수 있습니다.</summary>
@@ -53,7 +56,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             ICombatViewBufferReadSink input,
             ICurrentProgressBufferReadSink current,
             IRunProgressBufferReadSink run,
-            ICombatProgressView view)
+            ICombatProgressView view,
+            ICombatAdvanceService advance)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _results = results ?? throw new ArgumentNullException(nameof(results));
@@ -61,6 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
             _current = current ?? throw new ArgumentNullException(nameof(current));
             _run = run ?? throw new ArgumentNullException(nameof(run));
             _view = view;
+            _advance = advance ?? throw new ArgumentNullException(nameof(advance));
         }
 
         public CombatProgressFacts Read()
@@ -88,7 +93,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat
                 completionDisplay: _view.CompletionDisplay,
                 isAbandonRequested: _view.IsAbandonRequested,
                 runOutcome: _run.Outcome,
-                isEntryPresentationPending: _view.IsEntryPresentationPending);
+                isEntryPresentationPending: _view.IsEntryPresentationPending,
+                preparation: _advance.ReadPreparationState());
         }
 
         public bool TryReadSelection(out int chapterKey, out StageSelectionData stage)

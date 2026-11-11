@@ -25,7 +25,7 @@ MonoBehaviour:
   footprintWidth: 1
   footprintHeight: 1
   maxHealth: 25
-  physicalDefense: 5
+  physicalDefense: 3
   targetingMethod: {fileID: 11400000, guid: b392af0b31d746a1ae14c1795a406e7a, type: 2}
   attackRange: 1
   category: 20
@@ -34,15 +34,10 @@ MonoBehaviour:
   wallPropagation: 1
   priority: 15
   traits:
-  - rid: 6249925418060611681
   - rid: 6249925418060611682
   references:
     version: 2
     RefIds:
-    - rid: 6249925418060611681
-      type: {class: AccelerationTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
-      data:
-        attackPerMovedCell: 1
     - rid: 6249925418060611682
       type: {class: PullTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
       data:

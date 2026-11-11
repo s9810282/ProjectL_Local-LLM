@@ -51,7 +51,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             foreach (MovementTileFact source in state.Environment.Tiles)
             {
                 if (source.Cell != cell || !CombatEnvironmentFacts.IsShown(source)) continue;
-                if (source is TraitTrailFact trail && trail.Key == TraitKey.DustScreen)
+                if (CombatEnvironmentFacts.IsDustScreen(source, out TraitTrailFact trail))
                 {
                     var visual = _traits.GetTraitVisual(trail.Key);
                     string description = _descriptions.DustScreen(trail);
@@ -59,16 +59,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
                     if (_trailDescriptions.Add(description))
                         AppendDescription(visual.DisplayName, description);
                 }
-                else if (Contains(bindings.TerrainSourceIds, source.Id))
+                else if (CombatEnvironmentFacts.IsTerrain(bindings, source.Id))
                 {
                     var kind = EnvironmentVisualKinds.TerrainKind(source);
                     var visual = _terrains.GetTerrainVisual(kind);
                     AppendDescription(visual.DisplayName, _descriptions.Terrain(kind, source));
                 }
-                else if (Contains(bindings.ObjectSourceIds, source.Id))
+                else if (CombatEnvironmentFacts.TryGetObject(bindings, source, out ObjectSourceFact item))
                 {
-                    if (source is not ObjectSourceFact item)
-                        throw new InvalidOperationException("Object 분류와 Buffer 원본 형식이 다릅니다.");
                     var kind = EnvironmentVisualKinds.ObjectKind(item);
                     var visual = _objects.GetObjectVisual(kind);
                     AppendDescription(visual.DisplayName, _descriptions.Object(kind, item));
@@ -77,8 +75,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
 
             foreach (StructureCombatFacts structure in state.Structures)
             {
-                if (structure.Health.IsDead || !ContainsCell(structure.OccupiedCells, cell)) continue;
-                if (!CombatEnvironmentFacts.TryGetObstacle(bindings, obstacles, structure, out ObstacleContentProfile obstacle)) continue;
+                if (!CombatEnvironmentFacts.TryGetObstacleAt(bindings, obstacles, structure, cell, out ObstacleContentProfile obstacle)) continue;
                 var visual = _units.GetUnitVisual(structure.Definition.Key);
                 AppendDescription(visual.DisplayName, _descriptions.Obstacle(obstacle));
             }
@@ -118,12 +115,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             }
             _names.Append(name);
             _text.Append(description);
-        }
-
-        private static bool Contains(IReadOnlyList<long> values, long id)
-        {
-            for (int i = 0; i < values.Count; i++) if (values[i] == id) return true;
-            return false;
         }
 
         private static bool ContainsCell(IReadOnlyList<CellCoord> values, CellCoord cell)

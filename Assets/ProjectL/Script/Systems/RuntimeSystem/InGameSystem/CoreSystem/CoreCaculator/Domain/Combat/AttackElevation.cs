@@ -24,6 +24,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static AttackElevation From(MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings) =>
             new AttackElevation(EnvironmentTerrainRules.TerrainCells(environment, bindings, StaticTerrainKind.HighGround));
 
+        internal static IEnumerable<string> BuildSteps(MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings,
+            Action<AttackElevation> completed)
+        {
+            var cells = new List<CellCoord>();
+            foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, bindings, StaticTerrainKind.HighGround))
+            {
+                if (cell.HasValue) cells.Add(cell.Value);
+                yield return "AttackElevationSource";
+            }
+            completed(new AttackElevation(cells));
+            yield return "AttackElevationComplete";
+        }
+
         internal bool IsHigh(CellCoord cell) => _highGroundCells.Contains(cell);
 
         /// <summary>출발 칸이 고지대이고 맞는 칸이 고지대가 아니면 그 직격 선분은 Wall에 막히지 않는다(설계 D1).</summary>

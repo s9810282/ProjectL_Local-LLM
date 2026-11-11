@@ -19,6 +19,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             _ => null
         };
         public long? LastResetControllerTurnCount => (Status as ShieldStatus)?.LastResetControllerTurnCount;
+        public int? RemainingAffectedSideStarts => Status switch
+        {
+            FireStatus fire => fire.RemainingAffectedSideStarts,
+            BleedingStatus bleeding => bleeding.RemainingAffectedSideStarts,
+            ReconstructionStatus reconstruction => reconstruction.RemainingOwnTurnStarts,
+            _ => null
+        };
+        public long? ExpiresAtCompletedControllerTurnCount => (Status as MovementRangeDecreaseStatus)?.ExpiresAtCompletedControllerTurnCount;
         public bool Eligible => Status is not ShieldStatus shield || shield.Eligible;
 
         public StatusEffectSourceSnapshot(AppliedStatus status)
@@ -124,6 +132,55 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (effectiveIncreasePercent < 0) throw new ArgumentOutOfRangeException(nameof(effectiveIncreasePercent));
             EffectiveIncreasePercent = effectiveIncreasePercent;
         }
+    }
+
+    public sealed class RampageEffectSnapshot : StatusEffectSnapshot
+    {
+        public int AttackBonus { get; }
+        public int MovementBonus { get; }
+        public int KillAttackBonus { get; }
+        /// <summary>현재 조건의 표시 수명입니다. 처치 누적 원본은 특성 상태이며 되돌리기 재계산 대상이 아닙니다.</summary>
+        public StatusEffectLifetimeKind ConditionLifetimeKind => StatusEffectLifetimeKind.CurrentEligibility;
+
+        public RampageEffectSnapshot(int attackBonus, int movementBonus, int killAttackBonus)
+            : base(StatusEffectKey.Rampage, Array.Empty<StatusEffectSourceSnapshot>())
+        {
+            if (attackBonus < 0) throw new ArgumentOutOfRangeException(nameof(attackBonus));
+            if (movementBonus < 0) throw new ArgumentOutOfRangeException(nameof(movementBonus));
+            if (killAttackBonus < 0 || killAttackBonus > attackBonus) throw new ArgumentOutOfRangeException(nameof(killAttackBonus));
+            AttackBonus = attackBonus;
+            MovementBonus = movementBonus;
+            KillAttackBonus = killAttackBonus;
+        }
+    }
+
+    public sealed class FireEffectSnapshot : StatusEffectSnapshot
+    {
+        public int Damage => ((FireStatus)Sources[0].Status).Damage;
+        public int RemainingAffectedSideStarts => ((FireStatus)Sources[0].Status).RemainingAffectedSideStarts;
+        public FireEffectSnapshot(FireStatus status) : base(StatusEffectKey.Fire, new[] { new StatusEffectSourceSnapshot(status) }) { }
+    }
+
+    public sealed class ReconstructionEffectSnapshot : StatusEffectSnapshot
+    {
+        public int RemainingOwnTurnStarts => ((ReconstructionStatus)Sources[0].Status).RemainingOwnTurnStarts;
+        public ReconstructionEffectSnapshot(ReconstructionStatus status)
+            : base(StatusEffectKey.Reconstructing, new[] { new StatusEffectSourceSnapshot(status) }) { }
+    }
+
+    public sealed class BleedingEffectSnapshot : StatusEffectSnapshot
+    {
+        public IReadOnlyList<BleedingStack> Stacks => ((BleedingStatus)Sources[0].Status).Stacks;
+        public int RemainingAffectedSideStarts => ((BleedingStatus)Sources[0].Status).RemainingAffectedSideStarts;
+        public BleedingEffectSnapshot(BleedingStatus status) : base(StatusEffectKey.Bleeding, new[] { new StatusEffectSourceSnapshot(status) }) { }
+    }
+
+    public sealed class MovementRangeDecreaseEffectSnapshot : StatusEffectSnapshot
+    {
+        public int Magnitude => ((MovementRangeDecreaseStatus)Sources[0].Status).Magnitude;
+        public long ExpiresAtCompletedControllerTurnCount => ((MovementRangeDecreaseStatus)Sources[0].Status).ExpiresAtCompletedControllerTurnCount;
+        public MovementRangeDecreaseEffectSnapshot(MovementRangeDecreaseStatus status)
+            : base(StatusEffectKey.MovementRangeDecrease, new[] { new StatusEffectSourceSnapshot(status) }) { }
     }
 
     public sealed class ActionRestrictionEffectSnapshot : StatusEffectSnapshot

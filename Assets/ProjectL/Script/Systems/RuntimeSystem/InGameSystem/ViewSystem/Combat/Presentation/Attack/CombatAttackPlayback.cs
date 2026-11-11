@@ -1,3 +1,7 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.Render.Table.Effect.Enum;
@@ -37,6 +41,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private readonly CombatUnitPresentationWindow _presentation;
         private readonly Func<int> _generation;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatEventProfiler Profiler { get; set; }
+        private CombatPlaybackProfile _motionProfile = CombatEventProfiler.Unknown;
+
+#endif
         private readonly CombatAttackPresenter _attack = new();
         private readonly CombatProjectileFlights _flights;
         private readonly CombatHitFollowUps _followUps = new();
@@ -73,6 +82,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>공격 중 유닛·무기 표시가 사라져 연출을 끝낼 수 없게 됐는지입니다. 다음 Tick에서 오류로 알립니다.</summary>
         internal bool IsUnavailable => _unavailable;
 
+        /// <summary>다른 공격 출처가 열려 있는지입니다. 조기 공격이 출처 수명을 덮어쓰지 않도록 사용합니다.</summary>
+        internal bool HasSource => _gate.IsActive;
+
         /// <summary>공격이 끝났는지입니다.</summary>
         internal bool IsComplete => !_attack.IsPlaying && !_unavailable;
 
@@ -94,6 +106,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>남은 공격 연출과 겹쳐 이 사건을 시작해도 되는지입니다. 반응·걸음 같은 다른 재생 자원은 실행 목록(<see cref="CombatPresentationPlayers"/>)이 함께 봅니다.</summary>
         internal bool CanBegin(CombatEvent item) => _gate.CanBegin(item);
+
+        /// <summary>이 결과에서 실제 공격 히트에 대응하는 피해 대상 사건인지 확인합니다.</summary>
+        internal bool IsAttackHit(CombatCharacterEvent item) =>
+            HitSourceOf(item) != null;
+
+        /// <summary>기존 후속 대응표에서 히트로 해제되는 대상의 출처만 읽습니다.</summary>
+        internal CombatEvent HitSourceOf(CombatEvent item) =>
+            _followUps.TryGet(item, out var followUp) && followUp.ReleasedByHit &&
+            _followUps.IsHitTarget(followUp.Source, followUp.Target) ? followUp.Source : null;
 
         /// <summary>
         /// 활성 출처(공격·포효)가 사건 완료를 알렸고 아직 전체 종료 전인지입니다. 이때만 남은 연출(포효 작아지기 포함)과 다음 사건이 겹칠 수 있습니다.
@@ -120,6 +141,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         public void BeginSource(CombatEvent source, EntityId actorId, CombatHitCompletion completion, Action completed, int version)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var sourceProfile = Profiler?.Of(source) ?? CombatEventProfiler.Unknown;
+            _gate.Profile = sourceProfile;
+#endif
             _gate.Begin(source, actorId, completion, () =>
             {
                 if (version == _generation())
@@ -154,11 +179,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (shape != null && shape.AttackerId != actorId)
                 throw new ArgumentException($"[CombatAttackPlayback] 공격 모양의 공격자({shape.AttackerId})가 모션 행위자({actorId})와 다릅니다.", nameof(shape));
-            if (settings == null && !_presentation.TryGetAttackPresentation(actorId, out settings))
+            // 표시가 없는 공격자는 종류와 관계없이 false입니다(계약). 덮어쓰기 값이 있어도 표시는 봅니다(평가 C10-12).
+            if (settings == null ? !_presentation.TryGetAttackPresentation(actorId, out settings) : !_presentation.HasTarget(actorId))
                 return false;
             if (!HasCodeMotion(settings, shape == null))
                 return false;
             // 종류마다의 코드 모션은 그 종류의 전략이 정합니다(View 3라운드 W8).
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _motionProfile = Profiler?.AttackOf(actorId) ?? CombatEventProfiler.Unknown;
+            _flights.Profile = _motionProfile;
+#endif
             return CombatAttackStyles.Of(settings.Kind).TryBeginCodeMotion(this, actorId, shape, settings, mapper, hit, cue, end, version);
         }
 
@@ -198,7 +228,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             {
                 if (!_flights.Tick(deltaTime, attackVersion))
                     return false;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using (_motionProfile.MotionTick.Auto())
+                {
+                    _flights.Profile = _motionProfile;
+#endif
                 _attack.Tick(deltaTime);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                }
+#endif
             }
             finally
             {
@@ -241,6 +279,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (mapper == null) throw new ArgumentNullException(nameof(mapper));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _flights.Profile = Profiler?.AttackOf(shape.AttackerId) ?? CombatEventProfiler.Unknown;
+#endif
             Vector3 up = mapper.WorldUp.normalized;
             // 접촉 자리가 수평 길이 없이 정해질 때의 회전입니다(코드 모션과 같은 공격 방향, 계획 P5).
             Quaternion attackFacing = mapper.RotationToWorld(shape.Direction);

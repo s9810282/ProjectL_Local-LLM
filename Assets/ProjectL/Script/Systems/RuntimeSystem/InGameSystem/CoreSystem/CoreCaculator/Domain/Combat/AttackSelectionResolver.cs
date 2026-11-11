@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -22,69 +23,81 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public bool TryResolve(TargetingMethodSpec method, int range, CellCoord origin, Owner owner, AttackAim aim,
             out AttackCellSelection cells, out AttackFailureReason failureReason)
         {
+            AttackCellSelection resolved = null;
+            AttackFailureReason failure = default;
+            foreach (var _ in ResolveSteps(method, range, origin, owner, aim, (value, reason) =>
+                { resolved = value; failure = reason; })) { }
+            cells = resolved;
+            failureReason = failure;
+            return failure == AttackFailureReason.None;
+        }
+
+        internal static IEnumerable<string> ResolveSteps(TargetingMethodSpec method, int range, CellCoord origin, Owner owner,
+            AttackAim aim, Action<AttackCellSelection, AttackFailureReason> completed)
+        {
+            var failure = ValidateAim(method, range, origin, owner, aim);
+            if (failure != AttackFailureReason.None)
+            {
+                completed(null, failure);
+                yield return "SelectionInvalidAim";
+                yield break;
+            }
+            yield return "SelectionAimValidated";
+
+            if (method.ChoiceMode == TargetingChoiceMode.Single)
+            {
+                CellCoord primary = aim.Cell.Value;
+                var additional = AppointShapeCalculator.Translate(AppointShapeCalculator.CreateSplashOffsets(method.Splash), primary);
+                completed(new AttackCellSelection(primary, new[] { primary }, additional), AttackFailureReason.None);
+                yield return "SelectionMaskComplete";
+                yield break;
+            }
+            var cells = new List<CellCoord>();
+            var direction = method.ChoiceMode == TargetingChoiceMode.All ? (AttackDirection?)null : aim.Direction;
+            foreach (var offset in AppointShapeCalculator.MaskSteps(method.Shape, range, direction))
+            {
+                if (offset.HasValue && TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, CellCoord.Zero, offset.Value))
+                    cells.Add(new CellCoord(checked(origin.X + offset.Value.X), checked(origin.Y + offset.Value.Y)));
+                yield return "SelectionMaskItem";
+            }
+            completed(new AttackCellSelection(null, cells.ToArray(), Array.Empty<CellCoord>()), AttackFailureReason.None);
+            yield return "SelectionMaskComplete";
+        }
+
+        internal static AttackFailureReason ValidateAim(TargetingMethodSpec method, int range, CellCoord origin, Owner owner, AttackAim aim)
+        {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
             if (range < 0)
                 throw new ArgumentOutOfRangeException(nameof(range));
             TargetingAngleCalculator.Validate(method.ChoiceAngle, owner);
 
-            cells = null;
-            failureReason = AttackFailureReason.InvalidAttackAim;
             switch (method.ChoiceMode)
             {
                 case TargetingChoiceMode.Single:
                     if (aim.Kind != AttackAimKind.Cell ||
                         aim.Cell.HasValue == false || aim.Direction != AttackDirection.None)
-                        return false;
-                    if (AppointShapeCalculator.ContainsBaseMask(method.Shape, range,
-                        (long)aim.Cell.Value.X - origin.X, (long)aim.Cell.Value.Y - origin.Y) == false ||
+                        return AttackFailureReason.InvalidAttackAim;
+                    if (!AppointShapeCalculator.ContainsBaseMask(method.Shape, range,
+                        (long)aim.Cell.Value.X - origin.X, (long)aim.Cell.Value.Y - origin.Y) ||
                         !TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, origin, aim.Cell.Value))
-                    {
-                        failureReason = AttackFailureReason.InvalidPrimaryTarget;
-                        return false;
-                    }
+                        return AttackFailureReason.InvalidPrimaryTarget;
                     break;
                 case TargetingChoiceMode.Direction:
                     if (aim.Kind != AttackAimKind.Direction || aim.Cell.HasValue)
-                        return false;
-                    if (AppointShapeCalculator.IsDirectionSupported(method.Shape, aim.Direction) == false ||
+                        return AttackFailureReason.InvalidAttackAim;
+                    if (!AppointShapeCalculator.IsDirectionSupported(method.Shape, aim.Direction) ||
                         !TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, CellCoord.Zero,
                             AppointShapeCalculator.GetDirectionStep(aim.Direction)))
-                    {
-                        failureReason = AttackFailureReason.InvalidAttackDirection;
-                        return false;
-                    }
+                        return AttackFailureReason.InvalidAttackDirection;
                     break;
                 case TargetingChoiceMode.All:
-                    if (aim.Kind != AttackAimKind.All ||
-                        aim.Cell.HasValue || aim.Direction != AttackDirection.None)
-                        return false;
+                    if (aim.Kind != AttackAimKind.All || aim.Cell.HasValue || aim.Direction != AttackDirection.None)
+                        return AttackFailureReason.InvalidAttackAim;
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(method));
             }
-
-            cells = CalculateResolvedCells(method, range, origin, owner, aim);
-            failureReason = AttackFailureReason.None;
-            return true;
-        }
-
-        /// <summary>검증을 마친 지정 의도를 칸 집합으로 바꾼다. 칸 선택은 주 칸과 스플래시, 방향·전체는 모양의 칸을 쓴다.</summary>
-        private static AttackCellSelection CalculateResolvedCells(
-            TargetingMethodSpec method, int range, CellCoord origin, Owner owner, AttackAim aim)
-        {
-            if (method.ChoiceMode == TargetingChoiceMode.Single)
-            {
-                CellCoord primary = aim.Cell.Value;
-                CellCoord[] additional = AppointShapeCalculator.Translate(
-                    AppointShapeCalculator.CreateSplashOffsets(method.Splash), primary);
-                return new AttackCellSelection(primary, new[] { primary }, additional);
-            }
-
-            CellCoord[] offsets = method.ChoiceMode == TargetingChoiceMode.All
-                ? AppointShapeCalculator.CreateBaseMask(method.Shape, range)
-                : AppointShapeCalculator.CreateDirectionMask(method.Shape, range, aim.Direction);
-            return new AttackCellSelection(null, AppointShapeCalculator.Translate(
-                TargetingAngleCalculator.FilterOffsets(method.ChoiceAngle, owner, offsets), origin), Array.Empty<CellCoord>());
+            return AttackFailureReason.None;
         }
 
     }

@@ -71,16 +71,23 @@ half4 ProjectLStylizedBase(float2 uv)
 // 디졸브 텍스처는 기본 텍스처와 같은 UV 변환을 사용해 모든 Pass의 경계를 일치시킨다.
 float2 ProjectLStylizedDissolveMask(float2 uv)
 {
-    float noise = SAMPLE_TEXTURE2D(_DissolveTex, sampler_DissolveTex, uv).r;
+    float noise = 1.0;
+    UNITY_BRANCH
+    if (_DissolveAmount > 0.0 && _DissolveAmount < 1.0)
+        noise = SAMPLE_TEXTURE2D(_DissolveTex, sampler_DissolveTex, uv).r;
     return ProjectLDissolveMask(noise, _DissolveAmount, _DissolveEdgeWidth);
 }
 #endif
 
-void ProjectLStylizedClip(float2 uv)
+float ProjectLStylizedClip(float2 uv)
 {
     if (_AlphaClip > 0.5) clip(ProjectLStylizedBase(uv).a - _Cutoff);
 #if defined(PROJECTL_STYLIZED_DISSOLVE)
-    clip(ProjectLStylizedDissolveMask(uv).x - 0.5);
+    float2 mask = ProjectLStylizedDissolveMask(uv);
+    clip(mask.x - 0.5);
+    return mask.y;
+#else
+    return 0.0;
 #endif
 }
 

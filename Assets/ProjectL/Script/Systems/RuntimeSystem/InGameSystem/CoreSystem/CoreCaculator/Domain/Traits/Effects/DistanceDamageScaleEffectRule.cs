@@ -11,8 +11,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class DistanceDamageScaleEffectRule : IEffectTargetDistanceDamageRule
+    internal sealed class DistanceDamageScaleEffectRule : IEffectTargetDistanceDamageRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.None;
+
         private readonly DistanceDamageScaleTraitDefinition _definition;
         private readonly DistanceDamageScaleTraitRule _rule;
 

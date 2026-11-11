@@ -61,11 +61,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 presenter.BeginHit(settings, pose, damage, mapper, done, lost));
         }
 
-        internal CombatUnitReactionPresenter BeginDeath(EntityId id, CombatUnitReactionPresentationData settings,
-            ICombatUnitPose pose, FieldGridMapper mapper, Action releaseModel, Action completed, Action unavailable)
+        internal CombatUnitReactionPresenter BeginDeath(CombatCharacterEvent death, CombatUnitReactionPresentationData settings,
+            ICombatUnitPose pose, FieldGridMapper mapper, bool launchRagdoll, Action releaseModel, Action completed, Action unavailable)
         {
-            return Begin(id, true, completed, unavailable, (presenter, done, lost) =>
-                presenter.BeginDeath(settings, pose, mapper, releaseModel, done, lost));
+            return Begin(death.Final.EntityId, true, completed, unavailable, (presenter, done, lost) =>
+                presenter.BeginDeath(settings, pose, death, mapper, launchRagdoll, releaseModel, done, lost));
         }
 
         private CombatUnitReactionPresenter Begin(EntityId id, bool death, Action completed, Action unavailable,

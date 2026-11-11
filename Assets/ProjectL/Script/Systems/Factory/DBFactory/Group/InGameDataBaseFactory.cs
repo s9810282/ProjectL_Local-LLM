@@ -16,6 +16,7 @@ using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Artifact;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.ArtifactBoard;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Category;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Economy;
+using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Recovery;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
@@ -90,7 +91,11 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
             var enhancementSource = data.GetAllData().OfType<EnhancementDataTableSO>().SingleOrDefault();
             if (enhancementSource != null) new EnhancementTable(enhancementSource).ExportServices(builder);
             bool hasTraitGrowth = RegisterTraitGrowth(data, builder, unitTable, targetingMethodTable, categoryConfigTable.Config.DefaultTraits);
-            return new InGameDataBase(builder.BuildSystemReader(), enhancementSource != null, hasTraitGrowth);
+            // 적 AI 조정은 선택 테이블이다. 없으면 Core 결정 설정의 기본값을 쓴다.
+            var enemyAiTuningSource = data.GetAllData().OfType<EnemyAiTuningDataTableSO>().SingleOrDefault();
+            if (enemyAiTuningSource != null) new EnemyAiTuningTable(enemyAiTuningSource).ExportServices(builder);
+            return new InGameDataBase(builder.BuildSystemReader(), enhancementSource != null, hasTraitGrowth,
+                enemyAiTuningSource != null);
         }
 
         private static bool RegisterTraitGrowth(InGameGroup data, ISystemWriteSink builder,

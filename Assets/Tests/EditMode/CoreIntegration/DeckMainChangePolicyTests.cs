@@ -221,7 +221,7 @@ namespace ProjectL.Tests.CoreIntegration
 
         private static DeckEditDisplayModel Model(bool canEdit) => new(
             new[] { Card(3, true, false) },
-            new[] { Card(1, true, true), Card(2, false, true), null, null }, string.Empty, string.Empty, canEdit, false);
+            new[] { Card(1, true, true), Card(2, false, true), null, null }, canEdit, false, false, true);
 
         private static DeckEditCardModel Card(int id, bool main, bool inDeck) => new(
             new CharacterInstanceId(id), main ? EntityKey.Unit_MainCharacter : EntityKey.Unit_Akimbo, 1,

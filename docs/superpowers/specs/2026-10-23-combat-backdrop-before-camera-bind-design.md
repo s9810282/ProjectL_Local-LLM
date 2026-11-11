@@ -1,5 +1,7 @@
 # 전투 배경 맵을 카메라 연결 전에 세우기 — 설계 (A안)
 
+> **2026-11-09 대체 범위:** 배경 선생성 Node와 배경의 씬 수명은 유지한다. 맵 카메라 수집·표시 공급은 제거하고, 배경 생성 직후 옛 가상 카메라/Listener를 비활성·고유 이름으로 처리한다. 전투 시점과 조작 설정은 씬 공용 Binding에서 받는다. 최신 원본은 [씬 공용 카메라 설계](2026-11-08-combat-scene-camera-design.md)와 [사용 안내](../viewDocs/combat-camera-zoom-pose-guide.md)다. 아래 결정·구현 기록은 이전 시점 이력으로 보존한다.
+
 - 날짜: 2026-10-23
 - 상태: **결정 완료(2026-10-23 사용자): Q-B1~Q-B3 A, Q-B4 Stage 먼저, Q-B5 이것 먼저(§6).** BK-1(코드)·BK-2(문서) Stage에서 완료, 컴파일·Unity 미확인. BK-3은 Refector-Stage 병합 뒤. Task 계획 [backdrop-before-camera-bind-plan](../plans/2026-10-23-combat-backdrop-before-camera-bind-plan.md).
 - **대신함(2026-10-23, [골격 점검 설계](2026-10-23-combat-skeleton-check-design.md) K-4):** 이 문서의 `CombatViewSystem.BackdropEnterPriority`·`GameBootstrap.BindCamerasPriority`는 순서 표 `RuntimeSystem/Common/SceneNodeOrder.cs`의 `CombatBackdrop`(= `BindCameras` − 5)·`BindCameras`가 됐다. "순서 원본은 안내 §1.1 표"는 "숫자 원본은 `SceneNodeOrder`, 안내 §1.1은 그것을 가리키는 전체 표"로 읽는다.

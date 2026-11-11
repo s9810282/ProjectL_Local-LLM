@@ -9,18 +9,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public TraitKey Key { get; }
         public int Amount { get; }
         public int? SecondAmount { get; }
+        public bool PreventsLethalSacrificeDamage { get; }
+        public bool ExemptsAlliedAttackRangePenalty { get; }
 
-        public TraitRankValues(TraitKey key, int amount, int? secondAmount = null)
+        public TraitRankValues(TraitKey key, int amount, int? secondAmount = null,
+            bool preventsLethalSacrificeDamage = false, bool exemptsAlliedAttackRangePenalty = false)
         {
-            bool two = key == TraitKey.Cohesion || key == TraitKey.TrackingShot;
+            bool two = key == TraitKey.Cohesion || key == TraitKey.TrackingShot || key == TraitKey.Rampage;
             if (two != secondAmount.HasValue || amount < 0 || secondAmount < 0)
                 throw new ArgumentException("등급 수치의 개수 또는 값이 올바르지 않습니다.");
+            if (key == TraitKey.DustScreen && amount != 0)
+                throw new ArgumentException("모래 장막 등급은 수치 변경을 지정할 수 없습니다.", nameof(amount));
+            if (key == TraitKey.Bleeding && amount == 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
             if ((key == TraitKey.Taunt || key == TraitKey.Entrenchment || key == TraitKey.ArmorBreaker ||
                 key == TraitKey.CallOfBlood || key == TraitKey.TrackingShot) && amount > 100)
                 throw new ArgumentOutOfRangeException(nameof(amount));
+            if (preventsLethalSacrificeDamage && key != TraitKey.Sacrifice)
+                throw new ArgumentException("희생 등급에만 치명 피해 방지를 지정할 수 있습니다.", nameof(preventsLethalSacrificeDamage));
+            if (exemptsAlliedAttackRangePenalty && key != TraitKey.DustScreen)
+                throw new ArgumentException("모래 장막 등급에만 아군 사거리 감소 면제를 지정할 수 있습니다.", nameof(exemptsAlliedAttackRangePenalty));
             Key = key;
             Amount = amount;
             SecondAmount = secondAmount;
+            PreventsLethalSacrificeDamage = preventsLethalSacrificeDamage;
+            ExemptsAlliedAttackRangePenalty = exemptsAlliedAttackRangePenalty;
         }
 
         internal static TraitRankValues FromNormal(TraitSpec normal) => normal switch
@@ -42,6 +55,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             TrackingShotTraitSpec t => new(t.TraitKey, t.TargetHealthThresholdPercent, t.ExtraDamagePercent),
             HunterTraitSpec t => new(t.TraitKey, t.AttackPerTargetKill),
             FocusedBombardmentTraitSpec t => new(t.TraitKey, t.ExtraDamagePercent),
+            RampageTraitSpec t => new(t.TraitKey, t.MovementBonus, t.RankAttackBonus),
+            DustScreenTraitSpec t => new(t.TraitKey, 0, exemptsAlliedAttackRangePenalty: t.ExemptsAlliedAttackRangePenalty),
+            SacrificeTraitSpec t => new(t.TraitKey, t.ShieldOnActivation, preventsLethalSacrificeDamage: t.PreventsLethalSacrificeDamage),
+            BleedingTraitSpec t => new(t.TraitKey, t.DamagePerStack),
             _ => throw new ArgumentException("등급 수치가 정의되지 않은 특성입니다.", nameof(normal))
         };
 
@@ -68,6 +85,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 TrackingShotTraitSpec => new TrackingShotTraitSpec(Amount, SecondAmount.Value),
                 HunterTraitSpec t => new HunterTraitSpec(Amount, t.MaxRewardsPerStage),
                 FocusedBombardmentTraitSpec t => new FocusedBombardmentTraitSpec(t.RequiredEnemyCount, Amount),
+                RampageTraitSpec => new RampageTraitSpec(((RampageTraitSpec)normal).BaseAttackBonus, SecondAmount.Value, Amount),
+                DustScreenTraitSpec t => new DustScreenTraitSpec(t.AttackRangeReduction, t.AttackDamageReductionPercent,
+                    t.OpposingTurnEndsToExpire, ExemptsAlliedAttackRangePenalty),
+                SacrificeTraitSpec t => new SacrificeTraitSpec(t.RadiusCells, t.MaxTriggersPerEnemyTurn, PreventsLethalSacrificeDamage, Amount),
+                BleedingTraitSpec => new BleedingTraitSpec(Amount),
                 _ => throw new ArgumentException("등급 수치가 정의되지 않은 특성입니다.", nameof(source))
             };
         }

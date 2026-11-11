@@ -116,7 +116,7 @@ namespace ProjectL.Tests.Core
         {
             var input = MovementTestData.SafeRoute(new CellCoord(1, 1),new CellCoord(2, 1),new CellCoord(3, 1));
             var s = input.State;
-            var state = new CombatCommandState(8,8,s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 5, 15),
+            var state = new CombatCommandState(8,8,s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 5, 15),
                     new ThornFieldCellSnapshot(new CellCoord(3, 1), 5, 15) },s.Turn,s.Environment);
             input = Items(CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId == input.ActorId ? Equip(c, 60, 1) : c).ToArray(), state));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
@@ -140,7 +140,7 @@ namespace ProjectL.Tests.Core
         {
             var input = CliffFallTests.Knockback();
             var s = input.State;
-            var state = new CombatCommandState(8,8,s.Phase,s.IsNight,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 15) },s.Turn,s.Environment);
+            var state = new CombatCommandState(8,8,s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 15) },s.Turn,s.Environment);
             input = Items(CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId.Value == 2 ? Equip(c, 80, 1) : c).ToArray(), state));
             var result = CombatCommandCalculator.Calculate(input, NoRules);
             Assert.That(result.Accepted, Is.True, result.Reason);

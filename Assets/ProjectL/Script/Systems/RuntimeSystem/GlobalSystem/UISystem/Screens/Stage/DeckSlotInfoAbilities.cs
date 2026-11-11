@@ -1,30 +1,46 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 {
-    /// <summary>특성 수에 맞는 영역을 고릅니다. 세 개를 넘는 특성도 복제 슬롯에 전달합니다.</summary>
+    /// <summary>상세창의 병종·유닛 고유·추가 특성에 표시값을 전달합니다.</summary>
     [Serializable]
     internal sealed class DeckSlotInfoAbilities
     {
-        private const int ExpandedAreaSlotCount = 3;
-
-        [SerializeField] private DeckSlotAbilityArea area2 = new();
-        [SerializeField] private DeckSlotAbilityArea area3 = new();
+        [SerializeField] private ScrollRect scroll;
+        [SerializeField] private DeckSlotCategoryAbility category = new();
+        [SerializeField] private DeckSlotAbilitySection unit = new();
+        [SerializeField] private DeckSlotAbilitySection growth = new();
 
         internal void Validate(Transform owner)
         {
-            if (area2 == null || area3 == null) throw DeckSlotInfoReferences.Error(owner, "abilities.area2·area3가 필요합니다.");
-            area2.Validate(owner, 2);
-            area3.Validate(owner, ExpandedAreaSlotCount);
-            if (area2.Root == area3.Root || area2.Root.IsChildOf(area3.Root) ||
-                area3.Root.IsChildOf(area2.Root))
-                throw DeckSlotInfoReferences.Error(owner, "abilities의 두 영역은 서로 분리돼야 합니다.");
+            DeckSlotInfoReferences.RequireChild(scroll, owner, "abilities.scroll");
+            DeckSlotInfoReferences.RequireChild(scroll.content, scroll.transform, "abilities.scroll.content");
+            if (!scroll.enabled || !scroll.vertical || scroll.horizontal || scroll.viewport == null ||
+                !scroll.content.IsChildOf(scroll.viewport) ||
+                !scroll.viewport.TryGetComponent(out RectMask2D mask) || !mask.enabled ||
+                !scroll.content.TryGetComponent(out VerticalLayoutGroup layout) || !layout.enabled ||
+                !scroll.content.TryGetComponent(out ContentSizeFitter fitter) || !fitter.enabled ||
+                fitter.verticalFit != ContentSizeFitter.FitMode.PreferredSize)
+                throw DeckSlotInfoReferences.Error(owner, "abilities.scroll에는 세로 스크롤·뷰포트 마스크·세로 자동 배치가 필요합니다.");
+            if (unit == null || growth == null)
+                throw DeckSlotInfoReferences.Error(owner, "abilities.unit·growth 영역이 필요합니다.");
+            unit.Validate(owner, "abilities.unit");
+            growth.Validate(owner, "abilities.growth");
+            if (unit.Root.parent != scroll.content || growth.Root.parent != scroll.content || unit.Root == growth.Root)
+                throw DeckSlotInfoReferences.Error(owner, "abilities.unit·growth는 스크롤 콘텐츠의 서로 다른 직계 자식이어야 합니다.");
+            if (category == null)
+                throw DeckSlotInfoReferences.Error(owner, "abilities.category 영역이 필요합니다.");
+            category.Validate(owner);
         }
+
+        internal void BindInput() => category.BindInput();
 
         internal void ValidateContent(UnitCardTraitContent[] contents)
         {
@@ -34,67 +50,105 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         internal void Render(UnitCardTraitContent[] contents)
         {
             ValidateContent(contents);
-            bool three = contents.Length >= ExpandedAreaSlotCount;
-            area2.Render(three ? Array.Empty<UnitCardTraitContent>() : contents, !three);
-            area3.Render(three ? contents : Array.Empty<UnitCardTraitContent>(), three);
+            category.Render(contents);
+            unit.Render(contents, TraitOrigin.Unit);
+            growth.Render(contents, TraitOrigin.Growth);
+
+            // 세로 레이아웃은 같은 부모 아래의 형제 순서를 따릅니다.
+            if (unit.Root.GetSiblingIndex() > growth.Root.GetSiblingIndex())
+                unit.Root.SetSiblingIndex(growth.Root.GetSiblingIndex());
+        }
+
+        internal void ResetForSelection()
+        {
+            category.ClearHover();
+            scroll.StopMovement();
+            scroll.content.anchoredPosition = Vector2.zero;
         }
     }
 
-    /// <summary>저작 슬롯의 공통 부모가 추가 슬롯도 소유합니다. 복제본은 마지막 저작 슬롯 뒤에서 재사용합니다.</summary>
+    /// <summary>병종 특성 하나의 아이콘과 호버 설명을 소유합니다.</summary>
     [Serializable]
-    internal sealed class DeckSlotAbilityArea
+    internal sealed class DeckSlotCategoryAbility : IUIInputReceiver
     {
-        [SerializeField] private DeckSlotAbilityContent[] slots = Array.Empty<DeckSlotAbilityContent>();
-        private readonly List<DeckSlotAbilityContent> _extraSlots = new();
+        [SerializeField] private Button button;
+        [SerializeField] private Image icon;
+        [SerializeField] private UnitAbilityTooltip tooltip = new();
 
-        // Validate에서 슬롯과 공통 부모를 먼저 확인한 뒤 사용합니다.
-        internal Transform Root => slots[0].Root.parent;
+        private UIInputBinding _input;
+        private UnitCardTraitContent _content;
 
-        internal void Validate(Transform owner, int slotCount)
+        internal void Validate(Transform owner)
         {
-            string field = $"abilities.area{slotCount}";
-            if (slots == null || slots.Length != slotCount)
-                throw DeckSlotInfoReferences.Error(owner, field + $": 직접 배치한 슬롯 {slotCount}개가 필요합니다.");
-            for (int i = 0; i < slots.Length; i++)
-            {
-                if (slots[i] == null) throw DeckSlotInfoReferences.Error(owner, $"{field}.slots[{i}]가 필요합니다.");
-                slots[i].Validate(owner, $"{field}.slots[{i}]");
-                for (int j = 0; j < i; j++)
-                    if (slots[i].Root == slots[j].Root) throw DeckSlotInfoReferences.Error(owner, field + ": 중복 슬롯 참조입니다.");
-            }
-            DeckSlotInfoReferences.RequireChild(Root, owner, field + ".slots[0].root.parent");
-            for (int i = 0; i < slots.Length; i++)
-            {
-                if (slots[i].Root.parent != Root)
-                    throw DeckSlotInfoReferences.Error(owner, $"{field}.slots[{i}].root는 같은 영역의 직계 자식이어야 합니다.");
-            }
+            DeckSlotInfoReferences.RequireChild(button, owner, "abilities.category.button");
+            DeckSlotInfoReferences.RequireChild(icon, button.transform, "abilities.category.icon");
+            if (button.targetGraphic == null || button.targetGraphic == icon || !button.targetGraphic.raycastTarget ||
+                !button.targetGraphic.transform.IsChildOf(button.transform))
+                throw DeckSlotInfoReferences.Error(owner, "abilities.category.button에 아이콘과 별도의 Raycast Target Graphic이 필요합니다.");
+            if (tooltip == null)
+                throw DeckSlotInfoReferences.Error(owner, "abilities.category.tooltip 참조가 필요합니다.");
+            tooltip.Validate(button.transform, "abilities.category.tooltip");
         }
 
-        internal void Render(UnitCardTraitContent[] contents, bool visible)
+        internal void BindInput()
         {
-            EnsureCapacity(contents.Length);
-            for (int i = 0; i < slots.Length; i++)
-                slots[i].Render(i < contents.Length ? contents[i] : default, i < contents.Length);
-            for (int i = 0; i < _extraSlots.Count; i++)
-            {
-                int contentIndex = slots.Length + i;
-                _extraSlots[i].Render(contentIndex < contents.Length ? contents[contentIndex] : default,
-                    contentIndex < contents.Length);
-            }
-            Root.gameObject.SetActive(visible);
+            tooltip.Hide();
+            button.gameObject.SetActive(false);
+            _input = UIInputBinding.Attach(button, this, 0, hasHover: true);
         }
 
-        private void EnsureCapacity(int count)
+        internal void Render(UnitCardTraitContent[] contents)
         {
-            DeckSlotAbilityContent template = slots[slots.Length - 1];
-            int required = count - slots.Length;
-            while (_extraSlots.Count < required)
+            int index = Array.FindIndex(contents, content => content.Origin == TraitOrigin.Category);
+            bool visible = index >= 0;
+            _content = visible ? contents[index] : default;
+            icon.sprite = _content.Icon;
+            icon.enabled = _content.Icon != null;
+            if (!visible) ClearHover();
+            button.gameObject.SetActive(visible);
+            if (tooltip.Panel.activeSelf) tooltip.Show(_content);
+        }
+
+        internal void ClearHover() => _input.OnHoverExit();
+
+        // 병종 특성 설명의 입력은 호버로만 받습니다.
+        void IUIInputReceiver.Click(int slot) { }
+        void IUIInputReceiver.HoverEnter(int slot) => tooltip.Show(_content);
+        void IUIInputReceiver.HoverExit(int slot) => tooltip.Hide();
+    }
+
+    /// <summary>한 출처의 카드 슬롯을 순서대로 채우고 재사용합니다.</summary>
+    [Serializable]
+    internal sealed class DeckSlotAbilitySection
+    {
+        [SerializeField] private RectTransform root;
+        [SerializeField] private DeckSlotAbilityContent template = new();
+        private readonly List<DeckSlotAbilityContent> _slots = new();
+
+        internal RectTransform Root => root;
+
+        internal void Validate(Transform owner, string field)
+        {
+            DeckSlotInfoReferences.RequireChild(root, owner, field + ".root");
+            if (template == null) throw DeckSlotInfoReferences.Error(owner, field + ".template이 필요합니다.");
+            template.Validate(root, field + ".template");
+            if (template.Root.parent.parent != root ||
+                !template.Root.parent.TryGetComponent(out VerticalLayoutGroup layout) || !layout.enabled)
+                throw DeckSlotInfoReferences.Error(owner, field + ".template은 영역 내부의 세로 목록에 연결해야 합니다.");
+        }
+
+        internal void Render(UnitCardTraitContent[] contents, TraitOrigin origin)
+        {
+            if (_slots.Count == 0) _slots.Add(template);
+            int count = 0;
+            foreach (UnitCardTraitContent content in contents)
             {
-                DeckSlotAbilityContent clone = template.Clone(Root);
-                // 같은 위치에 겹치고 원래 3번 슬롯이 앞에 그려지도록 둡니다.
-                clone.Root.SetSiblingIndex(template.Root.GetSiblingIndex());
-                _extraSlots.Add(clone);
+                if (content.Origin != origin) continue;
+                if (count == _slots.Count) _slots.Add(template.Clone(template.Root.parent));
+                _slots[count++].Render(content, true);
             }
+            for (int i = count; i < _slots.Count; i++) _slots[i].Render(default, false);
+            root.gameObject.SetActive(count > 0);
         }
     }
 

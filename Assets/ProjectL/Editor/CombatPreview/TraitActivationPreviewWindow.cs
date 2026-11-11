@@ -60,8 +60,8 @@ namespace ProjectL.Tool.Editor
                 EditorGUILayout.HelpBox(PreviewPlayStartScene.Error, MessageType.Error);
             TraitActivationPreviewHost host = TraitActivationPreviewBridge.Host;
             EditorGUILayout.LabelField(host != null ? host.Status : "테스트 환경 대기", EditorStyles.wordWrappedLabel);
-            if (host != null && !host.HasMapCamera)
-                EditorGUILayout.HelpBox("맵 카메라가 연결되지 않아 줌·흔들림 검증은 지원하지 않습니다.", MessageType.Warning);
+            if (host != null && !host.HasSceneCamera)
+                EditorGUILayout.HelpBox("공용 전투 카메라 연결이 필요합니다. 확인 씬의 Scene Camera 참조를 확인하세요.", MessageType.Warning);
             bool nextMode = GUILayout.Toolbar(scenarioMode ? 1 : 0, new[] { "간단 재생", "조립 재생" }) == 1;
             if (nextMode != scenarioMode)
             {

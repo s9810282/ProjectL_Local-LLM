@@ -6,6 +6,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.ShopView;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -20,7 +21,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
     /// "제출 중" 사실은 영수증(<see cref="_pending"/>) 하나만 갖습니다.
     /// 구매와 완료가 끝나도 플레이어가 떠난다를 누를 때까지 화면을 남깁니다(공통 레이아웃 설계 SO7, <see cref="_awaitingExit"/>).
     /// </summary>
-    internal sealed class ShopPopupController : IPopupViewController, IStageOfferInput, IDisposable
+    /// <remarks>
+    /// 회복·증강과 달리 씬과 독립적인 요청 소유자(<c>ViewRequestExecution</c>)를 쓰지 않고 씬 수명 컨트롤러가 직접 제출합니다.
+    /// 씬을 떠나면 제출 전 요청이 취소되는 것이 의도된 정책이기 때문입니다(스테이지 선택 리팩토링 설계 §2.7 Q-SR9 A).
+    /// </remarks>
+    internal sealed class ShopPopupController : IPopupViewController, IStageOfferInput, IStageMapViewPopup
     {
         private readonly ShopPopupModelBuilder _models;
         private readonly ICurrentProgressBufferReadSink _current;
@@ -32,6 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         private readonly Action<string> _report;
         private readonly IStageOfferDisplay _screen;
         private readonly IStageOfferTextTableQuery _texts;
+        private readonly IAudioSystemService _audio;
         private readonly StagePopupViewLifetime _lifetime;
         // 훈련소 단계가 바뀐 직후의 입력을 버리는 시간입니다. 더블클릭의 두 번째 클릭이 바뀐 화면의 같은 자리를 누르지 않게 합니다.
         private const float StepInputLockSeconds = 0.2f;
@@ -40,7 +46,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         private CurrentShopData _displayContext;
         private int _stageKey;
         private bool _displayActive;
-        private bool _skipNextRestore;
         // 구매와 완료가 모두 수락돼 떠난다만 남았습니다. 그린 화면을 유지하고 다시 그리지 않습니다.
         private bool _awaitingExit;
 
@@ -49,7 +54,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             IStageCommandResultReadSink results, IUISystemService ui, IStageOfferDisplay screen,
             PopupInputSession popupInput, IPopupViewHost host,
             Action mapChanged, Action<string> report, RuntimeFaultBoundary faults, IStageOfferTextTableQuery texts,
-            StageMapScreenPresentation presentation = null)
+            IAudioSystemService audio, StageMapScreenPresentation presentation = null)
         {
             _models = models ?? throw new ArgumentNullException(nameof(models));
             _current = current ?? throw new ArgumentNullException(nameof(current));
@@ -61,12 +66,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             _mapChanged = mapChanged ?? throw new ArgumentNullException(nameof(mapChanged));
             _report = report ?? throw new ArgumentNullException(nameof(report));
             _texts = texts ?? throw new ArgumentNullException(nameof(texts));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
             _lifetime = new StagePopupViewLifetime("ShopPopup", ui, new StageOfferPopupViewScreen(screen), popupInput,
                 this, host, faults, presentation);
         }
 
         internal bool IsOpen => _lifetime.IsOpen;
         internal bool IsWaiting => _pending.Number > 0;
+        bool IStageMapViewPopup.IsOpen => IsOpen;
+        bool IStageMapViewPopup.IsWaiting => IsWaiting;
+        void IStageMapViewPopup.Start() => Start();
+        void IStageMapViewPopup.Tick() => Tick();
         internal int ChapterKey { get; private set; }
         internal StageNodeId NodeId { get; private set; }
         private bool CanWork => _lifetime.CanWork;
@@ -90,18 +100,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             ChapterKey = 0;
             NodeId = StageNodeId.Empty;
             _stageKey = 0;
-            _skipNextRestore = false;
             _awaitingExit = false;
-            // 공유 화면의 수신자는 수명 부품이 현재 연결일 때만 끊습니다. 입력 Buffer도 현재 연결의 것만 비웁니다.
-            _lifetime.Dispose(() => CleanupErrors.RunAll("[ShopPopup] 제출 정리 중 실패했습니다.",
-                BlockSubmission, () => { if (_lifetime.IsCurrent) _writer.Clear(); }),
-                () => _screen.BindInput(null));
+            // 공유 화면의 수신자는 수명 부품이 현재 연결일 때만 끊습니다.
+            // 상점 입력 Buffer 비우기는 맵 입력 Buffer와 함께 System 한 곳이 맡습니다(평가 N-06). 여기서는 새 제출만 막습니다.
+            _lifetime.Dispose(BlockSubmission, () => _screen.BindInput(null));
         }
 
         internal bool TryRestore(int mapKey)
         {
+            // 완료한 방문은 노드가 클리어돼 문맥 잡기(TryCaptureContext)가 받지 않습니다. 따로 1회 억제 깃발을 두지 않습니다(평가 C-15·N-22).
             if (!_lifetime.CanOpen || IsWaiting || _input.Commands.Count != 0) return false;
-            if (_skipNextRestore) { _skipNextRestore = false; return false; }
             if (!TryCaptureContext(mapKey) || !CanWork) return false;
             try
             {
@@ -147,31 +155,39 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             if (_lifetime.IsCurrent) _screen.SetCanSubmit(false);
         }
 
+        // 입력 의도는 EventSystem 콜백(Tick 밖)에서 옵니다. 판정·모델 단계 예외도 오류 경계로 보냅니다(평가 N-81).
         void IStageOfferInput.SelectCard(int index)
         {
-            if (!CanSubmitNow() || IsStepInputLocked) return;
-            if (_models.TrySelectUnit(index)) Redraw();
-            else if (_models.TryGetCommand(index, out ShopViewCommandData command)) Submit(command);
+            try
+            {
+                if (!CanSubmitNow() || IsStepInputLocked) return;
+                if (_models.TrySelectUnit(index)) Redraw();
+                else if (_models.TryGetCommand(index, out ShopViewCommandData command)) Submit(command);
+            }
+            catch (Exception error)
+            {
+                _lifetime.Report(error);
+            }
         }
 
         void IStageOfferInput.Exit()
         {
-            if (!CanSubmitNow() || IsStepInputLocked) return;
-            if (_models.TryBack())
-            {
-                Redraw();
-                return;
-            }
-            if (!_awaitingExit)
-            {
-                Submit(ShopViewCommandData.Complete(_models.Context));
-                return;
-            }
-            // 완료는 구매 때 이미 수락됐으므로 명령 없이 닫습니다. 예외는 오류 경계에 보고합니다(EventSystem은 수신부 예외를 기록만 합니다).
             try
             {
+                if (!CanSubmitNow() || IsStepInputLocked) return;
+                if (_models.TryBack())
+                {
+                    Redraw();
+                    return;
+                }
+                if (!_awaitingExit)
+                {
+                    Submit(ShopViewCommandData.Complete(_models.Context));
+                    return;
+                }
+                // 완료는 구매 때 이미 수락됐으므로 명령 없이 닫습니다.
                 _screen.SetCanSubmit(false);
-                if (CanWork) CloseAndRefresh(true);
+                if (CanWork) CloseAndRefresh();
             }
             catch (Exception error)
             {
@@ -300,12 +316,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         {
             bool completed = result.CompletionResult != null && result.CompletionResult.Accepted;
             bool close = completed && result.Kind == ShopCommandKind.Complete;
+            bool spentGold = false;
+            bool upgradedTrait = false;
             if (result.Kind != ShopCommandKind.Complete)
             {
                 var failure = result.PurchaseResult.FailureReason;
                 switch (ShopResultPolicy.ClassifyPurchase(failure))
                 {
                     case ShopResultCategory.Success:
+                        spentGold = PurchasePrice(result) > 0;
+                        upgradedTrait = result.Kind == ShopCommandKind.PurchaseTraining;
                         // 완료가 실패했으면 떠난다가 완료를 다시 냅니다.
                         _awaitingExit = completed;
                         if (!completed) _report("구매는 처리됐지만 상점 완료는 처리되지 않았습니다.");
@@ -350,8 +370,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             _writer.RemoveCommandsThrough(_pending.Number);
             _pending = default;
             if (!CanWork) return;
+            if (spentGold) _audio.Play(AmbgmEvent.UseMoney);
+            if (upgradedTrait) _audio.Play(UiEvent.Upgrade);
             _screen.SetCanSubmit(!close && CanSubmitNow());
-            if (CanWork && close) CloseAndRefresh(completed);
+            if (CanWork && close) CloseAndRefresh();
+        }
+
+        private int PurchasePrice(ShopCommandResult result)
+        {
+            if (result.Kind == ShopCommandKind.PurchaseTraining)
+                return result.PurchaseResult.Training?.Price
+                    ?? throw new InvalidOperationException($"[ShopPopup] 요청 {result.RequestNumber}의 훈련 영수증이 없습니다.");
+
+            if (!_displayContext.TryGetOffer(result.OfferId, out var offer))
+                throw new InvalidOperationException($"[ShopPopup] 요청 {result.RequestNumber}의 구매 상품({result.OfferId})이 없습니다.");
+            return offer.Cost;
         }
 
         private void ReconcileWithoutRequest()
@@ -362,7 +395,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             if (!MatchesDisplayContext() || _stages.IsCleared(ChapterKey, NodeId.Value))
             {
                 BlockSubmission();
-                if (CanWork) CloseAndRefresh(false);
+                if (CanWork) CloseAndRefresh();
                 return;
             }
             // 구매 마크가 외부 처리 중 바뀌어도 현재 방문의 Buffer 값으로 다시 그립니다.
@@ -377,11 +410,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
             }
         }
 
-        private void CloseAndRefresh(bool returnToSelection)
+        /// <summary>
+        /// 닫고 맵을 다시 그립니다. 완료든 불일치든 선택 화면으로 돌아갑니다. 다시 그린 맵이 복원을 예약하므로,
+        /// 끝나지 않은 방문이면 지금 Buffer의 방문 상태로 다시 열리고, 끝난 방문이면 선택 화면이 돌아옵니다(평가 C-15).
+        /// </summary>
+        private void CloseAndRefresh()
         {
-            _skipNextRestore = true;
             _awaitingExit = false;
-            if (IsOpen) _lifetime.CloseThen(returnToSelection, FinishCloseAndRefresh);
+            if (IsOpen) _lifetime.CloseThen(true, FinishCloseAndRefresh);
             else FinishCloseAndRefresh();
         }
 

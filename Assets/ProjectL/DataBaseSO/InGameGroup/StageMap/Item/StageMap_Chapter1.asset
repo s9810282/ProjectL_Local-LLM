@@ -18,26 +18,31 @@ MonoBehaviour:
   widthMin: 2
   singleFirstLayer: 1
   firstStageKey: 1120
-  additionalConnectionChance: 0.25
+  additionalConnectionChance: 0.1
+  minimumBranchCount: 1
   connectionAlgorithm: 0
   nearestConnectionWeight: 10
   otherConnectionWeight: 1
   seed: 192
   randomizeSeedEachRun: 1
-  nextChapterKey: 2
+  nextChapterKey: 0
   combatDistribution:
     weight: 80
     minimumCount: 1
     minDepth: 1
+    reduceConsecutive: 0
   shopDistribution:
     weight: 9
     minimumCount: 1
     minDepth: 2
+    reduceConsecutive: 1
   recoveryDistribution:
     weight: 7
     minimumCount: 1
     minDepth: 2
+    reduceConsecutive: 1
   enhancementDistribution:
     weight: 7
     minimumCount: 1
     minDepth: 2
+    reduceConsecutive: 1

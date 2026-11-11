@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
 {
@@ -21,6 +22,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly HashSet<EntityId> _auxiliary = new();
         private Dictionary<EntityId, int> _before;
         private IReadOnlyDictionary<EntityId, int> _recoveryBefore;
+        // 범위 시작의 캐릭터 사실(입력 목록 참조만)과, 피격 체력 고정 때 재구성이 일어난 캐릭터입니다(재구성 연출 설계 RE3, 공격 미리보기 칸).
+        // 적 AI 후보 평가도 이 길을 지나므로 명령마다 모든 캐릭터를 훑거나 표를 만들지 않습니다. 재구성이 일어났을 때만 집합을 만듭니다(묶음 끝 검토 L5).
+        private IReadOnlyList<CharacterCombatFacts> _scopeCharacters;
+        private HashSet<EntityId> _reconstructed;
         internal List<TraitActivationSnapshot> Reactions { get; } = new();
         internal IEnumerable<EntityId> HitIds => _contacts.Keys.Concat(_auxiliary).Distinct();
         internal IReadOnlyList<AttackHitContactSnapshot> Contacts(EntityId id) => _contacts.TryGetValue(id, out var values) ? values : Array.Empty<AttackHitContactSnapshot>();
@@ -42,6 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _before = plan.Input.Characters.ToDictionary(c => c.EntityId, c => c.Health.CurrentHealth);
             foreach (var structure in plan.Input.State.Structures) _before.Add(structure.EntityId, structure.Health.CurrentHealth);
             _recoveryBefore = world.Damage.CaptureRecovery();
+            _scopeCharacters = plan.Input.Characters;
         }
         internal void RecordContact(EntityId recipient, EntityId original, int index, AttackTargetRole role, int percent, CombatDamageOrigin origin)
         {
@@ -59,7 +65,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private Dictionary<EntityId, HealthStateSnapshot> _hitHealth;
         private IReadOnlyDictionary<EntityId, int> _recovery;
         private readonly List<AttackKnockbackSnapshot> _knockbacks = new();
+        private readonly HashSet<EntityId> _collisionVictims = new();
         internal IReadOnlyCollection<EntityId> PreHitTargets { get; private set; } = Array.Empty<EntityId>();
+        /// <summary>
+        /// 작렬로 날아온 유닛에 부딪혀 피해를 받은 유닛이다. 피격 대상(<see cref="HitIds"/>)이 아니라 미리보기 보조 행으로만 나간다.
+        /// 넉백 후보는 넉백 시작 때 고정돼 여기 들어온 유닛은 밀리지 않는다.
+        /// </summary>
+        internal IReadOnlyCollection<EntityId> CollisionVictims => _collisionVictims;
+        internal void AddCollisionVictim(EntityId id) => _collisionVictims.Add(id);
         /// <summary>이 공격의 넉백 요약이다. 처리 순서로 쌓인다. 추가 공격은 자기 기록을 따로 가진다(설계 2026-10-27 §5.2).</summary>
         internal IReadOnlyList<AttackKnockbackSnapshot> Knockbacks => _knockbacks;
 
@@ -138,8 +151,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (world == null) throw new ArgumentNullException(nameof(world));
             // 회복량은 사건 목록에서 다시 계산하지 않고, 피해 적용 경계가 실제 적용량을 기록한 값을 이 시점에 고정한다.
             _recovery = world.Damage.CaptureRecovery();
-            _hitHealth = HitIds.Concat(_knockbacks.Select(k => k.TargetId)).Distinct().ToDictionary(id => id, id => world.Characters.TryGetValue(id, out var c)
+            _hitHealth = HitIds.Concat(_knockbacks.Select(k => k.TargetId)).Concat(_collisionVictims).Distinct().ToDictionary(id => id, id => world.Characters.TryGetValue(id, out var c)
                 ? c.Health : world.Structures[id].Health);
+            // 재구성 판정은 재구성 규칙 한 곳이 정합니다. 장부는 고정한 대상마다 범위 시작·지금 사실을 넘기기만 합니다.
+            _reconstructed = null;
+            foreach (EntityId id in _hitHealth.Keys)
+            {
+                if (!world.Characters.TryGetValue(id, out var after) || !TryGetScopeCharacter(id, out var before)) continue;
+                if (ReconstructionTraitRule.Triggered(before, after))
+                    (_reconstructed ??= new HashSet<EntityId>()).Add(id);
+            }
+        }
+
+        /// <summary>이 공격으로 그 캐릭터의 재구성이 일어났는지입니다(피격 체력 고정 시점까지). 공격 결과·미리보기 칸이 읽습니다.</summary>
+        internal bool Reconstructed(EntityId id)
+        {
+            if (_hitHealth == null) throw new InvalidOperationException("피격 체력을 아직 고정하지 않았습니다.");
+            return _reconstructed != null && _reconstructed.Contains(id);
+        }
+
+        private bool TryGetScopeCharacter(EntityId id, out CharacterCombatFacts character)
+        {
+            if (_scopeCharacters != null)
+                for (int i = 0; i < _scopeCharacters.Count; i++)
+                    if (_scopeCharacters[i].EntityId == id)
+                    {
+                        character = _scopeCharacters[i];
+                        return true;
+                    }
+            character = null;
+            return false;
         }
 
         internal int Expected(EntityId id) => _expected.GetValueOrDefault(id);

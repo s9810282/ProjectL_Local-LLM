@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// 시작·존재하는 중간 이벤트·끝을 시각 순으로 콜백에 알립니다. Unity 애니메이션 이벤트는 쓰지 않습니다(설계 AC2).
     /// </summary>
     /// <remarks>
-    /// <para>시각은 시작부터 받은 시간의 합이고, 대여에 넣는 시각은 <see cref="CombatClipData.EndTime"/>에서 멈춥니다. 그 자세는 같은 프레임의 Unity 평가에서 보입니다(설계 F16).</para>
+    /// <para>시각은 시작부터 받은 시간에 재생 배율을 곱해 누적하며, 대여에 넣는 시각은 <see cref="CombatClipData.EndTime"/>에서 멈춥니다. 그 자세는 같은 프레임의 Unity 평가에서 보입니다(설계 F16).</para>
     /// <para>대여 복원은 대여 주인이 합니다. 이 클래스는 시각과 이벤트만 다룹니다. 재생 하나에 하나를 만들고, <see cref="Tick"/>은 할당하지 않습니다.</para>
     /// </remarks>
     internal sealed class CombatClipPlayback
@@ -17,29 +17,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly ICombatUnitClip _lease;
         private readonly CombatClipData _data;
         private readonly Action _started;
-        private readonly Action _eventTiming;
-        private readonly Action _eventTiming2;
-        private readonly Action _eventTiming3;
+        private readonly Action<int> _eventReached;
         private readonly Action _ended;
         private readonly CombatClipEventCursor _cursor;
+        private readonly float _playbackSpeed;
         private float _time;
         private bool _begun;
         private bool _cancelled;
 
         /// <param name="started">시작 이벤트에서 부릅니다. 받는 곳이 없으면 null입니다.</param>
-        /// <param name="eventTiming">이벤트 타이밍에서 부릅니다. 받는 곳이 없으면 null입니다.</param>
+        /// <param name="eventReached">중간 이벤트(기준·선택)에서 그 순번(<see cref="CombatClipTimings.Events"/>의 칸)으로 부릅니다. 받는 곳이 없으면 null입니다.
+        /// 콜백이 이벤트마다 하나가 아니라 순번 하나라, 이벤트 번호를 더해도 재생은 고치지 않습니다(평가 C2-04).</param>
         /// <param name="ended">끝 이벤트에서 부릅니다. 받는 곳이 없으면 null입니다.</param>
-        /// <param name="eventTiming2">선택 두 번째 이벤트에서 부릅니다. 기존 호출은 받지 않아도 됩니다.</param>
-        /// <param name="eventTiming3">선택 세 번째 이벤트에서 부릅니다. 기존 호출은 받지 않아도 됩니다.</param>
-        internal CombatClipPlayback(ICombatUnitClip lease, CombatClipData data, Action started, Action eventTiming, Action ended,
-            Action eventTiming2 = null, Action eventTiming3 = null)
+        internal CombatClipPlayback(ICombatUnitClip lease, CombatClipData data, Action started, Action<int> eventReached, Action ended,
+            float playbackSpeed = 1f)
         {
             _lease = lease ?? throw new ArgumentNullException(nameof(lease));
             _data = data ?? throw new ArgumentNullException(nameof(data));
+            CombatPresentationValueRules.RequirePositive(playbackSpeed, nameof(playbackSpeed));
+            _playbackSpeed = playbackSpeed;
             _started = started;
-            _eventTiming = eventTiming;
-            _eventTiming2 = eventTiming2;
-            _eventTiming3 = eventTiming3;
+            _eventReached = eventReached;
             _ended = ended;
             _cursor = new CombatClipEventCursor(data.Timings);
         }
@@ -58,13 +56,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Emit(0f);
         }
 
-        /// <summary>시각을 <paramref name="deltaTime"/>만큼 진행하고 그 시각까지의 이벤트를 냅니다. 음수·수가 아닌 시간은 0으로 봅니다. 끝나거나 취소된 뒤에는 아무 일도 하지 않습니다.</summary>
+        /// <summary>시각을 <paramref name="deltaTime"/> × 재생 배율만큼 진행하고 같은 시각으로 자세와 이벤트를 처리합니다. 음수·수가 아닌 시간은 0으로 봅니다. 끝나거나 취소된 뒤에는 아무 일도 하지 않습니다.</summary>
         internal void Tick(float deltaTime)
         {
             if (!_begun)
                 throw new InvalidOperationException("[CombatClipPlayback] 시작하지 않은 재생입니다.");
             if (_cancelled || IsComplete) return;
-            if (deltaTime > 0f) _time += deltaTime;
+            if (deltaTime > 0f) _time += deltaTime * _playbackSpeed;
             float time = Math.Min(_time, _data.EndTime);
             _lease.SetTime(time);
             Emit(time);
@@ -75,18 +73,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private void Emit(float time)
         {
-            while (!_cancelled && _cursor.TryNext(time, out CombatClipEventKind kind))
+            while (!_cancelled && _cursor.TryNext(time, out CombatClipEventKind kind, out int eventIndex))
             {
-                Action callback = kind switch
+                switch (kind)
                 {
-                    CombatClipEventKind.Start => _started,
-                    CombatClipEventKind.Event => _eventTiming,
-                    CombatClipEventKind.Event2 => _eventTiming2,
-                    CombatClipEventKind.Event3 => _eventTiming3,
-                    CombatClipEventKind.End => _ended,
-                    _ => throw new InvalidOperationException($"[CombatClipPlayback] 재생할 클립 이벤트 종류가 없습니다: {kind}"),
-                };
-                callback?.Invoke();
+                    case CombatClipEventKind.Start:
+                        _started?.Invoke();
+                        break;
+                    case CombatClipEventKind.Event:
+                        _eventReached?.Invoke(eventIndex);
+                        break;
+                    case CombatClipEventKind.End:
+                        _ended?.Invoke();
+                        break;
+                    default:
+                        throw new InvalidOperationException($"[CombatClipPlayback] 재생할 클립 이벤트 종류가 없습니다: {kind}");
+                }
             }
         }
     }

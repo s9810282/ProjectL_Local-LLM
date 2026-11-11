@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+#endif
 using System;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -11,6 +14,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>한 대상의 피격·사망 자세, 외부 Tick, 모델 유지권과 완료/취소 수명입니다.</summary>
     internal sealed class CombatUnitReactionPresenter
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private static readonly CombatPlaybackProfile.ByOwner _hitProfiles = new("Reaction.Hit");
+        private static readonly CombatPlaybackProfile.ByOwner _deathProfiles = new("Reaction.Death");
+        private CombatPlaybackProfile _profile = _hitProfiles.Unknown;
+
+#endif
         private ICombatUnitPose _pose;
         private CombatUnitReactionPresentationData _settings;
         private Vector3 _direction;
@@ -19,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private float _elapsed;
         private float _duration;
         private bool _death;
+        private bool _usesRagdoll;
         private Action _releaseModel;
         private Action _completed;
         private Action _unavailable;
@@ -33,6 +43,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal void BeginHit(CombatUnitReactionPresentationData settings, ICombatUnitPose pose,
             CombatCharacterEvent damage, FieldGridMapper mapper, Action completed, Action unavailable)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _profile = _hitProfiles.Of((damage?.Expected ?? damage?.Final)?.Owner);
+            using var beginSample = _profile.Begin.Auto();
+#endif
+
             ValidateStart(settings, pose, completed, unavailable);
             if (damage == null) throw new ArgumentNullException(nameof(damage));
             if (mapper == null) throw new ArgumentNullException(nameof(mapper));
@@ -42,7 +57,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             float distance = mapper.WorldCellWidth * settings.HitCellFraction;
             if (float.IsInfinity(distance)) throw new InvalidOperationException("피격 표시 거리가 유효하지 않습니다.");
             _direction = direction;
-            _tiltAxis = Vector3.Cross(mapper.WorldUp, direction).normalized;
+            _tiltAxis = CombatHitLean.AxisOf(direction, mapper.WorldUp);
             _distance = distance;
             _death = false;
             _duration = settings.HitDuration;
@@ -50,14 +65,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         internal void BeginDeath(CombatUnitReactionPresentationData settings, ICombatUnitPose pose,
-            FieldGridMapper mapper, Action releaseModel, Action completed, Action unavailable)
+            CombatCharacterEvent death, FieldGridMapper mapper, bool launchRagdoll, Action releaseModel, Action completed, Action unavailable)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _profile = _deathProfiles.Of((death?.Expected ?? death?.Final)?.Owner);
+            using var beginSample = _profile.Begin.Auto();
+#endif
+
             ValidateStart(settings, pose, completed, unavailable);
             if (mapper == null) throw new ArgumentNullException(nameof(mapper));
             if (releaseModel == null) throw new ArgumentNullException(nameof(releaseModel));
             Vector3 forward = Vector3.ProjectOnPlane(pose.Rotation * Vector3.forward, mapper.WorldUp);
             if (forward.sqrMagnitude < .000001f) forward = mapper.RotationToWorld(Rotation4.R0) * Vector3.forward;
             _tiltAxis = Vector3.Cross(mapper.WorldUp, forward).normalized;
+            _usesRagdoll = pose is ICombatUnitRagdollPose ragdoll &&
+                ragdoll.TryBeginDeathRagdoll(launchRagdoll ? CombatHitDirection.Resolve(death, mapper, pose.Rotation) : Vector3.zero,
+                    mapper.WorldUp, mapper.WorldCellWidth);
             _death = true;
             _duration = settings.DeathDuration + settings.DeathRestDuration;
             _releaseModel = releaseModel;
@@ -91,6 +114,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (float.IsNaN(deltaTime) || float.IsInfinity(deltaTime))
                 throw new ArgumentOutOfRangeException(nameof(deltaTime));
             if (!IsPlaying) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var tickSample = _profile.Tick.Auto();
+#endif
             if (_ticking) throw new InvalidOperationException("반응 Tick을 중첩 호출할 수 없습니다.");
             int version = _version;
             _ticking = true;
@@ -106,26 +132,37 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 _elapsed = (float)Math.Min(_duration, (double)_elapsed + Math.Max(0f, deltaTime));
                 if (_death)
                 {
-                    // 쓰러지는 구간만이 아니라 쓰러진 뒤 잠시 남는 시간까지 천천히 사라집니다.
-                    // 사망 반응이 끝나는 프레임에만 완전히 디졸브되어, 기울기와 소멸이 동시에 튀지 않습니다.
-                    float duration = Math.Max(_duration, 0.0001f);
-                    _pose.SetDeathDissolve(Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_elapsed / duration)));
+                    // 랙돌이 쓰러지는 동안에는 원래 외형을 유지하고, 뒤의 머묾 시간에 디졸브합니다.
+                    float dissolveStart = _usesRagdoll ? _settings.DeathDuration : 0f;
+                    if (_elapsed >= _duration)
+                        _pose.SetDeathDissolve(1f);
+                    else if (_elapsed > dissolveStart)
+                    {
+                        float progress = (_elapsed - dissolveStart) / (_duration - dissolveStart);
+                        _pose.SetDeathDissolve(Mathf.SmoothStep(0f, 1f, progress));
+                    }
                 }
                 if (_elapsed < _duration)
                 {
                     if (_death)
                     {
-                        float tilt = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_elapsed / _settings.DeathDuration));
-                        _pose.ApplyPose(_pose.Position, Quaternion.AngleAxis(-90f * tilt, _tiltAxis) * _pose.Rotation);
+                        if (!_usesRagdoll)
+                        {
+                            float tilt = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_elapsed / _settings.DeathDuration));
+                            _pose.ApplyPose(_pose.Position, Quaternion.AngleAxis(-90f * tilt, _tiltAxis) * _pose.Rotation);
+                        }
                     }
                     else
                     {
                         float amount = Mathf.Sin(Mathf.PI * (_elapsed / _settings.HitDuration));
                         _pose.ApplyPose(_pose.Position + _direction * (_distance * amount),
-                            Quaternion.AngleAxis(_settings.HitAngle * amount, _tiltAxis) * _pose.Rotation);
+                            CombatHitLean.Apply(_pose.Rotation, _tiltAxis, _settings.HitAngle, amount));
                     }
                     return;
                 }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var endSample = _profile.End.Auto();
+#endif
                 Action completed = _completed;
                 ClosePose(keepDeathDissolve: _death);
                 if (version == _version && !_released) completed();
@@ -155,6 +192,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>완료 콜백을 무효화하고 원래 자세를 복원합니다. 성공 통지는 하지 않습니다.</summary>
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var cancelSample = IsPlaying ? _profile.Cancel.Auto() : default;
+#endif
+
             ++_version;
             ClosePose(keepDeathDissolve: false);
         }

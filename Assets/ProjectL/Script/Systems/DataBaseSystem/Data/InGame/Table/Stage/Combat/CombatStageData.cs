@@ -95,8 +95,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         [SerializeField] private BattleObjectiveKind objectiveKind = BattleObjectiveKind.EnemyHeadquartersDestroyed;
         [SerializeField] private UnitPlacementInput[] initialEnemyPlacements = new UnitPlacementInput[0];
         [SerializeField] private EnemyLoadoutDataSO enemyLoadout;
-        [Tooltip("이 스테이지 적의 레벨입니다. 직접 배치와 로드아웃 출현 적 모두에 적용하며 소환체는 레벨 1입니다.")]
+        [Tooltip("이 스테이지 적의 레벨입니다. 직접 배치·로드아웃·넥서스 증원에 적용하며 소환체는 레벨 1입니다.")]
         [SerializeField, Min(1)] private int enemyLevel = 1;
+        [SerializeField] private NexusReinforcementAuthoring nexusReinforcements = new();
 
         [Header("Structures")]
         [SerializeField] private StructureDataSO[] structureCatalog = new StructureDataSO[0];
@@ -187,7 +188,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 enemyLevel: enemyLevel,
                 initialRandomTornadoPlacements: environmentData.RandomTornadoes,
                 playerDeploymentCells: CellInput.ToCellCoords(playerDeploymentCells),
-                rockfall: rockfall?.ToData(), haboob: haboob?.ToData(), tornado: environmentData.Tornado);
+                rockfall: rockfall?.ToData(), haboob: haboob?.ToData(), tornado: environmentData.Tornado,
+                nexusReinforcements: nexusReinforcements?.ToSpec(enemyLevel));
             if (fieldDefinition != null)
             {
                 var field = (FieldData)fieldDefinition.GetData();

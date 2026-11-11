@@ -60,8 +60,19 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSys
         public static readonly TypeSettingKey<float> AreaOutlineFlowSpeed =
             new TypeSettingKey<float>("_FlowSpeed");
 
-        /// <summary>EntityCartoon의 사망 디졸브 진행값입니다.</summary>
+        /// <summary>모델 재질의 사망 디졸브 진행값입니다.</summary>
         public static readonly TypeSettingKey<float> DissolveAmount =
             new TypeSettingKey<float>("_DissolveAmount");
+
+        public static readonly TypeSettingKey<Texture> DissolveTexture =
+            new TypeSettingKey<Texture>("_DissolveTex");
+
+        /// <summary>외곽선 재질의 색입니다. Cartoon 셰이더의 Outline Pass와 SelectOutline 셰이더가 같은 이름을 씁니다.</summary>
+        public static readonly TypeSettingKey<Color> OutlineColor =
+            new TypeSettingKey<Color>("_OutlineColor");
+
+        /// <summary>Cartoon 셰이더 Outline Pass의 월드 단위 외곽선 폭입니다.</summary>
+        public static readonly TypeSettingKey<float> OutlineWidth =
+            new TypeSettingKey<float>("_OutlineWidth");
     }
 }

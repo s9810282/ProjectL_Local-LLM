@@ -25,4 +25,4 @@ MonoBehaviour:
     attackPresentation: {fileID: 0}
     reactionPresentation: {fileID: 0}
     unitSoundPreset: -1
-    attackSoundPreset: -1
+    attackSoundSlotIndex: -1

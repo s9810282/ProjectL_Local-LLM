@@ -121,7 +121,7 @@ namespace ProjectL.Tests.Core
             var structure = new StructureCombatFacts(new EntityId(51), new StructureSpec(EntityKey.Structure_PowderBarrel,
                 1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100), Cell, Rotation4.R0, new[] { Cell }, Owner.Neutral);
             var s = seed.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                new[] { structure },s.ThornFields,s.Turn,new MovementEnvironmentFacts(new[] { Ground() }));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                new[] { structure },s.ThornFields,s.Turn,new MovementEnvironmentFacts(new[] { Ground() }));
             var input = new CombatCommandInput(seed.Number, seed.Kind, seed.ActorId, seed.Aim, state, seed.Characters,
                 seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 environmentBindings: new EnvironmentSemanticBindings(new[] { 71L }, Array.Empty<long>(), new[] { structure.EntityId }),
@@ -149,7 +149,7 @@ namespace ProjectL.Tests.Core
             var badge = new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player });
             var input = WithEnvironment(seed, ground, badge);
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
             var attackPreview = CombatCommandCalculator.Preview(input, TornadoEnvironmentTests.Rules, out var preview);
             var result = CombatCommandCalculator.Calculate(input, TornadoEnvironmentTests.Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
@@ -263,7 +263,7 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput SoulReady(CombatCommandInput input)
         {
             var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,true,s.Structures,s.ThornFields,s.Turn,s.Environment),
+            return CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment),
                 artifacts: new ArtifactLoadoutSnapshot(0, new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
         }
 
@@ -277,7 +277,7 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput WithEnvironment(CombatCommandInput input, params MovementTileFact[] sources)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(sources));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(sources));
             return Copy(CombatCommandTestData.With(input, state: state), new EnvironmentSemanticBindings(
                 sources.OfType<StaticTerrainFact>().Select(t => t.Id).ToArray(), sources.OfType<ObjectSourceFact>().Select(t => t.Id).ToArray(), input.EnvironmentBindings.ObstacleEntityIds));
         }

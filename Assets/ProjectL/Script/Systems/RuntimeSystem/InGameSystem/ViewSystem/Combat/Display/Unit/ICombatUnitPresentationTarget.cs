@@ -8,8 +8,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// 유닛 표시 하나가 창구(<see cref="CombatUnitPresentationWindow"/>)에 주는 것입니다(연출 조립 설계 B13 보완 4). <see cref="FieldUnitView"/>가 구현합니다.
     /// </summary>
     /// <remarks>
-    /// 자세·크기 대여의 수명 규칙은 구현이 지킵니다. 대여는 버전으로 늦은 복원을 막고, 표시가 꺼지거나 다른 ID로 다시 대여되면
-    /// 자세 먼저, 크기와 함께 취소를 알립니다(B14 O4 동등성의 근거).
+    /// 대여의 수명 규칙은 구현이 지킵니다(대여 칸 <see cref="UnitPresentationLeaseSlot{TLease}"/>). 늦은 복원은 대여 객체 참조로 막고, 표시가 꺼지거나 다른 ID로 다시 대여되면
+    /// 자세 → 서는 자리 → 크기 → 플래시 → 클립 순서로 되돌리며 취소를 알립니다(서는 자리는 취소 없이 내려놓음, B14 O4 동등성의 근거).
     /// </remarks>
     internal interface ICombatUnitPresentationTarget
     {
@@ -50,6 +50,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         /// <summary>사건 클립 채널을 쓸 수 있는지입니다(클립 설계 AC3·AC9). 이벤트 컴포넌트가 붙은 표시만 true입니다.</summary>
         bool SupportsClip { get; }
+
+        /// <summary>사건 클립 대여가 남아 있는지입니다.</summary>
+        bool HasClip { get; }
 
         /// <summary>사건 클립 대여를 시작합니다. 이전 대여가 남았거나 꺼진 표시면 예외입니다. 표시가 꺼지거나 다시 대여되면 취소되고 <paramref name="cancelled"/>를 부릅니다.</summary>
         ICombatUnitClip BeginClip(Action cancelled);

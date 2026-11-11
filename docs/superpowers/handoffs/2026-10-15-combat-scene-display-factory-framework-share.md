@@ -698,3 +698,67 @@ D1은 조립 위치 분리다. 이동·배치·공격 구현 이전은 D2~D4이�
 - 같은 묶음에서 입력 기능 셋의 생성자 인자를 필수로 바꿨습니다(C5-02). 입력 Factory는 이미 모든 값을 넘기고 있어 생성 줄은 그대로입니다.
 - 바뀌지 않은 것: 서비스 키·그룹·Builder·GlobalSystem·Framework, `CombatSceneDisplay`·`CombatSceneEventPresenter`·`CombatFieldEventPorts` 서명.
 - 컴파일 미확인, 새 시험 없음.
+
+## 51. 2026-11-05 전투 View 평가 후속 5차 — 진입 연출 조립 줄·질문 하나 (미전달)
+
+- 왜: 평가 C10-06(보드가 올라오는 동안 보드 위 물체가 떠 보임). 사용자 결정 Q-N7 "타일이 올라온 이후에 구조물부터 차례대로"([후속 수정 계획](../plans/2026-11-04-combat-view-evaluation-fixes-plan.md) §9, 진입 설계 §18).
+- `CombatBoardEntryFactory.Create`: 세 번째 인자(`units` 다음)로 `FieldObjectPresenter objects`를 더했습니다. 적 등장 부품 이름이 `CombatEntryRiseAppearance`로 바뀌었고(생성자 끝 인자 = 오류 문구의 대상 이름), 보드 위 구조물용과 적용 두 개를 같은 소환 상승 설정으로 만듭니다.
+- `CombatSceneDisplayFactory.cs`: 위 함수 호출 줄에 `objects`를 넘깁니다. 조립 실패 정리 범위를 적은 remarks 두 줄을 더했습니다(C9-05, 동작 무변경).
+- 바뀌지 않은 것: 서비스 키·그룹·Builder·GlobalSystem·Framework, `CombatSceneDisplay` 서명, 특성 미리보기 조립.
+- 여쭐 것(C5-01): 아침 자동 전환(`CombatPhaseTransitionPresenter`)은 호진님 `b9c4f3b4`에서 꺼져 있습니다. 되살릴 계획이 없으면 재생 조정·`CombatEventPlaybackFactory`·`CombatSceneDisplayFactory`·`CombatTraitPreviewFactory`에 남은 연결(약 45줄)을 걷으려 합니다. 처음 만드신 쪽으로 알고 있어 함께 여쭙니다(호진님 메모 §17).
+- 컴파일 미확인, 새 시험 없음.
+
+## 52. 2026-11-07 전투 View 씬 표시 나누기 — 표시 생성 줄·입력 Factory 꺼내기 (미전달)
+
+- 왜: 평가 C2-03 2·3단계. `CombatSceneDisplay`(876줄·필드 46·생성 인자 38·위임 49)에 수명·순서만 남기고 일을 객체로 나눴습니다([설계](../specs/2026-11-07-combat-view-scene-display-split-design.md) DS1~DS7, [계획](../plans/2026-11-07-combat-view-scene-display-split-plan.md), 결정 Q-DS1·Q-DS2·Q-DS3·Q-DS5 A).
+- `CombatSceneDisplayFactory.cs`(우리 조립 줄만)
+  - 105-124: 공유 수명 `CombatDisplayLifetime`·표시 스냅숏 `CombatDisplaySnapshot`을 먼저 만들고, 포인터 매퍼를 앞으로 옮겼습니다(이동 초안·고스트가 씀). 매퍼는 넷째 인자로 씬 루트(커서 스냅 설정)를 받습니다. 배치·공격 피드백에 `pointer`·`snapshot`·`lifetime`, 행동 버튼 표시 `CombatActionButtonsDisplay`·HUD 표면 `CombatHudSurfaces`·배경음 정책 `CombatBgmPolicy`·결과 화면 `CombatResultScreenDisplay`를 만듭니다. 배경음 정책은 하나를 표시와 결과 화면이 함께 받습니다.
+  - 191-197: 필드 표시 `CombatFieldDisplay`(이름 있는 인자 15)·선택 표시 `CombatSelectionDisplay`·입력 피드백 묶음 `CombatInputFeedback`(주인 일곱)을 만듭니다.
+  - 198-217: `new CombatSceneDisplay(…)`가 위치 인자 38개 → 이름 있는 인자 19개입니다.
+  - 218: 선택 바뀜 알림을 표시 대신 `selectionDisplay.RefreshInspectionSelection`에 겁니다.
+  - 111 `new CombatMovementPlanningPresenter(…, pointer)`의 원래 줄은 현강님 줄이라 현강님 메모 §27에도 적었습니다. 191-193 기믹 셋 낱말은 호진님 줄이라 호진님 메모 §20에도 적었습니다.
+- `CombatSceneInputFactory.cs`
+  - 75: `CombatInputFeedback feedback = display.Feedback;` — 입력 기능에 넘기는 계약을 묶음에서 이름으로 꺼냅니다. 그 아래 생성 줄의 `display` 자리가 `feedback.Picker`·`feedback.Occlusion` 같은 이름이 되었습니다.
+  - 형식 검사 둘(`display is not ICombatGimmickRangeFeedback`·`ICombatNexusRangeFeedback`, 실패 때 `InvalidOperationException`)을 지웠습니다. 묶음 형식이 같은 사실을 컴파일 때 막습니다.
+  - 내부 단계 `CreateSceneInteraction`·`CreateCursorSnap`·`CreateEnvironmentHover`의 첫 인자가 `ICombatBattleDisplay display` → `CombatInputFeedback feedback`입니다(private, 바깥 서명 `CreateSceneInput(display, sources)`는 그대로).
+- 바뀌지 않은 것: 서비스 키·그룹·Builder·GlobalSystem·Framework, `ICombatSceneFactory`·`ICombatSceneInputFactory` 계약, 조립 실패 정리 범위(표시가 만들어지기 전 실패는 지금처럼 Factory가 정리).
+- 컴파일 미확인, 새 시험 없음, 시험 변경 없음.
+
+## 53. 2026-11-10 새 상태 다섯의 HUD 표시 변환 (미전달)
+
+- `Factory/Runtime/InGame/View/CombatUnitStatusFactory.cs`: 표시 변환 목록 끝에 화염(`Fire`)·출혈(`Bleeding`)·이동력 감소(`MovementRangeDecrease`)·폭주(`Rampage`)·재구성 중(`Reconstructing`) 다섯 줄을 더했다. 출혈 값 하나(다음 턴 시작 피해 = 중첩 피해 합)는 같은 표시 부품의 설명 문구와 함께 쓰는 `CombatStatusDescriptionFormatter.BleedingDamage`를 부른다(2026-11-11 고침, Factory 안에 사본 없음). 이 다섯이 없으면 그 상태가 걸린 유닛이 HUD에 나올 때 "표시 변환이 등록되지 않았습니다"로 멈춘다.
+- 짝 에셋: `DataBaseSO/ViewGroup/UnitStatusVisual/Item/UnitStatusVisual_{Fire,Bleeding,MovementRangeDecrease,Rampage,Reconstructing}.asset`(설명 틀 인자 수 2·3·1·2·1). 코드와 한 커밋.
+- 바꾸지 않은 것: 서비스 키·그룹·Builder·생성 서명. 컴파일 미확인, 새 시험 없음.
+
+## 54. 2026-11-10 전투 첫 동작 Core 준비 — Factory 한 줄·서비스 키·JobType 값·Core 그룹 멤버 (미전달)
+
+사용자 지시("우리측에서 작업하는 걸로 하고…" → "쭉 진행해")로 전투 첫 동작의 Core JIT를 Combat 씬 로딩 중에 미리 끝내는 준비를 넣었다. 원본은 [첫 동작 Core 준비 계획](../plans/2026-11-10-combat-first-use-preparation-plan.md)이고, Core 변경 기록은 [Core 전달 문서 §5.84](2026-09-24-view-core-data-boundary-handoff.md)다.
+
+- `Factory/Runtime/InGame/Core/CombatSystemFactory.cs`: `CombatPreviewService` 다음 줄에 `new CombatFirstUsePreparationService(assembler, movementRules).ExportServices(sink);`(주석 한 줄 포함). 게시 협력자(`publisher`)는 넘기지 않는다.
+- `ServiceKeys/Runtime/InGame/Core/InGameCoreSystemServiceKey.cs`: `CombatFirstUse`(`SystemGroupKey<ICombatFirstUsePreparation>`) 한 줄.
+- `RuntimeSystem/InGameSystem/CoreSystem/InGameCoreSystemGroup.cs`(Core 그룹): 계약 멤버 `CombatFirstUse`와 해석 줄 하나씩.
+- `RuntimeSystem/GlobalSystem/JobSystem/JobRegister/JobRootType.cs`: 전투 전용 값 `JobType.FirstUsePrepare = 10`(주석 한 줄). 영역 규칙의 "우리 전용 열거 값"이다.
+- 바꾸지 않은 것:
+  - `JobRegisterSystem.cs:66`(전투 Plan 등록 줄). 새 값은 같은 `CombatPlan.Register`로 간다.
+  - LifeCycle 그룹·서비스 키
+  - 로딩 시스템. 기존 `RegisterScenePreparation` 계약을 진입 서비스가 쓰기만 한다.
+  - Builder·생성 서명
+- 로딩 준비 순서: 그룹 초기화 순서(Buffer → Global → InGame → LifeCycle)대로, View 선택 유닛 준비 다음에 첫 동작 준비가 돈다.
+- 컴파일 미확인, 새 시험 없음, 시험 변경 없음.
+
+## 55. 2026-11-11 포효 예고 조회 — 입력 Factory 생성 줄 둘 (미전달)
+
+- `Factory/Runtime/InGame/View/CombatSceneInputFactory.cs` `CreateSceneInput`: HUD 행동 가능 여부 조회 다음 줄에 포효 예고 조회 `CombatRoarForecastTracker`를 만들고(`sources.InputRead`·`sources.InputWrite`·`feedback.RoarForecast`), 연결 입력 묶음 `CombatSceneInput` 생성자 끝 인자로 넘긴다. 생성 순서 주석에 한 단계를 더했다.
+- 표시 Factory(`CombatSceneDisplayFactory`)는 무변경이다. 새 계약 `ICombatRoarForecastFeedback`은 입력 피드백 묶음 `CombatInputFeedback`이 이미 만드는 공격 피드백 `CombatAttackFeedback`(넉백 미리보기의 주인)이 구현한다(RF-c에서 `FieldView`에서 옮김).
+- 바꾸지 않은 것: 서비스 키·그룹·Builder·다른 생성 서명. 기록: [포효 예고 계획](../plans/2026-11-10-combat-roar-forecast-plan.md) RF-b·RF-c. 컴파일 미확인, 새 시험 없음.
+
+## 56. 2026-11-11 작은 이펙트 종류 둘 — Render DB `EffectType`·이펙트 표·프리팹 복사본 (사용자 지시, 미전달)
+
+작렬(해머) 연출에 작은 Boom·작은 낙석 이펙트가 필요해, 사용자 결정(B안: 작은 프리팹 복사본)으로 Render 쪽에 아래를 더했다. 원본 프리팹과 기존 종류 값은 바꾸지 않았다.
+
+- `DataBaseSystem/Data/Render/Table/Effect/Enum/EffectType.cs`: 끝에 `BoomSmall = 18`·`FallingRocksSmall = 19`(에셋이 정수로 저장해 끝에만 더함).
+- 새 프리팹 `Render/Effect/AttackEffect/Boom/BOOM_Small.prefab`·`Render/Effect/EventEffect/FallingRocks/FallingRocks_Small.prefab`(+ `.meta`, 새 GUID): 원본 파일을 그대로 복사하고 **루트 배율 0.5**, **모든 파티클 크기 방식 Local → Hierarchy**(원본은 Local이라 루트를 줄여도 자식 파티클이 안 작아짐), 루트 이름만 바꿈. 크기는 루트 배율 하나로 조절한다.
+- 새 이펙트 표 항목 `DataBaseSO/RenderGroup/EffectTable/Items/BoomSmallEffect.asset`·`FallingRocksSmall.asset`(+ `.meta`, 풀 값은 원본과 같음)과 `EffectDataTable.asset` 끝 두 줄.
+- 쓰는 곳: 전투 View DB `CombatAttack_Hammer`(해머 공격 맞는 순간)·`TraitVisual_CrashImpact`(작렬 부딪힘).
+- 확인 부탁: 원본 프리팹을 고치면 복사본은 따라가지 않는다(프리팹 Variant가 아님). Variant로 바꾸거나 큐에 크기 칸을 두는 쪽이 나으면 알려 달라.
+- 컴파일·Unity 미확인. 코드·에셋은 한 커밋(enum 값 없이 표 항목만 있으면 정수 18·19가 정의되지 않은 값).

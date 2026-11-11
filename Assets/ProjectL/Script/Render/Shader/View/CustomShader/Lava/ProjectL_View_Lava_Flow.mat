@@ -23,33 +23,24 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _CrustTexture:
-        m_Texture: {fileID: 2800000, guid: 5b67a250bdd830349b3b9f73a3f89508, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _EmissionMaskTexture:
         m_Texture: {fileID: 2800000, guid: 5b67a250bdd830349b3b9f73a3f89508, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 4, y: 4}
         m_Offset: {x: 0, y: 0}
     - _LavaTexture:
-        m_Texture: {fileID: 2800000, guid: 179b6e50e8b0dfc40b84f6195b1fb07a, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 5b67a250bdd830349b3b9f73a3f89508, type: 3}
+        m_Scale: {x: 4, y: 4}
         m_Offset: {x: 0, y: 0}
     - _VertexMotionTexture:
         m_Texture: {fileID: 2800000, guid: 37993c740d62873488c036b33b932ca9, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 3, y: 3}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CrustBlendStrength: 1
-    - _CrustDepthSoftness: 2.39
-    - _CrustDepthThreshold: 1.1
-    - _CrustWidthPixels: 16
-    - _LavaEmissionStrength: 0
-    - _VertexMotionAmplitude: 0.95
+    - _LavaEmissionStrength: 10
+    - _VertexMotionAmplitude: 0.26
     - _VertexMotionSpeed: 1
     m_Colors:
-    - _CrustUVSpeed: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionMaskUVSpeed: {r: 0.05, g: 0.02, b: 0, a: 0}
     - _LavaTint: {r: 1, g: 1, b: 1, a: 1}

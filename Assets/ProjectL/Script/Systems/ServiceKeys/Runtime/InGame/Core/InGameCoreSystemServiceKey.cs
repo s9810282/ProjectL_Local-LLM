@@ -35,6 +35,7 @@ namespace ProjectL.Systems.ServiceKeys.Runtime.InGame.Core
         public static readonly SystemGroupKey<ICombatAdvanceService> CombatAdvance = new(nameof(CombatAdvance));
 
         public static readonly SystemGroupKey<ICombatPreviewService> CombatPreview = new(nameof(CombatPreview));
+        public static readonly SystemGroupKey<ICombatFirstUsePreparation> CombatFirstUse = new(nameof(CombatFirstUse));
 
 
 
@@ -57,5 +58,8 @@ namespace ProjectL.Systems.ServiceKeys.Runtime.InGame.Core
 
         public static readonly SystemGroupKey<ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RunSystem.IRunStartService> RunStart =
             new(nameof(RunStart));
+
+        public static readonly SystemGroupKey<ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RunSystem.IRunAbandonService> RunAbandon =
+            new(nameof(RunAbandon));
     }
 }

@@ -23,12 +23,18 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         public void BindInput(IDeckCombatInput input) => _input = input;
 
+        /// <summary>필수 참조를 상태를 바꾸지 않고 검사합니다. 씬 연결 때 덱 편집 화면 검사가 부릅니다(평가 C-26).</summary>
+        internal void Validate()
+        {
+            if (acceptButton == null || cancelButton == null)
+                throw new InvalidOperationException("[DeckCombatConfirmUI] acceptButton과 cancelButton이 필요합니다.");
+        }
+
         public override void Open()
         {
             if (!_prepared)
             {
-                if (acceptButton == null || cancelButton == null)
-                    throw new InvalidOperationException("[DeckCombatConfirmUI] acceptButton과 cancelButton이 필요합니다.");
+                Validate();
                 UIInputBinding.Attach(acceptButton, this, 0);
                 UIInputBinding.Attach(cancelButton, this, 1);
                 acceptButton.navigation = new Navigation { mode = Navigation.Mode.Explicit,

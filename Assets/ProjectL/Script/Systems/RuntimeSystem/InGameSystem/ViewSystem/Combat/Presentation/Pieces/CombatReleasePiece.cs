@@ -11,25 +11,42 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     internal sealed class CombatReleasePiece : ICombatPresentationPiece
     {
         private readonly Action _release;
+        private readonly Func<bool> _canRelease;
+        private Action _releaseHit;
 
         /// <param name="release">출처의 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>).</param>
-        internal CombatReleasePiece(Action release) => _release = release ?? throw new ArgumentNullException(nameof(release));
+        internal CombatReleasePiece(Action release, Func<bool> canRelease = null)
+        {
+            _release = release ?? throw new ArgumentNullException(nameof(release));
+            _canRelease = canRelease;
+        }
 
         public bool IsEnded { get; private set; }
 
         public void Begin(CombatPieceContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-            CombatHitMoment.ReleaseThenSignal(_release, context.SignalCallback(CombatPieceSignal.Hit))();
-            IsEnded = true;
+            _releaseHit = CombatHitMoment.ReleaseThenSignal(_release, context.SignalCallback(CombatPieceSignal.Hit));
+            TryRelease();
         }
 
         public void Tick(float deltaTime)
         {
+            TryRelease();
         }
 
         public void Cancel()
         {
+            _releaseHit = null;
+        }
+
+        private void TryRelease()
+        {
+            if (_releaseHit == null || IsEnded || _canRelease?.Invoke() == false) return;
+            Action releaseHit = _releaseHit;
+            _releaseHit = null;
+            IsEnded = true;
+            releaseHit();
         }
     }
 }

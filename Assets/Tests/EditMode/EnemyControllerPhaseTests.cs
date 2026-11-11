@@ -17,7 +17,7 @@ namespace ProjectL.Tests.Core
             var source = CombatCommandTestData.Input();
             var characters = source.Characters.Select(c => c.With(actionUse: UnitActionUse.Attacked)).ToArray();
             var input = Input(source, phase, characters: characters);
-            var result = CombatTurnCalculator.BeginControllerTurn(input);
+            var result = CombatTurnCalculator.BeginControllerTurn(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             var final = CombatCommandComposition.Project(result);
             foreach (var actor in final.Characters)
@@ -31,7 +31,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Input(CombatCommandTestData.Input(), CombatControllerPhase.StartingEnemy,
                 characters: CombatCommandTestData.Input().Characters.Select(c => c.With(actionUse: UnitActionUse.Deferred)).ToArray());
-            var result = CombatTurnCalculator.BeginControllerTurn(input);
+            var result = CombatTurnCalculator.BeginControllerTurn(input, Array.Empty<IMovementTileRule>());
             var final = CombatCommandComposition.Project(result);
             Assert.That(final.Characters.Where(c => c.Owner == Owner.Player).All(c => c.ActionUse == UnitActionUse.Deferred), Is.True);
             Assert.That(final.Characters.Where(c => c.Owner == Owner.Enemy).All(c => c.ActionUse == UnitActionUse.Available), Is.True);
@@ -62,7 +62,7 @@ namespace ProjectL.Tests.Core
         public void PlayerPhaseCannotBeStartedAgainOrAutomaticallyEnded()
         {
             var input = Input(CombatCommandTestData.Input(), CombatControllerPhase.Player);
-            Assert.That(CombatTurnCalculator.BeginControllerTurn(input).Accepted, Is.False);
+            Assert.That(CombatTurnCalculator.BeginControllerTurn(input, Array.Empty<IMovementTileRule>()).Accepted, Is.False);
             Assert.That(input.State.Turn.CompletedPlayerTurnCount, Is.Zero);
         }
 
@@ -71,9 +71,9 @@ namespace ProjectL.Tests.Core
             CharacterCombatFacts[] characters = null)
         {
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: phase,
-                controllerTurnSequence: sequence, completedPlayerTurnCount: completed, nightStartPlayerTurnCount: baseline);
+                controllerTurnSequence: sequence, completedPlayerTurnCount: completed);
             // 적 진영 턴 중간이면 적 진영 시작이 이미 적 예산을 채운 상태다(적 공용 코스트 설계 §3 1번).
-            var state = source.State.With(turn: turn,isNight: true,                phase: phase == CombatControllerPhase.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic);
+            var state = source.State.With(turn: turn,                phase: phase == CombatControllerPhase.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic);
             bool player = phase == CombatControllerPhase.Player;
             return new CombatCommandInput(player ? 1 : 0, player ? CombatCommandKind.EndPlayerTurn : CombatCommandKind.StartControllerTurn,
                 EntityId.Empty, default, state, characters ?? source.Characters.ToArray(), source.Profiles, source.Main,

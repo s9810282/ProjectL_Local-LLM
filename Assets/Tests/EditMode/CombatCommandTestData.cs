@@ -45,7 +45,7 @@ namespace ProjectL.Tests.Core
                 characters.Add(Character(3, EntityKey.Unit_Demon, new CellCoord(4, 4), Owner.Enemy));
                 characters.Add(Character(4, EntityKey.Unit_Demon, new CellCoord(5, 3), Owner.Enemy));
             }
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,true,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
             var profiles = new[]
             {
                 new CombatAttackProfile(Spec(EntityKey.Unit_Akimbo, 20, category), method),
@@ -104,7 +104,7 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput NextPlayerTurn(CombatCommandInput input)
         {
             var begun = CombatTurnCalculator.BeginControllerTurn(
-                EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingPlayer));
+                EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingPlayer), Array.Empty<IMovementTileRule>());
             return FreshCommand(CombatCommandComposition.Project(begun), CombatCommandKind.Attack, input.ActorId, input.Aim);
         }
 
@@ -112,7 +112,7 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput NextEnemyTurn(CombatCommandInput input)
         {
             var begun = CombatTurnCalculator.BeginControllerTurn(
-                EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingEnemy));
+                EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingEnemy), Array.Empty<IMovementTileRule>());
             return CombatCommandComposition.Intent(CombatCommandComposition.Project(begun),
                 CombatCommandKind.Attack, input.Aim).WithActor(input.ActorId);
         }

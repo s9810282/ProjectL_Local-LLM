@@ -9,16 +9,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
     /// </summary>
     internal interface ITutorialViewDisplay
     {
-        /// <summary>Combat 화면에 연결합니다. 씬의 튜토리얼 화면을 찾고 창 활성 알림을 구독합니다. 없으면 예외입니다.</summary>
+        /// <summary>Combat 화면에 연결합니다. 씬의 튜토리얼 화면을 찾으며 없으면 예외입니다.</summary>
         void Attach();
 
-        /// <summary>화면 연결을 끊고 창 활성 알림을 해제합니다. 열린 표시는 먼저 <see cref="Close"/>로 닫습니다. 연결이 없으면 아무것도 하지 않습니다.</summary>
+        /// <summary>화면 연결을 끊습니다. 열린 표시는 먼저 <see cref="Close"/>로 닫습니다. 연결이 없으면 아무것도 하지 않습니다.</summary>
         void Detach();
 
         /// <summary>표시를 시작하고, 끝나면 <paramref name="completed"/>를 한 번 부릅니다. 진행 중인 앞 표시는 이 표시가 대신합니다.</summary>
         void Present(TutorialViewDisplayRequest request, Action completed);
 
-        /// <summary>현재 화면 좌표만 갱신합니다. 표시 완료·진행·타이머를 다시 시작하지 않습니다.</summary>
+        /// <summary>현재 화면 좌표만 갱신합니다. 표시 완료나 단계 진행을 다시 시작하지 않습니다.</summary>
         void RefreshLayout();
 
         /// <summary>입력 제한 때문에 막힌 조작이 있었다는 안내를 잠시 띄웁니다. 완료를 알리지 않습니다.</summary>

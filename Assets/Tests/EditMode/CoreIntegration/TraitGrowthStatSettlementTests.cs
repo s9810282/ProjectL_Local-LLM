@@ -24,44 +24,6 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class TraitGrowthStatSettlementTests
     {
-        [Test]
-        public void RankedDefault_RemainsInstanceLocalAcrossRecallAndClearsOnNewRun()
-        {
-            var key = TraitKey.ReconSquad;
-            var config = new CategoryConfigData(3, 5, 3, 2, 0, defaultTraits:
-                new System.Collections.Generic.Dictionary<CategoryKey, TraitKey> { [CategoryKey.Rider] = key });
-            var database = new CoreIntegrationTestData(config);
-            var tables = new TraitGrowthTestRuntime.GrowthTables(CategoryKey.Rider, false);
-            tables.ReplaceCategory(new CategoryTraitProgressionData(CategoryKey.Rider,
-                Array.Empty<TraitGrowthStepSpec>(), Array.Empty<TraitKey>()));
-            tables.ReplaceDefinition(TraitKey.Vanguard, new TraitGrowthDefinitionData(new ReconSquadTraitData(10, 1),
-                null, "", "", "", "", new TraitRankValues(key, 15), new TraitRankValues(key, 20)));
-            database.CategoryTraitProgressions = tables;
-            database.TraitGrowthDefinitions = tables;
-            database.SetStage(new StageRootData(1101, 1, StageMapRole.Regular, new CombatStageDetail(42, "field", 1, 0, 1,
-                Array.Empty<EntityPlacement>(), Array.Empty<EntityKey>(), Array.Empty<EntityPlacement>(), EntityKey.Structure_Headquarters,
-                CellCoord.Zero, Rotation4.R0, new CellCoord(7, 5), Rotation4.R180, null)));
-            using var battle = new ConfiguredMovementBattle(config, database: database, configureOwned: buffers => SeedPurchase(buffers, key));
-            var id = battle.Actor.OwnedId.Value;
-            Assert.That(battle.OwnedStats.TraitRanks[key], Is.EqualTo(2));
-            Assert.That(battle.OwnedStats.ReconSquadDescription.IncreasePercent, Is.EqualTo(15));
-            int Increase(CharacterCombatFacts actor) =>
-                actor.Stats.TraitStatuses.ToArray().OfType<ReconSquadTraitStatusSnapshot>().Single().IncreasePercent;
-            Assert.That(Increase(battle.Actor), Is.EqualTo(15));
-            Assert.That(Increase(battle.Character(EntityKey.Unit_DynamiteHammer)), Is.EqualTo(10));
-            for (int i = 0; i < 8; i++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                battle.AdvanceToPlayerOrDay();
-            }
-            Assert.That(battle.Actor.Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            Assert.That(Increase(battle.Actor), Is.EqualTo(15));
-            battle.Core.BattleCompletion.AbandonBattle();
-            battle.Core.BattleCompletion.EndBattle();
-            Assert.That(battle.Buffers.CharacterReadSink.Owned.Single(o => o.Id == id).Growth.Purchases[key], Is.EqualTo(1));
-            Assert.That(battle.Core.RunStart.StartNewRun(1).Succeeded, Is.True);
-            Assert.That(battle.Buffers.CharacterReadSink.Owned.All(o => o.Growth.Purchases.Count == 0), Is.True);
-        }
         internal static void SeedPurchase(ProjectL.Systems.RuntimeSystem.BufferSystems.Core.IBufferQuery buffers, TraitKey key)
         {
             // 구매 정산은 후속 단계다. 이 픽스처는 전투 진입 전 보유 이력만 설치한다.

@@ -114,6 +114,9 @@
 		<property name="start">
 			<value>3</value>
 		</property>
+		<relationship name="modulators">
+			<destination>{fc5422e1-0052-489d-a06e-2fa4877d7736}</destination>
+		</relationship>
 		<relationship name="audioFile">
 			<destination>{d13bf09f-4466-4a23-9339-583c69cad9eb}</destination>
 		</relationship>
@@ -122,6 +125,9 @@
 		<property name="start">
 			<value>2</value>
 		</property>
+		<relationship name="modulators">
+			<destination>{3a34c7ab-2fc6-4069-990e-0430a774d47f}</destination>
+		</relationship>
 		<relationship name="audioFile">
 			<destination>{2d520b07-8086-4642-b2cc-1317d4c1b5c0}</destination>
 		</relationship>
@@ -130,6 +136,9 @@
 		<property name="start">
 			<value>4</value>
 		</property>
+		<relationship name="modulators">
+			<destination>{a1966539-2579-4780-9be4-23eed6e10ecb}</destination>
+		</relationship>
 		<relationship name="audioFile">
 			<destination>{2d2a5e92-d100-4631-a10d-f33aa9b42816}</destination>
 		</relationship>
@@ -175,6 +184,30 @@
 	</object>
 	<object class="MixerBusPanner" id="{e23ff707-d45f-46d8-b40c-76f1446fac88}" />
 	<object class="MixerBusFader" id="{77d88886-13c6-4b44-91ad-3172ea4f5284}" />
+	<object class="RandomizerModulator" id="{fc5422e1-0052-489d-a06e-2fa4877d7736}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>pitch</value>
+		</property>
+		<property name="amount">
+			<value>6.25</value>
+		</property>
+	</object>
+	<object class="RandomizerModulator" id="{3a34c7ab-2fc6-4069-990e-0430a774d47f}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>pitch</value>
+		</property>
+		<property name="amount">
+			<value>6.25</value>
+		</property>
+	</object>
+	<object class="RandomizerModulator" id="{a1966539-2579-4780-9be4-23eed6e10ecb}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>pitch</value>
+		</property>
+		<property name="amount">
+			<value>6.25</value>
+		</property>
+	</object>
 	<object class="RandomizerModulator" id="{f7601796-37a9-4e2f-a7e3-a334a512c704}">
 		<property name="nameOfPropertyBeingModulated">
 			<value>pitch</value>

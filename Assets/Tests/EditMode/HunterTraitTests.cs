@@ -22,7 +22,7 @@ namespace ProjectL.Tests.Core
             input = TraitCombatFixtures.Characters(input, input.Characters.Where(c => c.Owner == Owner.Player)
                 .Concat(enemies.Select(c => c.WithHealth(new HealthStateSnapshot(100, 100))
                     .WithPlacement(CharacterRuntimeArea.EnemyWaiting, null, null, null, Array.Empty<CellCoord>()))).ToArray());
-            var state = input.State.With(phase: CombatFlowPhase.PlayerInput,isNight: false,itemRandomState: 123,                allocation: new CombatAllocationFacts(50, 17),                turn: new CombatTurnFacts(StagePhase.Deployment, preparationIndex: 2, mainPlacementLocked: true,
+            var state = input.State.With(phase: CombatFlowPhase.PlayerInput,itemRandomState: 123,                allocation: new CombatAllocationFacts(50, 17),                turn: new CombatTurnFacts(StagePhase.Deployment,
                     controllerTurnSequence: 16, completedPlayerTurnCount: 8,
                     enemyOrigins: enemies.Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray(),
                     completedControllerTurnCount: 16));
@@ -34,14 +34,12 @@ namespace ProjectL.Tests.Core
             Assert.That(result.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(1015568748u));
             Assert.That(input.State.EnvironmentProgress.RandomState, Is.EqualTo(1u));
             Assert.That(result.FinalState.Turn.ControllerPhase, Is.EqualTo(CombatControllerPhase.StartingPlayer));
-            Assert.That(result.FinalState.Turn.PreparationIndex, Is.EqualTo(2));
-            Assert.That(result.FinalState.Turn.NightStartPlayerTurnCount, Is.EqualTo(8));
             Assert.That(result.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(16));
             Assert.That(result.FinalState.Phase, Is.EqualTo(CombatFlowPhase.Automatic));
-            Assert.That(result.FinalState.IsNight, Is.True);
+            Assert.That(result.FinalState.InCombat, Is.True);
             Assert.That(result.FinalState.Allocation.SameValues(state.Allocation), Is.True);
             Assert.That(result.FinalState.ItemRandomState, Is.EqualTo(123u));
-            var begun = CombatTurnCalculator.BeginControllerTurn(CombatCommandComposition.Project(result));
+            var begun = CombatTurnCalculator.BeginControllerTurn(CombatCommandComposition.Project(result), Array.Empty<IMovementTileRule>());
             Assert.That(begun.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(1015568748u));
             Assert.That(Target(TraitCombatFixtures.Final(begun, 1)), Is.EqualTo(new EntityId(2)));
         }

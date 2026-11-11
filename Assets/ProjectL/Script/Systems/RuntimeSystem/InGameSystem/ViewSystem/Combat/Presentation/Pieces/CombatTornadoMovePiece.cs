@@ -7,7 +7,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 {
     /// <summary>
     /// 폭풍 몸을 다음 중심까지 옮기는 조각입니다(토네이도 View 설계 TN4). 중심 사건 하나가 조각 하나이고, 끝나면 그 중심의 접촉 사건이 이어집니다.
-    /// 취소되면 멈추기만 합니다. 결과 끝 표시 갱신이 최종 자리로 맞춥니다.
+    /// 시작한 뒤 취소되면 하붑 이동 조각처럼 목표 자리로 옮기고 끝납니다(평가 G1-02). 오류 정지 화면에 칸 사이 몸이 남지 않게 합니다.
+    /// 결과 끝 표시 갱신은 그대로 최종 자리로 맞춥니다.
     /// </summary>
     internal sealed class CombatTornadoMovePiece : ICombatPresentationPiece
     {
@@ -17,6 +18,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly Vector3 _from;
         private readonly Vector3 _to;
         private float _elapsed;
+        private bool _begun;
 
         internal CombatTornadoMovePiece(ICombatTornadoField field, TornadoPresentationSettingsData settings, long sourceId, Vector3 from, Vector3 to)
         {
@@ -33,6 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             _elapsed = 0f;
             IsEnded = false;
+            _begun = true;
             _field.MoveBody(_sourceId, _from);
         }
 
@@ -45,6 +48,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             IsEnded = _elapsed >= _settings.MoveStepSeconds;
         }
 
-        public void Cancel() => IsEnded = true;
+        public void Cancel()
+        {
+            if (IsEnded) return;
+            IsEnded = true;
+            if (_begun) _field.MoveBody(_sourceId, _to);
+        }
     }
 }

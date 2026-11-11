@@ -1,7 +1,7 @@
 {
     "name": "ProjectL.Tool.Runtime",
     "rootNamespace": "ProjectL.Tool.Runtime",
-    "references": [],
+    "references": ["Cinemachine", "Unity.RenderPipelines.Universal.Runtime"],
     "autoReferenced": true,
     "overrideReferences": true,
     "precompiledReferences": [],

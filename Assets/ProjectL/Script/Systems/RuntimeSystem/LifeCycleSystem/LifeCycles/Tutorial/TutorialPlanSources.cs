@@ -1,9 +1,11 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
 {
@@ -20,7 +22,9 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
             ICombatStateBufferReadSink combatState,
             ICombatResultHistoryReadSink combatResults,
             ICombatViewBufferReadSink combatInput,
-            ITutorialViewExecution execution)
+            ITutorialViewExecution execution,
+            ICombatProgressView progress,
+            ICharacterBufferReadSink characters)
         {
             Store = store ?? throw new ArgumentNullException(nameof(store));
             State = state ?? throw new ArgumentNullException(nameof(state));
@@ -28,16 +32,20 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
             CombatResults = combatResults ?? throw new ArgumentNullException(nameof(combatResults));
             CombatInput = combatInput ?? throw new ArgumentNullException(nameof(combatInput));
             Execution = execution ?? throw new ArgumentNullException(nameof(execution));
+            Progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            Characters = characters ?? throw new ArgumentNullException(nameof(characters));
         }
 
         /// <summary>다른 Plan과 같은 재료(Buffer 묶음·실행 창구)에서 필요한 것만 꺼냅니다.</summary>
-        internal static TutorialPlanSources From(IBufferQuery buffers, ITutorialViewExecution execution)
+        internal static TutorialPlanSources From(IBufferQuery buffers, ITutorialViewExecution execution,
+            ICombatProgressView progress)
         {
             if (buffers == null)
                 throw new ArgumentNullException(nameof(buffers));
 
             return new TutorialPlanSources(buffers.TutorialStore, buffers.TutorialStateReadSink,
-                buffers.CombatStateReadSink, buffers.CombatResultHistoryReadSink, buffers.CombatViewReadSink, execution);
+                buffers.CombatStateReadSink, buffers.CombatResultHistoryReadSink, buffers.CombatViewReadSink,
+                execution, progress, buffers.CharacterReadSink);
         }
 
         /// <summary>요청 큐·결과·세션·단계 규칙의 원본입니다. 바꾸는 것은 Job만 합니다.</summary>
@@ -53,5 +61,11 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial
 
         /// <summary>실행 소유자의 내부 사실과 실행 창구입니다.</summary>
         internal ITutorialViewExecution Execution { get; }
+
+        /// <summary>설명 시작에 필요한 기존 전투 View의 진행 사실만 읽습니다.</summary>
+        internal ICombatProgressView Progress { get; }
+
+        /// <summary>실제 피격 대상의 소유 진영을 읽습니다. 사망한 대상도 같은 전투의 기록으로 확인합니다.</summary>
+        internal ICharacterBufferReadSink Characters { get; }
     }
 }

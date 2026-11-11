@@ -16,8 +16,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         public static int MovementBonusAt(CellCoord cell, MovementEnvironmentFacts environment) =>
             GroundCompactionTraitRule.MovementBonusAt(cell, environment ?? throw new ArgumentNullException(nameof(environment)));
+        /// <summary>진영을 알 수 없는 기존 조회에서 면제를 적용하지 않은 환경의 사거리 감소를 반환합니다.</summary>
         public static int RangeReductionAt(CellCoord cell, MovementEnvironmentFacts environment) =>
-            DustScreenTraitRule.RangeReductionAt(cell, environment ?? throw new ArgumentNullException(nameof(environment)));
+            DustScreenTraitRule.UnfilteredRangeReductionAt(cell, environment ?? throw new ArgumentNullException(nameof(environment)));
+
+        public static int RangeReductionAt(CellCoord cell, MovementEnvironmentFacts environment, Owner queryingSide) =>
+            DustScreenTraitRule.RangeReductionAt(cell, environment ?? throw new ArgumentNullException(nameof(environment)), queryingSide);
 
         /// <summary>
         /// 이동자가 방금 떠난 칸에 흔적을 남깁니다. 흔적은 지나간 칸(들어갔다가 떠난 칸)에만 생기므로

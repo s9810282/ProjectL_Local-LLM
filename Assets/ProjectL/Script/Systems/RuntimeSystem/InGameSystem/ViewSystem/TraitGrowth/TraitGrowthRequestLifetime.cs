@@ -6,6 +6,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.TraitGrowthView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 using ProjectL.Systems.ServiceKeys.Runtime;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
@@ -22,29 +23,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
     internal sealed class TraitGrowthRequestLifetime : ITraitGrowthRequestSubmitter, ITraitGrowthRequestExecution,
         ISystemPostBindService, ISystemTick, ISystemShutdown, IExportSystemServices
     {
-        private readonly RuntimeFaultBoundary _faults;
         private ITraitGrowthViewReadSink _input;
         private ITraitGrowthViewWriteSink _writer;
         private ITraitGrowthResultReadSink _results;
-        private IJobRunner _runner;
+        // 제출 중·예약·실행 중·정지·종료 사실과 실행 시작·끝 앞부분은 회복과 함께 쓰는 실행 수명이 맡습니다(설계 §2.7 C-12).
+        private readonly ViewRequestExecution _execution;
         private int _pending;
-        private bool _reserved;
-        private bool _executing;
-        private bool _submitting;
-        private bool _stopped;
-        private bool _shutdown;
 
-        internal TraitGrowthRequestLifetime(RuntimeFaultBoundary faults) =>
-            _faults = faults ?? throw new ArgumentNullException(nameof(faults));
+        internal TraitGrowthRequestLifetime(RuntimeFaultBoundary faults)
+        {
+            // 오류 경계는 실행 수명만 씁니다(실행 오류·실패 보고).
+            _execution = new ViewRequestExecution("TraitGrowthRequest", "증강", faults);
+        }
 
-        public bool HasPending => _submitting || _pending != 0;
+        public bool HasPending => _execution.IsSubmitting || _pending != 0;
+
+        /// <summary>
+        /// 게시된 결과 중 화면이 아직 확인하지 않은 것이 있습니다. View 안에서 증강 결과 번호를 비교하는 곳은 여기 하나이고,
+        /// 증강 화면 컨트롤러도 이것을 읽습니다(설계 §2.7 C-12). 서비스를 받기 전이면 거짓입니다.
+        /// </summary>
+        public bool HasUnacknowledgedResult => _results != null && _results.HandledCommandNumber > _input.AcknowledgedResultNumber;
 
         // 앞선 결과를 아직 확인하지 않았으면 Core가 처리하지 않으므로 예약하지 않습니다(빈 Job 반복을 막음).
-        public bool CanReserveExecution => !_stopped && !_shutdown && !_faults.IsFaulted && !_reserved &&
-            _pending != 0 && _results != null && _results.HandledCommandNumber < _pending &&
-            _results.HandledCommandNumber <= _input.AcknowledgedResultNumber;
+        public bool CanReserveExecution => _execution.CanReserve && _pending != 0 && _results != null &&
+            _results.HandledCommandNumber < _pending && !HasUnacknowledgedResult;
 
-        public bool HasReservedExecution => _reserved;
+        public bool HasReservedExecution => _execution.IsReserved;
 
         internal void BindServices(ITraitGrowthViewReadSink input, ITraitGrowthViewWriteSink writer,
             ITraitGrowthResultReadSink results, IJobRunner runner)
@@ -52,25 +56,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
             _input = input ?? throw new ArgumentNullException(nameof(input));
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
             _results = results ?? throw new ArgumentNullException(nameof(results));
-            _runner = runner ?? throw new ArgumentNullException(nameof(runner));
+            _execution.BindRunner(runner);
         }
 
         public int Submit(TraitGrowthChoiceRequest request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            RequireAvailable();
+            _execution.RequireAvailable();
             ReleaseSettled();
             if (HasPending) throw new InvalidOperationException("이전 증강 선택의 처리와 결과 확인을 기다려야 합니다.");
-            _submitting = true;
-            try
-            {
-                _pending = _writer.Submit(request);
-                return _pending;
-            }
-            finally
-            {
-                _submitting = false;
-            }
+            return _execution.Submit(() => _pending = _writer.Submit(request));
         }
 
         public bool TryReserveExecution(out int number)
@@ -83,29 +78,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
                 _pending = 0;
                 return false;
             }
-            _reserved = true;
+            _execution.Reserve();
             number = _pending;
             return true;
         }
 
-        public bool TryBeginExecution(int number)
-        {
-            if (_shutdown || !_reserved || _executing || _pending != number) return false;
-            _executing = true;
-            return true;
-        }
+        public bool TryBeginExecution(int number) => _execution.TryBegin(number, _pending);
 
         public void NotifyExecutionFinished(int number, bool processed, Exception error)
         {
-            // 원인을 먼저 고정합니다.
-            if (error != null) _faults.Report(error);
-            if (!_reserved || _pending != number)
-            {
-                if (!_shutdown) Fail("보관한 예약과 다른 증강 실행 종료가 도착했습니다.");
-                return;
-            }
-            _executing = false;
-            _reserved = false;
+            if (!_execution.TryFinish(number, _pending, error)) return;
+            _execution.EndReservation();
             if (error != null) return;
             // 게시된 결과는 화면 컨트롤러가 확인합니다. 그때까지 번호를 들고 있어 화면이 잠깁니다.
             if (processed || _results.HandledCommandNumber >= number) return;
@@ -121,18 +104,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
 
         public void Shutdown()
         {
-            if (_shutdown) return;
-            _shutdown = true;
-            if (_executing || !_reserved) return;
-            // 루트는 View 다음 Global을 종료합니다. 통지 없이 버려지는 대기 예약을 놓으려면 같은 Runner를 먼저 비웁니다(회복과 같음).
-            _runner?.Clear();
-            if (_runner == null || _runner.IsIdle) _reserved = false;
+            if (!_execution.BeginShutdown()) return;
+            // 통지 없이 버려지는 대기 예약을 놓습니다(Runner 비우기는 실행 수명이 합니다, 회복과 같음).
+            _execution.TryReleaseQueuedReservation();
         }
 
         // 결과가 확인됐거나, 입력도 결과도 없으면(Run 재시작 Clear) 들고 있던 번호를 놓습니다.
         private void ReleaseSettled()
         {
-            if (_pending == 0 || _reserved || _input == null) return;
+            if (_pending == 0 || _execution.IsReserved || _input == null) return;
             if (_input.AcknowledgedResultNumber >= _pending)
             {
                 _pending = 0;
@@ -141,17 +121,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth
             if (_results.HandledCommandNumber < _pending && !_input.TryGetCommand(_pending, out _)) _pending = 0;
         }
 
-        private void RequireAvailable()
-        {
-            if (_input == null || _stopped || _shutdown || _faults.IsFaulted)
-                throw new InvalidOperationException("연결되고 정지하지 않은 증강 요청 소유자가 필요합니다.");
-        }
-
-        private void Fail(string message)
-        {
-            _stopped = true;
-            _faults.Report(new InvalidOperationException("[TraitGrowthRequest] " + message));
-        }
+        private void Fail(string message) => _execution.Fail(message);
 
         public void PostBindService(ISystemServiceStoreReader resolver)
         {

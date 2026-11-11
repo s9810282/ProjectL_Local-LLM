@@ -20,9 +20,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.ViewStage.Item
                 throw new InvalidOperationException("[ViewStageData] 프랍과 환경 외형의 StageKey가 같아야 합니다.");
             // 배경 방식별 칸(프리팹·맵 SO·바닥 타일)은 프랍 한 곳이 검사한다.
             Prop.Validate();
-            // 카메라 조작 값은 필수다(카메라 조작 설계 Q-CC8 A). 읽기가 값도 검사한다(CombatCameraSettingsSO.CreateData).
-            if (Prop.CameraSettings == null)
-                throw new InvalidOperationException($"[ViewStageData] 전투 카메라 조작 값(cameraSettings)이 필요합니다. StageKey: {Prop.StageKey}");
         }
 
         public int StageKey => Prop.StageKey;

@@ -15,10 +15,15 @@ MonoBehaviour:
   traitVisualData:
     key: 300
     displayName: "\uD76C\uC0DD"
-    icon: {fileID: 0}
-    description: "적 턴에 주변 2칸 아군이 치명적인 공격을 받으면 \n대신 피해를 받습니다. \n턴마다 최대 1회 발동합니다."
+    icon: {fileID: 21300000, guid: 6e7f4a0fb6172c54f84059361a7aaaba, type: 3}
+    description: "\uC801 \uD134\uC5D0 \uC8FC\uBCC0 2\uCE78 \uC544\uAD70\uC774 \uCE58\uBA85\uC801\uC778
+      \uACF5\uACA9\uC744 \uBC1B\uC73C\uBA74 \n\uB300\uC2E0 \uD53C\uD574\uB97C \uBC1B\uC2B5\uB2C8\uB2E4.
+      \n\uD134\uB9C8\uB2E4 \uCD5C\uB300 1\uD68C \uBC1C\uB3D9\uD569\uB2C8\uB2E4."
     defenseReductionDescription: 
-    rankValueFormat: 
+    rankValueFormat: "\uD53C\uD574 \uCC98\uB9AC \uD6C4 \uBCF4\uD638\uB9C9: {0} \u2192
+      {2} (+{1})"
+    rankEffectFormat: "\uB300\uC2E0 \uBC1B\uC740 \uD53C\uD574\uB85C \uC0AC\uB9DD
+      \uBC29\uC9C0: {0} \u2192 {1}"
     activations:
     - kind: 110
       direction: 0
@@ -63,7 +68,7 @@ MonoBehaviour:
     - condition: 0
       effect:
         effect: 11
-        positionOffset: {x: 0, y: -0.35, z: 0}
+        positionOffset: {x: 0, y: 0, z: 0}
         riderYOffset: 0
         rotationOffset: {x: 0, y: 0, z: 0}
     trailPrefab: {fileID: 0}

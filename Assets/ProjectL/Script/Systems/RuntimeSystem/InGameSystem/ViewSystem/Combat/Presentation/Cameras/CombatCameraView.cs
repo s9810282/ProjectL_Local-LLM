@@ -9,23 +9,23 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras
 {
     /// <summary>
-    /// 플레이어가 움직이는 전투 시점입니다(카메라 조작 설계 CC1·CC3·CC4). 팬 상태는 여기서만 소유하고, 자세 사용 맵은 pipeline 어댑터로 적용합니다.
+    /// 플레이어가 움직이는 전투 시점입니다(카메라 조작 설계 CC1·CC3·CC4). 팬 상태는 여기서만 소유하고, 자세 줌은 pipeline 어댑터로 적용합니다.
     /// 렌즈(보기 크기)는 카메라 창구(<see cref="CombatCameraWindow.TrySetViewSize"/>)에 맡깁니다. 입력 종류는 모릅니다.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 표시 연결마다 Factory가 하나 만들고 표시가 해제 때 <see cref="Restore"/>합니다(계획 P6·P8). 배경은 씬 수명이라 카메라가 남기 때문입니다.
-    /// 맵 카메라가 없으면(배경 없는 시험 조립, 카메라 없는 맵) 모든 조작이 아무 일도 하지 않습니다.
+    /// 표시 연결마다 Factory가 하나 만들고 표시가 해제 때 <see cref="Restore"/>합니다(계획 P6·P8). 공용 카메라는 씬 수명이라 표시보다 오래 남습니다.
+    /// 연결된 카메라가 없으면(카메라 없는 맵) 모든 조작이 아무 일도 하지 않습니다.
     /// </para>
     /// <para>
-    /// 이동은 카메라마다 프랍을 세운 순간의 회전으로 오른쪽·위쪽 축을 잡고, 같은 오프셋을 기준 월드 위치에 더합니다(설계 CC3, 계획 P2).
-    /// 그래서 Day·Night 카메라가 함께 움직여 낮↔밤 전환에서 튀지 않습니다. 보기 크기는 모든 맵 카메라가 하나를 함께 씁니다.
+    /// 이동은 카메라마다 연결 전의 회전으로 오른쪽·위쪽 축을 잡고, 같은 오프셋을 기준 월드 위치에 더합니다(설계 CC3, 계획 P2).
+    /// 운영은 공용 카메라 하나를 넘기며, 보기 크기·연출 줌과 팬의 기존 계산을 유지합니다.
     /// </para>
     /// </remarks>
     internal sealed class CombatCameraView : ICombatCameraControl
     {
         private readonly CombatCameraWindow _window;
-        private readonly CombatMapCamera[] _cameras;
+        private readonly CombatCameraSnapshot[] _cameras;
         private readonly CombatCameraSettingsData _settings;
         // 처음 보기 크기 = 자세 모드는 SO ZoomMax, 기존 모드는 프리팹 렌즈값을 제한 안으로 맞춘 값입니다(계획 P4). 이동 속도 비율의 바탕이기도 합니다(P3).
         private readonly float _initialSize;
@@ -35,14 +35,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private float _size;
         private bool _begun;
 
-        /// <param name="window">렌즈를 바꾸는 카메라 창구입니다. 같은 맵 카메라를 이미 받았어야 합니다.</param>
-        /// <param name="cameras">세운 맵 프랍의 카메라 사실입니다. 비어 있으면 조작이 없습니다.</param>
-        /// <param name="settings">카메라 조작 값입니다. 맵 카메라가 있으면 필수입니다(운영 DB가 스테이지마다 필수로 검사, 결정 Q-CC8 A).</param>
-        internal CombatCameraView(CombatCameraWindow window, IReadOnlyList<CombatMapCamera> cameras, CombatCameraSettingsData settings)
+        /// <param name="window">렌즈를 바꾸는 카메라 창구입니다. 같은 연결된 카메라를 이미 받았어야 합니다.</param>
+        /// <param name="cameras">명시적으로 읽은 카메라 기준 사실입니다. 비어 있으면 조작이 없습니다.</param>
+        /// <param name="settings">카메라 조작 값입니다. 연결된 카메라가 있으면 필수이며 씬 바인딩이 제공합니다.</param>
+        internal CombatCameraView(CombatCameraWindow window, IReadOnlyList<CombatCameraSnapshot> cameras, CombatCameraSettingsData settings)
         {
             _window = window ?? throw new ArgumentNullException(nameof(window));
             if (cameras == null) throw new ArgumentNullException(nameof(cameras));
-            _cameras = new CombatMapCamera[cameras.Count];
+            _cameras = new CombatCameraSnapshot[cameras.Count];
             _posePaths = new CombatCameraZoomPosePath[cameras.Count];
             _poseAdapters = new CombatCameraZoomPose[cameras.Count];
             for (int i = 0; i < _cameras.Length; i++)
@@ -50,21 +50,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_cameras.Length == 0)
                 return;
 
-            _settings = settings ?? throw new InvalidOperationException("[CombatCameraView] 맵 카메라가 있는데 카메라 조작 값이 없습니다(StageViewPropData.cameraSettings).");
+            _settings = settings ?? throw new InvalidOperationException("[CombatCameraView] 연결된 카메라가 있는데 카메라 조작 값이 없습니다(CombatSceneCameraBinding.settings).");
             for (int i = 0; i < _cameras.Length; i++)
             {
                 if (_cameras[i].Transform == null)
-                    throw new ArgumentException($"[CombatCameraView] 맵 카메라 사실에 카메라 오브젝트가 없습니다: {_cameras[i].Name}", nameof(cameras));
+                    throw new ArgumentException($"[CombatCameraView] 연결된 카메라 사실에 카메라 오브젝트가 없습니다: {_cameras[i].Name}", nameof(cameras));
                 // 보기 크기는 하나를 함께 쓰므로 처음 크기가 같아야 합니다. 다르면 첫 줌에서 한쪽이 튑니다.
                 if (!_settings.UseZoomPose && _cameras[i].BaseLens != _cameras[0].BaseLens)
                     throw new InvalidOperationException(
-                        $"[CombatCameraView] 맵 카메라의 처음 렌즈값이 다릅니다: {_cameras[0].Name}={_cameras[0].BaseLens}, {_cameras[i].Name}={_cameras[i].BaseLens}");
+                        $"[CombatCameraView] 연결된 카메라의 처음 렌즈값이 다릅니다: {_cameras[0].Name}={_cameras[0].BaseLens}, {_cameras[i].Name}={_cameras[i].BaseLens}");
             }
             if (_settings.UseZoomPose)
             {
                 for (int i = 0; i < _cameras.Length; i++)
                 {
-                    CombatMapCamera camera = _cameras[i];
+                    CombatCameraSnapshot camera = _cameras[i];
                     CombatCameraZoomPose.ValidateCamera(camera.Transform.GetComponent<CinemachineVirtualCamera>());
                     _posePaths[i] = CombatCameraZoomPosePath.FromOffsets(new Pose(camera.BasePosition, camera.BaseRotation),
                         _settings.ZoomOutPositionOffset, _settings.ZoomOutRotationOffset,
@@ -188,7 +188,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             List<Exception> errors = null;
             for (int i = 0; i < _cameras.Length; i++)
             {
-                CombatMapCamera camera = _cameras[i];
+                CombatCameraSnapshot camera = _cameras[i];
                 if (_poseAdapters[i] != null)
                     CleanupErrors.Try(_poseAdapters[i].Unbind, ref errors);
                 CleanupErrors.Try(() => camera.Transform.SetPositionAndRotation(camera.BasePosition, camera.BaseRotation), ref errors);
@@ -197,13 +197,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             CleanupErrors.ThrowIfAny(errors, "[CombatCameraView] 카메라를 처음 위치·크기로 되돌리지 못했습니다.");
         }
 
-        /// <summary>자세 어댑터에 팬을 전달하거나 기존 맵 카메라를 기준 위치에서 자기 화면 축으로 옮깁니다.</summary>
+        /// <summary>자세 어댑터에 팬을 전달하거나 기존 연결된 카메라를 기준 위치에서 자기 화면 축으로 옮깁니다.</summary>
         private void Place()
         {
             var local = new Vector3(_offset.x, _offset.y, 0f);
             for (int i = 0; i < _cameras.Length; i++)
             {
-                CombatMapCamera camera = _cameras[i];
+                CombatCameraSnapshot camera = _cameras[i];
                 if (_settings.UseZoomPose)
                     _poseAdapters[i].SetOffset(_offset);
                 else

@@ -59,7 +59,7 @@ namespace ProjectL.Tests.CoreIntegration
                 new TargetingMethodSpec(TargetingShape.CardinalLine, TargetingChoiceMode.Single, TargetingSplash.None, 0));
             var stats = OwnedCharacterStatsCalculator.Calculate(new[] { profile },
                 UnitSpecAdapter.ReadCategories(ConfiguredMovementBattle.Config), new[] { owned },
-                null, new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }).Single().Stats;
+                null, new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }, default).Single().Stats;
             Assert.That(cowboy.Traits.ToArray().Select(trait => trait.TraitKey), Does.Contain(TraitKey.Pull));
             Assert.That(stats.TraitKeys.ToArray(), Is.EqualTo(cowboy.Traits.ToArray().Select(trait => trait.TraitKey).ToArray()));
             Assert.That(stats.CategoryKey, Is.EqualTo(cowboy.CategoryKey));

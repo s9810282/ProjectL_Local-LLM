@@ -107,7 +107,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             var growth = query as IHasTraitGrowthTables;
             var catalog = TraitGrowthDefinitionAdapter.Build(growth?.CategoryTraitProgressions,
                 growth?.TraitGrowthDefinitions, config.DefaultTraits);
-            return OwnedCharacterStatsCalculator.CalculateForMains(profiles, categories, owned, mains, souls, catalog);
+            return OwnedCharacterStatsCalculator.CalculateForMains(profiles, categories, owned, mains, souls,
+                config.LevelProgression, catalog);
         }
     }
 }

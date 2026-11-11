@@ -14,6 +14,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly bool _rented;
         private readonly UnitHUDLayer _layer;
         private readonly Action<EntityKey, FieldUnitView> _return;
+        // 기존 필드 표시를 빌린 경우(rented = false) 그 표시의 신원입니다. 준비 중 다른 개체로 바뀌면 오류로 알립니다(평가 G2-02).
+        private readonly EntityId _entityId;
+        private readonly int _bindVersion;
         private Renderer[] _renderers;
         private bool[] _rendererStates;
         private Collider[] _colliders;
@@ -30,6 +33,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _rented = rented;
             _layer = layer;
             _return = returnView;
+            if (!rented && view != null)
+            {
+                _entityId = view.EntityId;
+                _bindVersion = view.BodyTrackingVersion;
+            }
         }
 
         internal void Activate(bool isCovered)
@@ -77,6 +85,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             if (_disposed || _view == null || _view.Hud == null || (_rented && !_view.isActiveAndEnabled))
                 throw new InvalidOperationException("[CombatUnitPreparation] 준비 중인 유닛 또는 HUD가 해제됐습니다.");
+            if (!_rented && (_view.EntityId != _entityId || _view.BodyTrackingVersion != _bindVersion))
+                throw new InvalidOperationException("[CombatUnitPreparation] 준비 중 기존 필드 표시가 다른 개체로 바뀌었습니다.");
             _layer.ValidatePreparation(_view.Hud);
         }
 
@@ -87,6 +97,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             List<Exception> errors = null;
             if (_layer != null && _view != null)
                 CleanupErrors.Try(() => _layer.EndPreparation(_view.Hud), ref errors);
+            // EndPreparation은 시작 때 떠 둔 보임으로 되돌립니다. 기존 필드 표시는 그 사이 바뀐 지금 상태로 다시 맞춥니다(평가 G2-02).
+            // 빌린 표시(rented)는 아래 반환(ResetForPool)이 다시 맞춥니다.
+            if (!_rented && _view != null) CleanupErrors.Try(_view.ResyncHudVisible, ref errors);
             if (_rented)
             {
                 if (_view != null)

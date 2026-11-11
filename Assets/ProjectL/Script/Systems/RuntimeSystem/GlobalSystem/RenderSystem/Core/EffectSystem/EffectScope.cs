@@ -43,8 +43,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.EffectSy
         public void Play(EffectScopeRequest handleRequset) 
         {
             ElementNode Node = EffectSystemHandleServices.GetElementNode(handleRequset.EffectType);
+            Vector3 localOriginOffset = Vector3.zero;
+            if (Node.worldOriginOffset != Vector3.zero)
+                localOriginOffset = handleRequset.TargetParent != null
+                    ? handleRequset.TargetParent.InverseTransformVector(Node.worldOriginOffset)
+                    : Node.worldOriginOffset;
             Node.particleStopNotifier.transform.SetParent(handleRequset.TargetParent);
-            Node.particleStopNotifier.transform.localPosition = handleRequset.LocalPosition;
+            Node.particleStopNotifier.transform.localPosition = handleRequset.LocalPosition + localOriginOffset;
             Node.particleStopNotifier.transform.localRotation = handleRequset.LocalRotation;
             Node.particleStopNotifier.gameObject.SetActive(true);
 

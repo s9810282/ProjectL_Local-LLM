@@ -50,7 +50,7 @@ namespace ProjectL.Tests.Core
         {
             var owned = Owned(category);
             var row = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(Spec()), Categories(), new[] { owned },
-                new MainCharacterPersistentState(7, 13, 11, 5), new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }).Single();
+                new MainCharacterPersistentState(7, 13, 11, 5), new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }, default).Single();
             Assert.That((row.Stats.CurrentHealth, row.Stats.MaxHealth, row.Stats.AttackPower, row.Stats.PhysicalDefense),
                 Is.EqualTo((7, 13, 20, 5)));
             Assert.That(row.Stats.MoveRange, Is.EqualTo(distance));

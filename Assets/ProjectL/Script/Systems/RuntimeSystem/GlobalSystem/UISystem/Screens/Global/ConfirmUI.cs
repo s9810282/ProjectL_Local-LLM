@@ -93,6 +93,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             {
                 ConfirmAction.SaveSettings => "변경한 설정을 저장하시겠습니까?",
                 ConfirmAction.AbandonRun => "현재 전투를 포기하시겠습니까?",
+                ConfirmAction.AbandonStageRun => "현재 런을 포기하고 로비로 돌아가시겠습니까?",
                 ConfirmAction.QuitGame => "게임을 종료하시겠습니까?",
                 _ => throw new InvalidOperationException("[ConfirmUI] 아직 지원하지 않는 확인 종류입니다.")
             };

@@ -20,6 +20,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </summary>
     internal sealed class FieldRailwayPresenter
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemRailwayBegin = new("Combat.Action.Playback.System.Railway.Begin");
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemRailwayTick = new("Combat.Action.Playback.System.Railway.Tick");
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemRailwayEnd = new("Combat.Action.Playback.System.Railway.End");
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemRailwayCancel = new("Combat.Action.Playback.System.Railway.Cancel");
+#endif
+
         private readonly Transform _cellsRoot;
         private readonly RailwayVisualData _config;
         private readonly IEffectSystemServices _effects;
@@ -57,7 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal void Install(FieldGridMapper mapper, IReadOnlyList<CellCoord> railCells)
         {
             if (_isReleased || _isStarting || _isCleaning || _isClearing || _hasUnreturnedEffects)
-                throw new InvalidOperationException("[FieldRailwayPresenter] 해제된 표시입니다.");
+                throw new InvalidOperationException("[FieldRailwayPresenter] 해제됐거나 기차 시작·정리 중이거나 이펙트를 다 돌려받지 못한 표시에는 설치할 수 없습니다.");
             Clear();
             if (mapper == null)
                 throw new ArgumentNullException(nameof(mapper));
@@ -178,6 +186,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <param name="advanced">이동 직후·정리 전의 이전/현재 경과 시간입니다. 시작 시 (0, 0)을 한 번 전달합니다.</param>
         internal void Begin(RailwayGimmickActivationSnapshot activation, Action completed, Action<float, float> advanced = null)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePlaybackSystemRailwayBeginSample = _profilePlaybackSystemRailwayBegin.Auto();
+#endif
+
             if (activation == null) throw new ArgumentNullException(nameof(activation));
             if (completed == null) throw new ArgumentNullException(nameof(completed));
             if (_isReleased || _isClearing || _isCleaning || _isStarting || _hasUnreturnedEffects || _installation == null || _completed != null)
@@ -197,8 +209,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _isStarting = true;
             try
             {
+                // Scope는 발동마다 새로 받지 않고 이 표시에서 하나를 다시 씁니다(평가 C9-03). EffectSystem은 받은 Scope를 Shutdown까지 쥡니다.
                 if (_config.Effect != EffectType.Empty)
-                    _effectScope = _effects.GetEffectHandle()
+                    _effectScope ??= _effects.GetEffectHandle()
                         ?? throw new InvalidOperationException("[FieldRailwayPresenter] EffectScope가 없습니다.");
                 foreach (TrackVisual train in _trains)
                 {
@@ -231,6 +244,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             if (_completed == null || _isCleaning || _isStarting)
                 return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePlaybackSystemRailwayTickSample = _profilePlaybackSystemRailwayTick.Auto();
+#endif
             if (_isTicking) throw new InvalidOperationException("열차 Tick을 중첩 호출할 수 없습니다.");
             Action completed = null;
             int version = _version;
@@ -249,6 +265,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (_version != version || _isReleased || _isClearing) return;
                 if (_elapsed < duration)
                     return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var endSample = _profilePlaybackSystemRailwayEnd.Auto();
+#endif
                 completed = _completed;
                 _completed = null;
                 _advanced = null;
@@ -268,6 +287,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var cancelSample = _completed != null ? _profilePlaybackSystemRailwayCancel.Auto() : default;
+#endif
+
             _version++;
             _completed = null;
             _advanced = null;
@@ -280,13 +303,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_isCleaning || _isStarting) return;
             _isCleaning = true;
             var scope = _effectScope;
-            _effectScope = null;
             List<Exception> errors = null;
             try
             {
                 try { scope?.StopAll(); }
                 catch (Exception error)
                 {
+                    // StopAll이 중간에 실패한 Scope는 다시 쓰지 않는다(이미 돌려준 노드를 두 번 돌려줄 수 있음, 평가 C9-03).
+                    _effectScope = null;
                     // 반환 실패 자식이 붙은 앵커는 직접 Destroy하지 않는다(FW-011).
                     _hasUnreturnedEffects = true;
                     (errors ??= new List<Exception>()).Add(error);

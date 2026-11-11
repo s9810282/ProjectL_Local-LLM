@@ -1,5 +1,4 @@
 using UnityEngine;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Feedback;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Assist;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ordering;
@@ -7,12 +6,12 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ord
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts
 {
     /// <summary>
-    /// 화면 좌표를 격자 좌표로 바꾸는 계약입니다. 경로 입력과 커서 그리드 스냅(<see cref="CombatCursorSnap"/>)이 씁니다.
-    /// 실제 구현은 <see cref="CombatPointerMapper"/>이고, <see cref="CombatSceneDisplay"/>가 해제 가드를 얹어 위임합니다. 테스트 가짜도 구현합니다.
+    /// 화면 좌표를 격자 좌표로 바꾸는 계약입니다. 경로 입력·공격 Drag 몸짓(<c>CombatAttackDragGesture</c>)·커서 그리드 스냅(<see cref="CombatCursorSnap"/>)이 씁니다.
+    /// 구현은 <see cref="CombatPointerMapper"/>이고, 연결 전·해제 뒤는 매퍼 자기 상태로 false입니다(씬 표시 나누기 설계 DS2).
     /// </summary>
     /// <remarks>
     /// 옛 <c>ICombatMovementPresenter.cs</c>에서 이름을 바꾼 파일입니다(구조 개선 SV3, GUID 유지).
-    /// 그 파일에 함께 있던 조립 계약 <c>ICombatMovementPresenter</c>(소비자 없음)는 지웠고 결과 사건 계약은 <see cref="ICombatEventPlayback"/>에 흡수했습니다.
+    /// 그 파일에 함께 있던 조립 계약 <c>ICombatMovementPresenter</c>(소비자 없음)는 지웠고 결과 사건 계약은 <c>ICombatEventPlayback</c>에 흡수했습니다.
     /// </remarks>
     internal interface ICombatPointerMapping
     {

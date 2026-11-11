@@ -1,7 +1,6 @@
 using ProjectL.Render.Shader.PostProcessing.EnvironmentalScreenPost;
 using ProjectL.Render.Shader.PostProcessing.FadeInOut;
 using ProjectL.Render.Shader.PostProcessing.SovelEdge;
-using ProjectL.Render.Shader.PostProcessing.Stencil;
 using ProjectL.Render.Shader.PostProcessing.VolmetrickLight;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.RenderFeatureSystem;
 
@@ -9,9 +8,6 @@ namespace ProjectL.Render.Shader.PostProcessing.Core
 {
     public static class RenderFeatureKeys
     {
-        public static readonly RenderFeatureKey<IStencilSettingService> Stencil =
-            new(RenderFeatureType.StencilBlending);
-
         public static readonly RenderFeatureKey<IVolmetrickLightSettingService> VolumetricLight =
             new(RenderFeatureType.VolumetricLight);
 

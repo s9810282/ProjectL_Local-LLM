@@ -29,6 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>경험치·레벨업 수치다. 기본값은 꺼짐이다(설정이 없는 개발 정의·시험).</summary>
         public LevelProgressionSpec Progression { get; }
         public StageClearRewardSpec ClearRewards { get; }
+        public NexusReinforcementSpec NexusReinforcements { get; }
         /// <summary>
         /// 전투 준비가 칸을 정할 최초 무작위 토네이도다. 정의 입력이며 전투 중 환경은 설치된 명령 상태에서 읽는다.
         /// </summary>
@@ -42,13 +43,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             WallBlockingSpec wallBlocking = null,
             BattleObjectiveKind objectiveKind = BattleObjectiveKind.EnemyHeadquartersDestroyed,
             IReadOnlyList<ItemDefinition> itemDefinitions = null, LevelProgressionSpec progression = default,
-            IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null, StageClearRewardSpec clearRewards = null, TraitGrowthCatalog traitGrowth = null)
+            IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null, StageClearRewardSpec clearRewards = null, TraitGrowthCatalog traitGrowth = null,
+            NexusReinforcementSpec nexusReinforcements = null)
         {
             TraitGrowth = traitGrowth ?? TraitGrowthCatalog.Disabled;
             ItemDefinitions = Copy(itemDefinitions ?? Array.Empty<ItemDefinition>());
             InitialRandomTornadoPlacements = Copy(initialRandomTornadoPlacements ?? Array.Empty<InitialRandomTornadoPlacementSpec>());
             Progression = progression;
             ClearRewards = clearRewards;
+            NexusReinforcements = nexusReinforcements;
             Stage = stage ?? throw new ArgumentNullException(nameof(stage));
             if (objectiveKind == BattleObjectiveKind.None || Enum.IsDefined(typeof(BattleObjectiveKind), objectiveKind) == false)
                 throw new ArgumentOutOfRangeException(nameof(objectiveKind));
@@ -76,7 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (attackProfiles == null)
                 throw new ArgumentNullException(nameof(attackProfiles));
-            return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, attackProfiles, Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions, Progression, InitialRandomTornadoPlacements, ClearRewards, TraitGrowth);
+            return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, attackProfiles, Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions, Progression, InitialRandomTornadoPlacements, ClearRewards, TraitGrowth, NexusReinforcements);
         }
 
         public BattleInitialization WithTraitGrowth(TraitGrowthCatalog traitGrowth)
@@ -85,7 +88,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(traitGrowth));
             return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, AttackProfiles,
                 Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions,
-                Progression, InitialRandomTornadoPlacements, ClearRewards, traitGrowth);
+                Progression, InitialRandomTornadoPlacements, ClearRewards, traitGrowth, NexusReinforcements);
         }
 
         private static IReadOnlyList<T> Copy<T>(IReadOnlyList<T> source) where T : class

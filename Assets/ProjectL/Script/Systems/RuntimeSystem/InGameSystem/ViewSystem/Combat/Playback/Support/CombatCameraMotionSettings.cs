@@ -20,7 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly ShakeValues _roarShake;
         private readonly ShakeValues _trainShake;
 
-        /// <summary>카메라 연출이 없는 값입니다(줌 배율 1, 모든 흔들림 세기 0). 설정을 넘기지 않은 조립(시험 등)에서 씁니다.</summary>
+        /// <summary>카메라 연출이 없는 값입니다(줌 배율 1, 모든 흔들림 세기 0). 지금 쓰는 곳은 없습니다(운영은 <see cref="From"/>).</summary>
         internal static CombatCameraMotionSettings None { get; } =
             new(1f, 0f, 0f, CinemachineImpulseDefinition.ImpulseShapes.Bump);
 

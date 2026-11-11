@@ -1,7 +1,7 @@
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
     /// <summary>
-    /// 유닛 외형 층 대여 하나입니다(연출 조립 설계 B13). 지금 층은 이동 투명도(입력 미리보기의 원본 흐림) 하나이고, 플래시는 B 단계에서 더합니다.
+    /// 유닛 외형 층 대여 하나입니다(연출 조립 설계 B13). 이 대여의 층은 이동 투명도(입력 미리보기의 원본 흐림)이고, 피격 플래시는 따로 <see cref="ICombatUnitFlash"/> 대여입니다(두 층은 <c>UnitModelAppearance</c>가 합침).
     /// 다른 대여가 그 층을 가져가거나 표시가 반환되면 이 대여의 <see cref="Restore"/>는 아무 일도 하지 않습니다.
     /// </summary>
     internal interface ICombatUnitAppearance

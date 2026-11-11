@@ -1,5 +1,4 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts
 {
@@ -7,7 +6,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
     /// 화면 좌표가 무엇을 가리키는지 알려 주는 좁은 계약입니다(설계 §7, E.1).
     /// CombatInteraction이 카메라·Transform을 모르고 순수 C#으로 남도록 씁니다.
     /// </summary>
-    /// <remarks>구현: 씬 표시(<see cref="CombatSceneDisplay"/>), 테스트 가짜.</remarks>
+    /// <remarks>구현: 포인터 매퍼(<c>CombatPointerMapper</c>, 씬 표시 나누기 설계 DS2). 연결 전·해제 뒤는 false입니다.</remarks>
     internal interface ICombatPointerPicker
     {
         /// <summary>화면 좌표 아래의 필드 칸입니다. 필드 밖이면 false입니다.</summary>

@@ -548,6 +548,7 @@ public void Dispose();
 
 ### 8.1 그래픽 작업용 카메라 구도 도구 (에디터 전용, 10-29·10-30)
 
+- **지움(2026-11-09, 사용자 "이제 필요 없으니 빼도 괜찮아"):** [스테이지 선택 리팩토링](2026-11-09-stage-select-refactor-design-Hojin.md) SR-a에서 도구와 런타임 갈래를 모두 지웠다. 이미 씬에 저장한 맵 카메라 구도는 그대로 쓴다. 아래는 지우기 전 기록이다.
 - 쓰는 곳: StageSelect 씬 `StageMapSceneRoot` 인스펙터 "그래픽 작업용 카메라 구도". 잠금을 풀면 월드 Position·Rotation XYZ와 렌즈 Orthographic Size를 고친다. Game 뷰에서는 Alt+왼쪽 끌기 = 화면 평면 이동, Alt+오른쪽 = X·Y 회전, Alt+가운데 = 시선 방향 전진·후진, Alt+휠 = Size 0.9배씩(최소 0.01). Z 회전은 인스펙터에서만.
 - 원본: 확정 값은 씬의 가상 카메라 Transform과 `m_Lens.OrthographicSize` 하나다. 작업 값은 `StageMapCameraFramingSettings`가 SessionState에 둔다(Unity를 끄면 사라짐). 재생 중에는 기존 Catalog 핸들로 미리 보고, 확정은 재생 중에도 된다. 재생 중 확정 값은 에디터 전용 `StageMapCameraFramingPending`이 들고 있다가 재생이 끝나면 편집 씬 카메라에 Undo·Dirty로 넣는다(대상 씬이 없으면 Additive로 엶). **씬 저장은 사용자가 한다.** 대상이 없거나 둘이면 오류를 내고 값은 세션에 남긴다.
 - 입력: `StageSelection` 액션 맵의 `CameraModifier`(Alt, `initialStateCheck`)·`CameraDolly`(가운데)·`CameraZoom`(휠)과 기존 `Cancel`·포인터를 기존 Controller → 슬롯 → 에디터 전용 수신 장식자로 받는다. 비에디터 빌드는 기존 수신자 그대로다. Alt 조정 입력은 노드 클릭·진입으로 넘기지 않고, Alt 해제·취소·슬롯 해제·Game 뷰 포커스 상실에 끌기를 끝낸다.
@@ -646,6 +647,13 @@ StageSelectPanel       (StageSelectPanelUI : UIGroup, ID StageSelect, Parallel �
 - StageSelectPanel을 전체 Stretch·오프셋 0으로 복구했다. 덱 루트는 전체 Stretch·배율 1이며 삭제된 Canvas/Scaler를 가리키는 씬 참조·override를 제거했다. 기존 버튼·카드 디자인은 유지한다.
 - StageDeckEditUISetup도 공통 Canvas 아래에 Canvas 없는 덱 프리팹을 생성·연결한다. 구성의 원본은 씬 계층이며 별도 정렬 서비스나 UI 등록 경로를 추가하지 않는다(SSOT·SOLID·FW 계약 유지).
 - 정적 확인: 씬 로컬 참조 전체와 UI 프리팹 5개의 override/stripped 참조가 유효하고 중첩 Canvas가 없다. Unity 컴파일·재생은 미확인이다.
+
+### 10.6 덱 상세 패널 정렬용 Canvas (11-09)
+
+- `StageSelectCanvas`는 공통 루트 Overlay Canvas이며 같은 오브젝트에 CanvasScaler와 GraphicRaycaster가 필요하다.
+- `DeckEditUI`는 공통 Canvas를 사용한다. 별도 정렬이 필요한 씬에서는 `Panel` 안에서 기존 `slotInfoPanel` 하나만 직접 감싸는 자식 Canvas를 한 개 둘 수 있다. 이 Canvas에는 Override Sorting과 GraphicRaycaster가 필요하다. 현재 StageSelect 씬의 상세 패널 Canvas Order는 100이며 값의 원본은 씬이다.
+- `DeckEditUI.ValidateChildCanvases()`는 덱 상세 패널의 소유 관계와 설정을 확인한다. 씬 연결과 덱 배치 메뉴가 같은 검사를 호출하며, `StageMapCanvasView`는 덱 영역 밖의 중첩 Canvas도 검사한다.
+- `UIId.DeckSlotInfo`는 기존대로 `UIId.DeckEdit` 아래에 Parallel 정책으로 등록한다. 상세 패널의 열기·닫기와 바인딩은 기존 UISystem 경로를 사용하며, 정렬용 Canvas의 수명은 덱 Panel 계층을 따른다.
 
 ## 11 보류 — Stage 실행 계층 Job·Plan 재구성
 

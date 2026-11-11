@@ -18,14 +18,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// → <see cref="Release"/>(최종 해제, 되살리지 않음). 연결되지 않았거나 해제된 뒤의 Try 계열은 false입니다.
     /// 카메라는 호출마다 지정 카메라 또는 Main Camera로 다시 고르며, UI Raycast 데이터는 같은 EventSystem 동안만 재사용합니다(V1).
     /// 같은 프레임·같은 좌표의 UI 가림 답은 한 번만 구합니다(평가 C7-02).
-    /// 표시는 하지 않습니다.
+    /// 표시는 하지 않습니다. 입력이 쓰는 집기·매핑·UI 가림·커서 장치 계약의 주인입니다(씬 표시 나누기 설계 DS2, 계획 TP-2).
+    /// 해제 뒤 규칙(D9)은 자기 해제 상태로 지킵니다(연결 전·해제 뒤 false).
     /// </remarks>
-    internal sealed class CombatPointerMapper : ICombatPointerPicker, ICombatPointerMapping
+    internal sealed class CombatPointerMapper : ICombatPointerPicker, ICombatPointerMapping, ICombatPointerOcclusion, ICombatCursorDevice
     {
         private readonly float _innerCellInset;
         private readonly List<RaycastResult> _uiHits = new();
         private FieldView _field;
         private Camera _assignedCamera;
+        // 커서 스냅 켜짐·감도를 실행 중 Inspector 변경대로 읽는 씬 루트입니다(계획 TP-2). 해제해도 비우지 않습니다(설계 P5).
+        private readonly CombatSceneRoot _cursorSettings;
         private FieldGridMapper _mapper;
         private EventSystem _pointerEventSystem;
         private PointerEventData _pointerEventData;
@@ -35,14 +38,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private Vector2 _uiAnswerScreen;
         private bool _uiAnswer;
 
-        internal CombatPointerMapper(FieldView field, Camera assignedCamera, float innerCellInset)
+        /// <param name="cursorSettings">커서 스냅 켜짐·감도를 읽을 씬 루트입니다(필수). 값 대신 참조를 받아 실행 중 Inspector 변경을 따릅니다.</param>
+        internal CombatPointerMapper(FieldView field, Camera assignedCamera, float innerCellInset, CombatSceneRoot cursorSettings)
         {
             _field = field != null ? field : throw new System.ArgumentNullException(nameof(field));
             _assignedCamera = assignedCamera;
             _innerCellInset = innerCellInset;
+            _cursorSettings = cursorSettings != null ? cursorSettings : throw new System.ArgumentNullException(nameof(cursorSettings));
         }
 
         public float InnerCellInset => _innerCellInset;
+
+        /// <summary>
+        /// 커서 스냅이 켜졌는지입니다. 해제 뒤에는 false이고, 격자 연결 여부는 보지 않습니다(설계 P5 — 옛 표시와 같은 조건).
+        /// 씬이 내려가며 루트가 파괴됐으면 false입니다.
+        /// </summary>
+        public bool IsCursorSnapEnabled => !_isReleased && _cursorSettings != null && _cursorSettings.SnapCursorToGrid;
+
+        /// <summary>커서 스냅 감도입니다. 해제와 상관없이 읽고, 루트가 파괴됐으면 0입니다.</summary>
+        public float CursorSnapThreshold => _cursorSettings != null ? _cursorSettings.CursorSnapThreshold : 0f;
 
         /// <summary>이번 설치의 격자에 연결됐는지입니다.</summary>
         internal bool IsBound => !_isReleased && _mapper != null;
@@ -123,7 +137,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>칸 중심의 화면 좌표입니다(커서 그리드 스냅). 연결 전·해제 뒤·카메라 없음·카메라 뒤쪽·카메라 화면 밖이면 false입니다.</summary>
-        internal bool TryCellCenterToScreen(CellCoord cell, out Vector2 screen)
+        public bool TryCellCenterToScreen(CellCoord cell, out Vector2 screen)
         {
             screen = default;
             Camera camera = CurrentCamera();
@@ -149,7 +163,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// OS 커서를 화면 좌표로 옮깁니다(커서 그리드 스냅). 마우스 장치가 없거나 창이 포커스가 아니면 옮기지 않습니다
         /// (다른 창의 커서를 뺏지 않음). 연결 전·해제 뒤에도 옮기지 않습니다.
         /// </summary>
-        internal bool TryWarpCursor(Vector2 screen)
+        public bool TryWarpCursor(Vector2 screen)
         {
             Mouse mouse = Mouse.current;
             if (!IsBound || mouse == null || !Application.isFocused)
@@ -164,7 +178,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// Hover 전용 통과 계약은 제외한다. 버튼을 누른 떼기를 필드 공격으로 쓰지 않게 Router가 읽습니다.
         /// 연결 전·해제 뒤·EventSystem이 없으면 false입니다.
         /// </summary>
-        internal bool IsPointerOverUi(float screenX, float screenY)
+        public bool IsPointerOverUi(float screenX, float screenY)
         {
             return IsBound && HitsUi(new Vector2(screenX, screenY));
         }

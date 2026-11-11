@@ -22,11 +22,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int TargetHealthBefore { get; }
         public int TargetHealthAfter { get; }
         public bool TargetKilled { get; }
+        /// <summary>
+        /// 이 공격으로 대상의 재구성(적 전용 특성)이 일어났는지입니다. 그러면 치명 피해를 받았지만 살아 있고 <see cref="TargetHealthAfter"/>는 최대 체력입니다.
+        /// 판정은 재구성 규칙(<c>ReconstructionTraitRule.Triggered</c>)이고, 공격 미리보기가 이 값을 대상 미리보기로 옮깁니다(2026-11-11 View 재구성 연출).
+        /// </summary>
+        public bool TargetReconstructed { get; }
 
         public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
             AttackTargetRole role, int appliedSplashPercent, int healthNormalizationLoss, int healthRecovery,
-            IReadOnlyList<AttackHitContactSnapshot> contacts)
-            : this(targetId, targetHealthBefore, targetHealthAfter, role, appliedSplashPercent, healthNormalizationLoss, healthRecovery)
+            IReadOnlyList<AttackHitContactSnapshot> contacts, bool targetReconstructed = false)
+            : this(targetId, targetHealthBefore, targetHealthAfter, role, appliedSplashPercent, healthNormalizationLoss, healthRecovery,
+                targetReconstructed)
         {
             Contacts = AttackHitContactSnapshot.Copy(contacts);
             var pairs = Contacts.Select(c => (c.Role, c.AppliedSplashPercent)).Distinct().ToArray();
@@ -37,7 +43,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
             AttackTargetRole role = AttackTargetRole.None, int appliedSplashPercent = 100, int healthNormalizationLoss = 0,
-            int healthRecovery = 0)
+            int healthRecovery = 0, bool targetReconstructed = false)
         {
             if (Enum.IsDefined(typeof(AttackTargetRole), role) == false)
                 throw new ArgumentOutOfRangeException(nameof(role));
@@ -69,6 +75,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             TargetHealthBefore = targetHealthBefore;
             TargetHealthAfter = targetHealthAfter;
             TargetKilled = TargetHealthAfter == 0;
+            TargetReconstructed = targetReconstructed;
         }
     }
 }

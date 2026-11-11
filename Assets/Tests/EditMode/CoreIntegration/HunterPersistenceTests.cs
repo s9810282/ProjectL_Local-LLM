@@ -18,60 +18,6 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class HunterPersistenceTests
     {
-        [TestCase(false)]
-        [TestCase(true)]
-        public void EnterCombat_LateHunterSelectionAndRngPublishTogether(bool stale)
-        {
-            using var battle = LateHunterBattle();
-            var hunter = battle.Character(EntityKey.Unit_Sniper);
-            var state = battle.Buffers.CombatStateReadSink.Current.CommandState;
-            var services = battle.Publication();
-            int number = battle.Buffers.CombatViewWriteSink.Submit(CombatViewCommandData.EnterCombat());
-            var input = services.Assembler.Assemble(new CombatActionRequest(number, CombatCommandKind.EnterCombat, default, default,
-                expectedBattleInstanceId: battle.Buffers.CombatStateReadSink.BattleInstanceId,
-                expectedControllerTurnSequence: state.Turn.ControllerTurnSequence));
-            var before = new CoreIntegrationSnapshot(battle.Buffers);
-            Assert.That(Target(hunter), Is.Null);
-            Assert.That(state.EnvironmentProgress.RandomState, Is.EqualTo(1u));
-            if (stale)
-            {
-                var p = state.EnvironmentProgress;
-                input = input.WithWorld(state.With(environmentProgress: new EnvironmentProgressFacts(p.NextObjectEntryOrdinal,
-                    p.NextSourceId, p.RandomState + 1)), input.Characters, input.Main, input.SoulCounts, input.Souls, input.EnvironmentBindings);
-            }
-            var transition = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
-            Assert.That(transition.Accepted, Is.True, transition.Reason);
-            before.AssertUnchanged(battle.Buffers);
-            if (stale)
-            {
-                Assert.Throws<InvalidOperationException>(() => services.Publisher.Publish(transition));
-                before.AssertUnchanged(battle.Buffers);
-                Assert.That(Target(battle.Character(EntityKey.Unit_Sniper)), Is.Null);
-                return;
-            }
-            Assert.That(services.Publisher.Publish(transition), Is.True);
-            var selected = battle.Character(EntityKey.Unit_Sniper);
-            var enemies = battle.Buffers.CharacterReadSink.Characters.Where(c => c.Owner == Owner.Enemy).OrderBy(c => c.EntityId).ToArray();
-            Assert.That(Target(selected), Is.EqualTo(enemies[0].EntityId));
-            var final = battle.Buffers.CombatStateReadSink.Current.CommandState;
-            Assert.That(final.EnvironmentProgress.RandomState, Is.EqualTo(1015568748u));
-            Assert.That(final.Turn.ControllerPhase, Is.EqualTo(CombatControllerPhase.StartingPlayer));
-            Assert.That(final.Turn.PreparationIndex, Is.EqualTo(state.Turn.PreparationIndex));
-            Assert.That(final.Turn.NightStartPlayerTurnCount, Is.EqualTo(state.Turn.CompletedPlayerTurnCount));
-            Assert.That(final.Turn.CompletedControllerTurnCount, Is.EqualTo(state.Turn.CompletedControllerTurnCount));
-            Assert.That(final.Phase, Is.EqualTo(CombatFlowPhase.Automatic));
-            Assert.That(final.IsNight, Is.True);
-            Assert.That(final.Allocation.SameValues(state.Allocation), Is.True);
-            Assert.That(final.ItemRandomState, Is.EqualTo(state.ItemRandomState));
-            var once = new CoreIntegrationSnapshot(battle.Buffers);
-            Assert.That(services.Publisher.Publish(transition), Is.True);
-            Assert.That(battle.Core.CombatCommands.ProcessNextCommand(), Is.False);
-            once.AssertUnchanged(battle.Buffers);
-            Assert.That(battle.Core.CombatAdvance.AdvanceCombat(), Is.True);
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.EnvironmentProgress.RandomState, Is.EqualTo(1015568748u));
-            Assert.That(Target(battle.Character(EntityKey.Unit_Sniper)), Is.EqualTo(Target(selected)));
-        }
-
         internal static ConfiguredMovementBattle LateHunterBattle()
         {
             var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config,
@@ -184,24 +130,6 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(fresh.Stats.TraitAttackBonus, Is.EqualTo(2));
             Assert.That(Rewards(fresh), Is.Zero);
             Assert.That(Target(fresh), Is.Null);
-        }
-
-        [Test]
-        public void NightAndRecall_PreserveCapAndRunBonus_ButClearInactiveTarget()
-        {
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new HunterSource(twoEnemies: true));
-            battle.Submit(battle.Attack(battle.Actor, Marked(battle).Anchor.Value));
-            var target = Target(battle.Actor);
-            for (int turn = 0; turn < 8; turn++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                battle.AdvanceToPlayerOrDay();
-                Assert.That(Rewards(battle.Actor), Is.EqualTo(1));
-                if (battle.Actor.Area == CharacterRuntimeArea.Field) Assert.That(Target(battle.Actor), Is.EqualTo(target));
-                else Assert.That(Target(battle.Actor), Is.Null);
-                Assert.That(Bonus(battle), Is.EqualTo(2));
-            }
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
         }
 
         [Test]

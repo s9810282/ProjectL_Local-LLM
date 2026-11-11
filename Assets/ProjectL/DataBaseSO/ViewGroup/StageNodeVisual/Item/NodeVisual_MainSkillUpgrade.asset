@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_MainSkillUpgrade
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 24
     stageKey: 1
     stageType: 2
     mapRole: 0

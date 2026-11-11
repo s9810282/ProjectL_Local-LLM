@@ -10,13 +10,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </summary>
     internal sealed class CombatHoverTracker
     {
-        private readonly ICombatInteractionFeedback _feedback;
+        // 호버 칸 계약만 받습니다(씬 표시 나누기 설계 DS2, 결정 Q-DS2 A).
+        private readonly ICombatHoverCellFeedback _feedback;
         private readonly CombatHoverKind _kind;
         private bool _hasHover;
         private CellCoord _cell;
         private CombatHoverState _state;
 
-        internal CombatHoverTracker(ICombatInteractionFeedback feedback, CombatHoverKind kind)
+        internal CombatHoverTracker(ICombatHoverCellFeedback feedback, CombatHoverKind kind)
         {
             _feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
             _kind = kind;

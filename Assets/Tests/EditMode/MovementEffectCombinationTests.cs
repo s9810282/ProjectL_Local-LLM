@@ -62,7 +62,7 @@ namespace ProjectL.Tests.Core
             var input = PositionSwapMovementTests.Route();
             var before = input.Characters.Single(c => c.EntityId.Value == 20);
             before = before.With(stats: before.Stats.With(traitAttackBonus: 4), heldEnvironment: new CharacterHeldEnvironmentState(41, true, 7),
-                items: new CharacterItemState(null, new[] { new ItemTemporaryEffect(1, ItemStatKind.PhysicalDefense, 3, 0) }))
+                items: new CharacterItemState(null, new[] { new ItemTemporaryEffect(1, ItemStatKind.PhysicalDefense, 3) }))
                 .WithStatusEffects(new StatusEffectSet(new AppliedStatus[] {
                     new AttackIncreaseStatus(new EffectOriginKey(EffectOwnerKind.Trait, 90, (int)TraitKey.Vanguard, "main"), 4, 2),
                     new AttackDecreaseStatus(new EffectOriginKey(EffectOwnerKind.Trait, 91, (int)TraitKey.Intimidation, "main"), 20) }));

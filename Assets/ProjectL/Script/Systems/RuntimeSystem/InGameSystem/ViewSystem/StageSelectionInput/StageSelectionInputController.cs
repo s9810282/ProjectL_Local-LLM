@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.Data;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
+using InputState = UnityEngine.InputSystem.LowLevel.InputState;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionInput
 {
@@ -11,6 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
         private float _pointerX;
         private float _pointerY;
         private bool _isPressed;
+        private uint _scrollUpdate;
+        private float _scrollValue;
 
         public override string ActionMap => StageSelectionInputNames.Map;
 
@@ -24,54 +27,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
             input.Raw(StageSelectionInputNames.PointerPosition, InputValueKind.Vector2, OnPointer);
             input.Raw(StageSelectionInputNames.Select, InputValueKind.Button, OnSelect);
             input.Press(StageSelectionInputNames.Confirm, _receiver.ConfirmRequested);
-#if UNITY_EDITOR
-            input.Raw(StageSelectionInputNames.CameraModifier, InputValueKind.Button, OnCameraModifier);
-            input.Raw(StageSelectionInputNames.CameraDolly, InputValueKind.Button, OnCameraDolly);
-            input.Raw(StageSelectionInputNames.CameraZoom, InputValueKind.Vector2, OnCameraZoom);
-            input.Raw(StageSelectionInputNames.Cancel, InputValueKind.Button, OnCameraRotate);
-#else
+            input.Raw(StageSelectionInputNames.CameraScroll, InputValueKind.Vector2, OnCameraScroll);
             input.Press(StageSelectionInputNames.Cancel, _receiver.CancelRequested);
-#endif
         }
 
-#if UNITY_EDITOR
-        private bool _cameraRotatePressed;
-        private bool _cameraDollyPressed;
-
-        private void OnCameraZoom(InputSnapshot snapshot)
+        private void OnCameraScroll(InputSnapshot snapshot)
         {
-            if (snapshot.Phase != InputPhase.Performed || snapshot.Value.Y == 0f) return;
-            if (_receiver is IStageCameraFramingInputReceiver framing)
-                framing.CameraZoomRequested(snapshot.Value.Y, _pointerX, _pointerY);
-        }
-
-        private void OnCameraDolly(InputSnapshot snapshot)
-        {
-            bool pressed = snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue;
-            if (pressed == _cameraDollyPressed) return;
-            _cameraDollyPressed = pressed;
-            if (_receiver is IStageCameraFramingInputReceiver framing)
-                framing.CameraDollyChanged(pressed, _pointerX, _pointerY);
-        }
-
-        private void OnCameraModifier(InputSnapshot snapshot)
-        {
-            if (_receiver is IStageCameraFramingInputReceiver framing)
-                framing.CameraModifierChanged(snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue);
-        }
-
-        private void OnCameraRotate(InputSnapshot snapshot)
-        {
-            bool pressed = snapshot.Phase != InputPhase.Canceled && snapshot.Value.ButtonValue;
-            if (pressed != _cameraRotatePressed)
+            if (snapshot.Phase != InputPhase.Performed)
             {
-                _cameraRotatePressed = pressed;
-                if (_receiver is IStageCameraFramingInputReceiver framing)
-                    framing.CameraRotateChanged(pressed, _pointerX, _pointerY);
+                _scrollValue = 0f;
+                return;
             }
-            if (snapshot.Phase == InputPhase.Performed) _receiver.CancelRequested();
+            float value = snapshot.Value.Y;
+            if (!float.IsFinite(value)) return;
+            // Mouse.scroll은 한 입력 갱신 안에서 누적됩니다. 늘어난 양만 보내 빠른 연속 입력을 중복 계산하지 않습니다.
+            uint update = InputState.updateCount;
+            if (_scrollUpdate != update)
+            {
+                _scrollUpdate = update;
+                _scrollValue = 0f;
+            }
+            float delta = value - _scrollValue;
+            _scrollValue = value;
+            if (delta != 0f) _receiver.ScrollRequested(delta, _pointerX, _pointerY);
         }
-#endif
 
         private void OnPointer(InputSnapshot snapshot)
         {

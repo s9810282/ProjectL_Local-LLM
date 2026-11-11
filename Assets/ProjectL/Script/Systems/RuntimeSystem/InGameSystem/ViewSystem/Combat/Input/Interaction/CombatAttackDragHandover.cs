@@ -12,7 +12,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// <para>
     /// 포인터 처리 본문은 옛 입력 기능 묶음 <c>TryHandleAttackDragPointer</c>를 옮긴 것입니다. 옛 "경로 참조 있음·같은 참조" 검사는
     /// 받는 쪽 연결 검사(<see cref="IsTargetAttached"/>) 하나로 바꿨습니다(경로 정지 = 연결 끊김, View 2라운드 TP-5).
-    /// 받는 쪽 없이 만든 조립(배치·공격만 검증)에서는 넘기지 않습니다. 콜백마다 받는 쪽 연결뿐 아니라 몸짓 세대도 다시 봅니다.
+    /// 받는 쪽은 생성 때 필수이고, 정지 뒤 상태는 연결 끊김(<c>IsDetached</c>)이 알려 줍니다(평가 C5-02). 콜백마다 받는 쪽 연결뿐 아니라 몸짓 세대도 다시 봅니다.
     /// </para>
     /// <para>
     /// 입력 기능 묶음의 공통 수명에서는 목록 맨 앞이며 포인터 대상은 없습니다(Router가 포인터를 <see cref="TryHandlePointer"/>로 먼저 넘김).
@@ -22,15 +22,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     internal sealed class CombatAttackDragHandover
     {
         private readonly CombatAttackDragGesture _gesture;
-        // 넘겨받는 쪽입니다. 없으면(경로 없는 조립) 넘기지 않습니다.
+        // 넘겨받는 쪽(경로 입력)입니다. 늘 있고, 정지 뒤 상태는 IsDetached가 알려 줍니다(평가 C5-02).
         private readonly ICombatAttackDragTarget _target;
         private readonly AttackTargetingInteraction _attack;
 
-        /// <param name="target">넘겨받는 쪽입니다. 없으면 null입니다.</param>
+        /// <param name="target">넘겨받는 쪽입니다. 필수입니다.</param>
         internal CombatAttackDragHandover(CombatAttackDragGesture gesture, ICombatAttackDragTarget target, AttackTargetingInteraction attack)
         {
             _gesture = gesture ?? throw new ArgumentNullException(nameof(gesture));
-            _target = target;
+            _target = target ?? throw new ArgumentNullException(nameof(target));
             _attack = attack ?? throw new ArgumentNullException(nameof(attack));
             InputOwner = new OwnerAdapter(this);
         }
@@ -38,8 +38,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>입력 기능 묶음의 공통 수명에 참여하는 창구입니다(View 2라운드 W5-1).</summary>
         internal CombatInputOwner InputOwner { get; }
 
-        /// <summary>넘겨받는 쪽이 있고 연결돼 있는지입니다.</summary>
-        private bool IsTargetAttached => _target != null && !_target.IsDetached;
+        /// <summary>넘겨받는 쪽이 연결돼 있는지입니다.</summary>
+        private bool IsTargetAttached => !_target.IsDetached;
 
         /// <summary>몸짓을 무효화합니다(세대를 올리고, 진행 중이면 release까지 막음). 의도 입구(복귀·공격 끄기·이동 모드 끝·공격 진입)가 부릅니다.</summary>
         internal void Invalidate() => _gesture.Invalidate();
@@ -96,7 +96,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         /// <summary>
-        /// 후보가 지금 공격 대상 사실과 맞지 않으면(받는 쪽이 없거나 끊김 포함) 무효화합니다. 포인터 처리와 매 Tick 감시가 이 규칙 하나를 씁니다.
+        /// 후보가 지금 공격 대상 사실과 맞지 않으면(받는 쪽 연결이 끊긴 경우 포함) 무효화합니다. 포인터 처리와 매 Tick 감시가 이 규칙 하나를 씁니다.
         /// 출발점과 세대는 무효화 전의 것을 줍니다. 후보가 아니면 출발점 값은 의미가 없습니다(쓰는 쪽은 후보를 승격한 뒤에만 씀).
         /// </summary>
         private void InvalidateStaleCandidate(out CombatAttackDragGesture.Origin origin, out int generation)

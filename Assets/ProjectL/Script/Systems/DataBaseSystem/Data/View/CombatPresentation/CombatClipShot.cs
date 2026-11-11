@@ -18,7 +18,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     {
         internal CombatClipShot(CombatClipEventId eventId, int point)
         {
-            if (eventId is not (CombatClipEventId.Event or CombatClipEventId.Event2 or CombatClipEventId.Event3))
+            if (!CombatClipEventIds.IsDefined(eventId))
                 throw new ArgumentOutOfRangeException(nameof(eventId), eventId, "정의된 클립 이벤트여야 합니다.");
             if (point < 0) throw new ArgumentOutOfRangeException(nameof(point), point, "발사 지점 번호는 0 이상이어야 합니다.");
             EventId = eventId;

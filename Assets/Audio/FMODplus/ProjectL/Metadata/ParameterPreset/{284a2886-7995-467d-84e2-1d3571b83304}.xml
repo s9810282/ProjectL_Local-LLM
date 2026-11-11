@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{284a2886-7995-467d-84e2-1d3571b83304}">
+		<property name="name">
+			<value>MoveAmount</value>
+		</property>
+		<relationship name="folder">
+			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{6561bdb0-918c-484d-9094-4889cbc9a686}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{6561bdb0-918c-484d-9094-4889cbc9a686}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>2</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>One</value>
+			<value>OverTow</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

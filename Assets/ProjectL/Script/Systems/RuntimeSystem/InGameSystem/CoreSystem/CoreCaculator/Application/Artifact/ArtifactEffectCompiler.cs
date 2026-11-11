@@ -189,8 +189,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             ArtifactLoadoutSnapshot snapshot)
         {
             ValidateSource(placed, data, ArtifactFactionFilter.Enemy, snapshot);
-            Require(placed, data.condition.type == ArtifactConditionType.IsNight,
-                "condition.type", "Soul Altar requires IsNight", snapshot);
+            Require(placed, data.condition.type == ArtifactConditionType.InCombat,
+                "condition.type", "Soul Altar requires InCombat", snapshot);
             Require(placed, data.condition.comparison == ArtifactComparisonType.LessThan,
                 "condition.comparison", "unused comparison must keep its default value", snapshot);
             Require(placed, data.target.type == ArtifactTargetType.Collector,
@@ -220,8 +220,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             ArtifactLoadoutSnapshot snapshot)
         {
             ValidateSource(placed, data, ArtifactFactionFilter.Enemy, snapshot);
-            Require(placed, data.condition.type == ArtifactConditionType.IsNight,
-                "condition.type", "Thorn Heart requires IsNight", snapshot);
+            Require(placed, data.condition.type == ArtifactConditionType.InCombat,
+                "condition.type", "Thorn Heart requires InCombat", snapshot);
             Require(placed, data.condition.comparison == ArtifactComparisonType.LessThan,
                 "condition.comparison", "unused comparison must keep its default value", snapshot);
             Require(placed, data.target.type == ArtifactTargetType.LastAttacker,

@@ -328,7 +328,7 @@ namespace ProjectL.Tests.Core
                 ? new CombatAttackProfile(p.Definition, all) : p)
                 .Append(new CombatAttackProfile(With(CombatCommandTestData.Spec(EntityKey.Unit_Gravekeeper, 5), Immune), all)).ToArray();
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(1, 5), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(1, 5), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation);
             input = new CombatCommandInput(input.Number, input.Kind, input.ActorId, AttackAim.ForAll(), state,
                 input.Characters, profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
                 environmentBindings: input.EnvironmentBindings,

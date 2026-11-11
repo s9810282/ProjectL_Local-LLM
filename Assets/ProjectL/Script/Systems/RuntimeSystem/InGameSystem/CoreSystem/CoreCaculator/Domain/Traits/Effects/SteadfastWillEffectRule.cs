@@ -8,8 +8,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class SteadfastWillEffectRule : ICombatEffectRule
+    internal sealed class SteadfastWillEffectRule : ICombatEffectRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.None;
+
         private readonly SteadfastWillTraitRule _rule;
 
         internal SteadfastWillEffectRule(SteadfastWillTraitDefinition definition, SteadfastWillTraitRule rule)

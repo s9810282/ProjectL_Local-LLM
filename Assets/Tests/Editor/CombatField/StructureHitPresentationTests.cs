@@ -165,9 +165,36 @@ namespace ProjectL.CombatField.Editor.Tests
         public void InspectionPolicy_DeploymentKeepsPendingAndModalBoundaries(StagePhase stage,
             CombatFlowPhase phase, bool pending, bool modal, bool expected)
         {
-            var facts = new CombatInputFacts(true, true, phase, stage, false,
-                currentLayer: CombatInputPolicy.LayerOf(stage), hasPendingCommand: pending,
-                isInputAvailable: true, isModalOpen: modal);
+            // 입력 사실 인자는 모두 필수가 됐습니다(평가 C5-02). 이 사례가 정하던 값(앞 다섯 + 이름 인자 넷) 말고는 옛 기본값 그대로입니다.
+            var facts = new CombatInputFacts(
+                isBattleDisplayed: true,
+                hasBattle: true,
+                phase: phase,
+                stagePhase: stage,
+                hasCompletion: false,
+                currentLayer: CombatInputPolicy.LayerOf(stage),
+                latestResultSequence: 0,
+                presentedResultSequence: 0,
+                isFinalizing: false,
+                selectedActorId: default,
+                hasUnhandledCommand: false,
+                previewAnswer: null,
+                hasPendingCommand: pending,
+                isPresenting: false,
+                isInputAvailable: true,
+                isAttackActive: false,
+                combatInputRestriction: default,
+                hasCurrentAcceptedEmptyMovementRange: false,
+                battleInstanceId: 0,
+                controllerTurnSequence: 0,
+                isSubmissionSuspended: false,
+                isAbandonRequested: false,
+                isModalOpen: modal,
+                isItemDragActive: false,
+                isTutorialPracticeGoalPending: false,
+                queryRevision: 0,
+                isEntryPresentationPending: false,
+                pointerTarget: default);
             Assert.That(CombatInputPolicy.CanSelectUnit(facts), Is.EqualTo(expected));
         }
         private UnitDamageText Widget()

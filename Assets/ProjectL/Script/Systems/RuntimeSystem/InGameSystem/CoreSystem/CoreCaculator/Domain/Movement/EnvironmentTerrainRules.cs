@@ -35,9 +35,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static IReadOnlyCollection<CellCoord> TerrainCells(MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, StaticTerrainKind kind)
         {
+            var cells = new List<CellCoord>();
+            foreach (var cell in TerrainCellSteps(environment, bindings, kind))
+                if (cell.HasValue) cells.Add(cell.Value);
+            return cells.ToArray();
+        }
+
+        internal static IEnumerable<CellCoord?> TerrainCellSteps(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings, StaticTerrainKind kind)
+        {
             ValidateTerrainQuery(environment, bindings, kind);
-            return environment.Tiles.OfType<StaticTerrainFact>().Where(t => IsTerrain(t, bindings, kind))
-                .Select(t => t.Cell).Distinct().ToArray();
+            var found = new HashSet<CellCoord>();
+            foreach (var tile in environment.Tiles)
+                yield return tile is StaticTerrainFact terrain && IsTerrain(terrain, bindings, kind) && found.Add(terrain.Cell)
+                    ? terrain.Cell : (CellCoord?)null;
         }
 
         private static void ValidateTerrainQuery(MovementEnvironmentFacts environment,
@@ -62,11 +73,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static int AppointRange(CombatCommandInput input, CharacterCombatFacts actor,
             MovementEnvironmentFacts environment = null)
         {
-            environment ??= input.State.Environment;
             int range = actor.Stats.AppointRange;
-            if (!actor.Anchor.HasValue) return range;
-            if (HasTerrain(environment, input.EnvironmentBindings, actor.Anchor.Value, StaticTerrainKind.Sandstorm)) range = SandstormRange(range);
-            return Math.Max(0, range - DustScreenTraitRule.RangeReductionAt(actor.Anchor.Value, environment));
+            return actor.Anchor.HasValue ? AppointRangeAt(input, range, actor.Anchor.Value, environment, actor.Owner) : range;
+        }
+
+        internal static int AppointRangeAt(CombatCommandInput input, int range, CellCoord anchor,
+            MovementEnvironmentFacts environment, Owner queryingSide)
+        {
+            environment ??= input.State.Environment;
+            if (HasTerrain(environment, input.EnvironmentBindings, anchor, StaticTerrainKind.Sandstorm)) range = SandstormRange(range);
+            return Math.Max(0, range - DustScreenTraitRule.RangeReductionAt(anchor, environment, queryingSide));
         }
 
         internal static int RemainingDamagePercent(MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings,

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="Bank" id="{f047c3b5-3b20-4f64-8a21-13925dab6e77}">
+		<property name="name">
+			<value>StageSelect</value>
+		</property>
+		<relationship name="folder">
+			<destination>{d8e627bb-2ae1-4411-be18-6f5b1fbda627}</destination>
+		</relationship>
+	</object>
+</objects>

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_Combat_Regular
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 21
     stageKey: 0
     stageType: 1
     mapRole: 0

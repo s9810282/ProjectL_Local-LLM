@@ -24,6 +24,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     [DisallowMultipleComponent]
     public sealed class PackUI : UIBase, IUIInputReceiver, ICombatPackDisplay
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPackClick = new("Combat.Action.UI.Pack.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPackHoverEnter = new("Combat.Action.UI.Pack.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPackHoverExit = new("Combat.Action.UI.Pack.HoverExit");
+#endif
+
         // 입력 슬롯 0은 펼침 토글이고, 아이템 칸은 1부터 칸 순서대로 씁니다.
         private const int FirstItemSlot = 1;
 
@@ -157,6 +164,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.Click(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPackClickSample = _profileUIPackClick.Auto();
+#endif
+
             if (slot >= FirstItemSlot)
             {
                 SelectItem(slot - FirstItemSlot);
@@ -217,6 +228,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.HoverEnter(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPackHoverEnterSample = _profileUIPackHoverEnter.Auto();
+#endif
+
             int index = slot - FirstItemSlot;
             if (!_shown || !isActiveAndEnabled || index < 0 || index >= _slots.Length) return;
             int itemKey = _slots[index].ItemKey;
@@ -229,6 +244,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.HoverExit(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPackHoverExitSample = _profileUIPackHoverExit.Auto();
+#endif
+
             if (slot >= FirstItemSlot) descriptionPanel.SetActive(false);
         }
 

@@ -21,9 +21,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             DurationUnitTurns = durationUnitTurns;
         }
 
-        internal bool CanSpawn(bool isNight, bool isEnemyUnitDeath)
+        internal bool CanSpawn(bool inCombat, bool isEnemyUnitDeath)
         {
-            return isNight && isEnemyUnitDeath;
+            return inCombat && isEnemyUnitDeath;
         }
     }
 }

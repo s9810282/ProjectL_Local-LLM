@@ -1,5 +1,7 @@
 # 전투 맵 바닥 타일 맞춤 Task 계획
 
+> **2026-11-10 후속:** 배경·타일 공통 자동 배율은 [공통 계획 CS0~CS4](2026-11-10-combat-map-common-scale-plan.md)에서 Combat·CombatMapAuthoring을 함께 다룬다. 아래 완료/검증 이력은 유지한다. 새 작업은 기존 표시 결과 보존을 먼저 검증하며, 설계 갱신만으로 타일 배치·배율을 변경하지 않는다.
+
 - 날짜: 2026-10-28
 - 설계: [map-tile-alignment-design](../specs/2026-10-28-combat-map-tile-alignment-design.md)(TA1~TA5, Q-TA1~Q-TA6 모두 A — 2026-10-28 사용자 "모두 A")
 - 상태: P1~P14 그대로 진행(2026-10-28 사용자 "7기준에 문제가 없다면 진행해", 점검 §1.1). TA-a 진행

@@ -57,7 +57,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             if (rotations != null && rotations.TryGetTerrainRotation(source.Id, out _))
                 throw new InvalidOperationException(
-                    $"[FieldTerrainPresenter] 이웃 모양을 쓰는 {kind}의 원본 {source.Id}에는 스테이지 외형 회전을 넣을 수 없습니다(모양이 회전을 정합니다).");
+                    $"[CombatTerrainLook] 이웃 모양을 쓰는 {kind}의 원본 {source.Id}에는 스테이지 외형 회전을 넣을 수 없습니다(모양이 회전을 정합니다).");
             if (neighbors == null) throw new ArgumentNullException(nameof(neighbors));
 
             CellCoord cell = source.Cell;

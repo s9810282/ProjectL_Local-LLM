@@ -19,6 +19,7 @@ MonoBehaviour:
     descriptionTemplate: "\uBC1B\uB294 \uD53C\uD574 {0}% \uC99D\uAC00"
     whileEffect:
       effect: 12
-      positionOffset: {x: 0, y: -0.625, z: 0}
+      positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
       rotationOffset: {x: 0, y: 0, z: 0}
     restartOn: 

@@ -16,9 +16,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (tiles == null) throw new ArgumentNullException(nameof(tiles));
             var copy = tiles.ToArray();
-            if (copy.Any(tile => tile == null) || copy.Select(tile => tile.Id).Distinct().Count() != copy.Length)
-                throw new ArgumentException("타일 원본은 null 또는 중복 ID일 수 없습니다.", nameof(tiles));
+            var ids = new HashSet<long>();
+            foreach (var tile in copy) ValidateTile(tile, ids);
             Tiles = Array.AsReadOnly(copy);
+        }
+
+        // 가시성 계산이 완전히 검증한 전용 목록만 받는다. 호출자는 목록을 다시 변경하지 않는다.
+        private MovementEnvironmentFacts(List<MovementTileFact> tiles) => Tiles = tiles.AsReadOnly();
+
+        private static void ValidateTile(MovementTileFact tile, HashSet<long> ids)
+        {
+            if (tile == null || !ids.Add(tile.Id))
+                throw new ArgumentException("타일 원본은 null 또는 중복 ID일 수 없습니다.", "tiles");
         }
 
         public bool SameValues(MovementEnvironmentFacts other)
@@ -31,10 +40,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public MovementEnvironmentFacts VisibleTo(Owner observer)
         {
+            MovementEnvironmentFacts result = null;
+            foreach (var _ in VisibleSteps(observer, value => result = value)) { }
+            return result;
+        }
+
+        internal IEnumerable<string> VisibleSteps(Owner observer, Action<MovementEnvironmentFacts> completed, bool preservePublic = false)
+        {
             if (observer != Owner.Player && observer != Owner.Enemy)
                 throw new ArgumentOutOfRangeException(nameof(observer));
-            return new MovementEnvironmentFacts(Tiles.Where(tile => tile.KnownTo.Contains(observer))
-                .Select(tile => tile.WithKnownTo(new[] { observer })).ToArray());
+            var visible = new List<MovementTileFact>();
+            foreach (var tile in Tiles)
+            {
+                if (tile.KnownTo.Contains(observer))
+                    visible.Add(preservePublic && tile.KnownTo.Contains(Owner.Player) && tile.KnownTo.Contains(Owner.Enemy)
+                        ? tile : tile.WithKnownTo(new[] { observer }));
+                yield return "EnvironmentVisibleTile";
+            }
+            var ids = new HashSet<long>();
+            foreach (var tile in visible)
+            {
+                ValidateTile(tile, ids);
+                yield return "EnvironmentVisibleValidation";
+            }
+            completed(new MovementEnvironmentFacts(visible));
+            yield return "EnvironmentVisibleComplete";
         }
     }
 

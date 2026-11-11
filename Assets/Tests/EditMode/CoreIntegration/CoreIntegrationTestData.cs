@@ -61,7 +61,7 @@ namespace ProjectL.Tests.CoreIntegration
             [1] = new TargetingMethodData(1, TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0)
         };
         // 보스 스테이지가 없어 그래프를 만들지 않는 맵이라 출현 규칙은 비워 둔다.
-        private readonly StageMapData _map = new(1, 2, 1, 1, false, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false, 0,
+        private readonly StageMapData _map = new(1, 2, 1, 1, false, 0, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false, 0,
             Array.Empty<ChapterStageDistributionRule>());
         private readonly FieldData _field = new("field", 8, 6, 8, 2, 2);
         private readonly UnitRosterData _roster = new(1, new[] { EntityKey.Unit_Akimbo, EntityKey.Unit_Demon });
@@ -70,6 +70,7 @@ namespace ProjectL.Tests.CoreIntegration
         private StageRootData _stage;
         internal void SetStage(StageRootData stage) => _stage = stage ?? throw new ArgumentNullException(nameof(stage));
         internal IRecoveryOptionTableQuery RecoveryOptions { get; set; }
+        internal IEnemyLoadoutTableQuery EnemyLoadouts { get; set; }
 
         /// <param name="playerDeploymentCells">스테이지의 아군 배치 칸이다. 비우면 필드의 아군 줄 수(2)를 쓴다.</param>
         internal CoreIntegrationTestData(CategoryConfigData config, int headquartersHealth = 20,
@@ -152,7 +153,7 @@ namespace ProjectL.Tests.CoreIntegration
         public IStageEconomyTableQuery StageEconomyTableQuery => this;
         public ICategoryConfigTableQuery CategoryConfigTableQuery => this;
         public IArtifactDefinitionTableQuery ArtifactDefinitionTableQuery => this;
-        public IEnemyLoadoutTableQuery EnemyLoadoutTableQuery => throw new NotSupportedException();
+        public IEnemyLoadoutTableQuery EnemyLoadoutTableQuery => EnemyLoadouts ?? throw new NotSupportedException();
         public IRecoveryOptionTableQuery RecoveryOptionTableQuery => RecoveryOptions ?? throw new NotSupportedException();
         public IRenderQuery RenderQuery => throw new NotSupportedException();
         public IViewQuery ViewQuery => throw new NotSupportedException();
@@ -236,12 +237,15 @@ namespace ProjectL.Tests.CoreIntegration
             return value != null;
         }
         public IReadOnlyCollection<StageEconomyData> GetAllStageEconomies() => new[] { _economy };
-        public ArtifactDefinitionData GetDefinition(int id) => throw new KeyNotFoundException();
+        /// <summary>배치 Artifact 정의다. 비워 두면 정의가 하나도 없다.</summary>
+        internal IReadOnlyList<ArtifactDefinitionData> ArtifactDefinitions { get; set; } = Array.Empty<ArtifactDefinitionData>();
+        public ArtifactDefinitionData GetDefinition(int id) =>
+            TryGetDefinition(id, out var value) ? value : throw new KeyNotFoundException();
         public bool TryGetDefinition(int id, out ArtifactDefinitionData value)
         {
-            value = null;
-            return false;
+            value = ArtifactDefinitions.FirstOrDefault(d => d.ArtifactId == id);
+            return value != null;
         }
-        public IReadOnlyCollection<ArtifactDefinitionData> GetAllDefinitions() => Array.Empty<ArtifactDefinitionData>();
+        public IReadOnlyCollection<ArtifactDefinitionData> GetAllDefinitions() => ArtifactDefinitions.ToArray();
     }
 }

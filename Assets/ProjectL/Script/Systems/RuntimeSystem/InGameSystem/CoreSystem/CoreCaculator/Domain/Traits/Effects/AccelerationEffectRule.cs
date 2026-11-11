@@ -10,8 +10,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class AccelerationEffectRule : IEffectMoveSucceededRule
+    internal sealed class AccelerationEffectRule : IEffectMoveSucceededRule, IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         private readonly AccelerationTraitDefinition _definition;
         private readonly AccelerationTraitRule _rule;
         internal AccelerationEffectRule(AccelerationTraitDefinition definition, AccelerationTraitRule rule)

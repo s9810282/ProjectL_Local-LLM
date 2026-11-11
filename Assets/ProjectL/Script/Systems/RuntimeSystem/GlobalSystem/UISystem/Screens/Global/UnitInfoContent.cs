@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
@@ -7,7 +8,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
     internal sealed class UnitInfoContent
     {
         internal UnitInfoContent(string category, string name, Sprite portrait, int? level, int? health,
-            int? attack, int? defense, int? moveDistance, int? attackDistance, UnitCardTraitContent[] abilities)
+            int? attack, int? defense, int? moveDistance, int? attackDistance, UnitCardTraitContent[] abilities,
+            MoveMethod? moveMethod)
         {
             Category = category;
             Name = name;
@@ -19,6 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             MoveDistance = moveDistance;
             AttackDistance = attackDistance;
             Abilities = abilities ?? throw new ArgumentNullException(nameof(abilities));
+            MoveMethod = moveMethod;
         }
 
         internal string Category { get; }
@@ -31,5 +34,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         internal int? MoveDistance { get; }
         internal int? AttackDistance { get; }
         internal UnitCardTraitContent[] Abilities { get; }
+        internal MoveMethod? MoveMethod { get; }
     }
 }

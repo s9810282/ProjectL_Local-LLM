@@ -31,8 +31,6 @@ MonoBehaviour:
       format: "Lv. {0} · 보유 {1}"
     - kind: 2
       format: "수량 1 · {0}"
-    - kind: 3
-      format: "{0}\n{1}"
     defaultErrorText: "상점 상태가 바뀌어 화면을 다시 불러옵니다."
     errors:
     - kind: 1

@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ShopSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.ArtifactSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RecoverySystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RunSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.StageCommandSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact;
@@ -32,6 +33,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.Core
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             , bool includeDevelopmentTools = false
 #endif
+            , bool usePreparedEnemyAdvance = false
             )
         {
             SystemBuilderHelper builder = new();
@@ -62,14 +64,15 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.Core
             IArtifactEditCalculation artifactCalculation = new ArtifactEditCalculator();
             new ArtifactEditingService(artifactCalculation).ExportServices(builder);
             // 전투 역할 서비스와 공유 협력 객체의 조립은 전투 전용 Factory가 맡는다.
-            IBattleEntryService battleEntry = CombatSystemFactory.Register(builder, battleSource, characters, progression);
+            IBattleEntryService battleEntry = CombatSystemFactory.Register(builder, battleSource, characters, progression, usePreparedEnemyAdvance);
             var recoveryProjection = new RecoveryStateProjection();
             var recovery = new RecoveryStageService(progression, recoveryProjection);
             recovery.ExportServices(builder);
             new StageCommandProcessingService(progression, shop, battleEntry, recovery, new ShopCommandExecutor(shop)).ExportServices(builder);
             new RecoveryCommandProcessingService(recovery, recoveryProjection).ExportServices(builder);
             new RecoveryStateQueryService(recoveryProjection).ExportServices(builder);
-            new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RunSystem.RunStartService().ExportServices(builder);
+            new RunStartService().ExportServices(builder);
+            new RunAbandonService().ExportServices(builder);
             new ResultQueryService().ExportServices(builder);
             new CharacterPresentationPublisher(characterStats).ExportServices(builder);
 

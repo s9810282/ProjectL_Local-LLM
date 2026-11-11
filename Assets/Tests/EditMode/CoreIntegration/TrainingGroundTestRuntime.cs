@@ -45,12 +45,13 @@ namespace ProjectL.Tests.CoreIntegration
             Buffers.CurrentProgressReadSink.Shop.EntryId);
         internal OwnedCharacterRecord Owned(CharacterInstanceId id) => Buffers.CharacterReadSink.Owned.Single(o => o.Id == id);
 
-        internal TrainingGroundTestRuntime(int gold = 100, bool noEligible = false, string source = "native")
+        internal TrainingGroundTestRuntime(int gold = 100, bool noEligible = false, string source = "native",
+            bool vanguardStopsAtTwo = false)
         {
             var defaults = source == "default" ? new[] { CategoryKey.Main, CategoryKey.Rider, CategoryKey.Heavy, CategoryKey.Cannon }
                 .ToDictionary(k => k, _ => TraitKey.Vanguard) : null;
             var data = Database = new CoreIntegrationTestData(new CategoryConfigData(3, 4, 3, 2, 0, defaultTraits: defaults));
-            var tables = new TrainingTables(noEligible, source);
+            var tables = new TrainingTables(noEligible, source, vanguardStopsAtTwo);
             data.CategoryTraitProgressions = tables;
             data.TraitGrowthDefinitions = tables;
             foreach (var unit in data.GetAllUnits().Where(u => u.OwnerEligibility != UnitOwnerEligibility.EnemyOnly).ToArray())
@@ -89,7 +90,7 @@ namespace ProjectL.Tests.CoreIntegration
                     if (!noEligible && owned.Id == CappedId)
                     {
                         growth = growth.WithPurchase(TraitKey.Vanguard);
-                        growth = growth.WithPurchase(TraitKey.Vanguard);
+                        if (!vanguardStopsAtTwo) growth = growth.WithPurchase(TraitKey.Vanguard);
                     }
                     Seed(owned.Id, new OwnedCharacterRecord(owned.Id, owned.CharacterKey, owned.Role, 2, 17,
                         growth, owned.HunterAttackBonus, owned.SpecializationCategory));
@@ -136,12 +137,12 @@ namespace ProjectL.Tests.CoreIntegration
 
         public void Dispose() => _runtime.Shutdown();
 
-        private sealed class TrainingTables : ICategoryTraitProgressionTableQuery, ITraitGrowthDefinitionTableQuery
+        internal sealed class TrainingTables : ICategoryTraitProgressionTableQuery, ITraitGrowthDefinitionTableQuery
         {
             private readonly CategoryTraitProgressionData[] _categories;
             private readonly TraitGrowthDefinitionData[] _traits;
 
-            internal TrainingTables(bool noEligible, string source)
+            internal TrainingTables(bool noEligible, string source, bool vanguardStopsAtTwo = false)
             {
                 _categories = new[] { CategoryKey.Main, CategoryKey.Rider, CategoryKey.Heavy, CategoryKey.Cannon }
                     .Select(category => new CategoryTraitProgressionData(category,
@@ -151,7 +152,7 @@ namespace ProjectL.Tests.CoreIntegration
                 {
                     new TraitGrowthDefinitionData(new VanguardTraitData(1, 1), null, "vanguard", "", "", "",
                         noEligible ? null : new TraitRankValues(TraitKey.Vanguard, 2),
-                        noEligible ? null : new TraitRankValues(TraitKey.Vanguard, 3)),
+                        noEligible || vanguardStopsAtTwo ? null : new TraitRankValues(TraitKey.Vanguard, 3)),
                     new TraitGrowthDefinitionData(new SoloActionTraitData(1, 1, 0, 1), null, "solo", "", "", ""),
                     new TraitGrowthDefinitionData(new StationaryFireTraitData(10), null, "stationary", "", "", "",
                         new TraitRankValues(TraitKey.StationaryFire, 20), new TraitRankValues(TraitKey.StationaryFire, 30))

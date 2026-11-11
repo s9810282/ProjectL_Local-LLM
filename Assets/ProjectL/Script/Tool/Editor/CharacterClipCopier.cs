@@ -13,7 +13,7 @@ namespace ProjectL.Tool.Editor
     /// </summary>
     /// <remarks>
     /// 이벤트 함수 이름의 원본은 <c>CombatAnimationEvents</c>(Systems)입니다. 이 어셈블리는 Systems를 참조하지 않아 이름을 문자열로 적었고,
-    /// 틀리면 DB 생성 때 <c>CombatClipEvents.Read</c>가 실패합니다. 시각 규칙은 <c>CombatClipData.FindTimeError</c>가 검사합니다.
+    /// 틀리면 DB 생성 때 <c>CombatClipEvents.ReadTimings</c>가 실패합니다. 시각 규칙은 <c>CombatClipTimings.FindTimeError</c>가 검사합니다.
     /// 다시 돌리면 같은 <c>.anim</c>을 덮어써 GUID가 유지되고, 곡선·클립 설정은 FBX에서 다시 옮기되 이미 찍힌 이벤트는 그대로 둡니다(조정한 시각 보존).
     /// </remarks>
     internal static class CharacterClipCopier

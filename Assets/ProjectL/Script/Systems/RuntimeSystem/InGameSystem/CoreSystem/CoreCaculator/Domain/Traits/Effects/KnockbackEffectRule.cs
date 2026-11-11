@@ -10,8 +10,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class KnockbackEffectRule : IEffectKnockbackRule
+    internal sealed class KnockbackEffectRule : IEffectKnockbackRule, IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.ActingAttackOnly;
+
         private readonly KnockbackTraitDefinition _definition;
         private readonly KnockbackTraitRule _rule;
 

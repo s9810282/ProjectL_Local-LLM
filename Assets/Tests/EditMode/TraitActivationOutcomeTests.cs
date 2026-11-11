@@ -224,7 +224,7 @@ namespace ProjectL.Tests.Core
         public void HunterState_HasSelectionRewardAndResetResults()
         {
             var start = EnemyControllerPhaseTests.Input(HunterTraitTests.Input(), CombatControllerPhase.StartingPlayer);
-            var begun = CombatTurnCalculator.BeginControllerTurn(start);
+            var begun = CombatTurnCalculator.BeginControllerTurn(start, Array.Empty<IMovementTileRule>());
             Assert.That(begun.Accepted, Is.True, begun.Reason);
             var selection = begun.Events.ToList().FindIndex(e => HasActivation(e, TraitKey.Hunter, "HunterTargetSelected"));
             var selectedState = begun.Events.ToList().FindIndex(e => e.Kind.ToString() == "TraitStateChanged" && State(e, "Final").EntityId.Value == 1);

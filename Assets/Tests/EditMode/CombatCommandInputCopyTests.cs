@@ -198,7 +198,7 @@ namespace ProjectL.Tests.Core
         {
             var source = Fixture();
             var s = source.State;
-            var final = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                s.Objective,s.Allocation,s.ItemRandomState,new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), 8));
+            var final = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                s.Objective,s.Allocation,s.ItemRandomState,new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), 8));
             var inventory = new ItemInventorySnapshot(new Dictionary<int, int> { [1] = 1 });
             var result = new CombatCommandTransition(source, true, "",
                 new CharacterChanges(Array.Empty<CharacterStateChange>(), Array.Empty<SoulCountChange>()),

@@ -39,6 +39,12 @@ namespace ProjectL.Tool.Editor
         private readonly Dictionary<string, (double Self, double Calls, double Gc)> _frameNames =
             new Dictionary<string, (double Self, double Calls, double Gc)>(StringComparer.Ordinal);
         private readonly List<List<int>> _children = new List<List<int>>();
+        private readonly Action<Sample> _writeSample;
+
+        internal ProfilerFrameScan(Action<Sample> writeSample = null)
+        {
+            _writeSample = writeSample;
+        }
 
         internal IReadOnlyList<Row> Frames => _frames;
         /// <summary>계층 경로마다의 합계입니다. 같은 이름 합침 보기라 한 프레임 안에서 경로는 하나뿐입니다.</summary>
@@ -60,7 +66,9 @@ namespace ProjectL.Tool.Editor
             return null;
         }
 
-        internal void Read(int frame)
+        /// <param name="frame">지금 불러온 버퍼에서 열 프레임 번호입니다.</param>
+        /// <param name="outputFrame">출력·합계에 적을 번호입니다. 구간 원본을 이어 붙일 때 <paramref name="frame"/>과 다를 수 있습니다.</param>
+        internal void Read(int frame, int outputFrame)
         {
             using (HierarchyFrameDataView view = Open(frame))
             {
@@ -71,11 +79,11 @@ namespace ProjectL.Tool.Editor
                 }
                 ThreadName ??= view.threadName;
 
-                var row = new Row(frame, view.frameTimeMs, view.frameGpuTimeMs, ReadCounters(frame));
+                var row = new Row(outputFrame, view.frameTimeMs, view.frameGpuTimeMs, ReadCounters(frame));
                 _frameNames.Clear();
                 Walk(view, view.GetRootItemID(), null, 0, row);
                 foreach (KeyValuePair<string, (double Self, double Calls, double Gc)> pair in _frameNames)
-                    TotalsOf(_names, pair.Key, pair.Key, -1).Add(0d, pair.Value.Self, pair.Value.Calls, pair.Value.Gc);
+                    TotalsOf(_names, pair.Key, pair.Key, -1).Add(outputFrame, 0d, pair.Value.Self, pair.Value.Calls, pair.Value.Gc);
                 _frames.Add(row);
             }
         }
@@ -94,7 +102,8 @@ namespace ProjectL.Tool.Editor
                 float calls = view.GetItemColumnDataAsFloat(id, HierarchyFrameDataView.columnCalls);
                 float gc = view.GetItemColumnDataAsFloat(id, HierarchyFrameDataView.columnGcMemory);
 
-                TotalsOf(_paths, path, name, depth).Add(total, self, calls, gc);
+                TotalsOf(_paths, path, name, depth).Add(row.Frame, total, self, calls, gc);
+                _writeSample?.Invoke(new Sample(row.Frame, path, depth, name, total, self, calls, gc));
                 _frameNames.TryGetValue(name, out (double Self, double Calls, double Gc) sum);
                 _frameNames[name] = (sum.Self + self, sum.Calls + calls, sum.Gc + gc);
                 if (depth == 0)
@@ -199,9 +208,24 @@ namespace ProjectL.Tool.Editor
             internal double SelfMs { get; private set; }
             internal double MaxSelfMs { get; private set; }
             internal double GcBytes { get; private set; }
+            internal double MaxGcBytes { get; private set; }
+            internal int FirstFrame { get; private set; }
+            internal int LastFrame { get; private set; }
+            internal int MaxTotalFrame { get; private set; }
+            internal int MaxSelfFrame { get; private set; }
+            internal int MaxGcFrame { get; private set; }
 
-            internal void Add(double totalMs, double selfMs, double calls, double gcBytes)
+            internal void Add(int frame, double totalMs, double selfMs, double calls, double gcBytes)
             {
+                if (Frames == 0)
+                    FirstFrame = frame;
+                LastFrame = frame;
+                if (Frames == 0 || totalMs > MaxTotalMs)
+                    MaxTotalFrame = frame;
+                if (Frames == 0 || selfMs > MaxSelfMs)
+                    MaxSelfFrame = frame;
+                if (Frames == 0 || gcBytes > MaxGcBytes)
+                    MaxGcFrame = frame;
                 Frames++;
                 Calls += calls;
                 TotalMs += totalMs;
@@ -209,7 +233,33 @@ namespace ProjectL.Tool.Editor
                 SelfMs += selfMs;
                 MaxSelfMs = Math.Max(MaxSelfMs, selfMs);
                 GcBytes += gcBytes;
+                MaxGcBytes = Math.Max(MaxGcBytes, gcBytes);
             }
+        }
+
+        /// <summary>읽은 프레임의 경로 하나입니다. 순차 출력하고 장기 보관하지 않습니다.</summary>
+        internal readonly struct Sample
+        {
+            internal Sample(int frame, string path, int depth, string name, double total, double self, double calls, double gc)
+            {
+                Frame = frame;
+                Path = path;
+                Depth = depth;
+                Name = name;
+                Total = total;
+                Self = self;
+                Calls = calls;
+                Gc = gc;
+            }
+
+            internal int Frame { get; }
+            internal string Path { get; }
+            internal int Depth { get; }
+            internal string Name { get; }
+            internal double Total { get; }
+            internal double Self { get; }
+            internal double Calls { get; }
+            internal double Gc { get; }
         }
     }
 }

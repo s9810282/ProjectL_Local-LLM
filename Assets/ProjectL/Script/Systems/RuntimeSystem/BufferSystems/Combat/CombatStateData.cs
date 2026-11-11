@@ -37,6 +37,11 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
         public IReadOnlyList<StageGimmickSpec> StageGimmicks { get; }
         /// <summary>전투 동안 바뀌지 않는 유닛별 특성 설정값이다. 설명 숫자는 <c>TraitSettings.For(유닛)</c>로 읽는다(설명 수치 공개 설계 SP3).</summary>
         public BattleTraitSettings TraitSettings { get; }
+        public NexusReinforcementSpec NexusReinforcements { get; }
+
+        /// <summary>현재 넥서스의 기하 범위다. 실제 증원 가능 칸이나 숨은 방해물은 공개하지 않는다.</summary>
+        public IReadOnlyList<CellCoord> ReadNexusReinforcementArea() =>
+            NexusReinforcementGeometry.Area(CommandState, NexusReinforcements);
 
         internal CombatStateData(BattlePreparation battle)
         {
@@ -60,6 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             RailCells = preparation.RailCells;
             StageGimmicks = preparation.StageGimmicks;
             TraitSettings = preparation.TraitSettings;
+            NexusReinforcements = preparation.NexusReinforcements;
         }
 
         internal CombatStateData(CombatStateData source, CombatCommandState final,
@@ -75,6 +81,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             PlayerZone = source.PlayerZone; RailCells = source.RailCells;
             StageGimmicks = source.StageGimmicks;
             TraitSettings = source.TraitSettings;
+            NexusReinforcements = source.NexusReinforcements;
         }
     }
 }

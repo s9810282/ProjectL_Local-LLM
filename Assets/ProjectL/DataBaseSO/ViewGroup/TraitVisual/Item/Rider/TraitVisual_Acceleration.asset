@@ -15,10 +15,14 @@ MonoBehaviour:
   traitVisualData:
     key: 370
     displayName: "\uAC00\uC18D"
-    icon: {fileID: 21300000, guid: 9ecac225ce015d74dac72c5ccee49fb8, type: 3}
-    description: "이동한 칸마다 공격력이 {이동칸당공격력증가량} 증가합니다. \n가속으로 증가한 공격력은 공격 시 사라집니다."
+    icon: {fileID: 21300000, guid: a52851b801c08274fb2192e0b7051f2d, type: 3}
+    description: "\uC774\uB3D9\uD55C \uCE78\uB9C8\uB2E4 \uACF5\uACA9\uB825\uC774
+      {\uC774\uB3D9\uCE78\uB2F9\uACF5\uACA9\uB825\uC99D\uAC00\uB7C9} \uC99D\uAC00\uD569\uB2C8\uB2E4.
+      \n\uAC00\uC18D\uC73C\uB85C \uC99D\uAC00\uD55C \uACF5\uACA9\uB825\uC740 \uACF5\uACA9
+      \uC2DC \uC0AC\uB77C\uC9D1\uB2C8\uB2E4."
     defenseReductionDescription: 
     rankValueFormat: 
+    rankEffectFormat: 
     activations:
     - kind: 90
       direction: 0
@@ -54,6 +58,37 @@ MonoBehaviour:
       positionSwap:
         enabled: 0
         waitSeconds: 0.5
+      deathBlink:
+        enabled: 0
+        color: {r: 1, g: 0, b: 0, a: 1}
+        pulses: 3
+        seconds: 0.9
+        peakStrength: 1
+        lastPulseRatio: 1
+        pulseCurve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: -1
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: -1
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
     alwaysEffects: []
     trailPrefab: {fileID: 0}
     trailLocalOffset: {x: 0, y: 0, z: 0}

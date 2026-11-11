@@ -48,13 +48,16 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Plans
 
         /// <summary>
         /// 지금 사실로 Stage의 다음 할 일을 정합니다. 판단의 유일한 원본입니다. 위에서부터 처음 맞는 줄 하나만 고릅니다.
-        /// 멈춘 도메인은 건너뛰고 다른 도메인을 계속 받습니다.
+        /// 멈춘 도메인은 건너뜁니다. 정지는 공용 오류 경계(F1)에도 보고되므로 같은 Tick 안에서만 의미가 있습니다.
         /// </summary>
         internal static StageStep Decide(in StageProgressFacts facts)
         {
             // 0. 로딩 중에는 아무것도 하지 않는다.
             if (facts.IsLoading)
                 return StageStep.Nothing;
+
+            if (!facts.AbandonRunId.IsEmpty)
+                return new StageStep(StageStepKind.AbandonRun);
 
             // 1. 전투 진입 시도. 끝날 때까지 다른 일을 걸지 않는다.
             if (!facts.IsEntryStopped)
@@ -103,7 +106,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Plans
             if (buffers.CharacterReadSink.Owned.Count == 0)
                 jobs.Add(new RunStartJob(service.CoreGroup.RunStart, StageRunStartOutcome.Instance,
                     buffers.CombatStateReadSink, buffers.StageViewWriteSink, buffers.CharacterReadSink, 0));
-            jobs.Add(new StageJob(service, 1, buffers.CurrentProgressReadSink, buffers.StageViewWriteSink));
+            jobs.Add(new StageJob(service.CoreGroup.ChapterProgression, 1, buffers.CurrentProgressReadSink,
+                buffers.StageViewWriteSink));
             return jobs;
         }
 
@@ -121,6 +125,11 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Plans
             {
                 case StageStepKind.None:
                     return NoJobs;
+                case StageStepKind.AbandonRun:
+                    return new List<IJobService>
+                    {
+                        new StageRunAbandonJob(service.CoreGroup.RunAbandon, progress, facts.AbandonRunId)
+                    };
                 // 아래 셋은 Core를 부르지 않는 이번 방문의 상태 바꿈이라 판단 직후 바로 합니다.
                 case StageStepKind.CloseCombatEntry:
                     progress.CloseCombatEntry();

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_Recovery
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 27
     stageKey: 0
     stageType: 0
     mapRole: 0

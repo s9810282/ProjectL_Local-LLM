@@ -126,7 +126,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 return ReadTraitGrowthProgress();
             var profile = ReadProfile(target);
             var candidates = TraitGrowthRules.Candidates(target, profile, catalog);
-            var keys = TraitGrowthOfferSampler.Sample(candidates, step.Kind, TraitGrowthOfferSampler.Seed(progress.RunId, target.Id, step.StepId));
+            int seed = TraitGrowthOfferSampler.Seed(progress.RunId, target.Id, step.StepId);
+            IReadOnlyList<TraitKey> keys;
+            if (step.Kind == TraitGrowthKind.Acquire)
+            {
+                var progression = EffectiveTraitProgression.Resolve(profile.Definition, target, catalog);
+                var groups = candidates.ToDictionary(key => key, key => catalog.GetTrait(key).Group);
+                keys = TraitGrowthOfferSampler.Sample(candidates, step.Kind, seed, groups,
+                    progression.CommonWeight, progression.CategoryWeight);
+            }
+            else
+                keys = TraitGrowthOfferSampler.Sample(candidates, step.Kind, seed);
             var choices = keys.Select(key =>
             {
                 var definition = catalog.GetTrait(key);

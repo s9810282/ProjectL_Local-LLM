@@ -58,15 +58,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly IReadOnlyList<Body> _subjectBodies;
         private readonly IReadOnlyList<Body> _subjectEndBodies;
         private readonly IReadOnlyList<Pose> _cells;
+        private readonly Pose? _selectedCell;
 
         private CombatCuePoints(EntityId actor, Pose? actorBody, IReadOnlyList<Body> subjectBodies, IReadOnlyList<Body> subjectEndBodies,
-            IReadOnlyList<Pose> cells)
+            IReadOnlyList<Pose> cells, Pose? selectedCell = null)
         {
             _actor = actor;
             _actorBody = actorBody;
             _subjectBodies = subjectBodies;
             _subjectEndBodies = subjectEndBodies;
             _cells = cells;
+            _selectedCell = selectedCell;
         }
 
         /// <summary>공격 칸의 자리입니다. <paramref name="actorBody"/>는 행위자 몸 상자 중심·모델 방향이고, 찾지 못했거나 쓰지 않으면 null입니다.</summary>
@@ -92,26 +94,39 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <exception cref="InvalidOperationException">필드 연결 전(<paramref name="mapper"/> null)이거나 칸이 필드 밖일 때입니다.</exception>
         internal static Pose CellPose(FieldGridMapper mapper, CellCoord cell)
         {
-            if (mapper == null)
-                throw new InvalidOperationException("[CombatCuePoints] 필드 연결 전에는 칸 자리를 정할 수 없습니다.");
+            RequireField(mapper);
             if (!mapper.IsInside(cell))
                 throw new InvalidOperationException($"[CombatCuePoints] 칸 자리가 필드 밖입니다: {cell}");
-            return new Pose(mapper.CellSurfaceToWorld(cell), mapper.RotationToWorld(Rotation4.R0));
+            return PoseOf(mapper, cell);
+        }
+
+        // 칸 자리 식 한 곳입니다. 필드 안 칸인지는 부르는 쪽이 이미 봤습니다(CellPose는 예외, 특성 발동 자리는 건너뜀).
+        private static Pose PoseOf(FieldGridMapper mapper, CellCoord cell) =>
+            new(mapper.CellSurfaceToWorld(cell), mapper.RotationToWorld(Rotation4.R0));
+
+        private static void RequireField(FieldGridMapper mapper)
+        {
+            if (mapper == null)
+                throw new InvalidOperationException("[CombatCuePoints] 필드 연결 전에는 칸 자리를 정할 수 없습니다.");
         }
 
         /// <summary>
         /// 특성 발동 칸의 자리입니다(특성 발동 연출 설계 TA4). 발동 유닛 몸 하나, 대상 몸 여럿, 칸 여럿입니다. 찾지 못한 몸·칸은 목록에 넣지 않고 넘깁니다.
         /// 특성 발동 큐는 시작 시점만 받아(큐 규칙) 끝 자리는 시작 자리와 같습니다.
+        /// <paramref name="selectedCell"/>은 발동의 선택 칸 자리(<see cref="CombatCuePoint.SelectedCell"/>)이고, 없으면 null입니다.
         /// </summary>
         internal static CombatCuePoints ForActivation(EntityId activator, Pose? activatorBody, IReadOnlyList<Body> subjectBodies,
-            IReadOnlyList<Pose> cells) => new(activator, activatorBody, subjectBodies, subjectBodies, cells);
+            IReadOnlyList<Pose> cells, Pose? selectedCell = null) =>
+            new(activator, activatorBody, subjectBodies, subjectBodies, cells, selectedCell);
 
         /// <summary>
         /// 특성 발동 사실 하나의 큐 자리입니다(특성 발동 연출 설계 TA4). 발동 유닛 몸, 대상(<c>TargetIds</c>)마다의 몸, 영향 칸(<c>TargetCells</c>)마다의 칸 자리입니다.
         /// 특성 처리기(사건 목록 안 발동)와 공격 시작(가로채기 반응 줄, 유닛 행동 계획 Tf4.5)이 함께 부르는 한 곳입니다. 칸 자리 규칙은 <see cref="CellPose"/>입니다.
+        /// 필드 밖 칸(작렬이 맵 끝에 부딪힌 막은 칸 등)은 칸 목록·선택 칸에 넣지 않습니다(작렬 View 설계 CV4). 발동 사실은 필드 밖 칸을 줄 수 있어
+        /// 계약 위반이 아니기 때문이며, 필드 밖이면 예외인 <see cref="CellPose"/> 규칙은 다른 호출자에게 그대로입니다.
         /// </summary>
         /// <param name="bodyOf">대상 하나의 지금 몸 자리입니다(보인 사실의 서 있는 몸). 찾지 못하면 null이고, 그 몸은 목록에 넣지 않습니다.</param>
-        /// <param name="mapper">필드 좌표 변환입니다. 칸이 있을 때만 읽습니다.</param>
+        /// <param name="mapper">필드 좌표 변환입니다. 칸이 있을 때만 한 번 읽습니다.</param>
         internal static CombatCuePoints ForActivation(TraitActivationSnapshot trait, Func<EntityId, Pose?> bodyOf, Func<FieldGridMapper> mapper)
         {
             if (trait == null) throw new ArgumentNullException(nameof(trait));
@@ -125,15 +140,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     targets.Add(new Body(trait.TargetIds[i], body.Value));
             }
             IReadOnlyList<Pose> cells = Array.Empty<Pose>();
-            if (trait.TargetCells.Count > 0)
+            Pose? selected = null;
+            if (trait.TargetCells.Count > 0 || trait.TargetCell.HasValue)
             {
                 FieldGridMapper field = mapper();
-                var poses = new Pose[trait.TargetCells.Count];
-                for (int i = 0; i < poses.Length; i++)
-                    poses[i] = CellPose(field, trait.TargetCells[i]);
-                cells = poses;
+                RequireField(field);
+                if (trait.TargetCells.Count > 0)
+                {
+                    var poses = new List<Pose>(trait.TargetCells.Count);
+                    for (int i = 0; i < trait.TargetCells.Count; i++)
+                    {
+                        if (field.IsInside(trait.TargetCells[i]))
+                            poses.Add(PoseOf(field, trait.TargetCells[i]));
+                    }
+                    cells = poses;
+                }
+                if (trait.TargetCell.HasValue && field.IsInside(trait.TargetCell.Value))
+                    selected = PoseOf(field, trait.TargetCell.Value);
             }
-            return ForActivation(trait.SourceUnitId, bodyOf(trait.SourceUnitId), targets, cells);
+            return ForActivation(trait.SourceUnitId, bodyOf(trait.SourceUnitId), targets, cells, selected);
         }
 
         /// <summary>투사체 접촉 자리입니다. 회전 = 진행 방향(접촉 값이 정함). 보정은 부르는 쪽이 <see cref="Apply"/>로 적용합니다.</summary>
@@ -169,6 +194,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 CombatCuePoint.ActorBody => _actorBody.HasValue ? 1 : 0,
                 CombatCuePoint.SubjectBody => SubjectBodiesOf(cue).Count,
                 CombatCuePoint.EventCell => Cells.Count,
+                CombatCuePoint.SelectedCell => _selectedCell.HasValue ? 1 : 0,
                 CombatCuePoint.Contact => throw new InvalidOperationException("[CombatCuePoints] 접촉 자리 이펙트는 공격 재생의 접촉 입구가 냅니다."),
                 _ => throw new ArgumentOutOfRangeException(nameof(cue), cue.Point, "정의되지 않은 이펙트 자리입니다."),
             };
@@ -186,8 +212,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             {
                 CombatCuePoint.ActorEffectPoint => CombatEffectPiece.AtClipPoint(_actor, effects, cue),
                 CombatCuePoint.ActorMuzzle => CombatEffectPiece.AtClipMuzzle(_actor, effects, cue),
-                CombatCuePoint.ActorBody => At(effects, cue, _actor, _actorBody.Value, group),
-                CombatCuePoint.SubjectBody => At(effects, cue, SubjectBodiesOf(cue)[index].Unit, SubjectBodiesOf(cue)[index].Pose, group),
+                CombatCuePoint.ActorBody => AtSurface(effects, cue, _actor, _actorBody.Value, group),
+                CombatCuePoint.SubjectBody => AtSurface(effects, cue, SubjectBodiesOf(cue)[index].Unit, SubjectBodiesOf(cue)[index].Pose, group),
+                CombatCuePoint.SelectedCell => At(effects, cue, EntityId.Empty, _selectedCell.Value, group),
                 _ => At(effects, cue, EntityId.Empty, Cells[index], group),
             };
         }
@@ -205,6 +232,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         // 정해진 자리의 조각입니다. 보정은 여기서 한 번 적용하고, 조각은 받은 자리를 그대로 씁니다(계획 P3).
         // 따라갈지·끝은 큐의 놓기 값이 정합니다(몸 자리·남기기 꺼짐이면 그 유닛을 따라감, 이펙트 따라가기 설계 FE1·이펙트 끝 규칙 설계 EL5).
+        private static CombatEffectPiece AtSurface(CombatEffectWindow effects, CombatEffectCue cue, EntityId unit, Pose point, CombatEffectActionGroup group)
+        {
+            Pose ground = new(effects.SurfaceOf(point.position), point.rotation);
+            return At(effects, cue, unit, ground, group);
+        }
+
         private static CombatEffectPiece At(CombatEffectWindow effects, CombatEffectCue cue, EntityId unit, Pose point, CombatEffectActionGroup group) =>
             CombatEffectPiece.At(effects, cue, Apply(point, cue, effects.AdditionalWorldOffsetOf(unit, cue.RiderYOffset)), unit, group);
     }

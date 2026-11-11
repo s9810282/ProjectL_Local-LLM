@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
@@ -16,6 +19,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private readonly CombatAttackPresentationData _settings;
         private readonly FieldGridMapper _mapper;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private readonly CombatPlaybackProfile _profile;
+
+#endif
         private readonly CombatProjectilePool _pool;
         private readonly CatusCannonWeaponView _weapon;
         private readonly ICombatAttackUnitPose _unit;
@@ -53,6 +60,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _profile = pool.ProfilingProfile;
+#endif
             _weapon = weapon != null ? weapon : throw new ArgumentNullException(nameof(weapon));
             _unit = unit ?? throw new ArgumentNullException(nameof(unit));
             _fired = fired ?? throw new ArgumentNullException(nameof(fired));
@@ -167,6 +177,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             float height = CombatShotPath.ArcHeight(_mapper, _settings);
             // 착탄 자리는 경로가 정해지는 지금 한 번 만듭니다(투사체 접촉 이펙트 설계 IE3).
             CombatProjectileContact landing = CombatProjectileContact.Along(from, _target, 1f, _up.normalized, _facing);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _pool.ProfilingProfile = _profile;
+#endif
             CombatProjectileLease lease = _pool.FireArc(from, _target, _settings.FlightDuration,
                 height, _up, _settings.SpinDegreesPerSecond, () =>
                 {

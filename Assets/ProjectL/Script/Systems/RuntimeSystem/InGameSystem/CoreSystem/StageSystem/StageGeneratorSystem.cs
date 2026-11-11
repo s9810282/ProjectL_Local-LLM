@@ -92,7 +92,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.StageSystem
                 var spec = new ChapterGraphSpec(map.DepthCount, map.WidthMax, map.WidthMin, map.SingleFirstLayer,
                     map.RandomizeSeedEachRun ? Environment.TickCount : map.Seed, ToConnection(map.ConnectionAlgorithm),
                     map.NearestConnectionWeight, map.OtherConnectionWeight, map.AdditionalConnectionChance,
-                    BuildPools(map, regularByKind), boss, pin, map.FirstStageKey);
+                    BuildPools(map, regularByKind), boss, pin, map.FirstStageKey, map.MinimumBranchCount);
                 nodes = ChapterGraphGenerator.Generate(spec);
             }
             catch (ArgumentException exception)

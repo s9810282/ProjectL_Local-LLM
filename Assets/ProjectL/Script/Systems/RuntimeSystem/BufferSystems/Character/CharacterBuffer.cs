@@ -65,7 +65,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
         /// <param name="membership">활성 전투의 참가 목록(Combat 상태)이다. 전투가 없을 때만 null이다.</param>
         PreparedCharacterChanges PrepareChanges(CharacterChanges changes, RunDeckSnapshot membership);
         /// <summary>전투 명령 게시 전용이다. 적 생성(Created)은 Combat Store의 할당·소환 기록 검증과 함께 이 경로로만 허용한다.</summary>
-        PreparedCharacterChanges PrepareCommandChanges(CharacterChanges changes, RunDeckSnapshot membership, MovementUndoResult undo = null);
+        PreparedCharacterChanges PrepareCommandChanges(CharacterChanges changes, RunDeckSnapshot membership, MovementUndoResult undo = null,
+            IReadOnlyList<CombatReinforcementEvent> reinforcements = null);
         void ValidateCommandInput(CombatCommandInput input, RunDeckSnapshot membership);
         void InstallChanges(PreparedCharacterChanges prepared);
         void EndBattle();
@@ -337,8 +338,10 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
 
         PreparedCharacterChanges ICharacterBufferStore.PrepareChanges(CharacterChanges changes, RunDeckSnapshot membership) =>
             PrepareChanges(changes, membership);
-        PreparedCharacterChanges ICharacterBufferStore.PrepareCommandChanges(CharacterChanges changes, RunDeckSnapshot membership, MovementUndoResult undo) =>
-            PrepareChanges(changes, membership ?? throw new ArgumentNullException(nameof(membership)), commandPublication: true, undo: undo);
+        PreparedCharacterChanges ICharacterBufferStore.PrepareCommandChanges(CharacterChanges changes, RunDeckSnapshot membership, MovementUndoResult undo,
+            IReadOnlyList<CombatReinforcementEvent> reinforcements) =>
+            PrepareChanges(changes, membership ?? throw new ArgumentNullException(nameof(membership)), commandPublication: true, undo: undo,
+                reinforcements: reinforcements);
         void ICharacterBufferStore.ValidateCommandInput(CombatCommandInput input, RunDeckSnapshot membership)
         {
             if (membership == null)
@@ -367,7 +370,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
         /// 공개 쓰기 경로가 이것들을 바꾸면 Core 판단 없이 레벨을 바꾸는 길이 되므로 거절한다.
         /// </param>
         private PreparedCharacterChanges PrepareChanges(CharacterChanges changes, RunDeckSnapshot membership,
-            bool commandPublication = false, MovementUndoResult undo = null)
+            bool commandPublication = false, MovementUndoResult undo = null, IReadOnlyList<CombatReinforcementEvent> reinforcements = null)
         {
             if (changes == null)
                 throw new ArgumentNullException(nameof(changes));
@@ -381,7 +384,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
             var proposedMain = PrepareMainChange(changes);
             var proposedRecords = new Dictionary<EntityId, BattleCharacterRecord>(_battleRecords);
             PrepareCharacterRecords(changes, commandPublication, proposedRecords, proposedMain, proposedSouls, finalOwned, undo);
-            PrepareCreatedRecords(changes, commandPublication, proposedRecords, proposedMain, proposedSouls, finalOwned);
+            PrepareCreatedRecords(changes, commandPublication, proposedRecords, proposedMain, proposedSouls, finalOwned, reinforcements);
             ValidateProposedState(proposedRecords, proposedMain, proposedSouls, finalOwned);
             return CreatePrepared(changes, proposedOwned, proposedSouls, proposedMain, proposedRecords);
         }
@@ -512,11 +515,16 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
             Dictionary<EntityId, BattleCharacterRecord> proposedRecords,
             Dictionary<CharacterInstanceId, MainCharacterPersistentState> proposedMain,
             Dictionary<CharacterInstanceId, int> proposedSouls,
-            IReadOnlyDictionary<CharacterInstanceId, OwnedCharacterRecord> finalOwned)
+            IReadOnlyDictionary<CharacterInstanceId, OwnedCharacterRecord> finalOwned, IReadOnlyList<CombatReinforcementEvent> reinforcements)
         {
             foreach (var created in changes.Created)
             {
-                RequireFreshBattleProgress(created);
+                // 증원은 생성 직후 받은 효과를 포함한 최종 사실로 설치한다. 초기 진행 검사는 생성 사건에 적용한다.
+                // 생성 사건과 최종 사실의 연결은 같은 거래의 Combat Store가 설치 전에 검증한다.
+                var initial = commandPublication && created.Owner == Owner.Enemy
+                    ? reinforcements?.SingleOrDefault(e => e.Created.EntityId == created.EntityId)?.Created
+                    : null;
+                RequireFreshBattleProgress(initial ?? created);
                 if (created.Owner == Owner.Enemy)
                 {
                     // 전투 중 소환 개체다. 할당 범위·소환 기록·참가자 일관성은 같은 거래의 Combat Store가 검증한다.

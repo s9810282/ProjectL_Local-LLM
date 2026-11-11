@@ -34,7 +34,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
                 case ShopFailureReason.DeckCountOverflow:
                     return ShopResultCategory.NormalRejection;
                 case ShopFailureReason.TargetNotOwned:
-                case ShopFailureReason.AlreadyEnhanced:
                 // 훈련: 그린 뒤 보유·등급이 바뀌었습니다. 닫고 지금 Buffer 상태로 다시 그립니다.
                 case ShopFailureReason.TraitNotTrainable:
                 case ShopFailureReason.RankLimitReached:
@@ -80,8 +79,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
                 case ShopFailureReason.InvalidItem:
                 case ShopFailureReason.InvalidCharacter:
                 case ShopFailureReason.IdentityOverflow:
-                case ShopFailureReason.InvalidEnhancement:
-                case ShopFailureReason.UnsupportedEnhancementLevel:
                     return true;
                 default:
                     return false;

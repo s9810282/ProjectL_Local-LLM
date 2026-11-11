@@ -71,7 +71,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 deliveredVictims.Add(victim.EntityId);
                 remaining--;
                 // 처치 연쇄는 원래 공격과 같은 원인이다(G14).
-                RoarHitCounter.Record(projected, victim.EntityId, hitCause, input.State.IsNight);
+                RoarHitCounter.Record(projected, victim.EntityId, hitCause, input.State.InCombat);
                 // 추가 공격은 적 1명만 노리므로 범위 안 적 수를 1로 다시 센다(일점 포격). 가속 포착값은 원래 공격 것을 쓴다.
                 var scope = parent?.TraitScope?.WithCapturedEnemyCount(1);
                 // 추가 공격 한 번도 공격 행동 한 번이다: 진영 공격 횟수를 올리고 깔끔한 뒷정리·선봉장을 평가한다(2026-11-02 결정).
@@ -85,7 +85,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 int currentDamage = parent != null
                     ? CombatAttackCalculator.CommonAttackDamage(projection.CurrentInput(), actor, parent.Profile, traitScope: scope) : damage;
                 actor = scope?.ForDamage(actor) ?? actor;
-                bool instant = FinishingShotApplication.Qualifies(input, actor, victim);
                 var numeric = CombatDamageCalculator.Attack(input, engine, pipeline, actor, victim, currentDamage,
                     AttackTargetRole.Designated, 100, actor.Anchor, null, projection.Environment,
                     currentCharacters: projected.Values.ToArray(), damageKind: CombatDamageKind.ExtraAttack, traitScope: scope);
@@ -93,9 +92,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
                 int activationIndex = events.Count;
                 var recoveryBefore = projection.Damage.CaptureRecovery();
-                var recipientId = instant ? victim.EntityId : SacrificeDamagePlanner.ResolveSingle(input, projected, actor, victim.EntityId, currentDamage,
+                // 희생 넘기기를 먼저 정한다. 즉사 여부는 넘기기 결과를 본 FiresOnHit 하나가 정한다.
+                var sacrificeUpgrade = SacrificeDamagePlanner.ResolveSingle(input, projected, actor, victim.EntityId, currentDamage,
                     AttackTargetRole.Designated, 100, origin, CombatDamageKind.ExtraAttack, projection.Environment,
-                    engine, pipeline, attackGroups, scope, events);
+                    engine, pipeline, attackGroups, scope, events, projection.ProfileReads);
+                var recipientId = sacrificeUpgrade?.RecipientId ?? victim.EntityId;
+                bool instant = FinishingShotApplication.FiresOnHit(input, actor, victim.EntityId, recipientId, victim);
                 if (recipientId != victim.EntityId)
                     numeric = CombatDamageCalculator.Attack(input, engine, pipeline, actor, projected[recipientId], currentDamage,
                         AttackTargetRole.Designated, 100, actor.Anchor, null, projection.Environment,
@@ -119,7 +121,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var startEvent = (CombatEffectsEvent)events[activationIndex];
                 var before = projected[recipientId];
                 var applied = instant ? projection.Damage.Defeat(recipientId, origin) : projection.Damage.Apply(recipientId, CombatDamageKind.ExtraAttack, origin, dealt,
-                    usedDustSources: numeric.UsedDustSources, traitScope: scope, damageActor: actor, numericInput: numeric.FinalDamage, heldDefenseGroups: attackGroups);
+                    usedDustSources: numeric.UsedDustSources, traitScope: scope, damageActor: actor, numericInput: numeric.FinalDamage, heldDefenseGroups: attackGroups,
+                    sacrificeUpgrade: sacrificeUpgrade);
                 if (!instant && applied.DamageBeforeItems != dealt)
                 {
                     var value = startEvent.Traits.Single();
@@ -137,6 +140,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     before.Health.CurrentHealth, after.Health.CurrentHealth, recovery, origin, reaction));
                 WeaknessExposureApplication.CompleteHit(actor, CombatCommandCalculator.RequiredProfile(input, actor),
                     CombatDamageKind.ExtraAttack, projected, events, victim.EntityId, origin);
+                TraitContactApplication.ApplyBleeding(actor, bindings, CombatDamageKind.ExtraAttack, projected, events, recipientId, origin);
+                LavaCannonApplication.ApplyCaptured(actor, bindings, CombatDamageKind.ExtraAttack, input.State.Turn,
+                    projected, events, origin, new[] { victim.EntityId });
                 if (after.Health.IsDead)
                 {
                     deathAnchors[recipientId] = before.Anchor.Value;

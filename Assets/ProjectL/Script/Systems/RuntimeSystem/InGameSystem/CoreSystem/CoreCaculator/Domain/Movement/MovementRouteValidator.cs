@@ -14,31 +14,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static MovementFailureReason Validate(CombatCommandInput input, MovementPath path, out int validStepCount,
             MovementEnvironmentFacts environment = null)
         {
-            validStepCount = 0;
+            var failure = MovementFailureReason.None;
+            int count = 0;
+            foreach (var _ in ValidationSteps(input, path, environment, (reason, steps) => { failure = reason; count = steps; })) { }
+            validStepCount = count;
+            return failure;
+        }
+
+        internal static IEnumerable<int> ValidationSteps(CombatCommandInput input, MovementPath path,
+            MovementEnvironmentFacts environment, Action<MovementFailureReason, int> completed)
+        {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            if (path == null) return MovementFailureReason.InvalidPath;
+            if (path == null) { completed(MovementFailureReason.InvalidPath, 0); yield break; }
             var actor = input.Characters.SingleOrDefault(c => c.EntityId == input.ActorId);
-            if (actor == null) return MovementFailureReason.EntityNotFound;
-            if (actor.Anchor != path.Origin) return MovementFailureReason.PathOriginMismatch;
-            if (!input.State.IsInside(path.Origin)) return MovementFailureReason.OutOfBounds;
+            if (actor == null) { completed(MovementFailureReason.EntityNotFound, 0); yield break; }
+            if (actor.Anchor != path.Origin) { completed(MovementFailureReason.PathOriginMismatch, 0); yield break; }
+            if (!input.State.IsInside(path.Origin)) { completed(MovementFailureReason.OutOfBounds, 0); yield break; }
             var ledger = ValidateActorPlacement(actor);
-            if (ledger != MovementFailureReason.None) return ledger;
-            if (path.StepCount == 0) return MovementFailureReason.SameAnchor;
+            if (ledger != MovementFailureReason.None) { completed(ledger, 0); yield break; }
+            if (path.StepCount == 0) { completed(MovementFailureReason.SameAnchor, 0); yield break; }
             var visited = new HashSet<CellCoord> { path.Origin };
             for (int i = 1; i < path.Cells.Count; i++)
             {
-                var cell = path.Cells[i];
-                if (!input.State.IsInside(cell)) return MovementFailureReason.OutOfBounds;
-                var previous = path.Cells[i - 1];
-                if (Math.Abs((long)cell.X - previous.X) + Math.Abs((long)cell.Y - previous.Y) != 1)
-                    return MovementFailureReason.InvalidPath;
-                if (!visited.Add(cell)) return MovementFailureReason.RepeatedCell;
-                if (!CanTraverse(input, cell, i == path.Cells.Count - 1, environment)) return MovementFailureReason.DestinationOccupied;
-                var budget = StepBudget(actor, i, environment ?? input.State.Environment);
-                if (budget != MovementFailureReason.None) return budget;
-                validStepCount = i;
+                var failure = ValidateStep(input, path, actor, visited, i, environment);
+                if (failure != MovementFailureReason.None) { completed(failure, i - 1); yield break; }
+                yield return 0;
             }
-            return MovementFailureReason.None;
+            completed(MovementFailureReason.None, path.StepCount);
+        }
+
+        private static MovementFailureReason ValidateStep(CombatCommandInput input, MovementPath path, CharacterCombatFacts actor,
+            HashSet<CellCoord> visited, int index, MovementEnvironmentFacts environment)
+        {
+            var cell = path.Cells[index];
+            if (!input.State.IsInside(cell)) return MovementFailureReason.OutOfBounds;
+            var previous = path.Cells[index - 1];
+            if (Math.Abs((long)cell.X - previous.X) + Math.Abs((long)cell.Y - previous.Y) != 1)
+                return MovementFailureReason.InvalidPath;
+            if (!visited.Add(cell)) return MovementFailureReason.RepeatedCell;
+            if (!CanTraverse(input, cell, index == path.Cells.Count - 1, environment)) return MovementFailureReason.DestinationOccupied;
+            return StepBudget(actor, index, environment ?? input.State.Environment);
         }
 
         internal static MovementFailureReason ValidateActorPlacement(CharacterCombatFacts actor)
@@ -50,10 +65,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
         internal static MovementFailureReason StepBudget(CharacterCombatFacts actor, long weightedCost, MovementEnvironmentFacts environment = null)
         {
-            int allowance = actor.Stats.MoveRange;
-            if (allowance == 0) return MovementFailureReason.VoluntaryMoveDisabled;
-            if (environment != null) allowance = checked(allowance + GroundCompactionTraitRule.MovementBonusAt(actor.Anchor.Value, environment));
-            return weightedCost > allowance ? MovementFailureReason.MoveRangeExceeded : MovementFailureReason.None;
+            int? allowance = VoluntaryMovementRules.Allowance(actor, environment);
+            if (!allowance.HasValue) return MovementFailureReason.VoluntaryMoveDisabled;
+            return weightedCost > allowance.Value ? MovementFailureReason.MoveRangeExceeded : MovementFailureReason.None;
         }
 
         internal static bool CanTraverse(CombatCommandInput input, CellCoord cell, bool landing, MovementEnvironmentFacts environment = null)
@@ -91,8 +105,67 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             MovementEnvironmentFacts environment = null) =>
             input.State.IsInside(cell) &&
             !EnvironmentTerrainRules.BlocksVoluntaryEntry(environment ?? input.State.Environment, input.EnvironmentBindings, cell) &&
-            !input.Characters.Any(c => !excluded.Contains(c.EntityId) && c.Area == CharacterRuntimeArea.Field &&
-                !c.Health.IsDead && c.OccupiedCells.Contains(cell)) &&
+            !input.Characters.Any(c => !excluded.Contains(c.EntityId) && IsLivingFieldUnit(c) && c.OccupiedCells.Contains(cell)) &&
             !input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell));
+
+        /// <summary>한 추적 탐색의 불변 공개 입력에서 중간 이동과 진입 판정에 쓰는 칸을 색인한다.</summary>
+        internal sealed class PursuitTraversal
+        {
+            private readonly CombatCommandInput _input;
+            private readonly bool _leap;
+            private readonly HashSet<CellCoord> _units = new HashSet<CellCoord>();
+            private readonly HashSet<CellCoord> _structures = new HashSet<CellCoord>();
+            private readonly HashSet<CellCoord> _terrain = new HashSet<CellCoord>();
+
+            internal PursuitTraversal(CombatCommandInput input, CharacterCombatFacts actor)
+            {
+                _input = input;
+                _leap = LeapTraitRule.AllowsIntermediate(actor);
+            }
+
+            internal IEnumerable<int> IndexSteps(MovementEnvironmentFacts environment)
+            {
+                foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, _input.EnvironmentBindings, StaticTerrainKind.Wall))
+                {
+                    if (cell.HasValue) _terrain.Add(cell.Value);
+                    yield return 0;
+                }
+                foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, _input.EnvironmentBindings, StaticTerrainKind.Cliff))
+                {
+                    if (cell.HasValue) _terrain.Add(cell.Value);
+                    yield return 0;
+                }
+                foreach (var unit in _input.Characters)
+                {
+                    if (unit.EntityId != _input.ActorId && IsLivingFieldUnit(unit))
+                        foreach (var cell in unit.OccupiedCells)
+                        {
+                            _units.Add(cell);
+                            yield return 0;
+                        }
+                    yield return 0;
+                }
+                foreach (var structure in _input.State.Structures)
+                {
+                    if (!structure.Health.IsDead)
+                        foreach (var cell in structure.OccupiedCells)
+                        {
+                            _structures.Add(cell);
+                            yield return 0;
+                        }
+                    yield return 0;
+                }
+            }
+
+            internal bool CanTraverse(CellCoord cell) => _leap
+                ? _input.State.IsInside(cell) && !_structures.Contains(cell)
+                : CanEnter(cell);
+
+            internal bool CanEnter(CellCoord cell) => _input.State.IsInside(cell) &&
+                !_terrain.Contains(cell) && !_units.Contains(cell) && !_structures.Contains(cell);
+        }
+
+        private static bool IsLivingFieldUnit(CharacterCombatFacts unit) =>
+            unit.Area == CharacterRuntimeArea.Field && !unit.Health.IsDead;
     }
 }

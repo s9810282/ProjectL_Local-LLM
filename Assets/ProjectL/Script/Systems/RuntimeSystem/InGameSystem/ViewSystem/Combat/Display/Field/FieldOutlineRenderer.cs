@@ -44,6 +44,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         // 층 사이 높이 차이입니다. 겹친 테두리의 Z-fighting만 피하면 됩니다.
         private const float LayerHeightStep = 0.002f;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 강조 테두리 메시 GC 계측입니다(성능 계획 Q-FP3a 1단계). 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        // 핸들 Update 둘레의 마커는 핸들마다 처음 쓸 때 만듭니다(Slot.UpdateMarker). 동작은 바꾸지 않습니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileRefresh = new("Combat.View.Field.Outline.Refresh");
+        private static readonly Unity.Profiling.ProfilerMarker _profileFillApply = new("Combat.View.Field.Fill.Apply");
+        private static readonly Unity.Profiling.ProfilerMarker _profilePathApply = new("Combat.View.Field.Path.Apply");
+#endif
+
         private readonly Transform _cellsRoot;
         private readonly IAreaOutlineSystemService _outlines;
         private readonly FieldMovementPathLine _path;
@@ -132,9 +140,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             for (int i = 0; i < order.Count; i++)
                 _slots[i + 2] = new Slot($"FieldOutline_{order[i]}", SlotKind.Layer, order[i]);
             _slots[_slots.Length - 1] = new Slot("FieldOutline_Hover", SlotKind.Hover, FieldHighlightLayer.None);
-            // 층을 더해 테두리 정렬 순서가 궤적 점선까지 올라가면 궤적이 테두리 아래로 깔립니다(정렬 순서 표).
-            if (FieldSortingOrders.Outline(_slots.Length - 1) >= FieldSortingOrders.Trajectory)
-                throw new InvalidOperationException("[FieldOutlineRenderer] 테두리 정렬 순서가 궤적 점선 정렬 순서에 닿았습니다. 정렬 순서 표를 고쳐야 합니다.");
+            // 층을 더해 테두리 정렬 순서가 낙석 느낌표(그 위의 궤적 점선 포함)까지 올라가면 그것들이 테두리 아래로 깔립니다(정렬 순서 표, 평가 C10-22).
+            if (FieldSortingOrders.Outline(_slots.Length - 1) >= FieldSortingOrders.RockfallWarningMark)
+                throw new InvalidOperationException("[FieldOutlineRenderer] 테두리 정렬 순서가 낙석 느낌표·궤적 점선 정렬 순서에 닿았습니다. 정렬 순서 표를 고쳐야 합니다.");
         }
 
         private enum SlotKind
@@ -228,6 +236,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (!_isBuilt)
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileRefresh = _profileRefresh.Auto();
+#endif
             // AreaOutline 핸들은 Global 렌더 풀 아래에 있어 필드 부모를 꺼도 남습니다.
             // 기존 Update 계약으로 빈 칸을 보내고, 다시 켜면 같은 상태에서 그립니다.
             if (!_isVisible)
@@ -246,7 +257,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             bool acting = _state.IsActing;
             // 채우기를 먼저 쌓아야 테두리가 겹친 칸의 깊이를 물을 수 있습니다(3판 RC8).
-            _fills?.Apply(acting);
+            if (_fills != null)
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var profileFillApply = _profileFillApply.Auto();
+#endif
+                _fills.Apply(acting);
+            }
             for (int i = 0; i < _slots.Length; i++)
             {
                 Slot slot = _slots[i];
@@ -366,7 +383,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
         }
 
-        // 테두리 고리 모양입니다. 핸들이 그리는 채우기 깊이의 판 모양 그대로입니다(덩어리 방식의 깊이 0은 칸 경계 그대로, 모양 식은 FieldCellShape 하나).
+        // 핸들과 그 높이 조각·깊이 판 핸들을 모두 빈 칸으로 그려 숨깁니다.
         private void HideArea(Slot slot, int slotIndex)
         {
             Apply(slot, slotIndex, slot.Height, _noCells, default, default);
@@ -374,6 +391,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             foreach (Slot inset in slot.Insets) HideArea(inset, slotIndex);
         }
 
+        // 테두리 고리 모양입니다. 핸들이 그리는 채우기 깊이의 판 모양 그대로입니다(덩어리 방식의 깊이 0은 칸 경계 그대로, 모양 식은 FieldCellShape 하나).
         private Vector2 LoopInsetOf(Slot slot) => _shape.InsetOf(slot.InsetDepth);
 
         private float CornerRadiusOf(Slot slot) => _shape.OutlineRadiusOf(slot.InsetDepth);
@@ -442,6 +460,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (slot.Drawn.SameAs(_scratch, color))
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePathApply = _profilePathApply.Auto();
+#endif
             if (_scratch.Count < 2)
             {
                 _path.Clear();
@@ -649,9 +670,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (slot.Handle == null || (slot.Drawn.SameAs(cells, color) && slot.DrawnOpening.Equals(opening)))
                 return;
 
+            // 우리 칸 배열은 마커 밖에서 채워, 마커 안의 할당이 GlobalSystem 메시 만들기 몫만 되게 합니다.
+            Vector2Int[] cellArray = slot.CellArrayOf(cells);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUpdate = slot.UpdateMarker(cells.Count == 0).Auto();
+#endif
             slot.Handle.Update(new AreaOutlineData(
                 slot.Name,
-                slot.CellArrayOf(cells),
+                cellArray,
                 _gridOrigin,
                 new Vector2(_spacing.Width, _spacing.Length),
                 yOffset,
@@ -777,6 +803,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             // 테두리 메시를 만들 때 넘기는 칸 배열입니다. 칸 수가 같으면 다시 씁니다(GC 끊김 설계 GH2).
             // GlobalSystem은 받은 배열로 그 자리에서 메시를 만들고 보관하지 않아(MeshSystem Update) 다시 써도 안전합니다.
             private Vector2Int[] _cellArray = Array.Empty<Vector2Int>();
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // 이 핸들의 Update 계측 마커입니다(Q-FP3a 1단계). 이름은 핸들 이름에서 나오고, 그리기·비우기를 나눠 처음 쓸 때만 만듭니다.
+            private Unity.Profiling.ProfilerMarker? _drawMarker;
+            private Unity.Profiling.ProfilerMarker? _clearMarker;
+
+            internal Unity.Profiling.ProfilerMarker UpdateMarker(bool clearing) => clearing
+                ? (_clearMarker ??= new Unity.Profiling.ProfilerMarker("Combat.View.Field.Outline.Clear." + Name))
+                : (_drawMarker ??= new Unity.Profiling.ProfilerMarker("Combat.View.Field.Outline.Draw." + Name));
+#endif
 
             internal Vector2Int[] CellArrayOf(List<Vector2Int> cells)
             {

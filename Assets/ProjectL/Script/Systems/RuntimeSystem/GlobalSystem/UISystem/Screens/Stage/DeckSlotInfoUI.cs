@@ -18,6 +18,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         [SerializeField] private DeckSlotInfoStats stats = new();
         [SerializeField] private DeckSlotInfoExperience experience = new();
         [SerializeField] private DeckSlotInfoAbilities abilities = new();
+        [SerializeField] private DeckSlotInfoRanges ranges = new();
         private IDeckEditInteractionReceiver _input;
         private bool _prepared;
         private bool _opened;
@@ -35,11 +36,12 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 !closeButton.targetGraphic.raycastTarget ||
                 !closeButton.targetGraphic.transform.IsChildOf(closeButton.transform))
                 throw DeckSlotInfoReferences.Error(transform, "closeButton은 독립적인 버튼이며 내부의 Raycast Target Graphic이 필요합니다.");
-            if (stats == null || experience == null || abilities == null)
-                throw DeckSlotInfoReferences.Error(transform, "stats·experience·abilities 표시 위젯이 필요합니다.");
+            if (stats == null || experience == null || abilities == null || ranges == null)
+                throw DeckSlotInfoReferences.Error(transform, "stats·experience·abilities·ranges 표시 위젯이 필요합니다.");
             stats.Validate(transform);
             experience.Validate(transform);
             abilities.Validate(transform);
+            ranges.Validate(transform);
         }
 
         internal void BindInput(IDeckEditInteractionReceiver input)
@@ -57,8 +59,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             UnitCardTraitContent[] contents = card.Stats == null ? Array.Empty<UnitCardTraitContent>() :
                 UnitCardTraitContent.Create(traits, card.Stats.TraitKeys.Span, card.DescriptionSource);
             stats.Render(card, displayName, portrait);
-            experience.RenderPending();
+            experience.Render(card.DescriptionSource?.Experience);
             abilities.Render(contents);
+            abilities.ResetForSelection();
+            ranges.Render(card.Stats?.MoveMethod, card.Stats?.MoveRange, card.DescriptionSource?.AttackPattern);
         }
 
         public override void Open()
@@ -81,6 +85,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             // Phase 2B에서 편성 상태별 문구·교체/닫기 입력을 연결합니다.
             changeButton.gameObject.SetActive(false);
             UIInputBinding.Attach(closeButton, this, 0);
+            abilities.BindInput();
             _prepared = true;
         }
 

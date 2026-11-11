@@ -56,21 +56,18 @@ namespace ProjectL.Tests.Core
         [Test]
         public void State_CopiesEffectsAndRetainsFirstDuplicateWithoutRefreshingExpiry()
         {
-            var original = new ItemTemporaryEffect(3, ItemStatKind.Priority, 10, 1);
+            var original = new ItemTemporaryEffect(3, ItemStatKind.Priority, 10);
             var effects = new List<ItemTemporaryEffect> { original,
-                new ItemTemporaryEffect(3, ItemStatKind.Priority, 20, 2),
-                new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5, 1) };
+                new ItemTemporaryEffect(3, ItemStatKind.Priority, 20),
+                new ItemTemporaryEffect(4, ItemStatKind.PhysicalDefense, 5) };
             var state = new CharacterItemState(1, effects);
             effects.Clear();
             Assert.That(state.Effects.Count, Is.EqualTo(2));
             Assert.That(state.Effects[0].Magnitude, Is.EqualTo(10));
-            Assert.That(state.Effects[0].PreparationIndex, Is.EqualTo(1));
             Assert.Throws<NotSupportedException>(() => ((IList<ItemTemporaryEffect>)state.Effects).Clear());
             var reordered = new CharacterItemState(1, new[] { state.Effects[1], original });
             Assert.That(state.SameValues(reordered), Is.True);
             Assert.That(state.SameValues(new CharacterItemState(null, reordered.Effects)), Is.False);
-            Assert.That(state.SameValues(new CharacterItemState(1, new[] {
-                new ItemTemporaryEffect(3, ItemStatKind.Priority, 10, 2), state.Effects[1] })), Is.False);
         }
 
         [Test]
@@ -86,10 +83,9 @@ namespace ProjectL.Tests.Core
         [TestCase(0, ItemStatKind.Priority, 10, 0)]
         [TestCase(3, (ItemStatKind)99, 10, 0)]
         [TestCase(3, ItemStatKind.Priority, 0, 0)]
-        [TestCase(3, ItemStatKind.Priority, 10, -1)]
         public void TemporaryEffect_RejectsInvalidDomains(int key, ItemStatKind stat, int magnitude, int round)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemTemporaryEffect(key, stat, magnitude, round));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemTemporaryEffect(key, stat, magnitude));
         }
 
         [TestCase(0)]
@@ -125,14 +121,13 @@ namespace ProjectL.Tests.Core
         public void DamageContext_AllowsUncreditedZeroDamageButRejectsMalformedFacts()
         {
             var before = Character(1, 60);
-            var hit = new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, before, 15, 0);
-            Assert.DoesNotThrow(() => new ItemDamageContext(CombatDamageKind.OrdinaryAttack, Character(2), before, 0, 0));
-            Assert.Throws<ArgumentNullException>(() => new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, null, 0, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext((CombatDamageKind)99, null, before, 0, 0));
+            var hit = new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, before, 15);
+            Assert.DoesNotThrow(() => new ItemDamageContext(CombatDamageKind.OrdinaryAttack, Character(2), before, 0));
+            Assert.Throws<ArgumentNullException>(() => new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, null, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext((CombatDamageKind)99, null, before, 0));
             // 0은 정의하지 않은 값이라 분류를 정하지 않은 default 우회도 거부한다.
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext(default, null, before, 0, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, before, -1, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, before, 1, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext(default, null, before, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, before, -1));
             Assert.DoesNotThrow(() => new ItemAfterDamageContext(hit, Character(1, 45), 15));
             Assert.Throws<ArgumentException>(() => new ItemAfterDamageContext(hit, Character(2, 45), 15));
             Assert.Throws<ArgumentException>(() => new ItemAfterDamageContext(hit, Character(1, 45), 14));
@@ -145,7 +140,7 @@ namespace ProjectL.Tests.Core
             var candidate = new ItemAttackCandidate(new EntityId(2), new CellCoord(3, 0));
             var candidates = new List<ItemAttackCandidate> { candidate };
             var finals = new List<CharacterCombatFacts> { Character(1), Character(2) };
-            var context = new ItemAttackContext(finals[0], new CellCoord(0, 0), candidates, finals, 0, 123);
+            var context = new ItemAttackContext(finals[0], new CellCoord(0, 0), candidates, finals, 123);
             candidates.Clear();
             finals.Clear();
             Assert.That(context.DirectHits.Count, Is.EqualTo(1));
@@ -154,9 +149,9 @@ namespace ProjectL.Tests.Core
             Assert.Throws<NotSupportedException>(() => ((IList<CharacterCombatFacts>)context.FinalCharacters).Clear());
             Assert.Throws<ArgumentException>(() => new ItemAttackCandidate(EntityId.Empty, default));
             Assert.Throws<ArgumentException>(() => new ItemAttackContext(Character(1), default,
-                new ItemAttackCandidate[] { null }, Array.Empty<CharacterCombatFacts>(), 0, 0));
+                new ItemAttackCandidate[] { null }, Array.Empty<CharacterCombatFacts>(), 0));
             Assert.Throws<ArgumentException>(() => new ItemAttackContext(Character(1), default,
-                Array.Empty<ItemAttackCandidate>(), new CharacterCombatFacts[] { null }, 0, 0));
+                Array.Empty<ItemAttackCandidate>(), new CharacterCombatFacts[] { null }, 0));
         }
 
         [Test]
@@ -179,7 +174,7 @@ namespace ProjectL.Tests.Core
             var target = new EntityId(1);
             var mitigation = ItemRuleDecision.Mitigation(target, 0);
             var heal = ItemRuleDecision.Heal(target, 0);
-            var effect = new ItemTemporaryEffect(3, ItemStatKind.Priority, 10, 0);
+            var effect = new ItemTemporaryEffect(3, ItemStatKind.Priority, 10);
             var debuff = ItemRuleDecision.ApplyEffect(target, effect, 123);
             Assert.That(mitigation.RemainingDamage, Is.Zero);
             Assert.That(mitigation.Consume, Is.True);
@@ -235,18 +230,17 @@ namespace ProjectL.Tests.Core
             var holder = Character(1);
             var emptyHits = Array.Empty<ItemAttackCandidate>();
             var final = new[] { holder };
-            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(null, default, emptyHits, final, 0, 0));
-            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(holder, default, null, final, 0, 0));
-            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(holder, default, emptyHits, null, 0, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemAttackContext(holder, default, emptyHits, final, -1, 0));
+            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(null, default, emptyHits, final, 0));
+            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(holder, default, null, final, 0));
+            Assert.Throws<ArgumentNullException>(() => new ItemAttackContext(holder, default, emptyHits, null, 0));
             Assert.Throws<ArgumentException>(() => new ItemAttackContext(holder, default, emptyHits,
-                new[] { holder, Character(1, 45) }, 0, 0));
+                new[] { holder, Character(1, 45) }, 0));
         }
 
         [Test]
         public void AfterDamage_RejectsHealingOrLossBeyondTheIncomingDamage()
         {
-            var hit = new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, Character(1, 60), 15, 0);
+            var hit = new ItemDamageContext(CombatDamageKind.EnvironmentDamage, null, Character(1, 60), 15);
             Assert.Throws<ArgumentNullException>(() => new ItemAfterDamageContext(hit, null, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => new ItemAfterDamageContext(hit, Character(1, 70), -10));
             Assert.Throws<ArgumentException>(() => new ItemAfterDamageContext(hit, Character(1, 40), 20));

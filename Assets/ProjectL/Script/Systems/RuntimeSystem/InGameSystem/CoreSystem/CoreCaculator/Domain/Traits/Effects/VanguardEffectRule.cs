@@ -10,8 +10,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class VanguardEffectRule : ICombatEffectRule
+    internal sealed class VanguardEffectRule : IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         private readonly VanguardTraitDefinition _definition;
         private readonly VanguardTraitRule _rule;
         internal VanguardEffectRule(VanguardTraitDefinition definition, VanguardTraitRule rule)

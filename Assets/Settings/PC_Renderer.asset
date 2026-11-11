@@ -44,11 +44,11 @@ MonoBehaviour:
   - {fileID: 7833122117494664109}
   - {fileID: 7486577925179682212}
   - {fileID: 2433005988638492109}
-  - {fileID: 864200001}
   - {fileID: 864200002}
   - {fileID: -380402446655870452}
   - {fileID: 7262249524462298539}
-  m_RendererFeatureMap: ad6b866f10d7b46ca4ad9d15f5aae567cd0532590ec6c32141a582330000000042a58233000000000c2a637ffd89b8faab25d32777b1c864
+  - {fileID: 864200003}
+  m_RendererFeatureMap: ad6b866f10d7b46ca4ad9d15f5aae567cd0532590ec6c32142a58233000000000c2a637ffd89b8faab25d32777b1c86443a5823300000000
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -74,52 +74,6 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
---- !u!114 &864200001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef143f3b84185814facdf0fffb9b88d3, type: 3}
-  m_Name: StencilBlendingFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  IsAddRenderPass: 0
-  linePresets:
-  - key: 0
-    data:
-      lineThickness: 0.27
-      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
-      lineNoiseTexture: {fileID: 2800000, guid: 26a3377eacb3cfe45adfe1e149194407, type: 3}
-      lineNoiseTiling: {x: 10, y: 0}
-      lineNoiseSpeed: 0.06
-      lineDistortion: 1.16
-  - key: 1
-    data:
-      lineThickness: 0.35
-      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
-      lineNoiseTexture: {fileID: 2800000, guid: 49bb715095baeef40ae705080df273ec, type: 3}
-      lineNoiseTiling: {x: 1, y: 1}
-      lineNoiseSpeed: 0.1
-      lineDistortion: 0.57
-  - key: 2
-    data:
-      lineThickness: 0.35
-      lineColor: {r: 4.282177, g: 0.40944484, b: 0.26258644, a: 1}
-      lineNoiseTexture: {fileID: 2800000, guid: 26a3377eacb3cfe45adfe1e149194407, type: 3}
-      lineNoiseTiling: {x: 3, y: 0}
-      lineNoiseSpeed: 0.1
-      lineDistortion: 1
-  setting:
-    TargetRenderTexture: {fileID: 8400000, guid: 0768573b95db4ce479e0fe2b09efd8eb, type: 2}
-    CircleCenter: {x: 0, y: 0}
-    CircleRadius: 0
-    TargetRenderTextureThickness: 5.48
-    lineKey: 0
-    BlendingShader: {fileID: 7200000, guid: 1f8645e0beaa9f848a83fbc6eb389b31, type: 3}
 --- !u!114 &864200002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,6 +93,49 @@ MonoBehaviour:
     FadeValue: 0
     FadeTexture: {fileID: 2800000, guid: 37993c740d62873488c036b33b932ca9, type: 3}
     FadeColor: {r: 0, g: 0, b: 0, a: 1}
+--- !u!114 &864200003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b3d386ba5cd94485973aee1479b272e, type: 3}
+  m_Name: Cartoon Outline
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    passTag: Cartoon Outline
+    Event: 300
+    filterSettings:
+      RenderQueueType: 0
+      LayerMask:
+        serializedVersion: 2
+        m_Bits: 4294967295
+      PassNames:
+      - ProjectLCartoonOutline
+    overrideMaterial: {fileID: 0}
+    overrideMaterialPassIndex: 0
+    overrideShader: {fileID: 0}
+    overrideShaderPassIndex: 0
+    overrideMode: 0
+    overrideDepthState: 0
+    depthCompareFunction: 4
+    enableWrite: 0
+    stencilSettings:
+      overrideStencilState: 1
+      stencilReference: 0
+      stencilCompareFunction: 3
+      passOperation: 2
+      failOperation: 0
+      zFailOperation: 0
+    cameraSettings:
+      overrideCamera: 0
+      restoreCamera: 1
+      offset: {x: 0, y: 0, z: 0, w: 0}
+      cameraFieldOfView: 60
 --- !u!114 &2433005988638492109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,12 +154,12 @@ MonoBehaviour:
   Settings:
     LightingRange: 60
     LightingSteps: 60
-    LightingIntensity: 0.005
-    LightingIntensityMax: 0.1
-    ShadowSteps: 16
-    ShadowIntensity: 0.02
-    ShadowIntensityMax: -0.01
-    ShadowsColor: {r: 1, g: 0.50319386, b: 0, a: 1}
+    LightingIntensity: 0.001
+    LightingIntensityMax: 0.01
+    ShadowSteps: 60
+    ShadowIntensity: 0.003
+    ShadowIntensityMax: -0.001
+    ShadowsColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &7262249524462298539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,14 +223,14 @@ MonoBehaviour:
   m_Active: 1
   m_Settings:
     AOMethod: 1
-    Downsample: 0
+    Downsample: 1
     AfterOpaque: 0
     Source: 1
     NormalSamples: 1
     Intensity: 0.82
     DirectLightingStrength: 1
     Radius: 1.62
-    Samples: 0
-    BlurQuality: 0
+    Samples: 2
+    BlurQuality: 1
     Falloff: 200
     SampleCount: -1

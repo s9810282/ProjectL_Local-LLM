@@ -5,7 +5,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
 {
     /// <summary>
     /// 처리 Job 바로 뒤에서 그 처리가 끝났는지 확인합니다(검사 후속 정리 계획 TP-R9, 로비 아티팩트 확인과 같은 꼴).
-    /// 아직 남았으면 기록 누락이므로 그 도메인만 멈춥니다. 같은 Runner Tick에 끝나 다음 Tick까지 기다리는 상태가 없습니다.
+    /// 아직 남았으면 기록 누락이므로 그 도메인을 멈추고 공용 오류 경계(F1)에 보고합니다. 같은 Runner Tick에 끝나 다음 Tick까지 기다리는 상태가 없습니다.
     /// </summary>
     internal sealed class StageCheckJob : IJobService
     {

@@ -31,9 +31,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
     internal sealed class StageSelectionReceiverSlot :
         IStageSelectionReceiverSlot,
         IStageSelectionInputReceiver,
-#if UNITY_EDITOR
-        IStageCameraFramingInputReceiver,
-#endif
         IExportSystemServices
     {
         private IStageSelectionInputReceiver _receiver;
@@ -62,16 +59,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
             _receiver = null;
             _selectOwner = null;
 
-#if UNITY_EDITOR
-            if (receiver is IStageCameraFramingInputReceiver framing)
-                framing.CameraModifierChanged(false);
-#endif
-
             if (hadSelection)
                 receiver.SelectCanceled();
         }
 
         public void PointerMoved(float screenX, float screenY) => _receiver?.PointerMoved(screenX, screenY);
+
+        public void ScrollRequested(float scrollY, float screenX, float screenY) =>
+            _receiver?.ScrollRequested(scrollY, screenX, screenY);
 
         public void SelectPressed(float screenX, float screenY)
         {
@@ -99,20 +94,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
         public void ConfirmRequested() => _receiver?.ConfirmRequested();
 
         public void CancelRequested() => _receiver?.CancelRequested();
-
-#if UNITY_EDITOR
-        public void CameraModifierChanged(bool pressed) =>
-            (_receiver as IStageCameraFramingInputReceiver)?.CameraModifierChanged(pressed);
-
-        public void CameraRotateChanged(bool pressed, float screenX, float screenY) =>
-            (_receiver as IStageCameraFramingInputReceiver)?.CameraRotateChanged(pressed, screenX, screenY);
-
-        public void CameraDollyChanged(bool pressed, float screenX, float screenY) =>
-            (_receiver as IStageCameraFramingInputReceiver)?.CameraDollyChanged(pressed, screenX, screenY);
-
-        public void CameraZoomRequested(float scrollY, float screenX, float screenY) =>
-            (_receiver as IStageCameraFramingInputReceiver)?.CameraZoomRequested(scrollY, screenX, screenY);
-#endif
 
         public void ExportServices(ISystemWriteSink sink)
         {

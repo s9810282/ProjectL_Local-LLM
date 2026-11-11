@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 !Hostility.AreHostile(holder.Owner, hit.Attacker.Owner))
                 return ItemRuleDecision.NoActivation();
             return ItemRuleDecision.ApplyEffect(hit.Attacker.EntityId,
-                new ItemTemporaryEffect(definition.Key, ItemStatKind.PhysicalDefense, spec.DefensePenalty, hit.PreparationIndex));
+                new ItemTemporaryEffect(definition.Key, ItemStatKind.PhysicalDefense, spec.DefensePenalty));
         }
     }
 }

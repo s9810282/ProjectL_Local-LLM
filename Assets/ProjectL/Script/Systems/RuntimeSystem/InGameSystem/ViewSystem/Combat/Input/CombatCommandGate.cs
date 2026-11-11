@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -38,9 +41,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         internal int TrySubmit(in CombatInputFacts facts, CombatViewCommandData command)
         {
             if (!CombatInputPolicy.CanSubmit(facts, HasPending, command.Kind))
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                CombatInputProfiler.CommandBlocked(command.Kind);
+#endif
                 return 0;
+            }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return CombatInputProfiler.Submit(_input, command);
+#else
             return _input.Submit(command);
+#endif
         }
 
         /// <summary>

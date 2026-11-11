@@ -23,34 +23,38 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         public static IReadOnlyList<CellCoord> Footprint(CellCoord center, int sideLength)
+            => new List<CellCoord>(FootprintSteps(center, sideLength)).AsReadOnly();
+
+        internal static IEnumerable<CellCoord> FootprintSteps(CellCoord center, int sideLength)
         {
             if (!Fits(center, sideLength, int.MaxValue, int.MaxValue)) throw new ArgumentOutOfRangeException(nameof(center));
             int radius = sideLength / 2;
-            var cells = new List<CellCoord>();
             for (int y = center.Y - radius; y <= center.Y + radius; y++)
                 for (int x = center.X - radius; x <= center.X + radius; x++)
-                    cells.Add(new CellCoord(x, y));
-            return cells.AsReadOnly();
+                    yield return new CellCoord(x, y);
         }
 
         // 경고 때 고른 방향을 그대로 사용하며 출발 중심을 항상 포함한다.
         public static IReadOnlyList<CellCoord> Travel(CellCoord center, int sideLength, int distance,
+            int width, int height, CellCoord direction)
+            => new List<CellCoord>(TravelSteps(center, sideLength, distance, width, height, direction)).AsReadOnly();
+
+        internal static IEnumerable<CellCoord> TravelSteps(CellCoord center, int sideLength, int distance,
             int width, int height, CellCoord direction)
         {
             if (!Fits(center, sideLength, width, height)) throw new ArgumentOutOfRangeException(nameof(center));
             if (distance < 1) throw new ArgumentOutOfRangeException(nameof(distance));
             if (direction != CellCoord.Zero && (Math.Abs((long)direction.X) != 1 || Math.Abs((long)direction.Y) != 1))
                 throw new ArgumentOutOfRangeException(nameof(direction));
-            var path = new List<CellCoord> { center };
-            if (direction == CellCoord.Zero) return path.AsReadOnly();
+            yield return center;
+            if (direction == CellCoord.Zero) yield break;
             for (int i = 0; i < distance; i++)
             {
                 var next = center + direction;
-                if (!Fits(next, sideLength, width, height)) break;
-                path.Add(next);
+                if (!Fits(next, sideLength, width, height)) yield break;
+                yield return next;
                 center = next;
             }
-            return path.AsReadOnly();
         }
     }
 }

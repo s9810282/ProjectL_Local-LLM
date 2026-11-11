@@ -1,8 +1,9 @@
 # 스테이지 선택 View 평가 설계 — 13기준 100점
 
 - 작성자: 호진(이호진)
-- 상태: 초안. 결정 대기(§8 Q-SE1~Q-SE5). 코드는 바꾸지 않는다.
+- 상태: 결정 완료(§8), 실행 완료(11-05, 결과는 [평가 보고서](2026-11-05-stage-select-view-evaluation-Hojin.md)). Codex 검수는 실패(보고서 §5). 코드는 바꾸지 않는다.
 - 요청: 2026-11-05 사용자 "스테이지 선택 부분을 리팩토링" → "평가 설계부터".
+- 결정: 2026-11-05 사용자 "Q-SE1 B안으로 하는데 현강님이 만든 UI의 터치는 많이 줄입니다. 문제 될 것이 아니라면요. 나머지는 권장 A로." 범위는 작성자와 상관없이 스테이지 선택 기능 파일 전부이고, 현강님 UI는 점수에 넣되 리팩토링에서 최소로 고친다(§2.3).
 - 틀: [로비 View 평가 설계](2026-11-05-lobby-view-evaluation-design-Hojin.md)와 같은 13기준·감점표·절차를 쓴다. 이 문서는 범위와 슬라이스·렌즈만 스테이지 선택에 맞게 바꾼다. 로비 쪽 점수와 견줄 수 있게 기준과 감점은 바꾸지 않는다.
 
 ## 1 목적
@@ -13,34 +14,42 @@
 
 ## 2 범위
 
-### 2.1 점수에 들어가는 것 (133개 파일, 12,276줄)
+### 2.1 점수에 들어가는 것 (160개 파일, 13,676줄)
 
-호진이 만들거나 손댄 스테이지 선택 코드다. 로비와 같은 규칙으로 고른다(Q-SE1). 판정은 파일 단위다. 호진 커밋(`CCRC_Hojin`·`Leehojin`)이 한 번이라도 닿은 파일이면 넣고, 다른 사람이 뒤에 고친 줄도 그 파일 안이면 범위다. 줄 수는 2026-11-05 작업 트리 기준이고, 기준 판이 정해지면 다시 센다.
+스테이지 선택 기능 코드 전부다. **작성자와 상관없이** 넣는다(Q-SE1 B). 로비 평가(호진이 닿은 파일만)와 규칙이 달라, 두 점수를 볼 때 이 차이를 적는다. 줄 수는 2026-11-05 작업 트리 기준이고, 기준 판이 정해지면 다시 센다.
 
 | 묶음 | 파일 | 줄 |
 |---|---|---|
-| 맵 View 바탕 `ViewSystem/StageMap/*`(표시·입력 쪽 제외) | 18 | 2,084 |
+| 맵 View 바탕 `ViewSystem/StageMap/*`(표시·입력 쪽 제외) + `StageMapSceneFactory` | 19 | 2,127 |
 | 맵 표시·입력 `ViewSystem/StageMap/*`(노드·연결선·카메라·선택·호버) + `Background/`·`Editor/` | 20 | 2,206 |
-| 상점·회복·증강 팝업 `StageMap/Shop/**`·`Recovery/**`·`TraitGrowth/**`, 요청 수명 `ViewSystem/Recovery/**`·`ViewSystem/TraitGrowth/**` | 22 | 2,256 |
-| 덱 편집 팝업 `StageMap/Deck/**` | 5 | 711 |
-| 스테이지 선택 입력 `ViewSystem/StageSelectionInput/**` + 서비스 키 `StageSelectionInputKey` | 7 | 363 |
-| UI 화면 `UISystem/Screens/Stage/*`(맵 캔버스·선택 패널·제안 카드·덱 편집·출전 확인·증강) | 17 | 1,705 |
-| View DB 입력·조회 `Data/View/Table/{Recovery,StageMap,StageMapBackground,StageNode,StageOfferText}/**`·조회 표 | 19 | 1,062 |
-| LifeCycle `LifeCycles/Stage/**`(Plan·Job·진입·증강 진행) | 17 | 1,374 |
-| View 입력 Buffer `BufferSystems/{StageView,ShopView,RecoveryView}/*` | 7 | 472 |
-| 연결: `StageMapSceneFactory` | 1 | 43 |
+| 상점·회복·증강 팝업 `StageMap/Shop/**`·`Recovery/**`·`TraitGrowth/**`, 요청 수명 `ViewSystem/Recovery/**`·`ViewSystem/TraitGrowth/**` | 23 | 2,303 |
+| 덱 편집 팝업 `StageMap/Deck/**`, 스테이지 선택 입력 `ViewSystem/StageSelectionInput/**`·`StageInput/StageSelectInput`, 서비스 키 `StageSelectionInputKey` | 15 | 1,248 |
+| UI 화면 `UISystem/Screens/Stage/*`(맵 캔버스·선택 패널·제안 카드·덱 편집·출전 확인·증강) | 29 | 2,519 |
+| View DB 입력·조회 `Data/View/Table/{Recovery,StageMap,StageMapBackground,StageNode,StageOfferText}/**`·조회 표, View 입력 Buffer `BufferSystems/{StageView,ShopView,RecoveryView,TraitGrowthView}/*`, Buffer 키 셋 | 35 | 1,800 |
+| LifeCycle `LifeCycles/Stage/**`(Plan·Job·진입·덱 편집 창·증강 진행) | 19 | 1,473 |
 
-맵 View 바탕 줄 수에는 Factory 연결 줄이 따로 빠져 있다(위 마지막 줄). 파일 하나하나는 부록 A에 있다.
+파일 하나하나와 작성자는 부록 A에 있다. 작성자는 그 파일에 닿은 커밋 작성자다.
 
-### 2.2 범위 밖
+### 2.2 현강님 UI 표시
 
-- **호진이 손대지 않은 파일**(감점 안 함, Q-SE1 A일 때). 스테이지 선택 기능에 속하지만 다른 사람만 쓴 파일이다. 목록은 부록 B(27개).
-  - 용근님: 덱 편집 창 `StageDeckEditWindow`·`IStageDeckEditFacts`, `DeckEditText`·`DeckEditPopupViewScreen`, `RecoveryDescriptionBindings`, 조회 표 둘·표 SO 셋 등.
-  - 현강님: 덱 편집 슬롯·정보 위젯(`DeckEditSlotView`·`OwnedUnitSlot`·`DeckSlotInfo*` 등).
-  - 민형님·천명님: Buffer 키 셋, `StageUI`, `TraitGrowthViewBuffer`.
+- 현강님만 쓴 UI 파일 10개(754줄)는 부록 A에 **(현강 UI)**로 표시한다. 덱 편집 슬롯·정보 위젯(`DeckEditSlotView`·`OwnedUnitSlot`·`DeckSlotInfo*`·`DeckOwnedFilter`), 덱 편집 입력 계약 셋(`IDeckEdit*`), `DeckEditCancelBinding`이다.
+- 평가에서는 다른 파일과 똑같이 보고 점수에 넣는다.
+- 문제 목록에는 그 문제가 (현강 UI)에 있는지 칸을 둔다. 리팩토링 설계에서 쓰는 규칙(§2.3)을 미리 가르기 위해서다.
+
+### 2.3 리팩토링에서 현강님 UI 다루기 (사용자 결정, 평가 결과에 적용)
+
+- 현강님 UI는 **고치는 범위를 최소로** 둔다.
+- 고치는 것은 둘뿐이다.
+  - 실제로 틀리게 동작하거나 오류를 묻는 문제(높음·중간 결함)
+  - 우리 쪽 변경 때문에 그 파일의 호출·계약을 맞춰야 하는 곳
+- 그 밖의 낮음(읽기 비용·관례·주석)은 문제 목록에 남기고 고치지 않는다. 그래서 리팩토링 뒤 재평가 점수에도 그 몫이 남는다.
+- 고친 줄은 현강님께 넘길 메모로 정리한다(전달 여부는 사용자가 정함).
+
+### 2.4 범위 밖
+
 - **로비 평가에서 이미 본 공용 부품**(Q-SE2 A): `ViewSystem/Common/*`(팝업 수명 `PopupViewScope`·`PopupInputSession`, 체스 말, 가림 판정 등). 스테이지 선택 코드가 이것을 **잘못 쓰는 몫**은 범위 안 코드의 문제로 센다.
 - **Core 쪽 결과 Buffer**: `BufferSystems/Current/*`·`Recovery/*`·`Stage/*`·`Character/*`. Core가 쓰는 결과라 기반으로 본다.
-- **전투 쪽 입력** `ViewSystem/StageInput/**`: 전투 View 영역이다.
+- **전투 쪽 입력** `ViewSystem/StageInput/**`(스테이지 선택 입력 `StageSelectInput` 하나는 범위 안): 전투 View 영역이다.
 - **기반**(감점 안 함): Framework, GlobalSystem 내부(UISystem Base·InputSystem·Render·Audio), Core, 공용 Factory 조립, 로비·전투 등 다른 씬 코드, 시험, 에디터 도구 `Tool/Editor/**`.
 - 기반이 강제한 한계는 감점하지 않는다. 범위 안 코드가 그 한계를 흡수하면서 사본이나 우회를 만들면, 그 몫만 깎는다.
 
@@ -48,7 +57,7 @@
 
 로비 평가 §3과 같다(C1~C12 전투 평가 기준 + C13 UI 규약). 표는 그 문서를 원본으로 하고 여기 다시 적지 않는다.
 
-- C13을 그대로 두는 까닭: 스테이지 선택도 UI 화면·팝업 비중이 크다(UI 화면 1,705줄, 팝업 2,967줄).
+- C13을 그대로 두는 까닭: 스테이지 선택도 UI 화면·팝업 비중이 크다(UI 화면 2,519줄, 팝업 3,108줄).
 - 문제 하나는 주된 기준 하나에만 둔다. UI 서비스 등록·Export 경로 문제는 C3, UI 화면 쪽 규약은 C13이다.
 
 ## 4 감점표·점수
@@ -61,7 +70,7 @@
 
 ## 5 절차
 
-로비는 찾기 12·합치기 1·검증 7·정리 1로 21회였다. 스테이지 선택은 범위가 로비의 약 1.4배라 슬라이스를 하나 늘린다. 실행은 약 25~35회로 본다(Q-SE5).
+로비는 찾기 12·합치기 1·검증 7·정리 1로 21회였다. 스테이지 선택은 범위가 로비의 약 1.6배라 슬라이스를 하나 늘린다. 실행은 약 25~35회로 본다(Q-SE5).
 
 1. **찾기 13명**
    - **슬라이스 7명:** 범위 파일을 묶음별로 나눠 **끝까지 읽는다**. 다 읽었는지 파일 목록으로 확인한다.
@@ -70,11 +79,11 @@
      |---|---|---|
      | S1 | 맵 View 바탕(시스템·Scope·서비스·씬·팝업 묶음·진입·출전·팝업 수명) + Factory | 2,127 |
      | S2 | 맵 표시·입력(표시·상호작용·노드·연결선·현재 위치·카메라·호버) + 배경·에디터 | 2,206 |
-     | S3 | 상점·회복·증강 팝업 + 요청 수명 | 2,256 |
-     | S4 | 덱 편집 팝업 + 스테이지 선택 입력 | 1,074 |
-     | S5 | UI 화면 | 1,705 |
-     | S6 | View DB 입력·조회 표 + View 입력 Buffer | 1,534 |
-     | S7 | LifeCycle | 1,374 |
+     | S3 | 상점·회복·증강 팝업 + 요청 수명 | 2,303 |
+     | S4 | 덱 편집 팝업 + 스테이지 선택 입력 | 1,248 |
+     | S5 | UI 화면(현강 UI 754줄 포함) | 2,519 |
+     | S6 | View DB 입력·조회 표 + View 입력 Buffer·키 | 1,800 |
+     | S7 | LifeCycle | 1,473 |
 
    - **렌즈 6명:** 범위 전체를 관점 하나로 훑는다.
      - L1 SSOT: 규칙·상태·상수 사본(맵 진입 가능 판정, 노드 상태, 팝업 열림 조건 등)
@@ -115,190 +124,183 @@
   - 11-04 동작 위험 설계 R1~R4와의 대조(§8 Q-SE4)
 - 문제 목록: `docs/superpowers/specs/<실행일>-stage-select-view-evaluation-issues-Hojin.md`
   - 검증을 통과한 문제 전부
-  - 위치·내용·실패 시나리오·고칠 방향·기준·검증 판정
+  - 위치·내용·실패 시나리오·고칠 방향·기준·검증 판정, (현강 UI) 여부(§2.2)
 - 평가 끝에 Phase 끝 Codex 검수를 받는다. 검수 대상은 보고서의 근거와 점수 계산이다.
 - 평가 결과로 스테이지 선택 리팩토링 설계를 쓴다. 11-04 동작 위험 설계의 Q-BR1~Q-BR4도 그 설계에서 함께 정한다. 평가 단계에서는 코드를 바꾸지 않는다.
 
-## 8 결정 대기
+## 8 결정 (2026-11-05 사용자)
 
-| # | 묻는 것 | 권장(A) | 다른 안 |
+| # | 묻는 것 | 고른 안 | 다른 안 |
 |---|---|---|---|
-| Q-SE1 | 범위 규칙 | **A 로비와 같게, 호진이 닿은 파일만**(133개). 다른 사람만 쓴 27개는 부록 B에 남기고 감점하지 않는다 | B 스테이지 선택 기능 파일은 작성자와 상관없이 모두(160개). 덱 편집 창 등 용근님 줄까지 점수에 들어가 로비와 규칙이 달라진다 |
-| Q-SE2 | 공용 부품 `ViewSystem/Common/*` | **A 빼기.** 로비 평가·2차 리팩토링에서 이미 보고 고쳤다. 잘못 쓰는 몫만 범위 안으로 센다 | B 다시 넣기. 같은 문제를 두 번 세게 된다 |
-| Q-SE3 | 기준 판 | **A R-M-03 커밋 뒤 커밋 하나** | B 지금 HEAD `cc3ccdf96`(범위 파일은 R-M-03과 겹치지 않아 결과는 같음, 기록만 덜 깔끔) |
-| Q-SE4 | 이미 아는 문제(11-04 R1~R4) | **A 검토자에게 알리지 않고, 끝난 뒤 대조**(로비 §8과 같음). 찾지 못한 것은 보고서에 따로 적는다 | B 미리 알려 확인시키기. 독립성이 떨어진다 |
-| Q-SE5 | 규모 | **A 찾기 13(슬라이스 7·렌즈 6), 실행 약 25~35회** | B 슬라이스 6으로 줄이기(S1·S2를 합쳐 4,300줄 한 명). 다 읽기가 어려워 빠질 수 있다 |
+| Q-SE1 | 범위 규칙 | **B 작성자와 상관없이 스테이지 선택 기능 파일 전부(160개).** 현강님 UI는 점수에 넣되 리팩토링에서 최소로 고친다(§2.3). 권장은 A였다 | A 로비와 같게 호진이 닿은 파일만(133개) |
+| Q-SE2 | 공용 부품 `ViewSystem/Common/*` | **A(권장) 빼기.** 로비 평가·2차 리팩토링에서 이미 보고 고쳤다. 잘못 쓰는 몫만 범위 안으로 센다 | B 다시 넣기. 같은 문제를 두 번 세게 된다 |
+| Q-SE3 | 기준 판 | **A(권장) R-M-03 커밋 뒤 커밋 하나** | B 지금 HEAD `cc3ccdf96`(범위 파일은 R-M-03과 겹치지 않아 결과는 같음, 기록만 덜 깔끔) |
+| Q-SE4 | 이미 아는 문제(11-04 R1~R4) | **A(권장) 검토자에게 알리지 않고, 끝난 뒤 대조**(로비 §8과 같음). 찾지 못한 것은 보고서에 따로 적는다 | B 미리 알려 확인시키기. 독립성이 떨어진다 |
+| Q-SE5 | 규모 | **A(권장) 찾기 13(슬라이스 7·렌즈 6), 실행 약 25~35회** | B 슬라이스 6으로 줄이기(S1·S2를 합쳐 4,300줄 한 명). 다 읽기가 어려워 빠질 수 있다 |
 
-## 부록 A 범위 파일 (133개)
+## 부록 A 범위 파일 (160개)
 
 경로 머리는 `Assets/ProjectL/Script/Systems/`다. 줄 수는 2026-11-05 작업 트리 기준이다.
 
-| 파일 | 줄 |
-|---|---|
-| `DataBaseSystem/Data/View/Table/Recovery/Item/RecoveryOptionVisualData.cs` | 31 |
-| `DataBaseSystem/Data/View/Table/Recovery/Item/RecoveryOptionVisualDataSO.cs` | 27 |
-| `DataBaseSystem/Data/View/Table/StageMap/Item/StageMapViewData.cs` | 107 |
-| `DataBaseSystem/Data/View/Table/StageMap/Item/StageMapViewDataSO.cs` | 67 |
-| `DataBaseSystem/Data/View/Table/StageMapBackground/Item/StageMapBackgroundData.cs` | 33 |
-| `DataBaseSystem/Data/View/Table/StageMapBackground/Item/StageMapBackgroundDataSO.cs` | 18 |
-| `DataBaseSystem/Data/View/Table/StageMapBackground/StageMapBackgroundDataTableSO.cs` | 11 |
-| `DataBaseSystem/Data/View/Table/StageNode/Item/StageNodeVisualData.cs` | 46 |
-| `DataBaseSystem/Data/View/Table/StageNode/Item/StageNodeVisualDataSO.cs` | 35 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferErrorKind.cs` | 20 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferLineKind.cs` | 23 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextData.cs` | 223 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextDataSO.cs` | 108 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextTarget.cs` | 15 |
-| `DataBaseSystem/Data/View/Table/StageOfferText/StageOfferTextDataTableSO.cs` | 11 |
-| `DataBaseSystem/Queries/ViewDataBase/ViewTable/IStageMapBackgroundTableQuery.cs` | 15 |
-| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageMapBackgroundTable.cs` | 70 |
-| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageNodeVisualTable.cs` | 93 |
-| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageOfferTextTable.cs` | 109 |
-| `Factory/Runtime/InGame/View/StageMapSceneFactory.cs` | 43 |
-| `RuntimeSystem/BufferSystems/RecoveryView/RecoveryViewBuffer.cs` | 124 |
-| `RuntimeSystem/BufferSystems/RecoveryView/RecoveryViewCommand.cs` | 23 |
-| `RuntimeSystem/BufferSystems/ShopView/ShopViewBuffer.cs` | 69 |
-| `RuntimeSystem/BufferSystems/ShopView/ShopViewCommand.cs` | 90 |
-| `RuntimeSystem/BufferSystems/StageView/StageViewBuffer.cs` | 104 |
-| `RuntimeSystem/BufferSystems/StageView/StageViewCommand.cs` | 53 |
-| `RuntimeSystem/BufferSystems/StageView/StageViewCommandKind.cs` | 9 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckCombatConfirmUI.cs` | 65 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditUI.cs` | 659 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoUI.cs` | 110 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckCombatDeparture.cs` | 20 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IStageOfferDisplay.cs` | 18 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IStageOfferInput.cs` | 10 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageLegendUI.cs` | 18 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageMapCanvasView.cs` | 71 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferCardContent.cs` | 41 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferCardView.cs` | 85 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferLayoutView.cs` | 264 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferPopupModel.cs` | 42 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferScreenUI.cs` | 136 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferUI.cs` | 20 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageScreenRootUI.cs` | 57 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageSelectPanelUI.cs` | 64 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/TraitGrowthUI.cs` | 25 |
-| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestExecution.cs` | 17 |
-| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestStatus.cs` | 13 |
-| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestSubmitter.cs` | 11 |
-| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/RecoveryRequestLifetime.cs` | 259 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Background/StageMapBackgroundDisplay.cs` | 128 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditDisplayModel.cs` | 95 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditDraft.cs` | 247 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditModelBuilder.cs` | 93 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupController.cs` | 244 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupViewFactory.cs` | 32 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingPending.cs` | 141 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingReceiver.cs` | 202 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingSettings.cs` | 98 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapSceneRootEditor.cs` | 78 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapCameraDrag.cs` | 15 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapEntryPresentation.cs` | 13 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapInteractionFeedback.cs` | 22 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapPointerBlocker.cs` | 9 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapSceneFactory.cs` | 16 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageNodePicker.cs` | 13 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupController.cs` | 239 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupModelBuilder.cs` | 111 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupViewFactory.cs` | 50 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/EnhancementShopOfferContentBuilder.cs` | 33 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/IShopOfferContentBuilder.cs` | 14 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ItemShopOfferContentBuilder.cs` | 29 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupController.cs` | 400 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupModelBuilder.cs` | 207 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupViewFactory.cs` | 80 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopResultPolicy.cs` | 91 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/TrainingCardContentBuilder.cs` | 79 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/UnitShopOfferContentBuilder.cs` | 53 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageCombatDeparture.cs` | 172 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageCurrentMarkerView.cs` | 128 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageEntryIdentity.cs` | 46 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageLinkView.cs` | 76 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapCameraDrag.cs` | 195 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapEntryObserver.cs` | 112 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapInteraction.cs` | 206 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapNodeLayout.cs` | 51 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapNodeMovement.cs` | 128 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapPointerBlocker.cs` | 15 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapSceneRoot.cs` | 39 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapScreenPresentation.cs` | 90 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapSelectionPresentation.cs` | 128 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewDisplay.cs` | 348 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewEntry.cs` | 110 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewInput.cs` | 87 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewPopups.cs` | 111 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewReader.cs` | 75 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewScene.cs` | 101 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewScope.cs` | 311 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewServices.cs` | 139 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewSystem.cs` | 283 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodeHoverInfo.cs` | 150 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodePicker.cs` | 37 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodeView.cs` | 204 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageOfferPopupViewScreen.cs` | 25 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StagePopupViewLifetime.cs` | 188 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupController.cs` | 216 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupModelBuilder.cs` | 102 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupViewFactory.cs` | 52 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/IStageSelectionInputReceiver.cs` | 28 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputController.cs` | 114 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputFactory.cs` | 31 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputLayers.cs` | 20 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputNames.cs` | 20 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionReceiverSlot.cs` | 135 |
-| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/ITraitGrowthRequestExecution.cs` | 15 |
-| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/ITraitGrowthRequestSubmitter.cs` | 14 |
-| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/TraitGrowthRequestLifetime.cs` | 171 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageEntryAttemptRead.cs` | 11 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageProgress.cs` | 35 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageTraitGrowthFacts.cs` | 17 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/RecoveryCommandJob.cs` | 61 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/ShopCommandJob.cs` | 36 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageCheckJob.cs` | 38 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs` | 75 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageNodeEntryJob.cs` | 36 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/TraitGrowthCommandJob.cs` | 61 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/TraitGrowthPrepareJob.cs` | 34 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs` | 200 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StageStep.cs` | 40 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageEntryAttempts.cs` | 80 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs` | 237 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageProgress.cs` | 194 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageProgressFacts.cs` | 104 |
-| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageTraitGrowthProgress.cs` | 115 |
-| `ServiceKeys/Runtime/StageSelectionInputKey.cs` | 15 |
-
-## 부록 B 범위 밖: 호진이 닿지 않은 스테이지 선택 파일 (27개)
-
-Q-SE1 A일 때 감점하지 않는다. 작성자는 git 기록의 커밋 작성자다.
-
 | 파일 | 줄 | 작성자 |
 |---|---|---|
+| `DataBaseSystem/Data/View/Table/Recovery/Item/RecoveryOptionVisualData.cs` | 31 | 호진 |
+| `DataBaseSystem/Data/View/Table/Recovery/Item/RecoveryOptionVisualDataSO.cs` | 27 | 호진·용근 |
 | `DataBaseSystem/Data/View/Table/Recovery/RecoveryOptionVisualDataTableSO.cs` | 11 | 용근 |
+| `DataBaseSystem/Data/View/Table/StageMap/Item/StageMapViewData.cs` | 107 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageMap/Item/StageMapViewDataSO.cs` | 67 | 호진·용근·민형 |
 | `DataBaseSystem/Data/View/Table/StageMap/StageMapViewDataTableSO.cs` | 11 | 용근 |
+| `DataBaseSystem/Data/View/Table/StageMapBackground/Item/StageMapBackgroundData.cs` | 33 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageMapBackground/Item/StageMapBackgroundDataSO.cs` | 18 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageMapBackground/StageMapBackgroundDataTableSO.cs` | 11 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageNode/Item/StageNodeVisualData.cs` | 46 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageNode/Item/StageNodeVisualDataSO.cs` | 35 | 호진·용근 |
 | `DataBaseSystem/Data/View/Table/StageNode/StageNodeVisualDataTableSO.cs` | 11 | 용근 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferErrorKind.cs` | 20 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferLineKind.cs` | 23 | 호진·용근 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextData.cs` | 223 | 호진·용근 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextDataSO.cs` | 108 | 호진·용근 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/Item/StageOfferTextTarget.cs` | 15 | 호진 |
+| `DataBaseSystem/Data/View/Table/StageOfferText/StageOfferTextDataTableSO.cs` | 11 | 호진 |
+| `DataBaseSystem/Queries/ViewDataBase/ViewTable/IStageMapBackgroundTableQuery.cs` | 15 | 호진 |
 | `DataBaseSystem/Queries/ViewDataBase/ViewTable/RecoveryOptionVisualTable.cs` | 57 | 용근 |
+| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageMapBackgroundTable.cs` | 70 | 호진 |
 | `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageMapViewTable.cs` | 44 | 용근 |
+| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageNodeVisualTable.cs` | 93 | 호진·용근 |
+| `DataBaseSystem/Queries/ViewDataBase/ViewTable/StageOfferTextTable.cs` | 109 | 호진 |
+| `Factory/Runtime/InGame/View/StageMapSceneFactory.cs` | 43 | 호진 |
+| `RuntimeSystem/BufferSystems/RecoveryView/RecoveryViewBuffer.cs` | 124 | 호진 |
+| `RuntimeSystem/BufferSystems/RecoveryView/RecoveryViewCommand.cs` | 23 | 호진 |
+| `RuntimeSystem/BufferSystems/ShopView/ShopViewBuffer.cs` | 69 | 호진 |
+| `RuntimeSystem/BufferSystems/ShopView/ShopViewCommand.cs` | 90 | 천명·호진 |
+| `RuntimeSystem/BufferSystems/StageView/StageViewBuffer.cs` | 104 | 호진 |
+| `RuntimeSystem/BufferSystems/StageView/StageViewCommand.cs` | 53 | 호진 |
+| `RuntimeSystem/BufferSystems/StageView/StageViewCommandKind.cs` | 9 | 호진 |
 | `RuntimeSystem/BufferSystems/TraitGrowthView/TraitGrowthViewBuffer.cs` | 96 | 천명 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditCancelBinding.cs` | 21 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditSlotView.cs` | 151 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckOwnedFilter.cs` | 77 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoAbilities.cs` | 151 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoExperience.cs` | 29 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoStats.cs` | 93 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckCombatConfirmUI.cs` | 65 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditCancelBinding.cs` (현강 UI) | 21 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditSlotView.cs` (현강 UI) | 151 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckEditUI.cs` | 659 | 호진·용근·천명·민형·현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckOwnedFilter.cs` (현강 UI) | 77 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoAbilities.cs` (현강 UI) | 151 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoExperience.cs` (현강 UI) | 29 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoStats.cs` (현강 UI) | 93 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/DeckSlotInfoUI.cs` | 110 | 호진·용근·천명·현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckCombatDeparture.cs` | 20 | 호진 |
 | `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditDisplay.cs` | 21 | 용근 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditDragReceiver.cs` | 13 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditInput.cs` | 21 | 용근,현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditInteractionReceiver.cs` | 17 | 현강 |
-| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/OwnedUnitSlot.cs` | 181 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditDragReceiver.cs` (현강 UI) | 13 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditInput.cs` (현강 UI) | 21 | 용근·현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IDeckEditInteractionReceiver.cs` (현강 UI) | 17 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IStageOfferDisplay.cs` | 18 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/IStageOfferInput.cs` | 10 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/OwnedUnitSlot.cs` (현강 UI) | 181 | 현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageLegendUI.cs` | 18 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageMapCanvasView.cs` | 71 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferCardContent.cs` | 41 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferCardView.cs` | 85 | 호진·현강 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferLayoutView.cs` | 264 | 호진·민형 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferPopupModel.cs` | 42 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferScreenUI.cs` | 136 | 호진·민형 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageOfferUI.cs` | 20 | 호진·민형 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageScreenRootUI.cs` | 57 | 호진 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageSelectPanelUI.cs` | 64 | 호진 |
 | `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/StageUI.cs` | 39 | 민형 |
+| `RuntimeSystem/GlobalSystem/UISystem/Screens/Stage/TraitGrowthUI.cs` | 25 | 호진·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestExecution.cs` | 17 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestStatus.cs` | 13 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/IRecoveryRequestSubmitter.cs` | 11 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/Recovery/RecoveryRequestLifetime.cs` | 259 | 호진·천명 |
 | `RuntimeSystem/InGameSystem/ViewSystem/StageInput/StageSelectInput.cs` | 80 | 용근 |
-| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupViewScreen.cs` | 25 | 용근,민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Background/StageMapBackgroundDisplay.cs` | 128 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditDisplayModel.cs` | 95 | 호진·용근·천명·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditDraft.cs` | 247 | 호진·용근·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditModelBuilder.cs` | 93 | 호진·용근·천명·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupController.cs` | 244 | 호진·용근·민형·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupViewFactory.cs` | 32 | 호진·용근 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditPopupViewScreen.cs` | 25 | 용근·민형 |
 | `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Deck/DeckEditText.cs` | 69 | 용근 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingPending.cs` | 141 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingReceiver.cs` | 202 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapCameraFramingSettings.cs` | 98 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Editor/StageMapSceneRootEditor.cs` | 78 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapCameraDrag.cs` | 15 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapEntryPresentation.cs` | 13 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapInteractionFeedback.cs` | 22 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapPointerBlocker.cs` | 9 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageMapSceneFactory.cs` | 16 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/IStageNodePicker.cs` | 13 | 호진 |
 | `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryDescriptionBindings.cs` | 47 | 용근 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupController.cs` | 239 | 호진·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupModelBuilder.cs` | 111 | 호진·용근 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Recovery/RecoveryPopupViewFactory.cs` | 50 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/EnhancementShopOfferContentBuilder.cs` | 33 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/IShopOfferContentBuilder.cs` | 14 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ItemShopOfferContentBuilder.cs` | 29 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupController.cs` | 400 | 호진·천명·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupModelBuilder.cs` | 207 | 호진·천명 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopPopupViewFactory.cs` | 80 | 호진·천명 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/ShopResultPolicy.cs` | 91 | 호진·천명 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/TrainingCardContentBuilder.cs` | 79 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/Shop/UnitShopOfferContentBuilder.cs` | 53 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageCombatDeparture.cs` | 172 | 호진·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageCurrentMarkerView.cs` | 128 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageEntryIdentity.cs` | 46 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageLinkView.cs` | 76 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapCameraDrag.cs` | 195 | 호진·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapEntryObserver.cs` | 112 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapInteraction.cs` | 206 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapNodeLayout.cs` | 51 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapNodeMovement.cs` | 128 | 호진·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapPointerBlocker.cs` | 15 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapSceneRoot.cs` | 39 | 호진·용근 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapScreenPresentation.cs` | 90 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapSelectionPresentation.cs` | 128 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewDisplay.cs` | 348 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewEntry.cs` | 110 | 호진·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewInput.cs` | 87 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewPopups.cs` | 111 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewReader.cs` | 75 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewScene.cs` | 101 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewScope.cs` | 311 | 호진·용근·천명·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewServices.cs` | 139 | 호진·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageMapViewSystem.cs` | 283 | 호진·용근·천명·민형·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodeHoverInfo.cs` | 150 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodePicker.cs` | 37 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageNodeView.cs` | 204 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StageOfferPopupViewScreen.cs` | 25 | 호진·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/StagePopupViewLifetime.cs` | 188 | 호진·민형 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupController.cs` | 216 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupModelBuilder.cs` | 102 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageMap/TraitGrowth/TraitGrowthPopupViewFactory.cs` | 52 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/IStageSelectionInputReceiver.cs` | 28 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputController.cs` | 114 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputFactory.cs` | 31 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputLayers.cs` | 20 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionInputNames.cs` | 20 | 호진·현강 |
+| `RuntimeSystem/InGameSystem/ViewSystem/StageSelectionInput/StageSelectionReceiverSlot.cs` | 135 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/ITraitGrowthRequestExecution.cs` | 15 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/ITraitGrowthRequestSubmitter.cs` | 14 | 호진 |
+| `RuntimeSystem/InGameSystem/ViewSystem/TraitGrowth/TraitGrowthRequestLifetime.cs` | 171 | 호진 |
 | `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageDeckEditFacts.cs` | 36 | 용근 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageEntryAttemptRead.cs` | 11 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageProgress.cs` | 35 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/IStageTraitGrowthFacts.cs` | 17 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/RecoveryCommandJob.cs` | 61 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/ShopCommandJob.cs` | 36 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageCheckJob.cs` | 38 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageJob.cs` | 75 | 호진·천명·민형 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/StageNodeEntryJob.cs` | 36 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/TraitGrowthCommandJob.cs` | 61 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Jobs/TraitGrowthPrepareJob.cs` | 34 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StagePlan.cs` | 200 | 호진·천명·민형 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/Plans/StageStep.cs` | 40 | 호진 |
 | `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageDeckEditWindow.cs` | 63 | 용근 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageEntryAttempts.cs` | 80 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageLifeCycle.cs` | 237 | 호진·용근·천명·민형·현강 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageProgress.cs` | 194 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageProgressFacts.cs` | 104 | 호진 |
+| `RuntimeSystem/LifeCycleSystem/LifeCycles/Stage/StageTraitGrowthProgress.cs` | 115 | 호진 |
 | `ServiceKeys/Runtime/Buffer/RecoveryViewBufferKey.cs` | 12 | 민형 |
 | `ServiceKeys/Runtime/Buffer/ShopViewBufferKey.cs` | 12 | 민형 |
 | `ServiceKeys/Runtime/Buffer/TraitGrowthViewBufferKey.cs` | 12 | 천명 |
+| `ServiceKeys/Runtime/StageSelectionInputKey.cs` | 15 | 호진·민형 |

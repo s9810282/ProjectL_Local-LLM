@@ -1,0 +1,726 @@
+{
+  "schemaVersion": 1,
+  "baselineHead": "9d8c9ce456db95e8e0aff766240af47353f18f46",
+  "branch": "feature/Cheon/Core/NewCombatSytem",
+  "inputsTsvSha256": "3a779e1b0228bd855f8d1df1f309a400e10fbd599ea5fc5793762caf64152372",
+  "fixtures": [
+    {
+      "id": "A8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=PiercingFalloff|restrictions=",
+        "unit=12|Unit_ShotGun|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Akimbo|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Gravekeeper|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=PiercingFalloff|restrictions=",
+        "unit=16|Unit_ShotGun|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Akimbo|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Gravekeeper|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|EightDirectionLine|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=PiercingFalloff:30:3",
+        "profile=Unit_ShotGun|Fan|Direction|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Akimbo|RadialSquare|All|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Gravekeeper|RadialSquare|Single|Radial|50|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "G16",
+      "canonicalLayout": [
+        "board=32:32|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=19|Unit_Demon|Enemy|||Field|Available|5:3|R0|5:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=20|Unit_Demon|Enemy|||Field|Available|6:3|R0|6:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=21|Unit_Demon|Enemy|||Field|Available|7:3|R0|7:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=22|Unit_Demon|Enemy|||Field|Available|8:3|R0|8:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=23|Unit_Demon|Enemy|||Field|Available|5:4|R0|5:4|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=24|Unit_Demon|Enemy|||Field|Available|6:4|R0|6:4|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=25|Unit_Demon|Enemy|||Field|Available|7:4|R0|7:4|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=26|Unit_Demon|Enemy|||Field|Available|8:4|R0|8:4|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "H8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "tile=100|5:1|object-mine|0|True|True|Enemy|damage=10|ordinal=1",
+        "tile=101|4:2|object-mine|0|True|True|Player|damage=10|ordinal=2",
+        "haboob=2|1|4:1|1:0;2:0;0:1;1:1;2:1;3:1;0:2;1:2;2:2;3:2;1:3;2:3",
+        "haboobState=1|Active|2|5:1;6:1;4:2;5:2;6:2;7:2;4:3;5:3;6:3;7:3;5:4;6:4"
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "N5",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "N6",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "N8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "R8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=4:0;5:1;6:2",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "railway=2|5",
+        "rockfall=2|2|3|5|20|1|0:0",
+        "rockfallState=2|Warning|2|5:1;6:2"
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=Taunt|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=Taunt|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=Bind:ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=Taunt:8:10",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=Taunt:5:15",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits="
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "U8",
+      "canonicalLayout": [
+        "board=32:32|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|28:2|R0|28:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|28:3|R0|28:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|29:2|R0|29:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|29:3|R0|29:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|2:2|R0|2:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|3:2|R0|3:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|4:2|R0|4:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|2:3|R0|2:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|3:3|R0|3:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|4:3|R0|4:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|2:4|R0|2:4|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|3:4|R0|3:4|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "tile=100|8:0|static-terrain|0|True|False|Player,Enemy",
+        "tile=101|8:1|static-terrain|0|True|False|Player,Enemy",
+        "tile=102|8:2|static-terrain|0|True|False|Player,Enemy",
+        "tile=103|8:3|static-terrain|0|True|False|Player,Enemy",
+        "tile=104|8:4|static-terrain|0|True|False|Player,Enemy",
+        "tile=105|8:5|static-terrain|0|True|False|Player,Enemy",
+        "tile=106|8:6|static-terrain|0|True|False|Player,Enemy",
+        "tile=107|8:7|static-terrain|0|True|False|Player,Enemy",
+        "tile=108|8:8|static-terrain|0|True|False|Player,Enemy",
+        "tile=109|8:9|static-terrain|0|True|False|Player,Enemy",
+        "tile=110|8:10|static-terrain|0|True|False|Player,Enemy",
+        "tile=111|8:11|static-terrain|0|True|False|Player,Enemy",
+        "tile=112|8:12|static-terrain|0|True|False|Player,Enemy",
+        "tile=113|8:13|static-terrain|0|True|False|Player,Enemy",
+        "tile=114|8:14|static-terrain|0|True|False|Player,Enemy",
+        "tile=115|8:15|static-terrain|0|True|False|Player,Enemy",
+        "tile=116|8:16|static-terrain|0|True|False|Player,Enemy",
+        "tile=117|8:17|static-terrain|0|True|False|Player,Enemy",
+        "tile=118|8:18|static-terrain|0|True|False|Player,Enemy",
+        "tile=119|8:19|static-terrain|0|True|False|Player,Enemy",
+        "tile=120|8:20|static-terrain|0|True|False|Player,Enemy",
+        "tile=121|8:21|static-terrain|0|True|False|Player,Enemy",
+        "tile=122|8:22|static-terrain|0|True|False|Player,Enemy",
+        "tile=123|8:23|static-terrain|0|True|False|Player,Enemy",
+        "tile=124|8:24|static-terrain|0|True|False|Player,Enemy",
+        "tile=125|8:25|static-terrain|0|True|False|Player,Enemy",
+        "tile=126|8:26|static-terrain|0|True|False|Player,Enemy",
+        "tile=127|8:27|static-terrain|0|True|False|Player,Enemy",
+        "tile=128|8:28|static-terrain|0|True|False|Player,Enemy",
+        "tile=129|8:29|static-terrain|0|True|False|Player,Enemy",
+        "tile=130|8:30|static-terrain|0|True|False|Player,Enemy",
+        "tile=131|8:31|static-terrain|0|True|False|Player,Enemy"
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "66dc0d905330ee4145de0ea8520a3637cbb17cb6eea604aac0d190c56c8c24a9",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "608be4c5a10fa51a6d884cf2d21449d049a5186680de144feaff2e64277d6974",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "e0f8fee9fc60f099e2f5968d9c7d12bba0fc74bc86bd8eff43d19638290a1f70",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "aa7caf83c2c2c2591a7a2ca35023bc5d1d3c4a45f604dd49ab04f947d0e052dc",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "617bb277dfe64b9349602610afcc971b7227d0a269988dac6c046a54b492ba65",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "W8",
+      "canonicalLayout": [
+        "board=32:32|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|28:2|R0|28:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|28:3|R0|28:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|29:2|R0|29:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|29:3|R0|29:3|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Demon|Enemy|||Field|Available|2:2|R0|2:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|3:2|R0|3:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|4:2|R0|4:2|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|2:3|R0|2:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|3:3|R0|3:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|4:3|R0|4:3|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|2:4|R0|2:4|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|3:4|R0|3:4|hp=100:100|stats=LiftAndPlace:3:1:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "tile=100|8:0|static-terrain|0|True|False|Player,Enemy",
+        "tile=101|8:1|static-terrain|0|True|False|Player,Enemy",
+        "tile=102|8:2|static-terrain|0|True|False|Player,Enemy",
+        "tile=103|8:3|static-terrain|0|True|False|Player,Enemy",
+        "tile=104|8:4|static-terrain|0|True|False|Player,Enemy",
+        "tile=105|8:5|static-terrain|0|True|False|Player,Enemy",
+        "tile=106|8:6|static-terrain|0|True|False|Player,Enemy",
+        "tile=107|8:7|static-terrain|0|True|False|Player,Enemy",
+        "tile=108|8:8|static-terrain|0|True|False|Player,Enemy",
+        "tile=109|8:9|static-terrain|0|True|False|Player,Enemy",
+        "tile=110|8:10|static-terrain|0|True|False|Player,Enemy",
+        "tile=111|8:11|static-terrain|0|True|False|Player,Enemy",
+        "tile=112|8:12|static-terrain|0|True|False|Player,Enemy",
+        "tile=113|8:13|static-terrain|0|True|False|Player,Enemy",
+        "tile=114|8:14|static-terrain|0|True|False|Player,Enemy",
+        "tile=115|8:15|static-terrain|0|True|False|Player,Enemy",
+        "tile=116|8:16|static-terrain|0|True|False|Player,Enemy",
+        "tile=117|8:17|static-terrain|0|True|False|Player,Enemy",
+        "tile=118|8:18|static-terrain|0|True|False|Player,Enemy",
+        "tile=119|8:19|static-terrain|0|True|False|Player,Enemy",
+        "tile=120|8:20|static-terrain|0|True|False|Player,Enemy",
+        "tile=121|8:21|static-terrain|0|True|False|Player,Enemy",
+        "tile=122|8:22|static-terrain|0|True|False|Player,Enemy",
+        "tile=123|8:23|static-terrain|0|True|False|Player,Enemy",
+        "tile=124|8:24|static-terrain|0|True|False|Player,Enemy",
+        "tile=125|8:25|static-terrain|0|True|False|Player,Enemy",
+        "tile=126|8:26|static-terrain|0|True|False|Player,Enemy",
+        "tile=127|8:27|static-terrain|0|True|False|Player,Enemy",
+        "tile=128|8:28|static-terrain|0|True|False|Player,Enemy"
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    },
+    {
+      "id": "X8",
+      "canonicalLayout": [
+        "board=16:16|Automatic|night=True|wallCut=128",
+        "turn=Combat|Enemy|2|1|1",
+        "rail=4:0;5:1;6:2",
+        "unit=1|Unit_MainCharacter|Player|1|Main|Field|Available|0:0|R0|0:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=2|Unit_Cowboy|Player|3|Sub|Field|Available|0:1|R0|0:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=3|Unit_DynamiteHammer|Player|4|Sub|Field|Available|2:0|R0|2:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=4|Unit_Sniper|Player|5|Sub|Field|Available|4:0|R0|4:0|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=11|Unit_Gravekeeper|Enemy|||Field|Available|5:1|R0|5:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=12|Unit_Demon|Enemy|||Field|Available|6:1|R0|6:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=13|Unit_Demon|Enemy|||Field|Available|7:1|R0|7:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=14|Unit_Demon|Enemy|||Field|Available|8:1|R0|8:1|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=15|Unit_Demon|Enemy|||Field|Available|5:2|R0|5:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=16|Unit_Demon|Enemy|||Field|Available|6:2|R0|6:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=17|Unit_Demon|Enemy|||Field|Available|7:2|R0|7:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "unit=18|Unit_Demon|Enemy|||Field|Available|8:2|R0|8:2|hp=100:100|stats=LiftAndPlace:3:4:10:0:100:Main|traits=|restrictions=",
+        "profile=Unit_MainCharacter|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Cowboy|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_DynamiteHammer|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Sniper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "profile=Unit_Gravekeeper|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:True|traits=",
+        "profile=Unit_Demon|RadialSquare|Single|None|0|Unrestricted|definition=Regular:Both:Main:LiftAndPlace:4:10:0:100:100:0:0|behavior=True:True:False|traits=",
+        "railway=2|5",
+        "rockfall=2|2|3|5|20|1|0:0",
+        "tornado=200|Player,Enemy|5:1|1|3|3|2|2|1",
+        "rockfallState=2|Warning|2|5:1;6:2",
+        "tornadoState=3|200|5:1|1|Warning|2|1:1"
+      ],
+      "seeds": [
+        {
+          "seed": 1,
+          "sha256": "5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19",
+          "canonicalRandomLine": "seed=1|environmentRng=1|itemRng=1"
+        },
+        {
+          "seed": 7,
+          "sha256": "33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a",
+          "canonicalRandomLine": "seed=7|environmentRng=7|itemRng=7"
+        },
+        {
+          "seed": 19,
+          "sha256": "c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6",
+          "canonicalRandomLine": "seed=19|environmentRng=19|itemRng=19"
+        },
+        {
+          "seed": 41,
+          "sha256": "352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0",
+          "canonicalRandomLine": "seed=41|environmentRng=41|itemRng=41"
+        },
+        {
+          "seed": 97,
+          "sha256": "e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947",
+          "canonicalRandomLine": "seed=97|environmentRng=97|itemRng=97"
+        }
+      ]
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CoreProfilerMarkers.cs",
+      "sha256": "eb4a50b70ec6c1613eda77a94e1fb6bee1d89e31dd187e19e9348eb4a31c95e0"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatCommandCalculator.cs",
+      "sha256": "fc025f831046a93b2a72187f27660791be06fd0735dec4741752f6b6c3fe5bad"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAiPolicy.cs",
+      "sha256": "2ff0384466dc6ab5bd8a1249385083bb0a6ffd7c2596fe621ecfc99a414153a4"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAiTurnService.cs",
+      "sha256": "72261df4def73decf93575cfcd476eac419d6a7a8ceeb02339b977ede19a1278"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionDiagnostics.cs",
+      "sha256": "186f500b86ffd129cb8334717edf3f4c45f251f1e6bbe91675a60d002fde5ac8"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyMovementPathfinder.cs",
+      "sha256": "2d99def7c0b489510d5cd7ca95c0863aa415aa4f90e275b6deb456f182832c6b"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Diagnostics/CoreProfiling.cs",
+      "sha256": "a99bca8acff999c70cf21d3174f5cb45eb9cb2df8aad6306fa0b1e73fb5756b3"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CoreIntegration/EnemyAiBaselineServiceTests.cs",
+      "sha256": "809e8b4a4f3bedb36fa72b21694d2798668f939a94ab5bccfc3673421ffbc5c3"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CoreIntegration/EnemyAiPreparationTestData.cs",
+      "sha256": "d204e8c900649970d459f4b3d1575fdaee6c168659ea29ce4809847cc9d05773"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CoreIntegration/EnemyAiServicePerformanceMeasurements.cs",
+      "sha256": "df25cfd2ae824e578a07eb851deebc17b32ea8af1dcf0add2ad22c5ebee96143"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiBaselineTests.cs",
+      "sha256": "beaa2c1619d0badccc610df9847ecb6655fa3cfb2df4de28cd8a3db73b07558f"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiBenchmarkFixtures.cs",
+      "sha256": "6909a3c65f17958b60adc0d54dcbcd4f1c86d87ee3e7eb6b009f64c2b43b7cf5"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiPerformanceMeasurements.cs",
+      "sha256": "98339af1fd6279cd7017ec1d7e6b78af5d398eefea498ed186198fd91014f030"
+    }
+  ],
+  "unity": "6000.0.73f1 (a166abc3bf0e)",
+  "canonicalization": {
+    "encoding": "UTF-8",
+    "lineSeparator": "LF, no trailing LF",
+    "randomLineInsertionIndex": 3,
+    "source": "Logs/EnemyAi/phase-1-9d8c9ce45-final/inputs.tsv",
+    "note": "Insert canonicalRandomLine at zero-based index 3 of canonicalLayout and join with LF for the measured SHA-256."
+  },
+  "workloadNotes": {
+    "N5": "Normal five-enemy reference added by the user. N6 and N8 are matched count comparisons.",
+    "G16": "Pre-grown 16-enemy stress snapshot. Live Nexus reinforcement growth to 16 was not reproduced under the existing five-enemy cap."
+  }
+}

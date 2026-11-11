@@ -38,7 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
         /// <summary>표시된 설명이 사용자 확인을 받을 수 있는지입니다. 상태에서 계산합니다.</summary>
         public bool CanContinue => Status == TutorialSessionStatus.Running
             && StepKind == TutorialStepKind.Explanation
-            && WaitReason == TutorialWaitReason.ContinueOrTimeout;
+            && WaitReason == TutorialWaitReason.Continue;
 
         /// <summary>Starting·Running·Ending입니다. 한 런타임에 하나만 있습니다.</summary>
         public bool IsActive => Status == TutorialSessionStatus.Starting
@@ -134,7 +134,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
             switch (WaitReason)
             {
                 case TutorialWaitReason.StartCondition:
-                case TutorialWaitReason.ContinueOrTimeout:
+                case TutorialWaitReason.Continue:
                     if (StepKind != TutorialStepKind.Explanation)
                         throw new ArgumentException($"{WaitReason}는 설명 단계만 기다립니다.");
                     break;

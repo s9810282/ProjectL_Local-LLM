@@ -13,7 +13,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support
 {
     /// <summary>
-    /// 전투 소리 프리셋 번호의 답입니다(View 3라운드 W9-2, 결정 Q-V26 A). 값의 원본은 View DB입니다. 유닛·공격·장애물 프리셋은 유닛 외형 표,
+    /// 전투 소리 프리셋과 공격 슬롯 번호의 답입니다. 값의 원본은 View DB입니다. 유닛·장애물 프리셋과 공격 슬롯은 유닛 외형 표,
     /// 오브젝트·아이템 프리셋은 각 외형 표, 적 공용·배경음·추락·약한 지반 붕괴 프리셋은 전투 연출 설정 표에 있습니다(소리 창구 2차 설계 ES1).
     /// 어느 사건에 어느 칸을 내는지는 소리 표(<see cref="CombatEventSounds"/>)가 정하고, 이 객체는 그 칸에 넣을 번호만 답합니다.
     /// </summary>
@@ -55,9 +55,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             return _visuals.TryGetUnitVisual(key, out UnitVisualData visual) ? visual.UnitSoundPreset : None;
         }
 
-        /// <summary>유닛 하나의 공격 소리 프리셋입니다. 포효도 포효한 유닛의 이 값입니다.</summary>
-        internal int Attack(EntityKey key) =>
-            _visuals.TryGetUnitVisual(key, out UnitVisualData visual) ? visual.AttackSoundPreset : None;
+        /// <summary>UnitAttack 플레이어의 공격 슬롯 번호입니다. 포효도 포효한 유닛의 이 값입니다.</summary>
+        internal int AttackSlot(EntityKey key) =>
+            _visuals.TryGetUnitVisual(key, out UnitVisualData visual) ? visual.AttackSoundSlotIndex : None;
 
         /// <summary>
         /// 장애물 종류 하나의 피해·파괴 소리 프리셋입니다(소리 창구 2차 설계 Q-ES3). 장애물 외형은 유닛 외형 표에 있어 그 유닛 소리 번호를 다시 씁니다.
@@ -73,9 +73,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <summary>아이템 하나의 발동(소모) 소리 프리셋입니다(소리 창구 2차 설계 ES1).</summary>
         internal int Item(int itemKey) =>
             _items.TryGet(itemKey, out ConsumableItemVisualData visual) ? visual.ItemSoundPreset : None;
-
-        /// <summary>낭떠러지 추락 소리 프리셋입니다(소리 창구 2차 설계 Q-ES4). 떨어지는 것이 유닛이든 구조물이든 하나입니다(검토 L2 결정 A).</summary>
-        internal int Fall() => _settings.FallSoundPreset;
 
         /// <summary>약한 지반 붕괴 소리 프리셋입니다(소리 창구 2차 설계 Q-ES5′).</summary>
         internal int WeakGroundCollapse() => _settings.WeakGroundCollapseSoundPreset;

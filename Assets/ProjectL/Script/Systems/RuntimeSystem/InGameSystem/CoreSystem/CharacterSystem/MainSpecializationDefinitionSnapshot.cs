@@ -45,14 +45,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             {
                 AddTrait(values, trait.Normal);
                 AddTrait(values, trait.Enhanced);
-                values.AddRange(new object[] { trait.Rank2?.Amount, trait.Rank2?.SecondAmount,
-                    trait.Rank3?.Amount, trait.Rank3?.SecondAmount });
+                AddRank(values, trait.Rank2);
+                AddRank(values, trait.Rank3);
                 values.AddRange(new object[] { trait.Name, trait.Description, trait.EnhancedName, trait.EnhancedDescription });
             }
             _values = values.ToArray();
         }
 
         internal bool SameValues(MainSpecializationDefinitionSnapshot other) => other != null && _values.SequenceEqual(other._values);
+
+        private static void AddRank(List<object> values, TraitRankValues rank)
+        {
+            values.AddRange(new object[] { rank != null, rank?.Amount, rank?.SecondAmount,
+                rank?.PreventsLethalSacrificeDamage, rank?.ExemptsAlliedAttackRangePenalty });
+        }
 
         private static void AddUnit(List<object> values, UnitSpec unit)
         {
@@ -75,12 +81,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 case AccelerationTraitSpec t: values.Add(t.AttackPerMovedCell); break;
                 case AnkleBreakerTraitSpec t: values.Add(t.DurationAffectedSideTurnEnds); break;
                 case ArmorBreakerTraitSpec t: values.Add(t.DefenseReductionPercentPerHit); break;
+                case BleedingTraitSpec t: values.Add(t.DamagePerStack); break;
                 case CallOfBloodTraitSpec t: values.Add(t.EnemyMaxHealthHealPercent); break;
                 case CleanSweepTraitSpec t: values.Add(t.AttackBonusPerAllyAttack); values.Add(t.DurationControllerTurnEnds); break;
                 case CohesionTraitSpec t: values.Add(t.DefensePerAdjacentAlly); values.Add(t.ShieldAmountPerAlly); values.Add(t.RadiusCells); values.Add(t.ResetEveryControllerTurnEnds); break;
                 case DisarmTraitSpec t: values.Add(t.DurationAffectedSideTurnEnds); break;
                 case DistanceDamageScaleTraitSpec t: values.AddRange(t.PercentByDistance.Cast<object>()); break;
-                case DustScreenTraitSpec t: values.Add(t.AttackRangeReduction); values.Add(t.AttackDamageReductionPercent); values.Add(t.OpposingTurnEndsToExpire); break;
+                case DustScreenTraitSpec t:
+                    values.AddRange(new object[] { t.AttackRangeReduction, t.AttackDamageReductionPercent,
+                        t.OpposingTurnEndsToExpire, t.ExemptsAlliedAttackRangePenalty });
+                    break;
                 case EntrenchmentTraitSpec t: values.Add(t.RadiusCells); values.Add(t.DamageReductionPercent); break;
                 case FinishingShotTraitSpec t: values.Add(t.AttackThresholdPercent); break;
                 case FocusedBombardmentTraitSpec t: values.Add(t.RequiredEnemyCount); values.Add(t.ExtraDamagePercent); break;
@@ -89,19 +99,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 case HuntersMarkTraitSpec t: values.Add(t.BonusDamagePercent); values.Add(t.DurationAffectedSideTurnEnds); break;
                 case HunterTraitSpec t: values.Add(t.AttackPerTargetKill); values.Add(t.MaxRewardsPerStage); break;
                 case ImpactBoltTraitSpec t: values.Add(t.DistanceCells); break;
+                case CrashImpactTraitSpec t: values.Add(t.DistanceCells); values.Add(t.WallDamagePercent); values.Add(t.UnitDamagePercent); break;
                 case IntimidationTraitSpec t: values.Add(t.AttackReductionPercent); break;
                 case KillChainAttackTraitSpec t:  break;
                 case KnockbackTraitSpec t: values.Add(t.DistanceCells); break;
+                case LavaCannonTraitSpec: break;
                 case LeapTraitSpec t:  break;
                 case MoraleBoostTraitSpec t: values.Add(t.DefeatedEnemyBaseAttackPercent); values.Add(t.DurationControllerTurnEnds); break;
                 case NecromancyTraitSpec t: values.Add(t.SummonedUnitKey); values.Add(t.MaxLivingSummons); values.Add(t.FirstActionDelay); break;
                 case PiercingFalloffTraitSpec t: values.Add(t.ReductionPercentPerTarget); values.Add(t.MaxTargetsPerRay); break;
                 case PositionSwapTraitSpec t: values.Add(t.ShieldAmount); break;
                 case PullTraitSpec t: values.Add(t.ExtraRangeCells); break;
+                case RampageTraitSpec t: values.Add(t.BaseAttackBonus); values.Add(t.RankAttackBonus); values.Add(t.MovementBonus); break;
                 case ReconSquadTraitSpec t: values.Add(t.IncreasePercent); values.Add(t.Radius); break;
                 case RegenerationTraitSpec t: values.Add(t.HealAmount); values.Add(t.HealEveryOwnSideTurnEnds); break;
-                case RoarTraitSpec t: values.Add(t.HitThreshold); break;
-                case SacrificeTraitSpec t: values.Add(t.RadiusCells); values.Add(t.MaxTriggersPerEnemyTurn); break;
+                case RoarTraitSpec t:
+                    values.AddRange(new object[] { t.HitThreshold, t.CountPerHit, t.CountPerOwnSideTurnEnd, t.CountPerOpposingSideTurnEnd });
+                    break;
+                case SacrificeTraitSpec t:
+                    values.AddRange(new object[] { t.RadiusCells, t.MaxTriggersPerEnemyTurn, t.PreventsLethalSacrificeDamage, t.ShieldOnActivation });
+                    break;
                 case SoloActionTraitSpec t: values.Add(t.ShieldAmount); values.Add(t.RadiusCells); values.Add(t.RequiredOccupiedNeighborCount); values.Add(t.ResetEveryControllerTurnEnds); break;
                 case StationaryFireTraitSpec t: values.Add(t.ExtraDamagePercent); break;
                 case SteadfastWillTraitSpec t:  break;
@@ -109,6 +126,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 case ThornFieldTraitSpec t: values.Add(t.ThornDamage); values.Add(t.DefenseReductionPercent); values.Add(t.TickPhase); values.Add(t.LifetimeUnitTurns); break;
                 case TrackingShotTraitSpec t: values.Add(t.TargetHealthThresholdPercent); values.Add(t.ExtraDamagePercent); break;
                 case VanguardTraitSpec t: values.Add(t.AttackBonus); values.Add(t.DurationControllerTurnEnds); break;
+                case ReconstructionTraitSpec t: values.Add(t.Level); break;
+                case SelfDestructTraitSpec t: values.Add(t.Level); break;
+                case FearTraitSpec: break;
                 default: throw new InvalidOperationException("전직 원본 비교에서 지원하지 않는 특성 정의입니다.");
             }
         }

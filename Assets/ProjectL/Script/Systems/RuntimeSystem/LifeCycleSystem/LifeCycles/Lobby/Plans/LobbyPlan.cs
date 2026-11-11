@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem;
@@ -23,8 +24,9 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Plans
 
         /// <param name="buffers">출발의 새 Run Job이 쓸 전투 상태 읽기·맵 입력 쓰기·로스터 읽기 싱크입니다.</param>
         /// <param name="lifeCycles">사실 읽기·아티팩트 확인 입구·전환 서비스를 꺼낼 LifeCycle 그룹입니다.</param>
+        /// <param name="audio">로비 출발 소리를 재생할 서비스입니다.</param>
         internal static List<IJobService> Register(IInGameSystemGroupService service, JobType jobType, IBufferQuery buffers,
-            ILifeCycleSystemGroupService lifeCycles)
+            ILifeCycleSystemGroupService lifeCycles, IAudioSystemService audio)
         {
             if (service == null)
                 throw new ArgumentNullException(nameof(service));
@@ -32,7 +34,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Plans
             switch (jobType)
             {
                 case JobType.Next:
-                    return Next(service, buffers, lifeCycles);
+                    return Next(service, buffers, lifeCycles, audio);
                 default:
                     // 출발·편집·프리뷰는 Next가 판단해 직접 만든다. 따로 등록하는 경로는 없다(설계 Q-LJ5).
                     throw new ArgumentOutOfRangeException(nameof(jobType), jobType, "[LobbyPlan] 알 수 없는 로비 Job 종류입니다.");
@@ -41,7 +43,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Plans
 
         /// <summary>사실을 한 번 읽어 다음 단계를 정하고 그 Job 목록을 만듭니다. 할 일이 없으면 공유 빈 목록입니다.</summary>
         private static List<IJobService> Next(IInGameSystemGroupService service, IBufferQuery buffers,
-            ILifeCycleSystemGroupService lifeCycles)
+            ILifeCycleSystemGroupService lifeCycles, IAudioSystemService audio)
         {
             if (lifeCycles == null)
                 throw new ArgumentNullException(nameof(lifeCycles));
@@ -76,7 +78,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Plans
                     {
                         new RunStartJob(service.CoreGroup.RunStart, new LobbyRunStartOutcome(request),
                             buffers.CombatStateReadSink, buffers.StageViewWriteSink, buffers.CharacterReadSink, LobbyJobPriority.Departure),
-                        new LobbyTransitionJob(request, manager)
+                        new LobbyTransitionJob(request, manager, audio)
                     };
                 }
                 case LobbyStepKind.Broken:

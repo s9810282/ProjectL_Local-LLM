@@ -15,7 +15,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (spec == null) throw new ArgumentNullException(nameof(spec));
             if (spec is not SacrificeTraitSpec specification) throw new ArgumentException("같은 특성 명세가 필요합니다.", nameof(spec));
-            return new SacrificeTraitDefinition(specification.RadiusCells, specification.MaxTriggersPerEnemyTurn);
+            return new SacrificeTraitDefinition(specification.RadiusCells, specification.MaxTriggersPerEnemyTurn,
+                specification.PreventsLethalSacrificeDamage, specification.ShieldOnActivation);
         }
     }
     public sealed class SacrificeRuntimeStateFactory : ITraitRuntimeStateFactory

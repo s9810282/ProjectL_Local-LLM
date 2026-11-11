@@ -1,6 +1,6 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
-using ProjectL.Systems.RuntimeSystem.InGameSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
@@ -12,17 +12,19 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
     /// <summary>챕터 맵을 준비하고 Buffer에 현재 챕터를 기록한다.</summary>
     internal struct StageJob : IJobService
     {
-        private readonly IInGameSystemGroupService _service;
+        // 새 Run의 첫 진입에 아직 현재 맵이 없을 때 들어가는 맵입니다. 새 Run 시작(RunStart)도 1번 챕터로 시작합니다.
+        private const int FirstChapterKey = 1;
+        private readonly IChapterProgressionCoordinator _chapters;
         private readonly ICurrentProgressBufferReadSink _current;
         private readonly IStageViewBufferWriteSink _stageInput;
 
         public int Priority { get; }
         public bool IsCompleted { get; private set; }
 
-        internal StageJob(IInGameSystemGroupService service, int priority, ICurrentProgressBufferReadSink current,
+        internal StageJob(IChapterProgressionCoordinator chapters, int priority, ICurrentProgressBufferReadSink current,
             IStageViewBufferWriteSink stageInput)
         {
-            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _chapters = chapters ?? throw new ArgumentNullException(nameof(chapters));
             _current = current ?? throw new ArgumentNullException(nameof(current));
             _stageInput = stageInput ?? throw new ArgumentNullException(nameof(stageInput));
             Priority = priority;
@@ -32,14 +34,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Jobs
         public void Execute()
         {
             if (IsCompleted) return;
-            if (_service == null)
-                throw new InvalidOperationException("StageJob requires an in-game service.");
+            if (_chapters == null)
+                throw new InvalidOperationException("StageJob requires a chapter progression service.");
 
             // 등록 시점의 복사본 대신 앞선 초기화 Job까지 반영된 현재 챕터를 읽는다.
-            int chapterKey = _current.HasMap ? _current.CurrentMapKey : 1;
+            int chapterKey = _current.HasMap ? _current.CurrentMapKey : FirstChapterKey;
             // 교체 전 입력을 취소한다. 발급 번호와 이미 게시한 결과는 유지한다.
             _stageInput.Clear();
-            var result = _service.CoreGroup.ChapterProgression.EnterChapter(chapterKey);
+            var result = _chapters.EnterChapter(chapterKey);
             if (!result.Accepted)
                 throw new InvalidOperationException($"Chapter entry rejected: {result.FailureReason}.");
             IsCompleted = true;

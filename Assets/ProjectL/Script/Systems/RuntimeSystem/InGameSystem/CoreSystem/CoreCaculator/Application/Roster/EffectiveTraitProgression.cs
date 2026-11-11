@@ -7,7 +7,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster
 {
-    /// <summary>Main 성장 단계는 유지하고 선택한 병과의 후보 접근만 합성한다.</summary>
+    /// <summary>Main 성장 단계를 유지하고 후보를 합치며 선택한 병과의 가중치를 적용한다.</summary>
     public static class EffectiveTraitProgression
     {
         public static CategoryTraitProgressionSpec Resolve(UnitSpec basis, OwnedCharacterRecord owned, TraitGrowthCatalog catalog)
@@ -31,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             PlayerMainDefinitionPolicy.Validate(basis.Key, basis.Role, basis.CategoryKey, basis.OwnerEligibility);
             var selected = catalog.GetCategory(specialization.Value);
             return new CategoryTraitProgressionSpec(original.Category, original.Steps,
-                original.Pool.Concat(selected.Pool).Distinct().ToArray());
+                original.Pool.Concat(selected.Pool).Distinct().ToArray(), selected.CommonWeight, selected.CategoryWeight);
         }
     }
 }

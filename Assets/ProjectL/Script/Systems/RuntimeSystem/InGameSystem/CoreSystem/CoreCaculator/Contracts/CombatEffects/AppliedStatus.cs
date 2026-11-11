@@ -17,7 +17,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// 이동 되돌리기는 이 상태를 영수증 없이 되돌린 자리의 다시 계산으로 복원합니다(<see cref="Results.MovementUndoResult"/>).
         /// </summary>
         CurrentEligibility = 6,
-        UntilReserveReturnOrDeath = 7
+        UntilReserveReturnOrDeath = 7,
+        AffectedSideTurnStarts = 8,
+        NextAffectedSideTurnEnd = 9
     }
 
     /// <summary>수신자가 보유하는 불변 효과 값입니다. 출처 없는 값은 레거시 사실 복원에만 사용합니다.</summary>

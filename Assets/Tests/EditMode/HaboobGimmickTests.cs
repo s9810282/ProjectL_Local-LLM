@@ -124,7 +124,7 @@ namespace ProjectL.Tests.Core
             StageGimmickComposition.Initialize(Base(width, height), new StageGimmickSpec[] { spec ?? new HaboobGimmickSpec() });
 
         private static CombatCommandState Base(int width, int height) =>
-            new CombatCommandState(width, height, CombatFlowPhase.PlayerInput, true,
+            new CombatCommandState(width, height, CombatFlowPhase.PlayerInput,
                 Array.Empty<StructureCombatFacts>(), Array.Empty<ThornFieldCellSnapshot>(),
                 new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
 

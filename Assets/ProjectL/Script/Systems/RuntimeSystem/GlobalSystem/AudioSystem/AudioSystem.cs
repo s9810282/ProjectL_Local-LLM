@@ -9,11 +9,68 @@ using UnityEngine.SceneManagement;
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 {
     // Boot에 구성된 각 Player의 슬롯 순서입니다.
-    public enum AmbgmEvent { BGM = 0, AMB = 1, UIClick = 2, UIHover = 3, UIReward = 4, GameStart = 5, StageChanger = 7 }
-    public enum UnitEvent { UnitPick = 0, UnitCancel = 1, UnitMovement = 2, UnitDead = 3, UnitAttack = 4, ObsDamaged = 5, ObsBroken = 6, BulletFall = 12 }
+    public enum AmbgmEvent
+    {
+        BGM = 0,
+        AMB = 1,
+        UIClick = 2,
+        UIHover = 3,
+        UIReward = 4,
+        GameStart = 5,
+        StageChanger = 7,
+        RunStart = 8,
+        UseMoney = 9,
+        CardShuffle = 10,
+        Lobby = 11,
+        Loading = 12,
+        Enter = 13,
+        LobbyWalk = 14
+    }
+
+    public enum UnitEvent
+    {
+        UnitPick = 0,
+        UnitCancel = 1,
+        UnitMovement = 2,
+        UnitDead = 3,
+        ObsDamaged = 4,
+        ObsBroken = 5,
+        BulletFall = 11,
+        Fall = 12,
+        NexusLanding = 13
+    }
+
     /// <summary>Boot의 UnitMovement 슬롯에 등록한 기본 이동 프리셋 인덱스입니다.</summary>
     public enum UnitMovementPreset { Base = 0 }
-    public enum SfxEvent { Tornado = 0, Tornado_Ended = 1, MineExplosion = 2, FallStone = 3, Haboob = 4, WeakTerrian = 5, Mark = 6, TrainCall = 7, TrainBell = 8 }
+    public enum SfxEvent
+    {
+        Tornado = 0,
+        Tornado_Ended = 1,
+        MineExplosion = 2,
+        FallStone = 3,
+        Haboob = 4,
+        WeakTerrian = 5,
+        Mark = 6,
+        TrainCall = 7,
+        TrainBell = 8,
+        StageDeploy = 9,
+        MapDeploy = 10,
+        RailDeploy = 11
+    }
+
+    public enum UiEvent
+    {
+        ChangeTurn = 0,
+        Heal = 1,
+        ScrollClose = 2,
+        ScrollOpen = 3,
+        Upgrade = 4,
+        StageWin = 5,
+        StageDefeat = 6
+    }
+
+    /// <summary>Boot의 ChangeTurn 슬롯에 등록된 진영별 프리셋 인덱스입니다.</summary>
+    internal enum ChangeTurnPreset { Player = 0, Enemy = 1 }
 
     public enum AudioStopMode
     {
@@ -29,7 +86,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
         // presetIndex = -1은 프리셋을 바꾸지 않고 재생한다는 뜻입니다.
         bool Play(AmbgmEvent slot, int presetIndex = -1);
         bool Play(UnitEvent slot, int presetIndex = -1);
+        /// <summary>UnitAttack 플레이어의 이벤트 슬롯을 재생합니다.</summary>
+        bool PlayUnitAttack(int slotIndex);
         bool Play(SfxEvent slot, int presetIndex = -1);
+        bool Play(UiEvent slot, int presetIndex = -1);
         bool SetPreset(AmbgmEvent slot, int presetIndex);
         bool IsPlaying(AmbgmEvent slot);
         bool Stop(AmbgmEvent slot, AudioStopMode stopMode = AudioStopMode.AllowFadeout);
@@ -106,7 +166,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
         private AudioManager _audioManager;
         private FmodEventPlayer _ambgm;
         private FmodEventPlayer _unit;
+        private FmodEventPlayer _unitAttack;
         private FmodEventPlayer _sfx;
+        private FmodEventPlayer _ui;
         private AudioBase[] _sceneAudioConsumers = Array.Empty<AudioBase>();
         private readonly HashSet<AudioBase> _boundAudioConsumers = new();
         private bool _isShutdown;
@@ -144,12 +206,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
                 _audioManager.RegisterExistingPlayers();
                 _ambgm = null;
                 _unit = null;
+                _unitAttack = null;
                 _sfx = null;
+                _ui = null;
                 foreach (var definition in _audioManager.PlayerIdDefinitions)
                 {
                     if (definition.DisplayName == "AMBGM") _audioManager.TryGetPlayer(definition.Id, out _ambgm);
                     if (definition.DisplayName == "Unit") _audioManager.TryGetPlayer(definition.Id, out _unit);
+                    if (definition.DisplayName == "UnitAttack") _audioManager.TryGetPlayer(definition.Id, out _unitAttack);
                     if (definition.DisplayName == "SFX") _audioManager.TryGetPlayer(definition.Id, out _sfx);
+                    if (definition.DisplayName == "UI") _audioManager.TryGetPlayer(definition.Id, out _ui);
                 }
             }
 
@@ -233,7 +299,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
                 _audioManager = null;
                 _ambgm = null;
                 _unit = null;
+                _unitAttack = null;
                 _sfx = null;
+                _ui = null;
                 _sceneAudioConsumers = Array.Empty<AudioBase>();
                 _boundAudioConsumers.Clear();
             }
@@ -252,7 +320,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem
 
         public bool Play(AmbgmEvent slot, int presetIndex = -1) => PlayCue(_ambgm, "AMBGM", (int)slot, presetIndex);
         public bool Play(UnitEvent slot, int presetIndex = -1) => PlayCue(_unit, "Unit", (int)slot, presetIndex);
+        public bool PlayUnitAttack(int slotIndex) => PlayCue(_unitAttack, "UnitAttack", slotIndex, -1);
         public bool Play(SfxEvent slot, int presetIndex = -1) => PlayCue(_sfx, "SFX", (int)slot, presetIndex);
+        public bool Play(UiEvent slot, int presetIndex = -1) => PlayCue(_ui, "UI", (int)slot, presetIndex);
 
         public bool SetPreset(AmbgmEvent slot, int presetIndex)
         {

@@ -15,7 +15,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (spec == null) throw new ArgumentNullException(nameof(spec));
             if (spec is not DustScreenTraitSpec specification) throw new ArgumentException("같은 특성 명세가 필요합니다.", nameof(spec));
-            return new DustScreenTraitDefinition(specification.AttackRangeReduction, specification.AttackDamageReductionPercent, specification.OpposingTurnEndsToExpire);
+            return new DustScreenTraitDefinition(specification.AttackRangeReduction, specification.AttackDamageReductionPercent,
+                specification.OpposingTurnEndsToExpire, specification.ExemptsAlliedAttackRangePenalty);
         }
     }
     public sealed class DustScreenRuntimeStateFactory : ITraitRuntimeStateFactory

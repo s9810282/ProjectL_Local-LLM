@@ -175,6 +175,23 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
+        public void RouteNormalization_ProjectsVisibilityOnceForAllSteps()
+        {
+            var cells = new[] { new CellCoord(1, 1), new CellCoord(2, 1), new CellCoord(2, 2) };
+            var input = MovementTestData.SafeRoute(cells);
+            var tile = new MineFact(cells[1], lethal: false, hidden: false);
+            var environment = new MovementEnvironmentFacts(new MovementTileFact[] { tile });
+            input = CombatCommandTestData.With(input, state: input.State.With(environment: environment,
+                environmentProgress: EnvironmentProgressFacts.Initial(environment)));
+
+            var failure = MovementPathNormalizer.TryNormalize(input, input.Path, Owner.Player, out var route);
+
+            Assert.That(failure, Is.EqualTo(MovementFailureReason.None));
+            Assert.That(route.Cells, Is.EqualTo(cells));
+            Assert.That(tile.VisibilityCopies, Is.EqualTo(1));
+        }
+
+        [Test]
         public void MiddleMineStopsBeforeDiagonalEndpoint()
         {
             var input = WithMine(MovementTestData.WithMovement(Diagonal(),5), new CellCoord(2, 1), lethal: true);
@@ -262,11 +279,16 @@ namespace ProjectL.Tests.Core
         private sealed class MineFact : MovementTileFact
         {
             internal bool Lethal { get; }
+            internal int VisibilityCopies { get; private set; }
             internal MineFact(CellCoord cell, bool lethal, bool hidden) : base(71, cell, "phase-b-mine", 0,
                 true, new[] { hidden ? Owner.Enemy : Owner.Player }) { Lethal = lethal; }
             public override bool SameValues(MovementTileFact other) => other is MineFact mine &&
                 Lethal == mine.Lethal && SameSourceValues(other);
-            public override MovementTileFact WithKnownTo(IReadOnlyList<Owner> knownTo) => this;
+            public override MovementTileFact WithKnownTo(IReadOnlyList<Owner> knownTo)
+            {
+                VisibilityCopies++;
+                return this;
+            }
         }
 
         private sealed class MineRule : IMovementTileRule

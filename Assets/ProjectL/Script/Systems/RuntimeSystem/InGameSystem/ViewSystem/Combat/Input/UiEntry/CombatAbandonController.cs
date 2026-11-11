@@ -15,6 +15,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
     /// </remarks>
     internal sealed class CombatAbandonController
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIAbandonRequest = new("Combat.Action.UI.Abandon.Request");
+#endif
+
         private readonly RuntimeFaultBoundary _faults;
         private readonly Func<CombatInputFacts> _readFacts;
         // 오류 아님·진입 활성·씬 연결을 조정자가 판단해 돌려준다.
@@ -39,6 +44,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
         /// </summary>
         internal bool TryRequestAbandon()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIAbandonRequestSample = _profileUIAbandonRequest.Auto();
+#endif
+
             if (!_canAct() || !CombatInputPolicy.CanRequestAbandon(_readFacts(), _progress.CanMarkAbandon))
                 return false;
 

@@ -28,7 +28,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         [Tooltip("자리 기준 위치 보정입니다. x = 오른쪽, y = 위, z = 그 자리의 앞이고, 앞이 무엇인지는 자리마다 다릅니다(자리 설명 참고). "
             + "월드 단위이며 필드 배율을 따르지 않습니다. 0이면 자리 그대로입니다.")]
         [SerializeField] private Vector3 positionOffset;
-        [Tooltip("이펙트를 놓는 유닛이 Rider일 때 Position Offset에 더할 월드 Y 보정입니다. 양수면 위로 올립니다. ActorBody·ActorMuzzle·ActorEffectPoint는 행위자, SubjectBody는 각 대상의 병과를 따릅니다. EventCell·Contact에는 적용하지 않습니다.")]
+        [Tooltip("이펙트를 놓는 유닛이 Rider일 때 Position Offset에 더할 월드 Y 보정입니다. 양수면 위로 올립니다. ActorBody·ActorMuzzle·ActorEffectPoint는 행위자, SubjectBody는 각 대상의 병과를 따릅니다. EventCell·SelectedCell·Contact에는 적용하지 않습니다.")]
         [SerializeField] private float riderYOffset;
         [Tooltip("자리 회전 뒤에 더하는 회전입니다(오일러 각, 도). 예: 위로 뿜는 이펙트를 바닥에 눕히려면 (-90, 0, 0). 0이면 자리 회전 그대로입니다.")]
         [SerializeField] private Vector3 rotationOffset;
@@ -156,6 +156,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     {
         [Tooltip("모델이 이 색으로 바뀌었다가 원래 색으로 돌아옵니다(ColorSystem 손잡이). 알파는 쓰지 않습니다(모델의 원래 알파를 따름).")]
         [SerializeField] private Color color = Color.red;
+        [Tooltip("피격 동안 모델 외곽선(Cartoon 재질 Outline 패스)이 이 색이 됐다가 몸 색과 같이 원래 외곽선으로 돌아옵니다. 외곽선은 조명을 받지 않아 몸 색보다 진하게 보이고, HDR 밝기가 1보다 크면 블룸으로 빛납니다. 알파는 쓰지 않습니다.")]
+        [SerializeField, ColorUsage(false, true)] private Color outlineColor = Color.red;
+        [Tooltip("피격 동안의 외곽선 폭(월드 단위)입니다. 0이면 외곽선은 바꾸지 않습니다(몸 색만). 재질 기본 폭은 0.015~0.02입니다.")]
+        [SerializeField, Min(0f)] private float outlineWidth;
         [Tooltip("원래 색으로 돌아오는 시간(초)입니다. 0이면 플래시가 없습니다. 피격 반응보다 길면 그 유닛의 다음 사건이 늦어집니다.")]
         [SerializeField, Min(0f)] private float seconds;
         [SerializeField] private CombatCueAnchor anchor = CombatCueAnchor.Start;
@@ -166,15 +170,18 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         {
         }
 
-        internal CombatFlashCueEntry(Color color, float seconds, CombatCueAnchor anchor = CombatCueAnchor.Start, float delay = 0f)
+        internal CombatFlashCueEntry(Color color, float seconds, CombatCueAnchor anchor = CombatCueAnchor.Start, float delay = 0f,
+            Color outlineColor = default, float outlineWidth = 0f)
         {
             this.color = color;
+            this.outlineColor = outlineColor;
+            this.outlineWidth = outlineWidth;
             this.seconds = seconds;
             this.anchor = anchor;
             this.delay = delay;
         }
 
-        internal CombatFlashCue ToCue() => new(color, seconds, anchor, delay);
+        internal CombatFlashCue ToCue() => new(new CombatFlashLook(color, outlineColor, outlineWidth), seconds, anchor, delay);
     }
 
     /// <summary>
@@ -311,21 +318,43 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         internal CombatCuePoint Point { get; }
     }
 
+    /// <summary>
+    /// 피격 플래시가 세기 1일 때의 모습입니다(몸 색·외곽선 색·외곽선 폭). 원래 모습과 세기만큼 섞는 규칙은 유닛 외형 소유자 한 곳이 갖습니다(조각·조립 설계 BP9 보충).
+    /// 시점 값은 갖지 않아, 외형 대여는 언제 그리는지 모른 채 모습만 받습니다.
+    /// </summary>
+    internal readonly struct CombatFlashLook
+    {
+        internal CombatFlashLook(Color body, Color outline, float outlineWidth)
+        {
+            CombatPresentationValueRules.RequireNonNegative(outlineWidth, nameof(outlineWidth));
+            Body = body;
+            Outline = outline;
+            OutlineWidth = outlineWidth;
+        }
+
+        internal Color Body { get; }
+        internal Color Outline { get; }
+        internal float OutlineWidth { get; }
+
+        /// <summary>외곽선을 바꾸는지입니다(폭이 0보다 큼). 아니면 몸 색만 바뀝니다.</summary>
+        internal bool HasOutline => OutlineWidth > 0f;
+    }
+
     /// <summary>피격 플래시 값입니다. 사건 완료를 기다립니다. 시간 0이면 없습니다.</summary>
     internal sealed class CombatFlashCue
     {
-        internal CombatFlashCue(Color color, float seconds, CombatCueAnchor anchor, float delay)
+        internal CombatFlashCue(CombatFlashLook look, float seconds, CombatCueAnchor anchor, float delay)
         {
             CombatPresentationValueRules.RequireNonNegative(seconds, nameof(seconds));
             CombatPresentationCueRules.RequireDefined(anchor);
             CombatPresentationValueRules.RequireNonNegative(delay, nameof(delay));
-            Color = color;
+            Look = look;
             Seconds = seconds;
             Anchor = anchor;
             Delay = delay;
         }
 
-        internal Color Color { get; }
+        internal CombatFlashLook Look { get; }
         internal float Seconds { get; }
         internal CombatCueAnchor Anchor { get; }
         internal float Delay { get; }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPanel;
+using ProjectL.Systems.ServiceKeys.Runtime;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
@@ -49,7 +51,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         // 하위가 Awake를 새로 선언하면 숨김 경고가 나도록 protected로 둡니다(기반 초기화를 빠뜨리지 않게).
         protected void Awake()
         {
-            if (layout != null) layout.Prepare(this);
+            if (layout != null) layout.TryPrepare(this);
+        }
+
+        public override void BindUIService(ISystemServiceStoreReader resolver)
+        {
+            if (resolver == null) throw new ArgumentNullException(nameof(resolver));
+            ScrollPresentation?.BindAudio(resolver.GetService(SystemGroupsService.Global).AudioServiceCommand);
         }
 
         public override void Open()

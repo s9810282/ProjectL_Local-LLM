@@ -104,6 +104,29 @@ namespace ProjectL.Tool.Editor
             : soCheck.Warnings.Count > 0 || soCheck.Phase == CombatStageSoCheckPhase.NeedsRecheck ? MessageType.Warning
             : MessageType.Info;
 
+        // 머리줄 검사/저장 버튼의 기존 활성 조건과 안내가 같은 원본을 사용합니다.
+        private string SoStageCommandUnavailableReason()
+        {
+            if (SoDraftBlocked) return "초안 보관 실패/충돌을 먼저 해결하세요. 초안 보호에서 원문 내보내기·대상별 정리·재시도를 사용할 수 있습니다.";
+            if (!soDocument.IsOpen) return "열린 스테이지가 없습니다. 전체 목록에서 스테이지를 열어 주세요.";
+            if (_soDraftInvalidDocument) return "현재 작업본은 바로 편집할 수 없습니다. 보호 원문을 유지한 에셋 다시 열기 또는 다른 스테이지 열기를 사용하세요.";
+            if (soCatalog == null) return "에셋 목록이 없어 검사·저장을 실행할 수 없습니다. 목록 새로고침 후 원인 알림을 확인하세요.";
+            return null;
+        }
+
+        private void DrawSoCommandAvailability()
+        {
+            string reason = SoStageCommandUnavailableReason();
+            if (reason != null) EditorGUILayout.HelpBox("검사·저장: " + reason, MessageType.Info);
+            if (soCatalog == null)
+                EditorGUILayout.HelpBox("에셋 목록이 없어 작업 영역 이동을 사용할 수 없습니다. 상단 목록 새로고침 후 원인 알림을 확인하세요. 상세 사용법과 초안 보호는 계속 사용할 수 있습니다.", MessageType.Warning);
+            if (soDocument.IsOpen && SoDraftEditable)
+            {
+                if (!soDocument.HasView) EditorGUILayout.HelpBox("짝 View가 없습니다. 저장하려면 배경·타일·카메라에서 짝 View를 먼저 만드세요.", MessageType.Info);
+                if (soModified) EditorGUILayout.LabelField("등록·빼기는 미저장 변경을 저장한 뒤 실행하세요.", EditorStyles.wordWrappedMiniLabel);
+            }
+        }
+
         private void DrawSoWorkStatus()
         {
             if (!soDocument.IsOpen)
@@ -117,6 +140,7 @@ namespace ProjectL.Tool.Editor
             if (GetSoWorkspace() == SoWorkspace.Settings) view = "스테이지 설정 · 지도 입력 꺼짐";
             if (_soShowStages) view = "스테이지 목록 · 지도 입력 꺼짐";
             else if (_soShowCreation) view = "새로 만들기·복제 · 지도 입력 꺼짐";
+            if (_soShowHelp) view = "빠른 사용법 · 지도 입력 꺼짐";
             EditorGUILayout.HelpBox($"{(soModified ? "저장 안 됨" : "미저장 변경 없음")} · {view} · {SoCheckStatus()}", SoCheckMessageType());
         }
 

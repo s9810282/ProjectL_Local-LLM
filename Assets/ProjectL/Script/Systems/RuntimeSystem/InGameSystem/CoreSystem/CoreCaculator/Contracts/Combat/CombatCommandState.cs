@@ -16,7 +16,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int BoardWidth { get; }
         public int BoardHeight { get; }
         public CombatFlowPhase Phase { get; }
-        public bool IsNight { get; }
+        /// <summary>전투 진입 뒤인지다. 턴 국면에서 계산하며 따로 저장하지 않는다(옛 밤 판정을 대신함, 밤 삭제 설계 N2).</summary>
+        public bool InCombat => Turn.StagePhase == StagePhase.Combat;
         public uint ItemRandomState { get; }
         public CombatRewardFacts Rewards { get; }
         public IReadOnlyList<StructureCombatFacts> Structures { get; }
@@ -30,21 +31,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public BattleObjective Objective { get; }
         /// <summary>새 개체 ID와 소환 난수 진행값이다. 원본은 여기 한 곳이며 Buffer가 연속성을 검사한다.</summary>
         public CombatAllocationFacts Allocation { get; }
+        public NexusReinforcementState Reinforcements { get; }
 
         /// <param name="objective">생략하면 본부 목표다. 운영 생성 지점은 원본 목표를 그대로 넘긴다.</param>
         /// <param name="allocation">생략하면 할당 불가 상태다. 운영 생성 지점은 원본 진행값을 그대로 넘긴다.</param>
-        public CombatCommandState(int boardWidth,int boardHeight,CombatFlowPhase phase,bool isNight,IReadOnlyList<StructureCombatFacts> structures,            IReadOnlyList<ThornFieldCellSnapshot> thornFields,            CombatTurnFacts turn = null,MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            WallBlockingSpec wallBlocking = null,BattleObjective objective = null,CombatAllocationFacts allocation = null,uint itemRandomState = 0,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null)
+        public CombatCommandState(int boardWidth,int boardHeight,CombatFlowPhase phase,IReadOnlyList<StructureCombatFacts> structures,            IReadOnlyList<ThornFieldCellSnapshot> thornFields,            CombatTurnFacts turn = null,MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            WallBlockingSpec wallBlocking = null,BattleObjective objective = null,CombatAllocationFacts allocation = null,uint itemRandomState = 0,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
+            NexusReinforcementState reinforcements = null)
         {
             Objective = objective ?? BattleObjective.EnemyHeadquarters;
             Allocation = allocation ?? CombatAllocationFacts.Unavailable;
+            Reinforcements = reinforcements ?? NexusReinforcementState.Disabled;
             if (boardWidth < 1 || boardHeight < 1) throw new ArgumentOutOfRangeException(nameof(boardWidth));
             if (!Enum.IsDefined(typeof(CombatFlowPhase), phase)) throw new ArgumentOutOfRangeException(nameof(phase));
             BoardWidth = boardWidth;
             BoardHeight = boardHeight;
             Phase = phase;
-
-
-            IsNight = isNight;
             ItemRandomState = itemRandomState;
             Rewards = rewards ?? CombatRewardFacts.Empty;
             Structures = Array.AsReadOnly((structures ?? throw new ArgumentNullException(nameof(structures))).ToArray());
@@ -68,8 +69,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         /// <summary>지정한 사실만 바꾸고 나머지 불변 문맥은 보존한다.</summary>
-        public CombatCommandState With(CombatFlowPhase? phase = null,            bool? isNight = null,IReadOnlyList<StructureCombatFacts> structures = null,            IReadOnlyList<ThornFieldCellSnapshot> thornFields = null,CombatTurnFacts turn = null,            MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            CombatAllocationFacts allocation = null,uint? itemRandomState = null,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null) =>
-            new CombatCommandState(BoardWidth,BoardHeight,phase ?? Phase,                isNight ?? IsNight,structures ?? Structures,thornFields ?? ThornFields,turn ?? Turn,                environment ?? Environment,environmentProgress ?? EnvironmentProgress,WallBlocking,Objective,                allocation ?? Allocation,itemRandomState ?? ItemRandomState,rewards ?? Rewards,traitTurn ?? TraitTurn,movementUndo ?? MovementUndo,gimmicks ?? Gimmicks);
+        public CombatCommandState With(CombatFlowPhase? phase = null,IReadOnlyList<StructureCombatFacts> structures = null,            IReadOnlyList<ThornFieldCellSnapshot> thornFields = null,CombatTurnFacts turn = null,            MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            CombatAllocationFacts allocation = null,uint? itemRandomState = null,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
+            NexusReinforcementState reinforcements = null) =>
+            new CombatCommandState(BoardWidth,BoardHeight,phase ?? Phase,structures ?? Structures,thornFields ?? ThornFields,turn ?? Turn,                environment ?? Environment,environmentProgress ?? EnvironmentProgress,WallBlocking,Objective,                allocation ?? Allocation,itemRandomState ?? ItemRandomState,rewards ?? Rewards,traitTurn ?? TraitTurn,movementUndo ?? MovementUndo,gimmicks ?? Gimmicks,
+                reinforcements ?? Reinforcements);
 
         public bool IsInside(CellCoord cell) => cell.X >= 0 && cell.Y >= 0 && cell.X < BoardWidth && cell.Y < BoardHeight;
 
@@ -78,13 +81,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public bool SameGameplayValues(CombatCommandState other)
         {
             if (other == null || BoardWidth != other.BoardWidth || BoardHeight != other.BoardHeight ||
-                Phase != other.Phase || IsNight != other.IsNight ||
+                Phase != other.Phase ||
                 ItemRandomState != other.ItemRandomState ||
                 Structures.Count != other.Structures.Count || !ThornFields.SequenceEqual(other.ThornFields) ||
                 !Turn.SameValues(other.Turn) || !TraitTurn.SameValues(other.TraitTurn) ||
                 !Environment.SameValues(other.Environment) || !EnvironmentProgress.SameValues(other.EnvironmentProgress) ||
                 WallBlocking.CornerCutTicks != other.WallBlocking.CornerCutTicks || !Objective.SameValues(other.Objective) ||
-                !Gimmicks.SameValues(other.Gimmicks) || !Allocation.SameValues(other.Allocation) || !Rewards.SameValues(other.Rewards)) return false;
+                !Gimmicks.SameValues(other.Gimmicks) || !Allocation.SameValues(other.Allocation) ||
+                !Reinforcements.SameValues(other.Reinforcements) || !Rewards.SameValues(other.Rewards)) return false;
             for (int i = 0; i < Structures.Count; i++)
             {
                 var a = Structures[i]; var b = other.Structures[i];

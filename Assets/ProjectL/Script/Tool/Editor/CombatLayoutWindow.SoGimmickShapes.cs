@@ -62,7 +62,9 @@ namespace ProjectL.Tool.Editor
             bool enabled = haboob ? soDocument.haboob.enabled : soDocument.rockfall.enabled;
             string name = haboob ? "하붑" : "낙석";
             EditorGUILayout.LabelField(haboob ? "구름 영역의 모양" : "돌 하나의 모양", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("위치: 전투 중 자동 결정", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(haboob
+                ? "구름 영역의 상대 모양입니다. 시작 위치는 지정할 수 있으며, 이후 이동은 무작위입니다."
+                : "돌 하나의 상대 모양입니다. 낙하 위치는 전투 중 무작위로 정해집니다.", EditorStyles.wordWrappedMiniLabel);
             if (editor.Draw(cells, enabled, out List<Vector2Int> changed))
             {
                 ApplySoGimmickShape(haboob, changed, name + " 모양 그리기");

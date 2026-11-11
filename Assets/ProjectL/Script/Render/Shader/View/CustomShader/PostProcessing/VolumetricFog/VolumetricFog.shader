@@ -6,14 +6,7 @@ Shader "ProjectL/HeightVolumeFog"
         [HDR] _FogColor ("안개 하단 색상", Color) = (0.65, 0.75, 0.85, 1)
         [HDR] _FogTopColor ("안개 상단 색상", Color) = (0.8, 0.9, 1.0, 0)
         _Density ("안개 밀도", Range(0, 12)) = 2.0
-        _StepCount ("레이마칭 스텝 수", Range(8, 128)) = 64
-        _Jitter ("스텝 지터", Range(0, 1)) = 0.75
         _EdgeFade ("큐브 가장자리 페이드", Range(0.001, 0.25)) = 0.04
-
-        [Header(Center Mask)]
-        _CenterMaskCenter ("중앙 마스크 중심 XZ", Vector) = (0.5, 0.5, 0, 0)
-        _CenterMaskRadius ("중앙 마스크 반경", Range(0, 0.707)) = 0.35
-        _CenterMaskSoftness ("중앙 마스크 경계 부드러움", Range(0.001, 0.35)) = 0.08
 
         [Header(Height Map)]
         _HeightMap ("하이트 맵", 2D) = "gray" {}
@@ -24,13 +17,6 @@ Shader "ProjectL/HeightVolumeFog"
         [Header(Parallax)]
         _ParallaxStrength ("패럴럭스 강도", Range(0, 0.5)) = 0.08
         _ParallaxViewClamp ("패럴럭스 시야 제한", Range(0.05, 1.0)) = 0.25
-
-        [Header(Noise)]
-        _NoiseTex ("노이즈 텍스처", 2D) = "white" {}
-        _NoiseScale ("노이즈 크기", Float) = 3.0
-        _NoiseStrength ("노이즈 강도", Range(0, 1)) = 0.35
-        _SmokeFlowDirection ("연기 흐름 방향 XZ", Vector) = (0.3, 0.7, 0, 0)
-        _SmokeFlowSpeed ("연기 흐름 속도", Range(0, 2)) = 0.2
 
         [Header(Depth)]
         _DepthBias ("씬 깊이 보정", Range(0, 0.1)) = 0.01
@@ -78,21 +64,12 @@ Shader "ProjectL/HeightVolumeFog"
             TEXTURE2D(_HeightMap);
             SAMPLER(sampler_HeightMap);
 
-            TEXTURE2D(_NoiseTex);
-            SAMPLER(sampler_NoiseTex);
-
             CBUFFER_START(UnityPerMaterial)
                 float4 _FogColor;
                 float4 _FogTopColor;
 
                 float _Density;
-                float _StepCount;
-                float _Jitter;
                 float _EdgeFade;
-
-                float4 _CenterMaskCenter;
-                float _CenterMaskRadius;
-                float _CenterMaskSoftness;
 
                 float4 _HeightMap_ST;
                 float _HeightScale;
@@ -101,12 +78,6 @@ Shader "ProjectL/HeightVolumeFog"
 
                 float _ParallaxStrength;
                 float _ParallaxViewClamp;
-
-                float4 _NoiseTex_ST;
-                float _NoiseScale;
-                float _NoiseStrength;
-                float4 _SmokeFlowDirection;
-                float _SmokeFlowSpeed;
 
                 float _DepthBias;
             CBUFFER_END
@@ -141,13 +112,6 @@ Shader "ProjectL/HeightVolumeFog"
                 output.positionWS = pos.positionWS;
 
                 return output;
-            }
-
-            float Hash12(float2 p)
-            {
-                float3 p3 = frac(float3(p.xyx) * 0.1031);
-                p3 += dot(p3, p3.yzx + 33.33);
-                return frac((p3.x + p3.y) * p3.z);
             }
 
             // ------------------------------------------------------------
@@ -203,7 +167,6 @@ Shader "ProjectL/HeightVolumeFog"
                 // --------------------------------------------------------
                 // Height-map parallax
                 //
-                // 레이마칭 자체로 이미 실제 view parallax가 생긴다.
                 // 아래 오프셋은 각 Y layer의 height-map UV를 추가로 이동시켜
                 // 2D height map에서 내부 깊이감을 더 강하게 만든다.
                 // --------------------------------------------------------
@@ -242,77 +205,6 @@ Shader "ProjectL/HeightVolumeFog"
                 return saturate(
                     heightValue * _HeightScale +
                     _HeightOffset
-                );
-            }
-
-            float SampleNoise(float3 positionOS)
-            {
-                float3 p01 = positionOS + 0.5;
-
-                float directionLength =
-                    length(_SmokeFlowDirection.xy);
-
-                float2 flowDirection =
-                    directionLength > 1e-5
-                    ? _SmokeFlowDirection.xy / directionLength
-                    : 0.0;
-
-                float flowTime =
-                    _Time.y *
-                    _SmokeFlowSpeed;
-
-                // 2D texture를 Y에 따라 비틀어 pseudo-3D처럼 사용한다.
-                float2 uv =
-                    p01.xz * _NoiseScale;
-
-                // 시간이 지날수록 같은 연기 무늬가 위쪽 Y로 이동한다.
-                // XZ 방향 이동도 함께 넣어 정적인 수직 띠를 피한다.
-                uv +=
-                    (p01.y - flowTime) *
-                    float2(0.37, 0.73) *
-                    _NoiseScale;
-
-                uv +=
-                    flowDirection *
-                    flowTime;
-
-                uv =
-                    uv * _NoiseTex_ST.xy +
-                    _NoiseTex_ST.zw;
-
-                float n =
-                    SAMPLE_TEXTURE2D_LOD(
-                        _NoiseTex,
-                        sampler_NoiseTex,
-                        uv,
-                        0
-                    ).r;
-
-                return lerp(
-                    1.0,
-                    saturate(n * 1.35),
-                    _NoiseStrength
-                );
-            }
-
-            float SampleCenterMask(float3 positionOS)
-            {
-                float2 p01XZ =
-                    positionOS.xz +
-                    0.5;
-
-                float distanceFromCenter =
-                    distance(
-                        p01XZ,
-                        _CenterMaskCenter.xy
-                    );
-
-                // 중앙 원 내부는 비우고, 반경 바깥에서만 안개를 보인다.
-                return smoothstep(
-                    _CenterMaskRadius,
-                    _CenterMaskRadius +
-                        max(_CenterMaskSoftness, 1e-5),
-                    distanceFromCenter
                 );
             }
 
@@ -377,17 +269,9 @@ Shader "ProjectL/HeightVolumeFog"
                         nearestEdge
                     );
 
-                float noise =
-                    SampleNoise(positionOS);
-
-                float centerMask =
-                    SampleCenterMask(positionOS);
-
                 return
                     heightMask *
                     edgeMask *
-                    centerMask *
-                    noise *
                     _Density;
             }
 
@@ -486,28 +370,10 @@ Shader "ProjectL/HeightVolumeFog"
                 if (tEnd <= tStart)
                     discard;
 
-                int stepCount =
-                    (int)clamp(
-                        round(_StepCount),
-                        8.0,
-                        128.0
-                    );
-
-                float segmentLength =
-                    tEnd - tStart;
-
+                // 보이는 구간을 세 등분하고 각 구간의 중간점에서 밀도를 구한다.
+                const int sampleCount = 3;
                 float stepLength =
-                    segmentLength /
-                    max((float)stepCount, 1.0);
-
-                float jitter =
-                    Hash12(
-                        input.positionCS.xy
-                    ) * _Jitter;
-
-                float t =
-                    tStart +
-                    stepLength * jitter;
+                    (tEnd - tStart) / sampleCount;
 
                 float3 accumulatedColor =
                     0.0;
@@ -515,18 +381,11 @@ Shader "ProjectL/HeightVolumeFog"
                 float accumulatedAlpha =
                     0.0;
 
-                [loop]
-                for (int i = 0; i < 128; i++)
+                [unroll]
+                for (int i = 0; i < sampleCount; i++)
                 {
-                    if (i >= stepCount)
-                        break;
-
-                    if (t > tEnd)
-                        break;
-
-                    if (accumulatedAlpha >= 0.995)
-                        break;
-
+                    float t =
+                        tStart + (i + 0.5) * stepLength;
                     float3 samplePosOS =
                         rayOriginOS +
                         rayDirOS * t;
@@ -581,8 +440,6 @@ Shader "ProjectL/HeightVolumeFog"
                     accumulatedAlpha +=
                         visibility *
                         sampleAlpha;
-
-                    t += stepLength;
                 }
 
                 return half4(

@@ -70,7 +70,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input,
                 characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray(),
                 profiles: profiles,
-                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 7) },s.Turn,s.Environment));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 7) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -92,7 +92,7 @@ namespace ProjectL.Tests.Core
             var s = input.State;
             var credit = input.Characters.Single(c => c.EntityId != input.ActorId).EntityId;
             var source = new DamageTile(71, CellCoord.Right, true, lethal ? 100 : 7, credit);
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.FinalState.Environment.Tiles.Single().Active, Is.False);

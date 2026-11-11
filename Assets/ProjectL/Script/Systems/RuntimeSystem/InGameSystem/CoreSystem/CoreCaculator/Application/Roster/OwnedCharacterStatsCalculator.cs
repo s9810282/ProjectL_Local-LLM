@@ -33,7 +33,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             IReadOnlyList<CategorySpec> categories,
             IReadOnlyList<OwnedCharacterRecord> owned,
             MainCharacterPersistentState main,
-            IReadOnlyDictionary<CharacterInstanceId, int> souls, TraitGrowthCatalog traitGrowth = null)
+            IReadOnlyDictionary<CharacterInstanceId, int> souls, LevelProgressionSpec progression,
+            TraitGrowthCatalog traitGrowth = null)
         {
             if (owned == null)
                 throw new ArgumentNullException(nameof(owned));
@@ -45,15 +46,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var mains = new Dictionary<CharacterInstanceId, MainCharacterPersistentState>();
             if (rows.Length == 1)
                 mains.Add(rows[0].Id, main);
-            return CalculateForMains(profiles, categories, owned, mains, souls, traitGrowth);
+            return CalculateForMains(profiles, categories, owned, mains, souls, progression, traitGrowth);
         }
 
-        /// <summary>보유 ID별 메인 상태를 한 카탈로그로 계산한다. 선택 여부는 지속 능력치를 바꾸지 않는다.</summary>
+        /// <summary>
+        /// 보유 ID별 메인 상태를 한 카탈로그로 계산한다. 선택 여부는 지속 능력치를 바꾸지 않는다.
+        /// <paramref name="progression"/>은 다음 레벨 진행값(<see cref="OwnedCharacterStatsSnapshot.Experience"/>)에만 쓴다.
+        /// 빠뜨리면 조용히 "경험치 꺼짐"이 되므로 필수다. 꺼짐을 뜻할 때만 <c>default</c>를 넘긴다.
+        /// </summary>
         public static IReadOnlyList<OwnedCharacterStatsSnapshot> CalculateForMains(
             IReadOnlyList<CombatAttackProfile> profiles, IReadOnlyList<CategorySpec> categories,
             IReadOnlyList<OwnedCharacterRecord> owned,
             IReadOnlyDictionary<CharacterInstanceId, MainCharacterPersistentState> mains,
-            IReadOnlyDictionary<CharacterInstanceId, int> souls,
+            IReadOnlyDictionary<CharacterInstanceId, int> souls, LevelProgressionSpec progression,
             TraitGrowthCatalog traitGrowth = null)
         {
             if (profiles == null)
@@ -124,7 +129,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 // 전투 중 특성 상태와 같은 원본(DeferredCombatFeatures)으로 카드에 사용 가능 여부를 싣는다.
                 var availability = stats.TraitKeys.ToArray().Select(DeferredCombatFeatures.GetTraitAvailability).ToArray();
                 items[i] = new OwnedCharacterStatsSnapshot(record.Id, record.CharacterKey, record.Role,
-                    record.Level, soulCount, stats, pattern, TraitSettingsSet.From(resolved, display), thornFieldDescription, huntersMarkDescription, pullDescription,
+                    record.Level, ExperienceRules.Progress(record, progression), soulCount, stats, pattern, TraitSettingsSet.From(resolved, display), thornFieldDescription, huntersMarkDescription, pullDescription,
                     impactBoltDescription, availability, reconSquadDescription, ranks);
             }
 

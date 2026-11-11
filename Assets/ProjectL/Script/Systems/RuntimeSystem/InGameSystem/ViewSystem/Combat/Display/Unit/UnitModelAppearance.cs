@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSystem;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -7,24 +8,28 @@ using UnityEngine.Rendering;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
     /// <summary>
-    /// 유닛 모델의 외형 층(이동 반투명, 피격 플래시)을 합쳐 쓰는 소유자입니다(조각·조립 설계 BP9). 모델 슬롯의 투명 변형·색 손잡이를 소유하고,
+    /// 유닛 모델의 외형 층(이동 반투명·피격 플래시·디졸브·아웃라인)을 합쳐 쓰는 소유자입니다. 모델 슬롯의 투명 변형·색 손잡이를 소유하고,
     /// 층마다 현재 값을 기억해 한 번에 씁니다. 어느 층을 끝내도 남은 층을 다시 쓰고, 마지막 층이 끝날 때만 원래 재질/PropertyBlock을 명시적으로 복원합니다.
     /// </summary>
     /// <remarks>
     /// 색은 ColorSystem의 공개 손잡이(<see cref="IColorSystemService.CreateColorHandle"/>)로만 바꿉니다(FW-203). 손잡이 반환은 Renderer의 PropertyBlock 복원을
     /// 보장하지 않으므로, 원래 슬롯과 블록은 이 객체가 직접 되돌립니다(DR-004). 반투명 층이 있으면 투명 변형 재질을 쓰고, 플래시만 있으면 원래 재질에 색만 바꿉니다.
     /// 합친 색 = 원래 색을 플래시 색 쪽으로 세기만큼 섞은 값이고, 알파 = 원래 알파 × 투명도입니다(플래시가 없으면 옛 이동 반투명과 같은 값).
+    /// 외곽선 = 바탕(강조 층이 있으면 그 외곽선, 없으면 재질 외곽선)을 플래시 외곽선 쪽으로 세기만큼 섞은 값입니다. 플래시 외곽선 폭이 0이면 바탕 그대로입니다.
     /// </remarks>
     internal sealed class UnitModelAppearance : IDisposable
     {
         private readonly List<RendererState> _states = new List<RendererState>();
         // 이동 반투명 층입니다. 1이면 층이 없습니다.
         private float _opacity = 1f;
-        // 피격 플래시 층입니다. 세기 0이면 층이 없습니다.
-        private Color _flashColor;
+        // 피격 플래시 층입니다(몸 색·외곽선). 세기 0이면 층이 없습니다.
+        private CombatFlashLook _flash;
         private float _flashStrength;
         // 적 사망 디졸브 층입니다. 0이면 층이 없습니다.
         private float _dissolveAmount;
+        private bool _hasOutline;
+        private Color _outlineColor;
+        private float _outlineWidth;
         private bool _applied;
         private bool _disposed;
 
@@ -55,13 +60,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             Apply();
         }
 
-        /// <summary>피격 플래시 층을 씁니다. 세기는 0~1이고, 0이면 그 층을 끝냅니다.</summary>
-        internal void SetFlash(Color color, float strength)
+        /// <summary>피격 플래시 층(몸 색·외곽선)을 씁니다. 세기는 0~1이고, 0이면 그 층을 끝냅니다.</summary>
+        internal void SetFlash(CombatFlashLook look, float strength)
         {
             if (_disposed) return;
             if (float.IsNaN(strength) || strength < 0f || strength > 1f)
                 throw new ArgumentOutOfRangeException(nameof(strength));
-            _flashColor = color;
+            _flash = look;
             _flashStrength = strength;
             Apply();
         }
@@ -74,7 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             Apply();
         }
 
-        /// <summary>EntityCartoon이 있는 모델의 사망 디졸브 진행값을 씁니다.</summary>
+        /// <summary>디졸브를 지원하는 모델의 사망 디졸브 진행값을 씁니다.</summary>
         internal void SetDissolve(float amount)
         {
             if (_disposed) return;
@@ -92,6 +97,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             Apply();
         }
 
+        /// <summary>기존 색 손잡이에 강조 층을 합칩니다. 미지원 재질은 적용 전에 구성 오류로 보고합니다.</summary>
+        internal void SetOutline(Color color, float width)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(UnitModelAppearance));
+            if (float.IsNaN(width) || float.IsInfinity(width) || width <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(width));
+            bool found = false;
+            foreach (RendererState state in _states)
+                found |= state.RequireOutlineSupport();
+            if (!found)
+                throw new InvalidOperationException("[UnitModelAppearance] 아웃라인을 적용할 실제 모델 렌더러가 없습니다.");
+            _outlineColor = color;
+            _outlineWidth = width;
+            _hasOutline = true;
+            Apply();
+        }
+
+        /// <summary>강조 층만 끝내고 현재 투명도·플래시·디졸브 층을 유지합니다.</summary>
+        internal void ClearOutline()
+        {
+            if (_disposed || !_hasOutline) return;
+            _hasOutline = false;
+            Apply();
+        }
+
         /// <summary>모든 층을 끝내고 원래 외형으로 되돌립니다.</summary>
         internal void Restore()
         {
@@ -99,6 +129,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _opacity = 1f;
             _flashStrength = 0f;
             _dissolveAmount = 0f;
+            _hasOutline = false;
             Apply();
         }
 
@@ -112,7 +143,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void Apply()
         {
-            if (_opacity >= 1f && _flashStrength <= 0f && _dissolveAmount <= 0f)
+            if (_opacity >= 1f && _flashStrength <= 0f && _dissolveAmount <= 0f && !_hasOutline)
             {
                 if (!_applied) return;
                 _applied = false;
@@ -122,17 +153,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _applied = true;
             try
             {
-                foreach (RendererState state in _states) state.Apply(_opacity, _flashColor, _flashStrength, _dissolveAmount);
+                foreach (RendererState state in _states)
+                    state.Apply(_opacity, _flash, _flashStrength, _dissolveAmount, _hasOutline, _outlineColor, _outlineWidth);
             }
             catch (Exception error)
             {
-                // 한 층의 적용이 실패하면 두 층을 함께 지우고 원래대로 돌린다(옛 이동 반투명의 실패 정리와 같음).
+                // 한 층의 적용이 실패하면 모든 층을 함께 지우고 원래대로 돌린다(옛 이동 반투명의 실패 정리와 같음).
                 // 플래시 중 반투명 준비가 실패하면 플래시도 지워지지만, 플래시 조각이 다음 Tick에 다시 쓴다.
                 try
                 {
                     _opacity = 1f;
                     _flashStrength = 0f;
                     _dissolveAmount = 0f;
+                    _hasOutline = false;
                     _applied = false;
                     RunAll(state => state.Restore());
                 }
@@ -163,6 +196,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private sealed class RendererState : IDisposable
         {
+            private static readonly int DissolveAmountId = Shader.PropertyToID(ColorShaderPropertyKey.DissolveAmount.Name);
+            private static readonly int DissolveTextureId = Shader.PropertyToID(ColorShaderPropertyKey.DissolveTexture.Name);
+            private static readonly int OutlineColorId = Shader.PropertyToID(ColorShaderPropertyKey.OutlineColor.Name);
+            private static readonly int OutlineWidthId = Shader.PropertyToID(ColorShaderPropertyKey.OutlineWidth.Name);
             private readonly Renderer _renderer;
             private readonly IColorSystemService _colors;
             private readonly Material[] _originals;
@@ -170,7 +207,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             private readonly MaterialPropertyBlock _globalBlock;
             private readonly TypeSettingKey<Color>[] _keys;
             private readonly Color[] _baseColors;
-            private readonly bool[] _supportsDissolve;
+            private readonly float?[] _baseDissolveAmounts;
+            private readonly bool[] _needsDissolveTexture;
+            private readonly bool _isModel;
+            private readonly bool[] _supportsOutline;
+            private readonly Color[] _baseOutlineColors;
+            private readonly float[] _baseOutlineWidths;
             private Material[] _transparent;
             private IColorHandle _scope;
             private bool _transparentApplied;
@@ -185,7 +227,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _blocks = new MaterialPropertyBlock[_originals.Length];
                 _keys = new TypeSettingKey<Color>[_originals.Length];
                 _baseColors = new Color[_originals.Length];
-                _supportsDissolve = new bool[_originals.Length];
+                _baseDissolveAmounts = new float?[_originals.Length];
+                _needsDissolveTexture = new bool[_originals.Length];
+                _isModel = renderer is MeshRenderer || renderer is SkinnedMeshRenderer;
+                _supportsOutline = new bool[_originals.Length];
+                _baseOutlineColors = new Color[_originals.Length];
+                _baseOutlineWidths = new float[_originals.Length];
                 for (int i = 0; i < _originals.Length; i++)
                 {
                     Material material = _originals[i];
@@ -197,14 +244,56 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     _baseColors[i] = _blocks[i].HasColor(id) ? _blocks[i].GetColor(id)
                         : _blocks[i].isEmpty && _globalBlock.HasColor(id) ? _globalBlock.GetColor(id)
                         : material != null && material.HasProperty(id) ? material.GetColor(id) : Color.white;
-                    _supportsDissolve[i] = material != null && material.HasProperty("_DissolveAmount");
+                    // 디졸브와 아웃라인은 지원 여부가 다릅니다. 한쪽 미지원이 다른 층의 준비를 건너뛰지 않습니다.
+                    if (_isModel && material != null && material.HasProperty(DissolveAmountId))
+                    {
+                        MaterialPropertyBlock originalBlock = _blocks[i].isEmpty ? _globalBlock : _blocks[i];
+                        _baseDissolveAmounts[i] = originalBlock.HasFloat(DissolveAmountId)
+                            ? originalBlock.GetFloat(DissolveAmountId)
+                            : material.GetFloat(DissolveAmountId);
+                        _needsDissolveTexture[i] = material.HasProperty(DissolveTextureId) &&
+                            material.GetTexture(DissolveTextureId) == null && !originalBlock.HasTexture(DissolveTextureId);
+                    }
+                    _supportsOutline[i] = _isModel && material != null
+                        && material.HasProperty(OutlineColorId) && material.HasProperty(OutlineWidthId);
+                    if (_supportsOutline[i])
+                    {
+                        _baseOutlineColors[i] = _blocks[i].HasColor(OutlineColorId) ? _blocks[i].GetColor(OutlineColorId)
+                            : _blocks[i].isEmpty && _globalBlock.HasColor(OutlineColorId) ? _globalBlock.GetColor(OutlineColorId)
+                            : material.GetColor(OutlineColorId);
+                        _baseOutlineWidths[i] = _blocks[i].HasFloat(OutlineWidthId) ? _blocks[i].GetFloat(OutlineWidthId)
+                            : _blocks[i].isEmpty && _globalBlock.HasFloat(OutlineWidthId) ? _globalBlock.GetFloat(OutlineWidthId)
+                            : material.GetFloat(OutlineWidthId);
+                    }
                 }
             }
 
+            internal bool RequireOutlineSupport()
+            {
+                if (!_isModel || _renderer == null) return false;
+                if (_originals.Length == 0)
+                    throw new InvalidOperationException($"[UnitModelAppearance] 모델 '{_renderer.name}'에 아웃라인 재질 슬롯이 없습니다.");
+                for (int i = 0; i < _originals.Length; i++)
+                {
+                    Material material = _originals[i];
+                    if (!_supportsOutline[i] || material == null || material.FindPass("Outline") < 0
+                        || !material.GetShaderPassEnabled("Outline"))
+                        throw new InvalidOperationException($"[UnitModelAppearance] 모델 '{_renderer.name}'의 재질 슬롯 {i} ({material?.name})에 {ColorShaderPropertyKey.OutlineColor.Name}, {ColorShaderPropertyKey.OutlineWidth.Name} 및 활성 Outline Pass가 필요합니다.");
+                }
+                return true;
+            }
+
             /// <summary>합친 층 값을 씁니다. 투명도 &lt; 1이면 투명 변형 재질, 아니면 원래 재질입니다. 재질은 바뀔 때만 바꿉니다.</summary>
-            internal void Apply(float opacity, Color flashColor, float flashStrength, float dissolveAmount)
+            internal void Apply(float opacity, CombatFlashLook flash, float flashStrength, float dissolveAmount,
+                bool hasOutline, Color outlineColor, float outlineWidth)
             {
                 if (_renderer == null) return;
+                // 강조만 남았을 때 파티클 등에는 새 색 손잡이를 만들지 않습니다.
+                if (!_isModel && opacity >= 1f && flashStrength <= 0f && dissolveAmount <= 0f)
+                {
+                    Restore();
+                    return;
+                }
                 bool transparent = opacity < 1f;
                 if (transparent && _transparent == null)
                 {
@@ -237,11 +326,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 for (int i = 0; i < _baseColors.Length; i++)
                 {
                     Color baseColor = _baseColors[i];
-                    Color color = flashStrength > 0f ? Color.Lerp(baseColor, flashColor, flashStrength) : baseColor;
+                    Color color = flashStrength > 0f ? Color.Lerp(baseColor, flash.Body, flashStrength) : baseColor;
                     color.a = baseColor.a * opacity;
                     _scope.SetOverrideData(i, _keys[i], color);
-                    if (_supportsDissolve[i])
-                        _scope.SetOverrideData(i, ColorShaderPropertyKey.DissolveAmount, dissolveAmount);
+                    if (_baseDissolveAmounts[i] is float baseDissolveAmount)
+                    {
+                        if (dissolveAmount > 0f && _needsDissolveTexture[i])
+                        {
+                            Texture texture = CartoonModelMaterialFallback.GetDefaults().GetTexture(DissolveTextureId);
+                            if (texture == null)
+                                throw new InvalidOperationException("[UnitModelAppearance] Cartoon 기본 디졸브 텍스처가 없습니다.");
+                            _scope.SetOverrideData(i, ColorShaderPropertyKey.DissolveTexture, texture);
+                            _needsDissolveTexture[i] = false;
+                        }
+                        _scope.SetOverrideData(i, ColorShaderPropertyKey.DissolveAmount,
+                            dissolveAmount > 0f ? dissolveAmount : baseDissolveAmount);
+                    }
+                    if (_supportsOutline[i])
+                    {
+                        // 바탕은 강조 층이 있으면 그 외곽선, 없으면 재질 외곽선입니다. 피격 외곽선은 그 위에 세기만큼 섞어, 플래시가 끝나면 바탕으로 돌아옵니다.
+                        Color lineColor = hasOutline ? outlineColor : _baseOutlineColors[i];
+                        float lineWidth = hasOutline ? outlineWidth : _baseOutlineWidths[i];
+                        if (flashStrength > 0f && flash.HasOutline)
+                        {
+                            lineColor = Color.Lerp(lineColor, flash.Outline, flashStrength);
+                            lineWidth = Mathf.Lerp(lineWidth, flash.OutlineWidth, flashStrength);
+                        }
+                        _scope.SetOverrideData(i, ColorShaderPropertyKey.OutlineColor, lineColor);
+                        _scope.SetOverrideData(i, ColorShaderPropertyKey.OutlineWidth, lineWidth);
+                    }
                 }
             }
 
@@ -252,7 +365,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _renderer.sharedMaterials = _originals;
                 _transparentApplied = false;
                 for (int i = 0; i < _blocks.Length; i++)
-                    _renderer.SetPropertyBlock(_blocks[i], i);
+                    _renderer.SetPropertyBlock(_blocks[i].isEmpty ? null : _blocks[i], i);
             }
 
             public void Dispose()

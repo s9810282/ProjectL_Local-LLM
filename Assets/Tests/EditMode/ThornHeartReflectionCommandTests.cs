@@ -109,14 +109,6 @@ namespace ProjectL.Tests.Core
             Assert.That(Reflections(result).Count(), Is.EqualTo(1));
         }
 
-        [Test]
-        public void DayAttack_DoesNotReflect()
-        {
-            var result = Run(ThornHeartTestData.Input(night: false));
-            Assert.That(ThornHeartTestData.Final(result, 1).Health.CurrentHealth, Is.EqualTo(10));
-            Assert.That(Reflections(result), Is.Empty);
-        }
-
         [TestCase(99, 99)]
         [TestCase(2, 0)]
         public void RejectedOrEmptyAttack_HasNoReflectionOrCost(int x, int y)
@@ -175,7 +167,7 @@ namespace ProjectL.Tests.Core
                 statuses: new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(1) });
             input = ThornHeartTestData.Replace(input, 3, c => CombatCommandTestData.With(c, position: new CellCoord(7, 0)));
             var state = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,state.Phase,true,                state.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 5) },turn: state.Turn));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,state.Phase,                state.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 5) },turn: state.Turn));
             var result = CombatAttackCalculator.Reaction(input, NoRules, input.Characters[0], input.Aim);
             Assert.That(result, Is.Not.Null);
             Assert.That(ThornHeartTestData.Final(result, 2).Health.CurrentHealth, Is.EqualTo(75));
@@ -238,7 +230,7 @@ namespace ProjectL.Tests.Core
             var s = input.State;
             input = CombatCommandTestData.With(input,
                 main: new MainCharacterPersistentState(1, 100, 1),
-                state: new CombatCommandState(8,8,s.Phase,true,s.Structures,s.ThornFields,                    objective: BattleObjective.DesignatedBoss(input.ActorId),turn: s.Turn));
+                state: new CombatCommandState(8,8,s.Phase,s.Structures,s.ThornFields,                    objective: BattleObjective.DesignatedBoss(input.ActorId),turn: s.Turn));
             var result = Run(input);
             Assert.That(ThornHeartTestData.Final(result, 1).Health.IsDead, Is.True);
             Assert.That(ThornHeartTestData.Final(result, 10).Health.IsDead, Is.True);

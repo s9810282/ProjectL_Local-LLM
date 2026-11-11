@@ -24,16 +24,20 @@ MonoBehaviour:
   isForcedMovementImmune: 0
   footprintWidth: 1
   footprintHeight: 1
-  maxHealth: 25
+  maxHealth: 30
   physicalDefense: 5
   targetingMethod: {fileID: 11400000, guid: 370b1888064844bc8421c2bf81b89916, type: 2}
   attackRange: 2
   category: 10
-  attackPower: 7
+  attackPower: 10
   wallDelivery: 1
   wallPropagation: 1
   priority: 30
-  traits: []
+  traits:
+  - rid: 6265209904258089049
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 6265209904258089049
+      type: {class: KillChainAttackTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data: 

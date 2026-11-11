@@ -23,7 +23,7 @@ audio.Play(SfxEvent.UnitAttack, 6);  // ShotGun
 | 전투 승리 결과 표시 | AMBGM / UIReward | 없음 |
 | 손패·필드 유닛 선택, 실제 턴 시작 | SFX / UnitPick | 직군 |
 | 선택한 배치 유닛·공격 조준 취소 | SFX / UnitCancel | 직군 |
-| 이동 결과의 유닛별 첫 이동 시작 / 사망 사건 표시 | SFX / UnitMovement, UnitDead | 직군 |
+| 자발적 이동의 걸음 시작 / 사망 사건 표시 | Unit / UnitMovement, UnitDead | 아군 외형 / 적 공용 |
 | 성공한 공격 사건 표시 | SFX / UnitAttack | 유닛 종류 |
 | 장애물 Hit / Destroyed 사건 표시 | SFX / ObsDamaged, ObsBroken | 없음 |
 
@@ -36,8 +36,8 @@ BGM은 현재 인스턴스를 유지한 채 프리셋만 바꾸고, 정지 상�
 전투 View가 적 소유권을 우선 판정하고, 메인 캐릭터 외 직군은 사건/캐릭터 스냅샷의
 `Stats.Category.Key`로 인덱스를 계산해 AudioSystem에 전달한다. 일반 직군은
 `(int)CategoryKey / 10`이다. None은 재생하지 않는다. GlobalUI 덱은 공통 UI Click/Hover만 재생한다.
-이동음은 OrderedCombatPresentation이 결과마다 유닛의 첫 이동 시작에 한 번 호출한다.
-중간 피해·환경 사건이 끼어도 같은 이동 결과의 다음 칸에서는 다시 재생하지 않는다.
+이동음은 아군과 적 모두 방향 회전을 마치고 각 칸으로 움직이기 시작할 때 재생한다.
+뛰어넘기는 도약 구간 시작에 한 번 재생한다. 넉백·끌어오기 등 강제 이동은 이동음을 호출하지 않는다.
 
 공격 프리셋은 MainCharacter=0(Akimbo), Akimbo=1, Sniper=2, ShotGun=6,
 Gravekeeper=7, CactusCannon=9, Ballista=11이다. Demon은 사용자 요청으로 보류한다.

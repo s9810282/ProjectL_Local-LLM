@@ -18,9 +18,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
         private sealed class LineInput
         {
             [SerializeField] internal StageOfferLineKind kind;
-            [Tooltip("UnitDetails: {0} 레벨, {1} 보유 수 / ItemDetails: {0} 설명 / EnhancementDetails: {0} 캐릭터 이름, {1} 설명 / RecoveryProjected: {0} 예상 회복량 / RecoveryMaxHealthProjected: {0} 예상 최대 체력 증가량 / "
+            [Tooltip("UnitDetails: {0} 레벨, {1} 보유 수 / ItemDetails: {0} 설명 / RecoveryProjected: {0} 예상 회복량 / RecoveryMaxHealthProjected: {0} 예상 최대 체력 증가량 / "
                 + "TraitGrowthHeader: {0} 유닛 이름, {1} 레벨, {2} 종류 낱말 / TraitAcquireLabel·TraitEnhanceLabel: 낱말 / "
-                + "TrainingDetails: {0} 등급 수치 글, {1} 특성 설명 / TrainingRank: {0} 지금, {1} 다음 / TrainingEmpty·TrainingUnitNoTrait: 글 / "
+                + "TrainingDetails: {0} 효과·수치 변화 글, {1} 특성 기본 설명 / TrainingRank: {0} 지금, {1} 다음 / TrainingEmpty·TrainingUnitNoTrait: 글 / "
+                + "TrainingEffectEnabled·TrainingEffectDisabled: 적용·미적용 상태 낱말(인자 없음) / "
                 + "TrainingUnitLevel: {0} 레벨 / TrainingUnitTraits: {0} 특성 이름들 / TrainingTraitPrompt: {0} 유닛 이름")]
             [SerializeField, TextArea(1, 4)] internal string format;
         }

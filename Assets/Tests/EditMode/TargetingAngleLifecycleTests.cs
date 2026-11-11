@@ -92,35 +92,6 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void RecallRedeploy_PreservesFactionForward()
-        {
-            var input = CombatCommonCommandTests.Command(CombatCommandKind.EndPlayerTurn);
-            input = TargetingAngleIntegrationTests.WithMethod(input, EntityKey.Unit_Akimbo, TargetingAngleIntegrationTests.Method());
-            var s = input.State;
-            var night = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,true,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,s.Objective,s.Allocation);
-            input = new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, night, input.Characters,
-                input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
-                battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
-                expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence,
-                battleInstanceId: input.BattleInstanceId);
-            var actorId = input.Characters[0].EntityId;
-            input = EnemyControllerPhaseTests.Input(input, CombatControllerPhase.Enemy, completed: 8).WithActor(actorId);
-            var recalled = CombatTurnCalculator.EndEnemyPhase(input, Rules);
-            Assert.That(recalled.Accepted, Is.True, recalled.Reason);
-            var hand = CombatCommandComposition.Project(recalled);
-            Assert.That(hand.Characters.Single(c => c.EntityId == input.ActorId).Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            var placed = CombatCommandCalculator.Calculate(CombatCommandComposition.Intent(
-                CombatCommandTestData.FreshCommand(hand, CombatCommandKind.PlaceUnit, actorId),
-                CombatCommandKind.PlaceUnit, cell: new CellCoord(2, 1)), Rules);
-            Assert.That(placed.Accepted, Is.True, placed.Reason);
-            var projected = CombatCommandComposition.Project(placed);
-            var actor = projected.Characters.Single(c => c.EntityId == input.ActorId);
-            Assert.That(actor.Owner, Is.EqualTo(Owner.Player));
-            Assert.That(actor.Anchor, Is.EqualTo(new CellCoord(2, 1)));
-            AssertForward(Activate(projected, actor), actor, 1);
-        }
-
-        [Test]
         public void DeferredCreatedEnemy_UsesItsOwnFactionForInformationalRange()
         {
             var input = CombatSummonTests.Input(new CellCoord(3, 3));

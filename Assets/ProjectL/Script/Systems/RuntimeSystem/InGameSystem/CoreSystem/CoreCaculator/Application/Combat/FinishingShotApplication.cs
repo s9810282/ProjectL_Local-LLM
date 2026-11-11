@@ -19,6 +19,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 health, new[] { target }, cells, origin);
         }
 
+        /// <summary>
+        /// 한 타격에서 마무리 사격 즉사가 실제로 서는지의 유일한 판단입니다. 희생 넘기기가 먼저 정해지고, 수호자가 대신 맞았으면
+        /// 원래 대상은 맞지 않으므로 즉사가 서지 않습니다. 수호자에게는 즉사를 판정하지 않고 숫자 피해만 줍니다(2026-11-10 사용자 결정).
+        /// 공격 직접 피해·처치 연쇄 추가 공격·희생 모의 계산이 이 함수를 부릅니다.
+        /// </summary>
+        internal static bool FiresOnHit(CombatCommandInput input, CharacterCombatFacts actor, EntityId originalId, EntityId recipientId,
+            CharacterCombatFacts target, StructureCombatFacts structure = null) =>
+            originalId == recipientId && Qualifies(input, actor, target, structure);
+
+        /// <summary>지키지 않으면 즉사로 죽을 대상인지(희생 넘기기 전 판정)입니다. 희생 계획이 치명 타격을 셀 때만 씁니다.</summary>
         internal static bool Qualifies(CombatCommandInput input, CharacterCombatFacts actor, CharacterCombatFacts target,
             StructureCombatFacts structure = null)
         {

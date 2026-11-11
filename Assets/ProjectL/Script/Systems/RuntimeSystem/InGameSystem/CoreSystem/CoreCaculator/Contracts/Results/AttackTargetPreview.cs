@@ -26,6 +26,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int TargetHealthBefore { get; } // 공격 전 대상의 체력
         public int TargetHealthAfter { get; } // 공격 후 대상의 체력
         public bool TargetKilled { get; } // 대상이 사망했는지 여부
+        /// <summary>
+        /// 이 공격으로 대상의 재구성(적 전용 특성)이 일어나는지입니다. 그러면 치명 피해를 받지만 살아 있고 예상 체력은 최대입니다.
+        /// 피격 결과(<see cref="AttackHitResult.TargetReconstructed"/>)에서 만든 미리보기는 그 값을 옮기고, 넉백·작렬 부딪힘 보조 행은 큰 생성자 인자로 받습니다
+        /// (공격 장부의 같은 판정, 2026-11-11 View 재구성 연출·묶음 끝 검토 M2). 넘기지 않으면 거짓입니다.
+        /// </summary>
+        public bool TargetReconstructs { get; }
         public ReadOnlyMemory<CellCoord> TargetOccupiedCells { get; } // 공격 대상이 현재 실제로 차지하고 있는 모든 맵 셀
         /// <summary>상성 적용 전 피해입니다.</summary>
         public int DamageBeforeMatchup { get; }
@@ -63,13 +69,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             IsDirectHit = hit.Contacts == null || hit.Contacts.Count > 0;
             TargetHealthAfter = hit.TargetHealthAfter;
             TargetKilled = hit.TargetKilled;
+            TargetReconstructs = hit.TargetReconstructed;
         }
 
         public AttackTargetPreview(
             EntityId targetId, int expectedDamage, int targetHealthBefore, CellCoord[] targetOccupiedCells,
             int damageBeforeMatchup, int matchupNumerator, int matchupDenominator, int incomingReduction,
             AttackTargetRole role = AttackTargetRole.None, int appliedSplashPercent = 100, int healthNormalizationLoss = 0,
-            int secondaryDamage = 0, int? targetHealthAfter = null, bool isDirectHit = true, int healthRecovery = 0)
+            int secondaryDamage = 0, int? targetHealthAfter = null, bool isDirectHit = true, int healthRecovery = 0,
+            bool targetReconstructs = false)
         {
             if (Enum.IsDefined(typeof(AttackTargetRole), role) == false)
                 throw new ArgumentOutOfRangeException(nameof(role));
@@ -117,6 +125,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (targetHealthAfter < 0) throw new ArgumentOutOfRangeException(nameof(targetHealthAfter));
             TargetHealthAfter = targetHealthAfter ?? checked((int)Math.Max(0L, (long)TargetHealthBefore + healthRecovery - ExpectedDamage - HealthNormalizationLoss));
             TargetKilled = TargetHealthAfter == 0;
+            TargetReconstructs = targetReconstructs;
 
             CellCoord[] copiedCells = new CellCoord[targetOccupiedCells.Length];
             Array.Copy(targetOccupiedCells, copiedCells, targetOccupiedCells.Length);

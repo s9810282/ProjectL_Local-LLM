@@ -93,9 +93,9 @@ namespace ProjectL.Tool.Editor
             }
             Validate(screen);
             if (screen.transform.parent != selection.transform ||
-                screen.GetComponentInParent<Canvas>(true) != canvas ||
-                screen.GetComponentsInChildren<Canvas>(true).Length != 0)
-                throw new InvalidOperationException("[StageDeckEditUISetup] DeckEditUI는 selection의 실제 자식이며 자체 Canvas 없이 공통 Canvas를 사용해야 합니다.");
+                screen.GetComponentInParent<Canvas>(true) != canvas)
+                throw new InvalidOperationException("[StageDeckEditUISetup] DeckEditUI 루트는 selection의 실제 자식이며 공통 Canvas를 사용해야 합니다.");
+            screen.ValidateChildCanvases();
 
             using (var serialized = new SerializedObject(selection))
             {

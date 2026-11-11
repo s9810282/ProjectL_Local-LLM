@@ -5,6 +5,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
+using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
@@ -43,6 +44,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 statuses.Add(new UnitHUDStatus("StatusEffect:" + (int)snapshot.Key, visual.Icon,
                     _descriptions.Describe(visual.DescribeBody(formatter.Values(snapshot)), snapshot), title: visual.DisplayName));
             }
+        }
+
+        /// <summary>
+        /// 이 사실에서 원래 모델 대신 보일 모델의 원본입니다(재구성 연출 설계 RE2·계획 TP-3). HUD와 같은 읽기 순서·보이기 규칙(<see cref="IsShown"/>)으로
+        /// 상태 외형에 모습(<c>WhileAppearance</c>)이 있는 첫 상태를 고릅니다. 없으면 false입니다. 상태 읽기가 목록을 새로 만들므로 부르는 쪽은
+        /// 사실이 바뀐 유닛만 부릅니다(<see cref="UnitStatusAppearance"/>).
+        /// </summary>
+        internal bool TryGetAppearance(CharacterCombatFacts character, out GameObject prefab)
+        {
+            if (character == null) throw new ArgumentNullException(nameof(character));
+            foreach (var snapshot in StatusEffectReadModel.Capture(character))
+            {
+                if (!IsShown(snapshot) || !_visuals.TryGet(snapshot.Key, out var visual) || visual.WhileAppearance == null)
+                    continue;
+                prefab = visual.WhileAppearance;
+                return true;
+            }
+            prefab = null;
+            return false;
         }
     }
 }

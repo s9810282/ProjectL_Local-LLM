@@ -24,7 +24,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         private ICombatStateBufferReadSink _combat;
         private long _shownDelay = -1;
-        private long _shownNightLength = -1;
         private StagePhase? _shownStagePhase;
         private CombatControllerPhase? _shownControllerPhase;
 
@@ -41,7 +40,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             ValidateReferences();
             _combat = resolver.GetService(BufferSystemKey.Buffer).CombatStateReadSink;
             _shownDelay = -1;
-            _shownNightLength = -1;
             _shownStagePhase = null;
             _shownControllerPhase = null;
             Refresh();
@@ -66,17 +64,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             var turn = battle?.CommandState.Turn;
             StagePhase? stage = turn?.StagePhase;
             CombatControllerPhase? controller = turn?.ControllerPhase;
-            // 배치에는 이전 밤의 누적값이 남아 있어도 0을 표시합니다. 8/8만으로 밤 종료를 단정하지 않습니다.
-            long delay = turn != null && turn.StagePhase == StagePhase.Combat ? turn.CompletedPlayerTurnsThisNight : 0;
-            long length = turn?.PlayerTurnsPerNight ?? 0;
-            if (_shownDelay != delay || _shownNightLength != length ||
+            // 낮밤 순환이 없어져(밤 삭제 설계 2026-11-10) 전투 중 완료한 플레이어 턴 수만 보입니다. 분모·진행 막대는 담당자가 다시 정합니다.
+            long delay = turn != null && turn.StagePhase == StagePhase.Combat ? turn.CompletedPlayerTurnCount : 0;
+            if (_shownDelay != delay ||
                 _shownStagePhase != stage || _shownControllerPhase != controller)
             {
-                progressText.text = DescribePhase(stage, controller) + " · " + delay.ToString(CultureInfo.InvariantCulture) + "/" +
-                    length.ToString(CultureInfo.InvariantCulture);
-                progressFill.fillAmount = length > 0 ? Mathf.Clamp01((float)delay / length) : 0f;
+                progressText.text = DescribePhase(stage, controller) + " · " + delay.ToString(CultureInfo.InvariantCulture);
+                progressFill.fillAmount = 0f;
                 _shownDelay = delay;
-                _shownNightLength = length;
                 _shownStagePhase = stage;
                 _shownControllerPhase = controller;
             }

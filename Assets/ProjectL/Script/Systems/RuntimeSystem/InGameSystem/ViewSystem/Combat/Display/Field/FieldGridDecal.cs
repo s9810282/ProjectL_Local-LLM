@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Tool.Runtime;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using Object = UnityEngine.Object;
@@ -15,12 +16,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </remarks>
     internal sealed class FieldGridDecal
     {
-        private static readonly int CellSizeId = Shader.PropertyToID("_CellSize");
-        private static readonly int GridSizeId = Shader.PropertyToID("_GridSize");
-        private static readonly int GridEdgeSizeId = Shader.PropertyToID("_GridEdgeSize");
-        private static readonly int GridOriginId = Shader.PropertyToID("_GridOrigin");
-        private static readonly int MaskCenterId = Shader.PropertyToID("_MaskCenter");
-
         private readonly Transform _fieldRoot;
         private GameObject _gameObject;
         private DecalProjector _projector;
@@ -67,19 +62,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             EnsureProjector(source);
 
-            // 선은 셀 경계를 중심으로 칸 간격의 2·(1 - 가장자리 값)만큼 그려진다. 가장자리 값은 두 축이 같으므로
-            // 넓은 축에서도 선이 lineWidth를 넘지 않도록 넓은 칸 간격 기준 비율을 쓴다.
-            float lineRatio = lineWidth / Mathf.Max(spacing.Width, spacing.Length);
-            float edge = Mathf.Clamp01(1f - (lineRatio * 0.5f));
-
-            // 격자선이 칸 경계에 오도록 필드 모서리(월드 XZ)를 격자 원점으로, 필드 중심을 마스크 중심으로 넣는다.
-            Vector3 corner = mapper.LocalToWorld(new Vector3(-mapper.TotalWidth * 0.5f, 0f, -mapper.TotalLength * 0.5f));
-            Vector3 center = _fieldRoot.position;
-            _instance.SetVector(CellSizeId, new Vector4(spacing.Width, spacing.Length, 0f, 0f));
-            _instance.SetFloat(GridSizeId, 1f);
-            _instance.SetFloat(GridEdgeSizeId, edge);
-            _instance.SetVector(GridOriginId, new Vector4(corner.x, corner.z, 0f, 0f));
-            _instance.SetVector(MaskCenterId, new Vector4(center.x, center.z, 0f, 0f));
+            CombatGridDecalLayout layout = CombatGridDecalLayout.Create(_fieldRoot, mapper.ColumnCount,
+                mapper.RowCount, spacing.Width, spacing.Length, lineWidth, depth, surfaceTop);
+            layout.ApplyMaterial(_instance);
 
             // 바닥처럼 같은 Rendering Layer를 켠 표면에만 찍습니다. 캐릭터·벽은 이 레이어를 켜지 않습니다.
             // URP DecalProjector의 renderingLayerMask setter는 데칼 캐시 갱신(OnValidate)을 부르지 않으므로,
@@ -89,14 +74,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             // 투영 방향(로컬 +Z)을 아래로 두고, 상자가 필드 평면 아래로 depth/2, 위로 depth/2 + 표면 높이만큼 걸치게 한다.
             // 표면 높이 0이면 위아래 depth/2씩으로 지금과 같다.
-            float top = Mathf.Max(0f, surfaceTop);
-            float height = depth + top;
             Transform decal = _gameObject.transform;
-            decal.localPosition = new Vector3(0f, (depth * 0.5f) + top, 0f);
+            decal.localPosition = layout.LocalPosition;
             decal.localRotation = Quaternion.Euler(90f, 0f, 0f);
             decal.localScale = Vector3.one;
-            _projector.size = new Vector3(mapper.TotalWidth, mapper.TotalLength, height);
-            _projector.pivot = new Vector3(0f, 0f, height * 0.5f);
+            _projector.size = layout.Size;
+            _projector.pivot = layout.Pivot;
 
             if (!_gameObject.activeSelf)
                 _gameObject.SetActive(true);

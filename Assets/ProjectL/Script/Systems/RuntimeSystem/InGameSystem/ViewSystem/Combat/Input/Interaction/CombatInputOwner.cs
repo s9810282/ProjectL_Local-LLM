@@ -14,7 +14,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// 전경 소유자는 포인터를 받는 기능(배치·아이템·공격·경로)이고, 활성(<see cref="IsActive"/>)인 것은 많아야 하나입니다.
     /// 배경 소유자(<see cref="IsBackground"/>)는 사용자 조작 없이 화면을 맞추는 기능(유닛 호버 범위)이며, 전경 처리 뒤에 묶음이 계산한
     /// 허용 값과 함께 <see cref="ObservePointer"/>·<see cref="ObserveTick"/>를 받습니다.
-    /// 공격 Drag 넘겨받기는 셋째 꼴입니다: 배경이 아니고, 포인터 대상이 없고(Router가 먼저 넘김), 활성이 되지 않습니다. 정리 단계에서만 몸짓을 무효화합니다.
+    /// 공격 Drag 넘겨받기는 셋째 꼴입니다: 배경이 아니고, 포인터 대상이 없고(Router가 먼저 넘김), 활성이 되지 않습니다. 몸짓 무효화는 정리 단계(선택 취소·결과 재생 전·표현 정리)와 매 Tick 감시(<see cref="Poll"/>, 후보가 낡았을 때)에서 합니다.
     /// </para>
     /// <para>
     /// 단계마다 정리 범위가 다릅니다. <see cref="CancelPresentation"/>은 경로를 뺀 표현 정리, <see cref="CancelInputs"/>는 경로까지 포함한 정리,

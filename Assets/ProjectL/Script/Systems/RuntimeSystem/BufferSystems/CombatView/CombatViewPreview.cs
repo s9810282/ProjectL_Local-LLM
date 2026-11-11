@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         public CombatViewPreviewKind Kind { get; }
         /// <summary>배치·이동·공격 미리보기의 주체입니다. 메인 배치 미리보기는 Empty입니다.</summary>
         public EntityId EntityId { get; }
-        /// <summary>배치·이동 미리보기의 목표 칸입니다.</summary>
+        /// <summary>배치 미리보기의 목표 칸입니다. 이동 미리보기는 칸 대신 경로(<see cref="Path"/>)를 씁니다.</summary>
         public CellCoord Cell { get; }
         /// <summary>배치 미리보기의 방향입니다.</summary>
         public Rotation4 Rotation { get; }
@@ -90,6 +90,14 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
             CombatViewInputGuard.RequireEntity(unit, nameof(unit));
             return new CombatViewPreviewData(CombatViewPreviewKind.UnitAttackRange,
                 unit, default, default, default);
+        }
+
+        /// <summary>보스가 지금 포효하면 어떻게 되는지 묻습니다(포효 예고 설계 RF2). 포효 특성이 있는 유닛만 물을 수 있습니다.</summary>
+        public static CombatViewPreviewData RoarForecast(EntityId boss)
+        {
+            CombatViewInputGuard.RequireEntity(boss, nameof(boss));
+            return new CombatViewPreviewData(CombatViewPreviewKind.RoarForecast,
+                boss, default, default, default);
         }
     }
 

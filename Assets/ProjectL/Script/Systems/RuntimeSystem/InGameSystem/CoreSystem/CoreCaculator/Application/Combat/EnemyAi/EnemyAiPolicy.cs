@@ -12,112 +12,185 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi
 {
-    /// <summary>
-    /// 실제 결과를 인게임에 반영하는 것이 아닌, 선택 자체를 반환
-    /// </summary>
+    /// <summary>공개 사실과 기존 미리보기로 적의 공격과 추적 우선순위를 평가한다.</summary>
     internal sealed class EnemyAiPolicy
     {
         private readonly HostilityPolicy _hostilityPolicy;
         private readonly IReadOnlyList<IMovementTileRule> _movementRules;
+        private readonly EnemyDecisionDiagnostics _diagnostics;
 
-        internal EnemyAiPolicy(HostilityPolicy hostilityPolicy, IReadOnlyList<IMovementTileRule> movementRules)
+        internal EnemyAiPolicy(HostilityPolicy hostilityPolicy, IReadOnlyList<IMovementTileRule> movementRules,
+            EnemyDecisionDiagnostics diagnostics = null)
         {
-            if (hostilityPolicy == null)
-                throw new ArgumentNullException(nameof(hostilityPolicy));
-
-            _hostilityPolicy = hostilityPolicy;
+            _hostilityPolicy = hostilityPolicy ?? throw new ArgumentNullException(nameof(hostilityPolicy));
             _movementRules = movementRules ?? throw new ArgumentNullException(nameof(movementRules));
+            _diagnostics = diagnostics;
         }
 
-        /// <summary>같은 공격 계산의 미리보기로 기존 점수와 대상 종류 우선순위를 평가한다.</summary>
         internal bool TrySelectAttackAim(CombatCommandInput input, AttackRangeResult range, out AttackAim selected)
             => TrySelectAttackAim(input, range, out selected, out _);
 
         internal bool TrySelectAttackAim(CombatCommandInput input, AttackRangeResult range, out AttackAim selected, out EntityId appliedTaunt)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyAttackAim);
             selected = default;
-            appliedTaunt = EntityId.Empty;
+            appliedTaunt = default;
             if (!range.Succeeded) return false;
             if (range.AttackerId != input.ActorId) throw new ArgumentException(nameof(range));
-            var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
-            var units = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead).ToDictionary(c => c.EntityId);
-            var structures = input.State.Structures.ToDictionary(s => s.EntityId);
-            var taunters = TauntTargeting.Sources(input, actor);
-            var profile = CombatCommandCalculator.RequiredProfile(input, actor);
-            var environment = input.State.Environment.VisibleTo(actor.Owner);
-            var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight,
-                input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
-            var elevation = AttackElevation.From(environment, input.EnvironmentBindings);
-            int commonDamage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
-            bool Delivers(AttackAim aim, EntityId targetId) => CombatAttackQueries.DeliversTo(input, actor, profile,
-                aim, targetId, commonDamage, environment, walls, elevation);
-            var required = taunters.FirstOrDefault(source => range.AttackAims.ToArray().Any(aim => Delivers(aim, source.EntityId)));
-            // 칠 수 없는 도발 출처에게 갈 수 있으면 이번 행동은 추적 경로가 맡습니다.
-            // 갈 수도 없으면 도발을 지킬 수 없으므로 도발이 없는 것처럼 고릅니다(2026-11-02 결정).
-            if (taunters.Length != 0 && required == null && !ReachableTaunter(input, taunters).IsEmpty) return false;
-            bool found = false;
-            (int allies, int targetKind, long damage, int hits, long distance, int y, int x, int direction) best = default;
-            foreach (var aim in range.AttackAims.ToArray())
-            {
-                if (required != null && !Delivers(aim, required.EntityId)) continue;
-                AttackPreview preview;
-                CombatCommandTransition projection;
-                using (CoreProfiling.Sample(CoreProfileSection.EnemyAimPreview))
-                    preview = CombatCommandCalculator.Preview(CombatAttackQueries.WithAim(input, aim), _movementRules, out projection);
-                if (!preview.CanAttack) continue;
-                var damageByTarget = ProjectedDamage(projection);
-
-                var targetIds = new HashSet<EntityId>(preview.Targets.ToArray().Select(t => t.TargetId));
-                targetIds.UnionWith(damageByTarget.Keys);
-                int allies = 0, hits = 0, unitHits = 0; long damage = 0;
-                foreach (var targetId in targetIds)
-                {
-                    bool unit = units.TryGetValue(targetId, out var target);
-                    Owner owner = unit ? target.Owner : structures[targetId].Owner;
-                    if (unit && owner == actor.Owner) allies++;
-                    bool kind = unit || structures[targetId].Definition.Key == EntityKey.Structure_Headquarters;
-                    long dealt = damageByTarget.GetValueOrDefault(targetId);
-                    // 합법적인 적대 대상은 피해 0이어도 공격한다. 실제 피해량은 선택 동점 해소에만 쓴다.
-                    if (kind && _hostilityPolicy.AreHostile(actor.Owner, owner) )
-                    { damage += dealt; hits++; if (unit) unitHits++; }
-                }
-                if (hits == 0) continue;
-                var rank = Rank(aim, allies, unitHits > 0 ? 0 : 1, damage, hits, 0);
-                if (found && rank.CompareTo(best) >= 0) continue;
-                found = true; best = rank; selected = aim;
-            }
-            if (found && required != null) appliedTaunt = required.EntityId;
-            return found;
+            var context = new EnemyDecisionContext(input, Contracts.Combat.EnemyAi.EnemyDecisionSettings.Default);
+            foreach (var _ in context.IndexSteps()) { }
+            AttackAim? best = null;
+            EntityId taunt = default;
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyAttackAim);
+            foreach (var _ in AttackSteps(input, context.Units[input.ActorId], context, range.AttackAims.ToArray(),
+                (aim, source) => { best = aim; taunt = source; })) { }
+            selected = best.GetValueOrDefault();
+            appliedTaunt = taunt;
+            return best.HasValue;
         }
 
-        /// <summary>동일한 공개 투영의 피해 사건을 합산한다. 회복·위치 정규화와 직접 타격의 무피해 접촉은 구분한다.</summary>
-        private static Dictionary<EntityId, long> ProjectedDamage(CombatCommandTransition projection)
+        internal IEnumerable<string> AttackSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            EnemyDecisionContext context, IReadOnlyList<AttackAim> suppliedAims, Action<AttackAim?, EntityId> completed)
         {
-            var damage = new Dictionary<EntityId, long>();
-            foreach (var entry in projection.Events)
+            if (suppliedAims == null && CombatAttackQueries.RangeActor(input, out _) != AttackFailureReason.None)
             {
-                EntityId id;
-                int loss;
-                switch (entry)
-                {
-                    case CombatCharacterEvent character when
-                        (character.Kind == CombatEventKind.HealthChanged || character.Kind == CombatEventKind.Died) &&
-                        character.DamageOrigins.Count > 0:
-                        id = character.Final.EntityId;
-                        loss = character.Expected.Health.CurrentHealth - character.Final.Health.CurrentHealth;
-                        break;
-                    case CombatStructureEvent structure when structure.DamageOrigins.Count > 0:
-                        id = structure.Final.EntityId;
-                        loss = structure.Expected.Health.CurrentHealth - structure.Final.Health.CurrentHealth;
-                        break;
-                    default:
-                        continue;
-                }
-                if (loss > 0) damage[id] = checked(damage.GetValueOrDefault(id) + loss);
+                completed(null, default);
+                yield break;
             }
-            return damage;
+            var profile = CombatCommandCalculator.RequiredProfile(input, actor);
+            yield return "DecisionAttackProfile";
+            MovementEnvironmentFacts environment = null;
+            foreach (var phase in input.State.Environment.VisibleSteps(actor.Owner, value => environment = value)) yield return phase;
+            WallGeometry walls = null;
+            foreach (var phase in WallGeometryBuilder.BuildSteps(input.State.BoardWidth, input.State.BoardHeight,
+                input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking, value => walls = value)) yield return phase;
+            AttackElevation elevation = null;
+            foreach (var phase in AttackElevation.BuildSteps(environment, input.EnvironmentBindings, value => elevation = value)) yield return phase;
+
+            IReadOnlyCollection<CharacterCombatFacts> taunters = null;
+            foreach (var _ in TauntTargeting.SourceSteps(input, actor, value => taunters = value)) yield return "DecisionTauntSources";
+            int commonDamage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            var aims = new List<AttackAim>();
+            var candidates = suppliedAims == null
+                ? CombatAttackQueries.AiRangeCandidates(input, actor, profile, environment)
+                : suppliedAims.Select(aim => (AttackAim?)aim);
+            foreach (var candidate in candidates)
+            {
+                if (candidate is AttackAim aim)
+                {
+                    AttackSelectionEvaluation selection = default;
+                    if (suppliedAims == null)
+                        foreach (var phase in CombatAttackQueries.SelectionSteps(input, actor, profile, aim, environment, walls,
+                            elevation, value => selection = value)) yield return phase;
+                    if (suppliedAims != null || selection.FailureReason == AttackFailureReason.None) aims.Add(aim);
+                }
+                yield return "DecisionAttackCandidate";
+            }
+
+            EntityId required = default;
+            var allowed = new HashSet<AttackAim>();
+            foreach (var source in taunters)
+            {
+                foreach (var aim in aims)
+                {
+                    bool delivers = false;
+                    foreach (var phase in CombatAttackQueries.DeliveryCheckSteps(input, actor, profile, aim, source.EntityId,
+                        commonDamage, environment, walls, elevation, value => delivers = value)) yield return phase;
+                    if (delivers) allowed.Add(aim);
+                    yield return "DecisionTauntAdmission";
+                }
+                if (allowed.Count == 0) continue;
+                required = source.EntityId;
+                break;
+            }
+            // 사거리 안에서 도발을 지킬 수 없고 걸어갈 수 있으면 공격보다 추적을 먼저 한다.
+            if (required.IsEmpty && taunters.Count > 0)
+            {
+                EntityId reachable = default;
+                foreach (var _ in ReachableTaunterSteps(input, taunters, value => reachable = value)) yield return "DecisionTauntPursuit";
+                if (!reachable.IsEmpty) { completed(null, default); yield break; }
+            }
+
+            AttackAim? best = null;
+            (int allies, int targetKind, long damage, int hits, int y, int x, int direction) bestRank = default;
+            foreach (var aim in aims)
+            {
+                if (!required.IsEmpty && !allowed.Contains(aim)) { yield return "DecisionTauntAimExcluded"; continue; }
+                if (_diagnostics != null)
+                {
+                    _diagnostics.WorkUnits++;
+                    _diagnostics.GeneratedAttacks++;
+                    _diagnostics.PreviewCalls++;
+                    _diagnostics.RecordAlternative(actor.EntityId, aim, null);
+                }
+                using var preview = CombatCommandCalculator.BeginPreview(CombatAttackQueries.WithAim(input, aim), _movementRules);
+                yield return "DecisionPreviewBegin";
+                while (!preview.IsComplete)
+                {
+                    preview.Step();
+                    yield return preview.Phase;
+                }
+                if (!preview.Preview.CanAttack) continue;
+                var damageByTarget = new Dictionary<EntityId, long>();
+                var targets = new HashSet<EntityId>();
+                foreach (var entry in preview.Transition.Events)
+                {
+                    var (id, loss) = ProjectedDamage(entry);
+                    if (loss > 0)
+                    {
+                        damageByTarget[id] = checked(damageByTarget.GetValueOrDefault(id) + loss);
+                        targets.Add(id);
+                    }
+                    yield return "DecisionScoreEvent";
+                }
+                for (int i = 0; i < preview.Preview.Targets.Length; i++)
+                {
+                    targets.Add(preview.Preview.Targets.Span[i].TargetId);
+                    yield return "DecisionScoreTarget";
+                }
+
+                int allies = 0, hits = 0, unitHits = 0;
+                long damage = 0;
+                foreach (var id in targets)
+                {
+                    bool unit = context.Units.TryGetValue(id, out var target);
+                    Owner owner = unit ? target.Owner : context.Structures[id].Owner;
+                    if (unit && owner == actor.Owner) allies++;
+                    bool kind = unit || context.Structures[id].Definition.Key == EntityKey.Structure_Headquarters;
+                    // 피해량이 0이어도 합법적인 적대 대상은 선택할 수 있다.
+                    if (kind && _hostilityPolicy.AreHostile(actor.Owner, owner))
+                    {
+                        damage += damageByTarget.GetValueOrDefault(id);
+                        hits++;
+                        if (unit) unitHits++;
+                    }
+                    yield return "DecisionScoreRankTarget";
+                }
+                var rank = (allies, unitHits > 0 ? 0 : 1, -damage, -hits, aim.Cell?.Y ?? 0, aim.Cell?.X ?? 0, (int)aim.Direction);
+                if (hits > 0 && (!best.HasValue || rank.CompareTo(bestRank) < 0))
+                {
+                    best = aim;
+                    bestRank = rank;
+                }
+                yield return "DecisionScoreRank";
+            }
+            completed(best, best.HasValue ? required : default);
+        }
+
+        /// <summary>공개 투영의 피해 사건만 점수에 포함한다.</summary>
+        private static (EntityId id, int loss) ProjectedDamage(CombatEvent entry)
+        {
+            switch (entry)
+            {
+                case CombatCharacterEvent character when
+                    (character.Kind == CombatEventKind.HealthChanged || character.Kind == CombatEventKind.Died) &&
+                    character.DamageOrigins.Count > 0:
+                    return (character.Final.EntityId, character.Expected.Health.CurrentHealth - character.Final.Health.CurrentHealth);
+                case CombatStructureEvent structure when structure.DamageOrigins.Count > 0:
+                    return (structure.Final.EntityId, structure.Expected.Health.CurrentHealth - structure.Final.Health.CurrentHealth);
+                default:
+                    return default;
+            }
         }
 
         internal bool TrySelectPursuitTarget(CombatCommandInput input, out EntityId selected)
@@ -126,44 +199,66 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal bool TrySelectPursuitTarget(CombatCommandInput input, out EntityId selected, out EntityId appliedTaunt)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyPursuitTarget);
-            appliedTaunt = EntityId.Empty;
             var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
-            // 갈 수 있는 도발 출처가 있으면 그쪽으로, 없으면 도발을 지킬 수 없으므로 기존 추적 규칙을 따릅니다.
-            var taunter = ReachableTaunter(input, TauntTargeting.Sources(input, actor));
-            if (!taunter.IsEmpty)
-            {
-                selected = appliedTaunt = taunter;
-                return true;
-            }
-            var units = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead &&
-                _hostilityPolicy.AreHostile(actor.Owner, c.Owner)).Select(c => (c.EntityId, Anchor: c.Anchor.Value)).ToArray();
-            var targets = units.Length > 0 ? units : input.State.Structures.Where(s => !s.Health.IsDead &&
-                s.Definition.Key == EntityKey.Structure_Headquarters && _hostilityPolicy.AreHostile(actor.Owner, s.Owner))
-                .Select(s => (s.EntityId, s.Anchor)).ToArray();
-            selected = targets.OrderBy(t => CalculateManhattan(actor.Anchor.Value, t.Anchor)).ThenBy(t => t.EntityId)
-                .Select(t => t.EntityId).DefaultIfEmpty(EntityId.Empty).First();
+            EntityId target = default, taunt = default;
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyPursuitTarget);
+            foreach (var _ in PursuitTargetSteps(input, actor, (id, source) => { target = id; taunt = source; })) { }
+            selected = target;
+            appliedTaunt = taunt;
             return !selected.IsEmpty;
         }
 
-        /// <summary>
-        /// 추적 경로가 있는 첫 도발 출처(가까운 순)를 고릅니다. 이미 이동했거나 이동이 막힌 적은 경로가 없습니다.
-        /// 공격 고르기와 추적 고르기가 "도발을 지킬 수 있나"를 같은 판정으로 봅니다.
-        /// </summary>
-        private static EntityId ReachableTaunter(CombatCommandInput input, IEnumerable<CharacterCombatFacts> taunters) =>
-            taunters.Where(source => EnemyMovementPathfinder.TryFind(input, source.EntityId, out _))
-                .Select(source => source.EntityId).DefaultIfEmpty(EntityId.Empty).First();
-
-        private static (int allies, int targetKind, long damage, int hits, long distance, int y, int x, int direction)
-            Rank(AttackAim aim, int allies, int targetKind, long damage, int hits, long distance) =>
-            (allies, targetKind, -damage, -hits, distance, aim.Cell?.Y ?? 0, aim.Cell?.X ?? 0, (int)aim.Direction);
-
-        private static long CalculateManhattan(CellCoord left, CellCoord right)
+        internal IEnumerable<int> PursuitTargetSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            Action<EntityId, EntityId> completed)
         {
-            long xDistance = Math.Abs((long)left.X - right.X);
-            long yDistance = Math.Abs((long)left.Y - right.Y);
+            IReadOnlyCollection<CharacterCombatFacts> sources = null;
+            foreach (var _ in TauntTargeting.SourceSteps(input, actor, value => sources = value)) yield return 0;
+            EntityId taunt = default;
+            foreach (var _ in ReachableTaunterSteps(input, sources, value => taunt = value)) yield return 0;
+            if (!taunt.IsEmpty) { completed(taunt, taunt); yield break; }
 
-            return xDistance + yDistance;
+            EntityId best = default;
+            var rank = (long.MaxValue, int.MaxValue);
+            foreach (var unit in input.Characters)
+            {
+                if (unit.Area == CharacterRuntimeArea.Field && !unit.Health.IsDead && _hostilityPolicy.AreHostile(actor.Owner, unit.Owner))
+                    Consider(unit.EntityId, unit.Anchor.Value);
+                yield return 0;
+            }
+            if (best.IsEmpty)
+                foreach (var structure in input.State.Structures)
+                {
+                    if (!structure.Health.IsDead && structure.Definition.Key == EntityKey.Structure_Headquarters &&
+                        _hostilityPolicy.AreHostile(actor.Owner, structure.Owner)) Consider(structure.EntityId, structure.Anchor);
+                    yield return 0;
+                }
+            completed(best, default);
+
+            void Consider(EntityId id, CellCoord anchor)
+            {
+                var origin = actor.Anchor.Value;
+                var candidate = (Math.Abs((long)origin.X - anchor.X) + Math.Abs((long)origin.Y - anchor.Y), id.Value);
+                if (candidate.CompareTo(rank) >= 0) return;
+                rank = candidate;
+                best = id;
+            }
+        }
+
+        private IEnumerable<int> ReachableTaunterSteps(CombatCommandInput input, IEnumerable<CharacterCombatFacts> sources,
+            Action<EntityId> completed)
+        {
+            foreach (var source in sources)
+            {
+                using var search = new EnemyPursuitSearch(input, source.EntityId, _diagnostics);
+                yield return 0;
+                while (!search.IsComplete)
+                {
+                    search.Step();
+                    yield return 0;
+                }
+                if (search.TryGetPath(out _)) { completed(source.EntityId); yield break; }
+            }
+            completed(default);
         }
     }
 }

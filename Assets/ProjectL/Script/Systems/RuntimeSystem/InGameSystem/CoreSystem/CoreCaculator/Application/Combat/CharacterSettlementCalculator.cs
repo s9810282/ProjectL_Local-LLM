@@ -58,6 +58,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal static CharacterCombatFacts Copy(CharacterCombatFacts c, HealthStateSnapshot health,
-            UnitStatsSnapshot stats) => c.With(health: health, stats: stats);
+            UnitStatsSnapshot stats) => RampageApplication.ReconcileChange(c, c.With(health: health, stats: stats));
     }
 }

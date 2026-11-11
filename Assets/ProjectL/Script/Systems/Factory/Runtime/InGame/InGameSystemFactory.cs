@@ -42,6 +42,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 , includeDevelopmentTools
 #endif
+                , usePreparedEnemyAdvance: true
                 );
 
         internal static IExportSystemServices CreateWithBattleSource(IBattleInitializationSource battleSource)
@@ -63,6 +64,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             , bool includeDevelopmentTools = false
 #endif
+            , bool usePreparedEnemyAdvance = false
             )
         {
             RuntimeFaultBoundary faults = faultBoundary ?? throw new ArgumentNullException(nameof(faultBoundary));
@@ -72,6 +74,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 , includeDevelopmentTools
 #endif
+                , usePreparedEnemyAdvance: usePreparedEnemyAdvance
                 ).ExportServices(builder);
             InGameViewSystemComposition view = InGameViewSystemFactory.CreateComposition(faults
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

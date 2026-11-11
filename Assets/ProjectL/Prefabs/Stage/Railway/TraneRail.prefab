@@ -48,10 +48,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1555687714242853918, guid: f2c5c4a7aeb94374994b57c2158e6c97, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 22f9a3721c6b41d089aea0af9cb4ec82, type: 2}
     - target: {fileID: 919132149155446097, guid: f2c5c4a7aeb94374994b57c2158e6c97, type: 3}
       propertyPath: m_Name
       value: TraneRail
       objectReference: {fileID: 0}
+    - target: {fileID: 7613447628110400617, guid: f2c5c4a7aeb94374994b57c2158e6c97, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 431ebea1cfe37ee449e65ac3e2fb2afa, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

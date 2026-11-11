@@ -11,19 +11,25 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
   m_Name: TraitVisual_HuntersMark
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   traitVisualData:
     key: 190
-    displayName: "사냥꾼의 표식"
-    icon: {fileID: 0}
-    description: "공격에 적중한 적에게 \n받는 피해가 {피해증가율}% 증가하는 \n약점 노출을 부여합니다. "
+    displayName: "\uC0AC\uB0E5\uAFBC\uC758 \uD45C\uC2DD"
+    icon: {fileID: 21300000, guid: 85d26691aa432364da42c298c834b607, type: 3}
+    description: "\uACF5\uACA9\uC5D0 \uC801\uC911\uD55C \uC801\uC5D0\uAC8C \n\uBC1B\uB294
+      \uD53C\uD574\uAC00 {\uD53C\uD574\uC99D\uAC00\uC728}% \uC99D\uAC00\uD558\uB294
+      \n\uC57D\uC810 \uB178\uCD9C\uC744 \uBD80\uC5EC\uD569\uB2C8\uB2E4. "
+    defenseReductionDescription: 
+    rankValueFormat: 
+    rankEffectFormat: 
     activations:
     - kind: 160
+      direction: 0
       cueTiming: 1
       bodyText:
         enabled: 1
         textSource: 0
-        overrideText: ""
+        overrideText: 
         target: 1
         count: 0
         color: {r: 1, g: 1, b: 1, a: 1}
@@ -37,3 +43,10 @@ MonoBehaviour:
         shakes: []
       attackPresentation: {fileID: 0}
       unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+    alwaysEffects: []
+    trailPrefab: {fileID: 0}
+    trailLocalOffset: {x: 0, y: 0, z: 0}
+    trailDescription: 

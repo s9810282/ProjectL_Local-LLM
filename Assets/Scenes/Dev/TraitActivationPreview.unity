@@ -169,6 +169,7 @@ MonoBehaviour:
   field: {fileID: 2003}
   units: {fileID: 4003}
   output: {fileID: 5003}
+  sceneCamera: {fileID: 2146100002}
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
@@ -2338,6 +2339,35 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1001 &2146100000
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4c86c5e22a1541199b46eba7c7dcb16d, type: 3}
+--- !u!4 &2146100001 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400100, guid: 4c86c5e22a1541199b46eba7c7dcb16d, type: 3}
+  m_PrefabInstance: {fileID: 2146100000}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2146100002 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114103, guid: 4c86c5e22a1541199b46eba7c7dcb16d, type: 3}
+  m_PrefabInstance: {fileID: 2146100000}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ab96f98acae46c394ce10d12184eb2d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2345,3 +2375,4 @@ SceneRoots:
   - {fileID: 594652444}
   - {fileID: 1002}
   - {fileID: 5002}
+  - {fileID: 2146100001}

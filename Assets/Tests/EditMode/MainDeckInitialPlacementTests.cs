@@ -75,7 +75,6 @@ namespace ProjectL.Tests.Core
             Assert.That(enter.Accepted, Is.False);
             Assert.That(enter.Reason, Is.EqualTo("InvalidMainCharacter"));
             Assert.That(enter.Characters.Characters, Is.Empty);
-            Assert.That(enter.FinalState.Turn.MainPlacementLocked, Is.False);
 
             var invalid = Calculate(input, CombatCommandKind.PlaceMainCharacter, new CellCoord(0, 3));
             Assert.That(invalid.Accepted, Is.False);
@@ -92,7 +91,6 @@ namespace ProjectL.Tests.Core
             Assert.That(final.Anchor, Is.EqualTo(new CellCoord(1, 0)));
             var entered = Calculate(After(input, placed), CombatCommandKind.EnterCombat);
             Assert.That(entered.Accepted, Is.True, entered.Reason);
-            Assert.That(entered.FinalState.Turn.MainPlacementLocked, Is.True);
         }
 
         [Test]
@@ -117,41 +115,6 @@ namespace ProjectL.Tests.Core
             Assert.That(final.Stats.EffectiveAttackPower, Is.EqualTo(7));
             Assert.That(final.Health.MaxHealth, Is.EqualTo(13));
             Assert.That(final.Health.CurrentHealth, Is.EqualTo(7));
-        }
-
-        [Test]
-        public void FirstNightEnd_KeepsManuallyPlacedMain_AndRecallsSameSub()
-        {
-            var (initialization, roster) = Setup(1);
-            var input = Input(initialization, roster, Prepare(initialization, roster, Draw(roster)));
-            input = After(input, Calculate(input, CombatCommandKind.PlaceMainCharacter, new CellCoord(1, 0)));
-            var sub = input.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Sub);
-            input = After(input, Calculate(input, CombatCommandKind.PlaceUnit, new CellCoord(2, 0), sub.EntityId));
-            input = After(input, Calculate(input, CombatCommandKind.EnterCombat));
-            var cohort = input.State.Rewards;
-            CombatCommandTransition ended = null;
-            for (int turn = 0; turn < 8; turn++)
-            {
-                input = After(input, CombatTurnCalculator.BeginControllerTurn(input));
-                var request = CombatCommandTestData.FreshCommand(input, CombatCommandKind.EndPlayerTurn, EntityId.Empty);
-                var playerEnd = CombatCommandCalculator.Calculate(request, Array.Empty<IMovementTileRule>());
-                Assert.That(playerEnd.Accepted, Is.True, playerEnd.Reason);
-                var enemy = CombatTurnCalculator.BeginControllerTurn(CombatCommandComposition.Project(playerEnd));
-                ended = CombatTurnCalculator.EndEnemyPhase(CombatCommandComposition.Project(enemy), Array.Empty<IMovementTileRule>());
-                Assert.That(ended.Accepted, Is.True, ended.Reason);
-                input = After(input, ended);
-            }
-            var after = input;
-            Assert.That(after.State.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(after.State.Turn.MainPlacementLocked, Is.True);
-            var main = after.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
-            Assert.That(main.Area, Is.EqualTo(CharacterRuntimeArea.Field));
-            Assert.That(main.Anchor, Is.EqualTo(new CellCoord(1, 0)));
-            Assert.That(after.Characters.Single(c => c.EntityId == sub.EntityId).Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            Assert.That(after.State.Rewards, Is.SameAs(cohort));
-            var nextNight = Calculate(after, CombatCommandKind.EnterCombat);
-            Assert.That(nextNight.Accepted, Is.True, nextNight.Reason);
-            Assert.That(nextNight.FinalState.Rewards, Is.SameAs(cohort));
         }
 
         internal static CombatCommandTransition Calculate(CombatCommandInput input, CombatCommandKind kind,

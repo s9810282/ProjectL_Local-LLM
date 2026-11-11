@@ -24,7 +24,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var ranks = Ranks(definition, record);
                 foreach (var trait in definition.Catalog.Definitions.Where(d => d.IsTrainable).OrderBy(d => d.Key))
                 {
-                    if (!ranks.TryGetValue(trait.Key, out int rank) || rank >= 3 || !DeferredCombatFeatures.IsTraitAvailable(trait.Key)) continue;
+                    if (!ranks.TryGetValue(trait.Key, out int rank) || !trait.CanAdvanceFrom(rank) ||
+                        !DeferredCombatFeatures.IsTraitAvailable(trait.Key)) continue;
                     int price = definition.Prices.GetPrice(rank);
                     choices.Add(new TrainingChoiceSnapshot(record.Id, trait.Key, rank, price, !purchased && balance >= price,
                         trait.ValuesAt(rank), trait.ValuesAt(rank + 1), trait.Name, trait.Description));
@@ -41,9 +42,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (record == null) return TrainingPurchaseDecision.Failure(ShopFailureReason.TargetNotOwned);
             var ranks = Ranks(definition, record);
             if (!ranks.TryGetValue(key, out int rank)) return TrainingPurchaseDecision.Failure(ShopFailureReason.TargetNotOwned);
-            if (!definition.Catalog.Definitions.Any(d => d.Key == key && d.IsTrainable) || !DeferredCombatFeatures.IsTraitAvailable(key))
+            var trait = definition.Catalog.Definitions.FirstOrDefault(d => d.Key == key);
+            if (trait?.IsTrainable != true || !DeferredCombatFeatures.IsTraitAvailable(key))
                 return TrainingPurchaseDecision.Failure(ShopFailureReason.TraitNotTrainable);
-            if (rank >= 3) return TrainingPurchaseDecision.Failure(ShopFailureReason.RankLimitReached);
+            if (!trait.CanAdvanceFrom(rank)) return TrainingPurchaseDecision.Failure(ShopFailureReason.RankLimitReached);
             if (rank != expectedRank) return TrainingPurchaseDecision.Failure(ShopFailureReason.StaleRank);
             int price = definition.Prices.GetPrice(rank);
             if (balance < price) return TrainingPurchaseDecision.Failure(ShopFailureReason.InsufficientFunds);

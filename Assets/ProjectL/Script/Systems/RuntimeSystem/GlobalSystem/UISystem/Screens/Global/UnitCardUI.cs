@@ -247,7 +247,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             if (_unitVisuals != null && _unitVisuals.TryGetUnitVisual(key, out var unitVisual))
             {
                 fallbackName = unitVisual.DisplayName;
-                image = unitVisual.InfoIcon;
+                image = unitVisual.TimelineIcon;
             }
             int? characterLevel = character?.ToFacts().Experience.EnemyLevel;
             if (character?.OwnedId is CharacterInstanceId ownedId &&
@@ -316,7 +316,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 character?.EffectiveAttackPower ?? baseline?.AttackPower,
                 character?.EffectivePhysicalDefense ?? baseline?.PhysicalDefense,
                 character?.Stats.MoveRange ?? baseline?.MoveRange,
-                character?.Stats.AttackRange ?? baseline?.AttackRange, traits);
+                character?.Stats.AttackRange ?? baseline?.AttackRange, traits,
+                character?.Stats.MoveMethod ?? baseline?.MoveMethod);
         }
     }
 }

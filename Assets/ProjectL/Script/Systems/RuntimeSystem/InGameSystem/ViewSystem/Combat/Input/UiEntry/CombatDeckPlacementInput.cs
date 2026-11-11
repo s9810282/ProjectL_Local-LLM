@@ -9,6 +9,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
     /// <summary>덱 UI의 요청을 수명·오류 경계 안에서 기존 배치 기능으로 전달합니다.</summary>
     internal sealed class CombatDeckPlacementInput : ICombatDeckPlacementInput
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIDeckUnitSelect = new("Combat.Action.UI.DeckUnit.Select");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIDeckUnitCancel = new("Combat.Action.UI.DeckUnit.Cancel");
+#endif
+
         private readonly CombatInteraction _interaction;
         private readonly ICharacterBufferReadSink _characters;
         private readonly Func<bool, CombatInputFacts> _readFacts;
@@ -45,6 +51,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
 
         public void Select(CharacterInstanceId ownedId)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIDeckUnitSelectSample = _profileUIDeckUnitSelect.Auto();
+#endif
+
             if (_released || _faults.IsFaulted || !_canReceive()) return;
             try
             {
@@ -58,6 +68,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ui
 
         public void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIDeckUnitCancelSample = _profileUIDeckUnitCancel.Auto();
+#endif
+
             if (_released) return;
             try
             {

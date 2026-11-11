@@ -67,8 +67,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         public int UnitRosterKey { get; }
         /// <summary>0이면 적 구성이 없습니다.</summary>
         public int EnemyLoadoutKey { get; }
-        /// <summary>이 스테이지 적의 레벨입니다. 직접 배치와 로드아웃 출현 적에 적용합니다.</summary>
+        /// <summary>이 스테이지 적의 레벨입니다. 직접 배치·로드아웃·넥서스 증원에 적용합니다.</summary>
         public int EnemyLevel { get; }
+        public NexusReinforcementSpec NexusReinforcements { get; }
         public int EconomyKey { get; }
         public IReadOnlyList<EntityPlacement> InitialEnemyPlacements { get; }
         public IReadOnlyList<EntityKey> StructureCatalog { get; }
@@ -121,7 +122,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             int enemyLevel = 1,
             IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null,
             IReadOnlyList<CellCoord> playerDeploymentCells = null, RockfallGimmickData rockfall = null, HaboobGimmickData haboob = null,
-            TornadoGimmickSpec tornado = null)
+            TornadoGimmickSpec tornado = null, NexusReinforcementSpec nexusReinforcements = null)
         {
             Tornado = tornado;
             Rockfall = rockfall;
@@ -129,6 +130,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             ObjectiveKind = objectiveKind;
             PlayerDeploymentCells = Array.AsReadOnly((playerDeploymentCells ?? Array.Empty<CellCoord>()).ToArray());
             EnemyLevel = enemyLevel;
+            NexusReinforcements = nexusReinforcements;
             TimelineSeed = timelineSeed;
             WallCells = Array.AsReadOnly((wallCells ?? Array.Empty<CellCoord>()).ToArray());
             WallBlocking = wallBlocking ?? WallBlockingSpec.Default;
@@ -190,6 +192,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 throw new InvalidOperationException("[CombatStageDetail] EnemyLoadoutKey must not be negative.");
             if (EnemyLevel < 1)
                 throw new InvalidOperationException("[CombatStageDetail] EnemyLevel must be at least 1.");
+            if (NexusReinforcements != null && NexusReinforcements.EnemyLevel != EnemyLevel)
+                throw new InvalidOperationException("증원 레벨은 스테이지 적 레벨과 같아야 합니다.");
 
             ValidatePlacements(InitialEnemyPlacements, "initial enemy");
             ValidatePlacements(InitialEnemyStructurePlacements, "initial enemy structure");

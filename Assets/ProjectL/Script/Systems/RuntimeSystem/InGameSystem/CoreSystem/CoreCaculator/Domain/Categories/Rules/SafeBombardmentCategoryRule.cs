@@ -7,8 +7,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Categories.Rules
 {
-    internal sealed class SafeBombardmentCategoryRule : IEffectAttackTargetingRule
+    internal sealed class SafeBombardmentCategoryRule : IEffectAttackTargetingRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.None;
+
         internal SafeBombardmentCategoryRule(SafeBombardmentCategoryRuleDefinition definition)
         {
             _ = definition ?? throw new ArgumentNullException(nameof(definition));

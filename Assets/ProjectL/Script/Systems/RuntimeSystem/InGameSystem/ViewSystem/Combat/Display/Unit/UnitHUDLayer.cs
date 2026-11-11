@@ -23,94 +23,40 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         public UnitHUDLayer() => Policy = UIOpenPolicy.Parallel;
         public override UIId ID => UIId.UnitHUDLayer;
         private IUIRuntimeRegistry _runtimeRegistry;
-        private IUISystemService _ui;
         private EntityId _selectedEntity;
-        private UnitHUDInfoPanel _selectedInfo;
-        private UnitHUDHoverPanel _selectedHover;
-        private bool _selectedInfoShown;
-        // 지난 갱신에서 찾은 선택 HUD. 참조 검사는 이 HUD가 바뀔 때만 한다.
-        private UnitHUD _selectedHud;
 
         internal void AttachUISystem(IUISystemService ui)
         {
-            // 기존 격리 연출 시험은 UISystem 없이 조립할 수 있다. 운영 From 경로는 항상 전달한다.
+            // null이면 UISystem 없이 층만 엽니다(지금 null을 넘기는 호출자는 없음, 운영·특성 확인 표시는 늘 전달).
             if (ui == null) { Open(); return; }
             if (!(ui is IUIRuntimeRegistry registry))
                 throw new InvalidOperationException("[UnitHUDLayer] UIId.UnitHUDLayer의 동적 UI 등록 계약이 필요합니다.");
             registry.RegisterRuntimeUI(this);
             _runtimeRegistry = registry;
-            _ui = ui;
             ui.OpenUI(ID, true);
         }
 
         internal void SetSelectedEntity(EntityId entity)
         {
             _selectedEntity = entity;
-            RefreshSelectedInfo();
+            BringSelectedHudToFront();
         }
 
-        private void RefreshSelectedInfo()
+        private void BringSelectedHudToFront()
         {
-            // UISystem 없는 격리 투영 시험에서는 독립 패널을 열지 않는다.
-            if (_runtimeRegistry == null) return;
-            UnitHUD selected = null;
-            if (!_selectedEntity.IsEmpty && isActiveAndEnabled)
-                for (int i = 0; i < _entries.Count; i++)
-                    if (_entries[i].Hud != null && _entries[i].Visible &&
-                        _entries[i].Hud.EntityId == _selectedEntity)
-                    {
-                        selected = _entries[i].Hud;
-                        // 선택·보임이 바뀌어 다른 HUD가 잡혔을 때만 검사한다. HUD 개체는 Layer 모르게 바뀔 수 있어 찾기는 매번 한다.
-                        if (!ReferenceEquals(selected, _selectedHud)) selected.ValidateReferences();
-                        // 같은 Canvas에서는 뒤쪽 sibling이 앞에 그려진다. 선택 HUD 전체를 올려 두 패널도 함께 보호한다.
-                        RectTransform selectedRect = _entries[i].Rect;
-                        if (selectedRect.GetSiblingIndex() != transform.childCount - 1)
-                            selectedRect.SetAsLastSibling();
-                        break;
-                    }
-            _selectedHud = selected;
-            UnitHUDInfoPanel next = selected == null ? null : selected.InfoPanel;
-            if (ReferenceEquals(next, _selectedInfo))
+            if (_selectedEntity.IsEmpty || !isActiveAndEnabled) return;
+
+            for (int i = 0; i < _entries.Count; i++)
             {
-                if (next != null && !_selectedInfoShown)
-                {
-                    _ui.OpenUI(next.ID, true);
-                    _selectedInfoShown = true;
-                }
+                Entry entry = _entries[i];
+                if (!entry.Visible || entry.Hud == null || entry.Hud.EntityId != _selectedEntity) continue;
+
+                if (entry.Rect.GetSiblingIndex() != transform.childCount - 1)
+                    entry.Rect.SetAsLastSibling();
                 return;
             }
-            ReleaseSelectedInfo();
-            if (next == null) return;
-            _runtimeRegistry.RegisterRuntimeUI(next);
-            try { _runtimeRegistry.RegisterRuntimeUI(next.HoverPanel); }
-            catch
-            {
-                _runtimeRegistry.UnregisterRuntimeUI(next);
-                throw;
-            }
-            _selectedInfo = next;
-            _selectedHover = next.HoverPanel;
-            next.SetRegistered(true);
-            _ui.OpenUI(next.ID, true);
-            _selectedInfoShown = true;
         }
 
-        private void ReleaseSelectedInfo()
-        {
-            if (ReferenceEquals(_selectedInfo, null)) return;
-            UnitHUDInfoPanel panel = _selectedInfo;
-            UnitHUDHoverPanel hover = _selectedHover;
-            _selectedInfo = null;
-            _selectedHover = null;
-            _selectedInfoShown = false;
-            if (panel != null)
-            {
-                panel.ClearHover();
-                panel.SetRegistered(false);
-            }
-            _runtimeRegistry.UnregisterRuntimeUI(hover);
-            _runtimeRegistry.UnregisterRuntimeUI(panel);
-        }
         public override void Open()
         {
             ThrowIfReleased();
@@ -287,7 +233,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _outputCamera = outputCamera;
             // 다음 렌더 전까지 이전 Camera 위치에 입력 가능한 HUD를 남기지 않는다.
             HideAll();
-            ReleaseSelectedInfo();
         }
 
         /// <summary>생성된 HUD의 기준 배율을 보관합니다. 등록 중 위치·줌 배율·루트 CanvasGroup을 제어하고 해제 때 기준 배율을 복구합니다.</summary>
@@ -328,7 +273,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 BaseLocalScale = baseLocalScale
             });
             // 새 HUD가 마지막 자식으로 생성되어도 기존 선택 HUD의 우선순위를 즉시 복구한다.
-            RefreshSelectedInfo();
+            BringSelectedHudToFront();
         }
 
         /// <summary>HUD를 숨기고 등록 때의 배율을 복구합니다. Clear·풀 반환·파괴는 소유자가 수행합니다.</summary>
@@ -342,7 +287,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (entry.Rect != null) entry.Rect.localScale = entry.BaseLocalScale;
                 RemoveInstance(entry.Hud);
                 _entries.RemoveAt(i);
-                RefreshSelectedInfo();
                 return;
             }
         }
@@ -362,9 +306,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             // 층과 함께 꺼진 HUD는 표시 상태를 지우므로 기준점에 알려 HUD에 쓴 내용의 기억을 버리게 한다(GC 끊김 계획 §3.7 L1).
             for (int i = 0; i < _entries.Count; i++)
                 if (IsAlive(_entries[i].Anchor)) _entries[i].Anchor.OnHudLayerHidden();
-            // UISystem.HideAll의 등록부 순회 중에도 호출된다. 등록 해제는 소유자의 선택/반환/Release 경계에서 한다.
-            if (_selectedInfo != null) _ui.CloseUI(_selectedInfo.ID);
-            _selectedInfoShown = false;
         }
 
         /// <summary>렌더 직전 출력 Camera와 기준점으로 위치·비례 배율을 갱신합니다. 반복 호출해도 연출을 초기화하거나 배율을 누적하지 않습니다.</summary>
@@ -399,8 +340,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 }
                 SetVisible(entry, visible);
             }
-            RefreshSelectedInfo();
-            if (_selectedHover != null) _selectedHover.RefreshPosition();
+            BringSelectedHudToFront();
             foreach (ProjectionLease item in _widgets)
                 if (item.Rect != null)
                     item.Group.alpha = item.Rect.gameObject.activeInHierarchy && Project(item.Rect, item.Position, item.BaseScale) ? 1f : 0f;
@@ -441,12 +381,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             if (_released) return;
             _selectedEntity = EntityId.Empty;
-            _selectedHud = null;
             foreach (ProjectionLease item in _widgets.ToArray()) item.Dispose();
-            ReleaseSelectedInfo();
             _runtimeRegistry?.UnregisterRuntimeUI(this);
             _runtimeRegistry = null;
-            _ui = null;
             while (_entries.Count > 0) Unregister(_entries[_entries.Count - 1].Hud);
             Hide();
             _released = true;

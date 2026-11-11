@@ -25,11 +25,11 @@ namespace ProjectL.Tests.Core
             var selections = new OwnedTraitGrowth(new[] { new TraitGrowthSelection(10, TraitKey.Knockback), new TraitGrowthSelection(20, TraitKey.Knockback) });
             var selected = new OwnedCharacterRecord(grown.Id, grown.CharacterKey, grown.Role, grown.Level, grown.Experience, selections);
             var pending = OwnedCharacterStatsCalculator.Calculate(new[] { profile }, UnitSpecTestFactory.CreateGrowthCategoryCatalog(), new[] { grown },
-                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, catalog)[0];
+                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, default, catalog)[0];
             var baseline = OwnedCharacterStatsCalculator.Calculate(new[] { profile }, UnitSpecTestFactory.CreateGrowthCategoryCatalog(), new[] { grown },
-                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, TraitGrowthCatalog.Disabled)[0];
+                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, default, TraitGrowthCatalog.Disabled)[0];
             var enhanced = OwnedCharacterStatsCalculator.Calculate(new[] { profile }, UnitSpecTestFactory.CreateGrowthCategoryCatalog(), new[] { selected },
-                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, catalog)[0];
+                category == CategoryKey.Main ? new MainCharacterPersistentState(10, 10, 5) : null, new Dictionary<CharacterInstanceId, int> { [grown.Id] = 0 }, default, catalog)[0];
             Assert.That((pending.Stats.AttackPower, pending.Stats.MaxHealth), Is.EqualTo((baseline.Stats.AttackPower, baseline.Stats.MaxHealth)));
             Assert.That((enhanced.Stats.AttackPower, enhanced.Stats.MaxHealth), Is.EqualTo((baseline.Stats.AttackPower, baseline.Stats.MaxHealth)));
             Assert.That((selected.Level, selected.Experience), Is.EqualTo((grown.Level, grown.Experience)));

@@ -10,10 +10,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         Vector3 Position { get; }
         Quaternion Rotation { get; }
         void ApplyPose(Vector3 position, Quaternion rotation);
-        /// <summary>사망 중 EntityCartoon의 디졸브 양을 씁니다. 지원하지 않는 표시는 아무 일도 하지 않습니다.</summary>
+        /// <summary>사망 중 디졸브 양을 씁니다. 지원하지 않는 표시는 아무 일도 하지 않습니다.</summary>
         void SetDeathDissolve(float amount);
         /// <summary>취소·풀 반환 때 사망 디졸브를 원래 값으로 되돌립니다.</summary>
         void ClearDeathDissolve();
         void RestorePose();
+    }
+
+    /// <summary>사망 반응에서 자세 대여가 끝날 때까지 모델에 랙돌을 적용합니다.</summary>
+    internal interface ICombatUnitRagdollPose
+    {
+        bool TryBeginDeathRagdoll(Vector3 push, Vector3 groundUp, float groundWidth);
     }
 }

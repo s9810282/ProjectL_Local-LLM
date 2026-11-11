@@ -55,6 +55,7 @@ namespace ProjectL.Tool.Editor
 
         private void OnEnable()
         {
+            InitializeSoDraftProtection();
             if (inspectorSelection != null)
             {
                 if (Selection.activeObject == inspectorSelection) Selection.activeObject = null;
@@ -87,6 +88,8 @@ namespace ProjectL.Tool.Editor
         {
             CancelSoGimmickShapes();
             EndStroke();
+            SaveSoDraft();
+            CaptureSoDraftProtection();
             Undo.undoRedoPerformed -= OnUndoRedo;
             SaveDraft();
             preview?.Dispose(); preview = null;
@@ -94,6 +97,8 @@ namespace ProjectL.Tool.Editor
 
         private void OnUndoRedo()
         {
+            PreserveSoDraftStorageFailure();
+            if (HandleSoDraftRestoreUndo()) return;
             if (editMode == CombatLayoutEditMode.So) { OnSoUndoRedo(); return; }
             settings = document.stage.Copy();
             modified = true; SaveDraft(); Repaint();
@@ -112,6 +117,7 @@ namespace ProjectL.Tool.Editor
         private void OnGUI()
         {
             if (document == null) return;
+            if (editMode == CombatLayoutEditMode.So) PrepareSoDraftProtection();
             DrawHeader();
             if (editMode == CombatLayoutEditMode.So) { DrawSoMode(); return; }
             using (new EditorGUILayout.HorizontalScope())

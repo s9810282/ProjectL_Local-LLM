@@ -52,7 +52,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private int _first;
         private int _generation;
         private bool _isCancelling;
-        private readonly HashSet<EntityId> _movementStarted = new();
         // 이 연결에서 이미 경고한 사건 형식입니다. 적 턴마다 같은 경고가 쌓이지 않게 연결마다 한 번만 남깁니다.
         private readonly HashSet<Type> _warnedUnsupported = new();
 
@@ -109,7 +108,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _states = new EventState[result.Events.Count];
             _first = 0;
             _groups.Begin(result);
-            _movementStarted.Clear();
             _eventPlayback.BeginPresentation(result);
             Tick(0);
         }
@@ -194,7 +192,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _states = Array.Empty<EventState>();
             _first = 0;
             _groups.Clear();
-            _movementStarted.Clear();
             var movement = _movement;
             _movement = null;
             List<Exception> errors = null;
@@ -245,8 +242,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     if (_generation == generation && ReferenceEquals(states, _states) && _states[index] == EventState.Started)
                         _states[index] = EventState.StepDone;
                 });
-                if (_generation == generation && _result != null && _movementStarted.Add(c.Expected.EntityId))
-                    _eventPlayback.BeginMovement(c);
             }
             else if (route == CombatEventRoute.Return)
             {

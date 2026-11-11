@@ -83,7 +83,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (_path == null || vcam != VirtualCamera)
                 return;
-            Pose pose = _path.Evaluate(state.Lens.OrthographicSize, _offset);
+            Transform reference = vcam.transform;
+            Pose pose = _path.EvaluateAtReference(state.Lens.OrthographicSize, _offset,
+                new Pose(reference.position, reference.rotation));
             state.RawPosition = pose.position;
             state.RawOrientation = pose.rotation;
             // ImpulseListener의 위치·회전 correction은 보존합니다.

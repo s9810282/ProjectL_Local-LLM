@@ -31,8 +31,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
         [SerializeField] private CombatUnitAnimationSO animationPresentation;
         [Tooltip("아군일 때 선택·이동·취소·사망 효과음 프리셋 번호입니다. -1이면 소리를 내지 않습니다. 적은 이 값 대신 전투 연출 설정의 적 공용 프리셋을 씁니다(View 3라운드 W9-2). 장애물(화약통·보급품) 외형이면 피해·파괴 효과음 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3).")]
         [SerializeField, Min(-1)] private int unitSoundPreset = -1;
-        [Tooltip("공격(포효 포함) 효과음 프리셋 번호입니다. -1이면 소리를 내지 않습니다(View 3라운드 W9-2).")]
-        [SerializeField, Min(-1)] private int attackSoundPreset = -1;
+        [Tooltip("UnitAttack 플레이어의 공격(포효 포함) 이벤트 슬롯 번호입니다. -1이면 소리를 내지 않습니다.")]
+        [SerializeField, Min(-1)] private int attackSoundSlotIndex = -1;
         [Tooltip("장애물(화약통·보급품) 외형에서만 씁니다. 다른 외형에 넣으면 DB 생성이 멈춥니다. 장애물이 피해를 받은 순간의 이펙트·흔들림이고, "
             + "시점은 Start(사건 순간)만, 이펙트 자리는 사건 칸(EventCell)만 됩니다. 지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다(이펙트 창구 확장 설계 EC5).")]
         [SerializeField] private CombatVisualCueInput obstacleHitCues = new();
@@ -66,8 +66,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
             : null;
         /// <summary>아군일 때의 유닛 효과음 프리셋입니다. -1이면 소리 없음입니다. 장애물 외형이면 피해·파괴 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3).</summary>
         public int UnitSoundPreset => unitSoundPreset;
-        /// <summary>공격 효과음 프리셋입니다. -1이면 소리 없음입니다.</summary>
-        public int AttackSoundPreset => attackSoundPreset;
+        /// <summary>UnitAttack 플레이어의 공격 이벤트 슬롯 번호입니다. -1이면 소리 없음입니다.</summary>
+        public int AttackSoundSlotIndex => attackSoundSlotIndex;
         /// <summary>장애물 피해 순간 큐입니다. 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(이펙트 창구 확장 계획 P6).</summary>
         internal CombatEventCues ObstacleHitCues => ReadCues(obstacleHitCues, nameof(obstacleHitCues));
         internal CombatEventCues StructureHitCues => (structureHitCues ?? new CombatVisualCueInput()).ToCues();
@@ -85,7 +85,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
             // 전투 클립 규칙(이벤트 컴포넌트·Idle 컨트롤러·클립 묶음)은 규칙 클래스 한 곳이 원본입니다(클립 설계 AC1·AC4).
             CombatUnitAnimationRules.ValidateUnit(prefab, animationPresentation, attack, reaction, $"Key: {key}");
             CombatPresentationSettingsData.ValidateSoundPreset(unitSoundPreset, $"{nameof(unitSoundPreset)} (Key: {key})");
-            CombatPresentationSettingsData.ValidateSoundPreset(attackSoundPreset, $"{nameof(attackSoundPreset)} (Key: {key})");
+            if (attackSoundSlotIndex < -1)
+                throw new InvalidOperationException($"[UnitVisualData] Key: {key}, {nameof(attackSoundSlotIndex)}: 슬롯 번호는 -1 또는 0 이상이어야 합니다.");
             CombatEventCues obstacleHit = ObstacleHitCues;
             CombatEventCues structureHit = StructureHitCues;
             CombatPresentationCueRules.Require(structureHit, CombatCueEvent.StructureHit, $"[UnitVisualData] Key: {key}, structureHitCues");

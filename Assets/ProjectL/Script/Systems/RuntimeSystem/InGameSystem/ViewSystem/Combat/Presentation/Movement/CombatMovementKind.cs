@@ -11,6 +11,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         Voluntary = 0,
 
         /// <summary>밀림(넉백·충격 볼트·공격 강제 이동, 끌어오기 레인)입니다.</summary>
-        Forced = 1
+        Forced = 1,
+
+        /// <summary>날려 보내는 밀림(작렬)입니다. 성질은 밀림과 같고 걸음 모양만 다릅니다(작렬 View 설계 CV5).</summary>
+        Flung = 2
     }
 }

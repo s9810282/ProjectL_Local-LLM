@@ -413,16 +413,21 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void FinishingDefeat_HasNoSacrificeReaction()
+        public void FinishingTarget_IsProtected_AndNoInstantDefeatFires()
         {
+            // 희생이 대신 맞으면 원래 대상은 맞지 않아 마무리 사격 즉사가 터지지 않는다. 수호자는 숫자 피해만 받는다(2026-11-10 사용자 결정).
             var input = TraitCombatFixtures.Equip(Input(), EntityKey.Unit_Akimbo, new FinishingShotTraitSpec(20));
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId.Value == 1
                 ? c.With(stats: c.Stats.With(attackPower: 100)) : c).ToArray());
             var result = TraitCombatFixtures.Attack(input);
             Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(result.Attack.Value.TraitActivations.ToArray().Any(t => t.Interception != null), Is.False);
-            Assert.That(result.Attack.Value.Hits.ToArray().Single().TargetId, Is.EqualTo(new EntityId(2)));
-            Assert.That(Used(TraitCombatFixtures.Final(result, 5)), Is.Zero);
+            Assert.That(result.Attack.Value.TraitActivations.ToArray().Count(t => t.Interception != null), Is.EqualTo(1));
+            Assert.That(TraitCombatFixtures.Final(result, 2).Health.CurrentHealth, Is.EqualTo(5));
+            Assert.That(Used(TraitCombatFixtures.Final(result, 5)), Is.EqualTo(1));
+            Assert.That(result.Events.OfType<CombatEffectsEvent>().SelectMany(e => e.Traits)
+                .Any(t => t.TraitActivationKind == TraitActivationKind.InstantDefeat), Is.False);
+            Assert.That(result.Events.OfType<CombatCharacterEvent>().Any(e => e.DamageCause == CombatDamageCause.InstantDefeat), Is.False);
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
         }
 
         [TestCase(false)]

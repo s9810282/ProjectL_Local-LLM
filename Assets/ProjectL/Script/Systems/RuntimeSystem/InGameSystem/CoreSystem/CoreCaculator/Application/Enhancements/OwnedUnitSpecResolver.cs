@@ -19,6 +19,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static TraitSpec RequireAvailableDefault(TraitGrowthCatalog catalog, CategoryKey category)
         {
             var trait = catalog.GetDefaultTrait(category);
+            // 병과 기본 특성은 플레이어 유닛에 붙으므로 적 전용 특성을 거절한다.
+            if (trait != null && TraitOwnerPolicy.IsEnemyOnly(trait.TraitKey))
+                throw new InvalidOperationException($"병과 기본 특성에 적 전용 특성을 넣을 수 없습니다: {category}, {trait.TraitKey}.");
             if (trait != null && !Combat.DeferredCombatFeatures.IsTraitAvailable(trait.TraitKey))
                 throw new InvalidOperationException($"병과 기본 특성을 사용할 수 없습니다: {category}, {trait.TraitKey}, {Combat.DeferredCombatFeatures.GetTraitUnavailableReason(trait.TraitKey)}.");
             return trait;

@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,24 +22,51 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static CharacterChanges Calculate(CombatCommandInput input, IReadOnlyList<CharacterCombatFacts> projected,
             Owner? endedSide, CombatProfileReadSet profileReads)
         {
+            using var sample = CoreProfiling.Sample(CoreProfileSection.TraitPresenceReconcile);
+            CharacterChanges result = null;
+            foreach (int step in CalculateSteps(input, projected, endedSide, profileReads, value => result = value)) { }
+            return result;
+        }
+
+        private static IEnumerable<int> CalculateSteps(CombatCommandInput input, IReadOnlyList<CharacterCombatFacts> projected,
+            Owner? endedSide, CombatProfileReadSet profileReads, Action<CharacterChanges> completed)
+        {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (projected == null) throw new ArgumentNullException(nameof(projected));
-            var sources = projected.Where(c => !c.Health.IsDead && c.Stats.TraitStatuses.ToArray()
-                .Any(t => t.Key == TraitKey.SoloAction || t.Key == TraitKey.Cohesion))
-                .SelectMany(c => CombatCommandEffects.Capture(c, CombatCommandCalculator.RequiredProfile(input, c, profileReads))
-                    .Where(b => b.Rule is SoloActionEffectRule || b.Rule is CohesionEffectRule).Select(b => (Source: c, Binding: b))).ToArray();
-            bool anyTaunter = projected.Any(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
-                c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Taunt));
+            var sources = new List<(CharacterCombatFacts Source, EffectRuleBinding Binding)>();
+            bool anyTaunter = false;
+            foreach (var source in projected)
+            {
+                if (!source.Health.IsDead)
+                {
+                    var traits = source.Stats.TraitStatuses.ToArray();
+                    if (traits.Any(t => t.Key == TraitKey.SoloAction || t.Key == TraitKey.Cohesion))
+                    {
+                        foreach (var binding in CombatCommandEffects.Capture(source, CombatCommandCalculator.RequiredProfile(input, source, profileReads)))
+                        {
+                            if (binding.Rule is SoloActionEffectRule || binding.Rule is CohesionEffectRule) sources.Add((source, binding));
+                            yield return 0;
+                        }
+                    }
+                    if (source.Area == CharacterRuntimeArea.Field && traits.Any(t => t.Key == TraitKey.Taunt)) anyTaunter = true;
+                }
+                yield return 0;
+            }
             var changes = new List<CharacterStateChange>();
             foreach (var recipient in projected)
             {
-                var shields = recipient.Health.IsDead ? new List<TraitShieldGrant>() : recipient.TraitEffects.Shields
-                    .Where(g => !IsPresenceManagedShield(g.Origin)).ToList();
+                yield return 0;
+                var currentEffects = recipient.TraitEffects;
+                var shields = currentEffects.Shields.Count == 0 && sources.Count == 0
+                    ? null
+                    : recipient.Health.IsDead ? new List<TraitShieldGrant>() : currentEffects.Shields
+                        .Where(g => !IsPresenceManagedShield(g.Origin)).ToList();
                 if (!recipient.Health.IsDead)
                 {
                     foreach (var entry in sources)
                     {
-                        var prior = recipient.TraitEffects.Shields.SingleOrDefault(g => g.Origin == entry.Binding.Origin);
+                        yield return 0;
+                        var prior = currentEffects.Shields.SingleOrDefault(g => g.Origin == entry.Binding.Origin);
                         var bound = new EffectRuleInput(entry.Binding.Origin, entry.Binding.ExpectedState);
                         var grant = entry.Binding.Rule switch
                         {
@@ -54,16 +82,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         if (grant != null) shields.Add(grant);
                     }
                 }
-                var effects = new CharacterTraitEffects(recipient.TraitEffects.AttackGrants, shields.OrderBy(g => g.Origin).ToArray(),
-                    CombatEffectiveStatsCalculator.CohesionDefenseBonus(input, recipient, projected, profileReads));
-                var final = effects.SameValues(recipient.TraitEffects) ? recipient : recipient.With(traitEffects: effects);
+                int cohesionDefense = CombatEffectiveStatsCalculator.CohesionDefenseBonus(input, recipient, projected, profileReads);
+                var final = recipient;
+                if (shields != null || cohesionDefense != currentEffects.CohesionDefenseBonus)
+                {
+                    var effects = new CharacterTraitEffects(currentEffects.AttackGrants,
+                        shields == null ? Array.Empty<TraitShieldGrant>() : shields.OrderBy(g => g.Origin).ToArray(), cohesionDefense);
+                    if (!effects.SameValues(currentEffects)) final = recipient.With(traitEffects: effects);
+                }
                 // 도발당함은 특성 효과를 맞춘 뒤에 맞춘다: With(traitEffects:)가 정규 목록의 특성 효과 항목을 다시 놓기 때문이다.
-                var statuses = AppliedStatusRules.ReplaceTaunted(final.StatusEffects, TauntedOrigins(input, projected, recipient, anyTaunter, profileReads));
-                if (!ReferenceEquals(statuses, final.StatusEffects)) final = final.WithStatusEffects(statuses);
+                if (anyTaunter || final.StatusEffects.Entries.Count != 0)
+                {
+                    var statuses = AppliedStatusRules.ReplaceTaunted(final.StatusEffects, TauntedOrigins(input, projected, recipient, anyTaunter, profileReads));
+                    if (!ReferenceEquals(statuses, final.StatusEffects)) final = final.WithStatusEffects(statuses);
+                }
+                if (final.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Rampage))
+                    final = RampageApplication.Reconcile(final, final.OwnedId.HasValue
+                        ? input.Owned.Single(o => o.Id == final.OwnedId.Value).HunterAttackBonus : 0);
                 if (!ReferenceEquals(final, recipient)) changes.Add(new CharacterStateChange(recipient, final));
             }
-            return new CharacterChanges(changes, Array.Empty<SoulCountChange>());
-        }
+            completed(new CharacterChanges(changes, Array.Empty<SoulCountChange>()));
+            yield return 0;
+                }
 
         /// <summary>
         /// 받는 쪽에 걸려야 할 도발당함 출처입니다(도발 디버프 설계 TT2, Q-TT1 A). AI가 행동을 정하는 진영(적)의 필드 유닛만 받고,
@@ -106,30 +146,128 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static void ReconcileAndRecord(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> projected,
             Owner? endedSide, List<CombatEvent> events, CombatDamageOrigin origin, CombatProfileReadSet profileReads)
         {
-            var changes = Calculate(input, projected.Values.ToArray(), endedSide, profileReads).Characters;
-            RecordShieldActivations(events, changes, origin);
-            RecordTauntActivations(events, changes, origin);
-            foreach (var change in changes)
+            using var work = BeginReconcile(input, projected, events, origin, profileReads, endedSide);
+            while (!work.IsComplete) work.Step();
+        }
+
+        internal static Reconciliation BeginReconcile(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> projected,
+            List<CombatEvent> events, CombatDamageOrigin origin = null, CombatProfileReadSet profileReads = null, Owner? endedSide = null) =>
+            new Reconciliation(input, projected, endedSide, events, origin, profileReads);
+
+        /// <summary>한 관찰 시점의 대상 목록에서 변경을 먼저 계산하고 원래 순서로 기록·적용한다.</summary>
+        internal sealed class Reconciliation : IDisposable
+        {
+            private IEnumerator<int> _steps;
+            private bool _complete;
+            private bool _disposed;
+            private bool _faulted;
+            private long _version;
+            internal bool IsComplete
             {
-                if (change.Expected.TraitEffects.CohesionDefenseBonus != change.Final.TraitEffects.CohesionDefenseBonus)
-                    CombatCommandEvents.Trait(events, change.Final.EntityId, TraitKey.Cohesion, TraitActivationKind.DefenseChanged,
-                        Math.Abs(change.Final.TraitEffects.CohesionDefenseBonus - change.Expected.TraitEffects.CohesionDefenseBonus),
-                        new[] { change.Final.EntityId }, change.Final.OccupiedCells, origin);
-                projected[change.Final.EntityId] = change.Final;
-                CombatCommandEvents.TraitState(events, change.Expected, change.Final, origin);
+                get
+                {
+                    RequireActive();
+                    return _complete;
+                }
+            }
+            internal long WorkVersion
+            {
+                get
+                {
+                    RequireActive();
+                    return _version;
+                }
+            }
+
+            internal Reconciliation(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> projected,
+                Owner? endedSide, List<CombatEvent> events, CombatDamageOrigin origin, CombatProfileReadSet profileReads)
+            {
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                if (projected == null) throw new ArgumentNullException(nameof(projected));
+                _steps = Run(input, projected, endedSide, events, origin, profileReads).GetEnumerator();
+            }
+
+            internal void Step()
+            {
+                RequireActive();
+                if (_complete) return;
+                using var sample = CoreProfiling.Sample(CoreProfileSection.TraitPresenceReconcile);
+                try
+                {
+                    _complete = !_steps.MoveNext();
+                    _version++;
+                    if (_complete)
+                    {
+                        _steps.Dispose();
+                        _steps = null;
+                    }
+                }
+                catch
+                {
+                    _faulted = true;
+                    _steps?.Dispose(); _steps = null;
+                    throw;
+                }
+            }
+
+            private IEnumerable<int> Run(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> projected,
+                Owner? endedSide, List<CombatEvent> events, CombatDamageOrigin origin, CombatProfileReadSet profileReads)
+            {
+                var population = new List<CharacterCombatFacts>();
+                yield return 0;
+                foreach (var character in projected.Values)
+                {
+                    population.Add(character);
+                    yield return 0;
+                }
+                CharacterChanges changes = null;
+                foreach (int step in CalculateSteps(input, population, endedSide, profileReads, value => changes = value)) yield return step;
+                if (changes.Characters.Count == 0) yield break;
+                foreach (int step in RecordShieldSteps(events, changes.Characters, origin)) yield return step;
+                foreach (int step in RecordTauntSteps(events, changes.Characters, origin)) yield return step;
+                foreach (var change in changes.Characters)
+                {
+                    yield return 0;
+                    if (change.Expected.TraitEffects.CohesionDefenseBonus != change.Final.TraitEffects.CohesionDefenseBonus)
+                        CombatCommandEvents.Trait(events, change.Final.EntityId, TraitKey.Cohesion, TraitActivationKind.DefenseChanged,
+                            Math.Abs(change.Final.TraitEffects.CohesionDefenseBonus - change.Expected.TraitEffects.CohesionDefenseBonus),
+                            new[] { change.Final.EntityId }, change.Final.OccupiedCells, origin);
+                    projected[change.Final.EntityId] = change.Final;
+                    CombatCommandEvents.TraitState(events, change.Expected, change.Final, origin);
+                }
+                    }
+
+            private void RequireActive()
+            {
+                if (_disposed) throw new ObjectDisposedException(nameof(Reconciliation));
+                if (_faulted) throw new InvalidOperationException("실패한 보유 정산은 다시 진행할 수 없습니다.");
+            }
+
+            public void Dispose()
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _steps?.Dispose(); _steps = null;
             }
         }
 
         internal static void RecordShieldActivations(List<CombatEvent> events, IEnumerable<CharacterStateChange> changes, CombatDamageOrigin origin = null)
         {
-            if (events == null) return;
+            foreach (int step in RecordShieldSteps(events, changes, origin)) { }
+        }
+
+        private static IEnumerable<int> RecordShieldSteps(List<CombatEvent> events, IEnumerable<CharacterStateChange> changes, CombatDamageOrigin origin)
+        {
+            if (events == null) yield break;
             var outcomes = new List<(EffectOriginKey Origin, TraitActivationKind Kind, int Amount, EntityId Recipient)>();
             foreach (var change in changes)
             {
+                yield return 0;
                 var before = change.Expected.TraitEffects.Shields;
                 var after = change.Final.TraitEffects.Shields;
                 foreach (var key in before.Select(g => g.Origin).Concat(after.Select(g => g.Origin)).Distinct().OrderBy(k => k))
                 {
+                    yield return 0;
                     if (key.Kind != EffectOwnerKind.Trait) continue;
                     var old = before.SingleOrDefault(g => g.Origin == key);
                     var next = after.SingleOrDefault(g => g.Origin == key);
@@ -158,31 +296,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             foreach (var group in outcomes.GroupBy(o => (o.Origin, o.Kind)).OrderBy(g => g.Key.Origin).ThenBy(g => g.Key.Kind))
             {
+                yield return 0;
                 var amounts = group.Select(o => o.Amount).Distinct().ToArray();
                 CombatCommandEvents.Trait(events, new EntityId(group.Key.Origin.OwnerInstanceId), (TraitKey)group.Key.Origin.DefinitionKey,
                     group.Key.Kind, amounts.Length == 1 ? amounts[0] : 0, group.Select(o => o.Recipient).Distinct().OrderBy(id => id).ToArray(), origin: origin);
             }
-        }
+                }
 
         /// <summary>
         /// 도발당함이 걸리고 풀린 받는 쪽을 도발 보유자(출처)마다 묶어 <see cref="TraitActivationKind.StatusApplied"/>·
         /// <see cref="TraitActivationKind.StatusRemoved"/>로 냅니다(양 0, 도발 디버프 설계 TT3). 상태 사건은 부르는 쪽이 바뀐 유닛마다 냅니다.
         /// </summary>
-        private static void RecordTauntActivations(List<CombatEvent> events, IEnumerable<CharacterStateChange> changes, CombatDamageOrigin origin)
+        private static IEnumerable<int> RecordTauntSteps(List<CombatEvent> events, IEnumerable<CharacterStateChange> changes, CombatDamageOrigin origin)
         {
-            if (events == null) return;
+            if (events == null) yield break;
             var outcomes = new List<(EffectOriginKey Origin, TraitActivationKind Kind, EntityId Recipient)>();
             foreach (var change in changes)
             {
+                yield return 0;
                 var before = TauntedOriginsOf(change.Expected);
                 var after = TauntedOriginsOf(change.Final);
                 foreach (var key in after.Except(before)) outcomes.Add((key, TraitActivationKind.StatusApplied, change.Final.EntityId));
                 foreach (var key in before.Except(after)) outcomes.Add((key, TraitActivationKind.StatusRemoved, change.Final.EntityId));
             }
             foreach (var group in outcomes.GroupBy(o => (o.Origin, o.Kind)).OrderBy(g => g.Key.Origin).ThenBy(g => g.Key.Kind))
+            {
+                yield return 0;
                 CombatCommandEvents.Trait(events, new EntityId(group.Key.Origin.OwnerInstanceId), TraitKey.Taunt, group.Key.Kind, 0,
                     group.Select(o => o.Recipient).Distinct().OrderBy(id => id).ToArray(), origin: origin);
-        }
+            }
+                }
 
         private static EffectOriginKey[] TauntedOriginsOf(CharacterCombatFacts character) =>
             character.StatusEffects.Entries.OfType<TauntedStatus>().Select(s => s.Origin.Value).ToArray();

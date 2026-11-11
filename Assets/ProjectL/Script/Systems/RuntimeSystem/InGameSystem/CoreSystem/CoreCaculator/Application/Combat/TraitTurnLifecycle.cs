@@ -78,6 +78,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                             Record(exposure.Origin.Value, exposure.RemainingAffectedSideTurnEnds == 1
                                 ? TraitActivationKind.StatusExpired : TraitActivationKind.StatusConsumed, character.EntityId);
                 var statuses = AppliedStatusRules.EndControllerTurn(current.StatusEffects, current.Owner, endedSide);
+                statuses = PeriodicStatusRules.ExpireSlow(statuses, input.State.Turn.CompletedControllerTurnCount);
+                foreach (var slow in current.StatusEffects.Entries.OfType<MovementRangeDecreaseStatus>())
+                    if (!statuses.Entries.Contains(slow) && slow.Origin.Value.Kind == EffectOwnerKind.Trait)
+                        Record(slow.Origin.Value, TraitActivationKind.StatusExpired, character.EntityId);
                 if (!ReferenceEquals(statuses, current.StatusEffects))
                 {
                     foreach (var grant in current.StatusEffects.Entries.OfType<AttackIncreaseStatus>()

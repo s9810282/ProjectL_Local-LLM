@@ -39,7 +39,7 @@ namespace ProjectL.Tests.Core
                 new CombatAttackProfile(UnitSpecTestFactory.Create(key, 1, 1, new[] { CellCoord.Zero }, 100,
                     MoveMethod.LiftAndPlace, range, 20, 100, trait ? new[] { Spec(extra) } : Array.Empty<TraitSpec>(),
                     categoryKey: CategoryKey.Main), method)).ToArray();
-            var state = new CombatCommandState(16,16,source.State.Phase,source.State.IsNight,                source.State.Structures,source.State.ThornFields,source.State.Turn);
+            var state = new CombatCommandState(16,16,source.State.Phase,                source.State.Structures,source.State.ThornFields,source.State.Turn);
             var input = CombatCommandTestData.With(source, characters, state, profiles);
             input = input.WithPersistentFacts(characters.Where(c => c.OwnedId.HasValue)
                 .Select(c => new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray(),

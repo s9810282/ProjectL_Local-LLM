@@ -10,6 +10,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// <summary>공격에서 시작한 Drag의 누른 칸과 release 소유권만 관리합니다.</summary>
     internal sealed class CombatAttackDragGesture
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackDragPress = new("Combat.Action.Interaction.AttackDrag.Press");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackDragPromoteToMove = new("Combat.Action.Interaction.AttackDrag.PromoteToMove");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackDragRelease = new("Combat.Action.Interaction.AttackDrag.Release");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackDragReset = new("Combat.Action.Interaction.AttackDrag.Reset");
+#endif
+
         internal readonly struct Origin
         {
             internal Origin(long battleId, EntityId actorId, CellCoord anchor, int resultSequence, Vector2 pressedScreen)
@@ -41,6 +49,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void BeginPress(Origin? origin)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackDragPressSample = _profileInteractionAttackDragPress.Auto();
+#endif
+
             _generation++;
             _origin = origin.GetValueOrDefault();
             _state = origin.HasValue ? State.Candidate : State.Idle;
@@ -55,6 +67,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal bool TryPromote(float screenX, float screenY, bool overUi)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackDragPromoteToMoveSample = _profileInteractionAttackDragPromoteToMove.Auto();
+#endif
+
             if (_state != State.Candidate || overUi)
                 return false;
             int generation = _generation;
@@ -70,6 +86,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal ReleaseRoute Release()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackDragReleaseSample = _profileInteractionAttackDragRelease.Auto();
+#endif
+
             ReleaseRoute route = _state == State.MoveOwned ? ReleaseRoute.ForwardToPath
                 : _state == State.SuppressUntilRelease ? ReleaseRoute.Consume : ReleaseRoute.PassThrough;
             Reset();
@@ -85,6 +105,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void Reset()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackDragResetSample = _profileInteractionAttackDragReset.Auto();
+#endif
+
             _generation++;
             _state = State.Idle;
             _origin = default;

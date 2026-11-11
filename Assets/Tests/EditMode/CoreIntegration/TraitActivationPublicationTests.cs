@@ -65,31 +65,6 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         [Test]
-        public void EnterCombat_LateHunterResultRereadDoesNotDrawAgain()
-        {
-            using var battle = HunterPersistenceTests.LateHunterBattle();
-            var hunter = battle.Character(EntityKey.Unit_Sniper);
-            battle.Submit(CombatViewCommandData.EnterCombat());
-            Assert.That(battle.Buffers.CombatResultReadSink.TryGetLatest(out var result), Is.True);
-            var selected = result.Events.OfType<CombatEffectsEvent>().SelectMany(e => e.Traits)
-                .Single(t => t.TraitKey == TraitKey.Hunter && t.TraitActivationKind == TraitActivationKind.HunterTargetSelected);
-            Assert.That(selected.SourceUnitId, Is.EqualTo(hunter.EntityId));
-            var final = battle.Character(EntityKey.Unit_Sniper);
-            var status = final.Stats.TraitStatuses.ToArray()
-                .OfType<ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits.HunterTraitStatusSnapshot>().Single();
-            Assert.That(selected.TargetId, Is.EqualTo(status.TargetId));
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.EnvironmentProgress.RandomState, Is.EqualTo(1015568748u));
-            var before = new CoreIntegrationSnapshot(battle.Buffers);
-            for (int i = 0; i < 3; i++)
-            {
-                Assert.That(battle.Buffers.CombatResultReadSink.TryGetLatest(out var same), Is.True);
-                Assert.That(same, Is.SameAs(result));
-                Assert.That(battle.Core.CombatCommands.ProcessNextCommand(), Is.False);
-            }
-            before.AssertUnchanged(battle.Buffers);
-        }
-
-        [Test]
         public void AcceptedResult_ContainsOrderedActivationsAndFinalFacts()
         {
             using var battle = Battle();

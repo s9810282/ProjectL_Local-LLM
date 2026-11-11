@@ -8,8 +8,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int AttackRangeReduction { get; }
         public int AttackDamageReductionPercent { get; }
         public int OpposingTurnEndsToExpire { get; }
+        public bool ExemptsAlliedAttackRangePenalty { get; }
 
-        public DustScreenTraitSpec(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire) : base(TraitKey.DustScreen)
+        public DustScreenTraitSpec(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire)
+            : this(attackRangeReduction, attackDamageReductionPercent, opposingTurnEndsToExpire, false)
+        {
+        }
+
+        public DustScreenTraitSpec(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire,
+            bool exemptsAlliedAttackRangePenalty = false) : base(TraitKey.DustScreen)
         {
             if (attackRangeReduction < 0)
                 throw new ArgumentOutOfRangeException(nameof(attackRangeReduction));
@@ -20,6 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             AttackRangeReduction = attackRangeReduction;
             AttackDamageReductionPercent = attackDamageReductionPercent;
             OpposingTurnEndsToExpire = opposingTurnEndsToExpire;
+            ExemptsAlliedAttackRangePenalty = exemptsAlliedAttackRangePenalty;
         }
 
         /// <inheritdoc />
@@ -28,7 +36,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             var otherSpec = (DustScreenTraitSpec)other;
             return AttackRangeReduction == otherSpec.AttackRangeReduction &&
                 AttackDamageReductionPercent == otherSpec.AttackDamageReductionPercent &&
-                OpposingTurnEndsToExpire == otherSpec.OpposingTurnEndsToExpire;
+                OpposingTurnEndsToExpire == otherSpec.OpposingTurnEndsToExpire &&
+                ExemptsAlliedAttackRangePenalty == otherSpec.ExemptsAlliedAttackRangePenalty;
         }
     }
 }

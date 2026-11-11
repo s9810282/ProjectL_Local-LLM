@@ -32,6 +32,7 @@ namespace ProjectL.Tool.Editor
 
         private void SetSoWorkspace(SoWorkspace next)
         {
+            if (_soShowHelp) CloseSoHelp();
             if (GetSoWorkspace() == next && !_soShowStages && !_soShowCreation) return;
             CancelSoWorkspaceInput();
             _soShowStages = false; _soShowCreation = false;
@@ -46,6 +47,7 @@ namespace ProjectL.Tool.Editor
         // 편집 값은 건드리지 않고 지도 보기만 바꿉니다.
         private void SetSoMapView(int view)
         {
+            if (_soShowHelp) CloseSoHelp();
             if (!_soShowStageSettings && soMapView == view && !_soShowStages && !_soShowCreation) return;
             CancelSoWorkspaceInput();
             _soShowStages = false; _soShowCreation = false;
@@ -75,7 +77,7 @@ namespace ProjectL.Tool.Editor
                 DragAndDrop.visualMode = DragAndDropVisualMode.None;
             }
             GUIUtility.hotControl = 0;
-            GUI.FocusControl(null);
+            if (Event.current != null) GUI.FocusControl(null);
         }
 
         private void OpenSoInspector(SoInspectorSection section)

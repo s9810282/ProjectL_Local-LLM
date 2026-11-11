@@ -25,17 +25,16 @@ MonoBehaviour:
   footprintWidth: 1
   footprintHeight: 1
   maxHealth: 15
-  physicalDefense: 5
+  physicalDefense: 2
   targetingMethod: {fileID: 11400000, guid: e5e42fa120684bc899e2050a79576e8a, type: 2}
   attackRange: 4
   category: 40
-  attackPower: 8
+  attackPower: 13
   wallDelivery: 2
   wallPropagation: 1
   priority: 30
   traits:
   - rid: 6249925418060611683
-  - rid: 6249925418060611684
   references:
     version: 2
     RefIds:
@@ -43,7 +42,3 @@ MonoBehaviour:
       type: {class: ImpactBoltTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
       data:
         distanceCells: 1
-    - rid: 6249925418060611684
-      type: {class: StationaryFireTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
-      data:
-        extraDamagePercent: 100

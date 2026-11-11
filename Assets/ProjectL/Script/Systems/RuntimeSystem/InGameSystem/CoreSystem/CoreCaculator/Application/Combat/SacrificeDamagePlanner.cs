@@ -22,12 +22,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         internal static IReadOnlyDictionary<int, EntityId> Plan(CommandAttackPlan plan, CommandAttackProjection world, ThornHeartAttackScope reflection = null)
         {
-            if (plan.Input.State.Turn.ControllerPhase != CombatControllerPhase.Enemy || !world.Characters.Values.Any(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field && c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice)))
-                return new ReadOnlyDictionary<int, EntityId>(new Dictionary<int, EntityId>());
+            IReadOnlyDictionary<int, EntityId> result = null;
+            foreach (var phase in PlanSteps(plan, world, value => result = value, reflection)) { }
+            return result;
+        }
+
+        /// <summary>폐기할 시뮬레이션을 보관하고 보호 예약이 완성된 뒤에만 호출자에게 넘긴다.</summary>
+        internal static IEnumerable<string> PlanSteps(CommandAttackPlan plan, CommandAttackProjection world,
+            Action<IReadOnlyDictionary<int, EntityId>> completed, ThornHeartAttackScope reflection = null)
+        {
+            bool available = false;
+            if (plan.Input.State.Turn.ControllerPhase == CombatControllerPhase.Enemy)
+            {
+                foreach (var character in world.Characters.Values)
+                {
+                    available = IsSource(character);
+                    yield return "SacrificeSource";
+                    if (available) break;
+                }
+            }
+            if (!available)
+            {
+                completed(new ReadOnlyDictionary<int, EntityId>(new Dictionary<int, EntityId>()));
+                yield break;
+            }
             var hits = new List<Hit>();
             int ordinal = 0;
             for (int i = 0; i < plan.Delivery.Hits.Count; i++)
             {
+                yield return "SacrificeHitScan";
                 var delivered = plan.Delivery.Hits[i];
                 int currentOrdinal = ordinal;
                 if (delivered.AppliesDamage) ordinal++;
@@ -37,18 +60,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     victim, world.Structures.Values.ToArray(), delivered.BaseDamage);
                 hits.Add(new Hit(i, victim.EntityId, raw, delivered.Role, delivered.AppliedPercent, delivered.ImpactOrigin, currentOrdinal));
             }
-            return Choose(plan.Input, world.Characters, plan.DamageActor, hits, plan.DamageKind, plan.AttackGroup,
-                plan.Environment, plan.Engine, plan.Pipeline, world.AttackGroups, reflection, plan.Delivery.PiercingShot != null, plan.TraitScope, plan);
+            foreach (var phase in ChooseSteps(plan.Input, world.Characters, plan.DamageActor, hits, plan.DamageKind, plan.AttackGroup,
+                plan.Environment, plan.Engine, plan.Pipeline, world.AttackGroups, completed, reflection,
+                plan.Delivery.PiercingShot != null, plan.TraitScope, plan))
+                yield return phase;
         }
 
-        internal static EntityId ResolveSingle(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
+        private static bool IsSource(CharacterCombatFacts character) =>
+            !character.Health.IsDead && character.Area == CharacterRuntimeArea.Field &&
+            character.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice);
+
+        internal static SacrificeHitUpgrade? ResolveSingle(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
             CharacterCombatFacts actor, EntityId original, int raw, AttackTargetRole role, int percent, CombatDamageOrigin origin,
-            CombatDamageKind kind, MovementEnvironmentFacts environment, CombatEffectEngine engine, TargetDamagePipeline pipeline, CommandAttackGroups groups, AttackTraitScope traitScope = null, List<CombatEvent> events = null)
+            CombatDamageKind kind, MovementEnvironmentFacts environment, CombatEffectEngine engine, TargetDamagePipeline pipeline, CommandAttackGroups groups, AttackTraitScope traitScope = null, List<CombatEvent> events = null,
+            CombatProfileReadSet profileReads = null)
         {
-            if (!characters.ContainsKey(original)) return original;
+            if (!characters.ContainsKey(original)) return null;
             var plan = Choose(input, characters, actor, new[] { new Hit(0, original, raw, role, percent, origin.PhysicalCell, 0) },
                 kind, origin.AttackGroup, environment, engine, pipeline, groups, traitScope: traitScope);
-            return plan.TryGetValue(0, out var source) && TryConsume(input, characters, actor, original, source, events, origin) ? source : original;
+            if (!plan.TryGetValue(0, out var source) || !TryConsume(input, characters, actor, original, source, events, origin))
+                return null;
+            return SacrificeDamageSettlement.Capture(input, characters[source], profileReads);
         }
 
         internal static bool TryConsume(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> characters,
@@ -86,125 +118,230 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             ThornHeartAttackScope reflection = null, bool continueAfterReflectionDeath = false, AttackTraitScope traitScope = null,
             CommandAttackPlan directPlan = null)
         {
-            var selected = new Dictionary<int, EntityId>();
-            if (input.State.Turn.ControllerPhase != CombatControllerPhase.Enemy ||
-                (kind != CombatDamageKind.OrdinaryAttack && kind != CombatDamageKind.ExtraAttack && kind != CombatDamageKind.ReactionAttack) ||
-                !characters.Values.Any(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
-                    c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice)))
-                return new ReadOnlyDictionary<int, EntityId>(selected);
+            IReadOnlyDictionary<int, EntityId> result = null;
+            foreach (var phase in ChooseSteps(input, characters, actor, hits, kind, group, environment, engine, pipeline,
+                groups, value => result = value, reflection, continueAfterReflectionDeath, traitScope, directPlan)) { }
+            return result;
+        }
 
-            Simulation Evaluate(Dictionary<int, EntityId> proposal)
+        private static IEnumerable<string> ChooseSteps(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
+            CharacterCombatFacts actor, IReadOnlyList<Hit> hits, CombatDamageKind kind, long group, MovementEnvironmentFacts environment,
+            CombatEffectEngine engine, TargetDamagePipeline pipeline, CommandAttackGroups groups, Action<IReadOnlyDictionary<int, EntityId>> completed,
+            ThornHeartAttackScope reflection = null, bool continueAfterReflectionDeath = false, AttackTraitScope traitScope = null,
+            CommandAttackPlan directPlan = null)
+        {
+            var selected = new Dictionary<int, EntityId>();
+            bool available = false;
+            if (input.State.Turn.ControllerPhase == CombatControllerPhase.Enemy &&
+                (kind == CombatDamageKind.OrdinaryAttack || kind == CombatDamageKind.ExtraAttack || kind == CombatDamageKind.ReactionAttack))
             {
-                var result = Simulate(input, characters, actor, hits, proposal, kind, group, environment, engine, pipeline, groups,
-                    reflection, continueAfterReflectionDeath, traitScope, directPlan);
+                foreach (var character in characters.Values)
+                {
+                    available = IsSource(character);
+                    yield return "SacrificeEligibility";
+                    if (available) break;
+                }
+            }
+            if (!available)
+            {
+                completed(new ReadOnlyDictionary<int, EntityId>(selected));
+                yield break;
+            }
+
+            IEnumerable<string> Evaluate(Dictionary<int, EntityId> proposal, Action<Simulation> evaluated)
+            {
+                Simulation result = null;
+                foreach (var phase in SimulateSteps(input, characters, actor, hits, proposal, kind, group, environment, engine,
+                    pipeline, groups, reflection, continueAfterReflectionDeath, traitScope, directPlan, value => result = value))
+                    yield return phase;
+                yield return "SacrificeSimulationComplete";
                 // 앞선 보호가 방어 출처를 살리면 뒤의 불필요한 예약을 제거하고 같은 배치를 다시 평가합니다.
                 while (result.Valid && result.UnnecessaryRedirects.Count != 0)
                 {
-                    foreach (int index in result.UnnecessaryRedirects) proposal.Remove(index);
-                    result = Simulate(input, characters, actor, hits, proposal, kind, group, environment, engine, pipeline, groups,
-                        reflection, continueAfterReflectionDeath, traitScope, directPlan);
+                    foreach (int index in result.UnnecessaryRedirects)
+                    {
+                        proposal.Remove(index);
+                        yield return "SacrificeRemoveReservation";
+                    }
+                    foreach (var phase in SimulateSteps(input, characters, actor, hits, proposal, kind, group, environment,
+                        engine, pipeline, groups, reflection, continueAfterReflectionDeath, traitScope, directPlan,
+                        value => result = value))
+                        yield return phase;
+                    yield return "SacrificeRevalidationComplete";
                 }
-                return result;
+                evaluated(result);
             }
 
-            var baseline = Evaluate(selected);
+            Simulation baseline = null;
+            foreach (var phase in Evaluate(selected, value => baseline = value)) yield return phase;
+            yield return "SacrificeBaselineComplete";
             while (true)
             {
-                var candidates = new List<(Hit Hit, EntityId Source, long Distance, int Main, int Hp, Dictionary<int, EntityId> Plan, Simulation Result)>();
-                foreach (var hit in hits.Where(h => !selected.ContainsKey(h.Index) && baseline.Lethal.Contains(h.Index)))
+                Candidate chosen = null;
+                foreach (var hit in hits)
                 {
+                    yield return "SacrificeCandidateHit";
+                    if (selected.ContainsKey(hit.Index) || !baseline.Lethal.Contains(hit.Index)) continue;
                     var before = baseline.Before[hit.Index];
                     var recipient = before.Single(c => c.EntityId == hit.Target);
-                    foreach (var source in before.Where(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
-                        c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice)))
+                    foreach (var source in before)
                     {
+                        yield return "SacrificeCandidateSource";
+                        if (!IsSource(source)) continue;
                         var binding = Binding(input, source);
                         var bound = new EffectRuleInput(binding.Origin, binding.ExpectedState);
-                        int reserved = selected.Values.Count(id => id == source.EntityId);
+                        int reserved = 0;
+                        foreach (var sourceId in selected.Values)
+                        {
+                            if (sourceId == source.EntityId) reserved++;
+                            yield return "SacrificeReservedCount";
+                        }
                         if (!((SacrificeEffectRule)binding.Rule).CanProtect(bound, actor, source, recipient,
                             input.State.Turn.ControllerPhase, input.State.Turn.ControllerTurnSequence, reserved)) continue;
-                        var proposal = new Dictionary<int, EntityId>(selected) { [hit.Index] = source.EntityId };
-                        var result = Evaluate(proposal);
+                        var proposal = new Dictionary<int, EntityId>();
+                        foreach (var entry in selected)
+                        {
+                            proposal.Add(entry.Key, entry.Value);
+                            yield return "SacrificeCopyReservation";
+                        }
+                        proposal[hit.Index] = source.EntityId;
+                        Simulation result = null;
+                        foreach (var phase in Evaluate(proposal, value => result = value)) yield return phase;
+                        yield return "SacrificeCandidateComplete";
                         if (!result.Valid || !proposal.ContainsKey(hit.Index)) continue;
-                        candidates.Add((hit, source.EntityId, SacrificeTraitRule.Distance(source, recipient),
+                        var candidate = new Candidate(hit, source.EntityId, SacrificeTraitRule.Distance(source, recipient),
                             recipient.OwnershipRole == CharacterOwnershipRole.Main ? 0 : 1,
-                            result.Final[source.EntityId].Health.CurrentHealth, proposal, result));
+                            result.Final[source.EntityId].Health.CurrentHealth, proposal, result);
+                        if (chosen == null || candidate.CompareTo(chosen) < 0) chosen = candidate;
                     }
                 }
-                if (candidates.Count == 0) break;
-                var chosen = candidates.OrderBy(c => c.Distance).ThenBy(c => c.Main).ThenByDescending(c => c.Hp)
-                    .ThenBy(c => c.Hit.Target).ThenBy(c => c.Source).ThenBy(c => c.Hit.Index).First();
+                if (chosen == null) break;
                 selected = chosen.Plan;
                 baseline = chosen.Result;
+                yield return "SacrificeChoose";
             }
-            return new ReadOnlyDictionary<int, EntityId>(selected);
+            completed(new ReadOnlyDictionary<int, EntityId>(selected));
         }
 
-        private static Simulation Simulate(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
+        private static IEnumerable<string> SimulateSteps(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
             CharacterCombatFacts actor, IReadOnlyList<Hit> hits, IReadOnlyDictionary<int, EntityId> redirects, CombatDamageKind kind,
             long group, MovementEnvironmentFacts environment, CombatEffectEngine engine, TargetDamagePipeline pipeline, CommandAttackGroups groups,
-            ThornHeartAttackScope reflection, bool continueAfterReflectionDeath, AttackTraitScope traitScope, CommandAttackPlan directPlan)
+            ThornHeartAttackScope reflection, bool continueAfterReflectionDeath, AttackTraitScope traitScope, CommandAttackPlan directPlan,
+            Action<Simulation> completed)
         {
-            var facts = characters.ToDictionary(p => p.Key, p => p.Value);
+            var facts = new Dictionary<EntityId, CharacterCombatFacts>();
+            foreach (var entry in characters)
+            {
+                facts.Add(entry.Key, entry.Value);
+                yield return "SacrificeCopyFacts";
+            }
             var damage = CombatDamageApplication.For(input, facts, new List<CombatEvent>(), captureMovementUses: false);
             var defenses = groups.Clone();
             var reflected = reflection?.Clone();
             var result = new Simulation(facts);
             foreach (var hit in hits.OrderBy(h => h.Index))
             {
-                TraitPresenceReconciler.Apply(input, facts);
-                result.Before.Add(hit.Index, facts.Values.ToArray());
+                using (var presence = damage.BeginReconcilePresence())
+                {
+                    while (presence != null && !presence.IsComplete)
+                    {
+                        presence.Step();
+                        yield return "SacrificePresence";
+                    }
+                }
+                var before = new List<CharacterCombatFacts>();
+                foreach (var character in facts.Values)
+                {
+                    before.Add(character);
+                    yield return "SacrificeBeforeHit";
+                }
+                result.Before.Add(hit.Index, before.ToArray());
                 var original = facts[hit.Target];
                 bool redirected = redirects.TryGetValue(hit.Index, out var source);
                 var currentActor = facts[actor.EntityId].Health.IsDead ? actor : traitScope?.ForDamage(facts[actor.EntityId]) ?? actor;
-                bool instant = FinishingShotApplication.Qualifies(input, currentActor, original);
-                if (instant && redirected) { result.UnnecessaryRedirects.Add(hit.Index); redirected = false; }
+                // 지키지 않으면 즉사로 죽을 대상도 희생 후보다(치명 타격으로 센다). 실제 즉사 여부는 아래 FiresOnHit가 정한다.
+                bool finishingTarget = FinishingShotApplication.Qualifies(input, currentActor, original);
                 if (redirected && (original.Health.IsDead || facts[source].Health.IsDead))
                 {
                     result.Valid = false;
-                    return result;
+                    completed(result);
+                    yield break;
                 }
                 if (original.Health.IsDead) continue;
-                if (redirected)
+                // 즉사가 걸릴 대상은 숫자 피해로 살아남아도 지켜야 하므로 불필요 판정을 하지 않는다.
+                if (redirected && !finishingTarget)
                 {
-                    var probe = CombatDamageApplication.For(input, facts.ToDictionary(p => p.Key, p => p.Value), new List<CombatEvent>(), captureMovementUses: false);
-                    if (!ApplyHit(input, currentActor, hit, hit.Target, kind, group, environment, engine, pipeline, defenses.Clone(), probe, traitScope, directPlan).After.Health.IsDead)
+                    var probeFacts = new Dictionary<EntityId, CharacterCombatFacts>();
+                    foreach (var entry in facts)
+                    {
+                        probeFacts.Add(entry.Key, entry.Value);
+                        yield return "SacrificeProbeFacts";
+                    }
+                    var probe = CombatDamageApplication.For(input, probeFacts, new List<CombatEvent>(), captureMovementUses: false);
+                    CombatDamageOutcome probed = default;
+                    foreach (var phase in ApplyHitSteps(input, currentActor, hit, hit.Target, kind, group, environment, engine,
+                        pipeline, defenses.Clone(), probe, traitScope, directPlan, value => probed = value))
+                        yield return phase;
+                    yield return "SacrificeProbeComplete";
+                    if (!probed.After.Health.IsDead)
                     {
                         result.UnnecessaryRedirects.Add(hit.Index);
                         redirected = false;
                     }
                 }
-                var applied = instant ? damage.Defeat(hit.Target, new CombatDamageOrigin(hit.Origin, actor.EntityId, group)) :
-                    ApplyHit(input, currentActor, hit, redirected ? source : hit.Target, kind, group, environment, engine, pipeline, defenses, damage, traitScope, directPlan);
-                if (!instant && !redirected && applied.After.Health.IsDead) result.Lethal.Add(hit.Index);
+                CombatDamageOutcome applied = default;
+                if (FinishingShotApplication.FiresOnHit(input, currentActor, hit.Target, redirected ? source : hit.Target, original))
+                {
+                    foreach (var phase in damage.DefeatSteps(hit.Target, new CombatDamageOrigin(hit.Origin, actor.EntityId, group),
+                        value => applied = value))
+                        yield return phase;
+                }
+                else
+                {
+                    SacrificeHitUpgrade? upgrade = redirected ? SacrificeDamageSettlement.Capture(input, facts[source]) : null;
+                    foreach (var phase in ApplyHitSteps(input, currentActor, hit, redirected ? source : hit.Target, kind, group,
+                        environment, engine, pipeline, defenses, damage, traitScope, directPlan, value => applied = value, upgrade))
+                        yield return phase;
+                }
+                yield return "SacrificeApplied";
+                if (!redirected && applied.After.Health.IsDead) result.Lethal.Add(hit.Index);
                 // 실제 공격의 반사 경계와 관통 예외를 같은 폐기 투영에서 사용합니다.
                 if (reflected != null && reflected.CanReflect(facts[actor.EntityId], original) &&
                     reflected.TryReflect(facts[actor.EntityId], original, defenses.Next(), damage, out var reflectedHit) &&
                     reflectedHit.TargetChange.Final.Health.IsDead && !continueAfterReflectionDeath) break;
             }
-            foreach (int index in redirects.Keys.Where(index => !result.Before.ContainsKey(index))) result.UnnecessaryRedirects.Add(index);
-            return result;
+            foreach (int index in redirects.Keys)
+            {
+                if (!result.Before.ContainsKey(index)) result.UnnecessaryRedirects.Add(index);
+                yield return "SacrificeUndelivered";
+            }
+            completed(result);
         }
 
-        private static CombatDamageOutcome ApplyHit(CombatCommandInput input, CharacterCombatFacts actor, Hit hit,
+        private static IEnumerable<string> ApplyHitSteps(CombatCommandInput input, CharacterCombatFacts actor, Hit hit,
             EntityId recipientId, CombatDamageKind kind, long group, MovementEnvironmentFacts environment,
             CombatEffectEngine engine, TargetDamagePipeline pipeline, CommandAttackGroups defenses, CombatDamageApplication damage, AttackTraitScope traitScope,
-            CommandAttackPlan directPlan)
+            CommandAttackPlan directPlan, Action<CombatDamageOutcome> completed, SacrificeHitUpgrade? sacrificeUpgrade = null)
         {
             var facts = damage.Characters;
             int raw = directPlan == null ? hit.Raw : CombatDamageCalculator.ScaleByTargetDistance(directPlan.Engine, directPlan.Bindings,
                 actor, hit.Target, facts[hit.Target], directPlan.Selection.EligibleStructures.ToArray(),
                 CombatAttackDelivery.CurrentBaseDamage(directPlan, actor, hit.Index));
+            yield return "SacrificeRawDamage";
             var calculated = CombatDamageCalculator.Attack(input, engine, pipeline, actor, facts[recipientId], raw,
                 hit.Role, hit.Percent, hit.Origin, null, environment, actualRecipientIndex: hit.Ordinal,
                 currentCharacters: facts.Values.ToArray(), damageKind: kind, traitScope: traitScope);
             // 피해와 함께 붙는 효과(방어구 부수기·표식)도 실제 수신자가 받습니다(2026-11-02 결정).
             int amount = calculated.FinalDamage;
             var origin = new CombatDamageOrigin(hit.Origin, actor.EntityId, group);
-            var applied = damage.Apply(recipientId, kind, origin, amount, heldDefenseGroups: defenses);
+            yield return "SacrificeDamageCalculation";
+            CombatDamageOutcome applied = default;
+            foreach (var phase in damage.ApplySteps(recipientId, kind, origin, amount, value => applied = value,
+                heldDefenseGroups: defenses, sacrificeUpgrade: sacrificeUpgrade))
+                yield return phase;
             ArmorBreakerApplication.AfterHit(input, actor, recipientId, facts, damage.Events, origin);
             WeaknessExposureApplication.CompleteHit(actor, CombatCommandCalculator.RequiredProfile(input, actor), kind, facts, damage.Events, recipientId, origin);
-            return applied;
+            completed(applied);
         }
 
         private static EffectRuleBinding Binding(CombatCommandInput input, CharacterCombatFacts source) =>
@@ -229,6 +366,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 Percent = percent;
                 Origin = origin;
                 Ordinal = ordinal;
+            }
+        }
+
+        /// <summary>기존 거리·메인·보호자 체력·대상·보호자·타격 순번의 우선순위를 유지한다.</summary>
+        private sealed class Candidate
+        {
+            private readonly Hit _hit;
+            private readonly EntityId _source;
+            private readonly long _distance;
+            private readonly int _main;
+            private readonly int _hp;
+            internal Dictionary<int, EntityId> Plan { get; }
+            internal Simulation Result { get; }
+
+            internal Candidate(Hit hit, EntityId source, long distance, int main, int hp,
+                Dictionary<int, EntityId> plan, Simulation result)
+            {
+                _hit = hit;
+                _source = source;
+                _distance = distance;
+                _main = main;
+                _hp = hp;
+                Plan = plan;
+                Result = result;
+            }
+
+            internal int CompareTo(Candidate other)
+            {
+                int comparison = _distance.CompareTo(other._distance);
+                if (comparison != 0) return comparison;
+                comparison = _main.CompareTo(other._main);
+                if (comparison != 0) return comparison;
+                comparison = other._hp.CompareTo(_hp);
+                if (comparison != 0) return comparison;
+                comparison = _hit.Target.CompareTo(other._hit.Target);
+                if (comparison != 0) return comparison;
+                comparison = _source.CompareTo(other._source);
+                return comparison != 0 ? comparison : _hit.Index.CompareTo(other._hit.Index);
             }
         }
 

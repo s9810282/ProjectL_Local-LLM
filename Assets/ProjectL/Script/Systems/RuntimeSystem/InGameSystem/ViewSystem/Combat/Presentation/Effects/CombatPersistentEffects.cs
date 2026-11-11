@@ -74,7 +74,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 Pose? body = bodyOf(want.Key.Body);
                 if (!body.HasValue)
                     continue;
-                Pose at = CombatCuePoints.Apply(body.Value, effect.PositionOffset, effect.RotationOffset, additionalWorldOffset);
+                Vector3? surface = _effects.SurfacePositionOf(want.Key.Body);
+                if (!surface.HasValue)
+                    continue;
+                Pose origin = new Pose(surface.Value, body.Value.rotation);
+                Pose at = CombatCuePoints.Apply(origin, effect.PositionOffset, effect.RotationOffset, additionalWorldOffset);
                 CombatEffectHandle handle = _effects.Play(effect.Effect, at, CombatEffectPlacement.Following(want.Key.Body).AsHeld());
                 _live.Add(want.Key, new Live(handle, effect, additionalWorldOffset, want.RestartOn));
             }

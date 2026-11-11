@@ -11,6 +11,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Contexts;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Transitions;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
@@ -108,120 +109,266 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return projection == null ? CombatCommandCalculator.Reject(input, reason.ToString()) : projection.Transition();
         }
 
-        internal static MovementProjection ProjectRoute(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
-            bool preview, out MovementFailureReason failure, out int validStepCount, CombatProfileReadSet profileReads = null)
+        internal static RouteWork BeginProjectRoute(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
+            bool preview, CombatProfileReadSet profileReads = null, bool preservePublic = false) =>
+            new RouteWork(input, rules, preview, profileReads, preservePublic);
+
+        internal static bool IsLeapActive(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatProfileReadSet profileReads = null) =>
+            LeapTraitRule.AllowsIntermediate(actor) && CombatCommandEffects.Capture(actor,
+                CombatCommandCalculator.RequiredProfile(input, actor, profileReads))
+                .Any(binding => binding.Rule is LeapEffectRule rule &&
+                    rule.AllowsIntermediate(new EffectRuleInput(binding.Origin, binding.ExpectedState), actor));
+
+        internal sealed class RouteWork : IDisposable
         {
-            validStepCount = 0;
-            failure = Actor(input, out var actor, profileReads: profileReads);
-            if (failure != MovementFailureReason.None) return null;
-            MovementPath path;
-            if (input.MovementContext != null)
+            private IEnumerator<int> _steps;
+            private MovementProjection _projection;
+            private MovementFailureReason _failure;
+            private int _validSteps;
+            private long _version;
+            private bool _complete;
+            private bool _disposed;
+            private bool _faulted;
+            internal bool IsComplete { get { RequireActive(); return _complete; } }
+            internal long WorkVersion { get { RequireActive(); return _version; } }
+            internal MovementProjection Projection { get { RequireComplete(); return _projection; } }
+            internal MovementFailureReason Failure { get { RequireComplete(); return _failure; } }
+            internal int ValidStepCount { get { RequireComplete(); return _validSteps; } }
+
+            internal RouteWork(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules, bool preview, CombatProfileReadSet profileReads, bool preservePublic)
             {
-                path = input.MovementContext.Path;
-                if (!MovementPathNormalizer.MatchesDraft(input.Path, path))
-                { failure = MovementFailureReason.StaleContext; return null; }
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                if (rules == null) throw new ArgumentNullException(nameof(rules));
+                _steps = Build(input, rules, preview, profileReads, preservePublic).GetEnumerator();
             }
-            else
+            internal void Step()
             {
-                failure = MovementPathNormalizer.TryNormalize(input, input.Path, actor.Owner, out path);
-                if (failure != MovementFailureReason.None) return null;
-            }
-            // 모서리는 공개 기하로 고정한다. 숨은 효과는 그 경로를 실행할 때만 해석한다.
-            failure = MovementRouteValidator.Validate(input, path, out validStepCount, input.State.Environment.VisibleTo(actor.Owner));
-            if (failure != MovementFailureReason.None) return null;
-            if (!CanLand(input, path.Endpoint, input.State.Environment.VisibleTo(actor.Owner), profileReads))
-            { failure = MovementFailureReason.DestinationOccupied; return null; }
-            var normalizedInput = input.WithIntent(input.Kind, input.Aim, path.Endpoint, path, input.MovementContext);
-            var expectedPassenger = MovementRouteValidator.SwapPassenger(normalizedInput, path.Endpoint);
-            var projection = new MovementProjection(normalizedInput, preview, profileReads);
-            projection.BeginOrdinaryMove();
-            projection.ReplacePositionModifier(PositionTileModifier.None);
-            bool leap = LeapTraitRule.AllowsIntermediate(actor) && CombatCommandEffects.Capture(actor, CombatCommandCalculator.RequiredProfile(input, actor, profileReads))
-                .Any(binding => binding.Rule is LeapEffectRule rule && rule.AllowsIntermediate(new EffectRuleInput(binding.Origin, binding.ExpectedState), actor));
-            var reconContacts = new HashSet<Contracts.Ids.EntityId>();
-            for (int i = 1; i < path.Cells.Count; i++)
-            {
-                if (i == path.Cells.Count - 1 && expectedPassenger != null &&
-                    (MovementRouteValidator.SwapPassenger(projection.CurrentInput(), path.Endpoint)?.EntityId != expectedPassenger.EntityId ||
-                     projection.Character(expectedPassenger.EntityId).Anchor != expectedPassenger.Anchor ||
-                     projection.Character(expectedPassenger.EntityId).Rotation != expectedPassenger.Rotation))
-                { projection.Stop(MovementStopReason.NextStepInvalid); break; }
-                if (!MovementRouteValidator.CanTraverse(projection.CurrentInput(), path.Cells[i], i == path.Cells.Count - 1, projection.Environment.VisibleTo(actor.Owner)))
-                { projection.Stop(MovementStopReason.NextStepInvalid); break; }
-                if (i == 1) ReconSquadApplication.Scan(projection, path.Origin, reconContacts);
-                if (leap && i < path.Cells.Count - 1)
+                RequireActive();
+                if (_complete) return;
+                try
                 {
-                    var visible = projection.Environment.VisibleTo(actor.Owner);
-                    if (!MovementRouteValidator.CanEnter(projection.CurrentInput(), path.Cells[i], visible) ||
-                        visible.Tiles.Any(t => t.Active && t.IsMine && t.Cell == path.Cells[i]))
-                        CombatCommandEvents.Trait(projection.Events, actor.EntityId, TraitKey.Leap, TraitActivationKind.MovementChanged,
-                            1, new[] { actor.EntityId }, new[] { path.Cells[i] });
+                    _complete = !_steps.MoveNext();
+                    _version++;
+                    if (_complete) { _steps.Dispose(); _steps = null; }
                 }
-                var passenger = i == path.Cells.Count - 1 ? MovementRouteValidator.SwapPassenger(projection.CurrentInput(), path.Cells[i]) : null;
-                if (passenger != null)
+                catch
                 {
-                    if (!CanLand(projection.CurrentInput(), path.Cells[i], projection.Environment.VisibleTo(actor.Owner), profileReads))
-                    { projection.Stop(MovementStopReason.NextStepInvalid); break; }
-                    projection.ExchangeEndpoint(passenger, path.Cells[i]);
-                    foreach (var id in new[] { actor.EntityId, passenger.EntityId }.OrderBy(id => id))
-                    {
-                        if (projection.Terminal) break;
-                        var arrival = projection.Character(id);
-                        if (arrival.Health.IsDead || arrival.Area != CharacterRuntimeArea.Field) continue;
-                        var cell = id == actor.EntityId ? path.Endpoint : path.Origin;
-                        if (arrival.Anchor != cell) continue;
-                        WeakGroundCalculator.RegisterEntry(projection, id, cell);
-                        MovementEnvironmentCalculator.ResolveEntry(projection, cell, rules, mover: id);
-                        if (!projection.Terminal && !projection.Character(id).Health.IsDead && projection.Character(id).Anchor == cell &&
-                            (!projection.ArrivalCells.TryGetValue(id, out var settled) || settled != cell))
-                        {
-                            if (id == actor.EntityId) projection.ResolvePathArrival();
-                            else projection.ResolveForcedArrival(id);
-                        }
-                    }
+                    _faulted = true;
+                    _steps?.Dispose();
+                    _steps = null;
+                    _projection = null;
+                    throw;
+                }
+            }
+            private IEnumerable<int> Build(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
+                bool preview, CombatProfileReadSet profileReads, bool preservePublic)
+            {
+                _validSteps = 0;
+                yield return 0;
+                _failure = Actor(input, out var actor, profileReads: profileReads);
+                if (_failure != MovementFailureReason.None) yield break;
+                MovementPath path;
+                if (input.MovementContext != null)
+                {
+                    path = input.MovementContext.Path;
+                    if (!MovementPathNormalizer.MatchesDraft(input.Path, path))
+                    { _failure = MovementFailureReason.StaleContext; yield break; }
                 }
                 else
                 {
-                    projection.Enter(path.Cells[i]);
-                    WeakGroundCalculator.RegisterEntry(projection, input.ActorId, path.Cells[i]);
-                    MovementEnvironmentCalculator.ResolveEntry(projection, path.Cells[i], rules, skipMines: leap && i < path.Cells.Count - 1);
+                    _failure = MovementPathNormalizer.TryNormalize(input, input.Path, actor.Owner, out path);
+                    if (_failure != MovementFailureReason.None) yield break;
                 }
-                ReconSquadApplication.Scan(projection, path.Cells[i], reconContacts);
-                if (projection.Actor.Stats.MoveMethod != MoveMethod.LiftAndPlace)
-                    projection.Stop(MovementStopReason.MovementBlocked);
-                if (projection.StopReason != MovementStopReason.Completed) break;
+                // 모서리는 공개 기하로 고정한다. 숨은 효과는 그 경로를 실행할 때만 해석한다.
+                MovementEnvironmentFacts visible = null;
+                foreach (var _ in input.State.Environment.VisibleSteps(actor.Owner, value => visible = value, preservePublic)) yield return 0;
+                foreach (var _ in MovementRouteValidator.ValidationSteps(input, path, visible,
+                    (reason, count) => { _failure = reason; _validSteps = count; })) yield return 0;
+                if (_failure != MovementFailureReason.None) yield break;
+                if (!CanLand(input, path.Endpoint, visible, profileReads))
+                { _failure = MovementFailureReason.DestinationOccupied; yield break; }
+                var normalizedInput = input.WithIntent(input.Kind, input.Aim, path.Endpoint, path, input.MovementContext);
+                var expectedPassenger = MovementRouteValidator.SwapPassenger(normalizedInput, path.Endpoint);
+                var projection = new MovementProjection(normalizedInput, preview, profileReads, preview ? visible : null);
+                yield return 0;
+                projection.BeginOrdinaryMove();
+                projection.ReplacePositionModifier(PositionTileModifier.None);
+                bool leap = IsLeapActive(input, actor, profileReads);
+                var reconContacts = new HashSet<Contracts.Ids.EntityId>();
+                for (int i = 1; i < path.Cells.Count; i++)
+                {
+                    CombatCommandInput current = null;
+                    if (i == path.Cells.Count - 1 && expectedPassenger != null)
+                    {
+                        foreach (var _ in Observe(projection, value => current = value)) yield return 0;
+                        if (MovementRouteValidator.SwapPassenger(current, path.Endpoint)?.EntityId != expectedPassenger.EntityId ||
+                            projection.Character(expectedPassenger.EntityId).Anchor != expectedPassenger.Anchor ||
+                            projection.Character(expectedPassenger.EntityId).Rotation != expectedPassenger.Rotation)
+                        { projection.Stop(MovementStopReason.NextStepInvalid); break; }
+                    }
+                    foreach (var _ in Observe(projection, value => current = value)) yield return 0;
+                    foreach (var _ in projection.Environment.VisibleSteps(actor.Owner, value => visible = value)) yield return 0;
+                    if (!MovementRouteValidator.CanTraverse(current, path.Cells[i], i == path.Cells.Count - 1, visible))
+                    { projection.Stop(MovementStopReason.NextStepInvalid); break; }
+                    if (i == 1)
+                        foreach (var _ in ReconSquadApplication.ScanSteps(projection, path.Origin, reconContacts)) yield return 0;
+                    bool skipsMineEntry = LeapTraitRule.SkipsMineEntry(leap, i == path.Cells.Count - 1);
+                    if (skipsMineEntry)
+                    {
+                        foreach (var _ in projection.Environment.VisibleSteps(actor.Owner, value => visible = value)) yield return 0;
+                        foreach (var _ in Observe(projection, value => current = value)) yield return 0;
+                        if (!MovementRouteValidator.CanEnter(current, path.Cells[i], visible) ||
+                            visible.Tiles.Any(t => t.Active && t.IsMine && t.Cell == path.Cells[i]))
+                            CombatCommandEvents.Trait(projection.Events, actor.EntityId, TraitKey.Leap, TraitActivationKind.MovementChanged,
+                                1, new[] { actor.EntityId }, new[] { path.Cells[i] });
+                    }
+                    CharacterCombatFacts passenger = null;
+                    if (i == path.Cells.Count - 1)
+                    {
+                        foreach (var _ in Observe(projection, value => current = value)) yield return 0;
+                        passenger = MovementRouteValidator.SwapPassenger(current, path.Cells[i]);
+                    }
+                    if (passenger != null)
+                    {
+                        foreach (var _ in Observe(projection, value => current = value)) yield return 0;
+                        foreach (var _ in projection.Environment.VisibleSteps(actor.Owner, value => visible = value)) yield return 0;
+                        if (!CanLand(current, path.Cells[i], visible, profileReads))
+                        { projection.Stop(MovementStopReason.NextStepInvalid); break; }
+                        projection.ExchangeEndpoint(passenger, path.Cells[i]);
+                        yield return 0;
+                        foreach (var id in new[] { actor.EntityId, passenger.EntityId }.OrderBy(id => id))
+                        {
+                            if (projection.Terminal) break;
+                            var arrival = projection.Character(id);
+                            if (arrival.Health.IsDead || arrival.Area != CharacterRuntimeArea.Field) continue;
+                            var cell = id == actor.EntityId ? path.Endpoint : path.Origin;
+                            if (arrival.Anchor != cell) continue;
+                            WeakGroundCalculator.RegisterEntry(projection, id, cell);
+                            foreach (var _ in MovementEnvironmentCalculator.ResolveEntrySteps(projection, cell, rules, mover: id)) yield return 0;
+                            if (!projection.Terminal && !projection.Character(id).Health.IsDead && projection.Character(id).Anchor == cell &&
+                                (!projection.ArrivalCells.TryGetValue(id, out var settled) || settled != cell))
+                            {
+                                if (id == actor.EntityId)
+                                {
+                                    foreach (var _ in projection.ResolvePathArrivalSteps()) yield return 0;
+                                }
+                                else
+                                {
+                                    foreach (var _ in projection.ResolveForcedArrivalSteps(id, null)) yield return 0;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        projection.Enter(path.Cells[i]);
+                        WeakGroundCalculator.RegisterEntry(projection, input.ActorId, path.Cells[i]);
+                        yield return 0;
+                        foreach (var _ in MovementEnvironmentCalculator.ResolveEntrySteps(projection, path.Cells[i], rules,
+                            skipMines: skipsMineEntry)) yield return 0;
+                    }
+                    foreach (var _ in ReconSquadApplication.ScanSteps(projection, path.Cells[i], reconContacts)) yield return 0;
+                    if (projection.Actor.Stats.MoveMethod != MoveMethod.LiftAndPlace)
+                        projection.Stop(MovementStopReason.MovementBlocked);
+                    if (projection.StopReason != MovementStopReason.Completed) break;
+                    yield return 0;
+                }
+                if (leap && !projection.Actor.Health.IsDead && projection.Actor.Area == CharacterRuntimeArea.Field)
+                {
+                    CombatCommandInput finalPosition = null;
+                    foreach (var _ in Observe(projection, value => finalPosition = value)) yield return 0;
+                    if (!MovementRouteValidator.CanEnter(finalPosition, projection.Actor.Anchor.Value, projection.Environment))
+                    { _failure = MovementFailureReason.DestinationOccupied; yield break; }
+                }
+                foreach (var _ in projection.ResolvePathArrivalSteps()) yield return 0;
+                if (projection.DistanceSpent > 0 && !projection.Actor.Health.IsDead && !projection.Terminal)
+                {
+                    var before = projection.Actor;
+                    var after = ApplyMoveSucceeded(input, before, path, projection.DistanceSpent, out var effect, profileReads);
+                    CombatCommandEvents.Effects(projection.Events, effect);
+                    int gain = AccelerationTraitRule.Held(after.Stats) - AccelerationTraitRule.Held(before.Stats);
+                    if (gain > 0) CombatCommandEvents.Trait(projection.Events, before.EntityId, TraitKey.Acceleration,
+                        TraitActivationKind.AttackGranted, gain, new[] { before.EntityId }, before.OccupiedCells);
+                    bool moved = before.Stats.TraitStatuses.ToArray().OfType<StationaryFireTraitStatusSnapshot>().Any(t => t.MovedThisOwnTurn);
+                    bool movedAfter = after.Stats.TraitStatuses.ToArray().OfType<StationaryFireTraitStatusSnapshot>().Any(t => t.MovedThisOwnTurn);
+                    if (moved != movedAfter) CombatCommandEvents.Trait(projection.Events, before.EntityId, TraitKey.StationaryFire,
+                        TraitActivationKind.StatusApplied, 1, new[] { before.EntityId }, before.OccupiedCells);
+                    projection.ReplaceActor(after);
+                    CombatCommandEvents.TraitState(projection.Events, before, after);
+                }
+                _projection = projection;
+                yield return 0;
             }
-            if (leap && !projection.Actor.Health.IsDead && projection.Actor.Area == CharacterRuntimeArea.Field &&
-                !MovementRouteValidator.CanEnter(projection.CurrentInput(), projection.Actor.Anchor.Value, projection.Environment))
-            { failure = MovementFailureReason.DestinationOccupied; return null; }
-            projection.ResolvePathArrival();
-            if (projection.DistanceSpent > 0 && !projection.Actor.Health.IsDead && !projection.Terminal)
+
+            private static IEnumerable<int> Observe(MovementProjection projection, Action<CombatCommandInput> completed)
             {
-                var bindings = CombatCommandEffects.Capture(projection.Actor, CombatCommandCalculator.RequiredProfile(input, projection.Actor, profileReads));
-                var direction = CombatCommandCalculator.AttackRotation(AttackAim.ForCell(path.Cells[projection.DistanceSpent]),
-                    path.Cells[projection.DistanceSpent - 1]);
-                var effect = new CombatEffectEngine().PlanMoveSucceeded(bindings,
-                    new MoveSucceededEffectContext(projection.DistanceSpent,true,direction));
-                CombatCommandEvents.Effects(projection.Events, effect);
-                var before = projection.Actor;
-                var after = CharacterSettlementCalculator.Copy(before, before.Health, CombatCommandEffects.Apply(before.Stats, effect));
-                int gain = AccelerationTraitRule.Held(after.Stats) - AccelerationTraitRule.Held(before.Stats);
-                if (gain > 0) CombatCommandEvents.Trait(projection.Events, before.EntityId, TraitKey.Acceleration,
-                    TraitActivationKind.AttackGranted, gain, new[] { before.EntityId }, before.OccupiedCells);
-                bool moved = before.Stats.TraitStatuses.ToArray().OfType<StationaryFireTraitStatusSnapshot>().Any(t => t.MovedThisOwnTurn);
-                bool movedAfter = after.Stats.TraitStatuses.ToArray().OfType<StationaryFireTraitStatusSnapshot>().Any(t => t.MovedThisOwnTurn);
-                if (moved != movedAfter) CombatCommandEvents.Trait(projection.Events, before.EntityId, TraitKey.StationaryFire,
-                    TraitActivationKind.StatusApplied, 1, new[] { before.EntityId }, before.OccupiedCells);
-                projection.ReplaceActor(after);
-                CombatCommandEvents.TraitState(projection.Events, before, after);
+                using var input = projection.BeginCurrentInput();
+                while (!input.IsComplete) { input.Step(); yield return 0; }
+                completed(input.Result);
             }
-            return projection;
+            private void RequireActive()
+            {
+                if (_disposed) throw new ObjectDisposedException(nameof(RouteWork));
+                if (_faulted) throw new InvalidOperationException("실패한 경로 계산은 다시 진행할 수 없습니다.");
+            }
+            private void RequireComplete()
+            {
+                RequireActive();
+                if (!_complete) throw new InvalidOperationException("경로 계산이 끝나지 않았습니다.");
+            }
+            public void Dispose()
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _steps?.Dispose();
+                _steps = null;
+                _projection = null;
+            }
+        }
+
+        internal static MovementProjection ProjectRoute(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
+            bool preview, out MovementFailureReason failure, out int validStepCount, CombatProfileReadSet profileReads = null)
+        {
+            using var work = BeginProjectRoute(input, rules, preview, profileReads);
+            while (!work.IsComplete) work.Step();
+            failure = work.Failure;
+            validStepCount = work.ValidStepCount;
+            return work.Projection;
         }
 
         internal static CharacterCombatFacts MoveTo(CharacterCombatFacts actor, CellCoord cell) =>
             actor.WithPlacement(actor.Area, actor.ReserveSlotIndex, cell, actor.Rotation, new[] { cell });
 
-        private static bool CanLand(CombatCommandInput input, CellCoord cell, MovementEnvironmentFacts environment,
+        /// <summary>
+        /// 자발 이동을 마친 행위자에게 이동 성공 효과(정지 사격의 이번 턴 이동 표시, 가속 공격력 등)를 적용한다.
+        /// 경로 완료(<see cref="RouteWork"/>)와 적 AI의 기하 후속 공격 추정이 같은 규칙을 쓴다.
+        /// </summary>
+        internal static CharacterCombatFacts ApplyMoveSucceeded(CombatCommandInput input, CharacterCombatFacts actor, MovementPath path,
+            int distanceSpent, out CombatEffectPlan effect, CombatProfileReadSet profileReads = null)
+        {
+            if (distanceSpent <= 0 || distanceSpent > path.StepCount) throw new ArgumentOutOfRangeException(nameof(distanceSpent));
+            var bindings = CombatCommandEffects.Capture(actor, CombatCommandCalculator.RequiredProfile(input, actor, profileReads));
+            var direction = CombatCommandCalculator.AttackRotation(AttackAim.ForCell(path.Cells[distanceSpent]), path.Cells[distanceSpent - 1]);
+            effect = new CombatEffectEngine().PlanMoveSucceeded(bindings, new MoveSucceededEffectContext(distanceSpent, true, direction));
+            return CharacterSettlementCalculator.Copy(actor, actor.Health, CombatCommandEffects.Apply(actor.Stats, effect));
+        }
+
+        /// <summary>
+        /// 경로를 끝까지 걸은 행위자의 사실이다: 종점 자리, 도착 칸 보정, 행동 사용 <see cref="UnitActionUse.Moved"/>(경로 시작의
+        /// <c>MovementProjection.BeginOrdinaryMove</c>와 같다), 이동 성공 효과(<see cref="ApplyMoveSucceeded"/>).
+        /// 경로 위 도착 연쇄(지뢰·가시·약한 지반 등)는 넣지 않는다. 그런 경로는 부르는 쪽이 따로 거른다.
+        /// </summary>
+        internal static CharacterCombatFacts MovedActor(CombatCommandInput input, CharacterCombatFacts actor, MovementPath path,
+            MovementEnvironmentFacts environment)
+        {
+            var departed = PositionTileModifierCalculator.Replace(actor, PositionTileModifier.None);
+            var moved = MoveTo(departed, path.Endpoint).With(actionUse: UnitActionUse.Moved);
+            moved = PositionTileModifierCalculator.Replace(moved, PositionTileModifierCalculator.ResolveAt(path.Endpoint, environment));
+            return path.StepCount == 0 ? moved : ApplyMoveSucceeded(input, moved, path, path.StepCount, out _);
+        }
+
+        internal static bool CanLand(CombatCommandInput input, CellCoord cell, MovementEnvironmentFacts environment,
             CombatProfileReadSet profileReads = null)
         {
             if (!MovementRouteValidator.CanLand(input, cell, environment)) return false;

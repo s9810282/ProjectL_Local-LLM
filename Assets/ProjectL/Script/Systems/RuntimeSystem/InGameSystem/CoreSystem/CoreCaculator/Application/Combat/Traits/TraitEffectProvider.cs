@@ -85,7 +85,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 else if (state is RoarRuntimeState roar &&
                          traitDefinition is RoarTraitDefinition roarDefinition)
                 {
-                    statuses.Add(new RoarTraitStatusSnapshot(roar.HitCount, roarDefinition.HitThreshold));
+                    statuses.Add(new RoarTraitStatusSnapshot(roar.HitCount, roarDefinition.HitThreshold, roarDefinition.CountPerHit,
+                        roarDefinition.CountPerOwnSideTurnEnd, roarDefinition.CountPerOpposingSideTurnEnd));
                 }
                 else if (state is IntimidationRuntimeState &&
                          traitDefinition is IntimidationTraitDefinition intimidation)
@@ -95,6 +96,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 else if (state is ImpactBoltRuntimeState && traitDefinition is ImpactBoltTraitDefinition bolt)
                 {
                     statuses.Add(new ImpactBoltTraitStatusSnapshot(bolt.DistanceCells));
+                }
+                else if (state is CrashImpactRuntimeState && traitDefinition is CrashImpactTraitDefinition crash)
+                {
+                    statuses.Add(new CrashImpactTraitStatusSnapshot(crash.DistanceCells, crash.WallDamagePercent, crash.UnitDamagePercent));
                 }
                 else if (state is PullRuntimeState && traitDefinition is PullTraitDefinition pull)
                 {
@@ -127,6 +132,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 else if (state is AnkleBreakerRuntimeState && traitDefinition is AnkleBreakerTraitDefinition)
                 {
                     statuses.Add(new AnkleBreakerTraitStatusSnapshot());
+                }
+                else if (state is BleedingRuntimeState && traitDefinition is BleedingTraitDefinition)
+                {
+                    statuses.Add(new BleedingTraitStatusSnapshot());
+                }
+                else if (state is FearRuntimeState && traitDefinition is FearTraitDefinition)
+                {
+                    statuses.Add(new FearTraitStatusSnapshot());
+                }
+                else if (state is SelfDestructRuntimeState && traitDefinition is SelfDestructTraitDefinition selfDestruct)
+                {
+                    statuses.Add(new SelfDestructTraitStatusSnapshot(selfDestruct.Level));
+                }
+                else if (state is ReconstructionRuntimeState reconstructionState && traitDefinition is ReconstructionTraitDefinition reconstruction)
+                {
+                    statuses.Add(new ReconstructionTraitStatusSnapshot(reconstruction.Level, reconstructionState.Used));
+                }
+                else if (state is RampageRuntimeState rampageState && traitDefinition is RampageTraitDefinition rampage)
+                {
+                    statuses.Add(new RampageTraitStatusSnapshot(rampage.BaseAttackBonus, rampage.RankAttackBonus,
+                        rampage.MovementBonus, rampageState.KillAttackBonus));
+                }
+                else if (state is LavaCannonRuntimeState && traitDefinition is LavaCannonTraitDefinition)
+                {
+                    statuses.Add(new LavaCannonTraitStatusSnapshot());
                 }
                 else if (state is SoloActionRuntimeState && traitDefinition is SoloActionTraitDefinition)
                 {

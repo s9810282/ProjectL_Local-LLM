@@ -15,10 +15,14 @@ MonoBehaviour:
   traitVisualData:
     key: 440
     displayName: "\uC704\uCE58 \uAD50\uD658"
-    icon: {fileID: 0}
-    description: "이동할 칸의 아군과 위치를 교대합니다. \n교대 대상은 이동 행동과 이동 거리를 \n소모하지 않습니다."
+    icon: {fileID: 21300000, guid: 900f8cd172fc3c14a99b199acca05d06, type: 3}
+    description: "\uC774\uB3D9\uD560 \uCE78\uC758 \uC544\uAD70\uACFC \uC704\uCE58\uB97C
+      \uAD50\uB300\uD569\uB2C8\uB2E4. \n\uAD50\uB300 \uB300\uC0C1\uC740 \uC774\uB3D9
+      \uD589\uB3D9\uACFC \uC774\uB3D9 \uAC70\uB9AC\uB97C \n\uC18C\uBAA8\uD558\uC9C0
+      \uC54A\uC2B5\uB2C8\uB2E4."
     defenseReductionDescription: 
     rankValueFormat: "\uBCF4\uD638\uB9C9 {0} \u2192 {2} (+{1})"
+    rankEffectFormat: 
     activations:
     - kind: 250
       direction: 0

@@ -8,6 +8,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private readonly Pose _zoomOut;
         private readonly Pose _zoomIn;
+        private readonly Pose _reference;
         private readonly float _minSize;
         private readonly float _maxSize;
 
@@ -19,8 +20,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentException("[CombatCameraZoomPose] 자세 줌은 0 < ZoomMin < ZoomMax여야 합니다.");
             _zoomOut = zoomOut;
             _zoomIn = zoomIn;
+            _reference = zoomOut;
             _minSize = minSize;
             _maxSize = maxSize;
+        }
+
+        private CombatCameraZoomPosePath(Pose zoomOut, Pose zoomIn, float minSize, float maxSize, Pose reference)
+            : this(zoomOut, zoomIn, minSize, maxSize)
+        {
+            ValidatePose(reference, nameof(reference));
+            _reference = reference;
         }
 
         /// <summary>SO의 오프셋을 원래 카메라 구도에 적용합니다. 양 끝점 모두 같은 원래 구도를 기준으로 합니다.</summary>
@@ -33,7 +42,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 reference.rotation * Quaternion.Euler(outRotation));
             Pose zoomIn = new Pose(reference.position + reference.rotation * inPosition,
                 reference.rotation * Quaternion.Euler(inRotation));
-            return new CombatCameraZoomPosePath(zoomOut, zoomIn, minSize, maxSize);
+            return new CombatCameraZoomPosePath(zoomOut, zoomIn, minSize, maxSize, reference);
         }
 
         /// <summary>실제 크기에서 진행률을 구합니다. 연출이 범위를 벗어나도 자세는 끝점에 고정합니다.</summary>
@@ -53,6 +62,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Vector3 pan = _zoomOut.rotation * new Vector3(offset.x, offset.y, 0f);
             return new Pose(Vector3.Lerp(_zoomOut.position, _zoomIn.position, t) + pan,
                 Quaternion.Slerp(_zoomOut.rotation, _zoomIn.rotation, t));
+        }
+
+        /// <summary>처음 기준에서 계산한 자세를 현재 카메라 Transform의 이동·회전만큼 옮깁니다. 경로의 원본 끝점은 바꾸지 않습니다.</summary>
+        internal Pose EvaluateAtReference(float actualSize, Vector2 offset, Pose currentReference)
+        {
+            ValidatePose(currentReference, nameof(currentReference));
+            Pose pose = Evaluate(actualSize, offset);
+            Quaternion rotationDelta = currentReference.rotation * Quaternion.Inverse(_reference.rotation);
+            return new Pose(
+                currentReference.position + rotationDelta * (pose.position - _reference.position),
+                rotationDelta * pose.rotation);
         }
 
         private static void ValidatePose(Pose pose, string name)

@@ -20,6 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         internal static AttackFailureReason Actor(CombatCommandInput input, out CharacterCombatFacts actor)
         {
+            using var sample = CoreProfiling.Sample(CoreProfileSection.AttackAdmission);
             var admission = CombatActionAdmission.Actor(input, CombatCommandKind.Attack, out actor);
             if (admission != Contracts.Results.MovementFailureReason.None)
                 return Enum.TryParse(admission.ToString(), out AttackFailureReason failure)
@@ -53,12 +54,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// </summary>
         private static AttackFailureReason UnitReady(CombatCommandInput input, CharacterCombatFacts unit)
         {
+            var failure = IntrinsicUnitReadiness(input, unit);
+            if (failure != AttackFailureReason.None) return failure;
+            return input.Characters.Any(DefersMultiCellAttack)
+                ? AttackFailureReason.DeferredMultiCellUnit : AttackFailureReason.None;
+        }
+
+        internal static bool DefersMultiCellAttack(CharacterCombatFacts unit) =>
+            unit.Area == CharacterRuntimeArea.Field && unit.OccupiedCells.Count != 1;
+
+        internal static AttackFailureReason IntrinsicUnitReadiness(CombatCommandInput input, CharacterCombatFacts unit)
+        {
             if (unit.Area != CharacterRuntimeArea.Field || unit.Health.IsDead) return AttackFailureReason.NotInCombat;
-            if (CombatActionAdmission.IsAttackRestricted(unit)) return AttackFailureReason.Disarmed;
+            var restriction = RestrictionFailure(unit);
+            if (restriction != AttackFailureReason.None) return restriction;
             if (!UnitBehaviorRules.CanBasicAttack(input, unit)) return AttackFailureReason.BasicAttackDisabled;
-            if (input.Characters.Any(c => c.Area == CharacterRuntimeArea.Field && c.OccupiedCells.Count != 1))
-                return AttackFailureReason.DeferredMultiCellUnit;
             return AttackFailureReason.None;
+        }
+
+        /// <summary>
+        /// 공격 제한(재구성 중·무장 해제)의 실패 이유다. 제한이 없으면 None이다. 판정은 <see cref="CombatActionAdmission.IsAttackRestricted"/> 하나이고,
+        /// 여기서는 이유만 가른다. 유닛 조건 검사와 포효(대기 판정·예고, BossRoarCalculator)가 같이 쓴다.
+        /// </summary>
+        internal static AttackFailureReason RestrictionFailure(CharacterCombatFacts unit)
+        {
+            if (!CombatActionAdmission.IsAttackRestricted(unit)) return AttackFailureReason.None;
+            return Domain.Traits.Rules.ReconstructionTraitRule.IsReconstructing(unit)
+                ? AttackFailureReason.Reconstructing : AttackFailureReason.Disarmed;
         }
 
         /// <summary>
@@ -70,73 +92,196 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatAttackProfile profile, AttackAim? aim = null, MovementEnvironmentFacts environment = null, WallGeometry walls = null,
             AttackElevation elevation = null)
         {
+            using var sample = CoreProfiling.Sample(CoreProfileSection.AttackSelection);
+            AttackSelectionEvaluation result = null;
+            foreach (var _ in SelectionSteps(input, actor, profile, aim, environment, walls, elevation, value => result = value)) { }
+            return result;
+        }
+
+        internal static IEnumerable<string> SelectionSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim? aim, MovementEnvironmentFacts environment, WallGeometry walls,
+            AttackElevation elevation, Action<AttackSelectionEvaluation> completed)
+        {
             var policy = new CombatEffectEngine().EvaluateAttackTargeting(CombatCommandEffects.Capture(actor, profile)).Policy;
             int range = SelectionRange(input, actor, profile, environment);
-            if (!new AttackSelectionResolver().TryResolve(profile.Method, range,
-                actor.Anchor.Value, actor.Owner, aim ?? input.Aim, out var raw, out var failure)) return AttackSelectionEvaluation.Failure(failure);
-            if (raw.PrimaryCell.HasValue && !input.State.IsInside(raw.PrimaryCell.Value)) return AttackSelectionEvaluation.Failure(AttackFailureReason.OutOfBounds);
-            if (raw.PrimaryCell.HasValue && !CanDesignate(input, actor, raw.PrimaryCell.Value))
-                return AttackSelectionEvaluation.Failure(AttackFailureReason.HaboobDesignationBlocked);
-            if (policy.ExcludesAdjacentDirectCells && raw.PrimaryCell.HasValue &&
-                CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, raw.PrimaryCell.Value))
-                return AttackSelectionEvaluation.Failure(AttackFailureReason.AppointCellRejected);
-            var selected = new AttackCellSelection(raw.PrimaryCell,
-                raw.DesignatedCells.ToArray().Where(input.State.IsInside).Where(c => !policy.ExcludesAdjacentDirectCells || raw.PrimaryCell.HasValue ||
-                    !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, c)).ToArray(),
-                raw.AdditionalCells.ToArray().Where(input.State.IsInside).ToArray());
-            var eligible = input.Characters.Where(c => AttackTargetEligibility.CanTargetCharacter(actor, c, policy)).ToArray();
-            var structures = input.State.Structures.Where(s => AttackTargetEligibility.CanTargetStructure(actor, s,
-                input.EnvironmentBindings.ObstacleEntityIds.Contains(s.EntityId), policy)).ToArray();
-            var targets = new AttackTargetResolver().CollectCandidates(selected, eligible, structures);
-            // 벽은 공개 지형이다. 관찰자별 투영은 사거리에만 쓰고 형상에는 원본을 전달한다.
-            // 고지대는 한쪽에만 보일 수 있어 사거리처럼 이 연산의 환경(관찰자 투영)을 따른다(고지대 Wall 무시 설계 D8).
-            walls ??= WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight,
-                input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
-            elevation ??= AttackElevation.From(environment ?? input.State.Environment, input.EnvironmentBindings);
+            yield return "SelectionPolicy";
+            AttackCellSelection selected = null;
+            AttackFailureReason failure = default;
+            foreach (var phase in SelectionCellSteps(input, actor, profile, aim ?? input.Aim, range, policy,
+                (value, reason) => { selected = value; failure = reason; })) yield return phase;
+            if (failure != AttackFailureReason.None) { completed(AttackSelectionEvaluation.Failure(failure)); yield break; }
+            var eligible = new List<CharacterCombatFacts>();
+            foreach (var candidate in input.Characters)
+            {
+                if (AttackTargetEligibility.CanTargetCharacter(actor, candidate, policy)) eligible.Add(candidate);
+                yield return "SelectionCharacterEligibility";
+            }
+            var structures = new List<StructureCombatFacts>();
+            foreach (var candidate in input.State.Structures)
+            {
+                if (AttackTargetEligibility.CanTargetStructure(actor, candidate,
+                    input.EnvironmentBindings.ObstacleEntityIds.Contains(candidate.EntityId), policy)) structures.Add(candidate);
+                yield return "SelectionStructureEligibility";
+            }
+            KeyValuePair<EntityId, AttackTargetRole>[] targets = null;
+            foreach (var phase in AttackTargetResolver.CollectSteps(selected, eligible, structures, value => targets = value))
+                yield return phase;
+            // 벽 형상은 공개 지형 원본을, 고저는 이 연산의 관찰 환경을 읽는다.
+            if (walls == null)
+                foreach (var phase in WallGeometryBuilder.BuildSteps(input.State.BoardWidth, input.State.BoardHeight,
+                    input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking, value => walls = value))
+                    yield return phase;
+            if (elevation == null)
+                foreach (var phase in AttackElevation.BuildSteps(environment ?? input.State.Environment,
+                    input.EnvironmentBindings, value => elevation = value)) yield return phase;
             var primaryFailure = ValidatePrimary(input, selected, targets, policy, walls);
-            if (primaryFailure != AttackFailureReason.None)
-                return AttackSelectionEvaluation.Failure(primaryFailure,
-                    selected.PrimaryCell.HasValue && walls.Occupies(selected.PrimaryCell.Value)
-                        ? AttackOcclusionResolver.ResolveCells(actor.Anchor.Value, selected, walls, elevation, profile.Occlusion).BlockedContacts
-                        : null);
+            if (primaryFailure != AttackFailureReason.None && (!selected.PrimaryCell.HasValue || !walls.Occupies(selected.PrimaryCell.Value)))
+            {
+                completed(AttackSelectionEvaluation.Failure(primaryFailure));
+                yield break;
+            }
 
-            EntityId selectedTargetId = targets.Where(t => t.Value == AttackTargetRole.Primary)
-                .Select(t => t.Key).DefaultIfEmpty(EntityId.Empty).Single();
+            EntityId selectedTargetId = EntityId.Empty;
             var emptyFailure = profile.Method.ChoiceMode == TargetingChoiceMode.All
                 ? AttackFailureReason.UnresolvedEmptyAll : AttackFailureReason.NoEligibleTargets;
-            // 가림 계산을 빈 대상 검사 앞에 둔다. 위치 없는 지정이 대상 없이 실패해도 덮었을 칸(표시용)을 같은 식으로 남긴다.
-            var occlusion = AttackOcclusionResolver.ResolveCells(actor.Anchor.Value, selected, walls, elevation, profile.Occlusion);
-            var reachable = occlusion.Cells;
-            var blocked = occlusion.BlockedContacts;
+            if (primaryFailure == AttackFailureReason.None)
+                selectedTargetId = targets.Where(t => t.Value == AttackTargetRole.Primary)
+                    .Select(t => t.Key).DefaultIfEmpty(EntityId.Empty).Single();
+
+            // 위치 없는 지정이 실패해도 실제로 도달한 표시 칸을 남긴다.
+            AttackCellSelection reachable = null;
+            IReadOnlyList<AttackBlockedContact> blocked = null;
+            foreach (var phase in AttackOcclusionResolver.ResolveCellSteps(actor.Anchor.Value, selected, walls, elevation,
+                profile.Occlusion, (cells, contacts) => { reachable = cells; blocked = contacts; })) yield return phase;
+            if (primaryFailure != AttackFailureReason.None)
+            {
+                completed(AttackSelectionEvaluation.Failure(primaryFailure, blocked));
+                yield break;
+            }
             if (!selected.PrimaryCell.HasValue && targets.Length == 0)
-                return AttackSelectionEvaluation.Failure(emptyFailure, emptyAreaCells: CombatAttackDelivery.DirectAffectedCells(reachable));
+            {
+                CellCoord[] empty = null;
+                foreach (var phase in CombatAttackDelivery.DirectAffectedCellSteps(reachable, value => empty = value))
+                    yield return phase;
+                completed(AttackSelectionEvaluation.Failure(emptyFailure, emptyAreaCells: empty));
+                yield break;
+            }
             if (selected.PrimaryCell.HasValue && !reachable.PrimaryCell.HasValue)
-                return AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked);
-            targets = new AttackTargetResolver().CollectCandidates(reachable, eligible, structures);
+            {
+                completed(AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked));
+                yield break;
+            }
+            foreach (var phase in AttackTargetResolver.CollectSteps(reachable, eligible, structures, value => targets = value))
+                yield return phase;
             if (!selected.PrimaryCell.HasValue && targets.Length == 0)
-                return AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked,
-                    CombatAttackDelivery.DirectAffectedCells(reachable));
-            // 전달 검증은 일반 규칙이 받아들인 조준에만 적용한다. 특성이 일반 실패 사유를 바꾸지 않게 한다.
+            {
+                CellCoord[] empty = null;
+                foreach (var phase in CombatAttackDelivery.DirectAffectedCellSteps(reachable, value => empty = value))
+                    yield return phase;
+                completed(AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked, empty));
+                yield break;
+            }
+            // 전달 검증은 일반 지정이 수락한 조준에만 적용한다.
             if (selected.PrimaryCell.HasValue)
             {
                 var deliveryFailure = CombatAttackDelivery.ValidateAim(profile, actor.Anchor.Value, selected.PrimaryCell.Value);
-                if (deliveryFailure != AttackFailureReason.None) return AttackSelectionEvaluation.Failure(deliveryFailure);
+                if (deliveryFailure != AttackFailureReason.None)
+                {
+                    completed(AttackSelectionEvaluation.Failure(deliveryFailure));
+                    yield break;
+                }
             }
             var resolved = new ResolvedAttackSelection(selected, reachable, targets, eligible, structures, policy, selectedTargetId);
-            var pull = PullAttackCalculator.Evaluate(input, actor, profile, resolved, environment ?? input.State.Environment, walls);
-            if (pull != null && pull.FailureReason != AttackFailureReason.None)
-                return AttackSelectionEvaluation.Failure(pull.FailureReason, blocked);
-            return AttackSelectionEvaluation.Success(resolved, blocked, pull);
+            PullAttackEvaluation pull = null;
+            foreach (var phase in PullAttackCalculator.EvaluateSteps(input, actor, profile, resolved,
+                environment ?? input.State.Environment, walls, value => pull = value)) yield return phase;
+            completed(pull != null && pull.FailureReason != AttackFailureReason.None
+                ? AttackSelectionEvaluation.Failure(pull.FailureReason, blocked)
+                : AttackSelectionEvaluation.Success(resolved, blocked, pull));
+            yield return "SelectionComplete";
+        }
+
+        /// <summary>대상 점유와 무관한 지정 칸을 계산한다. 실행과 예상 위협이 같은 사거리·각도·지형 제한을 쓴다.</summary>
+        internal static IEnumerable<string> SelectionCellSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim aim, int range, AttackTargetingPolicy policy,
+            Action<AttackCellSelection, AttackFailureReason> completed)
+        {
+            AttackCellSelection raw = null;
+            AttackFailureReason failure = default;
+            foreach (var phase in AttackSelectionResolver.ResolveSteps(profile.Method, range, actor.Anchor.Value, actor.Owner,
+                aim, (value, reason) => { raw = value; failure = reason; })) yield return phase;
+            if (failure == AttackFailureReason.None && raw.PrimaryCell is CellCoord primary)
+            {
+                if (!input.State.IsInside(primary)) failure = AttackFailureReason.OutOfBounds;
+                else if (!CanDesignate(input, actor, primary)) failure = AttackFailureReason.HaboobDesignationBlocked;
+                else if (policy.ExcludesAdjacentDirectCells && CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, primary))
+                    failure = AttackFailureReason.AppointCellRejected;
+            }
+            if (failure != AttackFailureReason.None) { completed(null, failure); yield break; }
+
+            var designated = new List<CellCoord>();
+            var additional = new List<CellCoord>();
+            for (int i = 0; i < raw.DesignatedCells.Length; i++)
+            {
+                var cell = raw.DesignatedCells.Span[i];
+                if (input.State.IsInside(cell) && (!policy.ExcludesAdjacentDirectCells || raw.PrimaryCell.HasValue ||
+                    !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, cell))) designated.Add(cell);
+                yield return "SelectionBoardCell";
+            }
+            for (int i = 0; i < raw.AdditionalCells.Length; i++)
+            {
+                var cell = raw.AdditionalCells.Span[i];
+                if (input.State.IsInside(cell)) additional.Add(cell);
+                yield return "SelectionBoardCell";
+            }
+            completed(new AttackCellSelection(raw.PrimaryCell, designated.ToArray(), additional.ToArray()), AttackFailureReason.None);
         }
 
         /// <summary>추적과 공격 선택이 실제 전달의 관통·벽·지정 규칙을 함께 사용합니다.</summary>
         internal static bool DeliversTo(CombatCommandInput input, CharacterCombatFacts actor, CombatAttackProfile profile,
             AttackAim aim, EntityId targetId, int commonDamage, MovementEnvironmentFacts environment, WallGeometry walls, AttackElevation elevation)
         {
-            var evaluation = Selection(input, actor, profile, aim, environment, walls, elevation);
-            if (evaluation.FailureReason != AttackFailureReason.None) return false;
-            return CombatAttackDelivery.Resolve(input, actor, profile, evaluation.Selection, commonDamage, walls, elevation)
-                .Hits.Any(hit => hit.TargetId == targetId && hit.AppliesDamage);
+            bool delivers = false;
+            foreach (var _ in DeliveryCheckSteps(input, actor, profile, aim, targetId, commonDamage, environment, walls, elevation,
+                value => delivers = value)) { }
+            return delivers;
+        }
+
+        internal static IEnumerable<string> DeliveryCheckSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim aim, EntityId targetId, int commonDamage, MovementEnvironmentFacts environment,
+            WallGeometry walls, AttackElevation elevation, Action<bool> completed)
+        {
+            ResolvedAttackDelivery delivery = null;
+            foreach (var phase in DeliverySteps(input, actor, profile, aim, commonDamage, environment, walls, elevation,
+                value => delivery = value))
+                yield return phase;
+            if (delivery == null)
+            {
+                completed(false);
+                yield break;
+            }
+            foreach (var hit in delivery.Hits)
+            {
+                if (hit.TargetId == targetId && hit.AppliesDamage)
+                {
+                    completed(true);
+                    yield break;
+                }
+                yield return "DeliveryTargetCheck";
+            }
+            completed(false);
+        }
+
+        internal static IEnumerable<string> DeliverySteps(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim aim, int commonDamage, MovementEnvironmentFacts environment,
+            WallGeometry walls, AttackElevation elevation, Action<ResolvedAttackDelivery> completed)
+        {
+            AttackSelectionEvaluation evaluation = null;
+            foreach (var phase in SelectionSteps(input, actor, profile, aim, environment, walls, elevation, value => evaluation = value))
+                yield return phase;
+            if (evaluation.FailureReason != AttackFailureReason.None) { completed(null); yield break; }
+            foreach (var phase in CombatAttackDelivery.ResolveSteps(input, actor, profile, evaluation.Selection, commonDamage,
+                walls, elevation, completed)) yield return phase;
         }
 
         /// <summary>방향 조준 후보와 그 순서(열거 값 순서, None 제외)다. 범위 조회와 추적 후보가 같은 순서로 돈다.</summary>
@@ -154,51 +299,118 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatAttackProfile profile, IReadOnlyCollection<CellCoord> targetCells, MovementEnvironmentFacts environment)
         {
             var aims = new List<AttackAim>();
-            if (targetCells.Count == 0) return aims;
+            using var cursor = EnumerateAimsThatCanHit(input, actor, profile, targetCells, environment);
+            while (cursor.MoveNext())
+                if (cursor.Current is AttackAim aim) aims.Add(aim);
+            return aims;
+        }
+
+        internal static IEnumerator<AttackAim?> EnumerateAimsThatCanHit(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, IReadOnlyCollection<CellCoord> targetCells, MovementEnvironmentFacts environment)
+        {
+            if (targetCells.Count == 0) yield break;
             var method = profile.Method;
             int range = SelectionRange(input, actor, profile, environment);
             var origin = actor.Anchor.Value;
-            var resolver = new AttackSelectionResolver();
             if (method.ChoiceMode == TargetingChoiceMode.Single)
             {
-                var primaries = new HashSet<CellCoord>();
-                if (profile.UsesPiercingShot)
+                var primaries = new SortedSet<CellCoord>(AimCellOrder);
+                var splash = AppointShapeCalculator.CreateSplashOffsets(method.Splash);
+                foreach (var target in targetCells)
                 {
-                    // 관통은 조준 칸이 방향만 정한다. 대상과 같은 줄의 조준이면 어느 거리든 같은 줄을 지난다.
-                    foreach (var target in targetCells)
+                    if (profile.UsesPiercingShot)
+                    {
                         if (PierceTargetCollector.TryResolveStep(origin, target, out var step))
                             for (int distance = 1; distance <= range; distance++)
+                            {
                                 primaries.Add(origin + new CellCoord(step.X * distance, step.Y * distance));
-                }
-                else
-                {
-                    // 선택 칸 = 주 칸 + 스플래시 칸이므로, 대상 칸에서 스플래시 칸을 뺀 자리가 주 칸 후보다.
-                    var splash = AppointShapeCalculator.CreateSplashOffsets(method.Splash);
-                    foreach (var target in targetCells)
+                                yield return null;
+                            }
+                    }
+                    else
                     {
                         primaries.Add(target);
+                        yield return null;
                         foreach (var offset in splash)
+                        {
                             primaries.Add(new CellCoord(target.X - offset.X, target.Y - offset.Y));
+                            yield return null;
+                        }
                     }
+                    yield return null;
                 }
-                foreach (var cell in primaries.Where(input.State.IsInside).OrderBy(c => c.Y).ThenBy(c => c.X))
+                foreach (var cell in primaries)
                 {
                     var aim = AttackAim.ForCell(cell);
-                    if (resolver.TryResolve(method, range, origin, actor.Owner, aim, out _, out _))
-                        aims.Add(aim);
+                    bool valid = input.State.IsInside(cell) && AttackSelectionResolver.ValidateAim(
+                        method, range, origin, actor.Owner, aim) == AttackFailureReason.None;
+                    yield return valid ? aim : (AttackAim?)null;
                 }
-                return aims;
+                yield break;
             }
 
-            var targets = new HashSet<CellCoord>(targetCells);
+            var targets = new HashSet<CellCoord>();
+            foreach (var target in targetCells)
+            {
+                targets.Add(target);
+                yield return null;
+            }
             var candidates = method.ChoiceMode == TargetingChoiceMode.All ? new[] { AttackAim.ForAll() } : DirectionAims;
             foreach (var aim in candidates)
             {
-                if (resolver.TryResolve(method, range, origin, actor.Owner, aim, out var cells, out _) &&
-                    (cells.DesignatedCells.ToArray().Any(targets.Contains) || cells.AdditionalCells.ToArray().Any(targets.Contains)))
-                    aims.Add(aim);
+                AttackCellSelection cells = null;
+                foreach (var _ in AttackSelectionResolver.ResolveSteps(method, range, origin, actor.Owner, aim,
+                    (value, _) => cells = value)) yield return null;
+                if (cells != null)
+                {
+                    bool intersects = false;
+                    for (int i = 0; i < cells.DesignatedCells.Length; i++)
+                    {
+                        if (targets.Contains(cells.DesignatedCells.Span[i])) { intersects = true; break; }
+                        yield return null;
+                    }
+                    for (int i = 0; !intersects && i < cells.AdditionalCells.Length; i++)
+                    {
+                        if (targets.Contains(cells.AdditionalCells.Span[i])) { intersects = true; break; }
+                        yield return null;
+                    }
+                    yield return intersects ? aim : (AttackAim?)null;
+                }
+                else yield return null;
             }
-            return aims;
+        }
+
+        private static readonly IComparer<CellCoord> AimCellOrder = Comparer<CellCoord>.Create((left, right) =>
+        {
+            int rows = left.Y.CompareTo(right.Y);
+            return rows != 0 ? rows : left.X.CompareTo(right.X);
+        });
+
+        internal static IEnumerable<AttackAim?> AiRangeCandidates(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, MovementEnvironmentFacts environment)
+        {
+            if (profile.Method.ChoiceMode == TargetingChoiceMode.All) { yield return AttackAim.ForAll(); yield break; }
+            if (profile.Method.ChoiceMode != TargetingChoiceMode.Single)
+            {
+                foreach (var aim in DirectionAims) yield return aim;
+                yield break;
+            }
+
+            int range = SelectionRange(input, actor, profile, environment);
+            var policy = new CombatEffectEngine().EvaluateAttackTargeting(CombatCommandEffects.Capture(actor, profile)).Policy;
+            var origin = actor.Anchor.Value;
+            var cells = new SortedSet<CellCoord>(AimCellOrder);
+            foreach (var offset in AppointShapeCalculator.MaskSteps(profile.Method.Shape, range, null))
+            {
+                if (offset.HasValue && (profile.Method.ChoiceAngle == TargetingChoiceAngle.Unrestricted ||
+                    TargetingAngleCalculator.Contains(profile.Method.ChoiceAngle, actor.Owner, CellCoord.Zero, offset.Value)))
+                {
+                    var cell = new CellCoord(checked(origin.X + offset.Value.X), checked(origin.Y + offset.Value.Y));
+                    if (IsRangeCell(input, actor, profile, policy, cell)) cells.Add(cell);
+                }
+                yield return null;
+            }
+            foreach (var cell in cells) yield return AttackAim.ForCell(cell);
         }
 
         private static AttackFailureReason ValidatePrimary(CombatCommandInput input, AttackCellSelection selected,
@@ -290,12 +502,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int effectiveRange = basicOnly ? EnvironmentTerrainRules.AppointRange(input, actor, environment)
                 : SelectionRange(input, actor, profile, environment);
             return new AppointRangeCalculator().CalculateRangeCells(profile.Method, effectiveRange, actor.Anchor.Value, actor.Owner)
-                .Where(input.State.IsInside)
-                .Where(c => profile.Method.ChoiceMode != TargetingChoiceMode.Single || CanDesignate(input, actor, c))
-                .Where(c => CombatAttackDelivery.ValidateAim(profile, actor.Anchor.Value, c) == AttackFailureReason.None)
-                .Where(c => !policy.ExcludesAdjacentDirectCells ||
-                    !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, c)).OrderBy(c => c.Y).ThenBy(c => c.X).ToArray();
+                .Where(c => IsRangeCell(input, actor, profile, policy, c))
+                .OrderBy(c => c.Y).ThenBy(c => c.X).ToArray();
         }
+
+        private static bool IsRangeCell(CombatCommandInput input, CharacterCombatFacts actor, CombatAttackProfile profile,
+            AttackTargetingPolicy policy, CellCoord cell) =>
+            input.State.IsInside(cell) &&
+            (profile.Method.ChoiceMode != TargetingChoiceMode.Single || CanDesignate(input, actor, cell)) &&
+            CombatAttackDelivery.ValidateAim(profile, actor.Anchor.Value, cell) == AttackFailureReason.None &&
+            (!policy.ExcludesAdjacentDirectCells || !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, cell));
 
         private static bool CanDesignate(CombatCommandInput input, CharacterCombatFacts actor, CellCoord primary) =>
             input.State.Gimmicks.Entries.OfType<HaboobGimmickState>().All(h =>

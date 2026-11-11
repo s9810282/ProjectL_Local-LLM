@@ -19,7 +19,7 @@ namespace ProjectL.Tests.Core
         {
             var i = Objects(new SheriffBadgeSourceFact(99, CellCoord.Right, 1, true, new[] { Owner.Player }));
             var s = i.State;
-            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new FixturePhaseProbe()).ToArray())));
+            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new FixturePhaseProbe()).ToArray())));
             var r = CombatCommandCalculator.Calculate(i, new IMovementTileRule[] { new SheriffBadgeMovementTileRule(), new FixturePhaseProbeRule() });
             Assert.That(r.Accepted, Is.True, r.Reason);
             Assert.That(MovementTestData.Actor(r).Health.CurrentHealth, Is.EqualTo(100));
@@ -70,7 +70,7 @@ namespace ProjectL.Tests.Core
             var badge = new SheriffBadgeSourceFact(99, new CellCoord(2, 1), 1, true, new[] { Owner.Player });
             i = WithObjects(i, badge);
             var s = i.State;
-            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { badge, new FixtureForce(other.EntityId) })));
+            i = CombatCommandTestData.With(i, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { badge, new FixtureForce(other.EntityId) })));
             var rules = new IMovementTileRule[] { new SheriffBadgeMovementTileRule(), new FixtureForceRule() };
             var context = MovementContextCalculator.Capture(i, Owner.Player, rules);
             Assert.That(context.VisibleEnvironment.Tiles.Select(t => t.Id), Does.Contain(99));
@@ -107,7 +107,7 @@ namespace ProjectL.Tests.Core
                 new HealthStateSnapshot(100, 100), new CellCoord(0, 7), Rotation4.R0, new[] { new CellCoord(0, 7) }, Owner.Enemy);
             var badge = new SheriffBadgeSourceFact(99, cell, 1, true, new[] { Owner.Enemy });
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { badge }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { badge }));
             var input = new CombatCommandInput(1, i.Kind, EntityId.Empty, default, state,
                 new[] { i.Characters.Single(c => c.CharacterKey == EntityKey.Unit_MainCharacter), waiting }, i.Profiles,
                 i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
@@ -131,7 +131,7 @@ namespace ProjectL.Tests.Core
             var cell = new CellCoord(2, 0);
             var badge = new SheriffBadgeSourceFact(99, cell, 1, true, new[] { Owner.Player });
             var s = i.State;
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),new MovementEnvironmentFacts(new[] { badge }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),new MovementEnvironmentFacts(new[] { badge }));
             var input = new CombatCommandInput(1, i.Kind, i.ActorId, default, state, i.Characters, i.Profiles,
                 i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, targetCell: cell,
                 battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
@@ -168,7 +168,7 @@ namespace ProjectL.Tests.Core
         {
             var s = i.State;
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim,
-                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
+                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
                 i.Characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
                 i.TargetCell, i.Rotation, i.Battle, i.ProcessingKind, i.Path, i.MovementContext, i.BattleInstanceId,
                 i.ArtifactItems, Bindings(objects.Select(o => o.Id).ToArray()), i.ObstacleContents,
@@ -251,7 +251,7 @@ namespace ProjectL.Tests.Core
             var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var s = i.State;
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim,
-                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
+                new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(objects)),
                 i.Characters, i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
                 path: i.Path, battleInstanceId: 1, environmentBindings: Bindings(objects.Select(o => o.Id).ToArray()),
                 expectedBattleInstanceId: i.ExpectedBattleInstanceId, expectedControllerTurnSequence: i.ExpectedControllerTurnSequence);
@@ -300,8 +300,8 @@ namespace ProjectL.Tests.Core
         {
             var i = CombatCommandTestData.Input();
             var s = i.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(50));
-            var stale = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(51));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(50));
+            var stale = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(51));
             Assert.That(state.SameValues(stale), Is.False);
             Assert.That(CombatTurnCalculator.State(state, state.Turn, state.Phase).EnvironmentProgress.NextObjectEntryOrdinal, Is.EqualTo(50));
         }
@@ -311,7 +311,7 @@ namespace ProjectL.Tests.Core
         {
             var i = Objects(new SheriffBadgeSourceFact(99, CellCoord.Right, 10, false, new[] { Owner.Player }));
             var s = i.State;
-            Assert.Throws<ArgumentException>(() => new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,s.Environment,                new EnvironmentProgressFacts(10)));
+            Assert.Throws<ArgumentException>(() => new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,                new EnvironmentProgressFacts(10)));
         }
 
         internal static EnvironmentSemanticBindings Bindings(params long[] ids) =>

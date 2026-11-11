@@ -9,7 +9,6 @@ namespace ProjectL.Tool.Editor
     public sealed class CartoonMaterialGUI : ShaderGUI
     {
         private const string CartoonShaderName = "ProjectL/BaseShader/Cartoon";
-        private const string EntityCartoonShaderName = "ProjectL/BaseShader/EntityCartoon";
 
         private static readonly string[] OpaquePasses =
         {
@@ -41,7 +40,7 @@ namespace ProjectL.Tool.Editor
         public override void AssignNewShaderToMaterial(Material material, UnityEngine.Shader oldShader, UnityEngine.Shader newShader)
         {
             base.AssignNewShaderToMaterial(material, oldShader, newShader);
-            if (newShader != null && IsCartoonShader(newShader))
+            if (newShader != null && newShader.name == CartoonShaderName)
             {
                 ApplySurface(material);
             }
@@ -54,9 +53,9 @@ namespace ProjectL.Tool.Editor
             {
                 throw new ArgumentNullException(nameof(material));
             }
-            if (material.shader == null || !IsCartoonShader(material.shader))
+            if (material.shader == null || material.shader.name != CartoonShaderName)
             {
-                throw new InvalidOperationException(material.name + ": Cartoon 또는 EntityCartoon 머티리얼이 필요하다.");
+                throw new InvalidOperationException(material.name + ": Cartoon 머티리얼이 필요하다.");
             }
             float surface = material.GetFloat("_Surface");
             if (surface != 0f && surface != 1f)
@@ -76,11 +75,6 @@ namespace ProjectL.Tool.Editor
             {
                 material.SetShaderPassEnabled(pass, !transparent);
             }
-        }
-
-        private static bool IsCartoonShader(Shader shader)
-        {
-            return shader.name == CartoonShaderName || shader.name == EntityCartoonShaderName;
         }
     }
 }

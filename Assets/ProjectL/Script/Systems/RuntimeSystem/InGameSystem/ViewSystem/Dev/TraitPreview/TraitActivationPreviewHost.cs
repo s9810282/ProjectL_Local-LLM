@@ -17,6 +17,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.ServiceKeys.Runtime;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPreview.Scenario;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPreview
@@ -34,6 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
         private FieldUnitPresenter units;
         [SerializeField]
         private Camera output;
+        [SerializeField] private CombatSceneCameraBinding sceneCamera;
         private FrameworkRuntime _runtime;
         private StageViewPropPresenter _backdrop;
         private EffectScope _scope;
@@ -78,6 +80,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
         {
             if (field == null || units == null || output == null || catalog == null)
                 throw new InvalidOperationException("특성 확인 씬의 Catalog·Field·Units·Output 참조가 필요합니다.");
+            if (sceneCamera == null)
+                throw new InvalidOperationException("특성 확인 씬의 공용 카메라(sceneCamera) 참조가 필요합니다.");
             // 합성 계약과 최신 DB를 먼저 검사해 입력 오류가 이전 장면을 지우지 않게 합니다.
             TraitPreviewScenarioInput input = original?.Copy() ?? throw new ArgumentNullException(nameof(original));
             CompiledTraitPreviewScenario result = CombatTraitPreviewScenarioFactory.Create().Compile(input);
@@ -130,6 +134,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
         {
             if (_runtime == null)
             {
+                sceneCamera.ValidateReferences();
+                if (sceneCamera.gameObject.scene != gameObject.scene || sceneCamera.transform.IsChildOf(field.CellsRoot))
+                    throw new InvalidOperationException("특성 확인 공용 카메라는 같은 씬의 필드·배경 밖에 배치해야 합니다.");
                 _stageViewKey = input.stageViewKey;
                 _faults = new RuntimeFaultBoundary(Fail);
                 _backdrop = new StageViewPropPresenter(tables.StageProps, field.CellsRoot, tables.Field);
@@ -147,7 +154,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
                 _scope = services.Effects.GetEffectHandle();
                 ++ScopeAcquisitionCount;
                 _pointerInput = CombatTraitPreviewFactory.CreatePointerInput(transform);
-                _session = new TraitPreviewSession(() => CombatTraitPreviewFactory.Create(field, units, output, transform, CombatDisplayTables.From(((IHasViewQuery)DataBaseFactory.Create(catalog)).ViewQuery), services, _backdrop, _scope), value => CombatTraitPreviewScenarioFactory.Create().Compile(value));
+                _session = new TraitPreviewSession(() => CombatTraitPreviewFactory.Create(field, units, output, transform, CombatDisplayTables.From(((IHasViewQuery)DataBaseFactory.Create(catalog)).ViewQuery), services, _backdrop, _scope, sceneCamera), value => CombatTraitPreviewScenarioFactory.Create().Compile(value));
             }
 
             RequireInactiveGame();
@@ -161,7 +168,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
         public bool BoundaryPause => _session?.BoundaryPause ?? false;
         public string Diagnostic => _session?.Diagnostic ?? "";
         public string Status => _closed ? $"환경 종료 — {_faults?.FirstError?.Message ?? "환경을 다시 열어 주세요."}" : _session?.Status ?? "준비됨 — 연출 확인 / 합성 결과";
-        public bool HasMapCamera => _backdrop != null && _backdrop.MapCameras.Count > 0;
+        public bool HasSceneCamera => sceneCamera != null && sceneCamera.isActiveAndEnabled;
 
         private void Update()
         {

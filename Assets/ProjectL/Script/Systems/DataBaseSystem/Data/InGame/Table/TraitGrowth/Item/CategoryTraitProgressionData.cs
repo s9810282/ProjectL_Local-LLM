@@ -10,11 +10,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
         public CategoryKey Category => _spec.Category;
         public IReadOnlyList<TraitGrowthStepSpec> Steps => _spec.Steps;
         public IReadOnlyList<TraitKey> Pool => _spec.Pool;
+        public int CommonWeight => _spec.CommonWeight;
+        public int CategoryWeight => _spec.CategoryWeight;
 
         public CategoryTraitProgressionData(CategoryKey category, IReadOnlyList<TraitGrowthStepSpec> steps,
             IReadOnlyList<TraitKey> pool)
+            : this(category, steps, pool, CategoryTraitProgressionSpec.DefaultCommonWeight,
+                CategoryTraitProgressionSpec.DefaultCategoryWeight)
         {
-            _spec = new CategoryTraitProgressionSpec(category, steps, pool);
+        }
+
+        public CategoryTraitProgressionData(CategoryKey category, IReadOnlyList<TraitGrowthStepSpec> steps,
+            IReadOnlyList<TraitKey> pool, int commonWeight, int categoryWeight)
+        {
+            _spec = new CategoryTraitProgressionSpec(category, steps, pool, commonWeight, categoryWeight);
         }
     }
 }

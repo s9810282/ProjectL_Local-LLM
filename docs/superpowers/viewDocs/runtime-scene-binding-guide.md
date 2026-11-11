@@ -65,7 +65,7 @@ GameBootstrap ── 소유 ──► FrameworkRuntime (게임 전체에 하나)
                                              └─ LifeCycle: Stage, Combat, …        ← 구간의 Flow는 여기
 
 [씬 A 로드] 로딩 시스템이 "씬 번호 A"에 등록된 Enter 처리를 priority 순서로 실행
-   UI 다시 연결(Bootstrap) → (Combat만) SceneRoot 찾기·배경 맵 세우기 → 카메라 다시 연결(Bootstrap) → LifeCycle.OnEnter → View Attach → 화면 열기(Bootstrap)
+   UI 다시 연결(Bootstrap) → (Combat만) SceneRoot·공용 카메라 참조 확인·배경 세우기·옛 카메라 차단 → 카메라 다시 연결(Bootstrap) → LifeCycle.OnEnter → View Attach → 화면 열기(Bootstrap)
 [씬 A 떠남] "씬 번호 A"의 Exit 처리
    이탈 준비 검사(LifeCycle) → View Detach(Combat은 배경 맵도 없앰) → LifeCycle.OnExit
    (정확한 priority와 씬별 등록은 아래 §1.1 표에 모아 두었다. Bootstrap·Combat 씬 시스템의 숫자 원본은 코드 SceneNodeOrder다)
@@ -83,7 +83,7 @@ GameBootstrap ── 소유 ──► FrameworkRuntime (게임 전체에 하나)
 | Exit | -100 | Stage·Lobby | `StageMapViewSystem`·`LobbyViewSystem` | View Detach(씬 참조를 놓음) | 각 시스템의 `DetachPriority` |
 | Exit | 0 | 각 구간 | `LifeCycleBase` | `OnExit`(Flow 정리, 전투는 정상 이탈이면 진입 요청을 닫음) | `LifeCycleBase`의 숫자 0(기반) |
 | Enter | -200 | Stage·Combat·Lobby | `GameBootstrap` | UISystem `BindScene` 다시 부름 | `SceneNodeOrder.BindSceneUI` |
-| Enter | -195 | Combat | `CombatViewSystem` | SceneRoot 찾기·배경 맵 세우기(카메라 다시 연결보다 먼저) | `SceneNodeOrder.CombatBackdrop`(= `BindCameras` − 5) |
+| Enter | -195 | Combat | `CombatViewSystem` | SceneRoot·공용 카메라 확인, 배경 세우기·옛 카메라 차단 | `SceneNodeOrder.CombatBackdrop`(= `BindCameras` − 5) |
 | Enter | -190 | Stage·Combat·Lobby | `GameBootstrap` | CameraGroup `BindScene` 다시 부름 | `SceneNodeOrder.BindCameras` |
 | Enter | 0 | 각 구간 | `LifeCycleBase` | `OnEnter`(Flow 시작, 전투는 수락된 진입 활성화) | `LifeCycleBase`의 숫자 0(기반) |
 | Enter | 90 | Combat | `GameBootstrap` | 덱 카드 부모 준비(`OpenUI(Deck,true)`) | `SceneNodeOrder.PrepareCombatDeck`(= `CombatViewAttach` − 10) |
@@ -96,7 +96,7 @@ GameBootstrap ── 소유 ──► FrameworkRuntime (게임 전체에 하나)
 
 - **같은 프레임의 Runner 순서(의도된 규약):** 로딩 Node와 별개로, 매 프레임 그룹 Tick 순서(Buffer → Global → InGame → LifeCycle)가 공용 Job Runner를 누가 먼저 잡는지 정한다. 튜토리얼(`TutorialViewSystem`, InGame Tick)은 Runner가 비었으면 같은 프레임의 전투(`CombatLifeCycle`, LifeCycle Tick)보다 먼저 자기 판단을 건다. 둘 다 할 일이 있으면 튜토리얼 Job이 먼저 돌고 전투는 Runner가 다시 빈 다음 프레임에 건다. 동작을 바꾸지 않는 규약이며, 새 루트를 더할 때도 "Runner가 비면 내 일을 건다"는 이 순서를 따른다(전투 개선 설계 §7.3 F6).
 - Bootstrap의 씬별 Node는 `GameBootstrap.BindUILifeCycle`의 표 하나에 있다. UI·카메라 다시 연결은 Framework가 씬마다 다시 연결하는 수단을 서비스 계약으로 주지 않아 그룹 모듈로 캐스트해 부른다(그 캐스트 둘도 같은 자리에만 있다).
-- **Combat 배경 맵을 -195에 세우는 이유(2026-10-23, 카메라 요구 2026-11-02 갱신):** 맵 프리팹 또는 맵 SO 안의 버추얼 카메라를 카메라 줌이 이름으로 카메라 목록에서 찾는다. 맵이 -190 카메라 수집보다 먼저 있어야 그 수집에 들어간다. 그래야 로딩 끝(AfterLoad)의 재수집에 기대지 않는다. 현재 `Day Camera`는 필수이며 `Night Camera`·`NightMap`은 필수가 아니다. 밤 화면 전환 설정은 제거했고 자동 단계 전환은 비활성 상태를 유지한다. 스테이지 키는 씬 로드 전 전투 준비가 Buffer에 게시하므로 이 시점에 읽을 수 있다. 설치 순서 원본은 [배경 설계](../specs/2026-10-23-combat-backdrop-before-camera-bind-design.md)(BD1~BD4), Night 설정 제거 기록은 [N1 계획](../plans/2026-11-02-combat-night-transition-settings-removal-plan.md)이다.
+- **Combat 배경과 공용 카메라 연결(2026-11-09 갱신):** 전투용 가상 카메라는 Combat 씬의 공용 프리팹에 미리 있고, -195에서 Root의 Binding·소유 경계를 확인한 뒤 배경을 세운다. 생성된 배경 인스턴스의 옛 가상 카메라/Listener를 끄고 고유 이름을 붙여 -190의 비활성 포함 수집에서도 이름이 충돌하지 않게 한다. 공용 카메라는 배경 밖에 있으므로 그대로 수집된다. Enter 100에서 CameraFactory/Session을 조립·선택·Begin하며 카탈로그 Handle을 AfterLoad 재수집 사이에 보관하지 않는다. Day/Night는 전투 진입의 필수 대상이 아니다. 자동 단계 전환은 비활성 그대로다. 스테이지 키·배경 수명·Node 숫자는 유지하고, 표시 Detach가 Session을 반환한 뒤 씬 이탈이 배경을 해제한다. 현재 원본은 [씬 공용 카메라 설계](../specs/2026-11-08-combat-scene-camera-design.md) SC1~SC9·§4이며 이전 [배경 선생성 설계](../specs/2026-10-23-combat-backdrop-before-camera-bind-design.md)는 당시 이력이다.
 
 | 구성 | 하는 일 | 하지 않는 일 |
 |---|---|---|

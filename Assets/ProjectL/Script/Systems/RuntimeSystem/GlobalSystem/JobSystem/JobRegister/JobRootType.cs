@@ -28,5 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister
         EntryTransition = 8,
         /// <summary>전투 전용: 진입 서비스가 막 받은 현재 요청으로 준비·전환을 등록한다(골격 점검 설계 K-2).</summary>
         Entry = 9,
+        /// <summary>전투 전용: Combat 씬 로딩 준비 단계에서 첫 동작 Core 준비를 Tick마다 한 단계씩 진행한다(첫 동작 Core 준비 계획 FU-b).</summary>
+        FirstUsePrepare = 10,
     }
 }

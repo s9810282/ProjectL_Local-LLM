@@ -2,6 +2,7 @@ using ProjectL.Systems.ServiceKeys.Runtime;
 using System;
 using System.Collections.Generic;
 using ProjectL.Framework.Composition;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem;
@@ -39,6 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister
         private readonly Dictionary<JobRootType, Func<IInGameSystemGroupService, JobType, List<IJobService>>> _plans = new();
         private IInGameSystemGroupService _inGameService;
         private IBufferQuery _buffers;
+        private IAudioSystemService _audio;
         // Combat·Lobby·Stage Plan이 전환·진입 요청·진행 사실 읽기에 쓴다(전투 재구성 설계 J14, 로비 재구성 설계 §4.9).
         private ILifeCycleSystemGroupService _lifeCycles;
 
@@ -55,11 +57,12 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister
             _inGameService = resolver.GetService(SystemGroupsService.InGame);
             _buffers = resolver.GetService(BufferSystemKey.Buffer);
             _lifeCycles = resolver.GetService(SystemGroupsService.LifeCycle);
+            _audio = resolver.GetService(SystemGroupsService.Global).AudioServiceCommand;
         }
 
         public void Initialize()
         {
-            _plans[JobRootType.Lobby] = (service, jobType) => LobbyPlan.Register(service, jobType, _buffers, _lifeCycles);
+            _plans[JobRootType.Lobby] = (service, jobType) => LobbyPlan.Register(service, jobType, _buffers, _lifeCycles, _audio);
             // Stage의 상점·회복·증강 Job도 Stage Plan 하나가 판단해 만든다(검사 후속 정리 계획 Q-Rd3).
             _plans[JobRootType.Stage] = (service, jobType) =>
                 StagePlan.Register(service, jobType, _buffers, _nextShopSeed, _lifeCycles);
@@ -85,6 +88,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister
             _inGameService = null;
             _buffers = null;
             _lifeCycles = null;
+            _audio = null;
         }
 
         public void ExportServices(ISystemWriteSink sink)

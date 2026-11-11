@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Heavy
   m_EditorClassIdentifier: 
-  attackClip: {fileID: -8000930635554010886, guid: 18142b09cfa63c7428cbedb3cce11125, type: 3}
+  attackClip: {fileID: 7400000, guid: 179957540e9fa0849b01b5cf13bb5b82, type: 2}
+  attackSpeed: 1
   attackCompanionClips: []
   hitDelay: 0
+  shots: []
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
   hitClip: {fileID: 0}
   hitCompanionClips: []

@@ -16,20 +16,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public MovementPreviewContext MovementContext { get; }
         /// <summary>필드 유닛 하나의 공격 범위 칸 조회 응답이다(호버 공격 범위 설계 UR2).</summary>
         public UnitAttackRangeResult? UnitRange { get; }
+        /// <summary>보스가 지금 포효하면 어떻게 되는지의 예고 응답이다(포효 예고 설계 RF2).</summary>
+        public RoarForecastResult? RoarForecast { get; }
         private CombatPreviewResult(int number, AttackRangeResult? range = null, AttackPreview? attack = null,
             MovePreview? move = null, MovementRangeResult? moveRange = null, CombatPlacementPreview? placement = null,
             CombatActionAvailability actionAvailability = null, MovementPreviewContext movementContext = null,
-            UnitAttackRangeResult? unitRange = null)
+            UnitAttackRangeResult? unitRange = null, RoarForecastResult? roarForecast = null)
         {
             if (number < 1) throw new ArgumentOutOfRangeException(nameof(number));
             if ((range.HasValue ? 1 : 0) + (attack.HasValue ? 1 : 0) + (move.HasValue ? 1 : 0) +
                 (moveRange.HasValue ? 1 : 0) + (placement.HasValue ? 1 : 0) + (actionAvailability != null ? 1 : 0) +
-                (unitRange.HasValue ? 1 : 0) != 1)
+                (unitRange.HasValue ? 1 : 0) + (roarForecast.HasValue ? 1 : 0) != 1)
                 throw new ArgumentException("미리보기 내용은 하나만 필요합니다.");
             RequestNumber = number; Range = range; Attack = attack; Move = move; MoveRange = moveRange; Placement = placement;
             ActionAvailability = actionAvailability;
             MovementContext = movementContext;
             UnitRange = unitRange;
+            RoarForecast = roarForecast;
         }
         public static CombatPreviewResult ForAttackRange(int number, AttackRangeResult range)
         {
@@ -53,6 +56,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (range.UnitId.IsEmpty || (range.Succeeded == (range.FailureReason != AttackFailureReason.None)))
                 throw new ArgumentException("유닛 공격 범위 결과가 초기화되지 않았습니다.", nameof(range));
             return new CombatPreviewResult(number, unitRange: range);
+        }
+        public static CombatPreviewResult ForRoarForecast(int number, RoarForecastResult forecast)
+        {
+            // default 값은 생성 검사를 건너뛰므로 여기서 한 번 더 본다(다른 결과와 같은 규칙).
+            if (forecast.BossId.IsEmpty || (forecast.Succeeded == (forecast.FailureReason != AttackFailureReason.None)))
+                throw new ArgumentException("포효 예고 결과가 초기화되지 않았습니다.", nameof(forecast));
+            return new CombatPreviewResult(number, roarForecast: forecast);
         }
     }
 }

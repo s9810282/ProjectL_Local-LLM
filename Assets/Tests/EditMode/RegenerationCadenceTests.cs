@@ -135,31 +135,6 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LastEnemyEnd_HealsBeforeRecallAndKeepsPersistentMainProgress()
-        {
-            var source = RegenerationTurnTests.Regeneration(TornadoEnvironmentTests.Input(sources: Array.Empty<MovementTileFact>(), characters: CombatCommandTestData.Input().Characters.ToArray()), EntityKey.Unit_Demon, 10, 40, 100, 2, 1);
-            source = RegenerationTurnTests.Regeneration(source, EntityKey.Unit_MainCharacter, 10, 60, 100, 2, 1);
-            source = CombatCommandTestData.With(source, main: source.Main.WithCurrentHealth(60), characters: source.Characters.Select(c =>
-                c.OwnershipRole == CharacterOwnershipRole.Main ? c.WithStatusEffects(new StatusEffectSet(new AppliedStatus[] {
-                    new AttackDecreaseStatus(new EffectOriginKey(EffectOwnerKind.Trait, 90, (int)TraitKey.Intimidation, "main"), 20) })) : c).ToArray());
-            var result = CombatTurnCalculator.EndEnemyPhase(EnemyControllerPhaseTests.Input(source, CombatControllerPhase.Enemy, completed: 8), Array.Empty<IMovementTileRule>());
-            Assert.That(result.Accepted, Is.True, result.Reason);
-            var final = CombatCommandComposition.Project(result);
-            var enemy = final.Characters.Single(c => c.EntityId.Value == 2);
-            Assert.That(enemy.Health.CurrentHealth, Is.EqualTo(50));
-            Assert.That(enemy.Area, Is.EqualTo(CharacterRuntimeArea.EnemyWaiting));
-            Assert.That(Progress(enemy), Is.Zero);
-            var main = final.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
-            Assert.That(main.Area, Is.EqualTo(CharacterRuntimeArea.Field));
-            Assert.That(Progress(main), Is.EqualTo(1));
-            Assert.That(main.StatusEffects.Entries.OfType<AttackDecreaseStatus>().Single().ReductionPercent, Is.EqualTo(20));
-            Assert.That(final.Main.CurrentHealth, Is.EqualTo(60));
-            var events = result.Events.ToList();
-            Assert.That(events.FindIndex(e => e is CombatCharacterEvent c && c.Final.EntityId == enemy.EntityId && c.Kind == CombatEventKind.HealthChanged),
-                Is.LessThan(events.FindIndex(e => e is CombatCharacterEvent c && c.Final.EntityId == enemy.EntityId && c.Kind == CombatEventKind.Returned)));
-        }
-
-        [Test]
         public void PreviewAndStaleEnd_CannotAdvanceProgress()
         {
             var input = RegenerationTurnTests.Regeneration(CombatCommandTestData.Input(), EntityKey.Unit_Akimbo, 10, 40, 100, 2, 1);

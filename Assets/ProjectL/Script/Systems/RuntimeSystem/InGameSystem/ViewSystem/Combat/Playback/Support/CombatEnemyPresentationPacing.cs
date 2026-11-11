@@ -86,7 +86,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                         return gap;
                     }
 
-                    if (combatEvent.Kind == CombatEventKind.CombatEntered || combatEvent.Kind == CombatEventKind.NightEnded)
+                    if (combatEvent.Kind == CombatEventKind.CombatEntered)
                         Clear();
                     return 0f;
 

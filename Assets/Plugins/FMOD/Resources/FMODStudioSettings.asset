@@ -417,7 +417,10 @@ MonoBehaviour:
   - Master
   Banks:
   - BGM
+  - Lobby
   - PostFX
+  - Stage1
+  - StageSelect
   - UI
   BanksToLoad:
   - Master

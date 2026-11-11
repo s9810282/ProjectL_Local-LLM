@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
+using ProjectL.Systems.DataBaseSystem;
+using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.ServiceKeys.Runtime;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
@@ -14,21 +21,288 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
     /// <summary>
     /// 자동 국면에서 진영 시작 또는 적 진행 요청을 만들어 계산하고 게시한다. View 명령을 읽거나 소비하지 않는다.
     /// </summary>
-    internal sealed class CombatAdvanceService : ICombatAdvanceService, ISystemPostBindService, IExportSystemServices
+    internal sealed class CombatAdvanceService : ICombatAdvanceService, ISystemInitData<IDataBaseQueryContext>,
+        ISystemPostBindService, IExportSystemServices, ISystemTick, ISystemShutdown
     {
+        private EnemyDecisionSettings _settings = EnemyDecisionSettings.Default;
         private readonly CombatInputAssembler _assembler;
         private readonly CombatTransitionPublisher _publisher;
         private readonly IReadOnlyList<IMovementTileRule> _movementRules;
         private ICombatStateBufferReadSink _combat;
         private IRunProgressBufferReadSink _run;
 
+        private readonly Func<int> _readFrame;
+        private readonly Func<long> _readTimestamp;
+        private readonly long _timestampFrequency;
+        private readonly bool _usePreparation;
+        private EnemyDecisionSourceStamp _source;
+        private EnemyDecisionSession _session;
+        // 적 진영 하나 동안 결정끼리 공유 구조를 다시 쓰는 캐시다(적 AI 근간 개편 설계 6.8). 진영이 끝나거나 전투가 바뀌면 버린다.
+        private EnemyDecisionSideCache _sideCache;
+        private long _sideCacheBattle;
+        private long _sideCacheSequence;
+        private RunId _sourceRun;
+        private bool _immediateRequired;
+        private bool _hasSpentFrame;
+        private int _lastSpentFrame;
+
+        internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
+        internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
+        internal bool HasPreparation => _source != null;
+        internal long AtomicOverrunCount { get; private set; }
+        internal long LargestPreparationAtomTicks { get; private set; }
+        internal long LastPreparationTicks { get; private set; }
+        internal long LastPreparationLargestAtomTicks { get; private set; }
+        internal long PreparationSliceCount { get; private set; }
+        internal long InputCaptureCount { get; private set; }
+
         internal CombatAdvanceService(CombatInputAssembler assembler, CombatTransitionPublisher publisher,
-            IReadOnlyList<IMovementTileRule> movementRules)
+            IReadOnlyList<IMovementTileRule> movementRules, Func<int> readFrame, Func<long> readTimestamp,
+            long timestampFrequency, bool usePreparation = false)
         {
             _assembler = assembler ?? throw new ArgumentNullException(nameof(assembler));
             _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
             _movementRules = movementRules ?? throw new ArgumentNullException(nameof(movementRules));
+            _readFrame = readFrame ?? throw new ArgumentNullException(nameof(readFrame));
+            _readTimestamp = readTimestamp ?? throw new ArgumentNullException(nameof(readTimestamp));
+            if (timestampFrequency <= 0) throw new ArgumentOutOfRangeException(nameof(timestampFrequency));
+            _timestampFrequency = timestampFrequency;
+            _usePreparation = usePreparation;
         }
+
+        internal CombatAdvanceService(CombatInputAssembler assembler, CombatTransitionPublisher publisher,
+            IReadOnlyList<IMovementTileRule> movementRules)
+            : this(assembler, publisher, movementRules, usePreparation: false) { }
+
+        internal CombatAdvanceService(CombatInputAssembler assembler, CombatTransitionPublisher publisher,
+            IReadOnlyList<IMovementTileRule> movementRules, bool usePreparation)
+            : this(assembler, publisher, movementRules, () => UnityEngine.Time.frameCount,
+                Stopwatch.GetTimestamp, Stopwatch.Frequency, usePreparation) { }
+
+        public AdvancePreparationState ReadPreparationState()
+        {
+            RequireBound();
+            if (!_usePreparation || !CanAdvance) return AdvancePreparationState.NotRequired;
+            bool current = SourceIsCurrent;
+            if (SpentThisFrame) return AdvancePreparationState.FrameDeferred;
+            if (!IsEnemyController) return AdvancePreparationState.NotRequired;
+            if (!current) return AdvancePreparationState.Required;
+            if (_immediateRequired) return AdvancePreparationState.NotRequired;
+            return _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+        }
+
+        public AdvancePreparationState PrepareAdvanceSlice()
+        {
+            long start = _readTimestamp();
+            RequireBound();
+            if (!_usePreparation) return AdvancePreparationState.NotRequired;
+            if (SpentThisFrame) return AdvancePreparationState.FrameDeferred;
+            if (!CanAdvance || !IsEnemyController)
+            {
+                CancelPreparation();
+                DropSideCache();
+                return AdvancePreparationState.NotRequired;
+            }
+            SpendFrame();
+            PreparationSliceCount++;
+            LastPreparationLargestAtomTicks = 0;
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemyPreparation);
+            try
+            {
+                // 검증·해제 비용도 첫 진행 단위에 포함한다. 첫 단위 뒤에는 기한을 넘겨 다음 단위를 시작하지 않는다.
+                if (!SourceIsCurrent) CancelPreparation();
+                if (_source == null)
+                {
+                    _sourceRun = _run.RunId;
+                    InputCaptureCount++;
+                    var input = _assembler.AssembleDecision(CreateRequest(), out _source);
+                    if (input == null || !CanAdvance || _sourceRun != _run.RunId)
+                    {
+                        CancelPreparation();
+                        RecordAtom(start, _readTimestamp());
+                        return AdvancePreparationState.Preparing;
+                    }
+                    _immediateRequired = !CombatCommandCalculator.RequiresEnemyDecision(input);
+                    if (!_immediateRequired)
+                        _session = new EnemyDecisionSession(input, _movementRules, _settings, SideCacheFor(input));
+                }
+                else if (!_immediateRequired && !_session.IsReady) _session.Step();
+
+                long end = _readTimestamp();
+                RecordAtom(start, end);
+                while (!_immediateRequired && !_session.IsReady && !BudgetSpent(start, end))
+                {
+                    long atomStart = end;
+                    _session.Step();
+                    end = _readTimestamp();
+                    RecordAtom(atomStart, end);
+                }
+                return _immediateRequired ? AdvancePreparationState.NotRequired :
+                    _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+            }
+            catch
+            {
+                CancelPreparation();
+                throw;
+            }
+            finally { LastPreparationTicks = _readTimestamp() - start; }
+        }
+
+        public PreparedAdvanceResult AdvancePreparedCombat()
+        {
+            RequireBound();
+            if (SpentThisFrame)
+                throw new InvalidOperationException("이번 프레임의 전투 준비·실행 예산을 이미 사용했습니다.");
+            if (!CanAdvance)
+            {
+                CancelPreparation();
+                return PreparedAdvanceResult.Cancelled;
+            }
+            SpendFrame();
+            if (!_usePreparation || !SourceIsCurrent || _session == null || !_session.IsReady)
+            {
+                CancelPreparation();
+                return PreparedAdvanceResult.Stale;
+            }
+            try
+            {
+                InputCaptureCount++;
+                var input = _assembler.AssembleDecision(CreateRequest(), out var fresh);
+                if (!CanAdvance)
+                {
+                    CancelPreparation();
+                    return PreparedAdvanceResult.Cancelled;
+                }
+                if (input == null || !SourceIsCurrent || !_assembler.IsCurrent(fresh))
+                {
+                    CancelPreparation();
+                    return PreparedAdvanceResult.Stale;
+                }
+                CombatCommandTransition transition;
+                using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
+                    transition = CombatCommandCalculator.AdvancePrepared(input, _session.Decision, _movementRules);
+                if (!CanAdvance)
+                {
+                    CancelPreparation();
+                    return PreparedAdvanceResult.Cancelled;
+                }
+                if (!SourceIsCurrent || !_assembler.IsCurrent(fresh))
+                {
+                    CancelPreparation();
+                    return PreparedAdvanceResult.Stale;
+                }
+                if (!transition.Accepted)
+                {
+                    _session.RejectSelected();
+                    return PreparedAdvanceResult.RetryPreparation;
+                }
+                bool published;
+                using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
+                    published = _publisher.Publish(transition);
+                CancelPreparation();
+                return published ? PreparedAdvanceResult.Published : PreparedAdvanceResult.Cancelled;
+            }
+            catch
+            {
+                CancelPreparation();
+                throw;
+            }
+        }
+
+        public void CancelPreparation()
+        {
+            var session = _session;
+            _session = null;
+            _source = null;
+            _sourceRun = default;
+            _immediateRequired = false;
+            session?.Dispose();
+        }
+
+        public void Tick(float deltatime)
+        {
+            if (_source != null && (!CanAdvance || !IsEnemyController || !SourceIsCurrent)) CancelPreparation();
+            if (_sideCache != null && !SideCacheIsCurrent) DropSideCache();
+        }
+
+        public void Shutdown()
+        {
+            CancelPreparation();
+            DropSideCache();
+        }
+
+        /// <summary>
+        /// 이 입력의 적 진영 캐시다. 진영 시작(처음 준비)에 만들고, 같은 전투·같은 진영 턴 순번이면 같은 캐시를 넘긴다.
+        /// 준비를 취소해도(게시 뒤 등) 진영이 이어지면 캐시는 남는다.
+        /// </summary>
+        private EnemyDecisionSideCache SideCacheFor(CombatCommandInput input)
+        {
+            long sequence = input.State.Turn.ControllerTurnSequence;
+            if (_sideCache == null || _sideCacheBattle != input.BattleInstanceId || _sideCacheSequence != sequence)
+            {
+                _sideCache = new EnemyDecisionSideCache();
+                _sideCacheBattle = input.BattleInstanceId;
+                _sideCacheSequence = sequence;
+            }
+            return _sideCache;
+        }
+
+        // 적 진영이 이어지는 동안만 참이다: 자동 진행 중, 적 제어자, 같은 전투, 같은 진영 턴 순번.
+        private bool SideCacheIsCurrent => CanAdvance && IsEnemyController && _combat.BattleInstanceId == _sideCacheBattle &&
+            _combat.Current.CommandState.Turn.ControllerTurnSequence == _sideCacheSequence;
+
+        private void DropSideCache() => _sideCache = null;
+
+        internal EnemyDecisionSideCache SideCache => _sideCache;
+
+        private bool SourceIsCurrent => _source != null && _sourceRun == _run.RunId && _assembler.IsCurrent(_source);
+        private bool SpentThisFrame => _hasSpentFrame && _lastSpentFrame == _readFrame();
+        private bool CanAdvance => !RunEnded && _combat.HasBattle && _combat.Completion == null &&
+            _combat.Phase == CombatFlowPhase.Automatic;
+        private bool IsEnemyController => _combat.Current.CommandState.Turn.ControllerPhase == CombatControllerPhase.Enemy;
+
+        private void SpendFrame()
+        {
+            _lastSpentFrame = _readFrame();
+            _hasSpentFrame = true;
+        }
+
+        private bool BudgetSpent(long start, long end) => (double)(end - start) * 1000 >= _timestampFrequency;
+
+        private void RecordAtom(long start, long end)
+        {
+            long elapsed = end - start;
+            if (elapsed < 0) throw new InvalidOperationException("준비 측정 시계는 단조 증가해야 합니다.");
+            LargestPreparationAtomTicks = Math.Max(LargestPreparationAtomTicks, elapsed);
+            LastPreparationLargestAtomTicks = Math.Max(LastPreparationLargestAtomTicks, elapsed);
+            if ((double)elapsed * 1000 > _timestampFrequency) AtomicOverrunCount++;
+        }
+
+        private CombatActionRequest CreateRequest()
+        {
+            var turn = _combat.Current.CommandState.Turn;
+            return new CombatActionRequest(0, turn.ControllerPhase == CombatControllerPhase.Enemy
+                    ? CombatCommandKind.CompleteEnemyTurn : CombatCommandKind.StartControllerTurn,
+                default, default, processingKind: CombatProcessingKind.Advance,
+                expectedBattleInstanceId: _combat.BattleInstanceId,
+                expectedControllerTurnSequence: turn.ControllerTurnSequence);
+        }
+
+        private void RequireBound()
+        {
+            if (_combat == null || _run == null)
+                throw new InvalidOperationException("전투 서비스는 Buffer 바인딩이 필요합니다.");
+        }
+
+        /// <summary>적 AI 기획 조정 테이블을 읽어 결정 설정을 만든다. 테이블이 없으면 계약 기본값이다(설계 6.5.1).</summary>
+        public void InitData(IDataBaseQueryContext data)
+        {
+            var query = data?.InGameQuery ?? throw new ArgumentNullException(nameof(data));
+            _settings = (query as IHasEnemyAiTuningTable)?.EnemyAiTuning?.Tuning.ToSettings() ?? EnemyDecisionSettings.Default;
+        }
+
+        /// <summary>준비 경로가 결정 세션에 넘기는 설정이다.</summary>
+        internal EnemyDecisionSettings DecisionSettings => _settings;
 
         public void PostBindService(ISystemServiceStoreReader resolver)
         {
@@ -46,21 +320,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
 
         public bool AdvanceCombat()
         {
-            if (_combat == null)
-                throw new InvalidOperationException("전투 서비스는 Buffer 바인딩이 필요합니다.");
+            RequireBound();
             if (RunEnded) return false;
             if (!_combat.HasBattle || _combat.Phase != CombatFlowPhase.Automatic)
                 return false;
 
+            if (_usePreparation)
+            {
+                if (SpentThisFrame) throw new InvalidOperationException("이번 프레임의 전투 예산을 이미 사용했습니다.");
+                SpendFrame();
+            }
+            CancelPreparation();
+
             using var sample = CoreProfilerMarkers.Advance.Auto();
-            var turn = _combat.Current.CommandState.Turn;
-            var kind = turn.ControllerPhase == CombatControllerPhase.Enemy
-                ? CombatCommandKind.CompleteEnemyTurn : CombatCommandKind.StartControllerTurn;
-            var input = _assembler.Assemble(new CombatActionRequest(0, kind,
-                default, default, processingKind: CombatProcessingKind.Advance,
-                expectedBattleInstanceId: _combat.BattleInstanceId,
-                expectedControllerTurnSequence: turn.ControllerTurnSequence));
+            var input = _assembler.Assemble(CreateRequest());
             if (RunEnded) return false;
+            if (_usePreparation && CombatCommandCalculator.RequiresEnemyDecision(input))
+                throw new InvalidOperationException("준비 경로의 적 행동은 준비된 행동 실행으로만 처리해야 합니다.");
             CombatCommandTransition transition;
             using (CoreProfilerMarkers.Calculate.Auto())
                 transition = CombatCommandCalculator.Advance(input, _movementRules);

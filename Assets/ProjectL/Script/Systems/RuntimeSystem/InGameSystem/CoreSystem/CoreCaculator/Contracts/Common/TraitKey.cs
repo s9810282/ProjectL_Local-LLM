@@ -45,6 +45,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         FocusedBombardment = 430,
         PositionSwap = 440,
         ReconSquad = 450,
+        Rampage = 460,
+        LavaCannon = 470,
+        Bleeding = 480,
+        Reconstruction = 490, // 적 전용. 치명 피해를 한 번 버티고 다음 자기 턴 뒤에 다시 일어난다.
+        SelfDestruct = 500, // 적 전용. 피해로 죽으면 주변 8칸에 고정 피해를 준다.
+        Fear = 510, // 적 전용. 피해로 죽으면 주변 8칸 캐릭터의 이동·공격을 막는다.
+        CrashImpact = 520, // 작렬. 넉백 변형: 날아가다 막혀 멈추면 날아간 대상(과 부딪힌 유닛)이 최대 체력 비율 피해를 입는다.
         // 폐기된 특성의 직렬화 번호 120은 재사용하지 않습니다.
         // 아래 세 값도 실행하지 않는 폐기 특성의 예약 번호다.
         DoorBreaching = 130,

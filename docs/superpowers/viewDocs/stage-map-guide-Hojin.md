@@ -10,6 +10,8 @@
 | 바꾸려는 것 | 위치 |
 |---|---|
 | 노드 간격·크기, 건물 높이, 캐릭터 모델·보정, 이동 시간·높이, 클릭 거리 | [`StageMapView_Default.asset`](../../../Assets/ProjectL/DataBaseSO/ViewGroup/StageMapView/Item/StageMapView_Default.asset)의 `Stage Map View Data` |
+| 챕터 최초 연출의 사용 여부·전개·카메라 왕복 시간 | 같은 에셋의 `Map Intro` (§3.1) |
+| 노드 낙하의 사용 여부·높이·개별 시간 | 같은 에셋의 `Node Drop` (§3.1) |
 | 종류별 건물 | `Assets/ProjectL/DataBaseSO/ViewGroup/StageNodeVisual/Item/NodeVisual_*.asset`의 `Visual Prefab` |
 | 챕터 배경 | `Assets/ProjectL/DataBaseSO/ViewGroup/StageMapBackground/`, 프리팹 `Assets/ProjectL/Prefabs/StageSelect/Backgrounds/` |
 | 맵 입력 바인딩 | [`PlayerInputActions.inputactions`](../../../Assets/ProjectL/Input/PlayerInputActions.inputactions)의 `StageSelection` 액션 맵 |
@@ -56,6 +58,40 @@
 프리팹이 없다. 코드가 노드마다 빈 자리(`StageNode_<id>`)를 만들고 그 아래에 건물을 놓는다. 캐릭터와 연결선도 이 자리를 기준으로 한다.
 
 클릭은 건물을 감싼 상자로 판정한다. 코드가 켜진 메시 크기를 재서 노드 자리에 BoxCollider를 붙인다(메시 모양이 아니라 상자이고, 겹치면 카메라에 가까운 상자가 잡힌다). 건물이 숨은 현재·완료 노드는 눌리지 않고 그 자리의 누름은 카메라 끌기가 된다. Core가 두 경우 모두 거절하므로 잃는 동작은 없다.
+
+### 3.1 챕터 최초 맵 진입 연출
+
+각 Run에서 챕터 맵을 처음 보여줄 때, 현재 플레이어부터 보스 방향으로 선이 뻗고 선 끝의 도착에 맞춰 건물이 착지한다. 갈림길은 함께 전개되며, 이미 나타난 점선의 위치·길이·간격은 유지된다. 카메라는 플레이어가 보이는 시작 구도에서 보스까지 이동하고 잠시 머문 뒤 시작 구도로 돌아온다.
+
+시간표는 현재 플레이어에서 보스까지의 **맵 진행축 거리**를 기준으로 한다. 현재 노드에서 전방으로 도달 가능한 구간만 연출하며, 현재 위치·클리어 건물·시작 장식·플레이어 마커는 낙하 대상이 아니다. 전방 밖은 기존 최종 표시를 유지한다. 현재 노드가 보스이고 출발선이 없으면 연출을 생략한다.
+
+`StageMapView_Default`의 `Stage Map View Data`에서 조정한다. 실행 중 변경은 Play를 다시 시작해야 반영된다.
+
+| Map Intro 필드 | 운영 초기값 | 뜻 |
+|---|---|---|
+| Enabled | 켜짐 | 전체 연출 사용. 끄면 최종 표시만 하고 새 재생 이력·효과·카메라 왕복을 만들지 않음 |
+| Start Hold Seconds | 0.6 | 로딩 종료 후 시작 대기(초) |
+| Reveal Seconds | 7 | 플레이어에서 보스까지 선·착지·카메라가 전개되는 시간(초) |
+| Boss Hold Seconds | 0.9 | 보스에서 머무는 시간(초) |
+| Return Seconds | 2.2 | 시작 구도로 돌아오는 시간(초). 0이면 즉시 복귀 |
+
+| Node Drop 필드 | 운영 값 | 뜻 |
+|---|---|---|
+| Enabled | 켜짐 | 건물 낙하와 착지 효과 사용. 꺼도 선 그리기·카메라 왕복·최초 이력은 유지 |
+| Height | **20** | 맵 위쪽 축을 따른 월드 낙하 높이 |
+| Seconds | 0.8 | 건물 하나가 떨어지는 게임 시간(초) |
+
+옛 `Wave Spread Seconds`는 제거했다. 전체 전개 속도는 `Map Intro > Reveal Seconds`로 조정한다. 첫 건물의 낙하가 시작 대기보다 앞서지 않도록 필요하면 전개 전에 준비 시간을 자동으로 더한다. 높이 또는 낙하 시간이 0이면 각 건물의 **도착 시각**에 즉시 착지하고 효과를 재생한다. 모든 시간·높이는 유한한 0 이상이어야 하며, `Reveal Seconds`는 0보다 커야 한다.
+
+로딩 중 배치·숨김·초기 카메라 구도를 준비하고 로딩 종료 후 공통 시계를 시작한다. **낙하·선·카메라 복귀·착지 효과 정리가 모두 끝나야** 맵 조작을 허용한다. 착지 효과는 기존 `FallingRocks`를 쓰며, 마지막 효과를 실제 생성한 때부터 게임 시간 3초가 지나도 남아 있으면 경고 한 번과 함께 회수한다. 효과 대기는 카메라 정지·복귀와 함께 진행한다.
+
+그동안 노드 선택·호버·윤곽선·새 팝업 열기, 배경 드래그·휠과 에디터 Alt 카메라 조작을 막는다. 차단 중 누른 채 완료를 기다렸다 떼어도 선택이나 드래그가 시작되지 않는다. 설정 창은 열 수 있으며, 열면 세 연출·파티클·효과 상한 대기가 함께 멈추고 닫으면 이어진다. 이 추가 차단은 `StageMapIntroInteractionPolicy`에 분리되어 있다.
+
+전투 복귀·상점/회복 종료·같은 맵 다시 그리기에는 반복하지 않는다. 다음 챕터와 새 Run에서는 다시 재생한다. 첫 표시 변화 전 취소는 재시도하고, 시작 후 이탈은 재진입 때 최종 배치를 보여 준다. 이력은 런타임 View에만 있으므로 실행을 새로 시작하면 초기화된다. 보류한 상점/회복 복원은 전체 연출 완료 후 현재 진행을 다시 읽어 선택 화면보다 먼저 처리한다.
+
+노드 누락·보스 중복/도달 불가·진행축 역방향 연결·지원하지 않는 선 메시·플레이어/보스를 진행축 이동으로 보여 줄 수 없는 카메라 구도는 구성 오류로 보고한다. 선 원본 메시·머티리얼·프리팹과 카메라 저장 구도는 연출에서 변경하지 않는다.
+
+새 통합 연출은 **Phase 1 코드 작성·정적 검토 완료, 컴파일 미확인**이다. 사용자 Unity 확인 방법과 미확인 항목은 [맵 진입 연출 계획의 U1~U9](../plans/2026-11-06-stage-map-intro-plan-Hojin.md#사용자-확인-u1u9)에서 확인한다. 선행 낙하의 기본 재생 확인은 [기존 실행 기록](../plans/2026-11-06-stage-node-drop-plan-Hojin.md#phase-1-실행-기록)에 보존하며, 새 선·카메라·입력 연출의 확인을 뜻하지 않는다.
 
 ## 4 현재 위치와 클리어 표시
 
@@ -138,7 +174,7 @@ PlayerInputActions / StageSelection
 
 1. `StageSelectionInputFactory`가 Controller·수신 슬롯·Layer(`StageSelectionInputLayers.Selection`·`Popup`)를 만든다. 같은 슬롯을 Controller와 `ViewGroup.Input.StageSelection`이 참조한다. `StageMapViewSystem.PostBindService`가 슬롯·Global 입력 Layer·요청 Buffer·결과 읽기를 받는다.
 2. CameraGroup 바인딩(-190) 뒤 View 연결(100)에서 `StageMapSceneRoot`와 출력 카메라를 찾는다. Scope가 피커와 `StageMapCameraDrag`를 만들고 카메라 핸들을 한 번 빌린다. 전투 표시 lease를 받은 뒤 `StageMapInteraction`을 슬롯에 Bind하고 StageSelection Layer를 켠다. 맵이 준비되면 표시한 챕터를 입력에 넘기고, 실제 시작·보스 위치로 드래그 범위를 정한다.
-3. Tick은 `StageMapEntryObserver`·`StageMapNodeMovement`·팝업 Controller로 결과를 소비한다. 맵 View는 Core 진입 API를 직접 부르지 않는다. 현재 노드가 바뀌면 캐릭터만 옮기고, 완료가 바뀌면 `RequestMapRedraw`로 다시 그린다.
+3. Tick은 `StageMapEntryObserver`·`StageMapNodeMovement`·팝업 Controller로 결과를 소비한다. 맵 View는 Core 진입 API를 직접 부르지 않는다. 선택 이동은 캐릭터와 카메라가 함께 끝나야 완료하며(§12), 완료가 바뀌면 `RequestMapRedraw`로 다시 그린다.
 4. Detach(-100)는 맵·상점 입력을 Clear하고 팝업·입력·표시를 정리하며 카메라 핸들을 반환한다. 입력 해제는 해석기를 StopInput한 뒤 슬롯을 Unbind하고, 현재 Layer가 StageSelection일 때만 ClearLayer한다.
 5. 공용 오류·종료의 `StopInput`은 새 입력·드래그를 막고 핸들을 반환하며 소유 입력을 비운다. 늦게 온 옛 수신자 호출은 새 요청을 쓰지 못한다.
 
@@ -180,6 +216,7 @@ var layers = resolver.GetService(SystemGroupsService.Global)
    - 건물을 눌러 이동·착지·이탈 뒤 표시가 §4 표와 맞는지. 상점·회복 팝업이 열린 동안 맵 입력이 막히는지.
    - 범례·덱 버튼·팝업과의 겹침. 자동 시험의 Main Camera RenderTexture에는 Overlay Canvas가 안 찍히므로 UI 겹침은 Game View에서 본다.
 5. 무작위 맵에 어떤 종류가 안 나왔으면 미확인으로 두고 다음 새 Run에서 본다. 이벤트 출현을 강제하지 않는다.
+6. 노드 낙하는 §3.1과 전용 계획 U1~U6을 확인한다. 특히 첫 진입의 로딩/순간 노출, 낙하 중 배경 드래그, 설정 창에서 정지/재개, 복귀 시 재생 생략을 본다. SO 변경에 따른 `DataBaseAssetTests`는 사용자 Unity 확인 항목이다.
 
 ## 10 커밋할 때
 
@@ -192,3 +229,26 @@ var layers = resolver.GetService(SystemGroupsService.Global)
 - 노드 클릭 확정, View 소유 입력 Buffer, Flow·Plan·Job 경유, Core의 기대 번호 조회, View의 결과 정리는 **이 프로젝트의 결정**이다([설계](../specs/2026-10-10-stage-map-design-Hojin.md) §3·§4). 공용 Framework의 보편 MUST로 넓히지 않는다.
 - 공용 Buffer 조회 객체에 WriteSink가 보인다고 View가 Core 소유 상태를 바꾸지 않는다.
 - 카메라 조립·수명·검증은 [카메라 Framework 공유](../handoffs/2026-10-11-stage-map-camera-framework-share-Hojin.md)를 따른다.
+
+## 12 노드 이동의 카메라 동행과 복귀 정렬 — 2026-11-07
+
+Phase 1 코드 작성·정적 검토와 독립 검토 지적 2건 보완을 마쳤다. **컴파일·사용자 Unity 확인은 미확인**이다. [설계](../specs/2026-11-06-stage-map-camera-focus-design-Hojin.md), [Phase 1 계획과 U1~U8](../plans/2026-11-07-stage-map-camera-focus-plan-Hojin.md#3-사용자-unity-확인과-phase-인수), [공유 메모·미전달](../handoffs/2026-11-07-stage-map-camera-focus-framework-share-Hojin.md)을 함께 본다.
+
+설정은 [`StageMapView_Default`](../../../Assets/ProjectL/DataBaseSO/ViewGroup/StageMapView/Item/StageMapView_Default.asset)의 **Camera Focus**에 있다. 변경 후 Play를 다시 시작한다.
+
+| 설정 | 현재 값 / 용도 |
+|---|---|
+| Enabled | true. 끄면 클릭 동행과 로딩 중 복귀 정렬만 생략한다. 최초 낙하·선·보스 왕복은 별도다. |
+| Player Viewport Y | 0.35. 플레이어의 바닥을 화면 아래에서 35% 높이에 맞춘다. 유한한 0 초과 1 미만이며 맵 경계에서는 기존 이동 범위가 우선한다. |
+| Current Marker Motion → Marker Move Duration | 현재 0.6초. 더 빠르게 이동하려면 이 값을 줄인다. 카메라도 같은 상승·이동·하강 전체 시간을 사용하므로 별도 카메라 시간은 없다. |
+
+- 전투 노드는 클릭 후 플레이어와 카메라가 함께 이동하고, 둘 다 끝나면 덱 출전 화면을 연다. 덱 취소·요청 거절/실행 전 취소는 클릭 전 구도로 돌아간다. Submit만으로 복원 정보를 버리지 않으며 실제 수락·준비 뒤 확정한다.
+- 상점·회복은 기존 선택 요청의 수락 뒤 두 표시가 함께 이동하고 완료 후 팝업을 연다. 팝업을 닫아 맵을 다시 그릴 때는 추가 정렬하지 않는다.
+- 같은 챕터의 전투 복귀는 로딩 가림 아래에서 현재 위치로 정렬한다. 최초 Intro가 재생되는 진입은 기존 왕복 구도를 유지한다. 가림 없는 진입에는 복귀 정렬을 적용하지 않는다.
+- 이동 중에는 노드 선택·배경 드래그·휠·Alt·Inspector 구도 편집이 차단된다. 설정 창의 시간 정지에는 플레이어와 카메라가 같이 멈춘다.
+- Inspector에서 Position/Rotation/Size를 바꾸거나 Alt로 조정할 때 현재 표시 구도부터 이어진다. Inspector를 보기만 해서는 저장하지 않는다. `확정 및 잠금`은 현재 편집 구도를 저장하고, `조정 취소 및 잠금`은 기존 확정 구도로 돌아간다.
+- Run·맵·준비 버전이 달라지면 이전 Delay 콜백과 카메라 이동은 폐기한다. 같은 챕터/노드 번호라도 새 Run으로 이전 이동의 완료나 복원을 전달하지 않는다.
+
+사용자 확인은 우선 전투/상점/회복 클릭의 상승~착지 동행, 두 표시 완료 뒤 팝업, 덱 취소, 일반 승리 후 가림 해제 첫 화면, 자동 이동 뒤 Inspector Size/회전 변경을 본다. 경계·큰 프레임 지연·동일 위치·새 Run 교체는 계획 U1~U8로 확인하며 재현하지 않은 항목은 미확인으로 남긴다. SO 변경에 따른 기존 `DataBaseAssetTests`도 사용자 Unity 확인 항목이다.
+
+이번 작업은 낙하 높이 **20**, 사용자가 조절한 낙하 0.5초·전개 4초·보스 대기 0.5초·복귀 1.2초를 유지했다.

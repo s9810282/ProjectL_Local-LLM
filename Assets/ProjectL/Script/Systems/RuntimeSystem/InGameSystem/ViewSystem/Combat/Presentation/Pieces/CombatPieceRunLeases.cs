@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </summary>
     /// <remarks>
     /// 빌린 것은 유닛 채널·장면 채널 모두 한 모양(유닛, 채널, 대여, 되돌리기)으로 기록합니다. 채널 하나는 <see cref="TryBorrowOne"/>의 한 칸
-    /// (창구에서 빌리고 그 자리에서 대여와 되돌리기를 기록)과 꺼내기 한 줄이라, 새 유닛 채널은 열거 값 + 한 칸 + 꺼내기 한 줄입니다(대여 분리 계획 §2.1).
+    /// (창구에서 빌리고 그 자리에서 대여와 되돌리기를 기록)과 꺼내기 한 줄이라, 새 유닛 채널은 열거 값 + 한 칸 + 꺼내기 한 줄 + 조각 맥락(<see cref="CombatPieceContext"/>)의 위임 한 줄입니다(대여 분리 계획 §2.1).
     /// 새 장면 채널은 100번대 열거 값(<see cref="CombatComposition.IsSceneChannel"/>이 가름)과 조립의 전용 적기 함수가 더 필요합니다.
     /// 빌리는 순서는 유닛 채널을 조립에 적은 순서대로 먼저, 장면 채널은 그 뒤입니다. 되돌리는 순서는 빌린 순서 그대로입니다(계획 §2.5 R1·R2).
     /// </remarks>

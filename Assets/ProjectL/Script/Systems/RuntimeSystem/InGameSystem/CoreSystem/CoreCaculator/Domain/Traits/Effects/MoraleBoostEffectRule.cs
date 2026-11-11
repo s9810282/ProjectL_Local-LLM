@@ -9,8 +9,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class MoraleBoostEffectRule : ICombatEffectRule
+    internal sealed class MoraleBoostEffectRule : IEffectOrderedHitRule
     {
+        public bool RequiresOrderedHits => true;
+
         private readonly MoraleBoostTraitDefinition _definition;
         private readonly MoraleBoostTraitRule _rule;
         internal MoraleBoostEffectRule(MoraleBoostTraitDefinition definition, MoraleBoostTraitRule rule)

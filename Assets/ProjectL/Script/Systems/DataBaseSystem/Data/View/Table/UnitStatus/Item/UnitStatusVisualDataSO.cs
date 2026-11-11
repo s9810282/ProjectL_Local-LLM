@@ -33,9 +33,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.UnitStatus.Item
             [SerializeField] private CombatHeldEffectEntry whileEffect = new();
             [Tooltip("이 발동 종류가 그 유닛에 오면 유지 이펙트를 거두고 다시 냅니다. 예: 보호막의 ShieldReset(턴 끝 리셋마다 다시 재생). 유지 이펙트가 없으면 비웁니다.")]
             [SerializeField] private List<TraitActivationKind> restartOn = new();
+            [Tooltip("이 상태가 유닛에 보이는 동안(HUD 아이콘과 같은 순간) 원래 모델 대신 보일 모델 프리팹입니다. 예: 재구성 중 잔해. 비우면 모습 그대로입니다. "
+                + "유닛 아래 자식으로 놓여 넉백·피격 자세를 따라가고, 몸 상자·HUD는 원래 유닛 것을 씁니다. 렌더러만 두고 충돌체·FieldUnitView는 넣지 않습니다.")]
+            [SerializeField] private GameObject whileAppearance;
 
             internal UnitStatusVisualData ToData() => new(effectKey, displayName, icon, descriptionTemplate,
-                WhileEffect(), restartOn != null ? restartOn.ToArray() : Array.Empty<TraitActivationKind>());
+                WhileEffect(), restartOn != null ? restartOn.ToArray() : Array.Empty<TraitActivationKind>(), whileAppearance);
 
             // 유지 이펙트 값은 만들 때 스스로 검사합니다. 어느 상태 외형인지 알 수 있게 감쌉니다(묶음 끝 검토 L9).
             private CombatHeldEffect WhileEffect()

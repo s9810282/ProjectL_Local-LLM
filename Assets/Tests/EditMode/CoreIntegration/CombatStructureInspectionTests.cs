@@ -138,7 +138,7 @@ namespace ProjectL.Tests.CoreIntegration
                 Assert.That(FieldObject(hover, "shieldRoot").activeSelf, Is.False);
                 Assert.That(Text(hover, "unitName"), Is.EqualTo("적 본부"));
                 Assert.That(Text(hover, "aValue"), Is.EqualTo("0"));
-                hud.SetInfo(null, "유닛", 4, 2);
+                hud.SetInfo("유닛", 4, 2);
                 Assert.That(FieldObject(hover, "shieldRoot").activeSelf, Is.True);
                 Assert.That(Text(hover, "sValue"), Is.EqualTo("2"));
             }

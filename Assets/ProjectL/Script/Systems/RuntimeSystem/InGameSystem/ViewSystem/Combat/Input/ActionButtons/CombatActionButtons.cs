@@ -7,7 +7,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TutorialInput;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.ActionButtons
 {
     /// <summary>
-    /// 전투 행동 버튼(공격·턴 종료)의 표시 값입니다(행동 버튼 설계 B3·B4).
+    /// 전투 행동 버튼(공격·턴 종료·이동 되돌리기)의 표시 값입니다(행동 버튼 설계 B3·B4).
     /// 판단은 하지 않고 기존 판단(Policy·공격 진입)의 결과를 한 값으로 묶습니다.
     /// </summary>
     /// <remarks>
@@ -16,7 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
     /// </remarks>
     internal readonly struct CombatActionButtons : IEquatable<CombatActionButtons>
     {
-        internal CombatActionButtons(bool visible, bool canAttack, bool canEndTurn, bool isAttackActive, bool canUseReturn = false)
+        internal CombatActionButtons(bool visible, bool canAttack, bool canEndTurn, bool isAttackActive, bool canUseReturn)
         {
             Visible = visible;
             CanAttack = canAttack;
@@ -31,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         /// </summary>
         internal bool Visible { get; }
 
-        /// <summary>공격 버튼을 누를 수 있는지입니다. 튜토리얼이 허용하면 공격 모드 중 끄기도 허용합니다(A2).</summary>
+        /// <summary>공격 버튼을 누를 수 있는지입니다. 이미 켜진 모드의 끄기는 새 공격 허용과 분리합니다.</summary>
         internal bool CanAttack { get; }
 
         /// <summary>턴 종료 버튼을 누를 수 있는지입니다. Router가 제출 때 쓰는 판단과 같습니다.</summary>
@@ -47,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         /// 현재 사실로 버튼 값을 만듭니다. <paramref name="facts"/>는 선행 미처리 명령까지 읽은 사실이어야 합니다(턴 종료 판단).
         /// </summary>
         /// <param name="canEnterAttack">키와 같은 공격 진입 판단입니다. 운영 씬은 현재 Ready.CanAttack을 포함합니다.</param>
-        internal static CombatActionButtons Read(in CombatInputFacts facts, bool canEnterAttack, bool isAttackActive, bool canUseReturn = false)
+        internal static CombatActionButtons Read(in CombatInputFacts facts, bool canEnterAttack, bool isAttackActive, bool canUseReturn)
         {
             if (CombatInputPolicy.IsInputBlocked(facts) || !facts.IsInputAvailable)
                 return default;
@@ -63,8 +63,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             return new CombatActionButtons(
                 true,
                 // 대기 중 새 진입은 막지만 이미 켜진 모드의 끄기는 유지합니다.
-                CombatInputPolicy.AllowsTutorialPreview(facts, CombatViewPreviewKind.AttackRange)
-                    && (isAttackActive || canEnterAttack),
+                isAttackActive || (CombatInputPolicy.AllowsTutorialPreview(facts, CombatViewPreviewKind.AttackRange)
+                    && canEnterAttack),
                 CombatInputPolicy.CanSubmit(facts, facts.HasPendingCommand, CombatViewCommandKind.EndPlayerTurn),
                 isAttackActive,
                 canUseReturn: canUseReturn);

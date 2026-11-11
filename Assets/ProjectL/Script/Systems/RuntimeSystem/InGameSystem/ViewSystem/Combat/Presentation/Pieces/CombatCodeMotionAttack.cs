@@ -3,10 +3,7 @@ using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Players;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Attack;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Effects;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces
@@ -31,28 +28,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </para>
     /// <para>앞 항목(<see cref="CombatAttackLead"/>, 대신 맞는 수호자 나가기)이 있으면 그 항목이 맨 앞에 오고, 모션과 시작 큐는 그 항목이 돌려준 시점에 시작하며,
     /// 맞는 순간 뒤 항목(대기·돌아오기)이 끝에 붙습니다(유닛 행동 설계 AA6). 그때 모션 번호는 앞 항목 수만큼 밀립니다.</para>
-    /// <para>창구·자리·앞 항목 인자는 클립 공격 입구(<see cref="CombatClipAttack"/>)처럼 기본값 없이 모두 받습니다. 창구를 더할 때 빠뜨린 입구가 컴파일에서 걸리게 하려는 것이고,
-    /// 없는 값은 null로 넘깁니다(평가 C4-08 1단계).</para>
+    /// <para>창구는 클립 공격 입구(<see cref="CombatClipAttack"/>)처럼 묶음 하나(<see cref="CombatCueSinks.ForAttack"/>)로 받고, 자리·앞 항목은 기본값 없이 받습니다(없는 값은 null).
+    /// 탄별 시점은 넣지 않아 투사체 소리는 Cue·Hit에 붙습니다(평가 C4-08 2단계, 작은 묶음 설계 SB1).</para>
     /// </remarks>
     internal static class CombatCodeMotionAttack
     {
         /// <param name="tryBeginMotion">코드 모션 입구입니다. 인자는 (모션 완료 콜백, 기준 순간 콜백, 타격 순간 콜백)입니다(<see cref="CombatAttackPlayback.TryBeginMotion"/>).</param>
         /// <param name="release">출처의 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>). 타격 신호보다 먼저 부릅니다.</param>
         /// <param name="cues">공격 칸 큐입니다(공격 표시 값의 <c>Cues</c>).</param>
-        /// <param name="effects">이펙트 창구입니다. 없으면 이펙트 큐를 넣지 않습니다.</param>
-        /// <param name="camera">맵 카메라 창구입니다. 없으면 흔들림 큐를 넣지 않습니다.</param>
+        /// <param name="sinks">공격 창구 묶음입니다(<see cref="CombatCueSinks.ForAttack"/>). 투사체 소리는 직선·곡사만 내며 비행 = 발사(MotionCue) + 지연, 착탄 = 맞음 + 지연입니다(투사체·피격 소리 설계 PS3).</param>
         /// <param name="actorBody">행위자 몸 자리입니다(큐 자리 <c>ActorBody</c>). 없으면 그 자리의 이펙트를 넣지 않습니다.</param>
-        /// <param name="projectileSounds">투사체 소리입니다(직선·곡사만, 비행 = 발사(MotionCue) + 지연, 착탄 = 맞음 + 지연, 투사체·피격 소리 설계 PS3). 없으면 넣지 않습니다.</param>
         /// <param name="lead">공격 조립의 앞 항목입니다(대신 맞는 수호자 나가기·돌아오기, 유닛 행동 계획 TP-14). 없으면 조립이 지금과 같습니다.</param>
         internal static CombatComposition Compose(CombatAttackShape shape, CombatEventCues cues, Func<Action, Action, Action, bool> tryBeginMotion,
-            Action release, CombatEventAudio sound, CombatEffectWindow effects, CombatCameraWindow camera, Pose? actorBody,
-            CombatProjectileSounds projectileSounds, CombatAttackLead lead)
+            Action release, CombatCueSinks sinks, Pose? actorBody, CombatAttackLead lead)
         {
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (cues == null) throw new ArgumentNullException(nameof(cues));
             if (tryBeginMotion == null) throw new ArgumentNullException(nameof(tryBeginMotion));
             if (release == null) throw new ArgumentNullException(nameof(release));
-            if (sound == null) throw new ArgumentNullException(nameof(sound));
+            if (sinks == null) throw new ArgumentNullException(nameof(sinks));
             EntityId attacker = shape.AttackerId;
             var composition = CombatComposition.ForAction(
                 CombatPieceCompletion.FromSource(shape.Source, attacker, shape.Completion));
@@ -66,8 +60,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 .Set(CombatCueAnchor.Cue, motion, CombatPieceSignal.MotionCue)
                 .Set(CombatCueAnchor.Hit, motion, CombatPieceSignal.Hit)
                 .Set(CombatCueAnchor.End, motion, CombatPieceSignal.End);
-            CombatCueComposer.Add(composition, anchors, cues, CombatCuePoints.ForActor(attacker, actorBody),
-                new CombatCueSinks(effects, camera, sound, shape.Source, projectileSounds: projectileSounds));
+            CombatCueComposer.Add(composition, anchors, cues, CombatCuePoints.ForActor(attacker, actorBody), sinks);
             lead?.AfterHit(composition, motion);
             return composition;
         }

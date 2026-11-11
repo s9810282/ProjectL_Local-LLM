@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -171,22 +172,33 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         }
     }
 
-    /// <summary>포효 발동에 필요한 밤 피격 횟수입니다. 현재 피격 횟수는 런타임 상태가 소유합니다.</summary>
+    /// <summary>
+    /// 포효 발동 카운터 값과 카운터를 쌓는 양입니다(밤 피격 1회마다, 자기 진영 턴 종료마다, 상대 진영 턴 종료마다).
+    /// 현재 카운터는 런타임 상태가 소유합니다.
+    /// </summary>
     public sealed class RoarTraitData : UnitTraitData
     {
         public override TraitKey TraitKey => TraitKey.Roar;
         public int HitThreshold { get; }
+        public int CountPerHit { get; }
+        public int CountPerOwnSideTurnEnd { get; }
+        public int CountPerOpposingSideTurnEnd { get; }
 
-        public RoarTraitData(int hitThreshold)
+        public RoarTraitData(int hitThreshold, int countPerHit = 1, int countPerOwnSideTurnEnd = 0, int countPerOpposingSideTurnEnd = 0)
         {
             HitThreshold = hitThreshold;
+            CountPerHit = countPerHit;
+            CountPerOwnSideTurnEnd = countPerOwnSideTurnEnd;
+            CountPerOpposingSideTurnEnd = countPerOpposingSideTurnEnd;
         }
 
         public override void Validate()
         {
-            if (HitThreshold < 1)
+            string error = RoarCountRules.FindDefinitionError(HitThreshold, CountPerHit, CountPerOwnSideTurnEnd, CountPerOpposingSideTurnEnd);
+            if (error != null)
             {
-                throw new InvalidOperationException("[RoarTraitData] HitThreshold must be positive.");
+                throw new InvalidOperationException(
+                    $"[RoarTraitData] {error} is invalid. HitThreshold must be positive, counts must not be negative, and at least one count must be positive.");
             }
         }
     }

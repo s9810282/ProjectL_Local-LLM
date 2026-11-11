@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -25,60 +27,202 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             events[index] = new Contracts.Combat.CombatEffectsEvent(new[] { start.Traits.Single().WithChildAttack(outcome) }, start.Categories);
         }
 
-        internal static AttackHitResult[] CreateHits(CommandAttackLedger ledger) => ledger.HitIds.OrderBy(id => id).Select(id =>
+        internal static AttackHitResult[] CreateHits(CommandAttackLedger ledger) =>
+            ledger.HitIds.OrderBy(id => id).Select(id => CreateHit(ledger, id)).ToArray();
+
+        private static AttackHitResult CreateHit(CommandAttackLedger ledger, Contracts.Ids.EntityId id)
         {
             var contacts = ledger.Contacts(id);
             var pairs = contacts.Select(c => (c.Role, c.AppliedSplashPercent)).Distinct().ToArray();
             var role = pairs.Length == 1 ? pairs[0].Role : AttackTargetRole.None;
             int percent = pairs.Length == 1 ? pairs[0].AppliedSplashPercent : 100;
             return new AttackHitResult(id, ledger.Before(id), ledger.HitHealth(id).CurrentHealth, role, percent,
-                ledger.NormalizationLoss(id), ledger.Recovery(id), contacts);
-        }).ToArray();
+                ledger.NormalizationLoss(id), ledger.Recovery(id), contacts, ledger.Reconstructed(id));
+        }
 
         internal static AttackResult Create(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
             UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
             out AttackPreview preview, bool reaction = false, AttackPullSnapshot pull = null)
         {
-            if (plan == null) throw new ArgumentNullException(nameof(plan));
-            if (world == null) throw new ArgumentNullException(nameof(world));
-            if (ledger == null) throw new ArgumentNullException(nameof(ledger));
-            var input = plan.Input;
-            var structures = plan.Selection.EligibleStructures.ToArray();
-            var results = CreateHits(ledger);
-            var result = AttackResult.FromFacts(plan.Actor.EntityId, plan.Selection.SelectedTargetId, plan.Direction, cost,
-                plan.Delivery.AffectedCells.ToArray(),
-                results, plan.RequestedCells, traitActivations: traitActivations.Concat(ledger.Reactions).ToArray(), categoryActivations: categoryActivations,
-                blockedContacts: world.BlockedContacts, piercingShot: plan.Delivery.PiercingShot, attackGroup: plan.AttackGroup, reaction: reaction, pull: pull,
-                knockbacks: ledger.Knockbacks);
-            var targetPreviews = results.Select(hit =>
+            using var work = BeginCreate(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull);
+            while (!work.IsComplete) work.Step();
+            preview = work.Preview;
+            return work.Result;
+        }
+
+        internal static ResultWork BeginCreate(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
+            UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
+            bool reaction = false, AttackPullSnapshot pull = null) =>
+            new ResultWork(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull);
+
+        /// <summary>대상별 결과를 순서대로 조립하고 공격 결과와 미리보기를 함께 봉인한다.</summary>
+        internal sealed class ResultWork : IDisposable
+        {
+            private IEnumerator<int> _steps;
+            private AttackResult _result;
+            private AttackPreview _preview;
+            private bool _complete;
+            private bool _disposed;
+            private bool _faulted;
+            private long _version;
+            internal bool IsComplete
             {
-                var original = input.Characters.SingleOrDefault(c => c.EntityId == hit.TargetId);
-                var occupied = original?.OccupiedCells ?? structures.Single(s => s.EntityId == hit.TargetId).OccupiedCells;
-                var damage = ledger.Breakdown(hit.TargetId);
-                int expectedDamage = ledger.Expected(hit.TargetId);
-                int directDamage = ledger.Direct(hit.TargetId);
-                return new AttackTargetPreview(hit, expectedDamage, occupied.ToArray(), damage.DamageBeforeMatchup,
-                    damage.MatchupNumerator, damage.MatchupDenominator,
-                    damage.IncomingReduction,
-                    secondaryDamage: checked(expectedDamage - directDamage));
-            }).ToList();
-            var movementTargets = ledger.PreHitTargets.Concat(ledger.Knockbacks.Select(k => k.TargetId)).Concat(pull == null ? Array.Empty<Contracts.Ids.EntityId>() : new[] { pull.TargetId });
-            foreach (var id in movementTargets.Distinct().Where(id => results.All(hit => hit.TargetId != id)).OrderBy(id => id))
-            {
-                var before = input.Characters.Single(c => c.EntityId == id);
-                // 넉백 보조 행도 직접 피격과 같은 시점의 체력을 사용합니다. Pull 사전 이동의 기존 경계는 유지합니다.
-                var after = ledger.Knockbacks.Any(k => k.TargetId == id) ? ledger.HitHealth(id) : world.Characters[id].Health;
-                int damage = ledger.Expected(id);
-                targetPreviews.Add(new AttackTargetPreview(id, damage, before.Health.CurrentHealth, before.OccupiedCells.ToArray(),
-                    0, 1, 1, 0, role: id == plan.Selection.SelectedTargetId ? AttackTargetRole.Primary : AttackTargetRole.Additional,
-                    healthNormalizationLoss: ledger.NormalizationLoss(id), secondaryDamage: damage,
-                    targetHealthAfter: after.CurrentHealth, isDirectHit: false, healthRecovery: ledger.Recovery(id)).WithContacts(Array.Empty<AttackHitContactSnapshot>()));
+                get
+                {
+                    RequireActive();
+                    return _complete;
+                }
             }
-            var actor = world.Characters[plan.Actor.EntityId];
-            // 비용 없는 반응 공격(포효)은 미리보기 대상이 아니다(G13).
-            preview = reaction ? default
-                : AttackPreview.FromFacts(result, targetPreviews.ToArray(), actor.Stats.TraitStatuses.ToArray(), actor.Stats.Category);
-            return result;
+            internal long WorkVersion
+            {
+                get
+                {
+                    RequireActive();
+                    return _version;
+                }
+            }
+            internal AttackResult Result
+            {
+                get
+                {
+                    RequireComplete();
+                    return _result;
+                }
+            }
+            internal AttackPreview Preview
+            {
+                get
+                {
+                    RequireComplete();
+                    return _preview;
+                }
+            }
+
+            internal ResultWork(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
+                UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
+                bool reaction, AttackPullSnapshot pull)
+            {
+                if (plan == null) throw new ArgumentNullException(nameof(plan));
+                if (world == null) throw new ArgumentNullException(nameof(world));
+                if (ledger == null) throw new ArgumentNullException(nameof(ledger));
+                _steps = Build(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull).GetEnumerator();
+            }
+
+            internal void Step()
+            {
+                RequireActive();
+                if (_complete) return;
+                using var sample = CoreProfiling.Sample(CoreProfileSection.AttackResultConstruction);
+                try
+                {
+                    _complete = !_steps.MoveNext();
+                    _version++;
+                    if (_complete)
+                    {
+                        _steps.Dispose();
+                        _steps = null;
+                    }
+                }
+                catch
+                {
+                    _faulted = true;
+                    _steps?.Dispose();
+                    _steps = null;
+                    _result = default;
+                    _preview = default;
+                    throw;
+                }
+            }
+
+            private IEnumerable<int> Build(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
+                UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
+                bool reaction, AttackPullSnapshot pull)
+            {
+                var input = plan.Input;
+                var structures = plan.Selection.EligibleStructures.ToArray();
+                yield return 0;
+                var orderedIds = new SortedSet<Contracts.Ids.EntityId>();
+                foreach (var id in ledger.HitIds)
+                {
+                    orderedIds.Add(id);
+                    yield return 0;
+                }
+                var results = new List<AttackHitResult>();
+                foreach (var id in orderedIds)
+                {
+                    results.Add(CreateHit(ledger, id));
+                    yield return 0;
+                }
+                var result = AttackResult.FromFacts(plan.Actor.EntityId, plan.Selection.SelectedTargetId, plan.Direction, cost,
+                    plan.Delivery.AffectedCells.ToArray(), results.ToArray(), plan.RequestedCells,
+                    traitActivations: traitActivations.Concat(ledger.Reactions).ToArray(), categoryActivations: categoryActivations,
+                    blockedContacts: world.BlockedContacts, piercingShot: plan.Delivery.PiercingShot, attackGroup: plan.AttackGroup,
+                    reaction: reaction, pull: pull, knockbacks: ledger.Knockbacks);
+                yield return 0;
+                var targetPreviews = new List<AttackTargetPreview>();
+                foreach (var hit in results)
+                {
+                    var original = input.Characters.SingleOrDefault(c => c.EntityId == hit.TargetId);
+                    var occupied = original?.OccupiedCells ?? structures.Single(s => s.EntityId == hit.TargetId).OccupiedCells;
+                    var damage = ledger.Breakdown(hit.TargetId);
+                    int expectedDamage = ledger.Expected(hit.TargetId);
+                    int directDamage = ledger.Direct(hit.TargetId);
+                    targetPreviews.Add(new AttackTargetPreview(hit, expectedDamage, occupied.ToArray(), damage.DamageBeforeMatchup,
+                        damage.MatchupNumerator, damage.MatchupDenominator, damage.IncomingReduction,
+                        secondaryDamage: checked(expectedDamage - directDamage)));
+                    yield return 0;
+                }
+                var movementTargets = new SortedSet<Contracts.Ids.EntityId>();
+                foreach (var id in ledger.PreHitTargets.Concat(ledger.Knockbacks.Select(k => k.TargetId)).Concat(ledger.CollisionVictims)
+                    .Concat(pull == null ? Array.Empty<Contracts.Ids.EntityId>() : new[] { pull.TargetId }))
+                {
+                    movementTargets.Add(id);
+                    yield return 0;
+                }
+                foreach (var id in movementTargets)
+                {
+                    yield return 0;
+                    if (results.Any(hit => hit.TargetId == id)) continue;
+                    var before = input.Characters.Single(c => c.EntityId == id);
+                    // 넉백·작렬 부딪힘 보조 행의 체력도 직접 피격 시점에 고정하며, Pull 사전 이동 경계는 유지한다.
+                    var after = ledger.Knockbacks.Any(k => k.TargetId == id) || ledger.CollisionVictims.Contains(id)
+                        ? ledger.HitHealth(id) : world.Characters[id].Health;
+                    int damage = ledger.Expected(id);
+                    targetPreviews.Add(new AttackTargetPreview(id, damage, before.Health.CurrentHealth, before.OccupiedCells.ToArray(),
+                        0, 1, 1, 0, role: id == plan.Selection.SelectedTargetId ? AttackTargetRole.Primary : AttackTargetRole.Additional,
+                        healthNormalizationLoss: ledger.NormalizationLoss(id), secondaryDamage: damage,
+                        targetHealthAfter: after.CurrentHealth, isDirectHit: false, healthRecovery: ledger.Recovery(id),
+                        targetReconstructs: ledger.Reconstructed(id))
+                        .WithContacts(Array.Empty<AttackHitContactSnapshot>()));
+                }
+                var actor = world.Characters[plan.Actor.EntityId];
+                // 실제 반응 공격(포효)은 미리보기 값이 필요 없다. 공개 미리보기로 돌린 반응(포효 예고)만 만든다(포효 예고 계획 TP-3).
+                _preview = reaction && !plan.PublicPreview ? default : AttackPreview.FromFacts(result, targetPreviews.ToArray(), actor.Stats.TraitStatuses.ToArray(), actor.Stats.Category);
+                _result = result;
+                yield return 0;
+            }
+
+            private void RequireActive()
+            {
+                if (_disposed) throw new ObjectDisposedException(nameof(ResultWork));
+                if (_faulted) throw new InvalidOperationException("실패한 공격 결과 조립은 다시 진행할 수 없습니다.");
+            }
+
+            private void RequireComplete()
+            {
+                RequireActive();
+                if (!_complete) throw new InvalidOperationException("공격 결과 조립이 끝나지 않았습니다.");
+            }
+
+            public void Dispose()
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _steps?.Dispose();
+                _steps = null;
+                _result = default;
+                _preview = default;
+            }
         }
     }
 }

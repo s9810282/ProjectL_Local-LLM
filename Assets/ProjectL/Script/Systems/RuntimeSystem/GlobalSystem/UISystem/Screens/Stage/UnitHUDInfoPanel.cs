@@ -1,14 +1,13 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 {
-    /// <summary>선택한 유닛만 동적 등록한다. 내용과 마스크 확장 연출은 이 화면이 소유한다.</summary>
+    /// <summary>기존 상세 HUD 프리팹의 참조와 표시 데이터를 유지한다.</summary>
     [DisallowMultipleComponent]
-    public sealed class UnitHUDInfoPanel : UIBase, IPointerEnterHandler, IPointerExitHandler, IUIWorldPointerPassThrough
+    public sealed class UnitHUDInfoPanel : UIBase
     {
         public UnitHUDInfoPanel() => Policy = UIOpenPolicy.Parallel;
         public override UIId ID => UIId.UnitHUDInfoPanel;
@@ -20,16 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         [SerializeField] private Image healthSubFill;
         [SerializeField] private Image shieldFill;
         [SerializeField] private UnitHUDHoverPanel hoverPanel;
-        [SerializeField, Min(0.01f)] private float expandDuration = 0.16f;
-        private float _width;
-        private float _elapsed;
-        private bool _hovered;
         private bool _prepared;
-        private bool _registered;
-
-        internal UnitHUDHoverPanel HoverPanel => hoverPanel;
-        // background는 이 객체의 Graphic으로 검증한다. 자식 Button/상태 아이콘은 통과 대상으로 만들지 않는다.
-        bool IUIWorldPointerPassThrough.AllowsWorldPointerThrough => _prepared && isActiveAndEnabled;
 
         internal void Prepare()
         {
@@ -49,21 +39,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 healthSubFill.transform.GetSiblingIndex() >= healthFill.transform.GetSiblingIndex())
                 throw new InvalidOperationException($"[UnitHUDInfoPanel] UIId.{ID}, '{name}': shieldFill은 Sprite가 연결된 왼쪽 시작 가로 Filled Image이며 같은 부모의 Shield → SubFill → Fill 순서가 필요합니다.");
             hoverPanel.Prepare((RectTransform)transform);
-            _width = maskRect.rect.width;
-            if (_width <= 0f)
+            if (maskRect.rect.width <= 0f)
                 throw new InvalidOperationException($"[UnitHUDInfoPanel] UIId.{ID}, '{name}': InfoPanelMask 너비는 양수여야 합니다.");
-            // Hover 수신은 유지한다. 필드 입력 가림은 IUIWorldPointerPassThrough 계약으로 별도 판정한다.
-            background.raycastTarget = true;
+            background.raycastTarget = false;
             _prepared = true;
-            // 동적 등록 전에는 데이터만 준비하고 두 화면 모두 숨긴다.
+            // 전투에서는 기본 HUD만 표시한다. 상세 프리팹은 비활성 상태로 준비한다.
             Hide();
             hoverPanel.Hide();
-        }
-
-        internal void SetRegistered(bool registered)
-        {
-            _registered = registered;
-            _hovered = false;
         }
 
         internal void SetUnit(string unitName, int attack, int? shield)
@@ -86,44 +68,5 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             shieldFill.color = shield.color;
             shieldFill.enabled = shield.enabled;
         }
-
-        public override void Open()
-        {
-            Prepare();
-            bool wasOpen = gameObject.activeSelf;
-            base.Open();
-            if (wasOpen) return;
-            _elapsed = 0f;
-            maskRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 0f);
-        }
-
-        private void Update() => AnimateExpansion(Time.unscaledDeltaTime);
-
-        internal void AnimateExpansion(float deltaTime)
-        {
-            if (!_prepared) return;
-            _elapsed = Mathf.Min(_elapsed + Mathf.Max(0f, deltaTime), expandDuration);
-            maskRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
-                _width * Mathf.SmoothStep(0f, 1f, _elapsed / expandDuration));
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (!_registered || !isActiveAndEnabled || _hovered) return;
-            _hovered = true;
-            hoverPanel.RefreshPosition();
-            UISystemService.OpenChildUI(ID, hoverPanel.ID);
-        }
-
-        public void OnPointerExit(PointerEventData eventData) => ClearHover();
-
-        internal void ClearHover()
-        {
-            if (!_hovered) return;
-            _hovered = false;
-            if (_registered) UISystemService.CloseUI(hoverPanel.ID);
-        }
-
-        protected override void OnUIHidden() => ClearHover();
     }
 }

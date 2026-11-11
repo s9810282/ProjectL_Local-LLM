@@ -5,6 +5,7 @@ using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 {
@@ -17,6 +18,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         NoMap,
         /// <summary>현재 맵을 대상으로 하는 정의가 없습니다.</summary>
         NoDefinition,
+        /// <summary>이번 게임 실행에서 그 정의를 이미 끝까지 마쳤습니다(패배·포기 뒤 새 런의 1-1, 2026-11-11 사용자).</summary>
+        AlreadyCompleted,
         NoSelection,
         /// <summary>현재 칸이 전투가 아닙니다.</summary>
         NotCombatNode,
@@ -26,6 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 
     /// <summary>
     /// "1-1"(대상 맵에서 처음 들어가는 전투) 판정입니다(튜토리얼 설계 §15.12). 공개 Buffer와 정의 표만 읽고 아무것도 바꾸지 않습니다.
+    /// 이번 게임 실행에서 이미 끝까지 마친 정의는 다시 실행하지 않습니다(2026-11-11 사용자, §15.2 "1-1 진입마다 실행"을 바꿈).
     /// </summary>
     internal static class TutorialViewTarget
     {
@@ -34,7 +38,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         /// 아니면 그 이유와 키 0을 돌려줍니다.
         /// </summary>
         internal static TutorialViewTargetMiss Find(ICombatStateBufferReadSink combat, ICurrentProgressBufferReadSink current,
-            IStageProgressBufferReadSink stages, ITutorialDefinitionTableQuery definitions, out int tutorialKey)
+            IStageProgressBufferReadSink stages, ITutorialDefinitionTableQuery definitions,
+            ITutorialStateBufferReadSink tutorials, out int tutorialKey)
         {
             if (combat == null)
                 throw new ArgumentNullException(nameof(combat));
@@ -44,6 +49,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 throw new ArgumentNullException(nameof(stages));
             if (definitions == null)
                 throw new ArgumentNullException(nameof(definitions));
+            if (tutorials == null)
+                throw new ArgumentNullException(nameof(tutorials));
 
             tutorialKey = 0;
             if (!combat.HasBattle)
@@ -53,6 +60,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 return TutorialViewTargetMiss.NoMap;
             if (!definitions.TryGetByTargetMap(current.CurrentMapKey, out TutorialDefinitionData definition))
                 return TutorialViewTargetMiss.NoDefinition;
+            // 끝까지 마친 회차만 센다. 패배·포기로 중간에 끊긴 회차 뒤에는 다음 1-1에서 처음부터 다시 실행한다.
+            if (tutorials.HasCompleted(definition.TutorialKey))
+                return TutorialViewTargetMiss.AlreadyCompleted;
             if (!current.HasSelection)
                 return TutorialViewTargetMiss.NoSelection;
 

@@ -19,6 +19,7 @@ MonoBehaviour:
     description: "이동한 경로에 {지속횟수}턴간 유지되는 연막을 남깁니다. \n연막 안 유닛은 공격 사거리가 {사거리감소량} 감소하지만 \n받는 공격 피해가 {피해감소율}% 감소합니다."
     defenseReductionDescription: 
     rankValueFormat: 
+    rankEffectFormat: "연막 생성자와 같은 진영의 공격 사거리 감소 면제: {0} → {1}"
     activations:
     - kind: 260
       direction: 0

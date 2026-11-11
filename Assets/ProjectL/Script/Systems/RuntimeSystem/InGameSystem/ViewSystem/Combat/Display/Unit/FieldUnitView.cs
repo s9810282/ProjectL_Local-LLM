@@ -8,12 +8,14 @@ using UnityEngine;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSystem;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
+using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
     /// <summary>
     /// 필드에 놓인 유닛·구조물 하나의 표시입니다(옛 FieldUnitView 이식, 계획 D.2).
-    /// 위치·방향·표시 여부·체력 숫자만 다루고, 실제 표시값과 다를 때만 씁니다(설계 §6.1).
+    /// 위치·방향·표시 여부·체력 숫자와 유닛 HUD를 실제 표시값과 다를 때만 쓰고(설계 §6.1), 재생 쪽 표시 대여 다섯(자세·서는 자리·크기·플래시·클립)과
+    /// 모델 외형 층·사건 클립 채널을 소유합니다(연출 조립 설계 B13).
     /// </summary>
     /// <remarks>
     /// 프리팹 인스턴스에 런타임으로 붙습니다. 공격·반응·능력 동작은 같은 자세 대여를 사용합니다.
@@ -21,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </remarks>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display")]
     [DisallowMultipleComponent]
-    public sealed class FieldUnitView : MonoBehaviour, ICombatUnitPresentationTarget, ICombatUnitHudTarget, IUnitHUDAnchor
+    public sealed class FieldUnitView : MonoBehaviour, ICombatUnitPresentationTarget, ICombatUnitHudTarget, IUnitHUDAnchor, ICombatUnitHighlightTarget
     {
         private TMP_Text _healthLabel;
         private static readonly ProfilerMarker HealthLabelMarker = new("Combat.Units.CreateHealthLabel");
@@ -43,7 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         //  2. 다른 개체로 묶일 때: Bind.
         //  3. HUD를 숨길 때: SyncHudActive(유닛 꺼짐 OnDisable·HUD 끔·등장 연출 숨김 SetEntryHudHidden·풀 반환이 이 길을 지남). 숨겨진 HUD는 체력 표시 상태를 지워 다시 보일 때 모두 다시 써야 함.
         //  4. HUD 층이 숨겨질 때: IUnitHUDAnchor.OnHudLayerHidden(층과 함께 HUD가 꺼져 3과 같은 까닭, 계획 §3.7 L1).
-        //  5. HUD 내용을 정하는 표가 바뀔 수 있을 때: 표시 집합 FieldUnitPresenter의 Configure·ConfigureHUDCategories가 ForgetHudFacts로.
+        //  5. HUD 내용을 정하는 표가 바뀔 수 있을 때: 표시 집합 FieldUnitPresenter의 Configure가 ForgetHudFacts로.
         private CharacterCombatFacts _hudFacts;
         private bool _entryHudHidden;
         // 채널마다 대여 칸 하나입니다. 대여 수명 규칙은 칸이 갖고, 시작 조건·복원 내용은 아래 대여 클래스가 갖습니다(클립 계획 T10a).
@@ -51,12 +53,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         // 특성 발동 유닛 행동이 옮긴 서는 자리입니다(유닛 행동 설계 AA2). 자세 칸의 아래 층이라 자세 칸과 따로입니다.
         private readonly UnitPresentationLeaseSlot<PresentationUnitStand> _standSlot = new();
         private readonly UnitPresentationLeaseSlot<PresentationUnitScale> _scaleSlot = new();
-        // 모델 외형 층(이동 반투명·피격 플래시)의 합성 소유자입니다(조각·조립 설계 BP9).
+        // 모델 외형 층(이동 반투명·피격 플래시·디졸브·아웃라인)의 합성 소유자입니다.
         private UnitModelAppearance _appearance;
-        // 적 전용 디졸브 셰이더 복제본의 수명입니다. 원본 프리팹 재질은 바꾸지 않습니다.
-        private EntityCartoonAppearance _entityCartoon;
+        // 적 표시와 아군 랙돌 디졸브에 쓰는 셰이더 복제본입니다. 원본 프리팹 재질은 바꾸지 않습니다.
+        private CartoonModelMaterialFallback _cartoonFallback;
+        private bool _temporaryDeathCartoon;
+        // 걸린 상태가 정하는 모습(재구성 중 잔해 등)입니다. 처음 그릴 때 만듭니다(재구성 연출 설계 RE2).
+        private UnitStatusAppearance _statusAppearance;
         private IColorSystemService _movementColors;
         private readonly UnitPresentationLeaseSlot<PresentationUnitFlash> _flashSlot = new();
+        private readonly UnitPresentationLeaseSlot<PresentationUnitOutline> _outlineSlot = new();
+        private readonly List<Renderer> _modelBoundsRenderers = new();
         // 사건 클립 채널입니다(클립 설계 AC9). 이벤트 컴포넌트가 붙은 표시만 가집니다. 컴포넌트 찾기는 인스턴스마다 한 번입니다.
         private UnitClipChannel _clipChannel;
         private CombatAnimationEvents _clipEvents;
@@ -64,10 +71,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly UnitPresentationLeaseSlot<PresentationUnitClip> _clipSlot = new();
         internal UnitHUD Hud => _unitHud;
 
-        /// <summary>지금 자세 대여입니다. 없으면 null입니다(시험·진단용 읽기).</summary>
+        /// <summary>지금 자세 대여입니다. 없으면 null입니다(진단용 읽기, 지금 부르는 곳은 없음).</summary>
         internal ICombatAttackUnitPose CurrentPresentationPose => _poseSlot.Current;
 
-        /// <summary>지금 사건 클립 채널입니다. 없으면 null입니다(시험·진단용 읽기).</summary>
+        /// <summary>지금 사건 클립 채널입니다. 없으면 null입니다(진단용 읽기, 지금 부르는 곳은 없음).</summary>
         internal UnitClipChannel ClipChannel => _clipChannel;
 
         public Vector3 HudWorldPosition => (_poseSlot.Current?.Position ?? transform.position) + _hudOffset;
@@ -120,6 +127,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_healthLabel != null) _healthLabel.gameObject.SetActive(!show && !_entryHudHidden);
         }
 
+        /// <summary>HUD 보임을 지금 표시 상태로 다시 맞춥니다. 준비 대여가 끝날 때 옛 스냅숏 대신 이것을 씁니다(평가 G2-02).</summary>
+        internal void ResyncHudVisible() => SyncHudActive();
+
         private void OnEnable()
         {
             SyncHudActive();
@@ -170,6 +180,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 return;
 
             ReleasePresentation();
+            ResetStatusAppearance();
             _hasShownHealth = false;
             _hudFacts = null;
             BodyTrackingVersion++;
@@ -253,7 +264,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             // 대여의 복원은 같은 EntityId일 때만 돌므로, EntityId를 비우기 전에 정리한다.
             ReleasePresentation();
+            ResetStatusAppearance();
             if (_unitHud != null) _unitHud.Clear();
+            // 진입 연출의 HUD 숨김은 진입 소유자만 풀지만, 풀로 돌아가는 표시에는 남기지 않습니다(평가 G2-01).
+            _entryHudHidden = false;
             ShowUnitHud(false);
             EntityId = EntityId.Empty;
             _hasShownHealth = false;
@@ -321,33 +335,40 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private void DropStand() => _standSlot.Current?.RestoreStand();
 
         /// <summary>
-        /// 표시 대여 다섯(자세·서는 자리·크기·플래시·클립)과 이동 투명도·예상 체력을 모두 정리합니다. 다시 묶기·끄기·풀 반환이 이 목록 하나를 씁니다.
+        /// 재생 표시 대여 다섯과 아웃라인 대여·이동 투명도·사망 디졸브·예상 체력을 모두 정리합니다. 다시 묶기·끄기·풀 반환이 이 목록 하나를 씁니다.
         /// </summary>
         /// <remarks>
         /// 복원 대상은 칸마다 다릅니다(자세·서는 자리는 위치·회전, 크기는 localScale, 플래시·투명도는 외형의 두 층, 클립은 Animator 아래, 예상 체력은 HUD).
         /// 자세와 서는 자리는 같은 위치·회전을 쓰므로 위 층(자세)을 먼저 되돌리고 아래 층(서는 자리)을 뒤에 되돌려, 끝 자리가 서는 자리를 빌리기 전 자리가 되게 합니다.
         /// 대여 칸의 Reset은 취소 콜백을 바로 부르고, 그 콜백이 같은 실행이 빌린 다른 칸을 되돌립니다.
-        /// 그래서 대여 다섯의 순서(자세 → 서는 자리 → 크기 → 플래시 → 클립)는 지킵니다. "자세 취소가 크기 취소보다 먼저"는 시험이 지키는 순서입니다
-        /// (<c>CombatUnitPresentationWindowTests</c>의 <c>…CancelsPoseBeforeScale</c> 둘).
-        /// 서는 자리만은 취소 콜백 없이 내려놓습니다(<see cref="DropStand"/>, 묶음 끝 검토 H1). 콜백이 없는 이동 투명도는 맨 앞에서 지웁니다.
+        /// 그래서 대여 다섯의 순서(자세 → 서는 자리 → 크기 → 플래시 → 클립)는 지킵니다. 특히 자세 취소가 크기 취소보다 먼저여야 합니다. 이 순서를 잡아 주는 시험은 없으니 바꿀 때 직접 확인합니다.
+        /// 서는 자리만은 취소 콜백 없이 내려놓습니다(<see cref="DropStand"/>, 묶음 끝 검토 H1). 콜백이 없는 아웃라인·이동 투명도·사망 디졸브는 맨 앞에서 지웁니다.
         /// </remarks>
-        private void ReleasePresentation()
-        {
-            ClearMovementOpacity();
-            ClearDeathDissolve();
-            ResetPresentationPose();
-            DropStand();
-            ResetPresentationScale();
-            ResetHitFlash();
-            ResetClip();
-            SetAttackHealthPreview(null);
-        }
+        private void ReleasePresentation() =>
+            // 한 칸(취소 콜백)이 던져도 나머지 칸을 끝까지 정리한 뒤 모아 던집니다(OnDestroy와 같은 보장, 평가 C9-07).
+            // 순서는 위 그대로입니다. 대리자 배열은 표시마다 한 번만 만듭니다(GC 끊김 설계 GH4).
+            CleanupErrors.RunAll("[FieldUnitView] 표시 대여 정리에 실패했습니다.",
+                _releaseSteps ??= new Action[]
+                {
+                    ResetOutline, ClearMovementOpacity, ClearDeathDissolve, ResetPresentationPose, DropStand,
+                    ResetPresentationScale, ResetHitFlash, ResetClip, ClearHealthPreview
+                });
+
+        private Action[] _releaseSteps;
+
+        private void ClearHealthPreview() => SetAttackHealthPreview(null);
 
         private void OnDisable()
         {
             SyncHudActive();
-            ReleasePresentation();
-            _clipChannel?.Pause();
+            try
+            {
+                ReleasePresentation();
+            }
+            finally
+            {
+                _clipChannel?.Pause();
+            }
         }
 
         /// <summary>모델 외형 층(이동 반투명·피격 플래시)을 준비합니다. 색 서비스가 없으면 준비하지 않습니다.</summary>
@@ -357,27 +378,42 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_appearance != null || colors == null) return;
             var models = new List<Renderer>();
             foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
-                if (renderer.GetComponentInParent<TMP_Text>(true) == null && renderer.GetComponentInParent<Canvas>(true) == null)
+                if (IsUnitModelPart(renderer))
                     models.Add(renderer);
             _appearance = new UnitModelAppearance(models.ToArray(), colors);
         }
 
-        /// <summary>체력이 있는 적 표시일 때만 모델 재질을 EntityCartoon으로 바꿉니다.</summary>
-        internal void SetEntityCartoon(bool enabled)
+        /// <summary>
+        /// 그 Renderer가 유닛 모델 표시의 일부인지입니다. HUD·문자(Canvas·TMP)와 선택 커서 같은 몸체 아닌 표시(<see cref="UnitModelBoundsExclusion"/>)는 아닙니다.
+        /// 모델 외형 층 수집과 모델 경계 측정이 이 규칙 하나를 씁니다. 몸체가 아닌 표시가 외형 층(반투명·플래시·디졸브·외곽선)에 잡히지 않게 합니다.
+        /// </summary>
+        private static bool IsUnitModelPart(Renderer renderer) =>
+            renderer.GetComponentInParent<TMP_Text>(true) == null
+            && renderer.GetComponentInParent<Canvas>(true) == null
+            && renderer.GetComponentInParent<UnitModelBoundsExclusion>(true) == null;
+
+        /// <summary>이전 모델 재질만 전투용 Cartoon으로 바꿉니다. 임시 사망 재질은 반환까지 유지합니다.</summary>
+        internal bool SetCartoonMaterialFallback(bool enabled)
         {
-            if ((_entityCartoon?.IsEnabled ?? false) == enabled) return;
+            if (!enabled && _temporaryDeathCartoon) return false;
+            if (enabled)
+            {
+                _cartoonFallback ??= new CartoonModelMaterialFallback(gameObject);
+                if (!_cartoonFallback.NeedsConversion) return false;
+            }
+            if ((_cartoonFallback?.IsEnabled ?? false) == enabled) return false;
 
             // 외형 층은 캡처한 원래 재질로 복원하므로, 셰이더 교체 전에 반드시 끝냅니다.
             ReleaseMovementAppearance();
             try
             {
-                _entityCartoon ??= new EntityCartoonAppearance(gameObject);
-                _entityCartoon.SetEnabled(enabled);
+                _cartoonFallback.SetEnabled(enabled);
             }
             finally
             {
                 PrepareMovementAppearance(_movementColors);
             }
+            return true;
         }
 
         internal void SetMovementOpacity(float opacity)
@@ -390,14 +426,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>이동 반투명 층만 끝냅니다. 피격 플래시 층이 남으면 그대로 둡니다.</summary>
         internal void ClearMovementOpacity() => _appearance?.ClearOpacity();
 
-        /// <summary>적 사망 반응의 디졸브 진행값입니다. EntityCartoon 이외의 표시는 바꾸지 않습니다.</summary>
-        internal void SetDeathDissolve(float amount)
+        /// <summary>랙돌 사망은 이전 모델 재질에도 디졸브가 적용되도록 필요할 때만 재질을 교체합니다.</summary>
+        private void SetDeathDissolve(float amount, bool usesRagdoll)
         {
-            if (_entityCartoon?.IsEnabled == true)
-                _appearance?.SetDissolve(amount);
+            if (usesRagdoll && amount > 0f && SetCartoonMaterialFallback(true))
+                _temporaryDeathCartoon = true;
+            _appearance?.SetDissolve(amount);
         }
 
-        private void ClearDeathDissolve() => _appearance?.ClearDissolve();
+        private void ClearDeathDissolve()
+        {
+            if (_temporaryDeathCartoon)
+            {
+                _temporaryDeathCartoon = false;
+                SetCartoonMaterialFallback(false);
+            }
+            else
+            {
+                _appearance?.ClearDissolve();
+            }
+        }
 
         /// <summary>모델 외형 층을 쓸 수 있는지입니다. 피격 플래시 대여의 조건입니다.</summary>
         internal bool SupportsHitFlash => _appearance != null;
@@ -418,11 +466,63 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void ResetHitFlash() => _flashSlot.Reset(lease => lease.RestoreFlash());
 
+        // 튜토리얼 강조 계약입니다(ICombatUnitHighlightTarget). 파괴된 표시에서도 부를 수 있게 Unity null 판정(this == null)을 먼저 합니다.
+        EntityId ICombatUnitHighlightTarget.EntityId => EntityId;
+
+        int ICombatUnitHighlightTarget.BodyTrackingVersion => BodyTrackingVersion;
+
+        bool ICombatUnitHighlightTarget.IsActive => this != null && isActiveAndEnabled;
+
+        Matrix4x4 ICombatUnitHighlightTarget.LocalToWorld => transform.localToWorldMatrix;
+
+        Transform ICombatUnitHighlightTarget.HudTransform => _unitHud != null ? _unitHud.transform : null;
+
+        /// <summary>선택 상태를 바꾸지 않고 현재 모델 외곽선만 빌립니다.</summary>
+        ICombatUnitOutline ICombatUnitHighlightTarget.BeginOutline(Color color, float width)
+        {
+            if (_outlineSlot.Current != null)
+                throw new InvalidOperationException("[FieldUnitView] 이전 아웃라인 대여가 아직 남아 있습니다.");
+            if (this == null || EntityId.IsEmpty || !isActiveAndEnabled)
+                throw new InvalidOperationException("[FieldUnitView] 활성 개체에서만 아웃라인을 시작할 수 있습니다.");
+            if (_appearance == null)
+                throw new InvalidOperationException("[FieldUnitView] 아웃라인에 필요한 모델 외형 준비가 없습니다.");
+            _appearance.SetOutline(color, width);
+            var lease = new PresentationUnitOutline(this);
+            _outlineSlot.Hold(lease, null);
+            return lease;
+        }
+
+        private void ResetOutline() => _outlineSlot.Reset(lease => lease.Dispose());
+
+        /// <summary>현재 보이는 실제 모델의 월드 경계입니다. HUD·문자·파티클·경계 제외 표시는 포함하지 않습니다.</summary>
+        bool ICombatUnitHighlightTarget.TryGetModelBounds(out Bounds bounds)
+        {
+            bounds = default;
+            if (this == null || !isActiveAndEnabled) return false;
+            GetComponentsInChildren(false, _modelBoundsRenderers);
+            bool found = false;
+            foreach (Renderer renderer in _modelBoundsRenderers)
+            {
+                if (renderer == null || !renderer.enabled
+                    || !(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
+                    || !IsUnitModelPart(renderer))
+                    continue;
+                if (found) bounds.Encapsulate(renderer.bounds);
+                else bounds = renderer.bounds;
+                found = true;
+            }
+            return found;
+        }
+
         internal void ReleaseMovementAppearance()
         {
+            List<Exception> errors = null;
+            CleanupErrors.Try(ResetOutline, ref errors);
             UnitModelAppearance appearance = _appearance;
             _appearance = null;
-            appearance?.Dispose();
+            if (appearance != null)
+                CleanupErrors.Try(appearance.Dispose, ref errors);
+            CleanupErrors.ThrowIfAny(errors, "[FieldUnitView] 모델 외형/아웃라인 정리에 실패했습니다.");
         }
 
         /// <summary>
@@ -445,6 +545,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         /// <summary>사건 클립 채널을 쓸 수 있는지입니다. 사건 클립 대여의 조건입니다.</summary>
         internal bool SupportsClip => _clipChannel != null;
+        bool ICombatUnitPresentationTarget.HasClip => _clipSlot.Current != null;
 
         /// <summary>사건 클립 대여를 시작합니다(클립 설계 AC3). 표시가 꺼지거나 다시 대여되면 취소되고 <paramref name="cancelled"/>를 부릅니다.</summary>
         internal ICombatUnitClip BeginClip(Action cancelled = null)
@@ -482,9 +583,47 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 try { ReleaseMovementAppearance(); }
                 finally
                 {
-                    try { _entityCartoon?.Dispose(); }
+                    try { _cartoonFallback?.Dispose(); }
                     finally { ReleaseUnitHud(); }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 이 사실에서 걸린 상태가 정하는 모습을 맞춥니다(재구성 연출 설계 RE2·계획 TP-4·TP-5). 같은 사실 객체면 아무것도 하지 않습니다.
+        /// 바뀌면 외형 층(투명도·플래시·윤곽)을 놓고 모델을 바꾼 뒤 다시 잡습니다(<see cref="SetCartoonMaterialFallback"/>과 같은 순서) — 층이 잡은 렌더러의
+        /// 원래 재질로 되돌리므로 바꾸기 전에 놓아야 하고, 다시 잡아야 잔해도 피격 플래시를 받습니다.
+        /// </summary>
+        /// <param name="resolve">사실 → 보일 프리팹(원래 모습이면 null)입니다. 표시 집합이 한 번 만든 대리자를 넘깁니다.</param>
+        internal void SyncStatusAppearance(CharacterCombatFacts facts, Func<CharacterCombatFacts, GameObject> resolve)
+        {
+            _statusAppearance ??= new UnitStatusAppearance(transform);
+            if (_statusAppearance.TryResolveChange(facts, resolve, out GameObject next))
+                ChangeStatusAppearance(next);
+        }
+
+        /// <summary>모습 판단 기억을 비웁니다. 다음 그리기가 상태를 다시 읽습니다(표가 바뀔 수 있는 Configure).</summary>
+        internal void ForgetStatusAppearance() => _statusAppearance?.Forget();
+
+        // 원래 모습으로 되돌리고 기억을 비웁니다(다른 개체로 묶일 때·풀 반환).
+        private void ResetStatusAppearance()
+        {
+            if (_statusAppearance == null) return;
+            if (_statusAppearance.IsReplaced) ChangeStatusAppearance(null);
+            _statusAppearance.Forget();
+        }
+
+        private void ChangeStatusAppearance(GameObject prefab)
+        {
+            bool layered = _appearance != null;
+            if (layered) ReleaseMovementAppearance();
+            try
+            {
+                _statusAppearance.Show(prefab);
+            }
+            finally
+            {
+                if (layered) PrepareMovementAppearance(_movementColors);
             }
         }
 
@@ -545,11 +684,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         void ICombatUnitHudTarget.SetHealthPreview(int? health) => SetAttackHealthPreview(health);
 
         /// <summary>자세 대여 하나입니다. 수명 규칙(늦은 복원 무시·취소 콜백)은 대여 칸이 갖습니다(클립 계획 T10a).</summary>
-        private sealed class PresentationUnitPose : ICombatAttackUnitPose
+        private sealed class PresentationUnitPose : ICombatAttackUnitPose, ICombatUnitRagdollPose
         {
             private readonly FieldUnitView _view;
             private readonly EntityId _entityId;
             private readonly Vector3 _healthPosition;
+            private CombatUnitRagdoll _ragdoll;
 
             internal PresentationUnitPose(FieldUnitView view)
             {
@@ -580,7 +720,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             {
                 if (!IsAvailable)
                     throw new InvalidOperationException("[FieldUnitView] 표시 자세 대여가 취소·반환됐습니다.");
-                _view.SetDeathDissolve(amount);
+                _view.SetDeathDissolve(amount, _ragdoll != null);
             }
 
             public void ClearDeathDissolve()
@@ -589,13 +729,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _view.ClearDeathDissolve();
             }
 
+            public bool TryBeginDeathRagdoll(Vector3 push, Vector3 groundUp, float groundWidth)
+            {
+                if (!IsAvailable || _ragdoll != null)
+                    throw new InvalidOperationException("[FieldUnitView] 활성 자세 대여에서 랙돌을 한 번만 시작할 수 있습니다.");
+                // 걸린 상태가 정한 다른 모델(재구성 중 잔해 등)을 보이는 동안은 래그돌을 쓰지 않습니다. 원래 모델이 꺼져 있어 래그돌이 보이지 않고,
+                // false면 사망 반응이 몸 전체를 기울여 잔해가 쓰러집니다(재구성 연출 설계 Q-RE2 A, 묶음 끝 검토 M1).
+                if (_view._statusAppearance?.IsReplaced == true || !_view.TryGetComponent(out CombatUnitRagdoll ragdoll))
+                    return false;
+
+                _view._clipChannel?.Pause();
+                try
+                {
+                    ragdoll.Begin(push, groundUp, groundWidth);
+                    _ragdoll = ragdoll;
+                    return true;
+                }
+                catch
+                {
+                    if (_view.isActiveAndEnabled) _view._clipChannel?.Resume();
+                    throw;
+                }
+            }
+
             public void RestorePose()
             {
                 if (!IsCurrent || !_view._poseSlot.Release(this)) return;
-                _view.transform.position = Position;
-                _view.ApplyRotation(Rotation);
-                if (_view._healthLabel != null)
-                    _view._healthLabel.transform.position = _healthPosition;
+                CombatUnitRagdoll ragdoll = _ragdoll;
+                _ragdoll = null;
+                try
+                {
+                    if (ragdoll != null) ragdoll.End();
+                }
+                finally
+                {
+                    _view.transform.position = Position;
+                    _view.ApplyRotation(Rotation);
+                    if (_view._healthLabel != null)
+                        _view._healthLabel.transform.position = _healthPosition;
+                    if (ragdoll != null && _view.isActiveAndEnabled) _view._clipChannel?.Resume();
+                }
             }
         }
 
@@ -653,6 +826,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             internal bool Fold() => IsCurrent && _view._standSlot.Release(this);
         }
 
+        /// <summary>늦은 반환이 새 개체·새 모델·새 대여를 지우지 않는 강조 대여입니다.</summary>
+        private sealed class PresentationUnitOutline : ICombatUnitOutline
+        {
+            private readonly FieldUnitView _view;
+            private readonly EntityId _entityId;
+            private readonly int _bodyTrackingVersion;
+            private readonly UnitModelAppearance _appearance;
+
+            internal PresentationUnitOutline(FieldUnitView view)
+            {
+                _view = view;
+                _entityId = view.EntityId;
+                _bodyTrackingVersion = view.BodyTrackingVersion;
+                _appearance = view._appearance;
+            }
+
+            private bool IsCurrent => _view != null && _view.EntityId == _entityId
+                && _view.BodyTrackingVersion == _bodyTrackingVersion
+                && ReferenceEquals(_view._appearance, _appearance) && _view._outlineSlot.IsCurrent(this);
+
+            public bool IsAvailable => IsCurrent && _view.isActiveAndEnabled && _view._appearance != null;
+
+            public void Dispose()
+            {
+                if (!IsCurrent || !_view._outlineSlot.Release(this)) return;
+                _view._appearance?.ClearOutline();
+            }
+        }
+
         /// <summary>피격 플래시 층 대여 하나입니다(조각·조립 설계 BP9). 수명 규칙은 대여 칸이 갖습니다(클립 계획 T10a).</summary>
         private sealed class PresentationUnitFlash : ICombatUnitFlash
         {
@@ -669,11 +871,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             public bool IsAvailable => IsCurrent && _view.gameObject.activeInHierarchy && _view._appearance != null;
 
-            public void SetFlash(Color color, float strength)
+            public void SetFlash(CombatFlashLook look, float strength)
             {
                 if (!IsAvailable)
                     throw new InvalidOperationException("[FieldUnitView] 피격 플래시 대여가 취소·반환됐습니다.");
-                _view._appearance.SetFlash(color, strength);
+                _view._appearance.SetFlash(look, strength);
             }
 
             public void RestoreFlash()
@@ -684,7 +886,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>사건 클립 대여 하나입니다(클립 설계 AC3). 수명 규칙은 대여 칸이 갖습니다(클립 계획 T10a).</summary>
-        private sealed class PresentationUnitClip : ICombatUnitClip
+        private sealed class PresentationUnitClip : ICombatUnitClip, ICombatWeaponPitchClip
         {
             private readonly FieldUnitView _view;
             private readonly EntityId _entityId;
@@ -703,6 +905,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             {
                 RequireAvailable();
                 _view._clipChannel.Begin(clip);
+            }
+
+            public void AimWeapon(CombatWeaponAim aim)
+            {
+                RequireAvailable();
+                _view._clipChannel.AimWeapon(aim);
             }
 
             public void SetTime(float time)

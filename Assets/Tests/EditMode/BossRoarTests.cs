@@ -120,24 +120,6 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void FourHits_SurviveDay_ThenOneHitRoars()
-        {
-            var day = Calculate(Input(4, night: false));
-            Assert.That(day.Events.OfType<CombatRoarEvent>(), Is.Empty);
-            Assert.That(RoarHitCounter.HitCount(Final(day, Boss)), Is.EqualTo(4));
-
-            var afterDay = CombatCommandComposition.Project(day);
-            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(afterDay,
-                CombatControllerPhase.StartingPlayer));
-            var ready = CombatCommandComposition.Project(started).WithActor(Player);
-            var night = Calculate(CombatCommandTestData.FreshCommand(WithNight(ready, true),
-                CombatCommandKind.Attack, Player, AttackAim.ForCell(new CellCoord(3, 3))));
-
-            Assert.That(night.Events.OfType<CombatRoarEvent>().Count(), Is.EqualTo(1));
-            Assert.That(RoarHitCounter.HitCount(Final(night, Boss)), Is.EqualTo(0));
-        }
-
-        [Test]
         public void TenIndependentHits_RoarOnceAndResetToZero()
         {
             // 독립 피격이 쌓여 임계값의 두 배를 넘어도 한 번만 포효하고 초과분은 버린다(G6-2·3).
@@ -298,7 +280,7 @@ namespace ProjectL.Tests.Core
         internal static RoarTraitStatusSnapshot Status(int hitCount, int threshold = 5) => new RoarTraitStatusSnapshot(hitCount, threshold);
 
         /// <summary>보스(Roar·Knockback 3, Fan/All)를 플레이어가 공격하는 밤 입력이다.</summary>
-        internal static CombatCommandInput Input(int hitCount, bool night = true, int threshold = 5, int playerHp = 100,
+        internal static CombatCommandInput Input(int hitCount, int threshold = 5, int playerHp = 100,
             int bossHp = 100, bool barrel = false, bool withTargets = true)
         {
             var seed = CombatCommandTestData.Input(empty: true);
@@ -335,7 +317,7 @@ namespace ProjectL.Tests.Core
             var turn = new CombatTurnFacts(StagePhase.Combat,
                 controllerPhase: withTargets ? CombatControllerPhase.Player : CombatControllerPhase.Enemy,
                 controllerTurnSequence: 1, completedPlayerTurnCount: 3);
-            var state = new CombatCommandState(8,8,withTargets ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,night,                structures,Array.Empty<ThornFieldCellSnapshot>(),                turn);
+            var state = new CombatCommandState(8,8,withTargets ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures,Array.Empty<ThornFieldCellSnapshot>(),                turn);
             var owned = characters.Where(c => c.OwnedId.HasValue).Select(c => new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator
                 .Contracts.Roster.OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray();
             return new CombatCommandInput(1, CombatCommandKind.Attack, withTargets ? Player : Boss, AttackAim.ForCell(boss.Anchor.Value), state,
@@ -345,13 +327,6 @@ namespace ProjectL.Tests.Core
                     obstacles.Select(o => o.EntityId).ToArray()),
                 obstacleContents: obstacles.ToArray(),
                 expectedBattleInstanceId: 1, expectedControllerTurnSequence: (state).Turn.ControllerTurnSequence);
-        }
-
-        private static CombatCommandInput WithNight(CombatCommandInput input, bool night)
-        {
-            var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,night,s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation);
-            return CombatCommandTestData.With(input, state: state);
         }
 
         private static CombatCommandInput WithKind(CombatCommandInput i, CombatCommandKind kind) =>

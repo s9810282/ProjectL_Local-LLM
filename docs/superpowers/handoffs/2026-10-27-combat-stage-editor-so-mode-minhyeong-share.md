@@ -1,6 +1,7 @@
-# 전투 스테이지 편집 도구 SO 모드 — 낙석·하붑 모양 편집 및 터널 폭발 옵션 (2026-11-02 갱신, 민형님, 미전달)
+# 전투 스테이지 편집 도구 SO 모드 — 빠른 사용법·초안 보호·기믹 입력 인계 (2026-11-09 갱신, 민형님, 미전달)
 
 - 작성자: 호진(이호진)
+- 최신 상태(2026-11-09): UXR-a~c·DP-a·TXT-a 코드 반영 뒤 **UXR-d 문서·정적 대조**를 반영했습니다. **컴파일 미확인, 최신 Unity 확인·Phase 인수 대기, 커밋 전, 공유 미전달**입니다. 현재 안내는 §10, 전체 기능/후속 확인은 [계획 §20.9](../plans/2026-10-27-combat-stage-editor-so-mode-plan-Hojin.md#209-uxr-d-문서기능-대조-기록-2026-11-09)가 원본입니다. D-01 본부 삭제 안내는 후속 승인으로 수정 반영했습니다(계획 §20.10, 컴파일·Unity 미확인). 아래 날짜별 기록은 당시 이력이며 형식 4~6·구형 초안 자동 재읽기는 현행 정책이 아닙니다.
 - 터널 폭발 후속: RTE-a 스테이지별 View 옵션과 편집 툴/Factory 연결 반영(§9), 컴파일·Unity 미확인. 공유 미전달입니다.
 - 모양 편집 후속: GSE-a 코드 반영(§8), 컴파일·Unity 미확인, 커밋 전. 자동 위치와 고지대 B1 보류를 유지합니다. 공유 미전달입니다.
 
@@ -22,7 +23,7 @@
 
 | 파일 | 바뀐 것 |
 |---|---|
-| `CombatLayoutWindow.cs` | 네 곳, 모두 SO일 때만 갈라지는 한 줄씩입니다. <br>· `OnUndoRedo` 맨 앞: SO면 `OnSoUndoRedo()` <br>· `OnGUI`: 머리줄 뒤 SO면 `DrawSoMode()` <br>· `DrawHeader`: 제목 옆 `DrawEditModeToggle()`. SO면 `DrawSoHeaderButtons()`, 아니면 기존 버튼 넷을 `else` 안으로 옮김(내용 그대로) <br>· `DrawHeader` 끝: SO면 `DrawSoHeaderStatus()` |
+| `CombatLayoutWindow.cs` | 기존 DT/SO 머리줄·본문·Undo 분기. DP-a에서 `OnEnable` 보호 초기화, `OnDisable` 초안 보관/확인 기준 기록, `OnGUI` 보호 준비, `OnUndoRedo` 복원 경계 처리를 연결했습니다. 최초 네 분기만 있던 상태에서 확장됐으므로 수명 변경 시 §10을 함께 확인하세요. |
 | `ProjectL.Tool.Editor.asmdef` | `references`에 셋: `Framework`(DB 항목 `GetData()` 검사), `ProjectL.Core.Contracts`(장애물 키 `ObstacleContentProfile.KeyFor`, 유닛 역할·소유 열거), `ProjectL.Core.Domain`(공격 모양 `AppointShapeCalculator`) |
 | `Tool/사용법.md`·`Tool/README.md` | 머리에 SO 모드 안내·링크 단락 하나씩. 나머지 DT 설명은 그대로입니다. |
 
@@ -33,7 +34,11 @@
 | `CombatLayoutWindow.SoMode.cs` | 기존 맵·배치/설정 편집기·입력·저장 흐름. 영역 조립은 Workspace가 호출 |
 | `CombatLayoutWindow.SoWorkspace.cs` | UXR-a/b의 작업 영역·목록·상황별 속성 조립과 공통 입력 취소/보기 전환 |
 | `CombatLayoutWindow.SoUx.cs` | 검사 수명·상태 표시·대상 위치 이동·UX-c 공개 진단 안내. 저장 검사와 표시 진단을 분리 |
-| `CombatLayoutWindow.SoHaboob.cs` | 하붑 사용·주기·경고·상대 칸 목록 UI. 값 변경은 기존 SoChange 경로 사용 |
+| `CombatLayoutWindow.SoHelp.cs` | UXR-c 여섯 주제·상세 문서·기능 위치 이동. 도움말 중 지도 입력 차단, 기존 진단/보호 UI 호출. 편집/저장 규칙은 소유하지 않음 |
+| `CombatLayoutWindow.SoDrafts.cs` | DP-a 복원 판단·보호 UI·재컴파일 확인 기준·복원 Undo 연결 |
+| `CombatStageSoDraftStore.cs` | 활성/보호 원문 읽기·쓰기·일치 확인·보호·원문 내보내기 결과 |
+| `CombatLayoutWindow.SoGimmickShapes.cs`·`CombatStageSoGimmickShapeEditor.cs` | 모양 UI/Undo 조립과 상대 모양 격자 입력. 맵 배치는 기존 HaboobStart/Rockfall 도구에 연결 |
+| `CombatLayoutWindow.SoHaboob.cs` | 하붑 사용·주기·경고·상대 칸 목록·시작 기준점, 맵 클릭/드롭·시작 비우기. 값 변경은 기존 SoChange 경로 사용 |
 | `CombatStageSoIssue.cs` | 메시지·선택적 좌표·층/인덱스 대상, Root/개정 기반 검사 결과 값 |
 | `CombatStageSoDocument.cs` | 작업본(참조는 GUID 문자열, 열거는 값). 배치 계산·바로 막기·상자 편집(칠하기·복사·대칭·묶음 옮기기)·아군 구역 칸 편집(`PaintZone`) |
 | `CombatStageSoAssets.cs` | SO 읽기·쓰기 창구. **SO 직렬화 필드 이름은 이 파일에만 있습니다**(DB SO 형식 대부분이 internal이라 SerializedObject로 접근) |
@@ -56,7 +61,7 @@ SO 코드가 DT 파일의 멤버 셋을 그대로 씁니다. 이름이나 동작
 
 - `EndStroke()`: 끌기 한 번을 Undo 한 묶음으로 끝내는 데 같이 씁니다.
 - `lastPainted`: 끌기 칠하기에서 같은 칸을 다시 칠하지 않게 같이 씁니다.
-- `DraftKey`: SO 초안은 `DraftKey + ".So"` 키로 EditorPrefs에 따로 둡니다.
+- `DraftKey`: 활성 SO 초안은 `DraftKey + ".So"`, 보호 원문 한 개는 여기에 `".Recovery"`를 붙여 보관합니다. 직접 삭제/덮어쓰기 대신 DraftStore/SoDrafts 계약을 사용합니다. 둘 다 PC 로컬이며 작업본 형식 7과 보호 봉투 형식 1은 별개입니다.
 
 그 밖에 SO partial에 정의된 것은 다음과 같습니다.
 
@@ -119,3 +124,14 @@ SO 코드가 DT 파일의 멤버 셋을 그대로 씁니다. 이름이나 동작
 - Tool의 낙석 세부 설정에 **터널 폭발 사용**을 연결했습니다. View 읽기/쓰기와 SoChange의 Undo·초안·Dirty·검사 수명을 재사용합니다. 작업본 형식 5→6이므로 업데이트 전 미저장 편집을 저장해야 합니다.
 - 꺼짐에서는 터널 WarningCues와 터널 누락 안내만 생략합니다. 경고음·낙하·착지·피해 및 앵커 중복 오류/능선 안내는 유지합니다. Transform이나 자식 능선은 비활성화하지 않습니다.
 - 원본은 편집 설계 §24·계획 §17, 사용법 §5.11입니다. **컴파일·Unity Ru.1~Ru.5 미확인, 고지대 B1 보류, 커밋 전, 공유 미전달.**
+
+## 10. 현행 화면·수명과 UXR-d 대조 (2026-11-09, 미전달)
+
+- 화면은 **배치 / 바닥 타일 / 스테이지 설정**입니다. 배치 속성은 선택/아군 구역/무작위 지형, 설정은 기본 정보/필드·아군 구역/공유 SO·본부·구조물/배경·타일·카메라/기믹/등록·맵 생성 규칙입니다. 상단 `사용법`은 창 내부 여섯 주제를 열고 `상세 사용법 파일`이 Markdown을 엽니다. 기존 속성의 전체 편집 필드는 축소하지 않았습니다.
+- 입력 소유권: 배치·지도 키는 SoMode, 타일 선택/복사/회전/난수는 SoTiles, 모양 획은 GimmickShapeEditor, 화면 전환/입력 취소는 Workspace입니다. Help는 표시 중 지도 본문/키를 호출하지 않습니다. 단순 닫기는 기존 영역/선택/클립보드/시점 유지, 위치 이동은 기존 Workspace/Inspector/MapView를 호출하며 편집/붙여넣기/저장을 실행하지 않습니다.
+- HAT/GP: 하붑 클릭/드롭은 클릭한 칸을 구름 가운데 근처로 놓고 X/Y는 왼쪽 아래 기준점입니다. 시작 비우기는 하붑을 끄지 않습니다. 낙석은 클릭 위치와 무관하게 사용만 켭니다. 두 모양 편집·낙석 폭발 옵션·하붑 시작 설정은 스테이지 복제/배치 비우기에 포함되지만 영역/타일 클립보드에는 포함되지 않습니다.
+- DP: 정상 현행 초안 복원, 복원 불가 원문 보호, 충돌 시 덮어쓰기 차단, 대상별 내보내기/복원/확인 폐기를 연결했습니다. 재컴파일 확인 기준과 빈 창 복원 Undo/복원 이후 클립보드 보완도 코드 반영입니다. 원문 내보내기는 SO 저장이 아니며 자동 형식 변환/다중 초안 이력은 없습니다.
+- 저장·등록: Dirty는 `soModified`, 검사/개정은 `soCheck`, 보관 판단은 DraftStore/SoDrafts 한 곳입니다. 쓰기 실패는 미저장 유지하되 이미 쓴 에셋을 모두 롤백하지 않습니다. 에셋 저장 뒤 표만 실패하면 저장 상태 유지·표 오류 표시, 초안 정리 실패는 별도입니다. 등록/빼기의 기존 맵 규칙·보스 교체·확인창은 그대로입니다.
+- PreviewRenderUtility·공유 작업 복제본·이벤트 해제는 기존 소유자 그대로입니다. Framework/Factory/서비스 등록·게임 입력·DB 스키마·DT·Core·FieldCamera·Architecture 변경은 UXR 범위가 아닙니다. 새 Help/Drafts는 기존 EditorWindow 내부 기능이며 런타임 UISystem 등록 대상이 아닙니다. **고지대 B1은 계속 보류**합니다.
+- UXR-F01~F27의 정적 진입점 누락은 발견하지 않았습니다. D-01은 후속 사용자 승인으로 `SoToolHint`를 본부 포함·아군 구역 제외로 맞추고 상자 삭제 주석을 정정했습니다(계획 §20.10). 도움말도 같은 함수를 사용합니다. 삭제 로직은 유지했으며 컴파일·Unity 확인 및 UXR-d Phase 인수는 대기입니다.
+- 확인 원본은 계획 §20.9입니다. UXR Ua/Ub/Uc, HBE/GSE/RTE/HAT/GP, DP Du.1~10·TXT Tu.1~2를 미확인으로 연결했습니다. 기존 확인 기록을 최신 코드 전체 성공으로 확대하지 않았습니다. **공유 미전달, 컴파일 미확인, 최신 Unity 미확인, 커밋 전**입니다.

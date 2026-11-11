@@ -17,8 +17,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// Core 상태를 만지지 않는 표시 전용입니다.
     /// </summary>
     /// <remarks>
-    /// 고스트 재질·색·크기·높이는 View DB(StageFieldView)에서 읽습니다. 색은 ColorScop으로 바꿉니다(설계 §13.3).
-    /// 배치 가능 여부 색(미리보기 응답 표시)은 후속 범위라 지금은 유효 색 하나만 씁니다.
+    /// 고스트 재질·색·크기·높이는 View DB(StageFieldView)에서 읽습니다. 색은 Renderer마다 받은 색 손잡이(<see cref="IColorHandle"/>)로 바꿉니다(설계 §13.3).
+    /// 배치 Drag는 Core 배치 응답으로 유효·무효 색을(<see cref="SetPlaceable"/>), 이동 고스트는 응답 전 중립 색과 유효·무효 색을(<see cref="SetMovementTint"/>) 씁니다.
     /// </remarks>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display")]
     [DisallowMultipleComponent]
@@ -217,7 +217,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
                         // 색은 Renderer마다 받은 손잡이로만 바꾸고 최종 Release에서 반환한다.
                         IColorHandle scope = colors.CreateColorHandle(renderer)
-                            ?? throw new InvalidOperationException("ColorSystem이 고스트 Renderer의 Scope를 만들지 못했습니다.");
+                            ?? throw new InvalidOperationException("ColorSystem이 고스트 Renderer의 색 손잡이를 만들지 못했습니다.");
                         _scopes.Add(scope);
                         _slotCounts.Add(slotCount);
                     }

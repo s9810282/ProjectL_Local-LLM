@@ -14,6 +14,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     [DisallowMultipleComponent]
     public sealed class BattleChangerUI : UIBase, IUIInputReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPhaseButtonClick = new("Combat.Action.UI.PhaseButton.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPhaseButtonHoverEnter = new("Combat.Action.UI.PhaseButton.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIPhaseButtonHoverExit = new("Combat.Action.UI.PhaseButton.HoverExit");
+#endif
+
         [SerializeField] private Button button;
         private IUISystemService _ui;
         private IStageInputReceiver _input;
@@ -22,6 +29,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         public BattleChangerUI() => Policy = UIOpenPolicy.Parallel;
         public override UIId ID => UIId.BattleChanger;
+        /// <summary>튜토리얼이 실제 버튼의 가장자리를 표시할 때 읽는 영역입니다.</summary>
+        internal RectTransform ButtonRect => button != null
+            ? (RectTransform)button.transform
+            : throw new InvalidOperationException("[BattleChangerUI] UIId.BattleChanger의 button 참조가 없습니다.");
 
         public override void BindUISystemService(IUISystemService service)
         {
@@ -90,6 +101,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.Click(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPhaseButtonClickSample = _profileUIPhaseButtonClick.Auto();
+#endif
+
             if (slot != 0 || !isActiveAndEnabled || !button.IsInteractable()) return;
             IStageInputReceiver input = _input
                 ?? throw new InvalidOperationException("[BattleChangerUI] UIId.BattleChanger의 전투 입력이 해제되었습니다.");
@@ -97,8 +112,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             input.EnterCombatRequested();
         }
 
-        void IUIInputReceiver.HoverEnter(int slot) { }
-        void IUIInputReceiver.HoverExit(int slot) { }
+        void IUIInputReceiver.HoverEnter(int slot) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPhaseButtonHoverEnterSample = _profileUIPhaseButtonHoverEnter.Auto();
+#endif
+ }
+        void IUIInputReceiver.HoverExit(int slot) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIPhaseButtonHoverExitSample = _profileUIPhaseButtonHoverExit.Auto();
+#endif
+ }
 
         private void ValidateReferences()
         {

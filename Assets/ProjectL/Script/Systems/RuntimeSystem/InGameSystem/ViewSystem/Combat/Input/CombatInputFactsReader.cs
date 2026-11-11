@@ -10,7 +10,7 @@ using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 {
-    /// <summary>판단 한 번의 입력 사실을 기존 원본에서 읽습니다. 캐시·쓰기·입력 정책 판정은 하지 않습니다.</summary>
+    /// <summary>판단 한 번의 입력 사실을 기존 원본에서 읽습니다. 캐시·Buffer 쓰기·입력 정책 판정은 하지 않습니다. 다만 빈 이동 범위 근거를 읽을 때 사실이 바뀌었으면 그 근거를 지웁니다(<c>CombatMovementRangeTracker.HasAcceptedEmptyRange</c>).</summary>
     internal sealed class CombatInputFactsReader
     {
         private readonly ICombatStateBufferReadSink _state;
@@ -68,20 +68,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 hasPendingCommand: _hasPendingCommand(),
                 isPresenting: CombatProgressFacts.IsUnpresented(_inputRead.PresentedResultSequence, _state.LatestResultSequence),
                 isInputAvailable: _isInputReady(),
-                isAttackActive: input != null && input.Interaction.IsAttackActive,
+                isAttackActive: input != null && input.IsAttackActive,
                 combatInputRestriction: _blockedInput.Restriction,
-                hasCurrentAcceptedEmptyMovementRange: input != null && input.Interaction.HasCurrentAcceptedEmptyMovementRange(selectedActor),
+                hasCurrentAcceptedEmptyMovementRange: input != null && input.HasCurrentAcceptedEmptyMovementRange(selectedActor),
                 isSubmissionSuspended: _progress.IsSubmissionSuspended,
                 isAbandonRequested: _progress.IsAbandonRequested,
                 isModalOpen: _isModalOpen(),
-                isItemDragActive: input != null && input.Interaction.IsItemDragActive,
+                isItemDragActive: input != null && input.IsItemDragActive,
                 battleInstanceId: hasBattle ? _state.BattleInstanceId : 0,
                 controllerTurnSequence: command?.Turn.ControllerTurnSequence ?? 0,
                 isTutorialPracticeGoalPending: hasBattle && _blockedInput.IsPracticeGoalPending(_state.BattleInstanceId), queryRevision: _state.QueryRevision,
                 isEntryPresentationPending: _progress.IsEntryPresentationPending,
                 // 대상 판정은 입력 기능 묶음 한 곳입니다(평가 C4-13). 연결 입력이 없으면 공격 모드·아이템 드래그가 없는 것으로 봅니다.
                 pointerTarget: input != null
-                    ? input.Interaction.ResolvePointerTarget(layer)
+                    ? input.ResolvePointerTarget(layer)
                     : CombatInputRouter.ResolvePointerTarget(layer, false, false));
         }
 

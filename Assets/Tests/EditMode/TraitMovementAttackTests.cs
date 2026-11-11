@@ -177,7 +177,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId.Value == 1
                 ? c.WithPlacement(CharacterRuntimeArea.Hand, 0, null, null, Array.Empty<CellCoord>()) : c).ToArray());
             var starting = EnemyControllerPhaseTests.Input(input, side == Owner.Player ? CombatControllerPhase.StartingPlayer : CombatControllerPhase.StartingEnemy);
-            var result = CombatTurnCalculator.BeginControllerTurn(starting);
+            var result = CombatTurnCalculator.BeginControllerTurn(starting, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Moved(TraitCombatFixtures.Final(result, 1)), Is.EqualTo(side != Owner.Player));
             Assert.That(Moved(TraitCombatFixtures.Final(result, 2)), Is.EqualTo(side != Owner.Enemy));

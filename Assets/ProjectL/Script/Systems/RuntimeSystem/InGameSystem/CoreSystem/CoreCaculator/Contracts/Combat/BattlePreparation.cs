@@ -33,6 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyList<ObstacleContentProfile> ObstacleContents { get; }
         /// <summary>전투 동안 바뀌지 않는 유닛별 특성 설정값이다(설명 수치 공개 설계 SP3).</summary>
         public BattleTraitSettings TraitSettings { get; }
+        public NexusReinforcementSpec NexusReinforcements { get; }
 
         /// <summary>
         /// 전환 입구다. 아군 줄 수로 줄 구역을 만든다. 적 줄 수는 받기만 하고 쓰지 않는다.
@@ -45,10 +46,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CellCoord[] railCells = null, StageGimmickSpec[] stageGimmicks = null,
             MovementEnvironmentFacts environment = null, EnvironmentSemanticBindings environmentBindings = null,
             IReadOnlyList<ObstacleContentProfile> obstacleContents = null,
-            WallBlockingSpec wallBlocking = null)
+            WallBlockingSpec wallBlocking = null, NexusReinforcementSpec nexusReinforcements = null)
             : this(boardWidth, boardHeight, reserveCapacity, timelineSeed, initialPhase, drawOrder, drawCursor,
                 PlayerDeploymentZone.Rows(playerDeploymentDepth), traitSettings, railCells, stageGimmicks, environment, environmentBindings,
-                obstacleContents, wallBlocking)
+                obstacleContents, wallBlocking, nexusReinforcements)
         {
         }
 
@@ -62,7 +63,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CellCoord[] railCells = null, StageGimmickSpec[] stageGimmicks = null,
             MovementEnvironmentFacts environment = null, EnvironmentSemanticBindings environmentBindings = null,
             IReadOnlyList<ObstacleContentProfile> obstacleContents = null,
-            WallBlockingSpec wallBlocking = null)
+            WallBlockingSpec wallBlocking = null, NexusReinforcementSpec nexusReinforcements = null)
         {
             if (boardWidth < 1)
                 throw new ArgumentOutOfRangeException(nameof(boardWidth));
@@ -82,6 +83,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (playerZone.FitsBoard(boardWidth, boardHeight) == false)
                 throw new ArgumentOutOfRangeException(nameof(playerZone));
             TraitSettings = traitSettings ?? throw new ArgumentNullException(nameof(traitSettings));
+            NexusReinforcements = nexusReinforcements;
 
             var copy = new CharacterInstanceId[drawOrder.Count];
             var ids = new HashSet<CharacterInstanceId>();
@@ -170,11 +172,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             var allocation = commandState?.Allocation ?? computed;
             if (commandState != null && environmentProgress != null && !commandState.EnvironmentProgress.SameValues(environmentProgress))
                 throw new ArgumentException("전투 준비의 초기 환경 진행값과 명령 상태의 진행값이 다릅니다.", nameof(commandState));
-            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth,combat.BoardHeight,                combat.InitialPhase,false,Structures,                Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
-                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray()),combat.Environment,                environmentProgress: environmentProgress,wallBlocking: combat.WallBlocking,objective: objective,allocation: allocation,itemRandomState: unchecked((uint)combat.TimelineSeed));
-            var expected = new CombatCommandState(combat.BoardWidth,combat.BoardHeight,combat.InitialPhase,CommandState.IsNight,Structures,CommandState.ThornFields,                CommandState.Turn,combat.Environment,CommandState.EnvironmentProgress,combat.WallBlocking,objective,allocation,CommandState.ItemRandomState,gimmicks: CommandState.Gimmicks);
+            var reinforcements = InitialReinforcements(combat, Structures);
+            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth,combat.BoardHeight,                combat.InitialPhase,Structures,                Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
+                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray()),combat.Environment,                environmentProgress: environmentProgress,wallBlocking: combat.WallBlocking,objective: objective,allocation: allocation,itemRandomState: unchecked((uint)combat.TimelineSeed),
+                reinforcements: reinforcements);
+            var expected = new CombatCommandState(combat.BoardWidth,combat.BoardHeight,combat.InitialPhase,Structures,CommandState.ThornFields,                CommandState.Turn,combat.Environment,CommandState.EnvironmentProgress,combat.WallBlocking,objective,allocation,CommandState.ItemRandomState,gimmicks: CommandState.Gimmicks,
+                reinforcements: reinforcements);
             if (!expected.SameValues(CommandState))
                 throw new ArgumentException("전투 준비와 명령 조회값이 다릅니다.", nameof(commandState));
+        }
+
+        private static NexusReinforcementState InitialReinforcements(CombatPreparation combat,
+            IReadOnlyList<StructureCombatFacts> structures)
+        {
+            if (combat.NexusReinforcements == null)
+                return NexusReinforcementState.Disabled;
+
+            var nexuses = structures.Where(s => s.Owner == Owner.Enemy && s.Definition.Key == EntityKey.Structure_Headquarters &&
+                !s.Health.IsDead).ToArray();
+            if (nexuses.Length != 1)
+                throw new ArgumentException("넥서스 증원은 살아 있는 적 본부 하나에 연결해야 합니다.", nameof(structures));
+
+            return new NexusReinforcementState(nexuses[0].EntityId, unchecked((uint)combat.TimelineSeed ^ 0x4E585350u),
+                Array.Empty<NexusReinforcementRecord>());
         }
     }
 }

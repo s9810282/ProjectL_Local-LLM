@@ -21,5 +21,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Structure_Headquarters = 20,
         Structure_PowderBarrel = 21,
         Structure_Supplies = 22,
+        Unit_Demon_SoloAction = 81,
+        Unit_Demon_AnkleBreaker = 82,
+        Unit_lqwe = 83,
+        Unit_UndeadCannon_ArmorBreaker = 84,
+        Unit_UndeadCannon_StationaryFire = 85,
+        Unit_UndeadCannon_SoloAction = 86,
+        Unit_UndeadRider_Disarm = 87,
+        Unit_UndeadHeavy_Entrenchment = 88,
     }
 }

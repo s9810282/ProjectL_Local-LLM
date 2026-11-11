@@ -16,5 +16,9 @@ MonoBehaviour:
   attackCompanionClips:
   - {fileID: 7400000, guid: a2c108413b211cc4ab11164393ae9f6a, type: 2}
   hitDelay: 0
+  shots: []
+  attackAnimationStartMode: 1
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
   hitClip: {fileID: 0}
   hitCompanionClips: []

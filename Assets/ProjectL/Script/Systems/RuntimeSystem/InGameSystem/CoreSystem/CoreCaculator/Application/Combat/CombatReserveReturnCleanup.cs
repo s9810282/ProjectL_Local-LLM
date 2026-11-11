@@ -28,7 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 traitStatuses: stats.TraitStatuses.ToArray().Select(s => s switch
                 {
                     HunterTraitStatusSnapshot hunter when hunter.TargetId.HasValue => new HunterTraitStatusSnapshot(null, hunter.SuccessfulRewards),
-                    RoarTraitStatusSnapshot roar when roar.HitCount != 0 => new RoarTraitStatusSnapshot(0, roar.HitThreshold),
+                    RoarTraitStatusSnapshot roar => roar.WithHitCount(0),
                     _ => s
                 }).ToArray());
             int maximum = checked(character.Health.MaxHealth - character.TemporaryMaxHealthBonus);

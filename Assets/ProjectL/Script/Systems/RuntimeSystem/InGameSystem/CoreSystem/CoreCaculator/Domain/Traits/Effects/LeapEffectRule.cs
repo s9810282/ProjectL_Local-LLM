@@ -8,8 +8,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class LeapEffectRule : ICombatEffectRule
+    internal sealed class LeapEffectRule : IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         private readonly LeapTraitRule _rule;
         internal LeapEffectRule(LeapTraitDefinition definition, LeapTraitRule rule)
         {

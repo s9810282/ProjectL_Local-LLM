@@ -275,7 +275,7 @@ namespace ProjectL.Tests.Core
             var i = CombatCommonCommandTests.Command(CombatCommandKind.PlaceUnit);
             var hand = CombatPlacementCalculator.Location(i.Characters[0], CharacterRuntimeArea.Hand, 0, null, null);
             var cell = new CellCoord(2, 0);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                i.State.Structures,i.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                i.State.Structures,i.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
             var input = new CombatCommandInput(1, i.Kind, i.ActorId, default, state, new[] { hand, i.Characters[1] },
                 i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, targetCell: cell,
                 battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
@@ -301,7 +301,7 @@ namespace ProjectL.Tests.Core
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), new CellCoord(0, 7), Rotation4.R0, new[] { new CellCoord(0, 7) }, Owner.Enemy);
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                new[] { headquarters },Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { Mine(cell: cell) }));
             var input = new CombatCommandInput(1, i.Kind, EntityId.Empty, default, state,
                 new[] { i.Characters.Single(c => c.CharacterKey == EntityKey.Unit_MainCharacter), waiting },
                 i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts,
@@ -347,7 +347,7 @@ namespace ProjectL.Tests.Core
             profiles ??= i.ObstacleContents.ToArray();
             environment ??= i.State.Environment;
             var s = i.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                structures,s.ThornFields,s.Turn,environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                structures,s.ThornFields,s.Turn,environment);
             var owned = characters.Where(c => c.OwnedId.HasValue).Select(c =>
                 new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray();
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim, state, characters,

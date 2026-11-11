@@ -77,7 +77,7 @@ namespace ProjectL.Tests.Core
             var waiting = CombatPlacementCalculator.Location(enemy, CharacterRuntimeArea.EnemyWaiting, null, null, null);
             var hq = Headquarters(cell);
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(1,2,CombatFlowPhase.PlayerInput,false,                new[] { hq },Array.Empty<ThornFieldCellSnapshot>(),turn);
+            var state = new CombatCommandState(1,2,CombatFlowPhase.PlayerInput,                new[] { hq },Array.Empty<ThornFieldCellSnapshot>(),turn);
             var input = Copy(seed, state, new[] { main, waiting }, 1, 1);
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.False);
@@ -96,7 +96,7 @@ namespace ProjectL.Tests.Core
             var enemy = CombatCommandTestData.Character(2, EntityKey.Unit_Demon, cell, Owner.Enemy);
             var waiting = CombatPlacementCalculator.Location(enemy, CharacterRuntimeArea.EnemyWaiting, null, null, null);
             var turn = new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, cell, Rotation4.R0) });
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell, damage: 100) }),                objective: BattleObjective.DesignatedBoss(enemy.EntityId));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),turn,                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell, damage: 100) }),                objective: BattleObjective.DesignatedBoss(enemy.EntityId));
             var input = Copy(seed, state, new[] { main, waiting }, 2, 2, ObjectArrivalOrderTests.Bindings(11));
             input = WithClearRewards(input);
             var result = CombatCommandCalculator.Calculate(input, MineEnvironmentTests.Rules);
@@ -123,7 +123,7 @@ namespace ProjectL.Tests.Core
             var main = seed.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
             var cell = new CellCoord(2, 0);
             var enemy = CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(2, 1), Owner.Enemy);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell, damage: 100) }),                objective: BattleObjective.DesignatedBoss(enemy.EntityId));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell, damage: 100) }),                objective: BattleObjective.DesignatedBoss(enemy.EntityId));
             var input = new CombatCommandInput(1, CombatCommandKind.PlaceUnit, hand.EntityId, default, state,
                 new[] { hand, main, enemy }, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls,
                 seed.Artifacts, cell, battle: new CombatBattleFacts(10, 1, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
@@ -182,7 +182,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentException>(() => new CombatRewardFacts(true, new[] { default(CharacterInstanceId) }, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), -1));
             var state = Deployed(0).State;
-            var changed = new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,                state.IsNight,state.Structures,state.ThornFields,state.Turn,state.Environment,                state.EnvironmentProgress,state.WallBlocking,state.Objective,state.Allocation,state.ItemRandomState,facts);
+            var changed = new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,state.Structures,state.ThornFields,state.Turn,state.Environment,                state.EnvironmentProgress,state.WallBlocking,state.Objective,state.Allocation,state.ItemRandomState,facts);
             Assert.That(state.SameValues(changed), Is.False);
         }
 

@@ -5,17 +5,24 @@ using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.ShopView;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Entry;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Completion;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 {
     /// <summary>
-    /// 스테이지 맵의 Framework 연결입니다. 서비스를 받아 묶음 하나로 모으고, 씬 노드를 등록하고, 씬 연결 Scope의 게시·Tick·폐기와
+    /// 스테이지 맵의 Framework 연결입니다. 서비스를 받아 쓰는 쪽별 묶음으로 나누고(설계 §2.9), 씬 노드를 등록하고, 씬 연결 Scope의 게시·Tick·폐기와
     /// 씬 배경음을 맡습니다. Scope 조립은 생성 계약(<see cref="IStageMapSceneFactory"/>)이 합니다.
     /// </summary>
     internal sealed class StageMapViewSystem :
@@ -35,9 +42,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private readonly IStageMapSceneFactory _sceneFactory;
         private IViewQuery _view;
         private StageMapViewServices _services;
-        // 배경음과 씬 노드 등록은 System만 쓰므로 묶음에 넣지 않고 직접 갖습니다.
+        // 배경음·씬 노드 등록·입력 Buffer 비우기는 System만 하므로 묶음에서 꺼내지 않고 직접 갖습니다.
         private IAudioSystemService _audio;
         private ILodingRegisterService _loading;
+        private IStageViewBufferWriteSink _requestWriter;
+        private IShopViewBufferWriteSink _shopWriter;
         private StageMapViewScope _scope;
         private StageMapViewScope _lastPublishedScope;
         private bool _stopped;
@@ -68,47 +77,52 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             var inGame = resolver.GetService(SystemGroupsService.InGame);
             var lifeCycles = resolver.GetService(SystemGroupsService.LifeCycle);
             IBufferQuery buffers = resolver.GetService(BufferSystemKey.Buffer);
-            _services = new StageMapViewServices(
-                mapData: view.StageMapViewTableQuery.Config,
-                nodeVisuals: view.StageNodeVisualTableQuery,
-                backgrounds: view.StageMapBackgroundTableQuery,
-                unitVisuals: view.UnitVisualTableQuery,
-                itemVisuals: view.ConsumableItemVisualTableQuery,
-                recoveryVisuals: view.RecoveryOptionVisualTableQuery,
-                offerTexts: view.StageOfferTextTableQuery,
-                current: buffers.CurrentProgressReadSink,
-                stages: buffers.StageProgressReadSink,
-                characters: buffers.CharacterReadSink,
-                currency: buffers.CurrencyReadSink,
-                shopInput: buffers.ShopViewReadSink,
-                shopWriter: buffers.ShopViewWriteSink,
-                requests: buffers.StageViewReadSink,
-                requestWriter: buffers.StageViewWriteSink,
-                results: buffers.StageCommandResults,
-                attempts: lifeCycles.StageEntryAttempts,
-                presentationOwner: lifeCycles.CombatEntry,
-                recoveryState: inGame.CoreGroup.RecoveryState,
-                recoveryStatus: inGame.ViewGroup.RecoveryStatus,
-                recoveryRequests: inGame.ViewGroup.RecoveryRequests,
-                deck: inGame.CoreGroup.Deck,
-                slot: inGame.ViewGroup.Input.StageSelection,
+            StageMapViewData mapData = view.StageMapViewTableQuery.Config;
+            IAudioSystemService audio = global.AudioServiceCommand;
+            IInputLayerService layers = global.InputServiceCommand.InputLayerServices;
+            IUISystemService ui = global.UIServiceCommand;
+            // 공용 안내도 Global Context로 받습니다(로비 출발 거절과 같은 경로).
+            var notice = new StageMapViewNotice(global.UITextPresentation);
+            var scene = new StageMapViewSceneServices(mapData, view.StageNodeVisualTableQuery,
+                view.StageMapBackgroundTableQuery, global.RenderServiceCommand.CoreGroup.ColorSystemServices,
+                global.RenderServiceCommand.ViewGroup.SelectOutlineSystemServices,
+                global.RenderServiceCommand.CoreGroup.CameraGroup.CameraCatalogSystem);
+            var clearHistory = new StageNodeClearHistory(buffers.RunProgressReadSink);
+            var completion = new StageMapViewCompletionServices(clearHistory,
+                new StageNodeBreakEffects(global.RenderServiceCommand.CoreGroup.EffectSystemServices),
+                buffers.CurrentProgressReadSink, buffers.StageProgressReadSink, buffers.RunProgressReadSink,
+                global.UtilityServiceCommand.delayService, audio, mapData);
+            var entry = new StageMapViewEntryServices(lifeCycles.CombatEntry, buffers.CurrentProgressReadSink,
+                buffers.StageProgressReadSink, buffers.StageViewReadSink, buffers.StageViewWriteSink,
+                buffers.StageCommandResults, lifeCycles.StageEntryAttempts, mapData,
+                global.UtilityServiceCommand.delayService, audio, clearHistory);
+            var input = new StageMapViewInputServices(mapData,
                 // 호버 패널은 Global Context로 받습니다(루트에서 따로 조회하지 않음, 설계 §5.7 NH5).
-                feedback: new StageNodeHoverInfo(buffers.StageProgressReadSink, view.StageOfferTextTableQuery,
+                new StageNodeHoverInfo(buffers.StageProgressReadSink, view.StageOfferTextTableQuery,
                     global.UITextPresentation, _faults.Report),
-                ui: global.UIServiceCommand,
-                layers: global.InputServiceCommand.InputLayerServices,
-                delay: global.UtilityServiceCommand.delayService,
-                cameras: global.RenderServiceCommand.CoreGroup.CameraGroup.CameraCatalogSystem,
-                traitVisuals: view.TraitVisualTableQuery,
-                growthOffers: buffers.TraitGrowthStateReadSink,
-                growthResults: buffers.TraitGrowthResultReadSink,
-                growthInputs: buffers.TraitGrowthViewReadSink,
-                growthWriter: buffers.TraitGrowthViewWriteSink,
-                growthRequests: inGame.ViewGroup.TraitGrowthRequests,
-                growthFacts: lifeCycles.StageTraitGrowthFacts,
-                colors: global.RenderServiceCommand.CoreGroup.ColorSystemServices,
-                audio: global.AudioServiceCommand);
-            _audio = _services.Audio;
+                new StageNodeAvailabilityReader(inGame.CoreGroup.ChapterProgression,
+                    buffers.CurrentProgressReadSink, buffers.StageProgressReadSink, lifeCycles.StageTraitGrowthFacts),
+                buffers.StageViewReadSink, buffers.StageViewWriteSink, inGame.ViewGroup.Input.StageSelection, layers);
+            var popups = new StageMapViewPopupServices(view.UnitVisualTableQuery, view.ConsumableItemVisualTableQuery,
+                view.RecoveryOptionVisualTableQuery, view.StageOfferTextTableQuery, view.TraitVisualTableQuery,
+                buffers.CurrentProgressReadSink, buffers.StageProgressReadSink, buffers.CharacterReadSink,
+                buffers.CurrencyReadSink, buffers.ShopViewReadSink, buffers.ShopViewWriteSink, buffers.StageCommandResults,
+                inGame.CoreGroup.RecoveryState, inGame.ViewGroup.RecoveryStatus, inGame.ViewGroup.RecoveryRequests,
+                inGame.CoreGroup.Deck, buffers.TraitGrowthStateReadSink, buffers.TraitGrowthResultReadSink,
+                buffers.TraitGrowthViewWriteSink, inGame.ViewGroup.TraitGrowthRequests,
+                lifeCycles.StageTraitGrowthFacts, ui, notice, audio);
+            _services = new StageMapViewServices(scene, entry, input, popups, mapData,
+                buffers.CurrentProgressReadSink, buffers.StageProgressReadSink, buffers.StageViewReadSink,
+                buffers.RunProgressReadSink, inGame.CoreGroup.RecoveryState, ui, layers,
+                global.LodingServiceCommand.LodingService, notice,
+                new StageMapIntroHistory(buffers.RunProgressReadSink),
+                new StageNodeDropEffects(global.RenderServiceCommand.CoreGroup.EffectSystemServices), audio, completion);
+            _audio = audio ?? throw new InvalidOperationException("[StageMapViewSystem] 오디오 서비스가 필요합니다.");
+            // 맵·상점 입력 Buffer 비우기의 주인은 System 하나입니다(평가 N-06). 연결이 바뀌어도 같은 쓰기 창구입니다.
+            _requestWriter = buffers.StageViewWriteSink
+                ?? throw new InvalidOperationException("[StageMapViewSystem] 맵 입력 쓰기 창구가 필요합니다.");
+            _shopWriter = buffers.ShopViewWriteSink
+                ?? throw new InvalidOperationException("[StageMapViewSystem] 상점 입력 쓰기 창구가 필요합니다.");
             _loading = global.LodingServiceCommand.LodingRegisterService
                 ?? throw new InvalidOperationException("[StageMapViewSystem] 로딩 등록 서비스가 필요합니다.");
             _view = null;
@@ -122,6 +136,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             loading.RegisterSceneExitLoaded(SceneIndices.Stage, new LodingNode(DetachPriority, Detach));
             // AfterLoad는 씬 번호가 없으므로 모든 씬에서 불리며, Stage 연결이 없으면 아무것도 하지 않습니다.
             loading.RegisterAfterLoad(new LodingNode(CameraHandlePriority, BindCameraHandle));
+            loading.RegisterScenePreparation(SceneIndices.Stage, new LodingPreparationNode(GetScenePreparation));
+        }
+
+        private ILodingPreparation GetScenePreparation()
+        {
+            RequireRunning();
+            StageMapViewScope scope = _scope;
+            if (scope == null || !scope.CanWork)
+                throw new InvalidOperationException("[StageMapViewSystem] 로딩 준비에 유효한 맵 연결이 필요합니다.");
+            return _sceneFactory.CreatePreparation(scope, _faults);
         }
 
         public void Tick(float deltaTime)
@@ -158,8 +182,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             List<Exception> errors = null;
             CleanupErrors.Try(() => scope?.Dispose(true), ref errors);
             if (ReferenceEquals(_scope, scope)) _scope = null;
-            CleanupErrors.Try(() => _services?.RequestWriter.Clear(), ref errors);
-            CleanupErrors.Try(() => _services?.ShopWriter.Clear(), ref errors);
+            CleanupErrors.Try(() => _requestWriter?.Clear(), ref errors);
+            CleanupErrors.Try(() => _shopWriter?.Clear(), ref errors);
             CleanupErrors.ThrowIfAny(errors, "[StageMap] 입력 정리 중 실패했습니다.");
         }
 
@@ -244,9 +268,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             CleanupErrors.Try(StopAmbient, ref errors);
             CleanupErrors.Try(() => scope?.Dispose(suppressMovementLoss), ref errors);
             if (ReferenceEquals(_scope, scope)) _scope = null;
-            // Scope가 없거나 정리가 실패해도 자기 입력의 발급·처리 번호는 유지하며 비웁니다.
-            CleanupErrors.Try(() => { if (ReferenceEquals(_lastPublishedScope, owner)) _services?.RequestWriter.Clear(); }, ref errors);
-            CleanupErrors.Try(() => { if (ReferenceEquals(_lastPublishedScope, owner)) _services?.ShopWriter.Clear(); }, ref errors);
+            // 맵·상점 입력 Buffer 비우기의 주인은 여기 한 곳입니다(평가 N-06). Scope·상점 컨트롤러는 새 제출만 막습니다.
+            // 정리 콜백이 다음 연결을 게시했으면 그 연결의 입력은 지우지 않습니다. Scope가 없거나 정리가 실패해도 발급·처리 번호는 유지하며 비웁니다.
+            CleanupErrors.Try(() => { if (ReferenceEquals(_lastPublishedScope, owner)) _requestWriter?.Clear(); }, ref errors);
+            CleanupErrors.Try(() => { if (ReferenceEquals(_lastPublishedScope, owner)) _shopWriter?.Clear(); }, ref errors);
             CleanupErrors.ThrowIfAny(errors, "[StageMap] 씬 정리 중 실패했습니다.");
         }
 

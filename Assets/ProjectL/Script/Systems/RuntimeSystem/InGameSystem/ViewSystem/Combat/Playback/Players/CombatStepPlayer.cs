@@ -88,7 +88,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public void StartGap(float seconds)
         {
             if (_motion.IsActive)
-                throw new InvalidOperationException("[CombatSceneEventPresenter] 걸음 레인이 진행 중일 때 행동 간격을 시작할 수 없습니다.");
+                throw new InvalidOperationException("[CombatStepPlayer] 걸음 레인이 진행 중일 때 행동 간격을 시작할 수 없습니다.");
             _wait.StartGap(seconds);
         }
 
@@ -101,7 +101,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             FieldGridMapper mapper = _mapper();
             if (mapper == null)
-                throw new InvalidOperationException("[CombatSceneEventPresenter] 필드 구성 성공 후 Mapper 연결이 필요합니다.");
+                throw new InvalidOperationException("[CombatStepPlayer] 필드 구성 성공 후 Mapper 연결이 필요합니다.");
             float remaining = Math.Max(0f, deltaTime);
             if (!_wait.Consume(ref remaining))
                 return;

@@ -16,6 +16,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems", sourceAssembly: "ProjectL.Systems", sourceClassName: "UnitHUD")]
     public sealed class UnitHUD : UIWidgetBase, IUIInputReceiver, IUISecondaryClickReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitHUDClick = new("Combat.Action.UI.UnitHUD.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitHUDHoverEnter = new("Combat.Action.UI.UnitHUD.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitHUDHoverExit = new("Combat.Action.UI.UnitHUD.HoverExit");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitHUDSecondaryClick = new("Combat.Action.UI.UnitHUD.SecondaryClick");
+#endif
+
         private bool _ownerVisible = true;
         internal bool OwnerVisible => _ownerVisible;
         internal void SetOwnerVisible(bool visible)
@@ -39,10 +47,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         internal Vector3 AdditionalWorldOffset => _isRider ? Vector3.up * riderHudYOffset : Vector3.zero;
 
         [SerializeField] private UnitHUDInfoPanel infoPanel;
-        [Tooltip("기본 HUD의 HP바 옆에 표시할 병과 이미지입니다. InfoPanelMask 밖의 같은 HUD에 둡니다.")]
-        [SerializeField] private Image categoryImage;
-        internal UnitHUDInfoPanel InfoPanel => infoPanel;
         internal EntityId EntityId => _entityId;
+
+        [Header("Action State")]
+        [SerializeField] private Image actionStateImage;
+        [Tooltip("이동 가능(흰색) 또는 이동·공격 모두 불가(검정색)를 표시합니다.")]
+        [SerializeField, InspectorName("Sprite 1")] private Sprite actionStateSprite1;
+        [Tooltip("공격만 가능할 때 흰색으로 표시합니다.")]
+        [SerializeField, InspectorName("Sprite 2")] private Sprite actionStateSprite2;
 
         [Header("Damage")]
         [SerializeField] private UnitDamageText damageText;
@@ -140,6 +152,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             if (infoPanel != null) infoPanel.Prepare();
             ClearDescription();
             if (itemIcon != null) itemIcon.gameObject.SetActive(false);
+            SetActionAvailability(null);
         }
 
         /// <summary>
@@ -165,12 +178,26 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             SetHealth(unit.Health.CurrentHealth, unit.Health.MaxHealth, unit.TraitEffects.ActiveShieldTotal);
         }
 
-        internal void SetInfo(Sprite category, string unitName, int attack, int shield)
+        internal void SetInfo(string unitName, int attack, int shield)
         {
             ValidateReferences();
-            categoryImage.sprite = category;
             infoPanel.SetUnit(unitName, attack, shield);
             infoPanel.CopyHealth(healthFill, healthSubFill, shieldFill);
+        }
+
+        internal void SetActionAvailability(CombatActionAvailability availability)
+        {
+            // 두 Sprite를 지정하기 전에는 표시를 숨깁니다. 바인딩 전 정리도 허용합니다.
+            if (availability == null || actionStateSprite1 == null)
+            {
+                if (actionStateImage != null) actionStateImage.gameObject.SetActive(false);
+                return;
+            }
+
+            bool attackOnly = availability.CanAttack && !availability.CanMove;
+            actionStateImage.sprite = attackOnly ? actionStateSprite2 : actionStateSprite1;
+            actionStateImage.color = availability.CanMove || availability.CanAttack ? Color.white : Color.black;
+            actionStateImage.gameObject.SetActive(true);
         }
 
         /// <summary>드로우 전에는 전투 사실을 만들지 않고 기본 위젯만 준비합니다. 독립 정보창은 열지 않습니다.</summary>
@@ -196,8 +223,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             if (statusRoot == null || !buffPanel.transform.IsChildOf(statusRoot) ||
                 !buffTitleText.transform.IsChildOf(buffPanel.transform) || !buffDescriptionText.transform.IsChildOf(buffPanel.transform))
                 throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': BuffPanel은 Status Root 아래, 제목과 설명은 BuffPanel 내부에 있어야 합니다.");
-            if (categoryImage == null)
-                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': categoryImage 참조가 필요합니다.");
             if (infoPanel == null || healthFill == null || healthSubFill == null || shieldFill == null || healthText == null || maxHealthText == null)
                 throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': infoPanel/healthFill/healthSubFill/shieldFill/healthText/maxHealthText 참조가 필요합니다.");
             if (!infoPanel.transform.IsChildOf(transform) || !healthFill.transform.IsChildOf(transform) ||
@@ -210,18 +235,22 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 shieldFill.transform.GetSiblingIndex() >= healthSubFill.transform.GetSiblingIndex() ||
                 healthSubFill.transform.GetSiblingIndex() >= healthFill.transform.GetSiblingIndex())
                 throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': shieldFill은 Sprite가 연결된 왼쪽 시작 가로 Filled Image이며 같은 부모의 Shield → SubFill → Fill 순서가 필요합니다.");
-            if (!categoryImage.transform.IsChildOf(transform) || categoryImage.transform == transform ||
-                categoryImage.transform.IsChildOf(infoPanel.transform.parent))
-                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': categoryImage는 같은 HUD의 InfoPanelMask 밖에 있어야 합니다.");
+            if (actionStateImage == null || !actionStateImage.transform.IsChildOf(transform) ||
+                actionStateImage.transform == transform || actionStateImage.transform.IsChildOf(infoPanel.transform.parent) ||
+                actionStateImage.transform.IsChildOf(statusRoot) || statusRoot.IsChildOf(actionStateImage.transform) ||
+                actionStateImage == healthFill || actionStateImage == healthSubFill || actionStateImage == shieldFill)
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': actionStateImage는 같은 HUD의 InfoPanelMask/Status Root 밖에 있는 별도 Image여야 합니다.");
+            if ((actionStateSprite1 == null) != (actionStateSprite2 == null))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': 행동 상태를 표시하려면 Sprite 1과 Sprite 2를 함께 지정해야 합니다.");
             if (statusRoot != null && (!statusRoot.IsChildOf(transform) || statusRoot == transform))
                 throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': statusRoot는 같은 HUD 내부에 있어야 합니다.");
             if (itemIcon == null)
                 throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': itemIcon 참조가 필요합니다.");
             if (!itemIcon.transform.IsChildOf(transform) || itemIcon.transform == transform ||
-                itemIcon == categoryImage || itemIcon.transform.IsChildOf(infoPanel.transform.parent) ||
+                itemIcon == actionStateImage || itemIcon.transform.IsChildOf(infoPanel.transform.parent) ||
                 (statusRoot != null && (itemIcon.transform.IsChildOf(statusRoot) || statusRoot.IsChildOf(itemIcon.transform))) ||
-                categoryImage.transform.IsChildOf(itemIcon.transform) || itemIcon.transform.IsChildOf(categoryImage.transform))
-                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': itemIcon은 같은 HUD의 Mask/Status Root 밖, categoryImage와 별개의 고정 슬롯이어야 합니다.");
+                actionStateImage.transform.IsChildOf(itemIcon.transform) || itemIcon.transform.IsChildOf(actionStateImage.transform))
+                throw new InvalidOperationException($"[UnitHUD] UIId.UnitHUDLayer, '{name}': itemIcon은 같은 HUD의 Mask/Status Root 밖, actionStateImage와 별개의 고정 슬롯이어야 합니다.");
             RequireStatusIcon(itemIcon);
             infoPanel.Prepare();
         }
@@ -250,11 +279,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         private void SetUnitExtrasVisible(bool visible)
         {
-            if (categoryImage != null)
-            {
-                categoryImage.gameObject.SetActive(visible);
-                if (!visible) categoryImage.sprite = null;
-            }
+            if (!visible) SetActionAvailability(null);
             if (itemIcon != null) itemIcon.gameObject.SetActive(visible && _itemStatus.HasValue);
             if (statusRoot != null) statusRoot.gameObject.SetActive(visible);
         }
@@ -620,6 +645,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.Click(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitHUDClickSample = _profileUIUnitHUDClick.Auto();
+#endif
+
             // 버프는 호버 중에만 표시하고, 장착 아이템만 기존 클릭 고정을 사용합니다.
             if (slot != ItemSlot) return;
             if (!isActiveAndEnabled || !CanDescribe(slot)) return;
@@ -631,6 +660,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.HoverEnter(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitHUDHoverEnterSample = _profileUIUnitHUDHoverEnter.Auto();
+#endif
+
             if (!isActiveAndEnabled || !CanDescribe(slot)) return;
             _hoveredStatus = slot;
             RefreshDescription();
@@ -638,6 +671,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUIInputReceiver.HoverExit(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitHUDHoverExitSample = _profileUIUnitHUDHoverExit.Auto();
+#endif
+
             if (_hoveredStatus == slot) _hoveredStatus = -1;
             RefreshDescription();
         }
@@ -650,6 +687,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         void IUISecondaryClickReceiver.SecondaryClick(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitHUDSecondaryClickSample = _profileUIUnitHUDSecondaryClick.Auto();
+#endif
+
             if (!isActiveAndEnabled || _statusSecondary == null || _entityId.IsEmpty ||
                 !IsStatusValid(slot) || !StatusAt(slot).HasSecondaryAction)
                 return;
@@ -692,7 +733,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         /// <summary>화면에서 숨길 때 hover만 정리합니다. 핀 선택·수치·진행 중인 연출은 보존합니다.</summary>
         internal void ClearStatusHover()
         {
-            infoPanel?.ClearHover();
             _itemSlot?.Input.OnHoverExit();
             for (int i = 0; i < _statusSlots.Count; i++) _statusSlots[i].Input.OnHoverExit();
             _hoveredStatus = -1;

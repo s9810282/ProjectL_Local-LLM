@@ -102,5 +102,109 @@ namespace ProjectL.Tests.Core
             Assert.That(BossRoarTests.Final(result, CombatSummonTests.Boss).Stats.TraitStatuses.ToArray()
                 .OfType<RoarTraitStatusSnapshot>().Single().HitThreshold, Is.EqualTo(threshold));
         }
+
+        [Test]
+        public void OwnSideTurnEnd_AddsConfiguredCount_BelowThresholdDoesNotRoar()
+        {
+            var input = WithCounts(BossTurnTests.WithRoar(BossTurnTests.BossInput(new CellCoord(3, 3)), 1), CombatSummonTests.Boss,
+                perOwnEnd: 2);
+
+            var result = CombatCommandCalculator.Advance(input, Array.Empty<IMovementTileRule>());
+
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.EnemyPhaseEnded), Is.True);
+            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, CombatSummonTests.Boss)), Is.EqualTo(3));
+            // 체력 변화가 없으므로 특성 상태 사건이 카운터 변경의 근거다.
+            Assert.That(result.Events.OfType<CombatTraitStateEvent>().Any(e => e.Final.EntityId == CombatSummonTests.Boss), Is.True);
+            Assert.That(result.Events.OfType<CombatRoarEvent>(), Is.Empty);
+        }
+
+        [Test]
+        public void OwnSideTurnEnd_ReachingThreshold_RoarsAfterEnemyPhaseEnds()
+        {
+            var input = WithCounts(BossTurnTests.WithRoar(BossTurnTests.BossInput(new CellCoord(3, 3)), 4), CombatSummonTests.Boss,
+                perOwnEnd: 1);
+
+            var result = CombatCommandCalculator.Advance(input, Array.Empty<IMovementTileRule>());
+
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            var events = result.Events.ToList();
+            int ended = events.FindIndex(e => e.Kind == CombatEventKind.EnemyPhaseEnded);
+            int roared = events.FindIndex(e => e is CombatRoarEvent);
+            Assert.That(ended, Is.GreaterThanOrEqualTo(0));
+            Assert.That(roared, Is.GreaterThan(ended));
+            Assert.That(events.OfType<CombatRoarEvent>().Count(), Is.EqualTo(1));
+            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, CombatSummonTests.Boss)), Is.Zero);
+        }
+
+        [Test]
+        public void OpposingSideTurnEnd_ReachingThreshold_RoarsAfterPlayerTurnEnds()
+        {
+            var input = CombatCommonCommandTests.Command(CombatCommandKind.EndPlayerTurn,
+                WithCounts(BossRoarTests.Input(4), BossRoarTests.Boss, perOpposingEnd: 1));
+
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            var events = result.Events.ToList();
+            int ended = events.FindIndex(e => e.Kind == CombatEventKind.PlayerTurnEnded);
+            int roared = events.FindIndex(e => e is CombatRoarEvent);
+            Assert.That(ended, Is.GreaterThanOrEqualTo(0));
+            Assert.That(roared, Is.GreaterThan(ended));
+            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, BossRoarTests.Boss)), Is.Zero);
+        }
+
+        [Test]
+        public void TurnEnd_UsesOnlyTheEndedSidesCount()
+        {
+            // 플레이어 턴 종료는 보스에게 상대 진영 종료다. 자기 진영 값만 있으면 카운터가 그대로다.
+            var input = CombatCommonCommandTests.Command(CombatCommandKind.EndPlayerTurn,
+                WithCounts(BossRoarTests.Input(1), BossRoarTests.Boss, perOwnEnd: 3));
+
+            var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
+
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, BossRoarTests.Boss)), Is.EqualTo(1));
+            Assert.That(result.Events.OfType<CombatTraitStateEvent>().Any(e => e.Final.EntityId == BossRoarTests.Boss), Is.False);
+        }
+
+        [TestCase(2, 3)]
+        [TestCase(0, 1)]
+        public void NightHit_AddsConfiguredCountPerHit(int perHit, int expected)
+        {
+            var result = CombatCommandCalculator.Calculate(WithCounts(BossRoarTests.Input(1), BossRoarTests.Boss, perHit: perHit),
+                Array.Empty<IMovementTileRule>());
+
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, BossRoarTests.Boss)), Is.EqualTo(expected));
+            Assert.That(result.Events.OfType<CombatRoarEvent>(), Is.Empty);
+        }
+
+        [Test]
+        public void CountValues_FollowOneRule()
+        {
+            Assert.That(RoarCountRules.FindDefinitionError(5, 1, 0, 0), Is.Null);
+            Assert.That(RoarCountRules.FindDefinitionError(5, 0, 0, 1), Is.Null);
+            Assert.That(RoarCountRules.FindDefinitionError(5, 0, 0, 0), Is.Not.Null);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RoarTraitSpec(5, 0, 0, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RoarTraitSpec(5, countPerOwnSideTurnEnd: -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RoarTraitDefinition(5, -1, 1, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new RoarTraitStatusSnapshot(0, 5, countPerOpposingSideTurnEnd: -1));
+
+            var definition = (RoarTraitDefinition)new RoarTraitDefinitionFactory().BuildDefinition(new RoarTraitSpec(5, 2, 0, 1));
+            Assert.That((definition.CountPerHit, definition.CountPerOwnSideTurnEnd, definition.CountPerOpposingSideTurnEnd),
+                Is.EqualTo((2, 0, 1)));
+            var status = new RoarTraitStatusSnapshot(3, 5, 2, 0, 1);
+            Assert.That(status.WithHitCount(0).SameValues(new RoarTraitStatusSnapshot(0, 5, 2, 0, 1)), Is.True);
+            Assert.That(status.SameValues(new RoarTraitStatusSnapshot(3, 5)), Is.False);
+        }
+
+        /// <summary>보스 포효 상태의 증가량만 바꾼다. 카운터·임계값은 그대로다.</summary>
+        private static CombatCommandInput WithCounts(CombatCommandInput input, EntityId bossId, int perHit = 1, int perOwnEnd = 0,
+            int perOpposingEnd = 0) =>
+            CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId != bossId ? c : CombatCommandTestData.With(c,
+                traits: c.Stats.TraitStatuses.ToArray().Select(t => t is RoarTraitStatusSnapshot r
+                    ? (TraitStatusSnapshot)new RoarTraitStatusSnapshot(r.HitCount, r.HitThreshold, perHit, perOwnEnd, perOpposingEnd)
+                    : t).ToArray())).ToArray());
     }
 }

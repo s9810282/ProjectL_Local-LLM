@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSettings.Item;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map;
 using UnityEngine;
 
@@ -10,6 +11,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>설치된 선로를 조각 순서대로 낙하시킵니다. 열차 발동과 경로는 변경하지 않습니다.</summary>
     internal sealed class CombatEntryRailwayAppearance
     {
+        private const bool RailLandingSoundEnabled = false;
+
         private sealed class Body
         {
             internal Transform Transform;
@@ -17,21 +20,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             internal Vector3 OffsetAxis;
             internal float Delay;
             internal CombatEntryVisibility Visibility;
+            internal bool RailLandingPending;
         }
 
         private readonly IReadOnlyList<IReadOnlyList<RailwaySegmentVisual>> _tracks;
         private readonly Transform _field;
         private readonly CombatRailwayDropSettings _settings;
+        private readonly IAudioSystemService _audio;
         private readonly List<Body> _bodies = new();
         private float _elapsed;
+        private int _railLandingsSinceSound;
         private bool _started;
 
         internal CombatEntryRailwayAppearance(IReadOnlyList<IReadOnlyList<RailwaySegmentVisual>> tracks,
-            Transform field, CombatRailwayDropSettings settings)
+            Transform field, CombatRailwayDropSettings settings, IAudioSystemService audio)
         {
             _tracks = tracks ?? throw new ArgumentNullException(nameof(tracks));
             _field = field != null ? field : throw new ArgumentNullException(nameof(field));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
             settings.Validate();
         }
 
@@ -51,7 +58,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     // 미설정 바닥만 생략합니다. 설치 후 파괴된 바닥은 Collect에서 오류로 검사합니다.
                     if (track[i].Tile is not null)
                         Collect(track[i].Tile, delay, seen);
-                    Collect(track[i].Rail, delay, seen);
+                    Collect(track[i].Rail, delay, seen, isRail: true);
                 }
             }
             foreach (Body body in _bodies)
@@ -63,7 +70,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             IsComplete = _bodies.Count == 0;
         }
 
-        private void Collect(Transform target, float delay, HashSet<Transform> seen)
+        private void Collect(Transform target, float delay, HashSet<Transform> seen, bool isRail = false)
         {
             if (target == null) throw new InvalidOperationException("[CombatEntryRailwayAppearance] 선로 조각이 사라졌습니다.");
             if (!seen.Add(target)) throw new InvalidOperationException("[CombatEntryRailwayAppearance] 선로 조각이 중복 등록됐습니다.");
@@ -74,7 +81,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 LocalPosition = target.localPosition,
                 OffsetAxis = target.parent != null ? target.parent.InverseTransformVector(worldAxis) : worldAxis,
                 Delay = delay,
-                Visibility = new CombatEntryVisibility(target)
+                Visibility = new CombatEntryVisibility(target),
+                RailLandingPending = isRail && RailLandingSoundEnabled
             });
         }
 
@@ -103,6 +111,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     body.LocalPosition + body.OffsetAxis * (_settings.Height * (1f - t * t));
                 body.Visibility.Restore();
                 complete &= t >= 1f;
+                if (t >= 1f && body.RailLandingPending)
+                {
+                    body.RailLandingPending = false;
+                    _railLandingsSinceSound++;
+                    if (_railLandingsSinceSound == 2)
+                    {
+                        _railLandingsSinceSound = 0;
+                        _audio.Play(SfxEvent.RailDeploy);
+                    }
+                }
             }
             IsComplete = complete;
         }
@@ -110,6 +128,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal void Cancel()
         {
             _started = false;
+            _railLandingsSinceSound = 0;
             IsComplete = true;
             List<Exception> errors = null;
             foreach (Body body in _bodies)

@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,14 +19,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         internal GameObject Panel => panel;
         internal bool HasReferences => panel != null || icon != null || nameText != null || descriptionText != null;
 
-        internal void Validate(Transform owner)
+        internal void Validate(Transform owner, string field)
         {
+            UIBase ui = owner.GetComponentInParent<UIBase>(true);
+            string context = $"[UnitAbilityTooltip] UIId.{ui?.ID ?? UIId.None}, '{owner.name}', {field}";
             if (panel == null || nameText == null || descriptionText == null)
-                throw new InvalidOperationException($"[UnitAbilityTooltip] '{owner.name}': abilityTooltip.panel·nameText·descriptionText 참조가 필요합니다.");
+                throw new InvalidOperationException($"{context}: panel·nameText·descriptionText 참조가 필요합니다.");
             if (panel.transform == owner || !panel.transform.IsChildOf(owner) ||
                 (icon != null && !icon.transform.IsChildOf(panel.transform)) || !nameText.transform.IsChildOf(panel.transform) ||
-                !descriptionText.transform.IsChildOf(panel.transform))
-                throw new InvalidOperationException($"[UnitAbilityTooltip] '{owner.name}': 특성 설명과 표시 참조는 소유 화면의 자식 패널 내부여야 합니다.");
+                !descriptionText.transform.IsChildOf(panel.transform) || nameText == descriptionText)
+                throw new InvalidOperationException($"{context}: 설명 패널은 입력 객체의 자식이어야 하며 표시 참조는 패널 내부에서 각각 연결해야 합니다.");
         }
 
         internal void Show(in UnitCardTraitContent content)

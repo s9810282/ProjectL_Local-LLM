@@ -13,7 +13,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private const float UnusedHopHeight = 0f;
         private const float UnusedHopSeconds = 1f;
 
-        /// <summary>걷기입니다. 설정을 넘기지 않은 조립(시험 등)에서 씁니다(걸음 모양 계획 P4).</summary>
+        /// <summary>걷기입니다(걸음 모양 계획 P4). 연출 값 묶음의 선택 인자 기본값이며, 그 묶음을 만드는 유일한 길(<c>CombatEventPresentationValues.From</c>)은 늘 설정 값을 넘깁니다.</summary>
         internal static CombatStepLookSettings Walk { get; } = new(CombatStepLook.Walk, UnusedHopHeight, UnusedHopSeconds);
 
         internal CombatStepLookSettings(CombatStepLook look, float hopHeight, float hopSeconds)

@@ -38,6 +38,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 return false;
             var composition = CombatComposition.ForFieldAction();
             composition.Add(new CombatTornadoMovePiece(_tornado, _tornado.Settings, sourceId, from, to), CombatPieceStart.AtStart(), waits: true);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEvent = e;
+#endif
             return _pieces.TryBegin(composition, completed, version);
         }
 

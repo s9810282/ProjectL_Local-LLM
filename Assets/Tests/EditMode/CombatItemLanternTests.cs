@@ -25,7 +25,7 @@ namespace ProjectL.Tests.Core
         {
             var input = CombatItemDirectDamageTests.Input(damage, 100, null);
             var holder = CombatItemDirectDamageTests.Equip(input.Characters.Single(c => c.EntityId.Value == 2), 100, 4);
-            var context = new ItemDamageContext(CombatDamageKind.OrdinaryAttack, input.Characters[0], holder, damage, 1);
+            var context = new ItemDamageContext(CombatDamageKind.OrdinaryAttack, input.Characters[0], holder, damage);
             var after = damage == 0 ? holder : CombatCommandCalculator.Hurt(holder, damage);
             var decision = CombatItemResolver.AfterDamage(Lantern, new ItemAfterDamageContext(context, after, damage));
             Assert.That(decision.Activated, Is.True);
@@ -38,7 +38,7 @@ namespace ProjectL.Tests.Core
         {
             var input = CombatItemDirectDamageTests.Input(100, 100, null);
             var holder = CombatItemDirectDamageTests.Equip(input.Characters.Single(c => c.EntityId.Value == 2), 100, 4);
-            var hit = new ItemDamageContext(CombatDamageKind.OrdinaryAttack, input.Characters[0], holder, 100, 1);
+            var hit = new ItemDamageContext(CombatDamageKind.OrdinaryAttack, input.Characters[0], holder, 100);
             var decision = CombatItemResolver.AfterDamage(Lantern,
                 new ItemAfterDamageContext(hit, CombatCommandCalculator.Hurt(holder, 100), 100));
             Assert.That(decision.Activated, Is.False);
@@ -53,7 +53,7 @@ namespace ProjectL.Tests.Core
         {
             var input = CombatItemDirectDamageTests.Input(0, 100, null);
             var holder = CombatItemDirectDamageTests.Equip(input.Characters.Single(c => c.EntityId.Value == 2), 100, 4);
-            var hit = new ItemDamageContext(cause, input.Characters[0], holder, 0, 1);
+            var hit = new ItemDamageContext(cause, input.Characters[0], holder, 0);
             Assert.That(CombatItemResolver.AfterDamage(Lantern, new ItemAfterDamageContext(hit, holder, 0)).Activated, Is.False);
         }
 
@@ -70,7 +70,7 @@ namespace ProjectL.Tests.Core
                 var target = new EntityId(id);
                 current[target] = CombatItemDirectDamageTests.Equip(current[target], 100, 4);
                 // 적용 경계가 소지자와 공격자(효과 대상)의 최종 사실을 사전에 직접 반영한다.
-                new CombatDamageApplication(new[] { Lantern }, 1, current, events).Apply(target, CombatDamageKind.OrdinaryAttack,
+                new CombatDamageApplication(new[] { Lantern }, current, events).Apply(target, CombatDamageKind.OrdinaryAttack,
                     new CombatDamageOrigin(CellCoord.Zero, input.ActorId, id), 0);
                 Assert.That(current[target].Items.EquippedItemKey, Is.Null);
             }

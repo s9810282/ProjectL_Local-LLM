@@ -11,7 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <remarks>
     /// 흔들림 시간만큼 실행을 붙잡지 않습니다. 기다리지 않는 항목도 실행을 살려 두어 최종 사실·다음 결과가 늦어지기 때문입니다.
     /// 보낸 흔들림은 개별 취소가 없어 취소돼도 그 시간만큼 갑니다(카메라 효과 규칙). 수신기가 없으면 창구가 아무것도 하지 않으므로,
-    /// 처리기는 <see cref="CombatCameraWindow.CanShake"/>를 보고 이 조각을 넣습니다(설계 K7). 값 검사는 카메라 효과가 보낼 때 합니다.
+    /// 조각을 넣는 쪽(큐 붙이기 <see cref="CombatCueComposer"/>·포효 처리기)이 <see cref="CombatCameraWindow.CanShake"/>를 보고 이 조각을 넣습니다(설계 K7). 값 검사는 카메라 효과가 보낼 때 합니다.
     /// </remarks>
     internal sealed class CombatCameraShakePiece : ICombatPresentationPiece
     {

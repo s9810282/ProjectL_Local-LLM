@@ -47,6 +47,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         ICombatAdvanceService CombatAdvance { get; }
         /// <summary>최신 미리보기 요청 응답이다.</summary>
         ICombatPreviewService CombatPreview { get; }
+        /// <summary>전투 첫 동작 Core 준비다. Combat 씬 로딩 준비 단계의 전투 골격 Job만 부른다. 상태를 바꾸지 않는다.</summary>
+        ICombatFirstUsePreparation CombatFirstUse { get; }
         /// <summary>현재 전투의 턴 순서 조회다. 상태를 바꾸지 않는다.</summary>
         /// <summary>전투 포기와 완료 후 정리다.</summary>
         IBattleCompletionService BattleCompletion { get; }
@@ -54,6 +56,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         IArtifactCommandProcessingService ArtifactCommands { get; }
         /// <summary>새 Run 시작(이전 Run 정리·시작 로스터·시작 Run 재화)이다.</summary>
         IRunStartService RunStart { get; }
+        IRunAbandonService RunAbandon { get; }
         IResultQueryService Results { get; }
     }
 
@@ -89,10 +92,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
         public ICombatCommandService CombatCommands { get; }
         public ICombatAdvanceService CombatAdvance { get; }
         public ICombatPreviewService CombatPreview { get; }
+        public ICombatFirstUsePreparation CombatFirstUse { get; }
         public IBattleCompletionService BattleCompletion { get; }
         public IArtifactEditingService Artifacts { get; }
         public IArtifactCommandProcessingService ArtifactCommands { get; }
         public IRunStartService RunStart { get; }
+        public IRunAbandonService RunAbandon { get; }
         public IResultQueryService Results { get; }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -128,10 +133,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem
             CombatCommands = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.CombatCommands);
             CombatAdvance = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.CombatAdvance);
             CombatPreview = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.CombatPreview);
+            CombatFirstUse = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.CombatFirstUse);
             BattleCompletion = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.BattleCompletion);
             Artifacts = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.Artifacts);
             ArtifactCommands = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.ArtifactCommands);
             RunStart = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.RunStart);
+            RunAbandon = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.RunAbandon);
             Results = systemReader.ServiceStoreReader.GetService(InGameCoreSystemServiceKey.Results);
         }
 

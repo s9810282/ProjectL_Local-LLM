@@ -7,7 +7,6 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.MeshSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.SelectOutlineSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.AreaOutlineSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.DrawPointLineSystem;
-using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.ScreenTransitionSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.RenderFeatureSystem;
 using ProjectL.Framework.SystemBase;
 
@@ -21,11 +20,6 @@ namespace ProjectL.Systems.Factory.Runtime.Global
         {
             SystemBuilderHelper systemBuilderHelper = new();
             var runtimeRoot = new RenderRuntimeRoot();
-
-            // 출력 의존 서비스보다 먼저 종료하여 Handle·Feature Scope를 먼저 반환합니다.
-            var screenTransitionSystem = new ScreenTransitionSystem(
-                new ScreenTransitionOutputProvider(), new ScreenTransitionInitModule());
-            screenTransitionSystem.ExportServices(systemBuilderHelper);
 
             CameraGroupFactory.Create().ExportServices(systemBuilderHelper);
 

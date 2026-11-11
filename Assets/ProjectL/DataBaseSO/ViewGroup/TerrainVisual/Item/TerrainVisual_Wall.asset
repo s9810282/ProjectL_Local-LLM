@@ -16,9 +16,7 @@ MonoBehaviour:
   visualMode: 0
   displayName: "\uBCBD"
   description: "\uCE90\uB9AD\uD130\uC758 \uC774\uB3D9\uACFC \uACF5\uACA9\uC744 \uAC00\uB85C\uB9C9\uC2B5\uB2C8\uB2E4.\n\uD30C\uAD34\uB418\uC9C0
-    \uC54A\uC73C\uBA70, \uB109\uBC31\uC758 \uC601\uD5A5\uC744 \uBC1B\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.\n\uACE0\uC9C0\uB300\uC5D0\uC11C
-    \uC800\uC9C0\uB300\uB97C \uACF5\uACA9\uD560 \uB54C\uB294 <color=#4DA6FF>\uBCBD\uC744
-    \uBB34\uC2DC</color>\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    \uC54A\uC2B5\uB2C8\uB2E4."
   icon: {fileID: 0}
   prefab: {fileID: 8281519400227982418, guid: aed31ef059fbab548a9fce6881bebc58, type: 3}
   localOffset: {x: 0, y: 0, z: 0}

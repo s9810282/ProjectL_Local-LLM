@@ -19,6 +19,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         internal static readonly ProfilerMarker Calculate = new("Core.Combat.Calculate");
         internal static readonly ProfilerMarker Publish = new("Core.Combat.Publish");
         internal static readonly ProfilerMarker PublishPreview = new("Core.Combat.PublishPreview");
+        /// <summary>전투 첫 동작 Core 준비 한 번(<see cref="ICombatFirstUsePreparation.PrepareNext"/>)입니다.</summary>
+        internal static readonly ProfilerMarker FirstUse = new("Core.Combat.FirstUse");
 
         // 미리보기는 종류마다 마커를 둬서 어느 요청이 무거운지 Profiler에서 바로 나뉘게 한다.
         private static readonly ProfilerMarker[] PreviewKinds = CreatePreviewKinds();

@@ -34,7 +34,7 @@ namespace ProjectL.Tool.Editor
         public const int RandomRotation = 4;
         public string tileSetGuid = "";
         public int columns, rows;
-        public Vector2 tileSize = new Vector2(2f, 2f);
+        public Vector2 tileSize = CombatMapAuthoringMetrics.TileSize;
         public Vector3 offset;
         public Vector2Int anchorTile;
         public int[] kinds = Array.Empty<int>();
@@ -122,7 +122,7 @@ namespace ProjectL.Tool.Editor
                 tileSetGuid = tileSetGuid ?? "",
                 columns = swapped ? fieldRows : fieldColumns,
                 rows = swapped ? fieldColumns : fieldRows,
-                tileSize = new Vector2(Unscaled(swapped ? cellLength : cellWidth, backdropScale.x), Unscaled(swapped ? cellWidth : cellLength, backdropScale.z)),
+                tileSize = CombatMapAuthoringMetrics.TileSize,
             };
             layout.kinds = new int[layout.columns * layout.rows];
             for (int i = 0; i < layout.kinds.Length; i++) layout.kinds[i] = fillKind;
@@ -136,7 +136,6 @@ namespace ProjectL.Tool.Editor
             return column + row * columns;
         }
 
-        private static float Unscaled(float length, float scale) => Mathf.Abs(scale) > 1e-5f ? length / Mathf.Abs(scale) : length;
     }
 
     // 3D 미리보기와 칸 높이가 쓰는 바닥 타일 묶음입니다(설계 §12 UT5·UT6). 맞춤이 성립할 때만 만듭니다(설계 P-UT13).
@@ -226,7 +225,7 @@ namespace ProjectL.Tool.Editor
     internal sealed class CombatStageSoTileFit
     {
         // 게임 CombatMapTileAlignment와 같은 허용 오차입니다.
-        private const float LevelToleranceDegrees = 1f;
+        private const float LevelToleranceDegrees = CombatTileAlignmentMath.LevelToleranceDegrees;
 
         private readonly int columns, rows;
         private readonly bool columnsAlongX, columnPositive, rowPositive;
@@ -437,25 +436,14 @@ namespace ProjectL.Tool.Editor
         private static int Mod4(int value) => ((value % 4) + 4) % 4;
 
         // CombatMapTileAlignment.YawCorrection: 타일 가로축이 필드 X·Z축 중 가까운 쪽과 평행해지도록 위 방향으로 돌릴 각(도, 최대 ±45)입니다.
-        public static float YawCorrection(Vector3 columnStep)
-        {
-            float yaw = Mathf.Atan2(columnStep.z, columnStep.x) * Mathf.Rad2Deg;
-            return yaw - Mathf.Round(yaw / 90f) * 90f;
-        }
+        public static float YawCorrection(Vector3 columnStep) => CombatTileAlignmentMath.YawCorrection(columnStep);
 
         // CombatMapTileAlignment.AnchorShift: 배경을 옮길 수평 양(필드 로컬)입니다. 옮긴 뒤 기준 타일 좌하단이 게임 (0,0) 칸 좌하단에 옵니다.
         // 검사(축·크기 비율·기준 타일 범위)는 Of가 이미 했으므로 여기서는 하지 않습니다. 필드 모서리는 FieldGridMapper.CornerLocal(필드 가운데가 원점)입니다.
         public static Vector3 AnchorShift(Vector3 gridCenter, Vector3 columnStep, Vector3 rowStep, int columns, int rows, Vector2Int anchor,
-            Vector2Int board, float cellWidth, float cellLength)
-        {
-            bool alongX = Mathf.Abs(columnStep.x) >= Mathf.Abs(columnStep.z);
-            Vector3 stepX = alongX ? columnStep : rowStep, stepZ = alongX ? rowStep : columnStep;
-            int countX = alongX ? columns : rows, countZ = alongX ? rows : columns;
-            float tileX = new Vector3(stepX.x, 0f, stepX.z).magnitude, tileZ = new Vector3(stepZ.x, 0f, stepZ.z).magnitude;
-            float mapMinX = -board.x * cellWidth * .5f - anchor.x * tileX;
-            float mapMinZ = -board.y * cellLength * .5f - anchor.y * tileZ;
-            return new Vector3(mapMinX - (gridCenter.x - countX * tileX * .5f), 0f, mapMinZ - (gridCenter.z - countZ * tileZ * .5f));
-        }
+            Vector2Int board, float cellWidth, float cellLength) =>
+            CombatTileAlignmentMath.AnchorShift(gridCenter, columnStep, rowStep, columns, rows, anchor, board,
+                cellWidth, cellLength, out _);
 
         // 배경 회전(타일 루트는 회전 없는 배경 자식)과 배율 부호로 타일 가로·세로가 필드 어느 축·방향을 따르는지 정합니다.
         private static void Axes(Vector3 rotationOffset, Vector3 backdropScale, out bool alongX, out bool columnPositive, out bool rowPositive)
@@ -471,11 +459,8 @@ namespace ProjectL.Tool.Editor
         // CombatMapTileAlignment.CellRatio: 양의 유한한 소수 비율도 허용합니다.
         private static float CellRatio(float tileLength, float cellSize, string axis, List<string> problems)
         {
-            float ratio = tileLength / cellSize;
-            if (float.IsFinite(tileLength) && tileLength > 0f && float.IsFinite(cellSize) && cellSize > 0f
-                && float.IsFinite(ratio) && ratio > 0f) return ratio;
-            problems.Add($"필드 {axis}축 타일 크기({tileLength:0.###})와 칸 간격({cellSize:0.###}) 및 그 비율은 0보다 큰 유한 값이어야 합니다. 타일 크기·배율 보정을 맞추세요.");
-            return 0f;
+            try { return CombatTileAlignmentMath.CellRatio(tileLength, cellSize, axis); }
+            catch (InvalidOperationException exception) { problems.Add(exception.Message); return 0f; }
         }
     }
 }

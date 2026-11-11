@@ -63,7 +63,7 @@ namespace ProjectL.Tests.Core
         {
             var source = CombatCommandTestData.Input();
             var s = source.State;
-            var enemyTurn = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Automatic,                s.IsNight,s.Structures,s.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1));
+            var enemyTurn = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Automatic,s.Structures,s.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1));
             var ownTurn = For(source, Enemy, enemyTurn, CombatProcessingKind.Advance);
 
             var range = CombatCommandCalculator.GetAttackRange(ownTurn);
@@ -93,7 +93,7 @@ namespace ProjectL.Tests.Core
         {
             var source = CombatCommandTestData.Input();
             var s = source.State;
-            var deployment = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.PlayerInput,                s.IsNight,s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
+            var deployment = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.PlayerInput,s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment));
             var input = For(source, Active, deployment);
 
             Assert.That(CombatCommandCalculator.GetAttackRange(input).FailureReason, Is.EqualTo(AttackFailureReason.WrongPhase));
@@ -149,7 +149,7 @@ namespace ProjectL.Tests.Core
         {
             var source = CombatCommandTestData.Input();
             var s = source.State;
-            var finished = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Finished,                s.IsNight,s.Structures,s.ThornFields,s.Turn);
+            var finished = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Finished,s.Structures,s.ThornFields,s.Turn);
 
             AssertFailure(CombatCommandCalculator.GetUnitAttackRange(For(source, Enemy, finished)),
                 AttackFailureReason.StageEnded, Enemy);
@@ -228,7 +228,7 @@ namespace ProjectL.Tests.Core
             {
                 new StaticTerrainFact(11, cell, StaticTerrainKind.Sandstorm, true, knownTo)
             });
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.IsNight,s.Structures,s.ThornFields,s.Turn,environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,environment);
             var bindings = new EnvironmentSemanticBindings(new long[] { 11 }, Array.Empty<long>(), Array.Empty<EntityId>());
             return For(input, input.ActorId, state, bindings: bindings);
         }

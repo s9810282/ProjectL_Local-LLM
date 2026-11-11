@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using System.Collections.Generic;
@@ -26,10 +29,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </remarks>
     internal sealed class AttackTargetingInteraction
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackEnter = new("Combat.Action.Interaction.Attack.Enter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackAim = new("Combat.Action.Interaction.Attack.Aim");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackCancel = new("Combat.Action.Interaction.Attack.Cancel");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackRelease = new("Combat.Action.Interaction.Attack.Release");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackConfirm = new("Combat.Action.Interaction.Attack.Confirm");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionAttackExit = new("Combat.Action.Interaction.Attack.Exit");
+#endif
+
         private readonly ICombatViewBufferWriteSink _input;
         private readonly ICombatViewBufferReadSink _requests;
         private readonly ICombatPointerPicker _picker;
-        private readonly ICombatInteractionFeedback _feedback;
+        // 공격 범위·영향·막힘·체력 계약입니다. 호버 칸은 호버 추적이 따로 받습니다(씬 표시 나누기 설계 DS2, 결정 Q-DS2 A).
+        private readonly ICombatAttackRangeFeedback _feedback;
         private readonly CombatCommandGate _gate;
         private readonly CombatHoverTracker _hover;
         private readonly ICombatActionRejectionSink _rejections;
@@ -38,7 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private AttackFailureReason? _rangeFailure;
         // 궤적 표시 의도입니다. 필수이고, 보일지는 조준 종류가 정합니다(ShowsTrajectory, 평가 C5-02).
         private readonly ICombatAttackTrajectoryFeedback _trajectory;
-        // 넉백 미리보기 표시 의도입니다. 운영·시험 모두 필수입니다(넉백 미리보기 결정 Q-KB4 A).
+        // 넉백 미리보기 표시 의도입니다. 필수입니다(넉백 미리보기 결정 Q-KB4 A).
         private readonly ICombatKnockbackPreviewFeedback _knockback;
         // 공격 모드 대상(즉시 처치 대상) 표시 의도입니다. 범위 응답 동안 보이고 모드 끝·결과 재생 직전에 지웁니다(이펙트 끝 규칙 계획 TP-E16, 결정 Q-FS4 A — 호버 중 유지).
         private readonly ICombatAttackModeTargets _modeTargets;
@@ -79,7 +93,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             ICombatViewBufferWriteSink input,
             ICombatViewBufferReadSink requests,
             ICombatPointerPicker picker,
-            ICombatInteractionFeedback feedback,
+            ICombatAttackRangeFeedback feedback,
+            ICombatHoverCellFeedback hover,
             CombatCommandGate gate, ICombatKnockbackPreviewFeedback knockback, ICombatAttackModeTargets modeTargets, CombatInputSounds sounds,
             ICombatActionRejectionSink rejections,
             ICombatAttackTrajectoryFeedback trajectory, CombatActionAvailabilityTracker actionAvailability)
@@ -92,7 +107,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _gate = gate ?? throw new ArgumentNullException(nameof(gate));
             _knockback = knockback ?? throw new ArgumentNullException(nameof(knockback));
             _modeTargets = modeTargets ?? throw new ArgumentNullException(nameof(modeTargets));
-            _hover = new CombatHoverTracker(feedback, CombatHoverKind.Attack);
+            _hover = new CombatHoverTracker(hover, CombatHoverKind.Attack);
             _sounds = sounds ?? throw new ArgumentNullException(nameof(sounds));
             _rejections = rejections ?? throw new ArgumentNullException(nameof(rejections));
             _trajectory = trajectory ?? throw new ArgumentNullException(nameof(trajectory));
@@ -134,6 +149,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>이전 공격 모드를 정리하고 새 행위자로 모드에 들어가 범위를 요청합니다.</summary>
         internal void Enter(in CombatInputFacts facts, EntityId actor)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackEnterSample = _profileInteractionAttackEnter.Auto();
+#endif
+
             int generation = ++_modeGeneration;
             Exit(generation);
             if (generation != _modeGeneration)
@@ -152,6 +171,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void PointerMoved(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackAimSample = _profileInteractionAttackAim.Auto();
+#endif
+
             if (!_active)
                 return;
 
@@ -173,9 +196,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             RequestHoverForCell(facts, characters, cell);
         }
 
-        internal void Cancel(IReadOnlyList<CharacterData> characters = null)
+        internal void Cancel(IReadOnlyList<CharacterData> characters)
         {
-            var selected = characters == null || !_active ? null : CombatCharacterQueries.Find(characters, _actor);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackCancelSample = _profileInteractionAttackCancel.Auto();
+#endif
+
+            // 부르는 곳은 Buffer 캐릭터 목록을 늘 넘깁니다(평가 C5-02).
+            var selected = !_active ? null : CombatCharacterQueries.Find(characters, _actor);
             if (selected != null)
                 _sounds.Play(UnitEvent.UnitCancel, _sounds.PresetOf(selected));
             Exit();
@@ -183,6 +211,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void SelectReleased(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackReleaseSample = _profileInteractionAttackRelease.Auto();
+#endif
+
             if (_active && _picker.TryPickCell(screenX, screenY, out CellCoord cell))
                 SubmitTarget(facts, characters, cell);
             else if (_active && _rangeAnswered)
@@ -282,6 +314,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>공격 모드·범위·영향 칸·공격 호버·자기 미리보기를 정리합니다. 모드가 아니면 아무것도 하지 않습니다.</summary>
         internal void Exit()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackExitSample = _profileInteractionAttackExit.Auto();
+#endif
+
             Exit(++_modeGeneration);
         }
 
@@ -313,13 +349,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         {
             CombatViewPreviewData range = CombatViewPreviewData.AttackRange(_actor);
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _rangeRequestNumber = CombatInputPolicy.CanPreview(facts, _gate.HasPending, range.Kind)
+                ? CombatInputProfiler.SetPreview(_input, range)
+                : 0;
+#else
             _rangeRequestNumber = CombatInputPolicy.CanPreview(facts, _gate.HasPending, range.Kind)
                 ? _input.SetPreview(range)
                 : 0;
+#endif
         }
 
         private void ApplyRangeAnswer(CombatPreviewResult answer)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.AttackRange).Auto();
+#endif
+
             _rangeAnswered = true;
             _rangeFailure = answer.Range?.FailureReason;
             _rangeBlockers.Clear();
@@ -347,6 +393,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         private void ApplyAttackAnswer(in CombatInputFacts facts, AttackPreview attack)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.Attack).Auto();
+#endif
+
             if (attack.CanAttack)
                 _feedback.ShowAffectedCells(attack.AffectedCells.ToArray(), attack.Pull,
                     closeOutline: attack.ProjectedCategory.Key == CategoryKey.Cannon);
@@ -405,12 +455,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             if (CombatInputPolicy.CanPreview(facts, _gate.HasPending, preview.Kind))
             {
                 DropRejectionRequest(facts);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                _hoverRequestNumber = CombatInputProfiler.SetPreview(_input, preview);
+#else
                 _hoverRequestNumber = _input.SetPreview(preview);
+#endif
             }
         }
 
         private void SubmitTarget(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, CellCoord cell)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionAttackConfirmSample = _profileInteractionAttackConfirm.Auto();
+#endif
+
             // 범위 응답을 받기 전에는 무엇을 고를 수 있는지 모르므로 기록하지 않는다.
             if (_actor.IsEmpty || !_rangeAnswered)
             {
@@ -456,7 +514,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             if (!CombatInputPolicy.CanPreview(facts, _gate.HasPending, preview.Kind))
                 return false;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _rejectionRequestNumber = CombatInputProfiler.SetPreview(_input, preview);
+#else
             _rejectionRequestNumber = _input.SetPreview(preview);
+#endif
             return true;
         }
 
@@ -476,6 +538,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         private void ApplyRejectionAnswer(in CombatInputFacts facts, CombatPreviewResult answer)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var previewSample = CombatInputProfiler.Apply(CombatViewPreviewKind.Attack).Auto();
+#endif
+
             _rejectionRequestNumber = 0;
             _input.ClearPreview(answer.RequestNumber);
             bool haboob = answer.Attack.HasValue && answer.Attack.Value.AttackerId == _actor

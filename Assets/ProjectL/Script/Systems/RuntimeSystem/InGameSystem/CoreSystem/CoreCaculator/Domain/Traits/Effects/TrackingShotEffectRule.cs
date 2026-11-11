@@ -11,8 +11,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class TrackingShotEffectRule : IEffectTargetDamageRule
+    internal sealed class TrackingShotEffectRule : IEffectTargetDamageRule, IEffectOrderedHitRule
     {
+        public bool RequiresOrderedHits => true;
+
         private readonly TrackingShotTraitDefinition _definition;
         private readonly TrackingShotTraitRule _rule;
         internal TrackingShotEffectRule(TrackingShotTraitDefinition definition, TrackingShotTraitRule rule)

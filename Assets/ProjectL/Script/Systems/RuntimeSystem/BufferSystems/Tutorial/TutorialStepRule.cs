@@ -50,7 +50,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
 
         /// <summary>
         /// 그 제한 아래에서 통과 조작을 할 수 있는지입니다. 제한이 통과 조작까지 막으면 실습을 끝낼 수 없으므로,
-        /// “이동만 허용”은 이동으로 통과하는 실습에만 둡니다(설계 §15.10).
+        /// 목표마다 승인된 제한 조합만 허용합니다(최신 규칙 교체 설계 §5.1).
         /// </summary>
         private static bool CanPass(TutorialPracticeGoal goal, TutorialCombatInputRestriction restriction)
         {
@@ -59,6 +59,10 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
                 TutorialPracticeGoal.EnterCombat => restriction == TutorialCombatInputRestriction.None,
                 TutorialPracticeGoal.MoveAtLeastOneCell => restriction == TutorialCombatInputRestriction.None
                     || restriction == TutorialCombatInputRestriction.MoveOnly,
+                TutorialPracticeGoal.AttackEnemyOnce => restriction == TutorialCombatInputRestriction.AttackPractice,
+                // 제한 없음이면 턴을 끝내기 전에 다른 유닛도 자유롭게 이동·공격할 수 있습니다(2026-11-11 사용자).
+                TutorialPracticeGoal.EndPlayerTurnOnce => restriction == TutorialCombatInputRestriction.None
+                    || restriction == TutorialCombatInputRestriction.EndTurnOnly,
                 _ => false
             };
         }

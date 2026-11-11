@@ -9,11 +9,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 {
     /// <summary>
-    /// 사건 Presenter가 필드 표시(가시·오브젝트·토네이도·지형 바뀜·특성 흔적·필드 외형 연출·필드 강조)에 닿는 창구입니다(View 3라운드 W9-3, 결정 Q-V27 A).
+    /// 사건 Presenter가 필드 표시(가시·오브젝트·토네이도·낙석·하붑(모래폭풍)·지형 바뀜·특성 흔적·필드 외형 연출·필드 강조)에 닿는 창구입니다(View 3라운드 W9-3, 결정 Q-V27 A).
     /// 화약통·지뢰 폭발은 이 창구가 아니라 외형의 순간 큐로 냅니다(이펙트 창구 확장 설계 EC9).
     /// 창구는 모두 필수입니다.
-    /// 표시 Factory가 필드 표시들의 메서드를 넘깁니다. 시험 조립은 시험 도우미(<c>CombatViewSystemTests.FieldPorts</c>)가 만든 창구를 넘기며,
-    /// 그 창구는 필드 표시 쪽은 아무것도 하지 않고 걸음 접촉 몸 조회는 예외를 던집니다(그 조립의 시험은 걸음 접촉을 만들지 않음).
+    /// 운영 표시와 특성 확인 표시 모두 표시 Factory의 <c>CombatSceneDisplayFactory.CreateFieldPorts</c> 한 함수로 필드 표시들의 메서드를 넘깁니다(평가 C4-02).
     /// </summary>
     internal sealed class CombatFieldEventPorts
     {
@@ -30,6 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="cancelAppearance">필드 외형 연출을 멈춥니다.</param>
         /// <param name="tornado">움직이는 토네이도 표시입니다(토네이도 View 계획 TP-3).</param>
         /// <param name="rockfall">낙석 표시입니다(낙석 View 계획 RP-4).</param>
+        /// <param name="haboob">하붑(모래폭풍) 구름 표시입니다(하붑 View 계획 HP-6).</param>
         internal CombatFieldEventPorts(
             Action<CellCoord> consumeThorn,
             Action<IReadOnlyList<CellCoord>> presentHighlight,

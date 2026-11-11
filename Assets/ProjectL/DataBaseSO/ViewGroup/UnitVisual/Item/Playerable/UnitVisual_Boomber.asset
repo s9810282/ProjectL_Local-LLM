@@ -17,13 +17,13 @@ MonoBehaviour:
     prefab: {fileID: 5218879570390324344, guid: 99c12b106cc88b14c884f950910ecea7, type: 3}
     displayName: "\uCC30\uB9AC"
     description: 
-    timelineIcon: {fileID: 21300000, guid: 72c0244785a39ee46bb168cbcf373fc9, type: 3}
+    timelineIcon: {fileID: 455121546, guid: 6ebaf5c065fc27d438438d8342bda841, type: 3}
     infoIcon: {fileID: 21300000, guid: d9460a4c870f33d4fb5aa8be782de235, type: 3}
-    attackPresentation: {fileID: 11400000, guid: 3ce031ca2bd64fbfaedaab95933f0636, type: 2}
+    attackPresentation: {fileID: 11400000, guid: 8ccfe15452974866a78c64a41a481c42, type: 2}
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
     animationPresentation: {fileID: 11400000, guid: ffb37e59d15593149bb7671a9cd2335b, type: 2}
     unitSoundPreset: 2
-    attackSoundPreset: 4
+    attackSoundSlotIndex: 5
     obstacleHitCues:
       effects: []
       shakes: []

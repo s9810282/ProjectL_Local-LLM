@@ -43,7 +43,7 @@ namespace ProjectL.Tests.Core
         {
             var input = Turn(2);
             var start = EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingPlayer);
-            var result = CombatTurnCalculator.BeginControllerTurn(start);
+            var result = CombatTurnCalculator.BeginControllerTurn(start, Array.Empty<IMovementTileRule>());
             var final = CombatCommandComposition.Project(result);
             Assert.That(final.Characters[0].Debuffs.SameValues(input.Characters[0].Debuffs), Is.True);
             Assert.That(final.State.ThornFields, Is.EqualTo(input.State.ThornFields));

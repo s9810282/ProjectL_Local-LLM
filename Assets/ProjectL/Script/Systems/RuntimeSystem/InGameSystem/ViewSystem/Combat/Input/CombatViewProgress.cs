@@ -19,7 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>
         /// 새 입력이 막 닫혔습니다(제출 정지 또는 포기 요청, <see cref="CombatInputPolicy.IsInputClosed"/>).
-        /// 배치 확인창 닫기·입력 표시 취소·입력 해제·행동 버튼 숨김을 합니다. 두 사실이 차례로 서면 두 번 불리므로 멱등적이어야 합니다.
+        /// 확인창(배치·턴 종료) 닫기·입력 표시 취소·입력 해제·행동 버튼 숨김을 합니다. 두 사실이 차례로 서면 두 번 불리므로 멱등적이어야 합니다.
         /// </summary>
         void OnInputClosed();
 

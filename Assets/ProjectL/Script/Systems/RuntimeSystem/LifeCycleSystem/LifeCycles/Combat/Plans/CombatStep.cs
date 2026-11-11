@@ -19,7 +19,9 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
         Abandon = 4,
         Command = 5,
         Preview = 6,
-        Advance = 7
+        Advance = 7,
+        PrepareAdvance = 8,
+        PreparedAdvance = 9
     }
 
     /// <summary>다음 단계와 그 단계가 확인할 번호입니다. 명령은 N, 미리보기는 요청 번호, 자동 진행은 판단 때의 결과 순번 S입니다.</summary>

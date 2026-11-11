@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 using ProjectL.Systems.ServiceKeys.Runtime;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
@@ -19,21 +20,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
         private IRecoveryViewBufferReadSink _input;
         private IRecoveryViewBufferWriteSink _writer;
         private IRecoveryResultReadSink _results;
-        private IJobRunner _runner;
+        // 제출 중·예약·실행 중·정지·종료 사실과 실행 시작·끝 앞부분은 증강과 함께 쓰는 실행 수명이 맡습니다(설계 §2.7 C-12).
+        private readonly ViewRequestExecution _execution;
         private RecoveryViewCommand _pending;
         private RecoveryViewCommand _consumed;
-        private bool _reserved;
-        private bool _executing;
-        private bool _submitting;
         private bool _draining;
-        private bool _stopped;
-        private bool _shutdown;
 
-        internal RecoveryRequestLifetime(RuntimeFaultBoundary faults) => _faults = faults ?? throw new ArgumentNullException(nameof(faults));
-        public bool HasPending => _submitting || _pending.Number != 0;
-        public bool CanReserveExecution => !_stopped && !_shutdown && !_faults.IsFaulted &&
-            !_reserved && _pending.Number != 0;
-        public bool HasReservedExecution => _reserved;
+        internal RecoveryRequestLifetime(RuntimeFaultBoundary faults)
+        {
+            _faults = faults ?? throw new ArgumentNullException(nameof(faults));
+            _execution = new ViewRequestExecution("RecoveryRequest", "회복", faults);
+        }
+
+        public bool HasPending => _execution.IsSubmitting || _pending.Number != 0;
+        public bool CanReserveExecution => _execution.CanReserve && _pending.Number != 0;
+        public bool HasReservedExecution => _execution.IsReserved;
+
+        /// <summary>게시된 결과 중 아직 확인하지 않은 것이 있습니다. 이 소유자 안에서 결과 번호를 비교하는 곳은 여기 하나입니다.</summary>
+        private bool HasUnacknowledgedResult => _results.HandledCommandNumber > _input.AcknowledgedResultNumber;
 
         internal void BindServices(IRecoveryViewBufferReadSink input, IRecoveryViewBufferWriteSink writer,
             IRecoveryResultReadSink results, IJobRunner runner)
@@ -41,28 +45,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
             _input = input ?? throw new ArgumentNullException(nameof(input));
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
             _results = results ?? throw new ArgumentNullException(nameof(results));
-            _runner = runner ?? throw new ArgumentNullException(nameof(runner));
+            _execution.BindRunner(runner);
         }
 
         public int Submit(RecoveryCommandData command)
         {
             if (command == null) throw new ArgumentNullException(nameof(command));
-            RequireAvailable();
+            _execution.RequireAvailable();
             if (HasPending) throw new InvalidOperationException("이전 회복 요청의 실행과 소비를 기다려야 합니다.");
             DrainPublished();
-            RequireAvailable();
-            _submitting = true;
-            try
+            _execution.RequireAvailable();
+            return _execution.Submit(() =>
             {
                 int number = _writer.Submit(command);
                 _pending = new RecoveryViewCommand(number, command);
-                if (_stopped || _faults.IsFaulted) CancelPending();
+                if (_execution.IsStopped || _faults.IsFaulted) CancelPending();
                 return number;
-            }
-            finally
-            {
-                _submitting = false;
-            }
+            });
         }
 
         public bool TryReserveExecution(out RecoveryViewCommand command)
@@ -80,34 +79,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
                 Fail("예약할 회복 입력의 전체 명령이 보관 기록과 다릅니다.");
                 return false;
             }
-            _reserved = true;
+            _execution.Reserve();
             command = _pending;
             return true;
         }
 
-        public bool TryBeginExecution(int number)
-        {
-            if (_shutdown || !_reserved || _executing || _pending.Number != number) return false;
-            _executing = true;
-            return true;
-        }
+        public bool TryBeginExecution(int number) => _execution.TryBegin(number, _pending.Number);
 
         public void NotifyExecutionFinished(int number, bool processed, Exception error)
         {
-            // 원인을 먼저 고정합니다. fault 정리가 재진입해도 아직 실행 기록을 놓지 않습니다.
-            if (error != null) _faults.Report(error);
-            if (!_reserved || _pending.Number != number)
-            {
-                if (!_shutdown) Fail("보관한 예약과 다른 회복 실행 종료가 도착했습니다.");
-                return;
-            }
-            _executing = false;
+            if (!_execution.TryFinish(number, _pending.Number, error)) return;
             try
             {
-                bool backpressure = _results.HandledCommandNumber > _input.AcknowledgedResultNumber &&
-                    _results.HandledCommandNumber != number;
+                bool backpressure = HasUnacknowledgedResult && _results.HandledCommandNumber != number;
                 DrainPublished();
-                _reserved = false;
+                _execution.EndReservation();
                 if (_consumed.Number == number)
                 {
                     _pending = default;
@@ -139,7 +125,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
             }
             catch (Exception cleanupError)
             {
-                _stopped = true;
+                _execution.Stop();
                 if (error == null) _faults.Report(cleanupError);
                 else error.Data["RecoveryRequestCleanupError"] = cleanupError;
             }
@@ -162,7 +148,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
             int number = _pending.Number;
             _writer.RemoveCommand(number);
             DrainPublished();
-            if (!_reserved && _pending.Number == number)
+            if (!_execution.IsReserved && _pending.Number == number)
             {
                 if (_results.HandledCommandNumber < number || _consumed.Number == number) _pending = default;
                 else Fail($"취소한 회복 요청 {number}의 게시 결과를 대조할 수 없습니다.");
@@ -171,7 +157,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
 
         internal void StopInput()
         {
-            _stopped = true;
+            _execution.Stop();
             CancelPending();
             DrainPublished();
         }
@@ -180,23 +166,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
 
         public void Shutdown()
         {
-            if (_shutdown) return;
-            _shutdown = true;
+            if (!_execution.BeginShutdown()) return;
             StopInput();
-            if (_executing || !_reserved) return;
-            // 루트는 View 다음 Global을 종료합니다. 같은 Runner의 공개 Clear를 먼저 완료해야
-            // 통지 없이 버려지는 queued 예약을 해제할 수 있습니다. 일반 취소에는 적용하지 않습니다.
-            _runner?.Clear();
-            if (_runner == null || _runner.IsIdle)
-            {
-                _pending = default;
-                _reserved = false;
-            }
+            // 통지 없이 버려지는 대기 예약을 놓았으면 보관 번호도 놓습니다(Runner 비우기는 실행 수명이 합니다).
+            if (_execution.TryReleaseQueuedReservation()) _pending = default;
         }
 
         private void DrainPublished()
         {
-            if (_draining || _results == null || _results.HandledCommandNumber <= _input.AcknowledgedResultNumber) return;
+            if (_draining || _results == null || !HasUnacknowledgedResult) return;
             _draining = true;
             try
             {
@@ -215,7 +193,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
                 _writer.AcknowledgeResult(result.Number);
                 if (pending) _consumed = _pending;
                 _writer.RemoveCommand(result.Number);
-                if (pending && !_reserved) _pending = default;
+                if (pending && !_execution.IsReserved) _pending = default;
             }
             finally
             {
@@ -223,17 +201,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery
             }
         }
 
-        private void RequireAvailable()
-        {
-            if (_input == null || _stopped || _shutdown || _faults.IsFaulted)
-                throw new InvalidOperationException("연결되고 정지하지 않은 회복 요청 소유자가 필요합니다.");
-        }
-
-        private void Fail(string message)
-        {
-            _stopped = true;
-            _faults.Report(new InvalidOperationException("[RecoveryRequest] " + message));
-        }
+        private void Fail(string message) => _execution.Fail(message);
 
         private static bool Matches(RecoveryViewCommand first, RecoveryViewCommand second) =>
             first.Number == second.Number && Matches(first.Data, second.Data);

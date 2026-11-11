@@ -1,12 +1,11 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts
 {
     /// <summary>
     /// 공격 조준이 공격 모드 동안 "즉시 처치 대상" 표시 의도만 전하는 좁은 계약입니다(이펙트 끝 규칙 설계 EL3 공격 모드 대상, 마무리 사격 FS-b, 계획 TP-E16).
-    /// 공격 조준만 받습니다. 구현: 씬 표시(<see cref="CombatSceneDisplay"/>)가 유지 표시 부품의 공격 모드 대상 출처에 넘깁니다.
+    /// 공격 조준만 받습니다. 구현: 사건 Presenter(<c>CombatSceneEventPresenter</c>)가 유지 표시 부품의 공격 모드 대상 출처에 넘깁니다(씬 표시 나누기 설계 DS2·P10).
     /// </summary>
     /// <remarks>
     /// 부르는 쪽은 Core 공격 범위 응답의 대상 목록(<c>AttackRangeResult.InstantDefeatTargetIds</c>)을 그대로 넘기고 판정하지 않습니다(판정 원본은 Core 하나).

@@ -58,10 +58,9 @@ namespace ProjectL.Tests.Core
             sources ??= new MovementTileFact[] { Source() };
             var environment = new MovementEnvironmentFacts(sources);
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: phase, controllerTurnSequence: sequence,
-                completedPlayerTurnCount: completed, nightStartPlayerTurnCount: nightStart, completedControllerTurnCount: sequence - 1);
+                completedPlayerTurnCount: completed, completedControllerTurnCount: sequence - 1);
             bool player = phase == CombatControllerPhase.Player;
-            var state = new CombatCommandState(width, height, player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,
-                true, seed.State.Structures, seed.State.ThornFields, turn, environment);
+            var state = new CombatCommandState(width, height, player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic, seed.State.Structures, seed.State.ThornFields, turn, environment);
             return WithStorms(new CombatCommandInput(player ? 1 : 0, player ? CombatCommandKind.EndPlayerTurn : CombatCommandKind.CompleteEnemyTurn,
                 EntityId.Empty, default, state, characters ?? seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(4, 1, width, height, Array.Empty<CharacterInstanceId>(), 0),

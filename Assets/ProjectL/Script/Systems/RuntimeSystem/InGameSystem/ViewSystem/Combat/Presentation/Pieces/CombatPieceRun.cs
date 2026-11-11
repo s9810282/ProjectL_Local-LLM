@@ -1,3 +1,7 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
@@ -115,6 +119,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>실행을 시작한 재생 세대입니다.</summary>
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatPlaybackProfile Profile { get; set; } = CombatEventProfiler.Unknown;
+
+#endif
         internal int Version { get; }
 
         internal CombatComposition Composition => _composition;
@@ -133,6 +141,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// </summary>
         internal bool TryStart()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var prepareSample = Profile.Prepare.Auto();
+#endif
+
             if (_state != RunState.NotStarted)
                 throw new InvalidOperationException("[CombatPieceRun] 실행은 한 번만 시작합니다.");
             _composition.MarkUsed();
@@ -143,6 +155,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             }
 
             _state = RunState.Running;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var beginSample = Profile.Begin.Auto();
+#endif
             try
             {
                 CombatPieceCompletion completion = _composition.Completion;
@@ -163,7 +178,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     _elapsed[i] = 0f;
                 }
                 if (_state == RunState.Running)
-                    CompleteIfDone(!completion.IsSource && _remainingWaits == 0);
+                    CompleteIfDone(!completion.IsSource && !completion.WaitsForAllItems && _remainingWaits == 0);
             }
             catch (Exception error)
             {
@@ -186,6 +201,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (_state != RunState.Running)
                 return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = Profile.Tick.Auto();
+#endif
             float delta = Math.Max(0f, deltaTime);
             int frame = _frame();
             for (int i = 0; i < _items.Count; i++)
@@ -270,6 +288,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>신호를 낸 것으로 표시하고 그 신호를 기다리는 뒤 항목을 시작합니다. 표시는 처리 도중 이 항목이 끝나도 남은 항목을 건너뛰지 않게 합니다.</summary>
         private void Emit(int item, CombatPieceSignal signal, float available)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var hitSample = signal == CombatPieceSignal.Hit ? Profile.Hit.Auto() : default;
+#endif
+
             _signalled[item] |= 1 << (int)signal;
             Trigger(item, signal, available);
         }
@@ -361,7 +383,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_state != RunState.Running)
                 return;
             // 기다림 항목이 이 끝(또는 건너뜀)으로 모두 끝났으면 한 번 알립니다. 이미 알렸으면 다시 알리지 않습니다.
-            CompleteIfDone(waitsBefore && !_composition.Completion.IsSource && _remainingWaits == 0);
+            // 모든 항목 완료(AllItems)는 여기서 알리지 않고, 마지막 항목이 끝나 전체 종료할 때 알립니다(CompleteIfDone의 전체 종료 갈래).
+            CompleteIfDone(waitsBefore && !_composition.Completion.IsSource && !_composition.Completion.WaitsForAllItems && _remainingWaits == 0);
         }
 
         /// <summary>
@@ -458,6 +481,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>모든 항목이 끝났습니다. 대여를 되돌리고 재생기에서 빠진 뒤, 출처 실행이면 출처 전체 종료를 알립니다.</summary>
         private void Finish()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = Profile.End.Auto();
+#endif
+
             _state = RunState.Finished;
             List<Exception> errors = null;
             Leases.Restore(ref errors);
@@ -483,6 +510,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private void Stop(ref List<Exception> errors, bool abortSource)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = Profile.Cancel.Auto();
+#endif
+
             _state = RunState.Cancelled;
             for (int i = 0; i < _items.Count; i++)
             {

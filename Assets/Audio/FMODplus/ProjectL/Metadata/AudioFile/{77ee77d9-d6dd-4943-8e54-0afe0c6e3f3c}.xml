@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{77ee77d9-d6dd-4943-8e54-0afe0c6e3f3c}">
+		<property name="assetPath">
+			<value>AMB_Daytime.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>5.1866439909297055</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{84825bae-1885-4526-87b7-4996686cf407}</destination>
+		</relationship>
+	</object>
+</objects>

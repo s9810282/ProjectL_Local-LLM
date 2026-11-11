@@ -1,4 +1,7 @@
+using System;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Completion;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
@@ -12,5 +15,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         /// <param name="output">화면을 그리는 출력 카메라입니다(Boot의 Main Camera).</param>
         StageMapViewScope Create(StageMapSceneRoot root, Camera output, StageMapViewServices services,
             RuntimeFaultBoundary faults);
+
+        ILodingPreparation CreatePreparation(StageMapViewScope scope, RuntimeFaultBoundary faults);
+
+        StageNodeClearPresentation CreateCompletion(StageMapViewScene scene, StageMapViewCompletionServices services,
+            StageMapCameraFocus focus, Func<bool> canWork, Func<StageMapMovementContext> captureContext,
+            Func<StageMapMovementContext, bool> isContextCurrent, Action clearPointer);
     }
 }

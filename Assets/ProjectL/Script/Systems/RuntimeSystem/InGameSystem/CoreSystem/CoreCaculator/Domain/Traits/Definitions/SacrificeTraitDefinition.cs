@@ -7,12 +7,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     {
         public int RadiusCells { get; }
         public int MaxTriggersPerEnemyTurn { get; }
+        public bool PreventsLethalSacrificeDamage { get; }
+        public int ShieldOnActivation { get; }
 
-        public SacrificeTraitDefinition(int radiusCells, int maxTriggersPerEnemyTurn) : base(TraitKey.Sacrifice)
+        public SacrificeTraitDefinition(int radiusCells, int maxTriggersPerEnemyTurn,
+            bool preventsLethalSacrificeDamage = false, int shieldOnActivation = 0) : base(TraitKey.Sacrifice)
         {
-            var spec = new SacrificeTraitSpec(radiusCells, maxTriggersPerEnemyTurn);
+            var spec = new SacrificeTraitSpec(radiusCells, maxTriggersPerEnemyTurn, preventsLethalSacrificeDamage, shieldOnActivation);
             RadiusCells = spec.RadiusCells;
             MaxTriggersPerEnemyTurn = spec.MaxTriggersPerEnemyTurn;
+            PreventsLethalSacrificeDamage = spec.PreventsLethalSacrificeDamage;
+            ShieldOnActivation = spec.ShieldOnActivation;
         }
     }
 }

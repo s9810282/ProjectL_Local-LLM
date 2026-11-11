@@ -21,7 +21,12 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 new CombatEffectFormatter<ActionRestrictionEffectSnapshot>(StatusEffectKey.Disarm),
                 new CombatEffectFormatter<ActionRestrictionEffectSnapshot>(StatusEffectKey.Bind),
                 new CombatEffectFormatter<WeaknessExposureEffectSnapshot>(StatusEffectKey.WeaknessExposure, s => s.EffectiveIncreasePercent),
-                new CombatEffectFormatter<TauntedEffectSnapshot>(StatusEffectKey.Taunted)
+                new CombatEffectFormatter<TauntedEffectSnapshot>(StatusEffectKey.Taunted),
+                new CombatEffectFormatter<FireEffectSnapshot>(StatusEffectKey.Fire, s => s.Damage, s => s.RemainingAffectedSideStarts),
+                new CombatEffectFormatter<BleedingEffectSnapshot>(StatusEffectKey.Bleeding, s => s.Stacks.Count, s => CombatStatusDescriptionFormatter.BleedingDamage(s.Stacks), s => s.RemainingAffectedSideStarts),
+                new CombatEffectFormatter<MovementRangeDecreaseEffectSnapshot>(StatusEffectKey.MovementRangeDecrease, s => s.Magnitude),
+                new CombatEffectFormatter<RampageEffectSnapshot>(StatusEffectKey.Rampage, s => s.AttackBonus, s => s.MovementBonus),
+                new CombatEffectFormatter<ReconstructionEffectSnapshot>(StatusEffectKey.Reconstructing, s => s.RemainingOwnTurnStarts)
             }, visuals);
             return new CombatUnitStatuses(visuals, formatters, new CombatStatusDescriptionFormatter(traits, rockfall));
         }

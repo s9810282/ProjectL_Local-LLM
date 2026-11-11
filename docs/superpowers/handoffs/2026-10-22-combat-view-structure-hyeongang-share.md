@@ -434,3 +434,82 @@ W13~W16 정적 검토에서 남은 구체적 결함은 없지만 **변경 후 �
 - 같은 파일의 1차 G3-01(재생 중 놓기 → 손에 남김) 변경은 사용자 쪽 줄입니다.
 - 경계 커밋(`^ad7e6b28`, 현강님으로 표시)인 `CombatRefreshSignal`·`CombatViewRefresh` remarks, 그리고 10-20 공유 문서상 현강님 코드인 `CombatEnvironmentText` 53줄(보임 조건 → `CombatEnvironmentFacts.IsShown`)도 고쳤습니다. 작성자가 확실하지 않아 사용자 확인 뒤 넘깁니다(계획 §5.3).
 - 컴파일 미확인, 새 시험 없음.
+
+## 23. 2026-11-05 전투 View 평가 후속 — 질문 둘 (미전달)
+
+5차([후속 수정 계획](../plans/2026-11-04-combat-view-evaluation-fixes-plan.md) §9)에서 현강님 줄은 바꾸지 않았습니다. 평가 중간 문제 가운데 현강님과 정해야 하는 것 둘을 여쭙니다.
+
+- **C1-38 약한 지반 소리 프리셋:** `Playback/Support/CombatEventSounds.cs` 158·178-186줄은 11-02 `8fe4a688b`("환경요소 사운드 연결")에서 DB 값을 코드 숫자 2로 바꾼 줄입니다. 그래서 설정 표의 `weakGroundCollapseSoundPreset`(지금 -1)을 바꿔도 아무 일이 없습니다. 둘 중 어느 쪽으로 할까요?
+  - (권장) DB 값 하나로: 표 기본값을 2로 맞추고 코드는 `presets.WeakGroundCollapse()`를 읽습니다. 진입 1·2회 프리셋(0·1)도 표 칸으로 올릴지 함께 정합니다.
+  - 코드 숫자를 원본으로: 설정 칸과 `WeakGroundCollapse()`를 지웁니다.
+  - 어느 쪽이든 붕괴 소리(2번)는 지금처럼 납니다. 표 값과 코드는 한 커밋에 넣어야 합니다.
+- **C1-22 HP 막대 규칙:** 전투 정보창(`CombatUnitInfoView`)과 유닛 HUD(`UnitHUD`)가 HP·보호막 막대의 분모·스냅 규칙을 글자 그대로 따로 갖고 있습니다. 지금은 같지만 한쪽만 바뀌면 어긋납니다. 공통 함수를 `UISystem/Base/HealthFillAnimation.cs` 옆(예: `HealthBarRule`)에 두고 두 곳이 부르게 해도 될까요? 바꿀 줄이 모두 현강님 줄(GlobalSystem 포함)이라 위치·이름을 정해 주시면 그대로 맞추겠습니다.
+
+## 24. 2026-11-05 전투 View 조정자 나누기 — 줄 둘 (미전달)
+
+[조정자 나누기 계획](../plans/2026-11-05-combat-view-coordinator-split-plan.md)(설계 [coordinator-split-design](../specs/2026-11-05-combat-view-coordinator-split-design.md) CS1~CS6)에서 현강님 줄 둘을 고쳤습니다. 줄 번호는 HEAD `dfb49b34` 기준입니다. 새 시험 없음, 시험 변경 없음. Unity 컴파일·재생 문제 없음(사용자, Ua~Ud). UI 코드와 프리팹에서 고칠 곳은 없습니다.
+
+- `Input/CombatSceneInput.cs` 116(`e2cb9912`, CS-a): 연결 입력 묶음의 부품 속성을 private 필드로 숨기면서 `ClearActionAvailability`가 `ActionAvailability.Clear()` 대신 `_actionAvailability.Clear()`를 부릅니다. 이름만 바뀌었습니다. 5줄 using과 115줄은 그대로입니다.
+- `CombatViewSystem.cs` 251(`0a6fe9c4`, CS-d): 조정자가 서비스를 하나씩 받지 않고 묶음 `CombatViewBindings` 하나로 받게 되어, 표시 값 읽기 생성이 `new CombatDisplayValueReader(bindings.State, bindings.Characters, bindings.Currency, bindings.Current, bindings.Items)`가 되었습니다. 넘기는 값과 순서는 같습니다.
+
+## 25. 2026-11-05 전투 View 작은 묶음 셋 — 환경 설명 갈래 넷 (미전달)
+
+[작은 묶음 계획](../plans/2026-11-05-combat-view-small-bundles-plan.md)(설계 [small-bundles-design](../specs/2026-11-05-combat-view-small-bundles-design.md) SB3, 평가 C1-05)에서 `Input/Assist/CombatEnvironmentText.cs`의 현강님 줄(`63a1c23e`)을 고쳤습니다. 줄 번호는 HEAD `fedd5627` 기준입니다. 컴파일 미확인(전투 View 작업 규칙상 MSBuild 없음), 새 시험 없음, 시험 변경 없음. UI 코드와 프리팹에서 고칠 곳은 없습니다.
+
+환경 원본을 어느 분류로 볼지의 판단을 `Display/Map/CombatEnvironmentFacts` 한 곳으로 모았습니다. 위험 범위 찾기·지형/오브젝트 표시·회전 검사가 같은 함수를 부르므로, 분류 정책이 바뀌어도 한 곳만 고치면 됩니다.
+
+- 62 지형 갈래: `Contains(bindings.TerrainSourceIds, source.Id)` → `CombatEnvironmentFacts.IsTerrain(bindings, source.Id)`.
+- 68-71 오브젝트 갈래: `Contains(bindings.ObjectSourceIds, …)` + 형식 검사 예외 → `CombatEnvironmentFacts.TryGetObject(bindings, source, out ObjectSourceFact item)`. 분류는 Object인데 형식이 다를 때의 예외 문구가 `[CombatEnvironmentFacts] Object 분류와 Buffer 원본 형식이 다릅니다: {id}.`로 바뀝니다(분류 계약을 어긴 Buffer에서만 남, 결정 Q-SB3 A).
+- 80-81 장애물 갈래: 생존·점유 칸 줄(80, 현강님)과 장애물 찾기 줄(81, 용근 `5de448e3`) → `CombatEnvironmentFacts.TryGetObstacleAt(bindings, obstacles, structure, cell, out obstacle)` 한 줄. 판단 순서(생존 → 점유 칸 → 분류·프로필)는 같습니다.
+- 123-127 쓰지 않게 된 `Contains(IReadOnlyList<long>, long)`를 지웠습니다. `ContainsCell`은 토네이도·기믹 반복이 써서 남습니다.
+
+화면에 보이는 설명·순서(흔적 → 지형 → 오브젝트, 그다음 장애물·토네이도·기믹)는 그대로입니다. 54 먼지 연막 줄(용근 `950a52c0`)도 같은 판단 `IsDustScreen`으로 바꿨고, 호진님 줄(토네이도·기믹)은 바뀌지 않았습니다.
+
+## 26. 2026-11-06 전투 View 선택 인자 나머지 — 확인창·거절 창구·덱 찾기·취소 (미전달)
+
+[선택 인자 나머지 계획](../plans/2026-11-06-combat-view-optional-args-plan.md)(설계 [optional-args-design](../specs/2026-11-06-combat-view-optional-args-design.md) OA1~OA3, 평가 C5-02 2단계)에서 현강님 줄을 고쳤습니다. 작성자는 전체 이력으로 셌습니다(설계 §1.7). 줄 번호는 고친 뒤(기준 판 `7279a9d5` 위) 기준입니다. 컴파일 미확인(전투 View 작업 규칙상 MSBuild 없음), 새 시험 없음, 시험 변경은 우리 시험 호출 한 곳뿐입니다. UI 코드와 프리팹에서 고칠 곳은 없습니다.
+
+운영 조립이 늘 넘기는 협력자를 생성자에서 필수로 받고, 쓰는 곳의 `?.`·null 갈래를 지웠습니다. 운영에서 보이는 동작은 같습니다. 바뀌는 것은 협력자를 빠뜨린 새 조립이 이제 생성 순간에 `ArgumentNullException`으로 멈춘다는 것입니다(전에는 그 기능만 조용히 빠졌습니다).
+
+- `Input/ActionButtons/CombatDeploymentConfirmation.cs`(`fc133bf7`)
+  - 32 생성자: `presentation ?? throw new ArgumentNullException(nameof(presentation))`. 31 주석도 같은 뜻으로 고쳤습니다.
+  - 40 `IsOpen`·116 `Close`: `_presentation?.`·`?? false`를 지웠습니다.
+  - 확인창을 여는 곳(옛 97-98)의 `InvalidOperationException` 갈래를 지웠습니다. 같은 사실을 생성 때 막으므로 예외 종류가 `InvalidOperationException` → `ArgumentNullException`으로 바뀝니다(계획 TP-5). 입력 재료 묶음이 null을 이미 거절해 운영에서는 둘 다 나지 않습니다.
+- 거절 창구 `rejections`(`80eb7481`)
+  - `Input/MovePath/CombatMovementInteraction.cs` 77 기본값 `= null`을 지우고 86에서 `?? throw`, 250·283 `_rejections?.MovementRejected` → `.`.
+  - `Input/MovePath/CombatPathInput.cs` 90 기본값 `= null`을 지우고 95에서 `?? throw`. 경로 입력이 이동 상호작용에 그대로 넘깁니다.
+- `Input/Interaction/PlacementDragInteraction.cs` 105 `FindDeckUnit`(`4dc3ba8a`): `characters == null ||`를 지웠습니다. 부르는 곳이 모두 Buffer 캐릭터 목록(null이 아님)을 넘깁니다. `ownedId.IsEmpty` 검사는 그대로입니다.
+- `Input/Interaction/CombatInteraction.cs` 259 `Cancel(IReadOnlyList<CharacterData> characters)`(`1b155e02`): 기본값 `= null`을 지웠습니다. 부르는 곳(Router)이 늘 목록을 넘깁니다. 안에서 부르는 `AttackTargetingInteraction.Cancel`도 기본값과 안쪽 null 검사를 지웠습니다(용근 줄).
+
+## 27. 2026-11-07 전투 View 씬 표시 나누기 — HUD·턴 표시·결과 화면·정보창·선택 HUD 줄 자리 (미전달)
+
+[씬 표시 나누기 계획](../plans/2026-11-07-combat-view-scene-display-split-plan.md)(설계 [scene-display-split-design](../specs/2026-11-07-combat-view-scene-display-split-design.md) DS1~DS7, 평가 C2-03 2·3단계)에서 현강님 줄을 옮기거나 고쳤습니다. 작성자는 기준 판 `eafd42f5`의 전체 이력으로 셌습니다(계획 T0.2). 줄 번호는 고친 뒤 기준입니다. 컴파일 미확인(전투 View 작업 규칙상 MSBuild 없음), 새 시험 없음, 시험 변경 없음. **UI 코드와 프리팹에서 고친 곳은 없습니다**(`CombatEndUI`·`CombatHud`·`TurnDisplayUI`·`CombatUnitInfo`·`UnitHUDLayer`·`PackUI` 그대로).
+
+`CombatSceneDisplay`(876줄)가 화면 표면과 선택 표시를 객체로 넘기고 수명·순서만 남겼습니다(347줄). 화면에 보이는 동작은 같습니다. 부르는 차례는 설계 §3.8 대응표대로 옛 차례와 같습니다.
+
+- 턴 표시·정보창·HUD(`cc8be90e` `_turnDisplay`, `fb30cbd1` `_unitInfo`·`ClearUnitInfo`, `ad7e6b28` `_hud.Present()`)
+  - 새 `Display/Hud/CombatHudSurfaces.cs`가 HUD·턴 표시·가방·정보창을 함께 받습니다. `Present`(38)·`RenderStatus(runGold, turn, phase)`(41, 옛 `_hud.Render` + `_turnDisplay.Render`)·`ClearTurn`(56)·`ClearUnitInfo`(59, 본문 그대로)입니다.
+  - 표시는 `_hud.Present()`(170)·`_hud.RenderStatus(…)`(223)·정리 목록의 `_hud.ClearTurn`·`_hud.ClearUnitInfo`로 부릅니다. 옛 `RefreshCore`의 `_turnDisplay.Render` 자리와 같습니다.
+- 결과 화면(`01f5c787` `_completion`·`HideCompletion`, 생성 인자 `completion`)
+  - 새 `Display/Hud/CombatResultScreenDisplay.cs`가 `CombatEndUI`와 배경음 정책을 받습니다. `Hide`(44)는 옛 `HideCompletion` 본문(Unity null 검사 포함)이고, `Show`(31)는 승리 배경음 → 결과 화면 → 확인 뒤 배경음 순서입니다(옛 `ShowCompletion`과 같음).
+  - `confirm` 대리자는 이제 null이면 `ArgumentNullException`입니다(계획 TP-7). 부르는 곳(결과 소비)이 늘 넘깁니다.
+- 선택 HUD(`1013a4df` `SetSelectedEntity` 줄 넷, `fb30cbd1` `InspectUnit` 껍데기)
+  - 새 `Selection/CombatSelectionDisplay.cs`가 선택 원본·정보창 Presenter·`UnitHUDLayer`를 받습니다. `RefreshInspectionSelection`(85)·`Clear`(95)·`InspectUnit`의 `SetSelectedEntity` 줄은 옛 자리와 같은 식입니다.
+  - `InspectUnit`의 해제 뒤 막기는 공유 수명(`Display/CombatDisplayLifetime`)으로 봅니다(설계 DS1).
+- `ReleaseUnitHudLayer`(`8b61db0f`)는 표시에 그대로 남았습니다(313, 본문 그대로). 해제 목록 맨 끝 차례도 같습니다.
+- `Display/Feedback/CombatMovementPlanningPresenter.cs` 17 클래스 요약(`2fb4d2bc`): "이동 계약의 주인"을 덧붙였습니다. 표시가 하던 이동 초안 위임을 이 클래스가 직접 구현합니다(`ICombatMovementFeedback`).
+- Factory 연결 줄(민형님 Factory 공유 §52에도 적음)
+  - `CombatSceneDisplayFactory.cs` 111 `new CombatMovementPlanningPresenter(…)`(`2fb4d2bc`): 끝 인자 `pointer`를 더했습니다(커서 고스트가 설 자리를 포인터 매퍼가 구함, 설계 P9).
+  - `CombatSceneInputFactory.cs` 49-56 `CreateEnvironmentHover`(`63a1c23e`): 첫 인자 `ICombatBattleDisplay display` → `CombatInputFeedback feedback`, 집기·UI 가림·기믹·본부 범위를 묶음에서 이름으로 꺼냅니다. 형식 검사 둘(`is not ICombatGimmickRangeFeedback` 등, 용근 줄)을 지웠습니다.
+  - `CombatSceneInputFactory.cs` 153 `new CombatPathInput(…, notices,`(`80eb7481`): 앞 인자 둘 `display, display` → `feedback.Mapping, feedback.Movement`.
+- 옮기기만 한 줄: `ICombatInteractionFeedback`의 `ClearAttackHealthPreview` 문서(`2fb4d2bc`)는 `git mv`한 `Input/Contracts/ICombatAttackRangeFeedback.cs`에 글자 그대로 있습니다.
+
+## 28. 2026-11-11 포효 예고 — HUD 행동 가능 여부 조회 옆에 배경 조회 하나 (미전달)
+
+기록: [포효 예고 계획](../plans/2026-11-10-combat-roar-forecast-plan.md) RF-b(TP-11). 보스 포효 카운터가 1 남으면 바닥에 포효 범위와 밀릴 유닛의 넉백 화살표를 보이는 기능이다. 현강님이 넣은 HUD 행동 가능 여부 조회(`CombatHudActionAvailability`, `f659532`)와 같은 자리·같은 꼴로 배경 조회 `CombatRoarForecastTracker`를 더했다. HUD 조회 코드 자체는 고치지 않았다.
+
+- `Input/CombatSceneInput.cs`: 생성자 서명 끝에 `CombatRoarForecastTracker roarForecast` 인자 하나(현강님 줄 `:67`), 새 입구 `SyncRoarForecast`, 표현 정리(`CancelPresentation`)·정지(`Stop`)에 지우기 한 줄씩.
+- `Input/CombatSceneInputDriver.cs` `TickEnd`: HUD 조회 바로 앞에서 포효 예고를 맞춘다(결과마다 한 번만 묻는 조회라, 유닛 수만큼 묻는 HUD 조회보다 먼저 슬롯을 씀). HUD 조회 호출 줄은 그대로.
+- `Factory/Runtime/InGame/View/CombatSceneInputFactory.cs`: 생성 순서 주석(현강님 줄 `:61`)에 "포효 예고 조회" 한 단계, 반환 줄(현강님 줄 `:104`) 끝에 인자 하나.
+- 화면 차이: HUD 조회가 슬롯을 쓰는 차례가 포효 예고 요청 하나만큼 늦어질 수 있다(보스 카운터가 1 남은 동안, 결과마다 한 번).
+- 컴파일·Unity 확인 문제 없음(사용자), 새 시험 없음.

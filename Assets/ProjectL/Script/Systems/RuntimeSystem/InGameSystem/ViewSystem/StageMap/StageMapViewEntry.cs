@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
@@ -12,22 +13,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     /// </summary>
     internal sealed class StageMapViewEntry : IStageMapEntryPresentation
     {
-        private readonly StageMapViewServices _services;
+        private readonly StageMapViewEntryServices _services;
         private readonly StageMapViewReader _reader;
         private readonly StageMapSelectionPresentation _selection;
         private readonly Func<bool> _canWork;
+        private readonly StageMapCameraFocus _cameraFocus;
+        private readonly Func<StageMapMovementContext> _captureContext;
+        private readonly Func<StageMapMovementContext, bool> _isContextCurrent;
         private MapCombatPresentationLease _lease;
         private StageMapNodeMovement _movement;
         private StageMapEntryObserver _observer;
-        internal StageCombatDeparture Departure { private get; set; }
+        private StageCombatDeparture _departure;
 
-        internal StageMapViewEntry(StageMapViewServices services, StageMapViewReader reader,
-            StageMapSelectionPresentation selection, Func<bool> canWork)
+        internal StageMapViewEntry(StageMapViewEntryServices services, StageMapViewReader reader,
+            StageMapSelectionPresentation selection, Func<bool> canWork, StageMapCameraFocus cameraFocus,
+            Func<StageMapMovementContext> captureMovementContext,
+            Func<StageMapMovementContext, bool> isMovementContextCurrent)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
             _selection = selection ?? throw new ArgumentNullException(nameof(selection));
             _canWork = canWork ?? throw new ArgumentNullException(nameof(canWork));
+            _cameraFocus = cameraFocus ?? throw new ArgumentNullException(nameof(cameraFocus));
+            _captureContext = captureMovementContext ?? throw new ArgumentNullException(nameof(captureMovementContext));
+            _isContextCurrent = isMovementContextCurrent ?? throw new ArgumentNullException(nameof(isMovementContextCurrent));
         }
 
         internal bool IsPresenting => _movement?.IsPresenting == true;
@@ -45,16 +54,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
                 return false;
             }
             _lease = lease;
-            _movement = new StageMapNodeMovement(scene.Display, scene.Root.MapRoot, _services.MapData,
-                _services.Delay, lease, _canWork, _services.Audio);
+            var jump = new StageMapViewMarkerJump(scene.Display, scene.Root.MapRoot, _services.MapData,
+                _services.Delay, _services.Audio, _cameraFocus, "StageMap");
+            _movement = new StageMapNodeMovement(scene.Display, jump, lease, _services.ClearHistory,
+                _canWork, _captureContext, _isContextCurrent);
             return true;
         }
 
-        /// <summary>진입 요청의 처리 결과를 관찰합니다. 비전투 착지는 <paramref name="restoreNoncombat"/>로 팝업을 되살립니다.</summary>
-        internal void StartObserver(Action<int> restoreNoncombat, Action<string> report)
+        /// <summary>
+        /// 진입 요청의 처리 결과를 관찰합니다. 비전투 착지는 <paramref name="restoreNoncombat"/>로 팝업을 되살립니다.
+        /// 출전 미리 이동(<paramref name="departure"/>)은 덱 팝업 뒤에 만들어지므로 관찰자도 그 뒤에 시작합니다. 사후 setter로 받지 않습니다(평가 N-03).
+        /// </summary>
+        internal void StartObserver(StageCombatDeparture departure, Action<int> restoreNoncombat, Action<string> report,
+            Action<ChapterProgressionResult> rejected)
         {
+            _departure = departure ?? throw new ArgumentNullException(nameof(departure));
             _observer = new StageMapEntryObserver(_services.Requests, _services.RequestWriter, _services.Results,
-                _services.Current, _services.Attempts, restoreNoncombat, report, this, _canWork);
+                _services.Current, _services.Attempts, restoreNoncombat, report, rejected, this, _canWork);
         }
 
         /// <summary>진입 결과 관찰 → 이동 중 진행 확인 → 이동 연출 순서로 한 Tick을 진행합니다.</summary>
@@ -69,13 +85,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
         internal void SynchronizeCurrentNode(int nodeId) => _movement.SynchronizeCurrentNode(nodeId);
 
+        internal void CancelInvalidMovement() => _movement?.CancelInvalidMovement();
+
         bool IStageMapEntryPresentation.PresentAccepted(StageViewCommand command, CombatEntryRequest request)
         {
             if (!_canWork()) return false;
             // Observer가 같은 요청의 준비·Job 완료·수락 결과를 대조한 뒤에만 호출합니다.
             // 준비 전 거절·취소는 이 경계에 오지 않으므로 선택 화면을 숨기지 않습니다.
             if (request != null) _selection.HideSelection();
-            if (_canWork() && Departure?.CompleteAccepted(command, request, _lease) == true)
+            if (_canWork() && _departure.CompleteAccepted(command, request, _lease))
             {
                 return true;
             }
@@ -90,6 +108,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             _lease = null;
             _movement = null;
             _observer = null;
+            _departure = null;
             List<Exception> errors = null;
             CleanupErrors.Try(() => lease?.Dispose(), ref errors);
             CleanupErrors.Try(() => movement?.Dispose(), ref errors);

@@ -52,9 +52,9 @@ namespace ProjectL.Tests.CoreIntegration
         };
 
         internal void SetMap(int key, int seed, IReadOnlyList<ChapterStageDistributionRule> rules, int depth = 7, int widthMin = 1,
-            bool singleFirstLayer = false, int firstStageKey = 0)
-            => _maps[key] = new StageMapData(key, depth, 3, widthMin, singleFirstLayer, firstStageKey, 0.3f, StageConnectionAlgorithm.WeightedRandom, 3, 1,
-                seed, false, 0, rules);
+            bool singleFirstLayer = false, int firstStageKey = 0, int minimumBranchCount = 0)
+            => _maps[key] = new StageMapData(key, depth, 3, widthMin, singleFirstLayer, firstStageKey, 0.3f, minimumBranchCount,
+                StageConnectionAlgorithm.WeightedRandom, 3, 1, seed, false, 0, rules);
 
         internal void Add(StageRootData stage) => _stages[stage.StageKey] = stage;
         internal void Remove(int stageKey) => _stages.Remove(stageKey);

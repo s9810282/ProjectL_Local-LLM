@@ -42,22 +42,59 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (distance < 1) throw new ArgumentOutOfRangeException(nameof(distance));
             if (canEnter == null) throw new ArgumentNullException(nameof(canEnter));
             if (enter == null) throw new ArgumentNullException(nameof(enter));
+            ForcedDisplacementPath result = null;
+            foreach (var _ in ExecuteSteps(start, step, distance, CanEnter, Enter, value => result = value)) { }
+            return result;
+
+            IEnumerable<string> CanEnter(CellCoord from, CellCoord to, Action<bool> completed)
+            {
+                completed(canEnter(from, to));
+                yield return "ForcedPathAdmission";
+            }
+
+            IEnumerable<string> Enter(CellCoord from, CellCoord to, bool last, Action<bool> completed)
+            {
+                completed(enter(from, to, last));
+                yield return "ForcedPathEntry";
+            }
+        }
+
+        internal static IEnumerable<string> ExecuteSteps(CellCoord start, CellCoord step, int distance,
+            Func<CellCoord, CellCoord, Action<bool>, IEnumerable<string>> canEnter,
+            Func<CellCoord, CellCoord, bool, Action<bool>, IEnumerable<string>> enter,
+            Action<ForcedDisplacementPath> completed)
+        {
+            if (distance < 1) throw new ArgumentOutOfRangeException(nameof(distance));
+            if (canEnter == null) throw new ArgumentNullException(nameof(canEnter));
+            if (enter == null) throw new ArgumentNullException(nameof(enter));
             var steps = new List<CellCoord>();
             var current = start;
+            var stop = ForcedDisplacementStop.Completed;
             for (int i = 0; i < distance; i++)
             {
                 var next = ForcedDisplacementGeometry.ResolveDestinationAnchor(current, step, 1);
-                if (!canEnter(current, next))
-                    return new ForcedDisplacementPath(distance, steps, ForcedDisplacementStop.Blocked);
+                bool allowed = false;
+                foreach (var phase in canEnter(current, next, value => allowed = value)) yield return phase;
+                if (!allowed)
+                {
+                    stop = ForcedDisplacementStop.Blocked;
+                    break;
+                }
                 steps.Add(next);
                 // 남은 거리가 있으면 현재 칸 효과부터 처리한다. 지뢰 등이 다음 칸 점유를 바꿀 수 있으므로
                 // 막힘은 효과 처리 뒤 다음 반복에서 검사하고, 요청 거리를 소진한 칸만 마지막으로 알린다.
                 bool last = i == distance - 1;
-                if (!enter(current, next, last))
-                    return new ForcedDisplacementPath(distance, steps, ForcedDisplacementStop.Interrupted);
+                bool continued = false;
+                foreach (var phase in enter(current, next, last, value => continued = value)) yield return phase;
+                if (!continued)
+                {
+                    stop = ForcedDisplacementStop.Interrupted;
+                    break;
+                }
                 current = next;
             }
-            return new ForcedDisplacementPath(distance, steps, ForcedDisplacementStop.Completed);
+            completed(new ForcedDisplacementPath(distance, steps, stop));
+            yield return "ForcedPathComplete";
         }
     }
 }

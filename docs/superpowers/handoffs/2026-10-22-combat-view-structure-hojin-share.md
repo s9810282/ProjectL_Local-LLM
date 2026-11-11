@@ -333,3 +333,52 @@ Play From Boot에 새 개발 모드(`DevBattleStage.PlacedStage`)를 더하면�
 - `Display/Field/FieldHighlightLayers.cs` 140(C1-21): 층 표에 "원점 열기" 열이 생겼습니다. 기본값이 없어 모든 줄에 적습니다. 낙석 경고 줄은 `SourceOpening.None`입니다. 원점 쪽 변을 여는 층은 `Origin`(공격·이동 범위 등), 호버 범위는 `HoverOrigin`, 나머지는 `None`입니다. 새 층에서 이 열을 빠뜨리면 컴파일에서 걸립니다.
 - `Input/Interaction/AttackTargetingInteraction.cs` 477(C5-02): 거절 안내 창구가 필수 인자가 되어, 하붑 거절의 `_rejections?.`를 `.`으로 바꿨습니다. 동작은 같습니다.
 - 경계 커밋(`^83fb2767`, 호진님으로 표시)에 걸린 줄도 고쳤습니다. 실제 작성자를 알 수 없어, 사용자 확인 뒤 넘깁니다(계획 §5.3).
+
+## 17. 2026-11-05 전투 View 평가 후속 5차 — 토네이도 이동 취소·질문 셋 (미전달)
+
+[후속 수정 계획](../plans/2026-11-04-combat-view-evaluation-fixes-plan.md) §9(5차)에서 호진님 줄을 고쳤습니다. 줄 번호는 HEAD `fd8b0d2f` 기준입니다. 컴파일 미확인, 새 시험 없음.
+
+- `Presentation/Pieces/CombatTornadoMovePiece.cs` 48(`4a38c7c9`, G1-02): 이동 조각이 시작한 뒤 취소되면 멈추기만 하던 것을, 하붑 이동 조각처럼 목표 자리로 옮기고 끝내게 바꿨습니다(시작 전 취소는 그대로 아무것도 안 함). 취소는 오류·정리 길에서만 오고, 오류 정지 화면에 폭풍 몸이 칸 사이에 남던 것을 막습니다. 정상 재생은 그대로입니다. 클래스 요약도 고쳤습니다.
+- 6차 주석 정리(평가 C12)에서 호진님 줄의 주석만 고쳤습니다(동작 무변경): `CombatFieldEventPorts` 15·`CombatPresentationPlayers` 10(`1ab12e55`, 지운 시험·실행 목록 순서 설명), `CombatSceneEventPresenter` 159(`4a38c7c9`, 특성 주석을 끌어오기 인자 줄에서 다음 줄로), `CombatFactEventHandler` 13(`4a38c7c9`)·`CombatEventHandlerTable` 23(`87642ff5`, '구조물' 설명을 지금 처리 대상에 맞춤).
+- 경계 커밋(`^83fb2767`, 호진님으로 표시)에 걸린 줄도 고쳤습니다. 코드는 `FieldRailwayPresenter` Scope 재사용(C9-03), `EntityViewSet` 종류 교체(C10-16), `FieldUnitPresenter.EnsureUnitHud`(C10-17), `CombatDeploymentConfirmation.Request`(C10-09)이고 나머지는 주석입니다. 실제 작성자를 알 수 없어 사용자 확인 뒤 넘깁니다(계획 §9.6).
+
+여쭐 것(평가 중간 문제, 답에 따라 다음 단계를 정합니다)
+
+- **C5-01 아침 자동 전환:** `CombatPhaseTransitionPresenter.TryBegin`을 주석 처리한 커밋이 호진님 `b9c4f3b4`("밤 전환 안되게 테스트로 수정", 10-29)입니다. 되살릴 계획이 있으신지요? 되살리지 않으면 재생 조정·Factory에 남은 경로(약 45줄, 늘 false인 판정 셋)를 걷겠습니다. 파일을 만든 민형님께도 같이 여쭙니다.
+- **C1-42 곡사 공통 수명:** 곡사 애니메이션(`CombatMortarAnimation`, 천명님 파일)만 공통 기반 `CombatAttackMotion`(호진님 파일) 밖에서 수명을 따로 돌립니다. 기반에 훅 둘(`BeginResources` 가상 함수, `CancelUnavailable`)을 더하고 곡사를 그 위로 올려도 될지 합의를 부탁드립니다(약 130줄, 구조 단계에서 함).
+- **C2-04 클립 이벤트 표:** `CombatClipEventCursor`·`CombatClipPlayback`·`CombatClipPiece`의 Event2·Event3 하드코딩을 이벤트 종류 표 하나로 모으려 합니다(약 50줄, 구조 단계). 줄 대부분이 호진님 줄이라 미리 알립니다. 바꾼 뒤 변경 정리를 넘기겠습니다. **(11-05 정정: 이 질문은 필요 없게 됐습니다.** 얕은 clone의 blame이 경계 커밋을 호진님으로 보였을 뿐이고, GitHub 파일 이력으로 보니 세 파일은 용근 `e0ee626d`(10-19 클립 시스템)가 만든 줄이었습니다. [작은 묶음 셋](../plans/2026-11-05-combat-view-small-bundles-plan.md)(SB2)에서 번호 표 둘로 바꿨고 호진님 줄은 바뀌지 않았습니다.)
+
+## 18. 2026-11-05 전투 View 조정자 나누기 — 행동 버튼 표면·배치 확인창 (미전달)
+
+[조정자 나누기 계획](../plans/2026-11-05-combat-view-coordinator-split-plan.md)(설계 [coordinator-split-design](../specs/2026-11-05-combat-view-coordinator-split-design.md) CS1~CS6)에서 호진님 줄을 고쳤습니다. 줄 번호는 HEAD `dfb49b34` 기준입니다. 새 시험 없음, 시험 변경 없음. Unity 컴파일·재생 문제 없음(사용자, Ua~Ud).
+
+- `CombatViewSystem.cs` 1182-1183(`8339e308`, 행동 버튼 표면 맞춤): `connection.Surfaces.Sync(…)`가 새 입력 분배 `Input/CombatSceneInputDriver.SyncActionButtons`로 옮겼습니다(CS-b). 넘기는 입력 쪽 사실 넷은 이제 연결 입력 묶음의 `ReadActionButtons(facts)`가 새 값 `Input/ActionButtons/CombatActionButtonState`(공격 진입 가능 → 공격 중 → 되돌리기 가능 → 가용성, 읽는 순서 그대로)로 줍니다(CS-a). 표면 쪽 계약 `CombatInputSurfaces.Sync`는 그대로입니다.
+- `Input/ActionButtons/CombatDeploymentConfirmation.cs` 42(경계 커밋 `^83fb2767`, Leehojin): `HasUnplacedUnits`가 자기 클래스 안에서만 쓰여 internal → private으로 내렸습니다(CS-a). 실제 작성자를 알 수 없어 사용자 확인 뒤 넘깁니다(평가 후속 계획 Q-N11).
+- 경계 커밋(`^83fb2767`, Leehojin으로 표시)에 걸린 줄 둘도 고쳤습니다. 조정자 17줄 using(`InputSystem.Data`)은 쓰는 곳이 없어 지웠고, `Input/CombatInputReceiver.cs` 13 주석은 Layer를 바꾸는 쪽을 "조정자"에서 입력 분배·입력 연결로 고쳤습니다. 실제 작성자를 알 수 없어 사용자 확인 뒤 넘깁니다(Q-N11).
+
+## 19. 2026-11-06 전투 View 선택 인자 나머지 — 입력 표면·공격 Drag·경로 입력·행동 버튼 (미전달)
+
+[선택 인자 나머지 계획](../plans/2026-11-06-combat-view-optional-args-plan.md)(설계 [optional-args-design](../specs/2026-11-06-combat-view-optional-args-design.md) OA1·OA2·OA4·OA5, 평가 C5-02 2단계)에서 호진님 줄을 고쳤습니다. 작성자는 전체 이력으로 셌습니다(설계 §1.7). 줄 번호는 고친 뒤(기준 판 `7279a9d5` 위) 기준입니다. 컴파일 미확인(전투 View 작업 규칙상 MSBuild 없음), 새 시험 없음, 시험 변경은 우리 시험 호출 한 곳뿐입니다.
+
+운영 조립이 늘 넘기는 협력자·값을 필수로 받고, 쓰는 곳의 `?.`·null 갈래를 지웠습니다. 운영에서 보이는 동작은 같습니다.
+
+- `Input/ActionButtons/CombatInputSurfaces.cs`(`8339e308`)
+  - 32-38 `BindRoot`: 루트가 null이면 돌아가던 갈래를 `ArgumentNullException`으로 바꿨습니다(설계 P12). 부르는 곳(`CombatViewConnection.BindRoot`)이 먼저 막으므로 동작은 같습니다. 문서 한 줄도 "루트는 필수"로 고쳤습니다.
+  - 38·46-48·62-64·74-76: 루트 안의 `BattleChanger?.`·`Pack?.`·`UnitInfo?.`를 `.`로 바꿨습니다. 세 칸은 씬 루트 `ValidateReferences`가 표시 조립 때 막습니다. 루트를 묶기 전·푼 뒤를 건너뛰는 `_root?.`는 그대로입니다.
+  - 57-58 `Sync`: `canUseReturn = false`·`availability = null` 기본값을 지웠습니다. 부르는 곳(입력 분배)이 늘 넘깁니다. `availability`의 null은 "Core 응답 전"이라는 뜻이라 그대로 받습니다(56 인자 문서).
+- `Input/Interaction/CombatInteraction.cs` 74-75 `attackDrag`(`32654528`): 기본값 `= null`을 지우고 생성자에서 막습니다. 넘겨받기 소유자를 늘 만들므로 `_handover` null 갈래 넷(`TryHandleAttackDragPointer`·`CancelDragOrAttack` 등)을 지웠습니다. 소유자 순서(넘겨받기 → 경로 → 아이템 → 배치 → 공격 → 호버)는 그대로입니다.
+- `Input/MovePath/CombatPathInput.cs` 83(`34ee0de4`): 이동 범위 사실을 읽을 때의 `actor.Anchor.HasValue` 재확인을 지웠습니다. 필드 유닛의 칸·방향은 Core 사실(`CharacterCombatFacts` 위치 검사)이 보장하고, `FindActor`는 필드에 있는 살아 있는 아군만 돌려줍니다. 같은 근거로 400의 `actor.Rotation ?? Rotation4.R0`도 `actor.Rotation.Value`가 되었습니다(용근 줄).
+- `Input/CombatInputFacts.cs` 38-39 `combatInputRestriction`·`hasCurrentAcceptedEmptyMovementRange`(`34ee0de4`): 기본값을 지웠습니다. 입력 사실 인자 28개가 모두 필수입니다(결정 Q-OA1 A). 사실을 더할 때 읽는 곳(`CombatInputFactsReader`)이 넘기기를 빠뜨리면 컴파일이 막힙니다. 운영 읽기는 이미 28개를 모두 넘깁니다.
+- `Input/ActionButtons/CombatActionButtons.cs` 19(생성자)·50(`Read`)의 `canUseReturn` 인자(`34ee0de4`): 기본값 `= false`를 지웠습니다(기본값 글자는 천명님 `d4a6d6fd`). 부르는 곳이 늘 넘깁니다.
+
+## 20. 2026-11-07 전투 View 씬 표시 나누기 — 토네이도·낙석·하붑 자리와 선택 표시 (미전달)
+
+[씬 표시 나누기 계획](../plans/2026-11-07-combat-view-scene-display-split-plan.md)(설계 [scene-display-split-design](../specs/2026-11-07-combat-view-scene-display-split-design.md) DS3·DS5·DS7, 평가 C2-03 2·3단계)에서 호진님 줄을 옮겼습니다. 작성자는 기준 판 `eafd42f5`의 전체 이력으로 셌습니다(계획 T0.2). 줄 번호는 고친 뒤 기준입니다. 컴파일 미확인, 새 시험 없음, 시험 변경 없음. 화면에 보이는 동작은 같습니다.
+
+- 토네이도·낙석·하붑 표시(`9d364b8d`·`678dbafb`·`87642ff5`의 필드·생성 인자·대입)
+  - `CombatSceneDisplay`에서 빠지고 새 `Display/Map/CombatFieldDisplay.cs` 생성자(46-49)가 받습니다. 그리기는 지금처럼 진입 보류(`CombatEntryDeferredDisplay`)가 하고, 필드 표시는 정리·해제 묶음 `GimmickClears`·`GimmickReleases`(74-75)만 만듭니다. 차례(흔적 → 토네이도 → 낙석 → 하붑)는 그대로입니다.
+  - `CombatSceneDisplayFactory.cs` 191-193: 옛 표시 생성 줄의 `tornado, rockfall, haboob` 낱말은 `new CombatFieldDisplay(…, tornado: tornado, rockfall: rockfall, haboob: haboob, …)` 이름 있는 인자로 옮겼습니다. 표시 생성자는 인자 38개 → 19개(이름 있는 인자)입니다.
+  - 기믹 공통 계약(평가 C2-01 2단계)은 다음 묶음 ③에서 이 자리를 바꿉니다(설계 DS5).
+- 선택 표시(`88377dec`의 `RefreshInspectionSelection` 주석, `ClearSelection`의 `SetSelectedEntity(EntityId.Empty)` 되살림)
+  - 새 `Selection/CombatSelectionDisplay.cs`의 `RefreshInspectionSelection`(85)·`Clear`(95)로 옮겼습니다. 식과 차례는 같습니다. 정보창 Presenter의 선택 바뀜 알림은 이제 `selectionDisplay.RefreshInspectionSelection`에 묶습니다(`CombatSceneDisplayFactory.cs` 218).
+- 그대로인 줄: `root.UnitInfo.Configure(…, tables.UnitStatuses)`(`8339e308`), `AttackTargetingInteraction`의 `_modeGeneration`(`32654528`)·`_rejectionRequestNumber`(`f40962f1`).

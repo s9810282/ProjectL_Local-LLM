@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>
     /// 특성 상시 이펙트 "보유 동안"의 출처입니다(이펙트 끝 규칙 설계 EL3, 계획 TP-E14). 보인 사실의 유닛이 필드 위에 살아 있고, 그 특성을 지금 쓸 수 있으면
     /// (<c>Stats.TraitStatuses</c>에 있고 <see cref="TraitStatusSnapshot.IsAvailable"/>, 결정 Q-EL5 A) 특성 외형 상시 목록의 보유 동안 항목을 보유 유닛 몸에 냅니다.
-    /// 숨김(끌기·사망 유지)은 받침이 그리기만 끕니다.
+    /// 끌기 숨김은 받침이 그리기만 끕니다. 죽은 유닛(사망 유지 중 포함)은 원하는 목록에서 빠져 다음 맞춤에서 거둬집니다.
     /// </summary>
     internal sealed class CombatOwnedTraitEffectSource : ICombatPersistentEffectSource
     {

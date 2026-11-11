@@ -28,4 +28,22 @@ MonoBehaviour:
     markerScale: 1.073429
     markerMoveDuration: 0.6
     markerJumpHeight: 0.8
+    markerVisit:
+      frontClearance: 1
+      settleJumpHeight: 0.2
+      settleJumpSeconds: 0.25
     pickDistance: 1000
+    nodeDrop:
+      enabled: 1
+      height: 20
+      seconds: 0.5
+    mapIntro:
+      enabled: 1
+      startHoldSeconds: 0.6
+      revealSeconds: 4
+      bossHoldSeconds: 0.5
+      returnSeconds: 1.2
+    cameraFocus:
+      enabled: 1
+      playerViewportY: 0.35
+    hoverStyle: {fileID: 11400000, guid: f351db503ea84ba588ce2c62b89dea7c, type: 2}

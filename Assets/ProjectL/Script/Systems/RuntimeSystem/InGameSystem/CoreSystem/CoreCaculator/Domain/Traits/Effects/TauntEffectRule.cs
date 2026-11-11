@@ -11,8 +11,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class TauntEffectRule : IEffectIncomingDamageRule
+    internal sealed class TauntEffectRule : IEffectIncomingDamageRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.None;
+
         private readonly TauntTraitDefinition _definition;
         private readonly TauntTraitRule _rule;
 

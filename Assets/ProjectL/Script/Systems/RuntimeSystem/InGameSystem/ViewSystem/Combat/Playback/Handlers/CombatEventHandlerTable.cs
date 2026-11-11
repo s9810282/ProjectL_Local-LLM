@@ -20,13 +20,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         /// <summary>
         /// 전투 결과 재생의 표를 만듭니다. 사건 틀 형식마다 형식 표의 처리기 칸(<see cref="CombatEventTypeTable.HandlerSlotOf"/>)으로 처리기를 고릅니다.
-        /// 연출이 있는 칸 열(끌어오기·특성 발동·토네이도·낙석·하붑 포함)은 그 처리기, 사실 칸은 사실 처리기입니다. 그래서 사건 틀 형식마다 처리기가 있습니다.
+        /// 연출이 있는 칸 열(끌어오기·특성 발동·토네이도·낙석·하붑·구조물 포함)은 그 처리기, 사실 칸은 사실 처리기입니다. 그래서 사건 틀 형식마다 처리기가 있습니다.
         /// 사실만 반영하는 새 형식은 형식 표에 한 줄을 더하고, 연출이 있는 새 형식은 처리기 칸과 처리기 하나를 만들어
         /// 이 메서드의 인자와 사건 Presenter의 조립에 더합니다.
         /// </summary>
         internal static CombatEventHandlerTable Create(CombatEventHandler attack, CombatEventHandler roar, CombatEventHandler summon,
             CombatEventHandler character, CombatEventHandler turn, CombatEventHandler facts, CombatEventHandler pull,
-            CombatEventHandler trait, CombatEventHandler tornado, CombatEventHandler rockfall, CombatEventHandler haboob, CombatEventHandler structure)
+            CombatEventHandler trait, CombatEventHandler tornado, CombatEventHandler rockfall, CombatEventHandler haboob,
+            CombatEventHandler structure, CombatEventHandler reinforcement)
         {
             var table = new CombatEventHandlerTable();
             IReadOnlyList<Type> eventTypes = CombatEventTypeTable.EventTypes;
@@ -44,6 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     CombatEventHandlerSlot.Tornado => tornado,
                     CombatEventHandlerSlot.Rockfall => rockfall,
                     CombatEventHandlerSlot.Haboob => haboob,
+                    CombatEventHandlerSlot.Reinforcement => reinforcement,
                     CombatEventHandlerSlot.Facts => facts,
                     CombatEventHandlerSlot.Structure => structure,
                     // 처리기 칸을 더하고 여기 갈래를 빠뜨리면 사실 처리기로 조용히 가지 않게 만들 때 알립니다.

@@ -91,7 +91,7 @@ PrefabInstance:
     - target: {fileID: 1877031345795483811, guid: 91e06d1a88ca1894d8697512081bc239, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: c509031a5dcd40948bc93473b4342515, type: 2}
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     - target: {fileID: 9218761688503894410, guid: 91e06d1a88ca1894d8697512081bc239, type: 3}
       propertyPath: m_Name
       value: TrainLoad

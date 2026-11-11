@@ -147,7 +147,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             Release();
         }
 
-        /// <summary>칸 하나의 셀입니다(테스트에서 칠한 색을 확인할 때 씁니다).</summary>
+        /// <summary>칸 하나의 셀입니다(진단용 읽기, 지금 부르는 곳은 없음).</summary>
         internal FieldCellHandle CellAt(int index)
         {
             return _cells[index];

@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 
@@ -16,12 +17,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private readonly IStageEntryAttemptRead _attempts;
         private readonly Action<int> _restoreNoncombat;
         private readonly Action<string> _report;
+        private readonly Action<ChapterProgressionResult> _rejected;
         private readonly IStageMapEntryPresentation _movement;
         private readonly Func<bool> _canWork;
         internal StageMapEntryObserver(IStageViewBufferReadSink input, IStageViewBufferWriteSink writer,
             IStageCommandResultReadSink results, ICurrentProgressBufferReadSink current,
             IStageEntryAttemptRead attempts, Action<int> restoreNoncombat, Action<string> report,
-            IStageMapEntryPresentation movement, Func<bool> canWork)
+            Action<ChapterProgressionResult> rejected, IStageMapEntryPresentation movement, Func<bool> canWork)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
@@ -30,6 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             _attempts = attempts ?? throw new ArgumentNullException(nameof(attempts));
             _restoreNoncombat = restoreNoncombat ?? throw new ArgumentNullException(nameof(restoreNoncombat));
             _report = report ?? throw new ArgumentNullException(nameof(report));
+            _rejected = rejected ?? throw new ArgumentNullException(nameof(rejected));
             _movement = movement ?? throw new ArgumentNullException(nameof(movement));
             _canWork = canWork ?? throw new ArgumentNullException(nameof(canWork));
         }
@@ -89,7 +92,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             if (receipt.ChapterKey != _current.CurrentMapKey) return;
             if (!_canWork()) return;
             if (!receipt.Result.Accepted)
+            {
                 _report($"스테이지 진입 거절: {receipt.Result.FailureReason}, {receipt.Result.NavigationFailureReason}");
+                // 정상 거절도 플레이어에게 한 번 알립니다(평가 C-16). 진단 로그는 그대로 둡니다.
+                if (_canWork()) _rejected(receipt.Result);
+            }
             else if (receipt.Kind == StageEntryCommandKind.Node)
                 _restoreNoncombat(receipt.ChapterKey);
         }

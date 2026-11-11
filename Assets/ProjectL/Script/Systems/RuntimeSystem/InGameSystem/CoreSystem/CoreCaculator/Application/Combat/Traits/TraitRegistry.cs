@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
@@ -141,6 +142,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal static TraitRegistry CreateDefault()
         {
+            using var sample = CoreProfiling.Sample(CoreProfileSection.TraitRegistryBuild);
             var focusRule = new FocusTraitRule();
             TraitRegistration focusRegistration = new TraitRegistration(
                 TraitKey.Focus,
@@ -289,6 +291,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new TraitRegistration(TraitKey.AnkleBreaker, typeof(AnkleBreakerTraitSpec), typeof(AnkleBreakerTraitDefinition),
                     typeof(AnkleBreakerRuntimeState), new AnkleBreakerTraitDefinitionFactory(), new AnkleBreakerRuntimeStateFactory(),
                     new AnkleBreakerTraitRule(), definition => new AnkleBreakerEffectRule((AnkleBreakerTraitDefinition)definition, new AnkleBreakerTraitRule())),
+                new TraitRegistration(TraitKey.Rampage, typeof(RampageTraitSpec), typeof(RampageTraitDefinition),
+                    typeof(RampageRuntimeState), new RampageTraitDefinitionFactory(), new RampageRuntimeStateFactory(),
+                    new RampageTraitRule(), definition => new RampageEffectRule((RampageTraitDefinition)definition, new RampageTraitRule())),
+                new TraitRegistration(TraitKey.Bleeding, typeof(BleedingTraitSpec), typeof(BleedingTraitDefinition),
+                    typeof(BleedingRuntimeState), new BleedingTraitDefinitionFactory(), new BleedingRuntimeStateFactory(),
+                    new BleedingTraitRule(), definition => new BleedingEffectRule((BleedingTraitDefinition)definition, new BleedingTraitRule())),
+                new TraitRegistration(TraitKey.Fear, typeof(FearTraitSpec), typeof(FearTraitDefinition),
+                    typeof(FearRuntimeState), new FearTraitDefinitionFactory(), new FearRuntimeStateFactory(),
+                    new FearTraitRule(), definition => new FearEffectRule((FearTraitDefinition)definition, new FearTraitRule())),
+                new TraitRegistration(TraitKey.SelfDestruct, typeof(SelfDestructTraitSpec), typeof(SelfDestructTraitDefinition),
+                    typeof(SelfDestructRuntimeState), new SelfDestructTraitDefinitionFactory(), new SelfDestructRuntimeStateFactory(),
+                    new SelfDestructTraitRule(),
+                    definition => new SelfDestructEffectRule((SelfDestructTraitDefinition)definition, new SelfDestructTraitRule())),
+                new TraitRegistration(TraitKey.Reconstruction, typeof(ReconstructionTraitSpec), typeof(ReconstructionTraitDefinition),
+                    typeof(ReconstructionRuntimeState), new ReconstructionTraitDefinitionFactory(), new ReconstructionRuntimeStateFactory(),
+                    new ReconstructionTraitRule(),
+                    definition => new ReconstructionEffectRule((ReconstructionTraitDefinition)definition, new ReconstructionTraitRule())),
+                new TraitRegistration(TraitKey.LavaCannon, typeof(LavaCannonTraitSpec), typeof(LavaCannonTraitDefinition),
+                    typeof(LavaCannonRuntimeState), new LavaCannonTraitDefinitionFactory(), new LavaCannonRuntimeStateFactory(),
+                    new LavaCannonTraitRule(), definition => new LavaCannonEffectRule((LavaCannonTraitDefinition)definition, new LavaCannonTraitRule())),
                 new TraitRegistration(TraitKey.SoloAction, typeof(SoloActionTraitSpec), typeof(SoloActionTraitDefinition),
                     typeof(SoloActionRuntimeState), new SoloActionTraitDefinitionFactory(), new SoloActionRuntimeStateFactory(),
                     new SoloActionTraitRule(), definition => new SoloActionEffectRule((SoloActionTraitDefinition)definition, new SoloActionTraitRule())),
@@ -356,6 +378,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new TraitRegistration(TraitKey.ImpactBolt, typeof(ImpactBoltTraitSpec), typeof(ImpactBoltTraitDefinition),
                     typeof(ImpactBoltRuntimeState), new ImpactBoltTraitDefinitionFactory(), new ImpactBoltRuntimeStateFactory(),
                     new ImpactBoltTraitRule(), definition => new ImpactBoltEffectRule((ImpactBoltTraitDefinition)definition, new ImpactBoltTraitRule())),
+                new TraitRegistration(TraitKey.CrashImpact, typeof(CrashImpactTraitSpec), typeof(CrashImpactTraitDefinition),
+                    typeof(CrashImpactRuntimeState), new CrashImpactTraitDefinitionFactory(), new CrashImpactRuntimeStateFactory(),
+                    new CrashImpactTraitRule(), definition => new CrashImpactEffectRule((CrashImpactTraitDefinition)definition, new CrashImpactTraitRule())),
                 new TraitRegistration(TraitKey.Pull, typeof(PullTraitSpec), typeof(PullTraitDefinition),
                     typeof(PullRuntimeState), new PullTraitDefinitionFactory(), new PullRuntimeStateFactory(),
                     new PullTraitRule(), definition => new PullEffectRule((PullTraitDefinition)definition, new PullTraitRule())),

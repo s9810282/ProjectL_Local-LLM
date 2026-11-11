@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces
@@ -22,6 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly CombatPieceSignal[] _signals;
         // 시작(Start)을 실행 시작 대신 이 시점에 잇습니다(공격 조립 앞 항목, 유닛 행동 계획 TP-14). 없으면 실행 시작입니다.
         private CombatPieceStart? _start;
+        private IReadOnlyList<CombatProjectileCueTiming> _projectileTimings;
 
         // 기준 시점 열거에 대응이 없는 값이 생기면 표를 처음 쓸 때 실패시킵니다(공격 종류 표 CombatAttackStyles와 같은 방식).
         static CombatCueAnchors()
@@ -45,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal CombatCueAnchors Set(CombatCueAnchor anchor, int item, CombatPieceSignal signal)
         {
             if (KindOf(anchor) != AnchorKind.Signal)
-                throw new ArgumentOutOfRangeException(nameof(anchor), anchor, "뼈대 신호에 잇는 기준 시점은 Cue·Cue2·Cue3·Hit·End입니다.");
+                throw new ArgumentOutOfRangeException(nameof(anchor), anchor, "뼈대 신호에 잇는 기준 시점은 Cue·선택 이벤트 시점·Hit·End입니다.");
             if (item < 0) throw new ArgumentOutOfRangeException(nameof(item));
             _items[(int)anchor] = item;
             _signals[(int)anchor] = signal;
@@ -59,6 +61,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal CombatCueAnchors StartAt(CombatPieceStart start)
         {
             _start = start.Kind == CombatPieceStartKind.AtStart && start.Delay <= 0f ? null : start;
+            return this;
+        }
+
+        /// <summary>
+        /// 원거리 클립의 탄별 발사·접촉 시점입니다(작은 묶음 설계 SB1, 계획 TP-2). 넣지 않았으면 null이고, 투사체 소리는 코드 모션처럼 Cue·Hit에 붙습니다.
+        /// 창구가 아니라 이 조립 하나의 시점 사실이라 창구 묶음(<see cref="CombatCueSinks"/>)이 아니라 여기 둡니다.
+        /// </summary>
+        internal IReadOnlyList<CombatProjectileCueTiming> ProjectileTimings => _projectileTimings;
+
+        /// <summary>원거리 클립 조립이 만든 탄별 시점을 넣습니다(<see cref="CombatClipRangedAttack.Add"/>).</summary>
+        internal CombatCueAnchors SetProjectileTimings(IReadOnlyList<CombatProjectileCueTiming> timings)
+        {
+            _projectileTimings = timings ?? throw new ArgumentNullException(nameof(timings));
             return this;
         }
 
@@ -94,8 +109,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private static AnchorKind KindOf(CombatCueAnchor anchor) => anchor switch
         {
             CombatCueAnchor.Start => AnchorKind.RunStart,
-            CombatCueAnchor.Cue or CombatCueAnchor.Cue2 or CombatCueAnchor.Cue3 or CombatCueAnchor.Hit or CombatCueAnchor.End => AnchorKind.Signal,
+            CombatCueAnchor.Cue or CombatCueAnchor.Hit or CombatCueAnchor.End => AnchorKind.Signal,
             CombatCueAnchor.Contact => AnchorKind.Contact,
+            // 클립 선택 이벤트 시점(Cue2 이상)은 번호 표가 정합니다(작은 묶음 설계 SB2).
+            _ when CombatClipEventIds.IsEventAnchor(anchor) => AnchorKind.Signal,
             _ => AnchorKind.Unknown,
         };
 

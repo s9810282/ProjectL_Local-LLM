@@ -18,6 +18,13 @@ Shader "ProjectL/BaseShader/Cartoon"
         _Cutoff ("알파 기준", Range(0,1)) = 0.5
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("렌더링 면", Float) = 2
 
+        [Header(Dissolve)]
+        [NoScaleOffset] _DissolveTex ("디졸브 텍스처 (R)", 2D) = "white" {}
+        _DissolveAmount ("디졸브 양", Range(0,1)) = 0
+        [HDR] _DissolveEdgeColor ("디졸브 경계 색", Color) = (1,0.3,0.03,1)
+        _DissolveEdgeWidth ("디졸브 경계 폭", Range(0,0.5)) = 0.05
+        _DissolveEdgeIntensity ("디졸브 경계 발광", Range(0,10)) = 2
+
         [Header(Lighting)]
         _ShadeColor ("그늘 색 배율", Color) = (0.25,0.28,0.38,1)
         _AmbientStrength ("환경광 강도", Range(0,2)) = 1
@@ -59,9 +66,10 @@ Shader "ProjectL/BaseShader/Cartoon"
     }
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" "Queue" = "Geometry" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" "Queue" = "Geometry" "ProjectLMovementTransparency" = "True" }
         HLSLINCLUDE
         #define PROJECTL_STYLIZED_SURFACE_ALPHA 1
+        #define PROJECTL_STYLIZED_DISSOLVE 1
         #include "Assets/ProjectL/Script/Render/Shader/Core/Includes/Stylized/ProjectLStylizedInput.hlsl"
         #include "Assets/ProjectL/Script/Render/Shader/Core/Includes/Stylized/ProjectLStylizedCartoon.hlsl"
         #include "Assets/ProjectL/Script/Render/Shader/Core/Includes/Stylized/ProjectLStylizedPasses.hlsl"
@@ -70,8 +78,8 @@ Shader "ProjectL/BaseShader/Cartoon"
         Pass
         {
             Name "Outline"
-            Tags { "LightMode" = "SRPDefaultUnlit" }
-            Cull Front ZWrite On ZTest LEqual
+            Tags { "LightMode" = "ProjectLCartoonOutline" }
+            Cull Front ZWrite Off ZTest LEqual
             HLSLPROGRAM
             #pragma target 3.5
             #pragma multi_compile_instancing

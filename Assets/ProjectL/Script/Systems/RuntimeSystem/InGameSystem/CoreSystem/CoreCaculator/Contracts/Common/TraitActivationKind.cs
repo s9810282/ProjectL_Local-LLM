@@ -26,6 +26,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         DefenseChanged = 340,
         InstantDefeat = 350,
         RoarTriggered = 360,
+        ReconstructionStarted = 370, // 치명 피해를 재구성으로 버팀. 출처·대상은 재구성한 유닛, Magnitude는 잃은 체력
+        ReconstructionEnded = 380, // 재구성 중 상태가 풀려 부활함. 출처·대상은 부활한 유닛
+        SelfDestructExploded = 390, // 자폭 폭발. 출처는 죽은 유닛, 대상은 실제로 바뀐 개체, 칸은 폭발 칸, 선택 칸은 사망 칸, Magnitude는 폭발 피해
+        CorpseDisplaced = 400, // 넉백으로 밀린 사망 특성 보유자의 시체 경로. 출처는 죽은 유닛, 칸은 시작 → 끝, Magnitude는 칸 수. 위치 사건은 없음
+        CrashImpactCollided = 410, // 작렬로 날아가다 막혀 부딪힘. 출처는 작렬 보유자, 대상은 날아간 유닛(+ 부딪힌 유닛), 칸은 막은 칸, 선택 칸은 날아간 유닛의 멈춘 칸, Magnitude는 방어 전 기준 피해. 부딪힘 피해 사건보다 앞에 온다
         HunterTargetSelected = 130, // 행동 종료 또는 참여 때 잠긴 대상의 변경입니다.
         ArmorBroken = 120, // 타격 뒤 실제 수신자에게 방어 잔존 비율을 추가했습니다.
         HealthRecovered = 100, // 처치로 실제 회복한 체력을 기록합니다.

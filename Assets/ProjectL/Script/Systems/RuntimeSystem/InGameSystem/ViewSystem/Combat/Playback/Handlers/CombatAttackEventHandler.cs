@@ -16,16 +16,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     internal sealed class CombatAttackEventHandler : CombatEventHandler
     {
         private readonly CombatAttackStart _start;
+        private readonly CombatPreAttackPlayback _preAttack;
 
-        internal CombatAttackEventHandler(CombatAttackStart start)
+        internal CombatAttackEventHandler(CombatAttackStart start, CombatPreAttackPlayback preAttack = null)
         {
             _start = start ?? throw new ArgumentNullException(nameof(start));
+            _preAttack = preAttack;
         }
 
         // 공격 사건만 조립을 만든다(공격 소리는 조립의 소리 큐가 낸다, 범용 연출 구조 설계 G2).
         internal override bool TryBeginBeforeFacts(CombatEvent e, Action completed, int version)
         {
             var attack = (CombatAttackEvent)e;
+            if (_preAttack?.TryJoin(attack, completed, version) == true)
+                return true;
             if (CombatAttackTarget.IsMovementOnly(attack.Attack))
             {
                 completed?.Invoke();

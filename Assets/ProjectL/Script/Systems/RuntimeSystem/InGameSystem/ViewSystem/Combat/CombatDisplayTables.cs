@@ -22,7 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </remarks>
     internal sealed class CombatDisplayTables
     {
-        /// <summary>모든 표를 받습니다. 테스트가 필드 설정 같은 일부 값만 바꿔 쓸 때도 이 생성자를 씁니다.</summary>
+        /// <summary>모든 표를 받습니다. 부르는 곳은 View DB에서 고르는 <see cref="From"/> 하나입니다.</summary>
         internal CombatDisplayTables(
             StageFieldViewData field,
             RailwayVisualData railway,

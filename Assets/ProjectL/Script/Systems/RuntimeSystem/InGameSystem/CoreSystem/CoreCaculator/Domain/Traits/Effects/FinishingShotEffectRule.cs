@@ -11,8 +11,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class FinishingShotEffectRule : ICombatEffectRule
+    internal sealed class FinishingShotEffectRule : IEffectOrderedHitRule
     {
+        public bool RequiresOrderedHits => true;
+
         private readonly FinishingShotTraitDefinition _definition;
         private readonly FinishingShotTraitRule _rule;
         internal FinishingShotEffectRule(FinishingShotTraitDefinition definition, FinishingShotTraitRule rule)

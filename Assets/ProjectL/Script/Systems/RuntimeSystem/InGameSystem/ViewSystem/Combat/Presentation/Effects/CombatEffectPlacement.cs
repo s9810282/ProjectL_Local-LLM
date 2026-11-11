@@ -5,9 +5,9 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Effects
 {
     /// <summary>
-    /// 이펙트 창구(<see cref="CombatEffectWindow"/>)가 이펙트 하나를 어떻게 놓고 언제 거두나입니다(이펙트 끝 규칙 설계 EL5). 값은 셋입니다:
-    /// 따라갈 유닛(비면 낸 자리에 머묾), 시간 끝(0보다 크면 낸 뒤 그 초에 거둠), 부르는 쪽이 거둠(손잡이로).
-    /// 셋 다 아니면 자연 끝입니다(프리팹이 스스로 멈출 때).
+    /// 이펙트 창구(<see cref="CombatEffectWindow"/>)가 이펙트 하나를 어떻게 놓고 언제 거두나입니다(이펙트 끝 규칙 설계 EL5). 값은 넷입니다:
+    /// 따라갈 유닛(비면 낸 자리에 머묾), 시간 끝(0보다 크면 낸 뒤 그 초에 거둠), 부르는 쪽이 거둠(손잡이로), 그 거둠이 큐의 행동 끝에서 왔는지(<see cref="ActionBound"/>).
+    /// 시간 끝도 부르는 쪽 거둠도 아니면 자연 끝입니다(프리팹이 스스로 멈출 때, 따라가기와는 무관).
     /// </summary>
     /// <remarks>
     /// 큐 값 → 놓기 값 변환은 <see cref="ForCue"/> 한 곳입니다(계획 TP-E26). 큐의 끝 열거(<see cref="CombatEffectEnd"/>)와 이 값의 끝은 층이 다릅니다:

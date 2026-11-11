@@ -100,7 +100,8 @@ namespace ProjectL.Systems.DataBaseSystem.Editor
                 "cues",
                 "attackPresentation",
                 "unitActions",
-                "positionSwap"
+                "positionSwap",
+                "deathBlink"
             }
 
             )

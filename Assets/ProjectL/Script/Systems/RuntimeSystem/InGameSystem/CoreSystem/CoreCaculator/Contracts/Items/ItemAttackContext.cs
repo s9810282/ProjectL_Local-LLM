@@ -12,7 +12,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CellCoord AttackerAnchorAtDelivery { get; }
         public IReadOnlyList<ItemAttackCandidate> DirectHits { get; }
         public IReadOnlyList<CharacterCombatFacts> FinalCharacters { get; }
-        public int PreparationIndex { get; }
         public uint RandomState { get; }
 
         public ItemAttackContext(
@@ -20,13 +19,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CellCoord attackerAnchorAtDelivery,
             IReadOnlyList<ItemAttackCandidate> directHits,
             IReadOnlyList<CharacterCombatFacts> finalCharacters,
-            int preparationIndex,
             uint randomState)
         {
             if (holder == null) throw new ArgumentNullException(nameof(holder));
             if (directHits == null) throw new ArgumentNullException(nameof(directHits));
             if (finalCharacters == null) throw new ArgumentNullException(nameof(finalCharacters));
-            if (preparationIndex < 0) throw new ArgumentOutOfRangeException(nameof(preparationIndex));
             var hits = new ItemAttackCandidate[directHits.Count];
             for (int i = 0; i < hits.Length; i++)
                 hits[i] = directHits[i] ?? throw new ArgumentException("피격 목록에 null을 넣을 수 없습니다.", nameof(directHits));
@@ -42,7 +39,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             AttackerAnchorAtDelivery = attackerAnchorAtDelivery;
             DirectHits = Array.AsReadOnly(hits);
             FinalCharacters = Array.AsReadOnly(characters);
-            PreparationIndex = preparationIndex;
             RandomState = randomState;
         }
     }

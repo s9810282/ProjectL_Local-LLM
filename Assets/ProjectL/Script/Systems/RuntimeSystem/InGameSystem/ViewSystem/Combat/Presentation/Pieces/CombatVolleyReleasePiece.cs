@@ -4,6 +4,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces
 {
     /// <summary>모든 탄의 최초 접촉 뒤 출처를 한 번 해제하는 외부 진행 조각입니다. 시계와 투사체 자원은 소유하지 않습니다.</summary>
+    /// <remarks>
+    /// 접촉마다 접촉 표시 입구(<c>contactFeedback</c>)를 접촉 순번으로 부릅니다. 그 입구가 탄별 숫자와 앞 탄의 피격(곁들임)을 냅니다
+    /// (<c>CombatAttackStart</c>가 묶음). 마지막 순번 뒤에 출처를 풀어 Core 피해 사건(피격·사망·체력)이 이어집니다.
+    /// </remarks>
     internal sealed class CombatVolleyReleasePiece : ICombatPresentationPiece
     {
         private enum State
@@ -15,16 +19,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         private readonly Action _release;
+        private readonly Func<bool> _canRelease;
+        private readonly Action<int> _contactFeedback;
         private readonly bool[] _contacted;
         private int _remaining;
+        private int _presentedContacts;
         private State _state;
         private Action _releaseHit;
         private Action _end;
 
-        internal CombatVolleyReleasePiece(int count, Action release)
+        internal CombatVolleyReleasePiece(int count, Action release, Func<bool> canRelease = null, Action<int> contactFeedback = null)
         {
             if (count <= 0) throw new ArgumentOutOfRangeException(nameof(count), count, "집계할 발사는 하나 이상이어야 합니다.");
             _release = release ?? throw new ArgumentNullException(nameof(release));
+            _canRelease = canRelease;
+            _contactFeedback = contactFeedback;
             _contacted = new bool[count];
             _remaining = count;
         }
@@ -57,6 +66,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_contacted[index]) return;
             _contacted[index] = true;
             _remaining--;
+            TryRelease();
+        }
+
+        private void TryRelease()
+        {
+            if (_state != State.Running || _canRelease?.Invoke() == false) return;
+
+            // 조기 공격의 합류 전 접촉도 보관했다가 표시합니다. 접촉 표시(숫자·앞 탄 피격)는 기존 후속 해제보다 먼저 냅니다.
+            while (_presentedContacts < _contacted.Length - _remaining)
+            {
+                int index = _presentedContacts++;
+                _contactFeedback?.Invoke(index);
+                if (_state != State.Running || _canRelease?.Invoke() == false) return;
+            }
             if (_remaining != 0) return;
 
             // 해제가 재진입/취소를 일으켜도 이미 센 접촉을 다시 처리하지 않습니다.
@@ -69,6 +92,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         public void Tick(float deltaTime)
         {
+            TryRelease();
         }
 
         public void Cancel()

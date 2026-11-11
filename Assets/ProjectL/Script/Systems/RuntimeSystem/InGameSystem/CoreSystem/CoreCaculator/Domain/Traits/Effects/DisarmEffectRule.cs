@@ -9,8 +9,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class DisarmEffectRule : ICombatEffectRule
+    internal sealed class DisarmEffectRule : IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         private readonly DisarmTraitDefinition _definition;
         private readonly DisarmTraitRule _rule;
 

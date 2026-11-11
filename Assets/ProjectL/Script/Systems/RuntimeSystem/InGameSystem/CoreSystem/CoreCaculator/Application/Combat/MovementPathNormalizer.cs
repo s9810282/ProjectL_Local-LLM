@@ -22,6 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (actor.Anchor != draft.Origin) return MovementFailureReason.PathOriginMismatch;
             if (!input.State.IsInside(draft.Origin)) return MovementFailureReason.OutOfBounds;
             if (draft.StepCount == 0) return MovementFailureReason.SameAnchor;
+            MovementEnvironmentFacts visible = null;
             long weightedCost = 0;
             for (int i = 1; i < draft.Cells.Count; i++)
             {
@@ -29,10 +30,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 long y = Math.Abs((long)draft.Cells[i].Y - draft.Cells[i - 1].Y);
                 if (x + y != 1 && (x != 1 || y != 1)) return MovementFailureReason.InvalidPath;
                 weightedCost += x + y;
-                var allowance = MovementRouteValidator.StepBudget(actor, weightedCost, input.State.Environment.VisibleTo(observer));
+                visible ??= input.State.Environment.VisibleTo(observer);
+                var allowance = MovementRouteValidator.StepBudget(actor, weightedCost, visible);
                 if (allowance != MovementFailureReason.None) return allowance;
             }
-            var visible = input.State.Environment.VisibleTo(observer);
             var cells = new List<CellCoord> { draft.Origin };
             var visited = new HashSet<CellCoord> { draft.Origin };
             MovementFailureReason failure = MovementFailureReason.InvalidPath;

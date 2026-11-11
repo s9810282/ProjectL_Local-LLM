@@ -41,6 +41,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 throw new InvalidOperationException(
                     "[StageSelectPanelUI] deckEditUI는 같은 씬의 공통 Canvas 아래 실제 자식이며 그룹 멤버가 아닌 독립 등록 자식이어야 합니다.");
             }
+            // 덱 편집 화면 안쪽 구성도 씬 연결 때 검사합니다. 상점·회복 화면의 Validate와 같은 꼴입니다(평가 C-26).
+            deckEditUI.Validate();
             int legendCount = 0;
             foreach (UIBase member in Instances)
             {

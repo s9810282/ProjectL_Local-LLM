@@ -62,24 +62,6 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         [Test]
-        public void Acceleration_SurvivesOrdinaryTurns_ButActualNightRecallClearsIt()
-        {
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new MovementAttackSource(enemy: false));
-            battle.Submit(battle.PreviewMove(battle.Actor, new CellCoord(0, 1), new CellCoord(1, 1)));
-            for (int turn = 0; turn < 8; turn++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                battle.AdvanceToPlayerOrDay();
-                int expectedHeld = battle.Actor.Area == CharacterRuntimeArea.Field ? 2 : 0;
-                Assert.That(Held(battle.Actor), Is.EqualTo(expectedHeld));
-                Assert.That(battle.Actor.Stats.TraitAttackBonus, Is.EqualTo(expectedHeld));
-                if (turn < 7) Assert.That(Moved(battle.Actor), Is.False);
-            }
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(battle.Actor.Area, Is.Not.EqualTo(CharacterRuntimeArea.Field));
-        }
-
-        [Test]
         public void HeldProjection_CannotBePublishedWithoutItsStatusContribution()
         {
             using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new MovementAttackSource());

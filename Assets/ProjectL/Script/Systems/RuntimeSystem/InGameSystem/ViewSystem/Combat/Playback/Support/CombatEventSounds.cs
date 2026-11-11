@@ -22,6 +22,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         /// <summary>배경음 프리셋을 바꿉니다.</summary>
         BackgroundPreset = 3,
+
+        /// <summary>UnitAttack 플레이어의 이벤트 슬롯을 냅니다.</summary>
+        UnitAttack = 4,
     }
 
     /// <summary>전투 배경음의 국면입니다(구조 원칙 평가 R2 (a)). 열거 값은 프리셋 번호가 아닙니다. 번호는 <see cref="CombatSoundPresets.Bgm"/>로만 얻습니다.</summary>
@@ -40,13 +43,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <summary>"무엇을 내나"의 답 하나입니다. 언제 내는지는 시계를 가진 쪽이 정합니다(조각·조립 설계 BP8).</summary>
     internal readonly struct CombatSoundCue
     {
-        private CombatSoundCue(CombatSoundCueKind kind, SfxEvent slot, int preset, bool playStageChanger = false, UnitEvent? unitSlot = null)
+        private CombatSoundCue(CombatSoundCueKind kind, SfxEvent slot, int preset, bool playStageChanger = false, UnitEvent? unitSlot = null, int attackSlotIndex = -1)
         {
             Kind = kind;
             Slot = slot;
             UnitSlot = unitSlot;
             Preset = preset;
             PlayStageChanger = playStageChanger;
+            AttackSlotIndex = attackSlotIndex;
         }
 
         internal CombatSoundCueKind Kind { get; }
@@ -59,6 +63,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         /// <summary>프리셋 번호입니다. 프리셋 없는 효과음이면 -1입니다.</summary>
         internal int Preset { get; }
+
+        /// <summary>공격 소리 단서에서 사용하는 UnitAttack 이벤트 슬롯 번호입니다.</summary>
+        internal int AttackSlotIndex { get; }
 
         /// <summary>배경음 프리셋 변경과 함께 전투 진입음을 냅니다.</summary>
         internal bool PlayStageChanger { get; }
@@ -81,11 +88,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         internal static CombatSoundCue Background(int preset, bool playStageChanger = false) =>
             new(CombatSoundCueKind.BackgroundPreset, default, preset, playStageChanger);
 
+        internal static CombatSoundCue Attack(int slotIndex) =>
+            slotIndex >= 0 ? new CombatSoundCue(CombatSoundCueKind.UnitAttack, default, -1, attackSlotIndex: slotIndex) : None;
+
         public override string ToString() => Kind switch
         {
             CombatSoundCueKind.Effect => $"{UnitSlot?.ToString() ?? Slot.ToString()}({Preset})",
             CombatSoundCueKind.EffectWithoutPreset => UnitSlot?.ToString() ?? Slot.ToString(),
             CombatSoundCueKind.BackgroundPreset => $"BGM({Preset})",
+            CombatSoundCueKind.UnitAttack => $"UnitAttack({AttackSlotIndex})",
             _ => "None",
         };
     }
@@ -115,28 +126,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 case CombatAttackEvent attack when attack.Attack.Succeeded:
                     CharacterCombatFacts attacker = findCharacter(attack.Attack.AttackerId);
                     return attacker == null ? CombatSoundCue.None
-                        : CombatSoundCue.Effect(UnitEvent.UnitAttack, presets.Attack(attacker.CharacterKey));
-                // 포효 소리는 포효한 유닛의 공격 프리셋이다(View 3라운드 W9-2, 지금 데이터에서는 보스만 포효해 옛 값과 같음).
+                        : CombatSoundCue.Attack(presets.AttackSlot(attacker.CharacterKey));
+                // 포효 소리는 포효한 유닛의 공격 이벤트 슬롯을 사용합니다.
                 case CombatRoarEvent roar:
                     CharacterCombatFacts roarer = findCharacter(roar.BossId);
                     return roarer == null ? CombatSoundCue.None
-                        : CombatSoundCue.Effect(UnitEvent.UnitAttack, presets.Attack(roarer.CharacterKey));
+                        : CombatSoundCue.Attack(presets.AttackSlot(roarer.CharacterKey));
                 // 신규 표식은 Core의 실제 적용 발동을 읽습니다. 상태 만료·소모 사건에는 소리를 내지 않습니다.
                 case CombatEffectsEvent effects when HasEnemyMarkApplication(effects, findCharacter):
                     return CombatSoundCue.EffectWithoutPreset(SfxEvent.Mark);
                 // 옛 기록의 표식 적용도 같은 슬롯으로 냅니다. Final이 없으면 소모입니다.
                 case CombatHuntersMarkEvent mark when mark.Final != null && findCharacter(mark.TargetId)?.Owner == Owner.Enemy:
                     return CombatSoundCue.EffectWithoutPreset(SfxEvent.Mark);
+                case CombatFallEvent fall:
+                    return findCharacter(fall.EntityId) != null
+                        ? CombatSoundCue.EffectWithoutPreset(UnitEvent.Fall)
+                        : CombatSoundCue.None;
                 case CombatMovementSourceEvent source when WeakGroundEntryPreset(source) is int entryPreset:
                     return CombatSoundCue.Effect(SfxEvent.WeakTerrian, entryPreset);
                 case CombatTurnEvent turn when turn.Kind == CombatEventKind.CombatEntered:
                     return CombatSoundCue.Background(presets.Bgm(CombatBgmPhase.Night), playStageChanger: true);
-                case CombatTurnEvent turn when turn.Kind == CombatEventKind.NightEnded:
-                    return CombatSoundCue.Background(presets.Bgm(CombatBgmPhase.Day));
                 // 기차인지는 사건 형식 표의 경로가 정한다(View 3라운드 W12-4).
                 case CombatGimmickEvent gimmick when CombatEventTypeTable.IsRailway(gimmick):
                     return CombatSoundCue.EffectWithoutPreset(SfxEvent.TrainCall);
-                // 사실 사건의 순간(장애물 반응·오브젝트·추락·약한 지반 붕괴·아이템)은 사건 형식 표의 순간 칸이 고릅니다(이펙트 창구 확장 계획 P16).
+                // 사실 사건의 순간(장애물 반응·오브젝트·약한 지반 붕괴·아이템)은 사건 형식 표의 순간 칸이 고릅니다(이펙트 창구 확장 계획 P16).
                 // 어느 사건·조건이 순간인지는 그 칸 한 곳이고, 여기서는 순간 종류마다 무엇을 낼지만 정합니다.
                 default:
                     return CombatEventTypeTable.TryGetMoment(e, out CombatEventMoment moment) ? Moment(moment, presets) : CombatSoundCue.None;
@@ -152,10 +165,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatMomentKind.ObjectCreated => Slotted(ObjectCreatedSlot, presets.Object(moment.ObjectKind)),
             CombatMomentKind.ObstacleHit => Obstacle(UnitEvent.ObsDamaged, moment.ObstacleKind, presets),
             CombatMomentKind.ObstacleDestroyed => Obstacle(UnitEvent.ObsBroken, moment.ObstacleKind, presets),
-            // 유닛과 구조물(장애물) 모두 같은 소리를 냅니다(소리 창구 2차 검토 L2 결정 A). 유닛의 이어지는 사망 소리는 추락 조립이 따로 냅니다.
-            CombatMomentKind.Fall => Slotted(FallSlot, presets.Fall()),
-            // 붕괴는 별도 사건에서 2번을 냅니다. 진입 소리는 위의 누적 진입 사건에서 고릅니다.
-            CombatMomentKind.WeakGroundCollapse => CombatSoundCue.Effect(SfxEvent.WeakTerrian, 2),
+            // 실제 붕괴는 남은 진입 횟수가 0인 순간입니다.
+            CombatMomentKind.WeakGroundCollapse => CombatSoundCue.Effect(SfxEvent.WeakTerrian, 0),
             // 효과가 겹쳐 수치 없이 소모만 된 "중복 효과"도 같은 소리를 냅니다(소리 창구 2차 검토 L1 결정 A).
             CombatMomentKind.ItemActivated => Slotted(ItemActivatedSlot, presets.Item(moment.ItemKey)),
             _ => throw new ArgumentOutOfRangeException(nameof(moment), moment.Kind, "모르는 사건 순간 종류입니다."),
@@ -175,14 +186,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             return false;
         }
 
-        // Core가 누적한 실제 진입 횟수만 표현에 사용합니다. 붕괴 예정 진입은 뒤의 붕괴 사건이 2번을 내므로 중복 재생하지 않습니다.
+        // 진입 뒤 Core가 제공한 남은 횟수로 소리를 고릅니다. 붕괴 예정 진입은 실제 붕괴 사건에서 한 번 재생합니다.
         private static int? WeakGroundEntryPreset(CombatMovementSourceEvent source)
         {
             if (source.Expected is not StaticTerrainFact { Kind: StaticTerrainKind.WeakGround } before ||
                 source.Final is not StaticTerrainFact { Kind: StaticTerrainKind.WeakGround } after ||
                 after.EntryCount <= before.EntryCount || after.PendingCollapse)
                 return null;
-            return (int)Math.Min(1L, after.EntryCount - 1);
+            return Math.Min(2, after.RemainingEntries);
         }
 
         // 장애물 피해·파괴는 그 장애물 외형의 번호를 넣습니다(소리 창구 2차 결정 Q-ES3). 번호가 없으면(-1) 소리를 끄지 않고 지금처럼
@@ -202,7 +213,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         // 아직 연결 대기인 효과음 칸입니다. 슬롯이 확정되면 해당 값으로 채웁니다.
         private static readonly SfxEvent? ObjectActivatedSlot = null; // AudioSystem 슬롯 대기 → SfxEvent.ObjectActivated(발동·습득 공용)
         private static readonly SfxEvent? ObjectCreatedSlot = null; // AudioSystem 슬롯 대기 → SfxEvent.ObjectCreated
-        private static readonly SfxEvent? FallSlot = null; // AudioSystem 슬롯 대기 → SfxEvent.Fall
         private static readonly SfxEvent? TornadoWarningSlot = null; // AudioSystem 슬롯 대기 → SfxEvent.TornadoWarning
         private static readonly SfxEvent? ItemActivatedSlot = null; // AudioSystem 슬롯 대기 → SfxEvent.ItemActivated
 
@@ -244,7 +254,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             if (unit == null) throw new ArgumentNullException(nameof(unit));
             if (presets == null) throw new ArgumentNullException(nameof(presets));
-            if (unit.Owner == Owner.Enemy) return CombatSoundCue.None;
             return Unit(UnitEvent.UnitMovement, unit, presets);
         }
 

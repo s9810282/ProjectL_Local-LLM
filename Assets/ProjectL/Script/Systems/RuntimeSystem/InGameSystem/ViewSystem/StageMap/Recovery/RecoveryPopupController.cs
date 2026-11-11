@@ -4,6 +4,7 @@ using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Current;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Recovery;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
@@ -19,7 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
     /// 현재 회복 표시의 문맥과 요청 결과를 연결합니다. 화면의 입력 의도를 받는 유일한 제출자이고,
     /// "이 표시가 낸 요청"은 영수증(번호·명령·표시 토큰) 하나만 갖습니다.
     /// </summary>
-    internal sealed class RecoveryPopupController : IPopupViewController, IStageOfferInput, IDisposable
+    internal sealed class RecoveryPopupController : IPopupViewController, IStageOfferInput, IStageMapViewPopup
     {
         private readonly ICurrentProgressBufferReadSink _current;
         private readonly IRecoveryStateReadSink _state;
@@ -27,12 +28,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
         private readonly IRecoveryRequestSubmitter _requests;
         private readonly IStageOfferDisplay _screen;
         private readonly IStageOfferTextTableQuery _texts;
+        private readonly IAudioSystemService _audio;
         private readonly Action _mapChanged;
         private readonly Action<string> _report;
         private readonly StagePopupViewLifetime _lifetime;
         private readonly RecoveryPopupModelBuilder _models;
         private RecoveryEntryContext _context;
+        // 밖에서 숨겨진 방문입니다. 같은 방문을 자동 복원으로 다시 열지 않습니다. 컨트롤러가 스스로 닫은 경우(완료·불일치)는 남기지 않습니다.
         private RecoveryEntryContext? _hiddenContext;
+        // 컨트롤러가 스스로 닫는 중입니다. Hide의 explicitClose는 프로그램 닫기도 참이라 이 값으로 구분합니다.
+        private bool _closingByController;
         private RecoveryCommandData _pending;
         private int _pendingNumber;
         private object _displayToken;
@@ -42,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             IRecoveryRequestStatus status, IRecoveryRequestSubmitter requests, IUISystemService ui,
             IStageOfferDisplay screen, PopupInputSession input, IPopupViewHost host, Action mapChanged,
             Action<string> report, RuntimeFaultBoundary faults, RecoveryPopupModelBuilder models,
-            IStageOfferTextTableQuery texts, StageMapScreenPresentation presentation = null)
+            IStageOfferTextTableQuery texts, IAudioSystemService audio, StageMapScreenPresentation presentation = null)
         {
             _current = current ?? throw new ArgumentNullException(nameof(current));
             _state = state ?? throw new ArgumentNullException(nameof(state));
@@ -53,12 +58,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             _report = report ?? throw new ArgumentNullException(nameof(report));
             _models = models ?? throw new ArgumentNullException(nameof(models));
             _texts = texts ?? throw new ArgumentNullException(nameof(texts));
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
             _lifetime = new StagePopupViewLifetime("RecoveryPopup", ui, new StageOfferPopupViewScreen(screen), input,
                 this, host, faults, presentation);
         }
 
         internal bool IsOpen => _lifetime.IsOpen;
-        internal bool IsWaiting => _pendingNumber > 0;
+        // 맵 쪽 대기 판정은 요청 소유자를 봅니다. 숨김 중 영수증을 지워도 소유자에 요청이 남아 있으면 대기입니다(평가 C-14, 상점과 같은 뜻).
+        internal bool IsWaiting => _status.HasPending;
+        bool IStageMapViewPopup.IsOpen => IsOpen;
+        bool IStageMapViewPopup.IsWaiting => IsWaiting;
+        void IStageMapViewPopup.Start() => Start();
+        void IStageMapViewPopup.Tick() => Tick();
         private bool CanWork => _lifetime.CanWork;
         private bool IsDisplay(object token) => token != null && ReferenceEquals(_displayToken, token) && CanWork && IsOpen;
 
@@ -93,6 +104,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             var token = new object();
             _displayToken = token;
             _hiddenContext = null;
+            _closingByController = false;
             ClearPendingDisplay();
             if (!_state.TryGetCurrent(out var state) || state.IsCompleted || !MatchesSelection(state.Context)) return;
             _context = state.Context;
@@ -101,7 +113,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
 
         void IPopupViewController.Hide(bool explicitClose)
         {
-            if (_displayToken != null) _hiddenContext = _context;
+            if (_displayToken != null && !_closingByController) _hiddenContext = _context;
+            _closingByController = false;
             _displayToken = null;
             ClearPendingDisplay();
             BlockSubmission();
@@ -120,7 +133,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
                     BlockSubmission();
                     if (!IsDisplay(token)) return;
                     _report("회복 상태가 바뀌어 팝업을 닫습니다.");
-                    if (IsDisplay(token)) Close(false);
+                    if (IsDisplay(token)) CloseAndRefresh();
                     return;
                 }
                 if (!IsDisplay(token) || _pendingNumber == 0) return;
@@ -175,14 +188,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             RecoveryOperationResult result = processed.Result;
             bool completed = result.Kind == RecoveryResultKind.Accepted && _pending.Kind == RecoveryCommandKind.Complete;
             bool mismatch = result.Kind == RecoveryResultKind.StateMismatch;
+            bool purchased = result.Succeeded && _pending.Kind == RecoveryCommandKind.Select && !result.AlreadyApplied;
+            bool spentGold = purchased && result.StateAfter.Receipt.SpentAmount > 0;
             ClearPendingDisplay();
+            if (spentGold) _audio.Play(AmbgmEvent.UseMoney);
+            if (purchased) _audio.Play(UiEvent.Heal);
             if (completed || mismatch)
             {
                 _screen.SetCanSubmit(false);
                 if (!IsDisplay(token)) return;
                 if (mismatch) _report($"회복 상태 불일치: {result.FailureReason}");
                 if (!IsDisplay(token)) return;
-                _lifetime.CloseThen(completed, completed ? _mapChanged : null);
+                CloseAndRefresh();
                 return;
             }
             if (result.Kind == RecoveryResultKind.TradeRejected)
@@ -204,7 +221,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
         }
 
         // 화면에 내리는 제출 허용의 한 원본입니다. 영수증이나 런타임 요청이 있는 동안에는 늘 잠급니다.
-        private bool CanSubmitNow(RecoveryStateSnapshot state) => !state.IsCompleted && !IsWaiting && !_status.HasPending;
+        // 자기 영수증(결과를 아직 처리하지 않음)과 소유자 대기 둘 다 없어야 제출합니다.
+        private bool CanSubmitNow(RecoveryStateSnapshot state) => !state.IsCompleted && _pendingNumber == 0 && !_status.HasPending;
 
         private bool MatchesSelection(RecoveryEntryContext context) => _current.HasSelection &&
             _current.CurrentMapKey == context.ChapterKey && _current.CurrentStage.NodeId == context.NodeId.Value &&
@@ -225,7 +243,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             if (_lifetime.IsCurrent) _screen.SetCanSubmit(false);
         }
 
-        private void Close(bool returnToSelection) => _lifetime.Close(returnToSelection);
+        /// <summary>
+        /// 스스로 닫고 선택 화면으로 돌아간 뒤 맵을 다시 그립니다(완료·상태 불일치·상태 바뀜 모두). 다시 그린 맵이 복원을 예약하므로
+        /// 끝나지 않은 방문이면 지금 회복 상태로 다시 열리고, 끝난 방문이면 TryRestore가 받지 않습니다(평가 C-15).
+        /// 다시 여는 조건(TryRestore)과 표시 중 닫는 조건(TryReadDisplay)은 같은 Core 회복 상태를 봅니다.
+        /// </summary>
+        private void CloseAndRefresh()
+        {
+            _closingByController = true;
+            _lifetime.CloseThen(true, _mapChanged);
+        }
 
         public void Dispose()
         {

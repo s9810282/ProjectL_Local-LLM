@@ -13,19 +13,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static CharacterCombatFacts[] Sources(CombatCommandInput input, CharacterCombatFacts actor) =>
             Sources(input, input.Characters, actor);
 
-        /// <summary>
-        /// 주어진 유닛 목록에서 <paramref name="actor"/>를 도발하는 유닛을 가까운 순으로 찾습니다.
-        /// 적 AI(명령 입력의 유닛)와 보유 조정(이번 투영의 유닛)이 같은 판정을 쓰도록 목록만 받습니다.
-        /// </summary>
+        internal static IEnumerable<int> SourceSteps(CombatCommandInput input, CharacterCombatFacts actor,
+            Action<IReadOnlyCollection<CharacterCombatFacts>> completed)
+        {
+            var sources = new SortedDictionary<(long distance, int id), CharacterCombatFacts>();
+            foreach (var source in input.Characters)
+            {
+                if (Affects(input, source, actor, null))
+                {
+                    long distance = long.MaxValue;
+                    foreach (var cell in source.OccupiedCells)
+                        foreach (var origin in actor.OccupiedCells)
+                        {
+                            distance = Math.Min(distance, Distance(cell, origin));
+                            yield return 0;
+                        }
+                    sources.Add((distance, source.EntityId.Value), source);
+                }
+                yield return 0;
+            }
+            completed(sources.Values);
+        }
+
+        /// <summary>입력과 투영 양쪽에서 같은 도발 자격을 사용한다.</summary>
         internal static CharacterCombatFacts[] Sources(CombatCommandInput input, IEnumerable<CharacterCombatFacts> characters,
             CharacterCombatFacts actor, CombatProfileReadSet profileReads = null) => characters
-            .Where(source => !source.Health.IsDead && source.Area == CharacterRuntimeArea.Field &&
-                source.Stats.TraitStatuses.ToArray().Any(t => t.Key == Contracts.Common.TraitKey.Taunt))
-            .Where(source => CombatCommandEffects.Capture(source, CombatCommandCalculator.RequiredProfile(input, source, profileReads))
-                .Any(binding => binding.Rule is TauntEffectRule rule &&
-                    rule.Affects(new EffectRuleInput(binding.Origin, binding.ExpectedState), source, actor)))
-            .OrderBy(source => source.OccupiedCells.Min(cell => actor.OccupiedCells.Min(origin =>
-                Math.Abs((long)cell.X - origin.X) + Math.Abs((long)cell.Y - origin.Y))))
+            .Where(source => Affects(input, source, actor, profileReads))
+            .OrderBy(source => source.OccupiedCells.Min(cell => actor.OccupiedCells.Min(origin => Distance(cell, origin))))
             .ThenBy(source => source.EntityId).ToArray();
+
+        private static bool Affects(CombatCommandInput input, CharacterCombatFacts source, CharacterCombatFacts actor,
+            CombatProfileReadSet profileReads) =>
+            !source.Health.IsDead && source.Area == CharacterRuntimeArea.Field &&
+            source.Stats.TraitStatuses.ToArray().Any(t => t.Key == Contracts.Common.TraitKey.Taunt) &&
+            CombatCommandEffects.Capture(source, CombatCommandCalculator.RequiredProfile(input, source, profileReads))
+                .Any(binding => binding.Rule is TauntEffectRule rule &&
+                    rule.Affects(new EffectRuleInput(binding.Origin, binding.ExpectedState), source, actor));
+
+        private static long Distance(Contracts.Common.CellCoord cell, Contracts.Common.CellCoord origin) =>
+            Math.Abs((long)cell.X - origin.X) + Math.Abs((long)cell.Y - origin.Y);
     }
 }

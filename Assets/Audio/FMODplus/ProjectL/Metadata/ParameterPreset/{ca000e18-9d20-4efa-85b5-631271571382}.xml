@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{ca000e18-9d20-4efa-85b5-631271571382}">
+		<property name="name">
+			<value>HPIncrease</value>
+		</property>
+		<relationship name="folder">
+			<destination>{29f03023-4c57-4013-a587-d39143ba2e19}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{15ba0bb8-4e7e-46de-9831-082b883ee3ee}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{15ba0bb8-4e7e-46de-9831-082b883ee3ee}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>2</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>Heal</value>
+			<value>MaxUp</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

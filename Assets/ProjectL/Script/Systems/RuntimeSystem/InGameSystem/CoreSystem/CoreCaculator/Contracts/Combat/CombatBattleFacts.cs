@@ -28,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>전투 정의에서 읽은 경험치·레벨업 수치다. 기본값은 꺼짐이다.</summary>
         public LevelProgressionSpec Progression { get; }
         public StageClearRewardSpec ClearRewards { get; }
+        public NexusReinforcementSpec NexusReinforcements { get; }
         /// <summary>
         /// 전환 입구다. 아군 줄 수로 줄 구역을 만든다. 적 줄 수는 받기만 하고 쓰지 않는다.
         /// 새 코드는 <see cref="PlayerDeploymentZone"/>을 받는 생성자를 쓴다.
@@ -36,10 +37,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             int playerDeploymentDepth, int enemyDeploymentDepth, IReadOnlyList<CharacterInstanceId> drawOrder,
             int drawCursor,
             IReadOnlyList<CellCoord> railCells = null, IReadOnlyList<StageGimmickSpec> gimmicks = null,
-            IReadOnlyList<CategorySpec> categories = null, LevelProgressionSpec progression = default, StageClearRewardSpec clearRewards = null)
+            IReadOnlyList<CategorySpec> categories = null, LevelProgressionSpec progression = default, StageClearRewardSpec clearRewards = null,
+            NexusReinforcementSpec nexusReinforcements = null)
             : this(reserveCapacity, timelineSeed,
                 playerDeploymentDepth < 0 ? throw new ArgumentException("전투 입력 값이 잘못되었습니다.") : PlayerDeploymentZone.Rows(playerDeploymentDepth),
-                drawOrder, drawCursor, railCells, gimmicks, categories, progression, clearRewards)
+                drawOrder, drawCursor, railCells, gimmicks, categories, progression, clearRewards, nexusReinforcements)
         {
         }
 
@@ -48,7 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             PlayerDeploymentZone playerZone, IReadOnlyList<CharacterInstanceId> drawOrder,
             int drawCursor,
             IReadOnlyList<CellCoord> railCells = null, IReadOnlyList<StageGimmickSpec> gimmicks = null,
-            IReadOnlyList<CategorySpec> categories = null, LevelProgressionSpec progression = default, StageClearRewardSpec clearRewards = null)
+            IReadOnlyList<CategorySpec> categories = null, LevelProgressionSpec progression = default, StageClearRewardSpec clearRewards = null,
+            NexusReinforcementSpec nexusReinforcements = null)
         {
             if (reserveCapacity < 0 || playerZone == null ||
                 drawCursor < 0 || drawCursor > drawOrder.Count)
@@ -61,6 +64,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Categories = categories == null ? null : Array.AsReadOnly(categories.ToArray());
             Progression = progression;
             ClearRewards = clearRewards;
+            NexusReinforcements = nexusReinforcements;
         }
     }
 }

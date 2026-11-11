@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 {
@@ -30,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 throw new InvalidOperationException(
                     "[StageMapCanvasView] 공통 Canvas와 같은 오브젝트에 부착해야 합니다.");
             }
-            ValidateCanvas(canvas, nameof(canvas));
+            ValidateRootCanvas();
             if (selection.gameObject.scene != gameObject.scene ||
                 selection.transform.parent != canvas.transform)
             {
@@ -52,19 +53,26 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             }
 
             selection.ValidateComposition(canvas);
+            Canvas slotInfoCanvas = selection.DeckScreen.ValidateChildCanvases();
+            foreach (Canvas childCanvas in canvas.GetComponentsInChildren<Canvas>(true))
+            {
+                if (childCanvas != canvas && childCanvas != slotInfoCanvas)
+                {
+                    throw new InvalidOperationException(
+                        $"[StageMapCanvasView] '{childCanvas.name}'은 허용되지 않는 중첩 Canvas입니다. UIId.DeckSlotInfo의 정렬용 Canvas만 허용합니다.");
+                }
+            }
             screens.ValidateComposition();
             traitGrowth.Validate();
         }
 
-        private void ValidateCanvas(Canvas target, string field)
+        private void ValidateRootCanvas()
         {
-            if (!target.isRootCanvas || target.renderMode != RenderMode.ScreenSpaceOverlay ||
-                target.gameObject.scene != gameObject.scene || target.GetComponentsInChildren<Canvas>(true).Length != 1 ||
-                target.GetComponent<UnityEngine.UI.CanvasScaler>() == null ||
-                target.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+            if (!canvas.isRootCanvas || canvas.renderMode != RenderMode.ScreenSpaceOverlay ||
+                canvas.GetComponent<CanvasScaler>() == null || canvas.GetComponent<GraphicRaycaster>() == null)
             {
                 throw new InvalidOperationException(
-                    $"[StageMapCanvasView] {field}는 같은 씬의 중첩 없는 최상위 Overlay Canvas이며 CanvasScaler와 GraphicRaycaster가 필요합니다.");
+                    $"[StageMapCanvasView] canvas '{canvas.name}'는 최상위 Overlay Canvas이며 CanvasScaler와 GraphicRaycaster가 필요합니다.");
             }
         }
     }

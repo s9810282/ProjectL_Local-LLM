@@ -142,6 +142,12 @@ namespace ProjectL.Tests.Core
 
         private sealed class ObservingRule : IStageGimmickRule
         {
+            public System.Collections.Generic.IEnumerator<HazardCellFact?> EnumerateForecast(CombatCommandInput input,
+                StageGimmickSpec definition, StageGimmickId id, long lastBoundaryCount)
+            {
+                yield break;
+            }
+
             public StageGimmickKey Key => StageGimmickKey.Haboob;
             internal CombatCommandInput Input { get; private set; }
             internal StageGimmickId Id { get; private set; }

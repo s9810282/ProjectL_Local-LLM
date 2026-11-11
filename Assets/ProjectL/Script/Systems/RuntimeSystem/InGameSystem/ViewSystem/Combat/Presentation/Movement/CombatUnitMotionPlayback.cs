@@ -1,5 +1,9 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+#endif
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -9,6 +13,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Reaction;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Movement
@@ -33,6 +38,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </remarks>
     internal sealed class CombatUnitMotionPlayback
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private static readonly CombatPlaybackProfile.ByOwner _voluntaryProfiles = new("Move.Voluntary");
+        private static readonly CombatPlaybackProfile.ByOwner _forcedProfiles = new("Move.Forced");
+        private static readonly CombatPlaybackProfile.ByOwner _pullProfiles = new("Move.Pull");
+        private static readonly CombatPlaybackProfile.ByOwner _facingProfiles = new("Move.FacingRestore");
+        private CombatPlaybackProfile _movementProfile = _voluntaryProfiles.Unknown;
+        private CombatPlaybackProfile _facingProfile = _facingProfiles.Unknown;
+
+#endif
         private readonly CombatUnitPresentationWindow _presentation;
         private readonly Func<CharacterCombatFacts, Quaternion, FieldGridMapper, CombatBody> _moverBody;
         // 이동 종류 → 걸음 모양 표입니다(걸음 모양 설계 ST2). 레인 집합이 받은 표 하나를 레인들이 공유합니다.
@@ -55,7 +69,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private int _pullIndex;
         private float _elapsed;
         private bool _movementBegan;
-        private bool _movementSoundPending;
         private bool _stepPrepared;
         // 현재 걸음(끌어오기 포함)의 모양과, 걸음이 스스로 하는 이동인지(걸음 전 회전)입니다. 걸음·끌어오기를 시작할 때마다 정하고
         // 그동안만 읽으므로 취소 때 비우지 않습니다. 회전 여부는 걸음에만 씁니다(끌어오기는 늘 끌려가는 방향으로 돎).
@@ -65,6 +78,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private Quaternion _turnFrom;
         private Quaternion _turnTo;
         private float _turnElapsed;
+        // 이번 회전의 시간입니다. 걸음 전 회전·방향 복귀는 회전 시간, 밀린 경로 끝 펴기는 젖히는 시간입니다(넉백 피격 연출, 임시).
+        private float _turnDuration;
+        // 밀리는 동안 젖힌 자세입니다(넉백 피격 연출, 임시). 밀림 걸음을 시작할 때마다 부르고 걸음 Tick이 오르기를 진행합니다.
+        private readonly CombatPushLean _pushLean;
         private CharacterCombatFacts _facingRestore;
         private Action _facingRestoreCompleted;
         private bool _facingRestoreDeferred;
@@ -82,7 +99,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="turnSeconds">걸음 전 회전·경로 끝 방향 복귀 시간입니다. 0이면 바로 돌립니다.</param>
         /// <param name="generation">사건 Presenter가 소유한 현재 재생 세대입니다. 취소마다 바뀝니다.</param>
         /// <param name="show">한 개체의 사실을 표시 사실에 넣고 다시 그립니다.</param>
-        /// <param name="playMovementSound">이동 시작 효과음입니다.</param>
+        /// <param name="playMovementSound">스스로 이동하는 걸음의 시작 효과음입니다.</param>
         /// <param name="contacts">결과마다 한 번 해석한 걸음 구간·접촉 묶음입니다. 레인 집합이 결과마다 준비하고 레인들이 공유합니다.</param>
         /// <param name="thornBody">가시 칸의 접촉 몸입니다(<see cref="FieldThornPresenter.BodyOf"/>). 없으면 가시 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="objectBody">오브젝트 원본의 접촉 몸입니다(<see cref="FieldObjectPresenter.BodyOf"/>). 없으면 오브젝트 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
@@ -105,6 +122,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _objectBody = objectBody;
             _contacts = new CombatStepContactGate(contacts ?? throw new ArgumentNullException(nameof(contacts)));
             _placementYielded = OnPlacementYielded;
+            _pushLean = new CombatPushLean(_presentation);
         }
 
         /// <summary>걸음·방향 복귀·중간 자세에서 도약 배치를 되찾는 대기가 진행 중인지입니다.</summary>
@@ -131,6 +149,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal void BeginStep(CombatCharacterEvent step, CombatMovementKind kind, bool startNow, FieldGridMapper mapper, Action completed,
             CombatLeapPlan.Step leapStep = null)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _movementProfile = (CombatMovementKinds.IsSelfDriven(kind) ? _voluntaryProfiles : _forcedProfiles).Of((step.Expected ?? step.Final)?.Owner);
+            using var actionSample = _movementProfile.Begin.Auto();
+#endif
+
             CombatStepStyle style = _styles.For(kind);
             if (leapStep != null)
             {
@@ -164,8 +187,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// Core가 제공한 실제 끌어오기 경로를 같은 유닛의 이동 레인에서 재생합니다. 끌어오기는 밀림이라 밀림 모양으로 칸마다 옮깁니다(걸음 모양 계획 P10).
         /// 먼저 끌려가는 방향(도착 칸 쪽)으로 돌고, 도착하면 원래 방향으로 돌아온 뒤 완료를 알립니다(걸음 모양 계획 §7, 걸음 경로와 같은 회전·복귀).
         /// </summary>
-        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed)
+        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed, Action started = null)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _movementProfile = _pullProfiles.Of(target?.Owner);
+            using var actionSample = _movementProfile.Begin.Auto();
+#endif
+
             if (completed == null) throw new ArgumentNullException(nameof(completed));
             EndLeap();
             _style = _styles.For(CombatMovementKind.Forced);
@@ -179,6 +207,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_stepVersion != _generation() || _pull == null) return;
             _placement = _presentation.BeginPlacement(target.EntityId);
             TurnToward(_pullFrom, At(target, movement.FinalAnchor), mapper);
+            // 배치를 빌려 선행 회전을 포함한 이동 실행을 연 순간입니다. 표시가 없거나 취소됐으면 통지하지 않습니다.
+            if (_stepVersion == _generation() && _pull != null && _placement != null)
+                started?.Invoke();
         }
 
         // 칸과 도착지는 Core의 실제 경로를 그대로 씁니다. 체력·디버프는 뒤따르는 사건 전까지 바꾸지 않습니다.
@@ -196,12 +227,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 remaining -= consumed;
                 _elapsed += consumed;
                 CharacterCombatFacts next = At(_pullFrom, _pull.Path[_pullIndex]);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var interpolateSample = _movementProfile.Interpolate.Auto();
+#endif
                 _placement?.Interpolate(_pullFrom, next, mapper, Mathf.Clamp01(_elapsed / seconds), _style);
                 if (_elapsed < seconds) return;
                 _pullFrom = next;
                 _pullIndex++;
                 _elapsed = 0f;
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var endSample = _movementProfile.End.Auto();
+#endif
             if (_pull == null) return;
             CharacterCombatFacts final = _pullFrom;
             int version = _stepVersion;
@@ -216,27 +253,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (version == _generation()) BeginFacingRestore(final, completed, mapper);
         }
 
-/// <summary>경로의 첫 걸음이 시작됨을 알립니다. 이미 움직이기 시작했으면 바로, 아니면 움직임이 시작될 때 효과음을 냅니다.</summary>
-        internal void NotifyMovementStarted(CombatCharacterEvent firstStep)
-        {
-            if (firstStep != null && _moving == firstStep)
-            {
-                if (_movementBegan)
-                    _playMovementSound(firstStep.Expected);
-                else
-                    _movementSoundPending = true;
-            }
-        }
-
         /// <summary>경로 끝에서 원래 방향으로 돌립니다. 돌 필요가 없으면 바로 완료를 알립니다. 취소는 완료가 아닙니다.</summary>
-        internal void BeginFacingRestore(CharacterCombatFacts facts, Action completed, FieldGridMapper mapper)
+        internal void BeginFacingRestore(CharacterCombatFacts facts, Action completed, FieldGridMapper mapper) =>
+            BeginRestore(facts, completed, mapper, _turnSeconds);
+
+        /// <summary>
+        /// 밀린 경로 끝에서 젖힌 자세를 폅니다(넉백 피격 연출, 임시). 방향 복귀와 같이 사실 회전으로 돌아가고 표시 회전을 지우며,
+        /// 시간만 젖히는 시간(<see cref="CombatHitLean.RiseSeconds"/>, 반응 값이 없으면 회전 시간)입니다.
+        /// </summary>
+        internal void BeginStraighten(CharacterCombatFacts facts, Action completed, FieldGridMapper mapper) =>
+            BeginRestore(facts, completed, mapper, StraightenSeconds(facts.EntityId));
+
+        private void BeginRestore(CharacterCombatFacts facts, Action completed, FieldGridMapper mapper, float seconds)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _facingProfile = _facingProfiles.Of(facts?.Owner);
+            using var actionSample = _facingProfile.Begin.Auto();
+#endif
+
             EndLeap();
+            _pushLean.Stop();
             _facingRestore = facts;
             _facingRestoreCompleted = completed;
-            BeginTurn(facts.EntityId, FieldUnitPresenter.ModelRotation(facts.Owner, facts.Rotation, mapper));
+            BeginTurn(facts.EntityId, FieldUnitPresenter.ModelRotation(facts.Owner, facts.Rotation, mapper), seconds);
             if (!_turning) FinishFacingRestore(mapper);
         }
+
+        private float StraightenSeconds(EntityId id) =>
+            _presentation.TryGetReactionSettings(id, out CombatUnitReactionPresentationData settings) ? CombatHitLean.RiseSeconds(settings) : _turnSeconds;
 
         /// <summary>
         /// 사건 완료 뒤 아직 보간 중인 경로 끝 걸음의 방향 복귀를 보간 끝 뒤로 미룹니다(설계 M3). 완료 통지는 호출자가 바로 합니다.
@@ -255,11 +299,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             int version = _generation();
             if (_pull != null)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var pullSample = _movementProfile.Tick.Auto();
+#endif
                 TickPull(remaining, mapper);
                 return;
             }
             if (_facingRestore != null)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var facingSample = _facingProfile.Tick.Auto();
+#endif
                 if (TickTurn(_facingRestore.EntityId, ref remaining) && version == _generation())
                     FinishFacingRestore(mapper);
                 return;
@@ -269,13 +319,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 ResumeLeap(mapper);
                 return;
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = _movementProfile.Tick.Auto();
+#endif
             if (!_stepPrepared)
                 StartStep(mapper);
             if (version != _generation() || _moving == null) return;
             if (!TickTurn(_moving.Expected.EntityId, ref remaining)) return;
             if (!_movementBegan) StartMotion(mapper);
             if (version != _generation() || _moving == null) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var interpolateSample = _movementProfile.Interpolate.Auto();
+#endif
             _elapsed += remaining;
+            _pushLean.Tick(remaining);
             float progress = Mathf.Clamp01(_elapsed / _style.Seconds);
             _placement?.Interpolate(_moving.Expected, _moving.Final, mapper, progress, _style);
             _contacts.Advance(progress);
@@ -287,15 +344,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>걸음·방향 복귀를 버립니다. 완료를 알리지 않습니다. 재생 세대는 호출자가 먼저 올립니다.</summary>
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var movementSample = _pull != null || _moving != null || _continuedLeap != null ? _movementProfile.Cancel.Auto() : default;
+            using var facingSample = _facingRestore != null ? _facingProfile.Cancel.Auto() : default;
+#endif
+
             _pull = null;
             _pullFrom = null;
             _pullIndex = 0;
             _moving = null;
             _elapsed = 0f;
             _movementBegan = false;
-            _movementSoundPending = false;
             _stepPrepared = false;
             _turning = false;
+            _pushLean.Stop();
             _facingRestore = null;
             _facingRestoreCompleted = null;
             _facingRestoreDeferred = false;
@@ -350,6 +412,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private void StartStep(FieldGridMapper mapper)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = _movementProfile.Prepare.Auto();
+#endif
+
             var step = _moving;
             int version = _generation();
             _show(step.Expected);
@@ -362,6 +428,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 _placement.Interpolate(step.Expected, step.Final, mapper, 0f, leap);
             if (_selfDriven)
                 TurnToward(step.Expected, step.Final, mapper, _style is CombatLeapStepStyle continuation && !continuation.Step.IsFirst);
+            else if (_style is not CombatLeapStepStyle)
+                // 밀린 걸음은 돌지 않고 젖힌 채 밀립니다(넉백 피격 연출, 임시). 넘겨받은 젖힘은 그대로, 없으면 여기서 젖히기 시작합니다.
+                _pushLean.BeginStep(step.Expected, step.Final, mapper);
             if (!_turning) StartMotion(mapper);
         }
 
@@ -382,7 +451,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     _presentation.SetFacing(from.EntityId, target);
                 }
                 else
-                    BeginTurn(from.EntityId, target);
+                    BeginTurn(from.EntityId, target, _turnSeconds);
             }
         }
 
@@ -390,11 +459,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             _movementBegan = true;
             ArmContacts(mapper);
-            if (_movementSoundPending)
-            {
-                _movementSoundPending = false;
+            // 도약 중 경유 칸들은 같은 점프에 속하므로 첫 구간에서만 소리를 냅니다.
+            if (_selfDriven && (_style is not CombatLeapStepStyle leap || leap.Step.IsFirst))
                 _playMovementSound(_moving.Expected);
-            }
         }
 
         // 보간이 시작될 때(걸음 전 회전 뒤) 묶음별 접촉 진행률을 정합니다(설계 M2). 이동자 몸은 지금 표시 방향으로 시작 칸 → 끝 칸을 지나고,
@@ -453,6 +520,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private void FinishStep(FieldGridMapper mapper)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = _movementProfile.End.Auto();
+#endif
+
             CharacterCombatFacts final = _moving.Final;
             bool restore = _facingRestoreDeferred;
             _moving = null;
@@ -474,8 +545,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             int version = _generation();
             _show(final);
             if (version != _generation()) return;
-            if (restore)
+            if (restore && _selfDriven)
                 BeginFacingRestore(final, _contacts.EndStep, mapper);
+            else if (restore)
+                BeginStraighten(final, _contacts.EndStep, mapper);
             else
                 _contacts.EndStep();
             NotifyStepCompleted();
@@ -497,13 +570,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             placement?.Restore();
         }
 
-        private void BeginTurn(EntityId id, Quaternion target)
+        private void BeginTurn(EntityId id, Quaternion target, float seconds)
         {
             _turning = false;
             if (!_presentation.TryGetRotation(id, out _turnFrom)) return;
             _turnTo = target;
             _turnElapsed = 0f;
-            _turning = _turnSeconds > 0f && Quaternion.Angle(_turnFrom, _turnTo) > .1f;
+            _turnDuration = seconds;
+            _turning = _turnDuration > 0f && Quaternion.Angle(_turnFrom, _turnTo) > .1f;
             _presentation.SetFacing(id, _turning ? _turnFrom : _turnTo);
         }
 
@@ -515,17 +589,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 _turning = false;
                 return true;
             }
-            float consumed = Math.Min(remaining, _turnSeconds - _turnElapsed);
+            float consumed = Math.Min(remaining, _turnDuration - _turnElapsed);
             remaining -= consumed;
             _turnElapsed += consumed;
-            _presentation.SetFacing(id, Quaternion.Slerp(_turnFrom, _turnTo, Mathf.Clamp01(_turnElapsed / _turnSeconds)));
-            if (_turnElapsed < _turnSeconds) return false;
+            _presentation.SetFacing(id, Quaternion.Slerp(_turnFrom, _turnTo, Mathf.Clamp01(_turnElapsed / _turnDuration)));
+            if (_turnElapsed < _turnDuration) return false;
             _turning = false;
             return true;
         }
 
         private void FinishFacingRestore(FieldGridMapper mapper)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var actionSample = _facingProfile.End.Auto();
+#endif
+
             var facts = _facingRestore;
             var completed = _facingRestoreCompleted;
             int version = _generation();

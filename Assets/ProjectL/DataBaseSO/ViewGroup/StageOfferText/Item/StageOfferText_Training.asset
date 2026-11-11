@@ -31,10 +31,8 @@ MonoBehaviour:
       format: "Lv. {0} · 보유 {1}"
     - kind: 2
       format: "수량 1 · {0}"
-    - kind: 3
-      format: "{0}\n{1}"
     - kind: 8
-      format: "{0}\n{1}"
+      format: "강화 내용: {0}\n기본 효과: {1}"
     - kind: 9
       format: "{0} → {1}등급"
     - kind: 10
@@ -47,6 +45,10 @@ MonoBehaviour:
       format: "훈련할 특성 없음"
     - kind: 14
       format: "{0}의 특성을 강화합니다"
+    - kind: 16
+      format: "적용"
+    - kind: 17
+      format: "미적용"
     defaultErrorText: "상점 상태가 바뀌어 화면을 다시 불러옵니다."
     errors:
     - kind: 1

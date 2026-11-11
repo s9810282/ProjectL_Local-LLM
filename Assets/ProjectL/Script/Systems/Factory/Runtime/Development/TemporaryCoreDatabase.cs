@@ -97,7 +97,7 @@ namespace ProjectL.Systems.Factory.Runtime.Development
         }
 
         private static StageMapData Map(int key, int nextChapterKey)
-            => new(key, 5, 1, 1, false, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false, nextChapterKey, new[] {
+            => new(key, 5, 1, 1, false, 0, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 42, false, nextChapterKey, new[] {
                 new ChapterStageDistributionRule(ChapterStageKind.Combat, 1, 0, 1),
                 new ChapterStageDistributionRule(ChapterStageKind.Shop, 0, 1, 1),
                 new ChapterStageDistributionRule(ChapterStageKind.Recovery, 0, 1, 1),

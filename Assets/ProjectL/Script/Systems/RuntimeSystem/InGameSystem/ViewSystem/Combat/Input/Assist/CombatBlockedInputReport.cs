@@ -7,7 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
     /// 튜토리얼의 전투 접점입니다(View 2라운드 W6-4): 튜토리얼이 건 전투 입력 제한을 읽고, Router가 실제로 막은 입력 시도를 알립니다.
     /// 튜토리얼 상태 읽기·요청 쓰기 Sink 둘은 이 클래스만 갖습니다. Router는 지금처럼 알림 대리자 하나(<see cref="Report"/>)를 받습니다.
     /// </summary>
-    /// <remarks>두 Sink 모두 필수입니다(View 2라운드 W6-7). 시험 조립은 실제 Buffer 창구를 넘기며, 기본 제한은 없음입니다.</remarks>
+    /// <remarks>두 Sink 모두 필수입니다(View 2라운드 W6-7). 튜토리얼이 건 제한이 없으면 제한 없음입니다.</remarks>
     internal sealed class CombatBlockedInputReport
     {
         private readonly ITutorialStateBufferReadSink _tutorialState;

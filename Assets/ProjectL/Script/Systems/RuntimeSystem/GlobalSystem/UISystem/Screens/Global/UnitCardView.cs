@@ -39,9 +39,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         internal void BindInfoInput(IUIInputReceiver receiver)
         {
             if (receiver == null) throw new ArgumentNullException(nameof(receiver));
+            ValidateInfoInput();
+            _infoBinding = UIInputBinding.Attach(infoButton, receiver, 0);
+        }
+
+        internal void ValidateInfoInput()
+        {
             if (infoButton == null || infoButton.transform == transform || !infoButton.transform.IsChildOf(transform))
                 throw new InvalidOperationException($"[UnitCardView] UIId.{OwnerUI?.ID ?? UIId.None}, '{name}': 카드 자식 infoButton이 필요합니다.");
-            _infoBinding = UIInputBinding.Attach(infoButton, receiver, 0);
         }
 
         /// <summary>상세 입력을 제공하지 않는 손패·로비 위젯에서는 정보 버튼을 숨깁니다.</summary>

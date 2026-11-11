@@ -120,9 +120,9 @@ namespace ProjectL.Tests.Core
         public void SurvivingRegistry_PreservesAllNewAndDeferredIdentities()
         {
             var registrations = TraitRegistry.CreateDefault().OrderedRegistrations;
-            Assert.That(registrations.Count(r => DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(34));
+            Assert.That(registrations.Count(r => DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(41));
             Assert.That(registrations.Count(r => !DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(3));
-            Assert.That(registrations.Count(r => (int)r.TraitKey >= 220), Is.EqualTo(24));
+            Assert.That(registrations.Count(r => (int)r.TraitKey >= 220), Is.EqualTo(31));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitAvailable((TraitKey)9999));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitRetired(TraitKey.None));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitRetired((TraitKey)9999));

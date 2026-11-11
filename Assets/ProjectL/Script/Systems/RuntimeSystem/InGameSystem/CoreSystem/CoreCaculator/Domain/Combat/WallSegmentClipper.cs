@@ -22,7 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return intersects;
         }
 
-        private static bool IntersectsPart(CellCoord start, CellCoord end, WallConvexPart part,
+        internal static bool IntersectsPart(CellCoord start, CellCoord end, WallConvexPart part,
             out SegmentParameter entry)
         {
             entry = SegmentParameter.Zero;

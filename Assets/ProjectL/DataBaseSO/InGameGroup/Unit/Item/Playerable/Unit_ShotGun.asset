@@ -25,7 +25,7 @@ MonoBehaviour:
   footprintWidth: 1
   footprintHeight: 1
   maxHealth: 35
-  physicalDefense: 5
+  physicalDefense: 6
   targetingMethod: {fileID: 11400000, guid: 4b69de16e50a408fa8cca60d6db58d46, type: 2}
   attackRange: 2
   category: 30
@@ -35,7 +35,6 @@ MonoBehaviour:
   priority: 30
   traits:
   - rid: 6249925418060611679
-  - rid: 6249925418060611680
   references:
     version: 2
     RefIds:
@@ -44,8 +43,3 @@ MonoBehaviour:
       data:
         bonusDamagePercent: 30
         durationAffectedSideTurnEnds: 1
-    - rid: 6249925418060611680
-      type: {class: VanguardTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
-      data:
-        attackBonus: 1
-        durationControllerTurnEnds: 1

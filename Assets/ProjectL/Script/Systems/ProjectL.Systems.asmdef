@@ -11,6 +11,7 @@
     "Unity.TextMeshPro",
     "Cinemachine",
     "Unity.InputSystem",
+    "Unity.Animation.Rigging",
     "UnityEngine.UI",
     "GUID:3a8ff804ec7d01c4887b0d7414c53a0c",
     "GUID:0c752da273b17c547ae705acf0f2adf2"

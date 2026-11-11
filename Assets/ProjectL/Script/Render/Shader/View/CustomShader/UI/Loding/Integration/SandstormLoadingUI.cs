@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Render.Shader.View.CustomShader.UI.Runtime;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
@@ -16,6 +17,7 @@ namespace ProjectL.Render.Shader.View.CustomShader.UI.Integration
     {
         [SerializeField] private SandstormTransitionVisual visual;
         private ILodingSystemService _loading;
+        private IAudioSystemService _audio;
 
         public override UIId ID => UIId.Loading;
         public override bool OpenWithGlobalUI => false;
@@ -43,11 +45,14 @@ namespace ProjectL.Render.Shader.View.CustomShader.UI.Integration
         public override void Open()
         {
             ValidateConfiguration();
+            IAudioSystemService audio = _audio
+                ?? throw new InvalidOperationException($"{name} (UIId.Loading): AudioSystem 바인딩이 필요합니다.");
             base.Open();
             // 비활성 상태에서 만든 중첩 Canvas도 활성화된 뒤 정렬 오버라이드를 확정한다.
             GetComponent<Canvas>().overrideSorting = true;
             // Open이 돌아온 뒤에는 하위 OnEnable의 초기화도 끝나 있다.
             visual.Cover();
+            if (!audio.IsPlaying(AmbgmEvent.Loading)) audio.Play(AmbgmEvent.Loading);
         }
 
         private void Awake() => ValidateConfiguration();
@@ -56,11 +61,15 @@ namespace ProjectL.Render.Shader.View.CustomShader.UI.Integration
         {
             base.BindUIService(resolver);
             ValidateConfiguration();
-            ILodingSystemService loading = resolver.GetService(SystemGroupsService.Global).LodingServiceCommand.LodingService;
+            var global = resolver.GetService(SystemGroupsService.Global);
+            ILodingSystemService loading = global.LodingServiceCommand.LodingService;
+            IAudioSystemService audio = global.AudioServiceCommand
+                ?? throw new InvalidOperationException($"{name} (UIId.Loading): AudioSystem 서비스가 필요합니다.");
             if (_loading != null && !ReferenceEquals(_loading, loading))
                 throw new InvalidOperationException(name + ": 로딩 서비스가 이미 연결되어 있습니다.");
             loading.BindPresentation(this);
             _loading = loading;
+            _audio = audio;
         }
 
         public void BeginCover()
@@ -76,6 +85,7 @@ namespace ProjectL.Render.Shader.View.CustomShader.UI.Integration
 
         protected override void OnUIHidden()
         {
+            _audio?.Stop(AmbgmEvent.Loading);
             if (visual != null)
             {
                 visual.ResetVisual();

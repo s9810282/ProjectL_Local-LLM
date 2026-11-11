@@ -9,24 +9,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CharacterCombatFacts Attacker { get; }
         public CharacterCombatFacts Recipient { get; }
         public int DamageBeforeItems { get; }
-        public int PreparationIndex { get; }
 
         public ItemDamageContext(
             CombatDamageKind kind,
             CharacterCombatFacts attacker,
             CharacterCombatFacts recipient,
-            int damageBeforeItems,
-            int preparationIndex)
+            int damageBeforeItems)
         {
             if (!Enum.IsDefined(typeof(CombatDamageKind), kind)) throw new ArgumentOutOfRangeException(nameof(kind));
             if (recipient == null) throw new ArgumentNullException(nameof(recipient));
             if (damageBeforeItems < 0) throw new ArgumentOutOfRangeException(nameof(damageBeforeItems));
-            if (preparationIndex < 0) throw new ArgumentOutOfRangeException(nameof(preparationIndex));
             Kind = kind;
             Attacker = attacker;
             Recipient = recipient;
             DamageBeforeItems = damageBeforeItems;
-            PreparationIndex = preparationIndex;
         }
     }
 }

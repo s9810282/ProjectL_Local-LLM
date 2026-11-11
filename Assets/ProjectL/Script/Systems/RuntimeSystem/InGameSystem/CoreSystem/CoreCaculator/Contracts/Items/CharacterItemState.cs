@@ -35,7 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 foreach (var candidate in other.Effects)
                 {
                     if (effect.ItemKey == candidate.ItemKey && effect.Stat == candidate.Stat &&
-                        effect.Magnitude == candidate.Magnitude && effect.PreparationIndex == candidate.PreparationIndex)
+                        effect.Magnitude == candidate.Magnitude)
                     {
                         found = true;
                         break;

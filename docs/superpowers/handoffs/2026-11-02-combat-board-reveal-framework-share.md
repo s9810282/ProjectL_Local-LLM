@@ -67,3 +67,15 @@ OutsideCells/TravelPaddingCells는 열차의 화면 밖 이동 여유로만 남�
 ## 양 끝 5칸 표시 연장 (R9, 2026-11-03)
 
 최종 사용자 요청으로 R8을 확장했다. 각 직선 첫/마지막 칸에서 각각 5칸을 표시용으로 더 만든다. RailwayVisual_Default의 **Rail Extension Cells=5**가 새 조절 지점이며 0이면 맵 내부만 생성한다. OutsideCells=230은 열차 이동 여유로만 남고 생성 개수로 사용하지 않는다. 추가 구간도 기존 순차 낙하에 참여해 현재 간격에서는 0.8초가 추가된다. 열차 경로/접촉과 진입 공개 계약은 유지했다. 코드/정적 검토 완료, **컴파일 미확인**. Unity에서 양끝 5칸/낙하/열차 발동과 DataBaseAssetTests를 확인한다.
+
+## 적 Nexus 착지 눌림 (NI1, 2026-11-06)
+
+Nexus 착지 때 건물과 점유 칸 아래 바닥/지형이 함께 눌렸다가 복구된다. 기존 Nexus 수집에서 점유 칸도 받고, 기존 칸↔타일 대응으로 대상 Transform을 얻는다. CombatBoardEntryFactory가 새 CombatEntryGroundCompression을 조립하며, Nexus 경과 시간과 기존 자세/효과 창구를 사용한다. FallingRocks는 접촉면에서 시작해 눌림 높이를 따른다. 눌림 복구와 기존 효과 대기는 동시에 진행하며 둘을 마친 뒤 적 등장으로 넘어간다.
+
+새 서비스/등록/Export/타이머/Buffer 쓰기 없음. Nexus Drop의 Impact Depth=0.35, Impact Down Seconds=0.08, Impact Return Seconds=0.22가 조절 지점이며 깊이 0이면 건너뛴다. 기존 낙하 설정과 3초 효과 대기 상한은 유지한다. 코드·정적 검토 완료, **컴파일 미확인**. 자세한 설계·호출/취소 점검·Unity 및 DataBaseAssetTests 인수는 [착지 눌림 계획](../plans/2026-11-06-nexus-landing-compression-plan.md)을 따른다.
+
+## 적의 그리드 Y 행별 등장 (ER1, 2026-11-06)
+
+첫 필드 적은 기준 칸 Anchor.Y가 큰 행부터 작은 행으로 순차 소환한다. 같은 행은 동시에 시작하고, 빈 행은 건너뛴다. CombatBoardEntryFactory가 Enemy Entry Row Gap Seconds를 새 CombatEntryEnemyRows에 주입하며, BoardEntry는 기존 적 수집의 Y 목록에서 만든 지연을 공유 상승에 전달한다. 공유 상승은 기존 CombatPieceRun의 지연 시작을 사용하고, 해당 조각의 아래쪽 자세 적용 뒤 모델을 공개한다. 구조물 상승은 지연 0을 유지한다.
+
+간격은 CombatPresentationSettings_Default → 전투 진입 적 행별 등장 → Enemy Entry Row Gap Seconds이며 기본 0.2초, 0은 동시 등장이다. 마지막 행 상승 완료까지 기존 진입 대기가 유지된다. 새 타이머/서비스/등록/Export·Core 변경 없음. 코드·정적 검토 완료, **컴파일 미확인**. Unity 재생 및 DataBaseAssetTests 확인은 [행별 등장 계획](../plans/2026-11-06-entry-enemy-row-reveal-plan.md)의 인수 항목을 따른다.

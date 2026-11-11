@@ -16,7 +16,10 @@ MonoBehaviour:
     key: 400
     displayName: "\uB9C8\uBB34\uB9AC \uC0AC\uACA9"
     icon: {fileID: 21300000, guid: 33156e2234ed22a4fb0dcd3c36130400, type: 3}
-    description: "공격 직전 대상의 현재 체력이 \n자신의 공격력 {처치기준율}% 미만이면 \n방어력과 보호막을 무시하고 처치합니다."
+    description: "\uACF5\uACA9 \uC9C1\uC804 \uB300\uC0C1\uC758 \uD604\uC7AC \uCCB4\uB825\uC774
+      \n\uC790\uC2E0\uC758 \uACF5\uACA9\uB825 {\uCC98\uCE58\uAE30\uC900\uC728}% \uBBF8\uB9CC\uC774\uBA74
+      \n\uBC29\uC5B4\uB825\uACFC \uBCF4\uD638\uB9C9\uC744 \uBB34\uC2DC\uD558\uACE0
+      \uCC98\uCE58\uD569\uB2C8\uB2E4."
     defenseReductionDescription: 
     rankValueFormat: "\uCC98\uCE58 \uAE30\uC900 {0}% \u2192 {2}% (+{1}%)"
     activations:
@@ -47,7 +50,7 @@ MonoBehaviour:
     - condition: 1
       effect:
         effect: 7
-        positionOffset: {x: 0, y: -1.5, z: 0}
+        positionOffset: {x: 0, y: 0, z: 0}
         riderYOffset: 1
         rotationOffset: {x: 0, y: 0, z: 0}
     trailPrefab: {fileID: 0}

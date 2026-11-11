@@ -1,5 +1,6 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Enhancements;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using System.Linq;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Artifact;
@@ -46,6 +47,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             _artifacts = buffers.ArtifactReadSink;
         }
 
+        internal CombatCommandInput AssembleDecision(CombatActionRequest request, out EnemyDecisionSourceStamp stamp)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            RequireBound();
+            stamp = null;
+            if (!_combat.HasBattle || _combat.Completion != null) return null;
+            var source = new EnemyDecisionSourceStamp(_combat, _characters, _definitions, _loadout,
+                _artifacts.Current, _items.Current, _currency.Amount, _fame.Amount);
+            if (!IsCurrent(source)) return null;
+            var input = Assemble(request);
+            if (!IsCurrent(source)) return null;
+            stamp = source;
+            return input;
+        }
+
+        internal bool IsCurrent(EnemyDecisionSourceStamp stamp)
+        {
+            RequireBound();
+            using var sample = CoreProfiling.Sample(CoreProfileSection.EnemySourceValidation);
+            return stamp != null && stamp.Matches(_combat, _characters, _definitions, _loadout,
+                _artifacts.Current, _items.Current, _currency.Amount, _fame.Amount);
+        }
+
+        private void RequireBound()
+        {
+            if (_combat == null || _characters == null || _artifacts == null || _items == null || _currency == null || _fame == null)
+                throw new InvalidOperationException("전투 입력 조립은 Buffer 바인딩이 필요합니다.");
+        }
+
         public CombatCommandInput Assemble(CombatActionRequest request)
         {
             if (request == null)
@@ -73,7 +103,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             // 환경 원본은 설치된 CommandState에서 읽는다. 정의를 다시 읽어 소비된 원본을 되살리지 않는다.
             var context = new CombatBattleFacts(battle.ReserveCapacity, battle.TimelineSeed,
                 battle.PlayerZone, battle.DrawOrder, battle.DrawCursor,
-                battle.RailCells, battle.StageGimmicks, definitions.Categories, definitions.Progression, definitions.ClearRewards);
+                battle.RailCells, battle.StageGimmicks, definitions.Categories, definitions.Progression, definitions.ClearRewards,
+                battle.NexusReinforcements);
             return new CombatCommandInput(request.Number, request.Kind, request.ActorId,
                 request.Aim, battle.CommandState, characters,
                 OwnedUnitSpecResolver.BuildProfiles(definitions.AttackProfiles, owned, definitions.TraitGrowth), main, owned,

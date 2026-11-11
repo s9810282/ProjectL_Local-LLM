@@ -37,6 +37,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (exposures.Count != 0) result.Add(new WeaknessExposureEffectSnapshot(WeaknessExposureRules.EffectivePercent(current), exposures));
             var taunts = Sources<TauntedStatus>(current);
             if (taunts.Count != 0) result.Add(new TauntedEffectSnapshot(taunts));
+            var fire = current.Entries.OfType<FireStatus>().SingleOrDefault();
+            if (fire != null) result.Add(new FireEffectSnapshot(fire));
+            var bleeding = current.Entries.OfType<BleedingStatus>().SingleOrDefault();
+            if (bleeding != null) result.Add(new BleedingEffectSnapshot(bleeding));
+            var slow = current.Entries.OfType<MovementRangeDecreaseStatus>().SingleOrDefault();
+            if (slow != null) result.Add(new MovementRangeDecreaseEffectSnapshot(slow));
+            var reconstruction = current.Entries.OfType<ReconstructionStatus>().SingleOrDefault();
+            if (reconstruction != null) result.Add(new ReconstructionEffectSnapshot(reconstruction));
+            if (RampageTraitRule.IsActive(character))
+                result.Add(new RampageEffectSnapshot(RampageTraitRule.AttackBonus(character), RampageTraitRule.MovementBonus(character),
+                    RampageTraitRule.Status(character).KillAttackBonus));
             return Array.AsReadOnly(result.OrderBy(s => s.Classification).ThenBy(s => s.Key).ToArray());
         }
 

@@ -69,7 +69,7 @@ namespace ProjectL.Tests.Core
                 .WithTraitGrowth(growth);
             var prepared = BattlePreparationCalculator.Prepare(init, owned, main, souls,
                 new InitialDrawPlan(new[] { owned[1].Id, owned[2].Id }), Array.Empty<CharacterCombatFacts>());
-            var stats = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(init.Units), categories, owned, main, souls, init.TraitGrowth);
+            var stats = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(init.Units), categories, owned, main, souls, default, init.TraitGrowth);
             foreach (var c in prepared.Characters)
             {
                 var query = stats.Single(s => s.OwnedId == c.OwnedId);
@@ -88,7 +88,7 @@ namespace ProjectL.Tests.Core
                 .Append(new CombatAttackProfile(mainSpec, new TargetingMethodSpec(TargetingShape.RadialSquare,
                     TargetingChoiceMode.Single, TargetingSplash.None, 0)))
                 .Append(new CombatAttackProfile(basis, method)).ToArray();
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (CombatFlowPhase.PlayerInput) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (CombatFlowPhase.PlayerInput) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
             return new CombatCommandInput(1, CombatCommandKind.Attack, actor.EntityId, AttackAim.ForCell(new CellCoord(4, 3)),
                 state, characters, OwnedUnitSpecResolver.BuildProfiles(profiles, owned, init.TraitGrowth), main, owned, souls,
                 seed.Souls, seed.Artifacts,

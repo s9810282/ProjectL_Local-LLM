@@ -91,7 +91,7 @@ namespace ProjectL.Tests.CoreIntegration
         {
             var actor = battle.Actor;
             var changed = actor.With(stats: actor.Stats.With(traitAttackBonus: 3, traitStatuses: new TraitStatusSnapshot[] { new AccelerationTraitStatusSnapshot(3) }),
-                items: new CharacterItemState(equipped ? 1 : null, new[] { new ItemTemporaryEffect(1, ItemStatKind.PhysicalDefense, 3, 0) }))
+                items: new CharacterItemState(equipped ? 1 : null, new[] { new ItemTemporaryEffect(1, ItemStatKind.PhysicalDefense, 3) }))
                 .WithStatusEffects(new StatusEffectSet(new AppliedStatus[] {
                     new AttackDecreaseStatus(new EffectOriginKey(EffectOwnerKind.Trait, 90, (int)TraitKey.Intimidation, "main"), 20),
                     new WeaknessExposureStatus(new EffectOriginKey(EffectOwnerKind.Trait, 91, (int)TraitKey.ReconSquad, "main"), 10,

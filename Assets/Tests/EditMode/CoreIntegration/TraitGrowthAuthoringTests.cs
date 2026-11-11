@@ -81,7 +81,9 @@ namespace ProjectL.Tests.CoreIntegration
             var two = new VanguardRankAuthoring();
             Set(two, "attackBonus", 4);
             Set(so, "rank2", two);
-            Assert.Throws<InvalidOperationException>(() => so.GetData());
+            var rank2Only = (TraitGrowthDefinitionData)so.GetData();
+            Assert.That(rank2Only.Rank2.Amount, Is.EqualTo(4));
+            Assert.That(rank2Only.Rank3, Is.Null);
             var three = new VanguardRankAuthoring();
             Set(so, "rank3", three);
             Assert.Throws<InvalidOperationException>(() => so.GetData());
@@ -312,6 +314,7 @@ namespace ProjectL.Tests.CoreIntegration
         private TraitGrowthDefinitionDataSO Definition(UnitTraitAuthoring normal, UnitTraitAuthoring enhanced = null)
         {
             var result = New<TraitGrowthDefinitionDataSO>();
+            Set(result, "group", TraitGrowthGroup.Common);
             Set(result, "normal", normal);
             Set(result, "enhanced", enhanced);
             Set(result, "displayName", "normal");

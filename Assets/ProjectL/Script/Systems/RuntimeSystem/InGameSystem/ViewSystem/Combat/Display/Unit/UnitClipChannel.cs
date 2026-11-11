@@ -33,6 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly Animator _animator;
         // 연결 때 복사한 지점 정의입니다. 번호 해석과 입력 배열은 이 값에 감춥니다.
         private readonly CombatAttackPoints _attackPoints;
+        private readonly CombatWeaponPitchRig _pitchRig;
         private readonly RuntimeAnimatorController _controller;
         private readonly bool _animatorWasEnabled;
         // Animator 아래 자식들의 준비 때 로컬 값입니다(계획 P3·P17). 사건 클립이 끝날 때 되돌립니다.
@@ -58,6 +59,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 throw new InvalidOperationException($"[UnitClipChannel] 전투 클립 이벤트 컴포넌트와 같은 GameObject에 Animator가 없습니다: {events.name}");
 
             _attackPoints = events.CaptureAttackPoints();
+            _pitchRig = events.GetComponent<CombatWeaponPitchRig>();
             _controller = _animator.runtimeAnimatorController;
             _animatorWasEnabled = _animator.enabled;
             Transform self = _animator.transform;
@@ -84,9 +86,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                 _graph = PlayableGraph.Create($"UnitClip_{events.name}");
                 _graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-                var output = AnimationPlayableOutput.Create(_graph, "Unit", _animator);
                 _mixer = AnimationMixerPlayable.Create(_graph, 2);
-                output.SetSourcePlayable(_mixer);
+                Playable source = _mixer;
+                if (_pitchRig != null)
+                    source = _pitchRig.Bind(_graph, source);
+                var output = AnimationPlayableOutput.Create(_graph, "Unit", _animator);
+                output.SetSourcePlayable(source);
                 if (_controller != null)
                 {
                     var idle = AnimatorControllerPlayable.Create(_graph, _controller);
@@ -103,19 +108,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             catch
             {
                 if (_graph.IsValid()) _graph.Destroy();
+                _pitchRig?.Clear();
                 _animator.runtimeAnimatorController = _controller;
                 _animator.enabled = _animatorWasEnabled;
                 throw;
             }
         }
 
-        /// <summary>바닥(Idle 컨트롤러)이 있는지입니다(시험용 읽기).</summary>
+        /// <summary>바닥(Idle 컨트롤러)이 있는지입니다(진단용 읽기, 지금 부르는 곳은 없음).</summary>
         internal bool HasBase => _controller != null;
 
-        /// <summary>위층 사건 클립이 꽂혀 있는지입니다(시험용 읽기).</summary>
+        /// <summary>위층 사건 클립이 꽂혀 있는지입니다(진단용 읽기, 지금 부르는 곳은 없음).</summary>
         internal bool HasOverlay => _overlay.IsValid();
 
-        /// <summary>그래프입니다(시험용 읽기). EditMode에서는 Unity 시간이 흐르지 않아 시험이 직접 평가합니다.</summary>
+        /// <summary>그래프입니다(진단용 읽기, 지금 부르는 곳은 없음). EditMode에서는 Unity 시간이 흐르지 않아 직접 평가해야 합니다.</summary>
         internal PlayableGraph Graph => _graph;
 
         /// <summary>
@@ -161,6 +167,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             int layers = _overlay.GetInputCount();
             for (int i = 0; i < layers; i++)
                 _overlay.GetInput(i).SetTime(time);
+            _pitchRig?.SetTime(time);
         }
 
         /// <summary>
@@ -169,6 +176,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// </summary>
         internal void End()
         {
+            _pitchRig?.ResetAim();
             if (!_overlay.IsValid()) return;
             try
             {
@@ -191,6 +199,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
                 RestorePose();
             }
+        }
+
+        /// <summary>프리팹이 조준 리그를 제공할 때 조준점을 설정합니다.</summary>
+        internal void AimWeapon(CombatWeaponAim aim)
+        {
+            if (_pitchRig == null)
+                return;
+            if (!_attackPoints.TryGetMuzzle(0, out Transform muzzle))
+                throw new InvalidOperationException($"[UnitClipChannel] 상하 조준에 첫 포구가 필요합니다: {_animator.name}");
+            _pitchRig.Aim(aim, muzzle);
         }
 
         /// <summary>발사 지점의 지금 월드 위치입니다. 포구가 없으면 false입니다.</summary>
@@ -244,9 +262,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             try { End(); }
             finally
             {
-                try { if (_graph.IsValid()) _graph.Destroy(); }
+                try
+                {
+                    if (_graph.IsValid())
+                    {
+                        _graph.Stop();
+                        _graph.Destroy();
+                    }
+                }
                 finally
                 {
+                    _pitchRig?.Clear();
                     _graph = default;
                     _mixer = default;
                     _overlay = default;

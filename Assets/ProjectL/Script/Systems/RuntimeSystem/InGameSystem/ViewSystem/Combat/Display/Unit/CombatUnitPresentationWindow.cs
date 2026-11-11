@@ -158,6 +158,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 placement.ClearYieldable();
         }
 
+        /// <summary>
+        /// 연발 앞 탄의 접촉 피격(곁들임)이 다른 대여를 빼앗거나 예외 없이 자세(<paramref name="clip"/>이면 클립도)를 빌릴 수 있는지입니다(2026-11-11).
+        /// 걸음 배치가 있으면 양보할 수 있어도 거짓입니다. 곁들임은 Core 사건이 아니라서 도약 경유를 빼앗지 않습니다.
+        /// </summary>
+        internal bool CanBeginContactHit(EntityId id, bool clip) =>
+            TryGetActive(id, out var target) && !target.HasPose && (!clip || !target.HasClip) && !_placements.ContainsKey(id);
+
         /// <summary>중간 사건에 넘긴 도약 배치를 다른 자세·유닛 행동을 접지 않고 되찾을 수 있는지입니다.</summary>
         internal bool CanResumePlacement(EntityId id) =>
             !_targets.TryGet(id, out var target) || !target.HasPose && !target.HasStand;
@@ -212,6 +219,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _deathHolds.Add(id, hold);
             return hold;
         }
+
+        /// <summary>
+        /// 켜진 표시가 있고 아직 사망 유지 중이 아니라 <see cref="HoldDeath"/>를 부를 수 있는지입니다. 반응 없이 몸만 남기는 사망(터질 유닛, 자폭 깜빡임 설계 SD5)이 먼저 묻습니다.
+        /// </summary>
+        internal bool CanHoldDeath(EntityId id) => TryGetActive(id, out _) && !_deathHolds.ContainsKey(id);
 
         /// <summary>
         /// 이동 원본을 흐리게 보입니다(입력 미리보기). 앞의 이동 투명도는 먼저 끝냅니다. 켜진 표시가 없으면 예외입니다.
@@ -297,6 +309,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// 공격 규칙 DB는 조회하지 않습니다.
         /// </summary>
         internal CombatAttackPresentationData AttackSettingsOf(EntityKey key) => _targets.AttackSettingsOf(key);
+
+        /// <summary>그 유닛의 표시 대상이 있는지입니다. 공격 표시 덮어쓰기로 코드 모션을 시작할 때 표시 없는 공격자를 거릅니다(평가 C10-12).</summary>
+        internal bool HasTarget(EntityId id) => _targets.TryGet(id, out _);
+
+        /// <summary>조기 공격이 기존 자세·클립·특성 행동을 빼앗지 않고 시작할 수 있는지입니다.</summary>
+        internal bool CanBeginAttackClip(EntityId id)
+        {
+            if (!TryGetActive(id, out var target) || !target.SupportsClip)
+                throw new InvalidOperationException($"공격 클립을 재생할 활성 표시가 없습니다: {id}.");
+            return !target.HasClip && !target.HasPose && !target.HasStand && CanYieldPlacement(id);
+        }
 
         /// <summary>이미 표시 중인 유닛의 공격 연출 값만 읽습니다. 공격 규칙 DB는 조회하지 않습니다.</summary>
         internal bool TryGetAttackPresentation(EntityId id, out CombatAttackPresentationData settings)

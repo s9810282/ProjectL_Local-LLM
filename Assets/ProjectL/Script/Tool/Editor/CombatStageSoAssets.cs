@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProjectL.Tool.Runtime;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -26,8 +27,9 @@ namespace ProjectL.Tool.Editor
         internal const string UnitType = "UnitDataSO", StructureType = "StructureDataSO", TerrainType = "TerrainDefinitionDataSO";
         internal const string ObstacleType = "ObstacleDefinitionDataSO", ObjectType = "ObjectDefinitionDataSO";
         internal const string FieldType = "FieldDataSO", RosterType = "UnitRosterDataSO", EconomyType = "StageEconomyDataSO";
-        internal const string LoadoutType = "EnemyLoadoutDataSO", ItemType = "ConsumableItemDataSO", CameraType = "CombatCameraSettingsSO";
+        internal const string LoadoutType = "EnemyLoadoutDataSO", ItemType = "ConsumableItemDataSO";
         internal const string RootTableType = "StageRootDataTableSO", ViewTableType = "ViewStageDataTableSO";
+        internal const string FieldViewTableType = "StageFieldViewDataTableSO";
         private const string UnitVisualType = "UnitVisualDataSO", TerrainVisualType = "TerrainVisualDataSO", ObjectVisualType = "ObjectVisualDataSO";
         private const string FieldTableType = "FieldDataTableSO", RosterTableType = "UnitRosterDataTableSO";
         private const string EconomyTableType = "StageEconomyDataTableSO", LoadoutTableType = "EnemyLoadoutDataTableSO";
@@ -37,6 +39,10 @@ namespace ProjectL.Tool.Editor
         private const string FieldViewType = "StageFieldViewDataSO";
         private const string FieldViewMode = "stageFieldViewData.fieldDisplayMode", FieldViewSpacing = "stageFieldViewData.outlineCellSpacing";
         private const string FieldViewUnitScale = "stageFieldViewData.fieldUnitScale";
+        private const string FieldGridMaterial = "stageFieldViewData.gridDecalMaterial";
+        private const string FieldGridLineWidth = "stageFieldViewData.gridLineWidth";
+        private const string FieldGridDepth = "stageFieldViewData.gridDecalDepth";
+        private const string FieldGridLayer = "stageFieldViewData.gridDecalRenderingLayer";
         private const string UnitVisualPrefab = "unitVisualData.prefab", VisualPrefab = "prefab", VisualOffset = "localOffset";
         private const string VisualScale = "localScale", VisualSurface = "surfaceHeight", VisualMode = "visualMode", ReplaceTileMode = "ReplaceTile";
         // 지형 외형의 이웃 모양 칸 다섯입니다. 하나라도 차 있으면 이웃 모양 지형입니다(병합 대응 설계 MG1).
@@ -73,7 +79,7 @@ namespace ProjectL.Tool.Editor
         private const string UnitDefinition = "unitDefinition", StructureDefinition = "structureDefinition", Definition = "definition";
         private const string Anchor = "anchor", Cell = "cell", Rotation = "rotation", VictoryTarget = "isVictoryTarget", StartingItem = "startingItem";
         private const string SourceId = "sourceId", KnownTo = "knownTo", RandomStart = "randomizeInitialPosition", X = "x", Y = "y";
-        private const string Prop = "stageViewPropData", PropObject = "gameObject", PropMap = "map", Camera = "cameraSettings";
+        private const string Prop = "stageViewPropData", PropObject = "gameObject", PropMap = "map";
         private const string DisableRockfallTunnelExplosion = "disableRockfallTunnelExplosion";
         private const string TornadoSign = "tornadoInitialHorizontalSign", TornadoSide = "tornadoSideLength";
         private const string TornadoPresentation = "tornadoPresentation", TornadoBodyReference = "bodyReferenceCells";
@@ -82,7 +88,7 @@ namespace ProjectL.Tool.Editor
         // 배경 방식과 바닥 타일입니다(설계 §12 UT1). 타일 배치(CombatMapTilesInput)와 타일 세트(CombatMapTileSetSO)는 같은 이름 "tiles"를 씁니다.
         internal const string TileSetType = "CombatMapTileSetSO";
         private const string ViewMode = "mode", MapTiles = "mapTiles", TileSet = "tileSet", TileColumns = "columns", TileRows = "rows";
-        private const string TileSize = "tileSize", TileOffset = "offset", AnchorTile = "anchorTile", Tiles = "tiles", TileRotations = "rotations", TilePrefabs = "prefabs";
+        private const string TileOffset = "offset", AnchorTile = "anchorTile", Tiles = "tiles", TileRotations = "rotations", TilePrefabs = "prefabs";
         private const string TableItems = "databaseItems", FootprintWidth = "footprintWidth", FootprintHeight = "footprintHeight";
         private const string FieldColumns = "columnCount", FieldRows = "rowCount", PlayerDepth = "playerDeploymentDepth", EnemyDepth = "enemyDeploymentDepth";
         // 맵 생성 규칙 판정 재료입니다(병합 대응 설계 MG5). 맵 SO는 읽기만 합니다.
@@ -122,6 +128,69 @@ namespace ProjectL.Tool.Editor
 
         internal static int ViewStageKey(Object view) => Require(Require(new SerializedObject(view), Prop), StageKey).intValue;
 
+        // 맵 작업실의 전투 구도 맥락입니다. SO를 고르기만 하며 값이나 프리팹은 바꾸지 않습니다.
+        internal static (int StageKey, string Mode, GameObject Prefab) ReadStageViewPropSource(Object asset)
+        {
+            if (!IsType(asset, ViewType))
+                throw new InvalidOperationException("운영 ViewStageDataSO 에셋을 선택하세요.");
+            if (!RegisteredItems(ViewTableType).Contains(asset))
+                throw new InvalidOperationException($"{asset.name}: 운영 ViewStage 표에 등록되지 않았습니다.");
+            SerializedProperty prop = Require(new SerializedObject(asset), Prop);
+            SerializedProperty mode = Require(prop, ViewMode);
+            string modeName = NameAt(mode.enumNames, mode.enumValueIndex);
+            if (modeName != "Prefab" && modeName != "MapDefinition" && modeName != "PrefabWithTiles")
+                throw new InvalidOperationException($"{asset.name}: 지원하지 않는 배경 방식입니다: {modeName}.");
+            GameObject prefab = modeName == "MapDefinition"
+                ? (Require(prop, PropMap).objectReferenceValue as MapDefinitionSO)?.Prefab
+                : Require(prop, PropObject).objectReferenceValue as GameObject;
+            return (Require(prop, StageKey).intValue, modeName, prefab);
+        }
+
+        internal static CombatStageSoView ReadStagePreviewView(Object asset)
+        {
+            ReadStageViewPropSource(asset);
+            var values = new CombatStageSoView();
+            ReadView(new SerializedObject(asset), values, new CombatStageSoNames());
+            return values;
+        }
+
+        // 작업실의 배경 보정 조작만 운영 ViewStage 에셋에 씁니다. 맵 프리팹은 수정하지 않습니다.
+        internal static void WriteStagePreviewOffsets(Object asset, Vector3 position, Vector3 rotation, Vector3 scale,
+            Vector3 tileOffset, Vector2Int anchorTile, bool tiles)
+        {
+            ReadStageViewPropSource(asset);
+            Undo.RecordObject(asset, "전투 배경 보정");
+            var values = new SerializedObject(asset);
+            SerializedProperty prop = Require(values, Prop);
+            Require(prop, PositionOffset).vector3Value = position;
+            Require(prop, RotationOffset).vector3Value = rotation;
+            if (!tiles) Require(prop, ScaleOffset).vector3Value = scale;
+            if (tiles)
+            {
+                SerializedProperty mapTiles = Require(prop, MapTiles);
+                Require(mapTiles, TileOffset).vector3Value = tileOffset;
+                Require(mapTiles, AnchorTile).vector2IntValue = anchorTile;
+            }
+            values.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
+        // 선택한 StageKey의 전투 Field 원본을 읽습니다. 중복 키·비전투 Root는 임의로 고르지 않습니다.
+        internal static (Object Root, CombatStageSoField Field) ReadStageField(int stageKey)
+        {
+            Object[] roots = RegisteredItems(RootTableType).Where(root => IsType(root, RootType) &&
+                Require(new SerializedObject(root), StageKey).intValue == stageKey).ToArray();
+            if (roots.Length != 1)
+                throw new InvalidOperationException($"운영 StageRoot 표에서 StageKey {stageKey}의 전투 Root가 {roots.Length}개입니다. 정확히 하나가 필요합니다.");
+            Object combat = Require(new SerializedObject(roots[0]), StageData).objectReferenceValue;
+            if (!IsType(combat, CombatType))
+                throw new InvalidOperationException($"{roots[0].name}: 전투 Stage 데이터가 아닙니다.");
+            Object field = Require(new SerializedObject(combat), Field).objectReferenceValue;
+            if (!IsType(field, FieldType))
+                throw new InvalidOperationException($"{combat.name}: FieldDataSO 참조가 없습니다.");
+            return (roots[0], ReadField(field));
+        }
+
         // 작업본을 에셋(또는 저장 전 복제본)에 씁니다. 배열은 작업본 순서로 다시 만들고, 숨김 호환 필드는 건드리지 않습니다(설계 SM10).
         // Root의 stageData는 받은 combat을 가리키게 합니다. 복제본 검사 때 Root 복제본이 전투 데이터 복제본을 보게 하려는 것입니다(계획 P11).
         // resolve는 저장 전 검사에서 공유 SO 대신 그 편집 복제본을 가리킬 때 씁니다. null을 내면 에셋을 씁니다.
@@ -141,7 +210,7 @@ namespace ProjectL.Tool.Editor
             if (view != null) WriteView(new SerializedObject(view), document);
         }
 
-        // 전용 복제를 할 수 있는 공유 SO의 키 필드와 표 형식입니다(설계 SM7). 정의 SO와 카메라 설정은 복제하지 않습니다(계획 P4).
+        // 전용 복제를 할 수 있는 공유 SO의 키 필드와 표 형식입니다(설계 SM7). 정의 SO는 복제하지 않습니다(계획 P4).
         private static bool SharedSpec(Object asset, out string keyField, out string tableType)
         {
             switch (asset != null ? asset.GetType().Name : "")
@@ -465,11 +534,50 @@ namespace ProjectL.Tool.Editor
         {
             Object asset = FindAll(FieldViewType).FirstOrDefault();
             if (asset == null) return new CombatStageSoFieldView(1f, 1f, 1f, true);
+            return ReadFieldView(asset);
+        }
+
+        // 전투 런타임과 같은 설정형 표의 유일한 필드 보기 값을 읽습니다.
+        internal static CombatStageSoFieldView ReadRegisteredFieldView()
+        {
+            return ReadFieldView(RegisteredFieldViewAsset());
+        }
+
+        /// <summary>편집용 격자의 재질·선 폭·투영 깊이를 운영 Field View SO에서 읽습니다. 운영 표시 스위치는 바꾸지 않습니다.</summary>
+        internal static (Material Material, float LineWidth, float Depth, uint RenderingLayers) ReadRegisteredGridDecal()
+        {
+            var values = new SerializedObject(RegisteredFieldViewAsset());
+            SerializedProperty mode = Require(values, FieldViewMode);
+            if (NameAt(mode.enumNames, mode.enumValueIndex) != "GridOutline")
+                throw new InvalidOperationException("편집용 필드 그리드는 GridOutline 방식의 칸 간격이 필요합니다.");
+            Material material = Require(values, FieldGridMaterial).objectReferenceValue as Material;
+            float lineWidth = Require(values, FieldGridLineWidth).floatValue;
+            float depth = Require(values, FieldGridDepth).floatValue;
+            string layerName = Require(values, FieldGridLayer).stringValue;
+            int layer = string.IsNullOrEmpty(layerName) ? -1 : RenderingLayerMask.NameToRenderingLayer(layerName);
+            if (material == null || !float.IsFinite(lineWidth) || lineWidth <= 0f
+                || !float.IsFinite(depth) || depth <= 0f || layer < 0 || layer >= 32)
+                throw new InvalidOperationException("운영 Field View의 격자 데칼 재질·선 폭·깊이·렌더링 레이어가 올바르지 않습니다.");
+            return (material, lineWidth, depth, 1u << layer);
+        }
+
+        private static Object RegisteredFieldViewAsset()
+        {
+            Object[] assets = RegisteredItems(FieldViewTableType).Where(asset => IsType(asset, FieldViewType)).ToArray();
+            if (assets.Length != 1)
+                throw new InvalidOperationException($"운영 StageFieldView 표에 등록된 설정이 {assets.Length}개입니다. 정확히 하나가 필요합니다.");
+            return assets[0];
+        }
+
+        private static CombatStageSoFieldView ReadFieldView(Object asset)
+        {
             var values = new SerializedObject(asset);
             SerializedProperty mode = Require(values, FieldViewMode);
             float unitScale = Require(values, FieldViewUnitScale).floatValue;
             if (NameAt(mode.enumNames, mode.enumValueIndex) != "GridOutline") return new CombatStageSoFieldView(1f, 1f, unitScale, true);
             Vector2 spacing = Require(values, FieldViewSpacing).vector2Value;
+            if (!float.IsFinite(spacing.x) || !float.IsFinite(spacing.y) || spacing.x <= 0f || spacing.y <= 0f)
+                throw new InvalidOperationException($"{asset.name}: OutlineCellSpacing은 양의 유한 값이어야 합니다: {spacing}");
             return new CombatStageSoFieldView(spacing.x, spacing.y, unitScale, false);
         }
 
@@ -599,7 +707,7 @@ namespace ProjectL.Tool.Editor
             return items;
         }
 
-        // 공유 SO마다 그것을 가리키는 전투 데이터(GUID)들입니다. 카메라 설정은 View를 셉니다(설계 §1.4).
+        // 공유 SO마다 그것을 가리키는 전투 데이터(GUID)들입니다. 공용 카메라 설정은 이 목록에 포함하지 않습니다.
         // 저장된 에셋 기준이라, 작업본에서 바꾼 참조는 저장한 뒤에 반영됩니다.
         internal static Dictionary<string, HashSet<string>> ShareUsers()
         {
@@ -617,8 +725,6 @@ namespace ProjectL.Tool.Editor
                 foreach (string name in new[] { Field, Roster, Economy, EnemyLoadout, Headquarters })
                     Add(Require(values, name).objectReferenceValue, GuidOf(combat));
             }
-            foreach (Object view in FindAll(ViewType))
-                Add(Require(Require(new SerializedObject(view), Prop), Camera).objectReferenceValue, GuidOf(view));
             return users;
         }
 
@@ -774,7 +880,6 @@ namespace ProjectL.Tool.Editor
             values.mode = EnumIndex(Require(prop, ViewMode), ref names.viewMode);
             values.gameObjectGuid = GuidOf(Require(prop, PropObject).objectReferenceValue);
             values.mapGuid = GuidOf(Require(prop, PropMap).objectReferenceValue);
-            values.cameraGuid = GuidOf(Require(prop, Camera).objectReferenceValue);
             values.disableRockfallTunnelExplosion = Require(prop, DisableRockfallTunnelExplosion).boolValue;
             values.positionOffset = Require(prop, PositionOffset).vector3Value;
             values.rotationOffset = Require(prop, RotationOffset).vector3Value;
@@ -791,7 +896,7 @@ namespace ProjectL.Tool.Editor
             tileSetGuid = GuidOf(Require(tiles, TileSet).objectReferenceValue),
             columns = Require(tiles, TileColumns).intValue,
             rows = Require(tiles, TileRows).intValue,
-            tileSize = Require(tiles, TileSize).vector2Value,
+            tileSize = CombatMapAuthoringMetrics.TileSize,
             offset = Require(tiles, TileOffset).vector3Value,
             anchorTile = Require(tiles, AnchorTile).vector2IntValue,
             kinds = Elements(Require(tiles, Tiles)).Select(kind => kind.intValue).ToArray(),
@@ -936,11 +1041,14 @@ namespace ProjectL.Tool.Editor
             Require(prop, ViewMode).enumValueIndex = document.view.mode;
             Require(prop, PropObject).objectReferenceValue = Load(document.view.gameObjectGuid);
             Require(prop, PropMap).objectReferenceValue = Load(document.view.mapGuid);
-            Require(prop, Camera).objectReferenceValue = Load(document.view.cameraGuid);
             Require(prop, DisableRockfallTunnelExplosion).boolValue = document.view.disableRockfallTunnelExplosion;
             Require(prop, PositionOffset).vector3Value = document.view.positionOffset;
             Require(prop, RotationOffset).vector3Value = document.view.rotationOffset;
-            Require(prop, ScaleOffset).vector3Value = document.view.scaleOffset;
+            SerializedProperty mode = Require(prop, ViewMode);
+            if (NameAt(mode.enumNames, mode.enumValueIndex) != CombatStageSoBackground.PrefabWithTiles)
+                Require(prop, ScaleOffset).vector3Value = document.view.scaleOffset;
+            else
+                CombatMapAuthoringMetrics.RequireTileSize(document.view.tiles.tileSize, view.targetObject.name);
             WriteTiles(Require(prop, MapTiles), document.view.tiles);
             WriteArray(Require(view, TerrainRotations), document.view.terrainRotations, WriteRotation);
             WriteArray(Require(view, ObjectRotations), document.view.objectRotations, WriteRotation);
@@ -954,7 +1062,7 @@ namespace ProjectL.Tool.Editor
             Require(tiles, TileSet).objectReferenceValue = Load(layout.tileSetGuid);
             Require(tiles, TileColumns).intValue = layout.columns;
             Require(tiles, TileRows).intValue = layout.rows;
-            Require(tiles, TileSize).vector2Value = layout.tileSize;
+            // 타일 크기는 공통 제작 규격이며 SO에 별도로 저장하지 않습니다.
             Require(tiles, TileOffset).vector3Value = layout.offset;
             Require(tiles, AnchorTile).vector2IntValue = layout.anchorTile;
             WriteArray(Require(tiles, Tiles), layout.kinds ?? Array.Empty<int>(), (element, kind) => element.intValue = kind);
@@ -1171,7 +1279,6 @@ namespace ProjectL.Tool.Editor
         public CombatStageSoChoices Economies { get; private set; }
         public CombatStageSoChoices Loadouts { get; private set; }
         public CombatStageSoChoices Items { get; private set; }
-        public CombatStageSoChoices Cameras { get; private set; }
         // 타일 세트는 표 없이 View가 직접 참조하는 SO입니다(계획 P-UTT5). 이름순입니다.
         public CombatStageSoChoices TileSets { get; private set; }
         // 이웃 모양을 쓰는 지형 종류입니다(EdgeShapeTerrainKinds). 화면용이고, 저장 검사는 새로 읽습니다(계획 P-MG1).
@@ -1201,7 +1308,6 @@ namespace ProjectL.Tool.Editor
                 Economies = Choices(CombatStageSoAssets.EconomyType),
                 Loadouts = Choices(CombatStageSoAssets.LoadoutType),
                 Items = Choices(CombatStageSoAssets.ItemType),
-                Cameras = Choices(CombatStageSoAssets.CameraType),
                 TileSets = Choices(CombatStageSoAssets.TileSetType),
                 EdgeShapeKinds = CombatStageSoAssets.EdgeShapeTerrainKinds(),
                 ChapterStages = CombatStageSoAssets.ReadChapterStages(),

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Environment
@@ -61,21 +62,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             return true;
         }
 
-        /// <summary>무너짐을 진행하고, 다 무너진 외형의 끝 콜백을 부릅니다.</summary>
+        /// <summary>무너짐을 진행하고, 다 무너진 외형의 끝 콜백을 부릅니다. 콜백 하나가 실패해도 나머지 외형을 돌려준 뒤 모아 던집니다(평가 C9-04).</summary>
         internal void Tick(float deltaTime)
         {
+            List<Exception> errors = null;
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 Entry entry = _entries[i];
                 entry.Motion.Tick(deltaTime);
                 if (!entry.Motion.IsDone) continue;
                 _entries.RemoveAt(i);
-                entry.Finished();
+                CleanupErrors.Try(entry.Finished, ref errors);
             }
+            CleanupErrors.ThrowIfAny(errors, "[CombatTileCollapseSet] 무너짐 끝 반환 중 실패했습니다.");
         }
 
         /// <summary>
         /// 남은 무너짐을 연출 없이 모두 끝내고 끝 콜백을 부릅니다(취소·건너뛰기·정리). 목록을 먼저 비워, 콜백이 실패해도 같은 외형을 두 번 돌려주지 않습니다.
+        /// 콜백 하나가 실패해도 나머지를 부른 뒤 모아 던집니다(평가 C9-04).
         /// 남은 것이 없으면 아무것도 하지 않습니다.
         /// </summary>
         internal void FinishAll()
@@ -83,8 +87,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_entries.Count == 0) return;
             Entry[] entries = _entries.ToArray();
             _entries.Clear();
+            List<Exception> errors = null;
             foreach (Entry entry in entries)
-                entry.Finished();
+                CleanupErrors.Try(entry.Finished, ref errors);
+            CleanupErrors.ThrowIfAny(errors, "[CombatTileCollapseSet] 무너짐 끝내기 중 실패했습니다.");
         }
     }
 }

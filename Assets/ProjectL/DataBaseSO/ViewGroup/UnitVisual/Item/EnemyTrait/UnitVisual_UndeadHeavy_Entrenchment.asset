@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 332c90a102c94b7a8171a3f0065dc12d, type: 3}
+  m_Name: UnitVisual_UndeadHeavy_Entrenchment
+  m_EditorClassIdentifier: 
+  unitVisualData:
+    key: 88
+    prefab: {fileID: 954244415361327568, guid: 79c7b6b528f2889468309c812f519bc7, type: 3}
+    displayName: "\uC5B8\uB370\uB4DC \uBC29\uD328\uBCD1"
+    description: 
+    timelineIcon: {fileID: 0}
+    infoIcon: {fileID: 686160478, guid: 029c4e9744865f74a949db9b49edf7b0, type: 3}
+    attackPresentation: {fileID: 11400000, guid: 3ce031ca2bd64fbfaedaab95933f0636, type: 2}
+    reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
+    animationPresentation: {fileID: 11400000, guid: 90e11029070028041892ead13bbbb4f3, type: 2}
+    unitSoundPreset: 3
+    attackSoundSlotIndex: -1
+    obstacleHitCues:
+      effects: []
+      shakes: []
+    structureHitCues:
+      effects: []
+      shakes: []
+    obstacleDestroyedCues:
+      effects: []
+      shakes: []

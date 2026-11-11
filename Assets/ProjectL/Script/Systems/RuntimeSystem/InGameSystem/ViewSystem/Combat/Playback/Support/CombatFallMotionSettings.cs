@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// </summary>
     internal sealed class CombatFallMotionSettings
     {
-        /// <summary>바로 끝나는 값입니다. 설정을 넘기지 않은 조립(시험 등)에서 씁니다.</summary>
+        /// <summary>바로 끝나는 값입니다. 연출 값 묶음의 선택 인자 기본값이며, 그 묶음을 만드는 유일한 길(<c>CombatEventPresentationValues.From</c>)은 늘 설정 값을 넘깁니다.</summary>
         internal static CombatFallMotionSettings Instant { get; } = new(0f, 0f, 1f, 0f);
 
         internal CombatFallMotionSettings(float seconds, float depth, float endScale, float shrinkStart)

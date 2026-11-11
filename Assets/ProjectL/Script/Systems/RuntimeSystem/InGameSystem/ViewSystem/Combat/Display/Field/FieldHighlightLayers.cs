@@ -71,7 +71,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// </summary>
         RockfallWarning = 1 << 16,
         /// <summary>호버한 토네이도·하붑·Rider 먼지 연막의 현재 영역입니다. 유닛 범위·공격 조준과 별도로 지우며 행동 중으로 치지 않습니다.</summary>
-        GimmickHoverRange = 1 << 17
+        GimmickHoverRange = 1 << 17,
+        /// <summary>적 본부의 증원 가능 기하 범위입니다. 현재 생성 가능한 칸의 판정이 아닙니다.</summary>
+        NexusReinforcementRange = 1 << 18,
+        /// <summary>
+        /// 포효가 임박한 보스의 포효 범위 칸입니다(포효 예고 설계 RF4). 전투 상태를 보이는 층이라 평소 화면에도 나오고 행동 중으로 치지 않습니다.
+        /// 공격·이동 범위 층들보다 아래라 겹친 칸에서는 그 범위가 안쪽에 그려집니다. 순서·색·채움은 층 표가 원본입니다.
+        /// </summary>
+        RoarForecast = 1 << 19
     }
 
     /// <summary>칸에 실제로 칠할 색의 종류입니다.</summary>
@@ -103,7 +110,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>낙석이 떨어질 칸입니다. 느낌표 이미지 색에 맞춘 씬 값입니다.</summary>
         RockfallWarning = 19,
         /// <summary>호버한 토네이도·하붑·Rider 먼지 연막의 현재 영역 색입니다.</summary>
-        GimmickHoverRange = 20
+        GimmickHoverRange = 20,
+        NexusReinforcementRange = 21,
+        /// <summary>포효가 임박한 보스의 포효 범위 색입니다.</summary>
+        RoarForecast = 22
     }
 
     /// <summary>
@@ -123,9 +133,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private static readonly LayerRow[] Rows =
         {
             //           층                                        색                                        채움   평소에도 그림  원점 열기                  받침 층
+            new LayerRow(FieldHighlightLayer.NexusReinforcementRange, FieldHighlightColor.NexusReinforcementRange, true,  true, SourceOpening.None),
             new LayerRow(FieldHighlightLayer.ObjectiveTarget,       FieldHighlightColor.ObjectiveTarget,      false, true,  SourceOpening.None),
             new LayerRow(FieldHighlightLayer.GimmickHoverRange,     FieldHighlightColor.GimmickHoverRange,    true,  true,  SourceOpening.None),
-            new LayerRow(FieldHighlightLayer.ActiveActor,           FieldHighlightColor.ActiveActor,          false, true,  SourceOpening.Origin),
+            // 포효 예고는 공격 조준·이동 범위 아래라 겹친 칸에서 조준이 안쪽에 그려집니다(포효 예고 설계 RF4, 계획 TP-16).
+            new LayerRow(FieldHighlightLayer.RoarForecast,          FieldHighlightColor.RoarForecast,         true,  true,  SourceOpening.None),
+            new LayerRow(FieldHighlightLayer.ActiveActor,          FieldHighlightColor.ActiveActor,          false, true,  SourceOpening.Origin),
             new LayerRow(FieldHighlightLayer.MoveRange,             FieldHighlightColor.MoveRange,            true,  false, SourceOpening.Origin),
             // 끌어오기 확장 범위는 이동 범위 색입니다(기본 범위와 칸 집합만 나눔, 거리·공격 가능 여부는 Core 응답).
             // 채움은 천명님 Phase D 판(GridOutline 채우기 목록에 없음)과 같게 두었습니다(병합, 채울지는 후속 결정).

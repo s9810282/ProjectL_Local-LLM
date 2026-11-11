@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_RandomEvent
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 26
     stageKey: 0
     stageType: 0
     mapRole: 0

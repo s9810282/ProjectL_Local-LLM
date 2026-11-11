@@ -11,8 +11,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class PiercingFalloffEffectRule : IEffectPierceFalloffRule
+    internal sealed class PiercingFalloffEffectRule : IEffectPierceFalloffRule, IEffectAssessmentCoverageRule
     {
+        public CombatAssessmentGap AssessmentGaps => CombatAssessmentGap.None;
+
         private readonly PiercingFalloffTraitDefinition _definition;
         private readonly PiercingFalloffTraitRule _rule;
 

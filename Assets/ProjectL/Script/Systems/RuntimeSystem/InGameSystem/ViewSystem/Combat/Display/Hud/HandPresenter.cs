@@ -19,7 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </summary>
     /// <remarks>
     /// <b>쓰지 않음(2026-10-24):</b> 손패 선택은 유지 덱 카드가 맡아 운영 경로·계약·씬 루트 참조에서 걷었습니다(View 단계 설계 W4).
-    /// 씬에 컴포넌트가 붙어 있어 Missing Script를 만들지 않으려고 파일만 남깁니다. 컴포넌트를 뗀 뒤 이 파일과 그 시험을 함께 지웁니다(계획 TP-10).
+    /// 씬에 컴포넌트가 붙어 있어 Missing Script를 만들지 않으려고 파일만 남깁니다. 컴포넌트를 뗀 뒤 이 파일을 지웁니다(그 시험은 이미 지워짐)(계획 TP-10).
     /// 아래 설명은 걷기 전 동작입니다.
     /// Buffer·Core·UISystem을 모르고 값만 받습니다. ID별 기존 카드를 다시 쓰고 새 대상만 빌립니다(W19).
     /// 집기·Drop 영역은 화면 좌표로 판정하며, 명령은 Router → PlacementDragInteraction 경로가 맡습니다. 호버 UI 이벤트는 표시만 바꿉니다.
@@ -231,7 +231,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_visuals.TryGetUnitVisual(character.CharacterKey, out var visual))
             {
                 fallbackName = visual.DisplayName;
-                portrait = visual.InfoIcon;
+                portrait = visual.TimelineIcon;
             }
 
             // 레벨은 Buffer에 없으므로 '-'다(덱과 같음). 특성·시너지 패널은 손패에서 숨긴다(설계 U5).

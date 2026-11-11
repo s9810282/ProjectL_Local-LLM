@@ -10,19 +10,23 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         public int AttackRangeReduction { get; }
         public int AttackDamageReductionPercent { get; }
         public int OpposingTurnEndsToExpire { get; }
+        public bool ExemptsAlliedAttackRangePenalty { get; }
 
-        public DustScreenTraitData(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire)
+        public DustScreenTraitData(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire,
+            bool exemptsAlliedAttackRangePenalty = false)
         {
             AttackRangeReduction = attackRangeReduction;
             AttackDamageReductionPercent = attackDamageReductionPercent;
             OpposingTurnEndsToExpire = opposingTurnEndsToExpire;
+            ExemptsAlliedAttackRangePenalty = exemptsAlliedAttackRangePenalty;
         }
 
         public override void Validate()
         {
             try
             {
-                _ = new DustScreenTraitSpec(AttackRangeReduction, AttackDamageReductionPercent, OpposingTurnEndsToExpire);
+                _ = new DustScreenTraitSpec(AttackRangeReduction, AttackDamageReductionPercent,
+                    OpposingTurnEndsToExpire, ExemptsAlliedAttackRangePenalty);
             }
             catch (ArgumentException exception)
             {

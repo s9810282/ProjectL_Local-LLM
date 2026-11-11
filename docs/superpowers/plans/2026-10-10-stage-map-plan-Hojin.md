@@ -42,6 +42,7 @@
 
 ### 2.1 사용자 Unity 확인 대기
 
+- [ ] 챕터 2 진입 임시 막기(§3.19): 챕터 1 보스 승리 → Run 승리·엔딩 → 로비. 챕터 2가 준비되면 `StageMap_Chapter1`의 다음 챕터 키를 2로 되돌릴 것.
 - [ ] UI 소유권 P3(로비): 컴파일, LobbySceneRoot `Ui` → LobbyCanvasView와 하위 참조 연결, 로비 배경·월드 모델 표시와 배경 Canvas Render Camera, 시설·덱·아티팩트 입력, 로비 ↔ StageSelect 왕복, 재생 종료 뒤 배경 Canvas의 저작 Render Camera 복원.
 - [ ] 캐릭터 SC-1: 캐릭터 1개·Idle·발 접지, 다음 노드 이동·회전·착지, 상점 진입, 전투 복귀·재진입 때 중복 없음.
 - [ ] 건물만 표시(§3.14)·연결선 메시(§3.16): 건물 위 클릭, 이동 뒤 숨김·복원, 건물·캐릭터·연결선 높이, 연결선 끝점·분기·SO 색(재생 재시작 뒤), 씬 왕복 때 색 핸들 중복 없음.
@@ -308,6 +309,15 @@ Core 교체 순서·API·수명 계약은 [Core 교체 인계](../handoffs/2026-
   - Ud(사용자): ① 컴파일, DB 생성 오류 없음 ② 일반·보스 전투 건물 호버에 새 글 ③ 용병 고용소·훈련소·상점·회복 글 그대로 ④ 상점·훈련소·회복 팝업 머리줄·버튼 글 그대로 ⑤ `StageOfferText_Combat` 인스펙터에 Stage Type·Map Role 칸.
 - 보고만: 노드 외형 전용 항목의 `Stage Key` 1·2·3·4가 실제 스테이지 키(1201~1303)와 맞지 않아 쓰이지 않는다. 그래서 Shop 종류 시설 셋은 모두 `_MainCharacterUpgradeStageNode`로, 회복 셋은 `_RandomEventStageNode`로 그려진다(설계 §5.7). 안내 §2의 SO 표 이름(`NodeVisual_Shop_Regular` 등)도 지금 에셋 이름과 다르다. → 11-03 작업 트리에서 사용자가 고침(이 세션 밖, 커밋 전): `NodeVisual_MercenaryRecruitment` 2 → 1201, `NodeVisual_SupportingCharacterGrowth` 3 → 1202, `NodeVisual_Recovery` 4 → 0(공통 Event), 표에서 `NodeVisual_RandomEvent` 등록을 뺌(에셋은 남음). 호버 글은 전투만 외형 표를 읽어 영향 없음. 안내 §2 표는 아직 옛 이름.
   - 11-03 고침(에셋만, 컴파일·재생 미확인): 용병 1201·훈련소 1202 전용, 회복은 Event 공통(키 0), `NodeVisual_RandomEvent`는 표 등록에서 뺌(에셋 남김). 내용은 설계 §5.7 같은 줄 아래.
+
+### 3.19 챕터 2 진입 임시 막기 (11-11)
+
+빌드용 임시 조치다(사용자 "챕터2는 아직 다 만든게 아니라서 막는게 좋을꺼 같습니다"). 에셋 한 줄만 바꿨고 코드는 그대로다. 재생 미확인, 커밋 전.
+
+- 바꾼 것: `DataBaseSO/InGameGroup/StageMap/Item/StageMap_Chapter1.asset`의 `nextChapterKey` 2 → 0. 이 칸은 `1258dd685`(11-05)에서 챕터 2를 열 때 2가 됐다. SO 툴팁대로 0이면 마지막 챕터라, 챕터 1 보스 승리가 Run 승리로 끝난다(결과 화면·엔딩 → 로비).
+- 그대로 둔 것: `StageMap_Chapter2.asset`·표 등록·챕터 2 스테이지 에셋. 표 검사는 다음 챕터 키가 0보다 클 때만 등록을 보므로 지금 값으로 DB 생성은 그대로다. 챕터 2는 어디서도 이어지지 않아 들어갈 수 없다.
+- 되돌리기: 챕터 2가 준비되면 같은 칸을 2로 돌린다.
+- 확인(사용자): ① DB 생성 오류 없음 ② 챕터 1 보스를 이기면 챕터 2 맵이 아니라 Run 승리 결과·엔딩 뒤 로비로 감.
 
 ## 4 c1b9b0a 병합 검토 (2026-10-11)
 

@@ -33,7 +33,7 @@ namespace ProjectL.Tests.Core
             var duplicate = CombatTurnCalculator.EndPlayerTurn(after, Array.Empty<IMovementTileRule>());
             Assert.That(duplicate.Accepted, Is.False);
             Assert.That(duplicate.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(1));
-            var start = CombatTurnCalculator.BeginControllerTurn(after);
+            var start = CombatTurnCalculator.BeginControllerTurn(after, Array.Empty<IMovementTileRule>());
             Assert.That(start.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(1));
             var enemyEnd = CombatTurnCalculator.EndEnemyPhase(CombatCommandComposition.Project(start), Array.Empty<IMovementTileRule>());
             Assert.That(enemyEnd.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(2));

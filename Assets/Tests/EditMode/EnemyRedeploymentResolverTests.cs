@@ -27,7 +27,7 @@ namespace ProjectL.Tests.Core
                     EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), new CellCoord(0, 7), Rotation4.R0, new[] { new CellCoord(0, 7) });
             var state = source.State.With(structures: new[] { headquarters },
-                turn: new CombatTurnFacts(StagePhase.Deployment, 2, true,
+                turn: new CombatTurnFacts(StagePhase.Deployment,
                     enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, enemy.Anchor.Value, Rotation4.R90) }));
             var input = new CombatCommandInput(source.Number, source.Kind, source.ActorId, source.Aim, state,
                 new[] { source.Characters[1], waiting }, source.Profiles, source.Main, source.Owned, source.SoulCounts,
@@ -55,7 +55,7 @@ namespace ProjectL.Tests.Core
             var definitions = new StageGimmickSpec[] { new TornadoGimmickSpec(new[] {
                 new TornadoMemberSpec(31, new[] { Owner.Player, Owner.Enemy }, new CellCoord(1, 6)) }) };
             var state = StageGimmickComposition.Initialize(source.State.With(structures: new[] { headquarters },
-                turn: new CombatTurnFacts(StagePhase.Deployment, 2, true,
+                turn: new CombatTurnFacts(StagePhase.Deployment,
                     enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, enemy.Anchor.Value, Rotation4.R90) })), definitions);
             var input = new CombatCommandInput(source.Number, source.Kind, source.ActorId, source.Aim, state,
                 new[] { source.Characters[1], waiting }, source.Profiles, source.Main, source.Owned, source.SoulCounts,
@@ -83,9 +83,9 @@ namespace ProjectL.Tests.Core
             var enemy = CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(2, 7), Owner.Enemy);
             var waiting = CombatPlacementCalculator.Location(enemy, CharacterRuntimeArea.EnemyWaiting, null, null, null);
             var mine = new MineSourceFact(901, enemy.Anchor.Value, 1, 1000, true, new[] { Owner.Player, Owner.Enemy });
-            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, false, source.State.Structures,
+            var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, source.State.Structures,
                 source.State.ThornFields, objective: BattleObjective.DesignatedBoss(enemy.EntityId),
-                turn: new CombatTurnFacts(StagePhase.Deployment, 2, true,
+                turn: new CombatTurnFacts(StagePhase.Deployment,
                     enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, enemy.Anchor.Value, Rotation4.R0) }),
                 environment: new MovementEnvironmentFacts(new[] { mine }), environmentProgress: new EnvironmentProgressFacts(2, 902, 1));
             var input = new CombatCommandInput(source.Number, source.Kind, source.ActorId, source.Aim, state,
@@ -105,7 +105,7 @@ namespace ProjectL.Tests.Core
             var footprint = new TileFootprint(2, 1, new[] { new CellCoord(1, 0) });
             var anchor = new CellCoord(-1, 4);
             var occupied = footprint.GetOccupiedCell(0, anchor, Rotation4.R0);
-            var board = new CombatCommandState(3,5,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
+            var board = new CombatCommandState(3,5,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
             Assert.That(footprint.CellCount, Is.EqualTo(1));
             Assert.That(occupied, Is.EqualTo(new CellCoord(0, 4)));
             Assert.That(board.IsInside(anchor), Is.False);

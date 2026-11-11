@@ -297,7 +297,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     nameof(spec));
             }
 
-            return new RoarTraitDefinition(roarSpec.HitThreshold);
+            return new RoarTraitDefinition(roarSpec.HitThreshold, roarSpec.CountPerHit,
+                roarSpec.CountPerOwnSideTurnEnd, roarSpec.CountPerOpposingSideTurnEnd);
         }
     }
 

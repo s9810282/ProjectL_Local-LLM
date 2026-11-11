@@ -4,8 +4,8 @@ using UnityEngine;
 namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 {
     /// <summary>
-    /// 전투 카메라 조작(이동·줌) 입력입니다(카메라 조작 설계 CC5). 스테이지 맵 프랍(<c>StageViewPropData.cameraSettings</c>)이 참조하고
-    /// 여러 스테이지가 하나를 함께 쓸 수 있습니다. 자세 줌을 켜면 시작 크기·양 끝점의 위치·회전까지 여기서 지정합니다.
+    /// 전투 카메라 조작(이동·줌) 입력입니다(카메라 조작 설계 CC5). 씬 공용 카메라 바인딩이 참조합니다.
+    /// 운영과 특성 확인 환경이 같은 설정을 함께 씁니다. 자세 줌을 켜면 시작 크기·양 끝점의 위치·회전까지 여기서 지정합니다.
     /// </summary>
     [CreateAssetMenu(fileName = "CombatCameraSettings", menuName = "ProjectL/Database/View/Combat Camera Settings")]
     internal sealed class CombatCameraSettingsSO : ScriptableObject

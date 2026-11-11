@@ -63,7 +63,7 @@ namespace ProjectL.Tests.Core
             var input = CliffFallTests.WithEnvironment(CliffFallTests.Knockback(),
                 new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player }));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
             Pin(input, TornadoEnvironmentTests.Rules, C3Expected);
         }
         /// <summary>C5: 관통. ID 순서(2, 7, 9)와 진행 순서(9, 2, 7)가 다르고 아티팩트 공통 피해 사건이 있다(G6, G1).</summary>
@@ -84,7 +84,7 @@ namespace ProjectL.Tests.Core
             var chars = input.Characters.ToArray();
             chars[2] = CombatCommandTestData.With(chars[2], hp: 25);
             chars[4] = CombatCommandTestData.With(chars[4], hp: 1);
-            var state = new CombatCommandState(8,8,input.State.Phase,true,                input.State.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 7) },turn: input.State.Turn);
+            var state = new CombatCommandState(8,8,input.State.Phase,                input.State.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 7) },turn: input.State.Turn);
             input = CombatCommandTestData.With(input, chars, state, artifacts: new ArtifactLoadoutSnapshot(0,
                 new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
             Pin(input, NoRules, C6Expected);
@@ -127,7 +127,7 @@ namespace ProjectL.Tests.Core
                     new[] { actor }.Concat(seed.Characters.Skip(1)).Concat(new[] { doomed }).ToArray(), profiles: profiles),
                 new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player }));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,true,s.Structures,s.ThornFields,s.Turn,s.Environment),
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment),
                 artifacts: new ArtifactLoadoutSnapshot(0, new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
             Pin(input, TornadoEnvironmentTests.Rules, C8Expected);
         }

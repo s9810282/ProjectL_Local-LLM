@@ -16,7 +16,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.Core
     internal static class CombatSystemFactory
     {
         internal static IBattleEntryService Register(ISystemWriteSink sink, IBattleInitializationSource source,
-            ICharacterRosterService characters, IChapterProgressionCoordinator progression)
+            ICharacterRosterService characters, IChapterProgressionCoordinator progression, bool usePreparedEnemyAdvance = false)
         {
             if (sink == null) throw new ArgumentNullException(nameof(sink));
             if (characters == null) throw new ArgumentNullException(nameof(characters));
@@ -46,8 +46,11 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.Core
             entry.ExportServices(sink);
             new BattleCompletionService(lifetime, artifacts, planner).ExportServices(sink);
             new CombatCommandService(assembler, publisher, movementRules).ExportServices(sink);
-            new CombatAdvanceService(assembler, publisher, movementRules).ExportServices(sink);
+            // 성능·Flow 인수 전에는 기본 자동 진행을 유지한다. 진단 조립에서만 명시적으로 준비 경로를 선택한다.
+            new CombatAdvanceService(assembler, publisher, movementRules, usePreparation: usePreparedEnemyAdvance).ExportServices(sink);
             new CombatPreviewService(assembler, movementRules).ExportServices(sink);
+            // 첫 동작 준비는 게시 협력자 없이 조립기·이동 규칙만 받는다(첫 동작 Core 준비 계획 FU-a).
+            new CombatFirstUsePreparationService(assembler, movementRules).ExportServices(sink);
             return entry;
         }
     }

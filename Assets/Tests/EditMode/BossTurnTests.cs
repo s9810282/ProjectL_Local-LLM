@@ -59,8 +59,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Outcome.Outcome, Is.EqualTo(StageOutcome.Defeat));
             Assert.That(result.FinalState.Phase, Is.EqualTo(CombatFlowPhase.Finished));
             Assert.That(result.Events.OfType<CombatRoarEvent>().Count(), Is.EqualTo(1));
-            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.NightEnded ||
-                e.Kind == CombatEventKind.EnemyPhaseEnded || e.Kind == CombatEventKind.ControllerTurnStarted), Is.False);
+            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.EnemyPhaseEnded || e.Kind == CombatEventKind.ControllerTurnStarted), Is.False);
             Assert.That(result.Characters.Created, Is.Empty);
         }
 
@@ -103,7 +102,7 @@ namespace ProjectL.Tests.Core
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                 controllerTurnSequence: 2, completedPlayerTurnCount: completed,
                 enemyOrigins: new[] { new CombatEnemyOrigin(Boss, bossCell, Rotation4.R90) }, summons: records);
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Automatic,                true,s.Structures,s.ThornFields,turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(Boss),new CombatAllocationFacts(Math.Max(11, characters.Max(c => c.EntityId.Value) + 1),
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.Automatic,s.Structures,s.ThornFields,turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(Boss),new CombatAllocationFacts(Math.Max(11, characters.Max(c => c.EntityId.Value) + 1),
                     s.Allocation.SummonRandomState));
             return new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, Boss, default, state, characters, profiles,
                 input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, processingKind: CombatProcessingKind.Advance,

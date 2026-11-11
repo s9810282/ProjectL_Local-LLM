@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Deck;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -15,11 +14,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
         internal static DeckEditDisplayModel Build(DeckEditDraft draft)
         {
             if (draft == null) throw new ArgumentNullException(nameof(draft));
-            string status = DeckEditText.Status(draft);
             DeckEditorSnapshot basis = draft.Basis;
             if (basis == null)
                 return new DeckEditDisplayModel(Array.Empty<DeckEditCardModel>(), new DeckEditCardModel[DeckEditSlotLayout.Count],
-                    status, string.Empty, false, false);
+                    false, false, draft.CanReevaluate, true);
 
             IReadOnlyList<CharacterInstanceId> candidates = draft.Candidates;
             var inDeck = new HashSet<CharacterInstanceId>(candidates);
@@ -31,19 +29,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
             }
 
             var deck = new DeckEditCardModel[DeckEditSlotLayout.Count];
+            bool fitsLayout = true;
             for (int i = 0; i < candidates.Count; i++)
             {
-                // 다시 평가로 사라진 후보도 Draft에서는 유지하고 Core의 거절 사유는 표시 모델의 Status에 남깁니다.
+                // 다시 평가로 사라진 후보도 Draft에서는 유지합니다. Core의 거절 사유는 컨트롤러가 공용 안내로 알립니다.
                 if (!TryFindOwned(basis, candidates[i], out OwnedCharacterRecord record)) continue;
                 DeckEditCardModel card = Card(basis, record, true);
                 int slot = DeckEditSlotLayout.IndexOf(card.Category);
+                // Core가 받은 덱이 화면 칸(병과당 한 칸)에 맞지 않으면 멈추지 않고 편집만 막습니다(평가 C-09). 출전은 Core 덱 그대로 됩니다.
                 if (slot < 0 || deck[slot] != null)
-                    throw new InvalidOperationException($"[DeckEditModelBuilder] UIId.DeckEdit: {card.Category} 병과의 " +
-                        $"보유 유닛 '{card.OwnedId}'을 고정 슬롯에 표시할 수 없습니다. 병과별 편성을 확인하세요.");
+                {
+                    fitsLayout = false;
+                    continue;
+                }
                 deck[slot] = card;
             }
 
-            return new DeckEditDisplayModel(owned, deck, status, Categories(deck), draft.CanEdit, draft.CanConfirm);
+            return new DeckEditDisplayModel(owned, deck, draft.CanEdit && fitsLayout, draft.CanConfirm,
+                draft.CanReevaluate, fitsLayout);
         }
 
         private static DeckEditCardModel Card(DeckEditorSnapshot basis, OwnedCharacterRecord record, bool inDeck)
@@ -70,24 +73,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Deck
             foreach (OwnedCharacterStatsSnapshot stats in basis.Stats)
                 if (stats.OwnedId == id) return stats;
             return null;
-        }
-
-        private static string Categories(IReadOnlyList<DeckEditCardModel> deck)
-        {
-            var counts = new SortedDictionary<CategoryKey, int>();
-            foreach (DeckEditCardModel card in deck)
-            {
-                if (card?.Stats == null) continue;
-                counts.TryGetValue(card.Stats.CategoryKey, out int count);
-                counts[card.Stats.CategoryKey] = count + 1;
-            }
-            var text = new StringBuilder();
-            foreach (KeyValuePair<CategoryKey, int> pair in counts)
-            {
-                if (text.Length > 0) text.Append(" · ");
-                text.Append(pair.Key).Append(' ').Append(pair.Value);
-            }
-            return text.ToString();
         }
     }
 }

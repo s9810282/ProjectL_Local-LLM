@@ -44,7 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public void BeginFrame(in CombatPlaybackFrame frame)
         {
             if (_unavailable)
-                throw new InvalidOperationException("[CombatSceneEventPresenter] 반응 중 유닛 표시가 비활성화됐습니다.");
+                throw new InvalidOperationException("[CombatReactionPlayer] 반응 중 유닛 표시가 비활성화됐습니다.");
             _versionAtFrameStart = _reaction.Version;
         }
 

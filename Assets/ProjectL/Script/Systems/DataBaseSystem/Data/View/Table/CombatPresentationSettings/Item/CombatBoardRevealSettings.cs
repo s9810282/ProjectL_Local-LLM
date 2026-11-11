@@ -37,8 +37,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             CombatPresentationValueRules.RequireNonNegative(conerBatchGrowth, nameof(conerBatchGrowth));
             CombatPresentationSettingsData.ValidateSeconds(sweepSeconds, nameof(sweepSeconds));
             CombatPresentationSettingsData.ValidateSeconds(tileSeconds, nameof(tileSeconds));
-            CombatPresentationSettingsData.ValidateRiseDepth(depth, nameof(depth));
-            CombatPresentationSettingsData.ValidateRiseDepth(overshoot, nameof(overshoot));
+            CombatPresentationValueRules.RequireNonNegative(depth, nameof(depth));
+            CombatPresentationValueRules.RequireNonNegative(overshoot, nameof(overshoot));
         }
     }
 }

@@ -7,7 +7,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Players
 {
     /// <summary>
-    /// 사건 Presenter의 재생기 실행 목록입니다(연출 조립 설계 B12). 외형 전환을 먼저 진행하고, 기존 겹침 순서(공격 독점 → 포효 히트 전 조각 행동 실행만 → 걸음·대기 → 반응,
+    /// 사건 Presenter의 재생기 실행 목록입니다(연출 조립 설계 B12). 외형 전환 → 몸 위 글자(있을 때)를 먼저 진행하고, 기존 겹침 순서(공격 독점 → 포효 히트 전 조각 행동 실행만 → 걸음·대기 → 반응,
     /// 설계 B14 O1·O3·O5·O7) 자리마다 이름 있는 인자로 받아 고정합니다(보완 2). 만든 뒤에는 바뀌지 않습니다(지침 §11).
     /// 조각 실행 집합 자리(<c>pieces</c>)는 옛 능력 자리의 규칙을 이어받았습니다(조각·조립 설계 BP5, B-2).
     /// </summary>

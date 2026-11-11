@@ -29,11 +29,18 @@ MonoBehaviour:
   targetingMethod: {fileID: 11400000, guid: b189027c0dcc429590c55a729991e95d, type: 2}
   attackRange: 1
   category: 20
-  attackPower: 6
+  attackPower: 10
   wallDelivery: 1
   wallPropagation: 1
   priority: 30
-  traits: []
+  traits:
+  - rid: 6265209904258089048
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 6265209904258089048
+      type: {class: CrashImpactTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:
+        distanceCells: 3
+        wallDamagePercent: 10
+        unitDamagePercent: 10

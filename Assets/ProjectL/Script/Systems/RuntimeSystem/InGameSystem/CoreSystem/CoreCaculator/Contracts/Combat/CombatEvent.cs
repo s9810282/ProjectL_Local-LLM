@@ -15,7 +15,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         Moved = 1, Placed, Returned, HealthChanged = 5, Died, Attacked,
         EffectsActivated, ArtifactActivated, SoulsCollected, SoulFieldSettled, CombatEntered,
-        NightEnded = 15, GimmickActivated, StageEnded, HealthNormalized,
+        // 폐기된 밤 종료 사건의 번호 15는 재사용하지 않습니다(밤 삭제 설계 2026-11-10).
+        GimmickActivated = 16, StageEnded, HealthNormalized,
         MovementSourceChanged, ThornConsumed, ObstacleReacted, HeldEnvironmentChanged, ObjectActivated, ObjectCreated,
         Relocated, TornadoActivated, Fell,
         /// <summary>전투 중 새 개체 생성이다. 다음 밤 복귀는 기존 Placed를 쓰므로 생성과 구분된다.</summary>
@@ -39,7 +40,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         TornadoAdvanced = 44,
         TornadoCenterReached = 45,
         TornadoEntryStarted = 46,
-        TornadoMemberAdvanced = 47
+        TornadoMemberAdvanced = 47,
+        Reinforced = 48,
+        /// <summary>치명 피해를 재구성으로 버텼다. 맞기 전 사실 → 재구성 사실(체력 최대·재구성 중)이며, 그 맞음에는 체력·사망 사건이 없다.</summary>
+        Reconstructed = 49
     }
 
     /// <summary>
@@ -129,11 +133,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (kind != CombatEventKind.Moved && kind != CombatEventKind.Placed && kind != CombatEventKind.Returned &&
                 kind != CombatEventKind.HealthChanged && kind != CombatEventKind.Died &&
-                kind != CombatEventKind.HealthNormalized && kind != CombatEventKind.Relocated)
+                kind != CombatEventKind.HealthNormalized && kind != CombatEventKind.Relocated && kind != CombatEventKind.Reconstructed)
                 throw new ArgumentOutOfRangeException(nameof(kind));
             Final = final ?? throw new ArgumentNullException(nameof(final));
             if (expected == null || expected.EntityId != final.EntityId)
                 throw new ArgumentException("캐릭터 사건의 원본·최종 식별자가 잘못되었습니다.");
+            if (kind == CombatEventKind.Reconstructed && (expected.Health.IsDead || final.Health.CurrentHealth != final.Health.MaxHealth))
+                throw new ArgumentException("재구성 사건은 살아 있던 캐릭터가 최대 체력으로 남을 때만 씁니다.");
             Expected = expected;
             if (kind == CombatEventKind.Relocated ? !tornadoSourceId.HasValue || tornadoSourceId.Value < 1 : tornadoSourceId.HasValue)
                 throw new ArgumentException("Tornado 이동 사건에는 원인 원본 식별자가 필요합니다.");
@@ -369,7 +375,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CombatTurnEvent(CombatEventKind kind, EntityId actor, CombatTurnFacts expected, CombatTurnFacts final) : base(kind)
         {
             if (kind != CombatEventKind.CombatEntered && kind != CombatEventKind.ControllerTurnStarted &&
-                kind != CombatEventKind.PlayerTurnEnded && kind != CombatEventKind.EnemyPhaseEnded && kind != CombatEventKind.NightEnded) throw new ArgumentOutOfRangeException(nameof(kind));
+                kind != CombatEventKind.PlayerTurnEnded && kind != CombatEventKind.EnemyPhaseEnded) throw new ArgumentOutOfRangeException(nameof(kind));
             ActorId = actor; Expected = expected ?? throw new ArgumentNullException(nameof(expected));
             Final = final ?? throw new ArgumentNullException(nameof(final));
         }

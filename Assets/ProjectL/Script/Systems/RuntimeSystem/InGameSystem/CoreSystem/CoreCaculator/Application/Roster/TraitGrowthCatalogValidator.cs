@@ -83,6 +83,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var key in catalog.Definitions.Select(d => d.Key)
                 .Concat(catalog.Categories.SelectMany(c => c.Pool)).Distinct())
             {
+                if (TraitOwnerPolicy.IsEnemyOnly(key))
+                    throw new InvalidOperationException($"Trait {key}: EnemyOnly. 성장 정의·후보에 넣을 수 없습니다.");
                 if (Combat.DeferredCombatFeatures.IsTraitRetired(key))
                     throw new InvalidOperationException($"Trait {key}: Retired.");
                 if (Combat.DeferredCombatFeatures.IsImplementationPending(key))

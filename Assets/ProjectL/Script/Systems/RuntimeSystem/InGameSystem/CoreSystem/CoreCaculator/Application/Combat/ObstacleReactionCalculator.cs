@@ -78,35 +78,56 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal void ResolveExplosions()
         {
+            foreach (var _ in ResolveExplosionSteps()) { }
+        }
+
+        internal IEnumerable<string> ResolveExplosionSteps()
+        {
             // 큐는 한 명령에만 존재한다. 다음 폭발은 앞선 폭발의 체력 정산이 끝난 최신 사실을 읽는다.
             while (explosions.TryDequeue(out var blast))
             {
                 var hitCause = sharedHitCause ?? new CombatHitCause();
                 var cells = new HashSet<CellCoord>(BarrelCells(blast.Source.Anchor, input.State.BoardWidth, input.State.BoardHeight));
-                foreach (var id in characters.Values.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead &&
-                    c.OccupiedCells.Any(cells.Contains)).Select(c => c.EntityId).OrderBy(id => id).ToArray())
+                var targets = new SortedSet<EntityId>();
+                foreach (var character in characters.Values)
+                {
+                    if (character.Area == CharacterRuntimeArea.Field && !character.Health.IsDead &&
+                        character.OccupiedCells.Any(cells.Contains)) targets.Add(character.EntityId);
+                    yield return "ObstacleBlastCharacterScan";
+                }
+                foreach (var id in targets)
                 {
                     var before = characters[id];
                     // 피해가 전부 막혀도 보유 방어를 읽고 소비하므로 공개 기대값에 수신자를 남긴다.
                     BlastTargetIds.Add(id);
                     TerrainQueryCells.Add(before.Anchor.Value);
                     TerrainQueryCells.Add(blast.Source.Anchor);
-                    RoarHitCounter.Record(characters, id, hitCause, input.State.IsNight);
+                    RoarHitCounter.Record(characters, id, hitCause, input.State.InCombat);
                     int damage = CombatDamageCalculator.Environment(input, blast.Profile.ExplosionDamage, blast.Origin,
                         before.Anchor, environment).FinalDamage;
-                    damage = damageApplication.Apply(id, CombatDamageKind.EnvironmentDamage, blast.Origin, damage,
-                        heldDefenseGroups: attackGroups).RemainingDamage;
+                    yield return "ObstacleBlastDamageInput";
+                    foreach (var phase in damageApplication.ApplySteps(id, CombatDamageKind.EnvironmentDamage, blast.Origin,
+                        damage, value => damage = value.RemainingDamage, heldDefenseGroups: attackGroups)) yield return phase;
                     if (characters[id].Health.IsDead) deathAnchors[id] = before.Anchor.Value;
                     BlastDamage[id] = checked(BlastDamage.GetValueOrDefault(id) + damage);
+                    yield return "ObstacleBlastCharacter";
                 }
                 // 점유 칸이 여러 개 겹쳐도 각 개체는 이 폭발에서 한 번만 정산한다.
-                foreach (var id in structures.Values.Where(s => !s.Health.IsDead && s.OccupiedCells.Any(cells.Contains))
-                    .Select(s => s.EntityId).OrderBy(id => id).ToArray())
+                targets.Clear();
+                foreach (var structure in structures.Values)
+                {
+                    if (!structure.Health.IsDead && structure.OccupiedCells.Any(cells.Contains))
+                        targets.Add(structure.EntityId);
+                    yield return "ObstacleBlastStructureScan";
+                }
+                foreach (var id in targets)
                 {
                     BlastTargetIds.Add(id);
                     DamageStructure(id, blast.Profile.ExplosionDamage, blast.Origin);
                     BlastDamage[id] = checked(BlastDamage.GetValueOrDefault(id) + blast.Profile.ExplosionDamage);
+                    yield return "ObstacleBlastStructure";
                 }
+                yield return "ObstacleBlastComplete";
             }
         }
 

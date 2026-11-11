@@ -91,23 +91,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
         }
 
-        /// <summary>Object 회전만 검증합니다. 아직 소비하지 않는 Terrain 회전을 요구하지 않습니다.</summary>
+        /// <summary>Object 회전만 분류와 대조합니다. Terrain 회전은 지형 표시가 대조합니다(<see cref="FieldTerrainPresenter.ValidateTerrainRotations"/>).</summary>
         internal static void ValidateObjectRotations(StageEnvironmentVisualData rotations, EnvironmentSemanticBindings bindings)
         {
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (rotations == null) return;
             foreach (EnvironmentVisualRotation rotation in rotations.ObjectRotations)
             {
-                bool found = false;
-                foreach (long id in bindings.ObjectSourceIds)
-                {
-                    if (id == rotation.SourceId)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
+                // 분류 소속은 CombatEnvironmentFacts 한 곳입니다(평가 C1-05).
+                if (!CombatEnvironmentFacts.IsObject(bindings, rotation.SourceId))
                     throw new InvalidOperationException($"[FieldObjectPresenter] Object 회전의 Source Id가 Buffer 분류에 없습니다: {rotation.SourceId}.");
             }
         }
@@ -140,6 +132,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             if (_isReleased || !_views.TryGet(sourceId, out Instance instance) || instance.GameObject == null) return;
             if (instance.GameObject.activeSelf) instance.GameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 지금 보이는 Object 인스턴스를 진입 연출 대상으로 모읍니다(평가 C10-06). 보드가 올라오는 동안 숨겼다가 구조물 다음에 보입니다.
+        /// 연결·배치는 바꾸지 않습니다. 꺼진 인스턴스(발동해 숨긴 것)는 넣지 않습니다.
+        /// </summary>
+        internal void CollectEntryObjects(List<Transform> targets)
+        {
+            if (targets == null) throw new ArgumentNullException(nameof(targets));
+            if (_isReleased) return;
+            _views.VisitViews(instance =>
+            {
+                if (instance.GameObject != null && instance.GameObject.activeInHierarchy) targets.Add(instance.GameObject.transform);
+            });
         }
 
         // 원본 표시 위치(필드 로컬)입니다. 표시(Apply)와 접촉 몸(BodyOf)이 함께 쓰는 한 곳입니다.

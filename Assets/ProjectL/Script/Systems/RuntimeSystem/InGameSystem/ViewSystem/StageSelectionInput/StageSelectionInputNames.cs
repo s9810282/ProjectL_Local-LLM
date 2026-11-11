@@ -11,10 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageSelectionI
         internal const string Select = "Select";
         internal const string Confirm = "Confirm";
         internal const string Cancel = "Cancel";
-#if UNITY_EDITOR
-        internal const string CameraModifier = "CameraModifier";
-        internal const string CameraDolly = "CameraDolly";
-        internal const string CameraZoom = "CameraZoom";
-#endif
+        // 기존 Input Actions의 휠 액션 이름입니다(이름은 CameraZoom이지만 맵 카메라 이동에 씁니다).
+        internal const string CameraScroll = "CameraZoom";
     }
 }

@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Recovery;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TraitGrowth;
@@ -38,6 +39,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
         private bool _shopStopped;
         private bool _recoveryStopped;
         private bool _growthStopped;
+        private RunId _abandonRunId;
 
         /// <param name="report">도메인을 멈출 때 남길 진단입니다.</param>
         internal StageProgress(Action<string> report)
@@ -51,8 +53,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
         /// <summary>LifeCycle이 이탈·종료로 등록을 멈췄는지입니다. 방문을 새로 시작할 때 풀립니다.</summary>
         internal bool IsHalted => _halted;
 
-        /// <summary>전체가 멈췄거나 도메인 하나가 멈췄는지입니다(덱 편집 창).</summary>
-        internal bool IsStopped => _halted || _entryStopped || _shopStopped || _recoveryStopped || _growthStopped;
+        /// <summary>전체·도메인 정지 또는 런 포기로 맵 상호작용을 진행할 수 없는 상태입니다.</summary>
+        internal bool IsStopped => _halted || _entryStopped || _shopStopped || _recoveryStopped || _growthStopped ||
+            !_abandonRunId.IsEmpty || HasAbandonedRun;
+
+        internal bool HasAbandonedRun { get; private set; }
+
+        /// <summary>처리 전부터 노드 착지까지 맵 명령이 남아 있습니다.</summary>
+        internal bool HasPendingMapRequest => _mapInput.TryGetNextCommand(0, out _);
 
         /// <summary>증강 도메인이 멈췄는지입니다(증강 화면).</summary>
         internal bool IsGrowthStopped => _growthStopped;
@@ -98,6 +106,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
             _shopStopped = false;
             _recoveryStopped = false;
             _growthStopped = false;
+            _abandonRunId = default;
+            HasAbandonedRun = false;
             _halted = faulted;
         }
 
@@ -105,7 +115,17 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
         internal void Halt()
         {
             _halted = true;
+            _abandonRunId = default;
+            HasAbandonedRun = false;
             _recovery?.CancelPending();
+        }
+
+        internal void RequestRunAbandon(RunId runId) => _abandonRunId = runId;
+
+        public void CompleteRunAbandon(bool abandoned)
+        {
+            _abandonRunId = default;
+            HasAbandonedRun = abandoned;
         }
 
         public StageProgressFacts Read()
@@ -114,6 +134,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
                 throw new InvalidOperationException("[StageProgress] 서비스를 받기 전에 읽을 수 없습니다.");
             if (_loading.IsLoading)
                 return new StageProgressFacts(isLoading: true);
+            if (!_abandonRunId.IsEmpty)
+                return new StageProgressFacts(abandonRunId: _abandonRunId);
 
             string problem = null;
             StageCombatEntryState combatEntry = _entryStopped ? StageCombatEntryState.None

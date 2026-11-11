@@ -54,7 +54,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             switch (fact)
             {
                 case CombatCharacterEvent c when c.Kind is CombatEventKind.Moved or CombatEventKind.Placed or CombatEventKind.Returned or
-                    CombatEventKind.HealthChanged or CombatEventKind.HealthNormalized or CombatEventKind.Died or CombatEventKind.Relocated:
+                    CombatEventKind.HealthChanged or CombatEventKind.HealthNormalized or CombatEventKind.Died or CombatEventKind.Relocated or
+                    CombatEventKind.Reconstructed:
                     var kind = c.Kind == CombatEventKind.Returned ? CombatChangeEvidenceKind.Return : CombatChangeEvidenceKind.Effect;
                     if (c.Kind == CombatEventKind.Moved && c.MovementCause?.Agency != CombatMovementAgency.Forced &&
                         c.Expected.WithPlacement(c.Final.Area, c.Final.ReserveSlotIndex, c.Final.Anchor, c.Final.Rotation,
@@ -132,12 +133,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                         r.Step == RockfallGimmickStep.Warning ? r.Final.WarnedCells : r.Expected.WarnedCells);
                 case CombatSummonEvent s when s.Kind == CombatEventKind.Summoned:
                     return Evidence(CombatChangeEvidenceKind.Effect, new[] { s.Created.EntityId });
+                case CombatReinforcementEvent r when r.Kind == CombatEventKind.Reinforced:
+                    return Evidence(CombatChangeEvidenceKind.Effect, new[] { r.Created.EntityId });
                 case CombatItemEvent i when i.Kind is CombatEventKind.ItemActivated or CombatEventKind.ItemEquipmentChanged or CombatEventKind.ItemDiscarded:
                     return ReadItem(i, stream);
                 case CombatExperienceEvent e when e.Kind is CombatEventKind.ExperienceEarned or CombatEventKind.ExperienceApplied:
                     return Evidence(CombatChangeEvidenceKind.Effect, new[] { e.RecipientId });
                 case CombatTurnEvent t when t.Kind is CombatEventKind.CombatEntered or CombatEventKind.ControllerTurnStarted or
-                    CombatEventKind.PlayerTurnEnded or CombatEventKind.EnemyPhaseEnded or CombatEventKind.NightEnded:
+                    CombatEventKind.PlayerTurnEnded or CombatEventKind.EnemyPhaseEnded:
                     return Evidence(CombatChangeEvidenceKind.Lifecycle);
                 case CombatOutcomeEvent o when o.Kind == CombatEventKind.StageEnded:
                     return Evidence(CombatChangeEvidenceKind.Lifecycle);
@@ -154,9 +157,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         private static bool HasRockfallBind(CharacterCombatFacts character, RockfallGimmickState rock) =>
             character.StatusEffects.Entries.OfType<ActionRestrictionStatus>().Any(s => s.Key == StatusEffectKey.Bind && s.Origin == rock.BindOrigin);
 
+        /// <summary>충돌 전부터 있던 다른 출처 속박이 그대로 남은 경우입니다(긴 쪽 규칙으로 낙석 속박이 끼지 않음).</summary>
+        private static bool HasLongerBind(CharacterCombatFacts before, CharacterCombatFacts after)
+        {
+            var prior = before.StatusEffects.Entries.OfType<ActionRestrictionStatus>().SingleOrDefault(s => s.Key == StatusEffectKey.Bind);
+            return prior != null && after.StatusEffects.Entries.OfType<ActionRestrictionStatus>()
+                .Any(s => s.Key == StatusEffectKey.Bind && s.Origin == prior.Origin && s.RemainingAffectedSideTurnEnds == prior.RemainingAffectedSideTurnEnds);
+        }
+
         private static void ValidateRockfallRecipients(CombatRockfallEvent rock, IReadOnlyList<CombatEvent> stream, int next)
         {
             // 충돌 바로 뒤에 수신자 순서대로 체력 변화(있을 때)와 생존자의 속박이 기록된다.
+            // 치명을 재구성으로 버틴 수신자는 체력 변화 대신 재구성 사건(최대 체력으로 남음)이 오고, 생존자처럼 속박을 받는다.
             var cells = rock.Expected.WarnedCells.ToHashSet();
             foreach (var id in rock.RecipientIds)
             {
@@ -164,16 +176,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 if (next < stream.Count && stream[next] is CombatCharacterEvent hp && hp.Final.EntityId == id)
                 {
                     Require(hp.Expected.Area == CharacterRuntimeArea.Field && hp.Expected.OccupiedCells.Any(cells.Contains) &&
-                        hp.Expected.Health.CurrentHealth > hp.Final.Health.CurrentHealth &&
-                        hp.Kind == (hp.Final.Health.IsDead ? CombatEventKind.Died : CombatEventKind.HealthChanged), "낙석 충돌 직후의 체력 변화");
+                        (hp.Kind == CombatEventKind.Reconstructed ||
+                            hp.Expected.Health.CurrentHealth > hp.Final.Health.CurrentHealth &&
+                            hp.Kind == (hp.Final.Health.IsDead ? CombatEventKind.Died : CombatEventKind.HealthChanged)), "낙석 충돌 직후의 체력 변화");
                     next++;
                     hurt = hp.Final;
                     if (hurt.Health.IsDead) continue;
                 }
+                // 같은 키 제한은 남은 횟수가 긴 쪽이 남으므로, 다른 출처의 더 긴 속박이 이미 있으면 낙석 속박은 끼지 않는다.
                 Require(next < stream.Count && stream[next] is CombatTraitStateEvent grant && grant.Final.EntityId == id &&
                     grant.Expected.Area == CharacterRuntimeArea.Field && grant.Expected.OccupiedCells.Any(cells.Contains) &&
                     (hurt == null || hurt.SameValues(grant.Expected)) && !grant.Final.Health.IsDead &&
-                    HasRockfallBind(grant.Final, rock.Expected), "낙석 생존자의 충돌 직후 속박");
+                    (HasRockfallBind(grant.Final, rock.Expected) || HasLongerBind(grant.Expected, grant.Final)), "낙석 생존자의 충돌 직후 속박");
                 next++;
             }
         }
@@ -379,8 +393,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                         p.Movement.Steps.Count == trait.Magnitude), "끌어오기 수신자의 실제 걸음");
                     return Evidence(CombatChangeEvidenceKind.Effect, targets);
                 case TraitActivationKind.InstantDefeat:
+                    // 재구성 보유자는 즉사를 버텨 사망 대신 재구성 사건이 남는다.
                     Require(targets.Count > 0 && targets.All(id => stream.OfType<CombatCharacterEvent>().Any(c => c.Final.EntityId == id &&
-                        c.Kind == CombatEventKind.Died && c.Final.Health.IsDead) || stream.OfType<CombatStructureEvent>().Any(s =>
+                        (c.Kind == CombatEventKind.Died && c.Final.Health.IsDead || c.Kind == CombatEventKind.Reconstructed)) ||
+                        stream.OfType<CombatStructureEvent>().Any(s =>
                         s.Final.EntityId == id && s.Kind == CombatEventKind.Died && s.Final.Health.IsDead)), "직접 처치 수신자의 사망 사실");
                     return Evidence(CombatChangeEvidenceKind.Effect, targets);
                 case TraitActivationKind.RoarTriggered:
@@ -391,6 +407,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                     var recipients = ReadHits(trait.ChildAttack.Hits, stream).ToList();
                     foreach (var reaction in trait.ChildAttack.Reactions) recipients.AddRange(ReadTrait(reaction, stream).AffectedEntityIds);
                     return Evidence(CombatChangeEvidenceKind.Effect, recipients);
+                case TraitActivationKind.SelfDestructExploded:
+                    // 폭발 대상은 실제로 바뀐 개체만 싣는다. 체력·보호막(특성 상태)·구조물 사건 중 하나가 남아 있어야 한다.
+                    Require(targets.All(id => stream.OfType<CombatCharacterEvent>().Any(c => c.Final.EntityId == id) ||
+                        stream.OfType<CombatTraitStateEvent>().Any(t => t.Final.EntityId == id) ||
+                        stream.OfType<CombatStructureEvent>().Any(s => s.Final.EntityId == id)), "자폭 수신자의 실제 변화");
+                    return Evidence(targets.Count == 0 ? CombatChangeEvidenceKind.Observation : CombatChangeEvidenceKind.Effect, targets);
+                case TraitActivationKind.ReconstructionStarted:
+                    Require(targets.Count == 1 && stream.OfType<CombatCharacterEvent>().Any(c => c.Final.EntityId == targets[0] &&
+                        c.Kind == CombatEventKind.Reconstructed), "재구성 수신자의 재구성 사실");
+                    return Evidence(CombatChangeEvidenceKind.Effect, targets);
+                case TraitActivationKind.ReconstructionEnded:
+                    Require(targets.Count == 1 && stream.OfType<CombatTraitStateEvent>().Any(t => t.Final.EntityId == targets[0] &&
+                        t.Expected.StatusEffects.Entries.Any(s => s is ReconstructionStatus) &&
+                        !t.Final.StatusEffects.Entries.Any(s => s is ReconstructionStatus)), "부활 수신자의 재구성 상태 해제");
+                    return Evidence(CombatChangeEvidenceKind.Effect, targets);
+                case TraitActivationKind.CorpseDisplaced:
+                    // 시체 밀기는 위치 사건 없이 경로만 남긴다. 출처 유닛의 사망 사실과 두 칸 이상의 경로가 필요하다.
+                    Require(trait.TargetCells.Count >= 2 && stream.OfType<CombatCharacterEvent>().Any(c => c.Final.EntityId == trait.SourceUnitId &&
+                        c.Kind == CombatEventKind.Died && c.Final.Health.IsDead), "시체 밀기의 사망 사실과 경로");
+                    return Evidence(CombatChangeEvidenceKind.Observation);
+                case TraitActivationKind.CrashImpactCollided:
+                    // 부딪힘은 막은 칸 하나와 받는 쪽(날아간 유닛, 캐릭터에 부딪혔으면 그 유닛)을 싣는다.
+                    // 피해가 0이거나(비율 0·전투 종료) 보호막·보유 방어가 모두 막으면 체력 변화가 없을 수 있다.
+                    Require(trait.TargetCells.Count == 1 && targets.Count >= 1 && targets.Count <= 2, "부딪힘 칸과 받는 쪽");
+                    var crashed = targets.Where(id => stream.OfType<CombatCharacterEvent>().Any(c => c.Final.EntityId == id) ||
+                        stream.OfType<CombatTraitStateEvent>().Any(t => t.Final.EntityId == id) ||
+                        stream.OfType<CombatHeldEnvironmentEvent>().Any(h => h.CharacterId == id)).ToArray();
+                    return Evidence(crashed.Length == 0 ? CombatChangeEvidenceKind.Observation : CombatChangeEvidenceKind.Effect, crashed);
                 case TraitActivationKind.DamageRedirected:
                     Require(trait.Interception != null, "가로채기의 실제 수신 관계");
                     // 실제 수신자의 변화는 Hits와 체력·상태 사건이 나타낸다. 보호 대상은 표시용이다.
@@ -441,12 +485,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         private static bool HasHealthChain(IReadOnlyList<CombatEvent> stream, AttackHitResult hit)
         {
-            var changes = stream.Select(f => f is CombatCharacterEvent c && c.Final.EntityId == hit.TargetId &&
-                    c.Kind is CombatEventKind.HealthChanged or CombatEventKind.HealthNormalized or CombatEventKind.Died
-                    ? (Valid: true, Before: c.Expected.Health.CurrentHealth, After: c.Final.Health.CurrentHealth, Normalize: c.Kind == CombatEventKind.HealthNormalized)
-                    : f is CombatStructureEvent s && s.Final.EntityId == hit.TargetId
-                        ? (Valid: true, Before: s.Expected.Health.CurrentHealth, After: s.Final.Health.CurrentHealth, Normalize: false)
-                        : (Valid: false, Before: 0, After: 0, Normalize: false))
+            // 재구성 사건은 "맞기 전 체력 → 0(손실)"과 "0 → 최대(회복)" 두 변화로 읽는다(공격 결과의 피해·회복과 같은 뜻).
+            var changes = stream.SelectMany(f => f is CombatCharacterEvent r && r.Final.EntityId == hit.TargetId && r.Kind == CombatEventKind.Reconstructed
+                    ? new[]
+                    {
+                        (Valid: true, Before: r.Expected.Health.CurrentHealth, After: 0, Normalize: false),
+                        (Valid: true, Before: 0, After: r.Final.Health.CurrentHealth, Normalize: false),
+                    }
+                    : new[]
+                    {
+                        f is CombatCharacterEvent c && c.Final.EntityId == hit.TargetId &&
+                            c.Kind is CombatEventKind.HealthChanged or CombatEventKind.HealthNormalized or CombatEventKind.Died
+                            ? (Valid: true, Before: c.Expected.Health.CurrentHealth, After: c.Final.Health.CurrentHealth, Normalize: c.Kind == CombatEventKind.HealthNormalized)
+                            : f is CombatStructureEvent s && s.Final.EntityId == hit.TargetId
+                                ? (Valid: true, Before: s.Expected.Health.CurrentHealth, After: s.Final.Health.CurrentHealth, Normalize: false)
+                                : (Valid: false, Before: 0, After: 0, Normalize: false),
+                    })
                 .Where(c => c.Valid).ToArray();
             for (int start = 0; start < changes.Length; start++)
             {

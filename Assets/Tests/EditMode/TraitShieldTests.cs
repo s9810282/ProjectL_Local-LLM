@@ -22,7 +22,7 @@ namespace ProjectL.Tests.Core
                 ? c.WithPlacement(c.Area, null, new CellCoord(2, 3), c.Rotation, new[] { new CellCoord(2, 3) }) : c).ToArray());
             input = TraitCombatFixtures.Equip(input, player ? EntityKey.Unit_Akimbo : EntityKey.Unit_Demon, new SoloActionTraitSpec(10, 1, 0, 1));
             input = EnemyControllerPhaseTests.Input(input, player ? CombatControllerPhase.StartingPlayer : CombatControllerPhase.StartingEnemy);
-            var result = CombatTurnCalculator.BeginControllerTurn(input);
+            var result = CombatTurnCalculator.BeginControllerTurn(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Active(TraitCombatFixtures.Final(result, player ? 1 : 2)), Is.Zero);
         }
@@ -215,10 +215,9 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput EndShieldTurn(CombatCommandInput input, Owner side, List<CombatEvent> events)
         {
             var old = input.State.Turn;
-            var turn = new CombatTurnFacts(StagePhase.Combat, old.PreparationIndex, old.MainPlacementLocked,
+            var turn = new CombatTurnFacts(StagePhase.Combat,
                 side == Owner.Player ? CombatControllerPhase.StartingEnemy : CombatControllerPhase.StartingPlayer,
-                old.ControllerTurnSequence, old.CompletedPlayerTurnCount + (side == Owner.Player ? 1 : 0),
-                old.NightStartPlayerTurnCount, old.EnemyOrigins, old.Summons, old.CompletedControllerTurnCount + 1);
+                old.ControllerTurnSequence, old.CompletedPlayerTurnCount + (side == Owner.Player ? 1 : 0), old.EnemyOrigins, old.Summons, old.CompletedControllerTurnCount + 1);
             input = CombatCommandTestData.With(input, state: input.State.With(phase: CombatFlowPhase.Automatic, turn: turn));
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             typeof(CombatCommandCalculator).Assembly.GetType(typeof(CombatCommandCalculator).Namespace + ".TraitTurnLifecycle")

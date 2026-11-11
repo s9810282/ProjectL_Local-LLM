@@ -37,7 +37,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             return root;
         }
 
-        internal static CombatTraitPreviewDisplay Create(FieldView field, FieldUnitPresenter units, Camera output, Transform parent, CombatDisplayTables tables, CombatDisplayServices services, StageViewPropPresenter backdrop, EffectScope scope)
+        internal static CombatTraitPreviewDisplay Create(FieldView field, FieldUnitPresenter units, Camera output, Transform parent, CombatDisplayTables tables, CombatDisplayServices services, StageViewPropPresenter backdrop, EffectScope scope, CombatSceneCameraBinding sceneCamera)
         {
             if (field == null)
                 throw new ArgumentNullException(nameof(field));
@@ -58,9 +58,9 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 FieldUnitPresenter ownedUnits = units;
                 result.Own(() => UnityEngine.Object.Destroy(ownedUnits.gameObject));
                 tables.PresentationSettings.Validate();
-                var camera = new CombatCameraWindow(services.CameraEffects, () => Time.time);
-                camera.AttachMap(backdrop.MapCameras);
-                result.Own(camera.DetachMap);
+                CombatCameraSession cameraSession = CombatCameraFactory.Create(sceneCamera, services.CameraCatalog, services.CameraEffects);
+                result.Own(cameraSession.Release);
+                CombatCameraWindow camera = cameraSession.Window;
                 var objects = new FieldObjectPresenter(field.CellsRoot, tables.Objects, tables.Environments);
                 result.Own(objects.Release);
                 var terrain = new FieldTerrainPresenter(field.CellsRoot, tables.Terrains, tables.Environments, CombatTileCollapseSettings.From(tables.PresentationSettings));
@@ -86,7 +86,6 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 });
                 layer.AttachUISystem(services.UI);
                 units.ConfigureMovementAppearance(services.Colors);
-                units.ConfigureHUDCategories(tables.Categories);
                 units.Configure(tables.Units, tables.Field.FieldUnitScale, tables.UnitStatuses, tables.Traits, layer, tables.Items);
                 result.Own(units.ReleaseHudLayer);
                 result.Own(units.Release);
@@ -94,19 +93,21 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 field.SetGroundBase(backdrop.TileSurface);
                 terrain.BindTiles(backdrop.TileSurface);
                 railway.Install(field.Mapper, Array.Empty<CellCoord>());
-                var effects = new CombatEffectWindow(services.Effects, field.CellsRoot, units.TrackBodyPresence, scope);
+                var effects = new CombatEffectWindow(services.Effects, field.CellsRoot,
+                    id => units.TrackSurfacePresence(id, field.Mapper), scope, position => field.Mapper.OnSurface(position));
                 result.Own(effects.Release);
                 // 하붑도 같습니다. 구름은 이펙트라 창구를 먼저 만듭니다.
                 var haboob = new FieldHaboobPresenter(tables.Haboob, effects);
                 result.Own(haboob.Release);
                 // 필드 창구는 운영 표시와 같은 함수로 만듭니다(평가 C4-02, 결정 Q-N2 A). 토네이도 외형 연출(진행·재생 중·막음·취소)도 운영과 같습니다.
                 CombatFieldEventPorts ports = CombatSceneDisplayFactory.CreateFieldPorts(field, thorns, objects, terrain, trails, tornado, rockfall, haboob);
-                CombatEventPlaybackComposition composition = CombatEventPlaybackFactory.Create(field, units, CombatEventPresentationValues.From(tables.PresentationSettings), services.Audio, tables.SoundPresets, tables.CueSources, camera, effects, ports, railway, thorns, services.ScreenTransitions, CombatPhaseTransitionSettings.From(tables.PresentationSettings), output, tables.PresentationSettings);
+                CombatEventPlaybackComposition composition = CombatEventPlaybackFactory.Create(field, units, CombatEventPresentationValues.From(tables.PresentationSettings), services.Audio, tables.SoundPresets, tables.CueSources, camera, effects, ports, railway, thorns, output, tables.PresentationSettings);
                 result.Events = composition.Events;
                 result.Playback = composition.Playback;
                 result.Own(composition.Events.Release);
                 result.Own(composition.Playback.CancelPendingEvents);
                 composition.Events.Bind(field.Mapper);
+                cameraSession.Begin();
                 return result;
             }
             catch

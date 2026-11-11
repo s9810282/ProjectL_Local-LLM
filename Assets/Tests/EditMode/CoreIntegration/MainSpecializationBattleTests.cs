@@ -276,27 +276,6 @@ namespace ProjectL.Tests.CoreIntegration
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
         [TestCase(CategoryKey.Cannon)]
-        public void NightRecallAndStageTeardownKeepOwnedClass(CategoryKey category)
-        {
-            using var battle = Create(category, enemy: false);
-            var id = battle.Main.OwnedId.Value;
-            for (int i = 0; i < 8; i++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                battle.AdvanceToPlayerOrDay();
-                Assert.That(battle.Main.Stats.SpecializationCategory, Is.EqualTo(category));
-            }
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(battle.Main.Area, Is.EqualTo(CharacterRuntimeArea.Field));
-            Assert.That(battle.Actor.Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            battle.Buffers.BattleWriteSink.EndBattle();
-            Assert.That(battle.Buffers.CharacterReadSink.Owned.Single(o => o.Id == id).SpecializationCategory, Is.EqualTo(category));
-            Assert.That(battle.Core.CharacterStats.ReadOwned().Items.Single(o => o.OwnedId == id).Stats.CombatCategoryKey, Is.EqualTo(category));
-        }
-
-        [TestCase(CategoryKey.Rider)]
-        [TestCase(CategoryKey.Heavy)]
-        [TestCase(CategoryKey.Cannon)]
         public void AttackFirstDoesNotReopenMovementAndNewRunClearsClass(CategoryKey category)
         {
             using var battle = Create(category);

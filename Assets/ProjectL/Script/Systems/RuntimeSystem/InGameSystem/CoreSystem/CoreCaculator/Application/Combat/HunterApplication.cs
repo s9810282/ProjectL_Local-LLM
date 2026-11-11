@@ -19,15 +19,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         internal static bool HasHunters(IEnumerable<CharacterCombatFacts> characters) => characters.Any(c => c.OwnedId.HasValue && Status(c) != null);
 
-        internal static CombatCommandState Reconcile(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> characters,
-            CombatCommandState state, List<CombatEvent> events)
-        {
-            if (!HasHunters(characters.Values)) return state;
-            var environment = new CommandEnvironmentState(state.Environment, input.EnvironmentBindings, state.EnvironmentProgress);
-            Reconcile(input, characters, environment.ChooseRandom, events);
-            return state.With(environmentProgress: environment.Progress);
-        }
-
         internal static void Reconcile(CombatCommandInput input, IDictionary<EntityId, CharacterCombatFacts> characters,
             Func<int, int> chooseRandom, List<CombatEvent> events)
         {

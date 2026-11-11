@@ -12,6 +12,12 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
         ITraitGrowthDefinitionTableQuery TraitGrowthDefinitions { get; }
     }
 
+    /// <summary>적 AI 기획 조정 테이블입니다. 등록하지 않으면 없으며, 쓰는 쪽은 Core 기본값을 씁니다.</summary>
+    internal interface IHasEnemyAiTuningTable : IServiceModule
+    {
+        IEnemyAiTuningTableQuery EnemyAiTuning { get; }
+    }
+
     internal interface IHasEnhancementTable : IServiceModule
     {
         IEnhancementTableQuery Enhancements { get; }
@@ -45,8 +51,10 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
 
     #region 시스템 모듈
 
-    internal sealed class InGameDataBase : SystemGroup, IInGameQuery, IHasArtifactBoardConfig, IHasConsumableItemTable, IHasEnhancementTable, IHasTraitGrowthTables
+    internal sealed class InGameDataBase : SystemGroup, IInGameQuery, IHasArtifactBoardConfig, IHasConsumableItemTable, IHasEnhancementTable, IHasTraitGrowthTables,
+        IHasEnemyAiTuningTable
     {
+        public IEnemyAiTuningTableQuery EnemyAiTuning { get; }
         public ICategoryTraitProgressionTableQuery CategoryTraitProgressions { get; }
         public ITraitGrowthDefinitionTableQuery TraitGrowthDefinitions { get; }
         public IEnhancementTableQuery Enhancements { get; }
@@ -67,8 +75,10 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase
         /// <summary>IInGameQuery와 분리한 설정 조회입니다. 테스트용 InGame 조회 구현체를 바꾸지 않기 위해 따로 노출합니다.</summary>
         public IArtifactBoardConfigTableQuery ArtifactBoardConfig { get; }
 
-        public InGameDataBase(ISystemReader systemReader, bool hasEnhancements = false, bool hasTraitGrowth = false) : base(systemReader)
+        public InGameDataBase(ISystemReader systemReader, bool hasEnhancements = false, bool hasTraitGrowth = false,
+            bool hasEnemyAiTuning = false) : base(systemReader)
         {
+            EnemyAiTuning = hasEnemyAiTuning ? systemReader.ServiceStoreReader.GetService(InGameTableKey.EnemyAiTuning) : null;
             CategoryTraitProgressions = hasTraitGrowth ? systemReader.ServiceStoreReader.GetService(InGameTableKey.CategoryTraitProgression) : null;
             TraitGrowthDefinitions = hasTraitGrowth ? systemReader.ServiceStoreReader.GetService(InGameTableKey.TraitGrowthDefinition) : null;
             Enhancements = hasEnhancements ? systemReader.ServiceStoreReader.GetService(InGameTableKey.Enhancement) : null;

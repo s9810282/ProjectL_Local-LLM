@@ -77,10 +77,26 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         // 시간은 안내가 켜진 동안만 잽니다.
         private void Awake() => enabled = false;
 
-        /// <summary>소유 화면의 Awake가 부릅니다. 참조가 빠졌으면 구성 검사(<see cref="Validate"/>)가 알리도록 미룹니다.</summary>
-        internal void Prepare(UIBase owner)
+        /// <summary>소유 화면의 Awake가 부릅니다. 참조가 빠졌으면 씬 연결 때 구성 검사(<see cref="Validate"/>)가 F1로 알리도록 미룹니다.</summary>
+        internal void TryPrepare(UIBase owner)
         {
             if (_prepared || !HasRequiredReferences) return;
+            PrepareCore(owner);
+        }
+
+        /// <summary>
+        /// 소유 화면의 Open이 부릅니다. 준비 전에 필수 구성을 검사하고, 빠졌으면 바로 예외입니다.
+        /// 구성 검사를 거치지 않은 경로에서도 그리기의 원인 없는 NRE 대신 누락을 알립니다(평가 N-44).
+        /// </summary>
+        internal void Prepare(UIBase owner)
+        {
+            if (_prepared) return;
+            Validate();
+            PrepareCore(owner);
+        }
+
+        private void PrepareCore(UIBase owner)
+        {
             _prepared = true;
             _exitBinding = UIInputBinding.Attach(exitButton, this, ExitSlot);
             for (int i = 0; i < cards.Count; i++)

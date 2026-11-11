@@ -8,13 +8,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public int AttackRangeReduction { get; }
         public int AttackDamageReductionPercent { get; }
         public int OpposingTurnEndsToExpire { get; }
+        public bool ExemptsAlliedAttackRangePenalty { get; }
 
-        public DustScreenTraitDefinition(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire) : base(TraitKey.DustScreen)
+        public DustScreenTraitDefinition(int attackRangeReduction, int attackDamageReductionPercent, int opposingTurnEndsToExpire,
+            bool exemptsAlliedAttackRangePenalty = false) : base(TraitKey.DustScreen)
         {
-            var spec = new DustScreenTraitSpec(attackRangeReduction, attackDamageReductionPercent, opposingTurnEndsToExpire);
+            var spec = new DustScreenTraitSpec(attackRangeReduction, attackDamageReductionPercent,
+                opposingTurnEndsToExpire, exemptsAlliedAttackRangePenalty);
             AttackRangeReduction = spec.AttackRangeReduction;
             AttackDamageReductionPercent = spec.AttackDamageReductionPercent;
             OpposingTurnEndsToExpire = spec.OpposingTurnEndsToExpire;
+            ExemptsAlliedAttackRangePenalty = spec.ExemptsAlliedAttackRangePenalty;
         }
     }
 }

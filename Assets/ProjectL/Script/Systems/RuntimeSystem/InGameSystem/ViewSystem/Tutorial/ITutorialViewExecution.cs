@@ -14,9 +14,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         /// <summary>다른 기능이 입력을 독점하고 있는지입니다. 지금은 현재 Layer가 설정 Layer인지로 판정합니다(설계 §8.1 조건 5·§10).</summary>
         bool IsInputMonopolized { get; }
 
-        /// <summary>그 설명의 자동 진행 시간이 다 됐는지입니다. 창이 비활성인 동안은 세지 않습니다(설계 §15.4.1).</summary>
-        bool IsTimerExpired(int sessionId, int stepRevision);
-
         /// <summary>그 단계에 마지막으로 요청한 표시가 끝났는지와 그 종류입니다.</summary>
         bool TryGetCompletedPresentation(int sessionId, int stepRevision, out TutorialViewPresentationKind kind);
 
@@ -35,12 +32,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         /// <summary>표시를 시작합니다. 같은 단계에 새 표시를 요청하면 앞의 완료 사실은 버립니다.</summary>
         void BeginPresentation(int sessionId, int stepRevision, int tutorialKey, int stepKey,
             TutorialViewPresentationKind kind);
-
-        /// <summary>
-        /// 표시된 설명의 자동 진행 시간을 세기 시작합니다. 시간 값은 정의(<c>AutoAdvanceSeconds</c>)에서 실행 소유자가 읽습니다.
-        /// 남은 시간의 원본은 실행 소유자입니다(설계 §15.4.1).
-        /// </summary>
-        void StartTimer(int sessionId, int stepRevision, int tutorialKey);
 
         /// <summary>입력 제한 때문에 막힌 조작이 있었다는 안내를 잠시 띄웁니다. 단계와 진행은 바꾸지 않습니다.</summary>
         void ShowBlockedInputNotice(int sessionId, int stepRevision, int tutorialKey, int stepKey);

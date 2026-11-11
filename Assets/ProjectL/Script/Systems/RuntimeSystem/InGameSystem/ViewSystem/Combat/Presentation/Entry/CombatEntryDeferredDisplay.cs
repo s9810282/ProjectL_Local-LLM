@@ -8,7 +8,9 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Entry
 {
-    /// <summary>기믹은 보드 완성까지, 상시 효과는 유닛 등장 완료까지 첫 표시를 보류합니다. 시간은 진행하지 않습니다.</summary>
+    /// <summary>
+    /// 기믹은 보드 완성까지, 상시 효과는 유닛 등장 완료까지 첫 표시를 보류합니다. 시간은 보드 공개 뒤 토네이도 생성 전환만 진행합니다(<see cref="TickRevealed"/>).
+    /// </summary>
     internal sealed class CombatEntryDeferredDisplay
     {
         private readonly FieldRailwayPresenter _railway;
@@ -73,6 +75,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             ClearPending();
             _railway.SetEntryVisible(true);
             RenderNow(gimmicks, tornadoes, mapper);
+        }
+
+        /// <summary>
+        /// 보드 공개 뒤 진입이 끝날 때까지 토네이도 생성 전환을 진행합니다(평가 C10-18). 진입 중에는 재생 Tick이 돌지 않아,
+        /// 이것이 없으면 토네이도가 진입이 끝날 때까지 크기 0으로 남습니다. 진입이 끝나면 재생 Tick이 맡으므로 두 번 진행되지 않습니다.
+        /// </summary>
+        internal void TickRevealed(float deltaTime)
+        {
+            if (!_boardDeferred) _tornado.TickAppearance(deltaTime);
         }
 
         /// <summary>유닛의 최종 등장 자세가 복원된 뒤 상시 효과만 맞춥니다. 유닛을 다시 그리지 않습니다.</summary>

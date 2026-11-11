@@ -19,7 +19,7 @@ using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Hud
 {
-    /// <summary>전투 선택의 정보 표시와 페이즈별 덱 전환을 맡습니다. 선택 원본은 Display에서 빌립니다.</summary>
+    /// <summary>전투 선택의 정보 표시를 맡습니다. 선택 원본은 Display에서 빌립니다.</summary>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display")]
     [DisallowMultipleComponent]
     public sealed class CombatUnitInfo : UIBase
@@ -103,20 +103,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             // 외부 UI 호출이 Clear로 재진입해도 표시 목록을 다시 붙잡지 않도록 먼저 적용합니다.
 
-            StagePhase? previousStage = _stage;
-            bool phaseChanged = previousStage != stage;
+            bool phaseChanged = _stage != stage;
             if (phaseChanged)
             {
                 _stage = stage;
-                if (stage == StagePhase.Combat)
-                    _ui.CloseUI(UIId.UnitCard);
-                // 최초 목록 상태는 Bootstrap이 맡고, 이후 배치 국면 복귀에서만 엽니다.
-                else if (stage == StagePhase.Deployment && previousStage.HasValue)
-                    _ui.OpenChildUI(UIId.Deck, UIId.UnitCard);
                 if (stage != StagePhase.Combat && stage != StagePhase.Deployment)
                     Dismiss();
             }
-            // 값 갱신만으로 사용자가 연 카드 목록을 다시 닫지 않는다.
+            // 카드의 개폐는 배치 표시가 맡습니다. 여기서는 정보창 내용만 갱신합니다.
             if ((stage == StagePhase.Combat || stage == StagePhase.Deployment) && (phaseChanged || gameObject.activeSelf))
                 ShowSelection();
         }

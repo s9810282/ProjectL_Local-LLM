@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -12,6 +13,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// </summary>
     internal static class WeakGroundCalculator
     {
+        internal static bool CollapsesOnNextEntry(MovementTileFact tile, EnvironmentSemanticBindings bindings) =>
+            tile is StaticTerrainFact ground && IsWeakGround(ground, bindings) && ground.RemainingEntries <= 1;
+
+        private static bool IsWeakGround(StaticTerrainFact ground, EnvironmentSemanticBindings bindings) =>
+            ground.Active && ground.Kind == StaticTerrainKind.WeakGround && bindings.TerrainSourceIds.Contains(ground.Id);
+
         internal static void RegisterEntry(MovementProjection projection, EntityId characterId, CellCoord cell)
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection));
@@ -21,8 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             projection.TerrainQueryCells.Add(cell);
             var ground = projection.Environment.Tiles.OfType<StaticTerrainFact>().SingleOrDefault(source =>
-                source.Active && source.Kind == StaticTerrainKind.WeakGround && source.Cell == cell &&
-                projection.Bindings.TerrainSourceIds.Contains(source.Id));
+                source.Cell == cell && IsWeakGround(source, projection.Bindings));
             if (ground != null) projection.ChangeTerrain(ground, ground.RegisterEntry());
         }
 
@@ -32,25 +38,67 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// </summary>
         internal static void CollapsePending(MovementProjection projection)
         {
-            if (projection == null) throw new ArgumentNullException(nameof(projection));
-            var pending = projection.Environment.Tiles.OfType<StaticTerrainFact>()
-                .Where(t => t.PendingCollapse && projection.Bindings.TerrainSourceIds.Contains(t.Id))
-                .OrderBy(t => t.Id).ToArray();
-            if (pending.Length == 0) return;
-            foreach (var ground in pending) projection.ChangeTerrain(ground, ground.Collapse());
+            foreach (var _ in CollapsePendingSteps(projection)) { }
+        }
 
-            var current = projection.CurrentInput();
-            var occupants = current.Characters.Where(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field)
-                .Select(c => new { Id = c.EntityId, Cells = c.OccupiedCells })
-                .Concat(current.State.Structures.Where(s => !s.Health.IsDead && projection.Bindings.ObstacleEntityIds.Contains(s.EntityId))
-                    .Select(s => new { Id = s.EntityId, Cells = s.OccupiedCells }))
-                .OrderBy(c => c.Id).ToArray();
+        internal static IEnumerable<string> CollapsePendingSteps(MovementProjection projection)
+        {
+            if (projection == null) throw new ArgumentNullException(nameof(projection));
+            SortedDictionary<long, StaticTerrainFact> pending = null;
+            foreach (var tile in projection.Environment.Tiles)
+            {
+                if (tile is StaticTerrainFact ground && ground.PendingCollapse &&
+                    projection.Bindings.TerrainSourceIds.Contains(ground.Id))
+                    (pending ??= new SortedDictionary<long, StaticTerrainFact>()).Add(ground.Id, ground);
+                yield return "WeakGroundScan";
+            }
+            if (pending == null) yield break;
+            var groundsByCell = new Dictionary<CellCoord, long>();
+            foreach (var ground in pending.Values)
+            {
+                projection.ChangeTerrain(ground, ground.Collapse());
+                groundsByCell.TryAdd(ground.Cell, ground.Id);
+                yield return "WeakGroundCollapse";
+            }
+
+            using var observation = projection.BeginCurrentInput();
+            while (!observation.IsComplete)
+            {
+                observation.Step();
+                yield return "WeakGroundObservation";
+            }
+            var current = observation.Result;
+            var occupants = new SortedDictionary<(EntityId Id, bool IsStructure), IReadOnlyList<CellCoord>>();
+            foreach (var character in current.Characters)
+            {
+                if (!character.Health.IsDead && character.Area == CharacterRuntimeArea.Field)
+                    occupants.Add((character.EntityId, false), character.OccupiedCells);
+                yield return "WeakGroundOccupant";
+            }
+            foreach (var structure in current.State.Structures)
+            {
+                if (!structure.Health.IsDead && projection.Bindings.ObstacleEntityIds.Contains(structure.EntityId))
+                    occupants.Add((structure.EntityId, true), structure.OccupiedCells);
+                yield return "WeakGroundOccupant";
+            }
             foreach (var occupant in occupants)
             {
-                var ground = pending.FirstOrDefault(t => occupant.Cells.Contains(t.Cell));
-                if (ground != null) CliffFallCalculator.ResolveAt(projection, occupant.Id, ground.Cell, settleDeaths: false);
+                long? first = null;
+                CellCoord contact = default;
+                foreach (var cell in occupant.Value)
+                {
+                    if (groundsByCell.TryGetValue(cell, out long id) && (!first.HasValue || id < first.Value))
+                    {
+                        first = id;
+                        contact = cell;
+                    }
+                    yield return "WeakGroundContact";
+                }
+                if (first.HasValue) CliffFallCalculator.ResolveAt(projection, occupant.Key.Id, contact, settleDeaths: false);
+                yield return "WeakGroundFall";
             }
             projection.ResolveDeathBoundary();
+            yield return "WeakGroundDeaths";
         }
     }
 }

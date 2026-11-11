@@ -102,8 +102,6 @@ namespace ProjectL.Tool.Editor
         private MessageType soNoticeType = MessageType.Info;
         private Vector2 soSidebarScroll, soGridScroll, soDetailsScroll;
 
-        private string SoDraftKey => DraftKey + ".So";
-
         // 맵 한 칸에 그리는 배치 하나입니다. 위 층(Layer 값이 큰 것)이 칸 색을 정합니다.
         private readonly struct SoOccupant
         {
@@ -130,23 +128,29 @@ namespace ProjectL.Tool.Editor
             else { EndStroke(); GUI.FocusControl(null); }
             InvalidateSoCheck();
             editMode = (CombatLayoutEditMode)mode;
+            if (editMode == CombatLayoutEditMode.So) PrepareSoDraftProtection();
         }
 
         private void DrawSoHeaderButtons()
         {
             if (GUILayout.Button("목록 새로고침", EditorStyles.toolbarButton)) { RefreshSoCatalog(); GUIUtility.ExitGUI(); }
-            using (new EditorGUI.DisabledScope(!soDocument.IsOpen))
+            using (new EditorGUI.DisabledScope(!soDocument.IsOpen || SoDraftBlocked))
             {
                 if (GUILayout.Button("에셋에서 다시 읽기", EditorStyles.toolbarButton)) { ReloadSoFromAssets(); GUIUtility.ExitGUI(); }
+            }
+            using (new EditorGUI.DisabledScope(SoStageCommandUnavailableReason() != null))
+            {
                 if (GUILayout.Button("검사", EditorStyles.toolbarButton)) { CheckSoStage(); GUIUtility.ExitGUI(); }
                 if (GUILayout.Button("저장", EditorStyles.toolbarButton)) { SaveSoStage(); GUIUtility.ExitGUI(); }
             }
-            if (GUILayout.Button("사용법", EditorStyles.toolbarButton)) { OpenSoUsageGuide(); GUIUtility.ExitGUI(); }
+            if (GUILayout.Button("사용법", EditorStyles.toolbarButton)) { ShowSoHelp(CurrentSoHelpTopic()); GUIUtility.ExitGUI(); }
         }
 
         private void DrawSoHeaderStatus()
         {
-            DrawSoWorkspaceHeader();
+            if (_soShowHelp) { DrawSoWorkStatus(); return; }
+            DrawSoDraftProtection();
+            using (new EditorGUI.DisabledScope(SoDraftBlocked)) DrawSoWorkspaceHeader();
             DrawSoWorkStatus();
             if (!string.IsNullOrEmpty(soNotice)) EditorGUILayout.HelpBox(soNotice, soNoticeType);
             if (soPasteVisibilityBlocked) DrawSoPasteVisibilityRecovery();
@@ -154,15 +158,32 @@ namespace ProjectL.Tool.Editor
 
         private void DrawSoMode()
         {
+            // 빈 창·카탈로그 실패·초안 보호 중에도 도움말은 열립니다. 지도 입력과 분리합니다.
+            if (_soShowHelp) { DrawSoHelp(); return; }
             if (soCatalog == null && !soCatalogFailed) RefreshSoCatalog();
-            if (!soDraftChecked) { soDraftChecked = true; RestoreSoDraft(); }
             DrawSoWorkspaceTabs();
             if (soCatalog == null)
             {
                 EditorGUILayout.HelpBox("에셋 목록이 없습니다. 위 알림을 확인하고 목록 새로고침을 눌러 주세요.", MessageType.Warning);
                 return;
             }
-            if (soDocument.IsOpen && soDocument.format != CombatStageSoDocument.CurrentFormat) ReopenSoOldFormat();
+            // 구형 작업본은 목록에서 다른 에셋을 열 수 있지만 편집·복제에는 넘기지 않습니다.
+            if (_soDraftInvalidDocument)
+            {
+                using (new EditorGUI.DisabledScope(SoDraftBlocked)) DrawSoStageList();
+                return;
+            }
+            if (SoDraftBlocked)
+            {
+                CancelSoWorkspaceInput();
+                EditorGUILayout.HelpBox("초안 원문을 보호하는 동안 현재 작업을 읽기 전용으로 표시합니다. 위 보호 영역에서 해결하세요.", MessageType.Warning);
+                // GUI.enabled만으로는 지도 수동 이벤트 처리가 막히지 않습니다.
+                Event e = Event.current;
+                if (e.isMouse || e.isKey || e.type == EventType.ValidateCommand || e.type == EventType.ExecuteCommand
+                    || e.type == EventType.DragUpdated || e.type == EventType.DragPerform) e.Use();
+                using (new EditorGUI.DisabledScope(true)) DrawSoWorkspaceBody();
+                return;
+            }
             DrawSoWorkspaceBody();
             HandleSoKeys();
             if (Event.current.rawType == EventType.MouseUp || Event.current.type == EventType.Ignore) EndStroke();
@@ -200,7 +221,8 @@ namespace ProjectL.Tool.Editor
         {
             ResetSoGimmickShapeViews();
             InvalidateSoCheck(changed: true);
-            soModified = true; SaveSoDraft(); Repaint();
+            soModified = soDocument != null && soDocument.IsOpen;
+            PrepareSoDraftProtection(); SaveSoDraft(); Repaint();
         }
 
         private void SetSoNotice(string message, MessageType type = MessageType.Info)
@@ -212,60 +234,19 @@ namespace ProjectL.Tool.Editor
         // 작업본만 바꿉니다. 창 Undo로 되돌리고 초안을 남깁니다(설계 SM11).
         private void SoChange(string label, Action action)
         {
+            PrepareSoDraftProtection();
+            if (!SoDraftEditable) return;
             CancelSoGimmickShapes();
             Undo.RecordObject(this, label);
             action(); InvalidateSoCheck(changed: true); soModified = true; EditorUtility.SetDirty(this); SaveSoDraft(); Repaint();
         }
 
-        private void SaveSoDraft() => EditorPrefs.SetString(SoDraftKey, JsonUtility.ToJson(soDocument));
-
-        private void RestoreSoDraft()
+        private bool AllowSoReplace()
         {
-            if (soDocument.IsOpen) return;
-            string draft = EditorPrefs.GetString(SoDraftKey, "");
-            if (string.IsNullOrEmpty(draft)) return;
-            try
-            {
-                var restored = JsonUtility.FromJson<CombatStageSoDocument>(draft);
-                if (restored == null || !restored.IsOpen) return;
-                // 옛 형식 초안은 새 칸(바닥 타일 등)이 빈 채라 저장하면 에셋 값을 지웁니다. 복원하지 않고 버립니다(설계 P-UT6).
-                if (restored.format != CombatStageSoDocument.CurrentFormat)
-                {
-                    EditorPrefs.DeleteKey(SoDraftKey);
-                    SetSoNotice("도구가 바뀌기 전에 남은 SO 편집 초안이라 복원하지 않았습니다.", MessageType.Warning);
-                    return;
-                }
-                soDocument = restored; InvalidateSoCheck(changed: true); soModified = true;
-                SetSoNotice("저장하지 않은 마지막 SO 편집 초안을 복원했습니다.");
-            }
-            catch (Exception exception) { SetSoNotice("SO 초안을 복원하지 못했습니다: " + exception.Message, MessageType.Warning); }
+            PrepareSoDraftProtection();
+            return !SoDraftBlocked && (!soModified || EditorUtility.DisplayDialog("저장하지 않은 SO 편집",
+                "저장하지 않은 변경이 있습니다. 버리고 계속할까요?", "버리기", "취소"));
         }
-
-        // 도구가 바뀌기 전에 창에 남은 작업본은 새 칸이 빈 채라 저장하면 에셋 값을 지웁니다(설계 P-UT6).
-        // 저장하지 않은 편집은 버리고 같은 스테이지를 에셋에서 다시 읽습니다. 찾지 못하면 닫습니다.
-        private void ReopenSoOldFormat()
-        {
-            InvalidateSoCheck(reset: true);
-            var entry = soCatalog.Stages.Find(stage => stage.RootGuid == soDocument.rootGuid);
-            soModified = false; EditorPrefs.DeleteKey(SoDraftKey);
-            if (entry == null)
-            {
-                soDocument = new CombatStageSoDocument();
-                SetSoNotice("도구가 바뀌어 열려 있던 스테이지를 닫았습니다. 목록에서 다시 여세요.", MessageType.Warning);
-                return;
-            }
-            OpenSoStage(entry);
-            if (soDocument.format == CombatStageSoDocument.CurrentFormat)
-            {
-                SetSoNotice($"도구가 바뀌어 {entry.Root.name}을(를) 에셋에서 다시 읽었습니다. 저장하지 않은 편집은 버렸습니다.", MessageType.Warning);
-                return;
-            }
-            // 다시 읽지 못했으면 OpenSoStage가 남긴 문구를 두고 옛 작업본만 닫습니다.
-            soDocument = new CombatStageSoDocument();
-        }
-
-        private bool AllowSoReplace() =>
-            !soModified || EditorUtility.DisplayDialog("저장하지 않은 SO 편집", "저장하지 않은 변경이 있습니다. 버리고 계속할까요?", "버리기", "취소");
 
         private void RefreshSoCatalog()
         {
@@ -292,24 +273,23 @@ namespace ProjectL.Tool.Editor
             }
         }
 
-        private void ReloadSoFromAssets()
+        private void ReloadSoFromAssets(string rootGuid = null)
         {
-            if (!AllowSoReplace()) return;
+            if (SoDraftBlocked) return;
             RefreshSoCatalog();
-            var entry = soCatalog?.Stages.Find(stage => stage.RootGuid == soDocument.rootGuid);
+            var entry = soCatalog?.Stages.Find(stage => stage.RootGuid == (rootGuid ?? soDocument.rootGuid));
             if (entry == null)
             {
                 SetSoNotice("열린 스테이지의 Stage Root를 찾을 수 없습니다.", MessageType.Error);
                 return;
             }
-            soModified = false;
             OpenSoStage(entry);
         }
 
-        private void OpenSoStage(CombatStageSoEntry entry)
+        private void OpenSoStage(CombatStageSoEntry entry, bool replaceConfirmed = false)
         {
             CancelSoGimmickShapes();
-            if (!AllowSoReplace()) return;
+            if (SoDraftBlocked || (!replaceConfirmed && !AllowSoReplace())) return;
             var views = soCatalog.ViewsFor(entry.StageKey);
             // 짝 View는 같은 스테이지 키로 찾고, 둘 이상이면 열지 않습니다(계획 P12).
             if (views.Count > 1)
@@ -321,15 +301,12 @@ namespace ProjectL.Tool.Editor
             {
                 Object pair = views.Count == 1 ? views[0] : null;
                 var opened = CombatStageSoAssets.Read(entry.Root, pair, soCatalog.Names);
-                CancelSoWorkspaceInput();
+                if (!ClearSoActiveDraft()) return;
                 soDocument = opened;
-                _soInspectedPlacement = null;
+                soModified = false;
+                _soDraftRestoreOwner = null;
+                ResetSoDraftDocumentView();
                 _soShowStages = false; _soShowCreation = false;
-                ClearSharedCopies(); soFieldColumns = 0;
-                soHasBox = false;
-                soPreviewNeedsReset = true;
-                soModified = false; EditorPrefs.DeleteKey(SoDraftKey);
-                soSelectedCell = new Vector2Int(-1, -1); soOccupants = null;
                 InvalidateSoCheck(reset: true);
                 if (pair == null) SetSoNotice($"짝 View(스테이지 키 {entry.StageKey})가 없습니다: {entry.Root.name}", MessageType.Warning);
                 else if (soDocument.HasLegacyPlacements) SetSoNotice($"숨김 호환 벽·지형이 있습니다. SO 모드는 이 값을 편집하지 않고 그대로 둡니다: {entry.Root.name}", MessageType.Warning);
@@ -392,6 +369,9 @@ namespace ProjectL.Tool.Editor
 
         private void CheckSoStage()
         {
+            PrepareSoDraftProtection();
+            string unavailable = SoStageCommandUnavailableReason();
+            if (unavailable != null) { SetSoNotice(unavailable, MessageType.Warning); return; }
             CancelSoGimmickShapes();
             Object root = CombatStageSoAssets.Load(soDocument.rootGuid);
             Object combat = CombatStageSoAssets.Load(soDocument.combatGuid);
@@ -413,9 +393,12 @@ namespace ProjectL.Tool.Editor
             SetSoNotice(SoCheckStatus() + ". '검사 결과'를 확인하세요.", SoCheckMessageType());
         }
 
-        // 복제본 검사를 통과할 때만 에셋 셋에 씁니다. 실패하면 아무것도 쓰지 않습니다(설계 SM2).
+        // 검사 거절은 쓰지 않습니다. 에셋 쓰기 중 실패는 작업본만 복구하며 이미 쓴 파일은 롤백하지 않습니다.
         private void SaveSoStage()
         {
+            PrepareSoDraftProtection();
+            string unavailable = SoStageCommandUnavailableReason();
+            if (unavailable != null) { SetSoNotice(unavailable, MessageType.Warning); return; }
             CancelSoGimmickShapes();
             Object root = CombatStageSoAssets.Load(soDocument.rootGuid);
             Object combat = CombatStageSoAssets.Load(soDocument.combatGuid);
@@ -445,6 +428,10 @@ namespace ProjectL.Tool.Editor
             }
             if (next != null && !ConfirmSoChapter("저장", next, null, null, out swap)) return;
             if (next == null) soCheck.Complete();
+            // 공유 편집 목록을 비우기 전에 마지막 확정 작업본과 원문을 확보합니다(설계 §27.2.1).
+            string beforeSave = JsonUtility.ToJson(soDocument);
+            var beforeDocument = JsonUtility.FromJson<CombatStageSoDocument>(beforeSave);
+            if (!ReplaceSoActiveDraft(beforeSave)) return;
             try
             {
                 // 고친 공유 SO 값을 먼저 쓰고, 그다음 스테이지 셋을 씁니다(T17).
@@ -469,10 +456,12 @@ namespace ProjectL.Tool.Editor
             }
             catch (Exception exception)
             {
-                SetSoNotice("저장하지 못했습니다: " + exception.Message, MessageType.Error);
+                soDocument = beforeDocument; soModified = true;
+                ResetSoDraftDocumentView(); InvalidateSoCheck(changed: true);
+                SetSoNotice("에셋 쓰기 중 실패했습니다. 작업본과 초안은 저장 시작 전 내용으로 유지했습니다. 일부 에셋은 이미 반영됐을 수 있습니다: " + exception.Message, MessageType.Error);
                 return;
             }
-            soModified = false; EditorPrefs.DeleteKey(SoDraftKey);
+            soModified = false; ClearSoActiveDraft();
             // 바닥 타일 맞춤 문제는 저장을 막지 않고 저장 뒤 알림에 붙입니다(설계 Q-UT2 A, 계획 Tb.6).
             string tileNote = SoTileFitSummary();
             // 보스 교체는 스테이지를 쓴 뒤 표를 고칩니다. 스테이지 쓰기가 실패하면 표는 그대로입니다(계획 P-MG5).
@@ -558,7 +547,7 @@ namespace ProjectL.Tool.Editor
                 EditorGUILayout.LabelField($"만들 파일: Stage_{fileName} · Combat_{fileName} · StageViewProp_{fileName}", EditorStyles.wordWrappedMiniLabel);
                 if (GUILayout.Button("배치 비우고 만들기")) { CreateSoStage(template, false); GUIUtility.ExitGUI(); }
                 if (GUILayout.Button("배치까지 복제")) { CreateSoStage(template, true); GUIUtility.ExitGUI(); }
-                EditorGUILayout.LabelField("참조·View 값은 틀에서 이어받습니다. 새 스테이지는 표에 등록되지 않은 채 만들어집니다.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("두 방식 모두 참조·View 값과 낙석·하붑 설정을 틀에서 이어받습니다. '배치 비우고 만들기'도 기믹 설정은 유지합니다. 새 스테이지는 표에 등록되지 않은 채 만들어집니다.", EditorStyles.wordWrappedMiniLabel);
             }
             finally { EditorGUIUtility.labelWidth = previousLabelWidth; }
         }
@@ -580,6 +569,7 @@ namespace ProjectL.Tool.Editor
         {
             CancelSoGimmickShapes();
             if (!AllowSoReplace()) return;
+            if (!SoDraftEditable) return;
             var views = soCatalog.ViewsFor(template.StageKey);
             var problems = new List<string>();
             if (views.Count > 1) problems.Add($"틀 스테이지 키 {template.StageKey}의 View가 {views.Count}개입니다. 하나만 남겨 주세요.");
@@ -590,16 +580,18 @@ namespace ProjectL.Tool.Editor
                 SetSoNotice("새 스테이지를 만들지 못했습니다:\n" + string.Join("\n", problems), MessageType.Error);
                 return;
             }
-            soModified = false; soNewName = ""; soNewKey = 0;
+            soNewName = ""; soNewKey = 0;
             RefreshSoCatalog();
             var entry = soCatalog?.Stages.Find(stage => stage.Root == root);
-            if (entry != null) OpenSoStage(entry);
+            if (entry != null) OpenSoStage(entry, true);
             SetSoNotice($"새 스테이지를 만들었습니다(표 미등록): {root.name}");
         }
 
         // 표 등록·해제는 저장한 에셋 기준이라, 저장하지 않은 변경이 있으면 먼저 저장을 요청합니다(설계 SM8).
         private void SetSoRegistered(bool registered)
         {
+            PrepareSoDraftProtection();
+            if (!SoDraftEditable) return;
             CancelSoGimmickShapes();
             if (soModified)
             {
@@ -878,7 +870,11 @@ namespace ProjectL.Tool.Editor
                 soZoneErase = GUILayout.Toolbar(soZoneErase ? 1 : 0, SoZoneModes, GUILayout.Width(120)) == 1;
             if (!tileView && soTool == SoTool.HaboobStart) DrawSoHaboobToolBar();
             if (!tileView && soTool == SoTool.Rockfall) DrawSoRockfallToolBar();
-            if (!tileView) EditorGUILayout.LabelField(SoToolHint(), EditorStyles.wordWrappedMiniLabel);
+            if (!tileView)
+            {
+                EditorGUILayout.LabelField(SoToolHint(), EditorStyles.wordWrappedMiniLabel);
+                DrawSoHelpLink("이 도구 사용법", soTool == SoTool.TileRotate ? SoHelpTopic.Tiles : SoHelpTopic.Placement);
+            }
             try { soField = SoFieldOf(); }
             catch (Exception exception)
             {
@@ -1103,6 +1099,9 @@ namespace ProjectL.Tool.Editor
                 using (new EditorGUI.DisabledScope(!hasClip))
                     if (GUILayout.Button(hasClip ? $"붙여넣기 (Ctrl+V) · {soClip.Count}개" : "붙여넣기 (Ctrl+V)")) { PasteSo(); GUIUtility.ExitGUI(); }
             }
+            EditorGUILayout.LabelField("영역 복사는 배치만 담으며 낙석·하붑 설정과 바닥 타일은 담지 않습니다. 검사 전에도 복사할 수 있습니다. 숫자·글자 입력 중 Ctrl+C/V는 입력 칸에 적용되므로 맵을 눌러 포커스를 옮기세요.", EditorStyles.wordWrappedMiniLabel);
+            if (!soHasBox) EditorGUILayout.LabelField("복사할 상자가 없습니다. 선택 도구에서 Shift+끌기로 영역을 고르세요.", EditorStyles.wordWrappedMiniLabel);
+            if (soClip == null || soClip.Count == 0) EditorGUILayout.LabelField("붙여넣을 배치가 없습니다. 영역을 먼저 복사하세요.", EditorStyles.wordWrappedMiniLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
                 string target = soHasBox ? "상자" : "전체";
@@ -1431,7 +1430,7 @@ namespace ProjectL.Tool.Editor
             e.Use(); Repaint();
         }
 
-        // 상자 선택이 있으면 상자 안 배치(본부 제외)를, 없으면 고른 칸 맨 위 배치를 지웁니다.
+        // 상자 선택이 있으면 상자 안 배치(본부 포함)를, 없으면 고른 칸 맨 위 배치를 지웁니다. 아군 구역은 지우지 않습니다.
         private void DeleteSoSelection(CombatStageSoGrid grid)
         {
             if (!soHasBox)
@@ -1495,7 +1494,7 @@ namespace ProjectL.Tool.Editor
             var grid = SoGrid();
             if (grid == null || !soHasBox)
             {
-                SetSoNotice("복사할 상자를 먼저 고르세요(선택 도구로 빈 칸부터 끌기).", MessageType.Warning);
+                SetSoNotice("복사할 상자를 먼저 고르세요(선택 도구에서 빈 칸부터 끌기 또는 Shift+끌기).", MessageType.Warning);
                 return;
             }
             soClip = soDocument.Copy(soDocument.PlacementsIn(soBox, grid).Where(p => SoShown(p.Item)), soBox.position);
@@ -1575,17 +1574,17 @@ namespace ProjectL.Tool.Editor
                 case SoTool.Select: return "칸 누르기: 고르기 · 배치를 끌기: 옮기기 · 빈 칸부터 끌기 또는 Shift+끌기: 상자 선택 · Delete 지우기 · R 회전 · Esc 취소";
                 case SoTool.Headquarters: return "누른 칸으로 적 본부를 옮깁니다(본부 정의는 스테이지 설정 → 공유 SO·본부·구조물).";
                 case SoTool.Rail: return "누르거나 끌어서 레일 칸을 더합니다. 지우기는 '지우기' 도구로 합니다.";
-                case SoTool.Erase: return "누른 칸의 맨 위 배치를 지웁니다. 본부는 지우지 않습니다.";
+                case SoTool.Erase: return "누른 칸의 맨 위 배치를 지웁니다(본부 포함). 아군 구역은 지우지 않습니다.";
                 case SoTool.PlayerZone:
                     return "누르거나 끌어서 아군 배치 구역 칸을 칠하거나 지웁니다 · Shift+끌기: 사각형 · 기존 '지우기' 도구는 구역을 건드리지 않습니다";
                 case SoTool.HaboobStart:
                     return "누른 칸이 구름 가운데 근처가 되도록 하붑 시작 위치를 정합니다(하붑·시작 위치 지정도 켬) · 다른 칸을 누르면 옮김 · 구름이 판 밖으로 나가는 칸은 놓지 않음 · " +
-                           "선택 도구로 구름 칸을 고르고 Delete: 시작 위치 비우기";
+                           "선택 도구에서 상자 선택 없이 구름 칸을 고르고 Delete: 배치가 있으면 배치 먼저 삭제, 없으면 시작 위치만 무작위로(하붑 사용 여부 유지). 지우개·상자 Delete는 시작 위치를 비우지 않음";
                 case SoTool.Rockfall:
-                    return "아무 칸이나 누르면 낙석을 켭니다. 낙석 위치는 전투 중 무작위로 정해져 맵에 그리지 않습니다.";
+                    return "낙석 켜기입니다. 클릭한 칸은 낙하 위치가 아닙니다. 낙하 위치는 전투 중 무작위로 정해져 맵에 그리지 않습니다.";
                 case SoTool.TileRotate:
                     return "칸 누르기·끌기: 그 칸의 바닥 타일 고르기 · Ctrl: 더하기 · Shift+끌기: 사각형 · Ctrl+A: 2D = 판 위 타일·3D = 타일 맵 전부 · Esc: 비우기 · R / Shift+R: 돌리기 · " +
-                           "판 밖 타일은 3D(판 밖을 누름)나 '바닥 타일' 작업 영역에서 고릅니다(2D는 판 안만)";
+                           "판 밖 타일은 3D나 '바닥 타일' 작업 영역에서 고릅니다(2D는 판 안만). 타일 Ctrl+C/V는 '바닥 타일 → 선택'에서 사용하세요. 숫자·글자 입력 중에는 맵 단축키가 적용되지 않습니다";
             }
             string brush = BrushOf(soTool);
             return string.IsNullOrEmpty(brush) ? "왼쪽 '정의 목록'에서 놓을 정의를 고르세요." : $"놓을 정의: {soCatalog.DefinitionLabel(brush)}";
@@ -2072,6 +2071,11 @@ namespace ProjectL.Tool.Editor
                 using (new EditorGUI.DisabledScope(!rootRegistered && !viewRegistered))
                     if (GUILayout.Button("표에서 빼기")) { SetSoRegistered(false); GUIUtility.ExitGUI(); }
             }
+            if (soModified) EditorGUILayout.LabelField("등록·빼기 전에 미저장 변경을 먼저 저장하세요.", EditorStyles.wordWrappedMiniLabel);
+            if (view == null) EditorGUILayout.LabelField("짝 View가 없어 등록할 수 없습니다. 배경·타일·카메라에서 짝 View를 만드세요.", EditorStyles.wordWrappedMiniLabel);
+            else if (rootRegistered && viewRegistered) EditorGUILayout.LabelField("두 표에 이미 등록되어 있습니다.", EditorStyles.wordWrappedMiniLabel);
+            if (!rootRegistered && !viewRegistered) EditorGUILayout.LabelField("두 표에 등록되지 않아 뺄 항목이 없습니다.", EditorStyles.wordWrappedMiniLabel);
+            DrawSoHelpLink("검사·저장·등록 사용법", SoHelpTopic.SaveAndRegister);
             DrawSoChapterLine();
         }
 
@@ -2498,8 +2502,14 @@ namespace ProjectL.Tool.Editor
             DrawSoBackground(view);
             if (SoVector3("위치 보정", view.positionOffset, out Vector3 position)) SoChange("위치 보정 변경", () => view.positionOffset = position);
             if (SoVector3("회전 보정", view.rotationOffset, out Vector3 rotation)) SoChange("회전 보정 변경", () => view.rotationOffset = rotation);
-            if (SoVector3("배율", view.scaleOffset, out Vector3 scale)) SoChange("배율 변경", () => view.scaleOffset = scale);
-            DrawSoReference("카메라 설정", view.cameraGuid, soCatalog.Cameras, picked => view.cameraGuid = picked, false);
+            if (CombatStageSoBackground.UsesTiles(SoBackgroundMode(view)))
+            {
+                CombatStageSoVisuals visuals = SoVisualsOrNull(out string problem);
+                if (visuals == null) EditorGUILayout.HelpBox(problem, MessageType.Error);
+                else CombatMapScaleEditor.Draw(CombatStageSoAssets.Load(view.gameObjectGuid) as GameObject, visuals.FieldView, view.tiles);
+            }
+            else if (SoVector3("배율", view.scaleOffset, out Vector3 scale)) SoChange("배율 변경", () => view.scaleOffset = scale);
+            EditorGUILayout.HelpBox("전투 카메라는 Combat 씬의 Combat Camera와 공용 CombatCameraSettings에서 설정합니다.", MessageType.Info);
             EditorGUILayout.LabelField("외형 회전", $"지형 {view.terrainRotations.Count} · 오브젝트 {view.objectRotations.Count}");
             DrawSoTileLayout(view);
         }

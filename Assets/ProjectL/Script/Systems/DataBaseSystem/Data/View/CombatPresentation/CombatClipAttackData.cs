@@ -10,11 +10,15 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     internal sealed class CombatClipAttackData
     {
         /// <exception cref="ArgumentOutOfRangeException">선딜레이가 <see cref="IsValidDelay"/>에 맞지 않을 때입니다.</exception>
-        internal CombatClipAttackData(CombatClipData clip, float hitDelay, IReadOnlyList<CombatClipShot> shots = null)
+        internal CombatClipAttackData(CombatClipData clip, float hitDelay, IReadOnlyList<CombatClipShot> shots = null,
+            CombatAttackAnimationStartData animationStart = default, float attackSpeed = 1f)
         {
             Clip = clip ?? throw new ArgumentNullException(nameof(clip));
             if (!IsValidDelay(hitDelay)) throw new ArgumentOutOfRangeException(nameof(hitDelay), hitDelay, DelayRule);
+            CombatPresentationValueRules.RequirePositive(attackSpeed, nameof(attackSpeed));
+            AttackSpeed = attackSpeed;
             HitDelay = hitDelay;
+            AnimationStart = animationStart;
             HasExplicitShots = shots != null && shots.Count > 0;
             Shots = ReadShots(shots);
         }
@@ -23,6 +27,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         internal const string DelayRule = "선딜레이는 유한한 0 이상의 초여야 합니다.";
 
         internal CombatClipData Clip { get; }
+
+        /// <summary>공격 주/부속 클립과 클립 이벤트가 공유하는 재생 배율입니다. 별도 초 단위 지연은 유지합니다.</summary>
+        internal float AttackSpeed { get; }
+
+        /// <summary>공격 클립 시작 기준입니다. 타격 뒤의 HitDelay와 별개입니다.</summary>
+        internal CombatAttackAnimationStartData AnimationStart { get; }
 
         /// <summary>명시 입력인지입니다. 정규화 뒤의 한 발만으로는 기본 단발과 구분할 수 없어 입력 출처를 보관합니다.</summary>
         internal bool HasExplicitShots { get; }

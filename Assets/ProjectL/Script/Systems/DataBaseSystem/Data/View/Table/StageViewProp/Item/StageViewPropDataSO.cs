@@ -1,6 +1,5 @@
 using System;
 using ProjectL.Framework.DataBase;
-using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Tool.Runtime;
 using UnityEngine;
 
@@ -18,12 +17,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageViewProp.Item
         [SerializeField] private MapDefinitionSO map;
         [Tooltip("필드 기준 위치 보정값입니다. PrefabWithTiles 방식에서는 높이(y)만 쓰고, 가로(x·z)는 타일 경계가 필드 칸 경계에 맞도록 코드가 정합니다.")]
         [SerializeField] private Vector3 positionOffset;
-        [Tooltip("필드 기준 회전 보정값(오일러 각)입니다. 프리팹 안 카메라도 함께 돌아 화면 방향이 됩니다. PrefabWithTiles 방식에서는 구멍 축이 필드 축과 평행하도록 가장 가까운 90° 단위로 맞춰집니다.")]
+        [Tooltip("필드 기준 회전 보정값(오일러 각)입니다. PrefabWithTiles 방식에서는 구멍 축이 필드 축과 평행하도록 가장 가까운 90° 단위로 맞춰집니다.")]
         [SerializeField] private Vector3 rotationOffset;
-        [Tooltip("프리팹의 원래 로컬 크기에 축별로 곱하는 배율입니다. (1, 1, 1)은 원래 크기를 유지합니다.")]
-        [SerializeField] private Vector3 scaleOffset = Vector3.one;
-        [Tooltip("전투 카메라 조작(이동·줌) 값입니다. 필수이고 여러 스테이지가 하나를 함께 쓸 수 있습니다. 처음 보기 크기는 맵 프리팹 카메라 렌즈값입니다.")]
-        [SerializeField] private CombatCameraSettingsSO cameraSettings;
+        [Tooltip("Prefab/MapDefinition에서 원본 로컬 크기에 곱하는 배율입니다. PrefabWithTiles는 이 값을 사용하지 않고 OutlineCellSpacing / 공통 제작 규격으로 자동 계산합니다.")]
+        [SerializeField, CombatMapScale] private Vector3 scaleOffset = Vector3.one;
         [Tooltip("켜면 이 스테이지의 낙석 터널 폭발과 폭발 흔들림만 생략합니다. 경고 표시·경고음·돌 낙하·착지 효과·피해는 유지됩니다.")]
         [SerializeField] private bool disableRockfallTunnelExplosion;
         [Tooltip("PrefabWithTiles 방식에서 배경 구멍을 채우는 바닥 타일 배치입니다. 기준점(anchorTile)은 게임 (0,0) 칸이 놓일 타일 칸이고 맵(배경·타일)이 그 자리에 맞춰 옮겨집니다. 칸 위치는 적지 않고 순서로 정해집니다.")]
@@ -45,11 +42,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageViewProp.Item
         public Vector3 RotationOffset => rotationOffset;
         public Vector3 ScaleOffset => scaleOffset;
 
-        /// <summary>
-        /// 전투 카메라 조작 값입니다(카메라 조작 설계 CC5). 읽을 때마다 검사한 새 값이고(DB 규칙 P2), SO가 비어 있으면 null입니다.
-        /// 비어 있으면 부트 DB 생성(<c>ViewStageData</c>)에서 거절합니다.
-        /// </summary>
-        public CombatCameraSettingsData CameraSettings => cameraSettings != null ? cameraSettings.CreateData() : null;
 
         /// <summary>
         /// 바닥 타일 배치입니다. 읽을 때마다 검사한 새 값입니다(DB 규칙 P2).

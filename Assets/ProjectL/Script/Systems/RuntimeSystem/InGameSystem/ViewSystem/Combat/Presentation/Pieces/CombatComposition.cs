@@ -40,7 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>실행이 무엇을 막는지입니다(조각·조립 설계 BP4).</summary>
     internal enum CombatPieceScope
     {
-        /// <summary>행동 실행(포효·소환): 진행 중 모든 사건을 막고, 출처가 겹침을 허용할 때만 엽니다.</summary>
+        /// <summary>행동 실행: 진행 중 모든 사건을 막고, 출처가 겹침을 허용할 때만 엽니다. 포효·소환·클립/코드 모션 공격·낙석 충돌·하붑·위치 교환·진입 등장 등이 씁니다.</summary>
         Action = 1,
 
         /// <summary>유닛 실행(피격·사망): 주체 유닛의 사건, 주체 없는 사건, 행동 사건을 막습니다.</summary>
@@ -59,15 +59,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </summary>
     internal readonly struct CombatPieceCompletion
     {
-        private CombatPieceCompletion(CombatEvent source, EntityId actor, CombatHitCompletion policy)
+        private CombatPieceCompletion(CombatEvent source, EntityId actor, CombatHitCompletion policy, bool waitsForAllItems = false)
         {
             Source = source;
             Actor = actor;
             Policy = policy;
+            WaitsForAllItems = waitsForAllItems;
         }
 
         /// <summary>출처 완료인지입니다.</summary>
         internal bool IsSource => Source != null;
+
+        /// <summary>
+        /// 일반 완료를 기다림 항목이 아니라 모든 항목이 끝날 때(전체 종료) 알리는지입니다(<see cref="AllItems"/>). 일반 완료(<see cref="General"/>)는 거짓입니다.
+        /// </summary>
+        internal bool WaitsForAllItems { get; }
 
         /// <summary>출처 사건입니다. 일반 완료면 null입니다.</summary>
         internal CombatEvent Source { get; }
@@ -80,6 +86,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>일반 완료입니다. 기다림 항목이 없으면 실행 시작 즉시 알립니다.</summary>
         internal static CombatPieceCompletion General => default;
+
+        /// <summary>
+        /// 모든 항목 완료입니다. 기다림 여부와 상관없이 모든 항목이 끝나 대여를 되돌린 뒤 한 번 알립니다. 사건 완료 뒤까지 실행이 대여를 쥐면 안 되는 조립이 씁니다 —
+        /// 터질 유닛의 깜빡임은 다음 사건(자폭 발동)이 그 몸 대여를 거두므로, 지연 큐가 남아 있어도 사건이 그보다 먼저 끝나면 안 됩니다(자폭 깜빡임 묶음 끝 검토 F1).
+        /// </summary>
+        internal static CombatPieceCompletion AllItems => new(null, EntityId.Empty, default, waitsForAllItems: true);
 
         /// <summary>출처 완료입니다. 실행이 시작 때 출처 수명을 열고, 전체 종료 때 닫고, 취소 때 비웁니다.</summary>
         internal static CombatPieceCompletion FromSource(CombatEvent source, EntityId actor, CombatHitCompletion policy)
@@ -153,6 +165,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>유닛 실행이 사망 실행인지입니다. 동시 사망 프로필에서 사망 실행끼리만 겹칩니다(설계 B14 O14).</summary>
         internal bool IsDeath { get; }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>전체 사건을 갖지 않은 유닛 조립의 종류입니다. 기존 사건 형식 표로만 분류합니다.</summary>
+        internal Type ProfilingEventType { get; set; }
+        /// <summary>조립의 원본 사건입니다. 계측 외의 실행·완료 판정에는 쓰지 않습니다.</summary>
+        internal CombatEvent ProfilingEvent { get; set; }
+#endif
         internal CombatPieceCompletion Completion { get; }
 
         internal IReadOnlyList<Item> Items => _items;
@@ -181,7 +199,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         // 장면 채널 번호의 시작입니다. 유닛 채널은 그 아래 번호를 씁니다.
         private const int SceneChannelStart = 100;
 
-        /// <summary>행동 실행(포효·소환)의 조립을 시작합니다.</summary>
+        /// <summary>행동 실행의 조립을 시작합니다(쓰는 곳은 <see cref="CombatPieceScope.Action"/> 설명).</summary>
         internal static CombatComposition ForAction(CombatPieceCompletion completion) =>
             new(CombatPieceScope.Action, EntityId.Empty, false, completion);
 
@@ -210,6 +228,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// </summary>
         internal bool IsEmpty => _items.Count == 0;
 
+        /// <summary>
+        /// 이 유닛 실행이 주체의 밀림 걸음(넉백 등 밀린 이동)을 막지 않는지입니다(넉백 피격 연출, 임시 — 2026-11-11 사용자 "피격과 동시에 밀림").
+        /// 밀림과 함께 가는 피격(자세를 빌리지 않아 걸음 배치와 겹칠 수 있음)만 켭니다. 피격과 밀림 사이에 끼는 그 주체의 특성 발동·상태 사건도 막지 않고,
+        /// 그 주체의 다른 캐릭터 사건(피격·사망 등)과 행동·출처를 여는 사건은 이 실행이 끝날 때까지 기다립니다(판정은 조각 실행 재생기 <c>PassesPushAlongsideHit</c>).
+        /// </summary>
+        internal bool AllowsSubjectPush { get; private set; }
+
+        /// <summary>이 유닛 실행이 주체의 밀림 걸음을 막지 않게 합니다(<see cref="AllowsSubjectPush"/>). 자세 채널을 빌리는 실행은 거절합니다.</summary>
+        internal CombatComposition AllowSubjectPush()
+        {
+            RequireOpen();
+            if (Scope != CombatPieceScope.Unit)
+                throw new InvalidOperationException("[CombatComposition] 밀림 걸음과 겹치는 것은 유닛 실행만 됩니다.");
+            for (int i = 0; i < _leases.Count; i++)
+            {
+                if (_leases[i].Channel == CombatPieceChannel.Pose)
+                    throw new InvalidOperationException("[CombatComposition] 자세를 빌리는 실행은 밀림 걸음과 겹칠 수 없습니다(걸음 배치와 함께 못 씀).");
+            }
+            AllowsSubjectPush = true;
+            return this;
+        }
+
         /// <summary>실행이 시작할 때 빌릴 유닛 채널을 적습니다. 같은 유닛·채널은 한 번만 적고, 장면 채널은 거절합니다(전용 함수로).</summary>
         internal CombatComposition Lease(EntityId unit, CombatPieceChannel channel)
         {
@@ -221,6 +261,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentOutOfRangeException(nameof(channel));
             if (IsSceneChannel(channel))
                 throw new ArgumentException($"[CombatComposition] 장면 채널은 전용 함수로 빌립니다: {channel}", nameof(channel));
+            if (AllowsSubjectPush && channel == CombatPieceChannel.Pose)
+                throw new InvalidOperationException("[CombatComposition] 밀림 걸음과 겹치는 실행은 자세를 빌릴 수 없습니다.");
             for (int i = 0; i < _leases.Count; i++)
             {
                 if (_leases[i].Unit == unit && _leases[i].Channel == channel)

@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
@@ -28,9 +29,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static IReadOnlyList<EntityId> PendingBosses(CombatCommandInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            if (!input.State.IsNight || input.State.Phase == CombatFlowPhase.Finished ||
-                input.State.Turn.StagePhase != StagePhase.Combat) return Array.Empty<EntityId>();
-            return input.Characters.Where(c => !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field && !CombatActionAdmission.IsAttackRestricted(c))
+            if (PhaseFailure(input) != AttackFailureReason.None) return Array.Empty<EntityId>();
+            return input.Characters.Where(c => UnitFailure(c) == AttackFailureReason.None)
                 .Where(c => Roar(input, c) is RoarTraitSpec roar && RoarHitCounter.HitCount(c) >= roar.HitThreshold)
                 .Select(c => c.EntityId).OrderBy(id => id).ToArray();
         }
@@ -70,19 +70,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (!PendingBosses(input).Contains(bossId)) throw new InvalidOperationException("포효 대기 중인 보스가 아닙니다.");
             var boss = input.Characters.Single(c => c.EntityId == bossId);
-            var profile = CombatCommandCalculator.RequiredProfile(input, boss);
-            if (profile.Method.ChoiceMode != TargetingChoiceMode.All)
-                throw new InvalidOperationException("포효 보스의 공격 프로필은 전체 지정(All)이어야 합니다.");
+            RequireAllProfile(input, boss);
 
             // 1단계: 포효 카운터만 초기화한다. 일반 행동 사용과 공용 자금은 유지한다.
-            var projected = input.Characters.ToDictionary(c => c.EntityId);
-            projected[bossId] = RoarHitCounter.Reset(boss);
-            CombatCommandTransition Reset(params CombatEvent[] events) => CombatCommandCalculator.Finish(input,
-                new Dictionary<EntityId, CharacterCombatFacts>(projected), input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, input.State.ThornFields.ToDictionary(f => f.Cell), input.State.Structures.ToArray(), new List<long>(),
-                new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, input.State,
-                events: events.ToList());
-            var reset = Reset();
+            var reset = ResetCounter(input, boss, out var resetBoss);
             var afterReset = CombatCommandComposition.Project(reset);
 
             // 2단계: 반응 공격. 범위 안에 대상이 없으면 포효 사실만 남긴다.
@@ -97,11 +88,77 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 : Array.Empty<EntityId>();
             CombatCommandEvents.Trait(ordered, bossId, TraitKey.Roar, TraitActivationKind.RoarTriggered,
                 occurrence.AreaCells.Count, targets, occurrence.AreaCells, origin);
-            CombatCommandEvents.TraitState(ordered, boss, projected[bossId], origin);
+            CombatCommandEvents.TraitState(ordered, boss, resetBoss, origin);
             ordered.AddRange(reset.Events);
             if (attack == null) ordered.Add(occurrence);
             var recorded = CombatCommandComposition.WithEvents(reset, ordered);
             return attack == null ? recorded : CombatCommandComposition.Merge(input, new[] { recorded, attack });
+        }
+
+        /// <summary>
+        /// 보스(<see cref="CombatCommandInput.ActorId"/>)가 지금 포효하면 어떻게 되는지 예고한다(포효 예고 설계 RF2, 계획 TP-1~TP-7).
+        /// 실제 포효(<see cref="TryRoar"/>)와 같은 순서 — 카운터 되돌림 → 전체 지정 반응 공격 — 를 플레이어 시점 공개 미리보기로 돌린다.
+        /// 카운터는 보지 않는다(언제 보일지는 묻는 쪽, TP-4). 게임 상태를 바꾸지 않는다.
+        /// </summary>
+        internal static RoarForecastResult Forecast(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            var bossId = input.ActorId;
+            var phase = PhaseFailure(input);
+            if (phase != AttackFailureReason.None) return RoarForecastResult.Failure(phase, bossId);
+            var boss = input.Characters.SingleOrDefault(c => c.EntityId == bossId);
+            if (boss == null) return RoarForecastResult.Failure(AttackFailureReason.EntityNotFound, bossId);
+            if (Roar(input, boss) == null)
+                throw new InvalidOperationException("포효 특성이 없는 유닛의 포효 예고를 물었습니다.");
+            var unit = UnitFailure(boss);
+            if (unit != AttackFailureReason.None) return RoarForecastResult.Failure(unit, bossId);
+            RequireAllProfile(input, boss);
+
+            var afterReset = CombatCommandComposition.Project(ResetCounter(input, boss, out _));
+            using var work = new CombatAttackCalculation(afterReset, rules, publicPreview: true,
+                reactionActor: afterReset.Characters.Single(c => c.EntityId == bossId), reactionAim: AttackAim.ForAll(),
+                previewObserver: Owner.Player);
+            while (!work.IsComplete) work.Step();
+            // 대상이 없으면 반응 계산은 전이 없이 범위 칸만 돌려준다(실제 포효의 빈 범위 사건과 같은 원본, TP-7).
+            return work.Transition == null
+                ? RoarForecastResult.WithoutTargets(bossId, work.EmptyAreaCells)
+                : RoarForecastResult.WithTargets(bossId, work.Preview);
+        }
+
+        /// <summary>포효가 일어날 수 있는 전투 조건(전투 미종료 + 밤 + 전투 국면)이다. 대기 판정과 예고가 같이 쓴다(TP-1).</summary>
+        private static AttackFailureReason PhaseFailure(CombatCommandInput input)
+        {
+            if (input.State.Phase == CombatFlowPhase.Finished) return AttackFailureReason.StageEnded;
+            if (!input.State.InCombat || input.State.Turn.StagePhase != StagePhase.Combat) return AttackFailureReason.WrongPhase;
+            return AttackFailureReason.None;
+        }
+
+        /// <summary>포효할 수 있는 유닛 조건(살아 있는 Field 캐릭터 + 공격 제한 아님)이다. 대기 판정과 예고가 같이 쓴다(TP-1).</summary>
+        private static AttackFailureReason UnitFailure(CharacterCombatFacts character)
+        {
+            if (character.Health.IsDead || character.Area != CharacterRuntimeArea.Field) return AttackFailureReason.NotInCombat;
+            return CombatAttackQueries.RestrictionFailure(character);
+        }
+
+        private static void RequireAllProfile(CombatCommandInput input, CharacterCombatFacts boss)
+        {
+            if (CombatCommandCalculator.RequiredProfile(input, boss).Method.ChoiceMode != TargetingChoiceMode.All)
+                throw new InvalidOperationException("포효 보스의 공격 프로필은 전체 지정(All)이어야 합니다.");
+        }
+
+        /// <summary>
+        /// 포효 1단계: 카운터만 0으로 되돌린 전이다(G6-2). 일반 행동 사용과 공용 자금은 유지한다. 실제 포효와 예고가 같이 쓴다(TP-1).
+        /// </summary>
+        private static CombatCommandTransition ResetCounter(CombatCommandInput input, CharacterCombatFacts boss,
+            out CharacterCombatFacts resetBoss)
+        {
+            var projected = input.Characters.ToDictionary(c => c.EntityId);
+            resetBoss = RoarHitCounter.Reset(boss);
+            projected[boss.EntityId] = resetBoss;
+            return CombatCommandCalculator.Finish(input, projected, input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
+                input.Souls, input.State.ThornFields.ToDictionary(f => f.Cell), input.State.Structures.ToArray(), new List<long>(),
+                new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, input.State,
+                events: new List<CombatEvent>());
         }
     }
 }

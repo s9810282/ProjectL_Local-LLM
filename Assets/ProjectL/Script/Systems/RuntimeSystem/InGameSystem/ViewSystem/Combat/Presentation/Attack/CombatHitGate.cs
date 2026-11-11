@@ -1,3 +1,7 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -38,6 +42,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </remarks>
     internal sealed class CombatHitGate
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatPlaybackProfile Profile { get; set; } = CombatEventProfiler.Unknown;
+
+#endif
         private readonly CombatHitFollowUps _followUps;
         private readonly HashSet<EntityId> _released = new();
         private CombatEvent _source;
@@ -90,6 +98,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal void Release(CombatEvent source, EntityId target)
         {
             if (!IsCurrent(source) || !_followUps.IsHitTarget(source, target) || !_released.Add(target)) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var hitSample = Profile.Hit.Auto();
+#endif
             if (_completion == CombatHitCompletion.FirstRelease) NotifyCompleted();
         }
 
@@ -102,6 +113,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             bool added = false;
             foreach (EntityId target in _followUps.HitTargetsOf(source))
                 added |= _released.Add(target);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var hitSample = added ? Profile.Hit.Auto() : default;
+#endif
             if (added && _completion == CombatHitCompletion.FirstRelease)
                 NotifyCompleted();
         }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPreview;
 using Cinemachine;
 using UnityEditor;
@@ -15,6 +16,7 @@ namespace ProjectL.Tool.Editor
     public static class TraitActivationPreviewSceneBuilder
     {
         public const string ScenePath = "Assets/Scenes/Dev/TraitActivationPreview.unity";
+        public const string CameraPrefabPath = "Assets/ProjectL/Prefabs/Stage/CombatCamera.prefab";
 
         public static void EnsureScene()
         {
@@ -62,6 +64,13 @@ namespace ProjectL.Tool.Editor
                 cameraRoot.AddComponent<CinemachineBrain>();
                 cameraRoot.AddComponent<AudioListener>();
                 cameraRoot.AddComponent<FMODUnity.StudioListener>();
+                GameObject cameraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraPrefabPath);
+                if (cameraPrefab == null)
+                    throw new InvalidOperationException($"공용 전투 카메라 프리팹이 없습니다: {CameraPrefabPath}");
+                GameObject combatCamera = (GameObject)PrefabUtility.InstantiatePrefab(cameraPrefab, scene);
+                CombatSceneCameraBinding cameraBinding = combatCamera.GetComponent<CombatSceneCameraBinding>();
+                if (cameraBinding == null)
+                    throw new InvalidOperationException("공용 전투 카메라 프리팹에 CombatSceneCameraBinding이 없습니다.");
                 var light = new GameObject("Preview Light").AddComponent<Light>();
                 light.type = LightType.Directional;
                 light.intensity = 1;
@@ -70,6 +79,7 @@ namespace ProjectL.Tool.Editor
                 Set(host, "field", field);
                 Set(host, "units", units);
                 Set(host, "output", output);
+                Set(host, "sceneCamera", cameraBinding);
                 if (!AssetDatabase.IsValidFolder("Assets/Scenes/Dev")) AssetDatabase.CreateFolder("Assets/Scenes", "Dev");
                 EditorSceneManager.SaveScene(scene, ScenePath);
             }

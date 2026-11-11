@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.Common;
+using ProjectL.Systems.DataBaseSystem.Data.Render.Table.Effect.Enum;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
@@ -13,13 +14,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
     internal sealed class StageNodeVisualData : IData
     {
         internal StageNodeVisualData(int stageKey, StageType stageType, StageMapRole mapRole, GameObject visualPrefab,
-            string displayName, Vector3 rotationOffset = default)
+            string displayName, EffectType breakEffect, Vector3 rotationOffset = default)
         {
             StageKey = stageKey;
             StageType = stageType;
             MapRole = mapRole;
             VisualPrefab = visualPrefab;
             RotationOffset = rotationOffset;
+            BreakEffect = breakEffect;
             DisplayName = string.IsNullOrWhiteSpace(displayName) && visualPrefab != null
                 ? visualPrefab.name
                 : displayName;
@@ -31,9 +33,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
         public GameObject VisualPrefab { get; }
         public Vector3 RotationOffset { get; }
         public string DisplayName { get; }
+        public EffectType BreakEffect { get; }
 
         internal void Validate()
         {
+            if (BreakEffect == EffectType.Empty || !System.Enum.IsDefined(typeof(EffectType), BreakEffect))
+                throw new InvalidOperationException($"[StageNodeVisualData] StageKey {StageKey}: 정의된 파괴 EffectType이 필요합니다.");
             if (!float.IsFinite(RotationOffset.x) || !float.IsFinite(RotationOffset.y) || !float.IsFinite(RotationOffset.z))
                 throw new InvalidOperationException($"[StageNodeVisualData] StageKey {StageKey}: rotationOffset은 유한한 값이어야 합니다.");
             if (StageKey < 0)
@@ -41,6 +46,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item
             if (!System.Enum.IsDefined(typeof(StageType), StageType) ||
                 !System.Enum.IsDefined(typeof(StageMapRole), MapRole))
                 throw new InvalidOperationException("[StageNodeVisualData] Stage type or map role is invalid.");
+            // 노드는 건물을 눌러 고르므로 건물 프리팹이 늘 필요합니다. 표시 시점이 아니라 DB 생성 때 막습니다(평가 N-52).
+            ViewPrefabRules.RequirePrefabAsset(VisualPrefab, $"[StageNodeVisualData] StageKey {StageKey}·{StageType}·{MapRole} 건물");
         }
     }
 }

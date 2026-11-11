@@ -392,7 +392,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+  - {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2969,7 +2969,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+  - {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8302,7 +8302,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+  - {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -10321,7 +10321,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+  - {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -11543,6 +11543,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -62.232
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (2)
@@ -11617,6 +11621,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (15)
@@ -11693,6 +11701,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (16)
@@ -11769,6 +11781,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox
@@ -11843,6 +11867,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (5)
@@ -11917,6 +11945,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (3)
@@ -11994,7 +12026,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 9ef5de0dcddb5c9488c2ce79aa59fd50, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 9ef5de0dcddb5c9488c2ce79aa59fd50, type: 3}
       propertyPath: m_Name
       value: Bar_ver2_attach (1)
@@ -12069,6 +12101,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (4)
@@ -12145,6 +12181,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (2)
@@ -12219,6 +12259,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1
@@ -12296,7 +12340,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 49a6da2d97ca0494eb9bd2b0587367c2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 58988035974d3114a8f7fbfd8d92372a, type: 2}
+      objectReference: {fileID: 2100000, guid: 22f9a3721c6b41d089aea0af9cb4ec82, type: 2}
     - target: {fileID: 919132149155446097, guid: 49a6da2d97ca0494eb9bd2b0587367c2, type: 3}
       propertyPath: m_Name
       value: Wooden_Lantern
@@ -12371,6 +12415,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (25)
@@ -12447,6 +12495,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (5)
@@ -12526,7 +12578,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+      objectReference: {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
     - target: {fileID: 919132149155446097, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: m_Name
       value: "\uC11C\uBE0C_\uD504\uB78D_\uAF2C\uB9C8\uC120\uC778\uC7A5 (3)"
@@ -12604,7 +12656,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: m_Name
       value: Bar_attach (2)
@@ -12686,7 +12738,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 49a6da2d97ca0494eb9bd2b0587367c2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 58988035974d3114a8f7fbfd8d92372a, type: 2}
+      objectReference: {fileID: 2100000, guid: 22f9a3721c6b41d089aea0af9cb4ec82, type: 2}
     - target: {fileID: 919132149155446097, guid: 49a6da2d97ca0494eb9bd2b0587367c2, type: 3}
       propertyPath: m_Name
       value: Wooden_Lantern (1)
@@ -12764,7 +12816,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: m_Name
       value: Bar_attach (3)
@@ -12839,6 +12891,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (8)
@@ -12913,6 +12969,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -48.691
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (40)
@@ -12989,6 +13049,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (13)
@@ -13077,6 +13141,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -11.98
       objectReference: {fileID: 0}
+    - target: {fileID: -2474432806101076370, guid: d8f16db27615aad44b0eb7055474fca3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 0899658a80b443528f8d07a7bf5f0257, type: 2}
     - target: {fileID: -32740708348632125, guid: d8f16db27615aad44b0eb7055474fca3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -6.37
@@ -13097,6 +13165,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5042199252846065088, guid: d8f16db27615aad44b0eb7055474fca3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 0899658a80b443528f8d07a7bf5f0257, type: 2}
     - target: {fileID: 5881653257344767963, guid: d8f16db27615aad44b0eb7055474fca3, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -13236,6 +13308,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (7)
@@ -13310,6 +13386,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (2)
@@ -13384,6 +13472,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (41)
@@ -13460,6 +13552,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (11)
@@ -13618,6 +13714,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (4)
@@ -13692,6 +13792,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (1)
@@ -13769,7 +13873,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: m_Name
       value: Bar_attach (1)
@@ -13955,6 +14059,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (42)
@@ -14107,6 +14215,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -4.514
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 95e431a38ab939a42906fce33bd05904, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 6b32620c03bff9d4f844c3b4979af0f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 95e431a38ab939a42906fce33bd05904, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Carriage (1)
@@ -14181,6 +14293,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (20)
@@ -14260,7 +14376,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 9ef5de0dcddb5c9488c2ce79aa59fd50, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 9ef5de0dcddb5c9488c2ce79aa59fd50, type: 3}
       propertyPath: m_Name
       value: Bar_ver2_attach
@@ -14339,6 +14455,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (10)
@@ -14415,6 +14535,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -62.231
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (6)
@@ -14489,6 +14613,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (4)
@@ -14563,6 +14691,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 29.921
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (38)
@@ -14639,6 +14771,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -14.013
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (6)
@@ -14715,6 +14851,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (3)
@@ -14789,6 +14937,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 29.921
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (36)
@@ -14865,6 +15017,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (27)
@@ -15041,6 +15197,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -62.232
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (3)
@@ -15118,7 +15278,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 02cfd271cb6ecc3449dca58111a25043, type: 2}
+      objectReference: {fileID: 2100000, guid: 65b558ef46f5bdc48baeb9f5fcc567f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: m_Name
       value: Wooden plank
@@ -15197,6 +15357,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (7)
@@ -15274,7 +15446,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+      objectReference: {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
     - target: {fileID: 919132149155446097, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: m_Name
       value: "\uC11C\uBE0C_\uD504\uB78D_\uAF2C\uB9C8\uC120\uC778\uC7A5 (2)"
@@ -15349,6 +15521,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (32)
@@ -15425,6 +15601,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (1)
@@ -15502,7 +15690,11 @@ PrefabInstance:
     - target: {fileID: -7308718804694308083, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 319ac11df90a45949bdcbf567a5dc4e5, type: 2}
+      objectReference: {fileID: 2100000, guid: 549b88489c2a8554c917106dcb62beef, type: 2}
+    - target: {fileID: -6874384816470629186, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     - target: {fileID: -2439540499024966111, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
       propertyPath: m_LocalScale.x
       value: 6958.966
@@ -15691,6 +15883,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 3.1609955
       objectReference: {fileID: 0}
+    - target: {fileID: 4682844015635282582, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
+    - target: {fileID: 7022404304150118815, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
+    - target: {fileID: 7422883808709208033, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: -4906838889796845047, guid: 17d4543a92177e34cb67ae131d41e6bf, type: 3}
@@ -15762,6 +15966,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (34)
@@ -15841,7 +16049,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+      objectReference: {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
     - target: {fileID: 919132149155446097, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: m_Name
       value: "\uC11C\uBE0C_\uD504\uB78D_\uAF2C\uB9C8\uC120\uC778\uC7A5 (4)"
@@ -15919,7 +16127,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 02cfd271cb6ecc3449dca58111a25043, type: 2}
+      objectReference: {fileID: 2100000, guid: 65b558ef46f5bdc48baeb9f5fcc567f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: m_Name
       value: Wooden plank (2)
@@ -15998,6 +16206,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.154
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (29)
@@ -16188,6 +16400,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (19)
@@ -16264,6 +16480,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 29.921
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (37)
@@ -16340,6 +16560,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (4)
@@ -16417,7 +16649,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: ac7cad55ae966f447aa8c855725c6b4a, type: 2}
+      objectReference: {fileID: 2100000, guid: 8ea13b3fcf24b08408b5796a5ee751be, type: 2}
     - target: {fileID: 919132149155446097, guid: 0ad8a2263bccd4249bcbf03f3b640c07, type: 3}
       propertyPath: m_Name
       value: "\uC11C\uBE0C_\uD504\uB78D_\uAF2C\uB9C8\uC120\uC778\uC7A5 (1)"
@@ -16492,6 +16724,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.154
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (28)
@@ -16568,6 +16804,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock
@@ -16644,6 +16884,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (23)
@@ -16720,6 +16964,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (5)
@@ -16797,7 +17053,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 87ed4058e0799744d900091dee1d6290, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 87ed4058e0799744d900091dee1d6290, type: 3}
       propertyPath: m_Name
       value: church_ver3_attach (1)
@@ -17036,6 +17292,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -179.127
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: e653d12ee5166e24fb38aad7a48042e5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 6baad081dab346a08f15f7130da178b0, type: 2}
     - target: {fileID: 919132149155446097, guid: e653d12ee5166e24fb38aad7a48042e5, type: 3}
       propertyPath: m_Name
       value: LAND17
@@ -17139,6 +17399,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (33)
@@ -17239,6 +17503,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.053025
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (2)
@@ -17315,6 +17583,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (9)
@@ -17391,6 +17663,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.154
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (30)
@@ -17479,6 +17755,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 3929797008875788479, guid: 1270cb4bdc61d484cbb3660f02bc225a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: 1270cb4bdc61d484cbb3660f02bc225a, type: 3}
@@ -17551,6 +17831,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 30.896
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (39)
@@ -17627,6 +17911,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (26)
@@ -17703,6 +17991,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 12.75
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (7)
@@ -17779,6 +18071,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (17)
@@ -17855,6 +18151,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (8)
@@ -17931,6 +18231,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (22)
@@ -18007,6 +18311,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (43)
@@ -18083,6 +18391,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (10)
@@ -18157,6 +18477,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 27.936996
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 5192590a7d21aca46b9d5376e92e2ce0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: ef36f6ae0c87ae84ea73e708048f6a1f, type: 2}
     - target: {fileID: 919132149155446097, guid: 5192590a7d21aca46b9d5376e92e2ce0, type: 3}
       propertyPath: m_Name
       value: "\uD48D\uCC28"
@@ -18231,6 +18555,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (12)
@@ -18393,6 +18721,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (6)
@@ -18470,7 +18810,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 02cfd271cb6ecc3449dca58111a25043, type: 2}
+      objectReference: {fileID: 2100000, guid: 65b558ef46f5bdc48baeb9f5fcc567f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 301ef0dc2a4865b409ddc32d631d777b, type: 3}
       propertyPath: m_Name
       value: Wooden plank (1)
@@ -18541,6 +18881,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 14.403
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 95e431a38ab939a42906fce33bd05904, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 6b32620c03bff9d4f844c3b4979af0f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 95e431a38ab939a42906fce33bd05904, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Carriage (2)
@@ -18615,6 +18959,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (24)
@@ -18691,6 +19039,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 29.921
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (21)
@@ -18767,6 +19119,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (9)
@@ -18841,6 +19205,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (1)
@@ -18915,6 +19283,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (31)
@@ -18994,7 +19366,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 87ed4058e0799744d900091dee1d6290, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 87ed4058e0799744d900091dee1d6290, type: 3}
       propertyPath: m_Name
       value: church_ver3_attach
@@ -19069,6 +19441,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 93.372
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: b5555ead152bf3140aa4924dd8d6d4f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 00c4f3bce80344148943160d91a13f76, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_Fance 1 (6)
@@ -19143,6 +19519,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (18)
@@ -19219,6 +19599,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4332782502028995177, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: -3385482135228441972, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
+    - target: {fileID: 381927113135927303, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: 850a89cdb1602cb4fba0dc7e4ca5c068, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_WoodBox (8)
@@ -19293,6 +19685,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -62.231
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 013e92b8f57081a4e96a5d0b660a1215, type: 2}
     - target: {fileID: 919132149155446097, guid: ff3b3fba7945ab54cbd7a19c99a1c179, type: 3}
       propertyPath: m_Name
       value: BackGround_Prop_OakBarrel (5)
@@ -19449,6 +19845,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -29.507
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (35)
@@ -19537,6 +19937,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 3929797008875788479, guid: 1270cb4bdc61d484cbb3660f02bc225a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: 1270cb4bdc61d484cbb3660f02bc225a, type: 3}
@@ -19697,6 +20101,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (3)
@@ -19773,6 +20181,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (1)
@@ -19849,6 +20261,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (14)
@@ -19925,6 +20341,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 4cea32fc577292742a45e5f8e8cf0a26, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f281dc2161dfa746ab8cba5048b02e6, type: 3}
       propertyPath: m_Name
       value: smallrock (44)
@@ -20092,7 +20512,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: eaf4e5b0d16eeb44fb9ac1ed51eb48b3, type: 2}
+      objectReference: {fileID: 2100000, guid: b7feca6c93d707049810885cd30669f4, type: 2}
     - target: {fileID: 919132149155446097, guid: 11f96d1507017ed4399c868c746318f9, type: 3}
       propertyPath: m_Name
       value: Bar_attach

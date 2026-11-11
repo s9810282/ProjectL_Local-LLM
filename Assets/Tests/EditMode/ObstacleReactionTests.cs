@@ -81,7 +81,7 @@ namespace ProjectL.Tests.Core
             var barrel = Barrel(51, new CellCoord(2, 0), 1, 7);
             var input = Copy(route, structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { new BarrelTriggerFact() })));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { new BarrelTriggerFact() })));
             var rules = new IMovementTileRule[] { new BarrelTriggerRule() };
             Assert.That(CombatMovementCalculator.Preview(input, rules).ProjectedActor.Health.CurrentHealth, Is.EqualTo(93));
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -219,7 +219,7 @@ namespace ProjectL.Tests.Core
             var input = Barrels(Barrel(51, new CellCoord(4, 3), 10, 10));
             var s = input.State;
             var terrain = new StaticTerrainFact(71, new CellCoord(5, 3), StaticTerrainKind.HighGround, true, new[] { Owner.Player });
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(new MovementTileFact[] { terrain }));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(new MovementTileFact[] { terrain }));
             input = new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
                 environmentBindings: new EnvironmentSemanticBindings(new[] { 71L }, Array.Empty<long>(), input.EnvironmentBindings.ObstacleEntityIds),
@@ -308,7 +308,7 @@ namespace ProjectL.Tests.Core
             StructureCombatFacts[] structures = null, ObstacleContentProfile[] profiles = null)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                structures ?? s.Structures,s.ThornFields,s.Turn,s.Environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                structures ?? s.Structures,s.ThornFields,s.Turn,s.Environment);
             profiles ??= input.ObstacleContents.ToArray();
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, characters ?? input.Characters.ToArray(),
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell, input.Rotation,

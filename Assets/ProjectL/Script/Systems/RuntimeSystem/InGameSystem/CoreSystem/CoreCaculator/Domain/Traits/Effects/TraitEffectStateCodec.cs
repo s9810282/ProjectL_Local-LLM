@@ -9,6 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static IEffectStateSnapshot Capture(TraitRuntimeState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
+            if (state is RampageRuntimeState rampage) return new RampageEffectStateSnapshot(rampage.KillAttackBonus);
 
             if (state is AccelerationRuntimeState acceleration) return new AccelerationEffectStateSnapshot(acceleration.HeldAttackBonus);
             if (state is StationaryFireRuntimeState stationaryfire) return new StationaryFireEffectStateSnapshot(stationaryfire.MovedThisOwnTurn);
@@ -49,6 +50,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (state is ImpactBoltRuntimeState)
                 return new ImpactBoltEffectStateSnapshot();
 
+            if (state is CrashImpactRuntimeState)
+                return new CrashImpactEffectStateSnapshot();
+
             if (state is PullRuntimeState)
                 return new PullEffectStateSnapshot();
 
@@ -70,6 +74,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static TraitRuntimeState Restore(IEffectStateSnapshot snapshot)
         {
             if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (snapshot is RampageEffectStateSnapshot rampage) return new RampageRuntimeState(rampage.KillAttackBonus);
 
             if (snapshot is AccelerationEffectStateSnapshot acceleration) return new AccelerationRuntimeState(acceleration.HeldAttackBonus);
             if (snapshot is StationaryFireEffectStateSnapshot stationaryfire) return new StationaryFireRuntimeState(stationaryfire.MovedThisOwnTurn);
@@ -109,6 +114,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             if (snapshot is ImpactBoltEffectStateSnapshot)
                 return new ImpactBoltRuntimeState();
+
+            if (snapshot is CrashImpactEffectStateSnapshot)
+                return new CrashImpactRuntimeState();
 
             if (snapshot is PullEffectStateSnapshot)
                 return new PullRuntimeState();

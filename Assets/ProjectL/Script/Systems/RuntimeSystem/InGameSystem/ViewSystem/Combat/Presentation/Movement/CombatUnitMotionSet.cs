@@ -43,7 +43,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="turnSeconds">걸음 전 회전·경로 끝 방향 복귀 시간입니다. 0이면 바로 돌립니다.</param>
         /// <param name="generation">사건 Presenter가 소유한 현재 재생 세대입니다. 취소마다 바뀝니다.</param>
         /// <param name="show">한 개체의 사실을 표시 사실에 넣고 다시 그립니다.</param>
-        /// <param name="playMovementSound">이동 시작 효과음입니다.</param>
+        /// <param name="playMovementSound">스스로 이동하는 걸음의 시작 효과음입니다.</param>
         /// <param name="thornBody">가시 칸의 접촉 몸입니다. 없으면 가시 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="objectBody">오브젝트 원본의 접촉 몸입니다. 없으면 오브젝트 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="leapMotion">뛰어넘기 구간 전체 시간·높이입니다. 생략하면 View 설정 기본값을 씁니다.</param>
@@ -146,19 +146,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>Core가 제공한 실제 끌어오기 경로를 같은 유닛의 이동 레인에서 재생합니다.</summary>
-        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed)
+        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed, Action started = null)
         {
             CombatUnitMotionPlayback lane = Lane(movement.TargetId);
             if (lane.IsActive)
                 throw new InvalidOperationException("끌어오기 전에 대상의 이전 이동이 끝나야 합니다.");
-            lane.BeginPull(movement, target, mapper, completed);
-        }
-
-/// <summary>경로의 첫 걸음이 시작됨을 알립니다(이동 효과음).</summary>
-        internal void NotifyMovementStarted(CombatCharacterEvent firstStep)
-        {
-            if (firstStep != null && _lanes.TryGetValue(firstStep.Expected.EntityId, out CombatUnitMotionPlayback lane))
-                lane.NotifyMovementStarted(firstStep);
+            lane.BeginPull(movement, target, mapper, completed, started);
         }
 
         /// <summary>그 유닛의 레인에서 경로 끝 방향 복귀를 합니다. 돌 필요가 없으면 바로 완료를 알립니다.</summary>
@@ -166,6 +159,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (facts == null) throw new ArgumentNullException(nameof(facts));
             Lane(facts.EntityId).BeginFacingRestore(facts, completed, mapper);
+        }
+
+        /// <summary>그 유닛의 레인에서 밀린 경로 끝의 젖힌 자세를 폅니다(넉백 피격 연출, 임시). 펼 필요가 없으면 바로 완료를 알립니다.</summary>
+        internal void BeginStraighten(CharacterCombatFacts facts, Action completed, FieldGridMapper mapper)
+        {
+            if (facts == null) throw new ArgumentNullException(nameof(facts));
+            Lane(facts.EntityId).BeginStraighten(facts, completed, mapper);
         }
 
         /// <summary>사건 완료 뒤 아직 보간 중인 경로 끝 걸음의 방향 복귀를 그 레인의 보간 끝 뒤로 미룹니다(이동 접촉 설계 M3).</summary>

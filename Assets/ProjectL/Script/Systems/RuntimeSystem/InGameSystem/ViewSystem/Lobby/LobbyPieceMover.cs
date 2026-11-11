@@ -39,7 +39,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             int generation = ++_generation;
             motion.Begin(arrival.position, arrival.position + arrival.rotation * Vector3.forward);
             if (ReferenceEquals(_motion, motion) && generation == _generation && motion.IsMoving)
-                _audio.Play(UnitEvent.UnitMovement, (int)UnitMovementPreset.Base);
+                _audio.Play(AmbgmEvent.LobbyWalk);
         }
 
         /// <summary>이동 완료를 한 번 소비합니다.</summary>

@@ -13,7 +13,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         ReturnUnit = 3,
         /// <summary>준비를 마치고 전투를 시작합니다.</summary>
         EnterCombat = 4,
-        /// <summary>유닛 이동. 개체 ID와 목표 칸을 받습니다.</summary>
+        /// <summary>유닛 이동. 개체 ID와 경로·이동 문맥(입력 당시 전투·진영 턴)을 받습니다.</summary>
         Move = 5,
         /// <summary>유닛 공격. 개체 ID와 조준을 받습니다.</summary>
         Attack = 6,

@@ -131,6 +131,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentException("위치 이동(Relocate)은 ComposeRelocate로 조립합니다.", nameof(place));
             var composition = CombatComposition.ForUnit(actor, isDeath: false, CombatPieceCompletion.General)
                 .Lease(actor, CombatPieceChannel.Stand);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEventType = typeof(CombatEffectsEvent);
+#endif
             int moveOut = composition.Add(new CombatStandMovePiece(actor,
                     (stand, mapper) => CombatUnitActionPlaces.EndPose(place, action.Distance, action.Face, HomeOf(stand),
                         target.IsEmpty ? null : standingOf(target)?.position, null, mapper),
@@ -155,6 +158,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentException($"위치 이동 행동이 아닙니다: {action.Place}", nameof(action));
             var composition = CombatComposition.ForUnit(actor, isDeath: false, CombatPieceCompletion.General)
                 .Lease(actor, CombatPieceChannel.Stand);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEventType = typeof(CombatEffectsEvent);
+#endif
             composition.Add(new CombatStandMovePiece(actor, (stand, mapper) => destination, action.OutSeconds, action.Look, hopHeight),
                 CombatPieceStart.AtStart(), waits: true);
             return composition;

@@ -10,17 +10,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         public static StatusEffectSet Import(CharacterDebuffState debuffs, CharacterTraitEffects effects)
         {
-            var entries = new List<AppliedStatus>();
+            List<AppliedStatus> entries = null;
             if (effects != null)
             {
-                entries.AddRange(effects.AttackGrants.Select(g => g.ToStatus()));
-                entries.AddRange(effects.Shields.Select(g => g.ToStatus()));
+                for (int i = 0; i < effects.AttackGrants.Count; i++)
+                    (entries ??= new List<AppliedStatus>()).Add(effects.AttackGrants[i].ToStatus());
+                for (int i = 0; i < effects.Shields.Count; i++)
+                    (entries ??= new List<AppliedStatus>()).Add(effects.Shields[i].ToStatus());
             }
-            if (debuffs?.Intimidation != null) entries.Add(debuffs.Intimidation.ToStatus());
-            if (debuffs?.Disarm != null) entries.Add(debuffs.Disarm.ToStatus());
-            if (debuffs?.AnkleBreaker != null) entries.Add(debuffs.AnkleBreaker.ToStatus());
-            if (debuffs?.ArmorBreak != null) entries.AddRange(debuffs.ArmorBreak.Stacks.Select(s => s.ToStatus()));
-            return entries.Count == 0 ? StatusEffectSet.Empty : new StatusEffectSet(entries);
+            if (debuffs?.Intimidation != null) (entries ??= new List<AppliedStatus>()).Add(debuffs.Intimidation.ToStatus());
+            if (debuffs?.Disarm != null) (entries ??= new List<AppliedStatus>()).Add(debuffs.Disarm.ToStatus());
+            if (debuffs?.AnkleBreaker != null) (entries ??= new List<AppliedStatus>()).Add(debuffs.AnkleBreaker.ToStatus());
+            if (debuffs?.ArmorBreak != null)
+            {
+                var stacks = debuffs.ArmorBreak.Stacks;
+                for (int i = 0; i < stacks.Count; i++)
+                    (entries ??= new List<AppliedStatus>()).Add(stacks[i].ToStatus());
+            }
+            return entries == null ? StatusEffectSet.Empty : new StatusEffectSet(entries);
         }
 
         public static CharacterDebuffState ProjectDebuffs(StatusEffectSet statuses) => ProjectDebuffs(statuses, CharacterDebuffState.Empty);
@@ -55,6 +62,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         private static bool Matches(StatusEffectSet statuses, StatusEffectSet imported, Func<AppliedStatus, bool> owns)
         {
+            if (statuses.Entries.Count == 0 && imported.Entries.Count == 0) return true;
             var current = statuses.Entries.Where(owns).ToArray();
             var incoming = imported.Entries.Where(owns).ToArray();
             return current.Select(s => s.Key).Concat(incoming.Select(s => s.Key)).Distinct().All(key =>

@@ -18,20 +18,40 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             i.WithIntent(kind, aim, cell, path ?? i.Path, movementContext ?? i.MovementContext);
         internal static CombatCommandInput Project(CombatCommandTransition t)
         {
+            CombatCommandInput result = null;
+            foreach (var _ in ProjectSteps(t, value => result = value)) { }
+            return result;
+        }
+
+        internal static IEnumerable<int> ProjectSteps(CombatCommandTransition t, Action<CombatCommandInput> completed)
+        {
             var i = t.Input;
             if (!t.Accepted) throw new InvalidOperationException("거절된 계산을 자동 명령의 중간 변경으로 사용할 수 없습니다.");
-            var characters = i.Characters.ToDictionary(c => c.EntityId);
-            foreach (var c in t.Characters.Characters) characters[c.Final.EntityId] = c.Final;
+            var characters = new Dictionary<EntityId, CharacterCombatFacts>();
+            foreach (var c in i.Characters) { characters.Add(c.EntityId, c); yield return 0; }
+            foreach (var c in t.Characters.Characters) { characters[c.Final.EntityId] = c.Final; yield return 0; }
             // 이번 단계에서 만든 개체는 다음 단계의 기존 개체가 된다. 할당·소환 기록·목표는 FinalState로 함께 넘어간다.
-            foreach (var c in t.Characters.Created) characters.Add(c.EntityId, c);
-            var counts = i.SoulCounts.ToDictionary(p => p.Key, p => p.Value);
-            foreach (var c in t.Characters.Souls) counts[c.Id] = c.FinalCount;
+            foreach (var c in t.Characters.Created) { characters.Add(c.EntityId, c); yield return 0; }
+            var counts = new Dictionary<CharacterInstanceId, int>();
+            foreach (var pair in i.SoulCounts) { counts.Add(pair.Key, pair.Value); yield return 0; }
+            foreach (var c in t.Characters.Souls) { counts[c.Id] = c.FinalCount; yield return 0; }
             // 보유 기록 변경도 다음 단계의 원본이다. 목록 순서(획득 순서)는 유지한다.
-            var owned = i.Owned.Select(o => t.Characters.Owned.SingleOrDefault(c => c.Expected.Id == o.Id)?.Final ?? o).ToArray();
-            return i.WithWorld(t.FinalState, characters.Values.ToArray(), t.Characters.Main?.Final ?? i.Main,
+            var changes = new Dictionary<CharacterInstanceId, OwnedCharacterRecord>();
+            foreach (var c in t.Characters.Owned) { changes.Add(c.Expected.Id, c.Final); yield return 0; }
+            var owned = new OwnedCharacterRecord[i.Owned.Count];
+            for (int index = 0; index < owned.Length; index++)
+            {
+                var source = i.Owned[index];
+                owned[index] = changes.TryGetValue(source.Id, out var final) ? final : source;
+                yield return 0;
+            }
+            var values = new CharacterCombatFacts[characters.Count];
+            int target = 0;
+            foreach (var value in characters.Values) { values[target++] = value; yield return 0; }
+            completed(i.WithWorld(t.FinalState, values, t.Characters.Main?.Final ?? i.Main,
                 counts, t.Field.Final, t.EnvironmentBindings?.Final ?? i.EnvironmentBindings)
                 .WithPersistentFacts(owned, t.InventoryChange?.Final ?? i.ItemInventory,
-                    t.RewardChange?.FinalGold ?? i.GoldBalance, t.RewardChange?.FinalFame ?? i.FameBalance);
+                    t.RewardChange?.FinalGold ?? i.GoldBalance, t.RewardChange?.FinalFame ?? i.FameBalance));
         }
         internal static CombatCommandTransition WithEvents(CombatCommandTransition transition, IReadOnlyList<CombatEvent> events) =>
             new(transition.Input, transition.Accepted, transition.Reason, transition.Characters, transition.Field,

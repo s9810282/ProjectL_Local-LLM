@@ -188,7 +188,7 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         private static StageMapData Map(int depth, IReadOnlyList<ChapterStageDistributionRule> rules, bool singleFirstLayer = false, int firstStageKey = 0)
-            => new(7, depth, 3, 1, singleFirstLayer, firstStageKey, 0, StageConnectionAlgorithm.Nearest, 1, 1, 0, false, 0, rules);
+            => new(7, depth, 3, 1, singleFirstLayer, firstStageKey, 0, 0, StageConnectionAlgorithm.Nearest, 1, 1, 0, false, 0, rules);
 
         private static ChapterStageDistributionRule[] ValidRules() => new[]
         {

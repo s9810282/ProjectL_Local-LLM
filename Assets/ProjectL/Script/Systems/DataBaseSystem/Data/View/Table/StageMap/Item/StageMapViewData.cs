@@ -1,5 +1,6 @@
 using System;
 using ProjectL.Framework.DataBase;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageNode.Item;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSystem;
 using UnityEngine;
 
@@ -14,7 +15,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
             float lineHeight, float lineWidth,
             GameObject connectionPrefab, GameObject startVisualPrefab, GameObject currentMarkerPrefab,
             Vector3 markerOffset, float markerYaw, float markerScale, float markerMoveDuration,
-            float markerJumpHeight, float pickDistance, Color lineColor)
+            float markerJumpHeight, float pickDistance, Color lineColor, StageNodeDropData nodeDrop,
+            StageMapIntroData mapIntro, StageMapCameraFocusData cameraFocus, StageMarkerVisitData markerVisit,
+            StageNodeHoverStyleData hoverStyle = null)
         {
             DepthSpacing = depthSpacing;
             WidthSpacing = widthSpacing;
@@ -32,6 +35,11 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
             MarkerMoveDuration = markerMoveDuration;
             MarkerJumpHeight = markerJumpHeight;
             PickDistance = pickDistance;
+            NodeDrop = nodeDrop ?? throw new ArgumentNullException(nameof(nodeDrop));
+            MapIntro = mapIntro ?? throw new ArgumentNullException(nameof(mapIntro));
+            CameraFocus = cameraFocus ?? throw new ArgumentNullException(nameof(cameraFocus));
+            MarkerVisit = markerVisit ?? throw new ArgumentNullException(nameof(markerVisit));
+            HoverStyle = hoverStyle;
         }
 
         public float DepthSpacing { get; }
@@ -50,12 +58,23 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
         public float MarkerMoveDuration { get; }
         public float MarkerJumpHeight { get; }
         public float PickDistance { get; }
+        public StageNodeDropData NodeDrop { get; }
+        public StageMapIntroData MapIntro { get; }
+        public StageMapCameraFocusData CameraFocus { get; }
+        public StageMarkerVisitData MarkerVisit { get; }
+        public StageNodeHoverStyleData HoverStyle { get; }
 
         internal void Validate()
         {
+            NodeDrop.Validate();
+            MapIntro.Validate();
+            CameraFocus.Validate();
+            MarkerVisit.Validate();
             RequirePositiveFinite(DepthSpacing, nameof(DepthSpacing));
             RequirePositiveFinite(WidthSpacing, nameof(WidthSpacing));
             RequirePositiveFinite(NodeScale, nameof(NodeScale));
+            if (Mathf.Abs(NodeScale - 1f) > 0.001f)
+                throw new InvalidOperationException($"{Owner} 건물 앞 이동과 파괴 효과는 NodeScale 1만 지원합니다.");
             if (!float.IsFinite(BuildingHeight))
                 throw new InvalidOperationException($"{Owner} {nameof(BuildingHeight)} must be finite.");
             RequirePositiveFinite(LineWidth, nameof(LineWidth));

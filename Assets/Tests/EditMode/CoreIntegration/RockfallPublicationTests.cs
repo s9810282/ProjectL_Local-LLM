@@ -138,21 +138,6 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         [Test]
-        public void ReturnCleansesBeforeAnOpportunityWithoutHiddenState()
-        {
-            using var battle = Create(new RockfallGimmickSpec(15, 1, 64, 64, 0));
-            for (int i = 0; i < PlayerTurnRules.PlayerTurnsPerNight; i++)
-            {
-                EndPlayer(battle);
-                battle.AdvanceToPlayerOrDay();
-            }
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(battle.Actor.Area, Is.EqualTo(CharacterRuntimeArea.Hand));
-            Assert.That(battle.Actor.StatusEffects.Entries.OfType<ActionRestrictionStatus>(), Is.Empty);
-            Assert.That(battle.Main.StatusEffects.Entries.OfType<ActionRestrictionStatus>().Single().Key, Is.EqualTo(StatusEffectKey.Bind));
-        }
-
-        [Test]
         public void TerminalImpactRemovesPendingWarningAndDoesNotRunAgain()
         {
             using var battle = Create(new RockfallGimmickSpec(1, 1, 64, 64, 100));

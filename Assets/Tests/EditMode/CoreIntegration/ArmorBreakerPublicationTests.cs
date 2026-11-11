@@ -15,25 +15,6 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class ArmorBreakerPublicationTests
     {
-        [Test]
-        public void ActualNightRecall_ClearsArmorReduction_WhileOrdinaryTurnsPreserveIt()
-        {
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new ArmorSource());
-            battle.Submit(battle.Attack(battle.Actor, battle.Character(EntityKey.Unit_Demon).Anchor.Value));
-            for (int turn = 0; turn < 8; turn++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                battle.AdvanceToPlayerOrDay();
-                Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Phase, Is.Not.EqualTo(CombatFlowPhase.Finished));
-                var recipient = battle.Character(EntityKey.Unit_Demon);
-                Assert.That(CombatEffectiveStatsCalculator.PhysicalDefense(recipient),
-                    Is.EqualTo(recipient.Area == CharacterRuntimeArea.Field ? 10 : 20));
-            }
-            Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            battle.Buffers.BattleWriteSink.EndBattle();
-            Assert.That(battle.Buffers.CharacterReadSink.Characters, Is.Empty);
-        }
-
         [TestCase(false)]
         [TestCase(true)]
         public void PreviewAndPublication_KeepArmorAtomic(bool stale)

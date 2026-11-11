@@ -12,18 +12,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly EntityId _unit;
         private readonly string _text;
         private readonly CombatBodyTextData _data;
-        internal CombatBodyTextPiece(CombatBodyTextWindow window, EntityId unit, string text, CombatBodyTextData data)
+        private readonly Action _started;
+        internal CombatBodyTextPiece(CombatBodyTextWindow window, EntityId unit, string text, CombatBodyTextData data, Action started = null)
         {
             _window = window ?? throw new ArgumentNullException(nameof(window));
             _unit = unit;
             _text = text;
             _data = data;
+            _started = started;
         }
 
         public void Begin(CombatPieceContext context)
         {
-            _window.Show(_unit, _text, _data);
+            bool shown = _window.TryShow(_unit, _text, _data);
             IsEnded = true;
+            if (shown)
+                _started?.Invoke();
         }
 
         public void Tick(float deltaTime)

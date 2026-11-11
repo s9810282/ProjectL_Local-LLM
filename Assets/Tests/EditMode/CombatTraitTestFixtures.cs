@@ -90,7 +90,7 @@ namespace ProjectL.Tests.Core
             var structures = building ? new[] { new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] {CellCoord.Zero}, 100, false, 0),
                 new HealthStateSnapshot(100,100), cell, Rotation4.R0, new[] {cell}, Owner.Enemy) } : Array.Empty<StructureCombatFacts>();
-            return CombatCommandTestData.With(input, characters, new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,structures,s.ThornFields,turn: s.Turn), profiles);
+            return CombatCommandTestData.With(input, characters, new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,structures,s.ThornFields,turn: s.Turn), profiles);
         }
 
         internal static TraitActivationSnapshot[] Activations(CombatCommandTransition result, TraitKey key) =>

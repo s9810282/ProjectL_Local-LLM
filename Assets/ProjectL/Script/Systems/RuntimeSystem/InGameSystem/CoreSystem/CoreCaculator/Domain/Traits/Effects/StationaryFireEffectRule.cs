@@ -10,8 +10,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class StationaryFireEffectRule : IEffectMoveSucceededRule, IEffectTargetDamageRule
+    internal sealed class StationaryFireEffectRule : IEffectMoveSucceededRule, IEffectTargetDamageRule, IEffectAssessmentHarmRule
     {
+        public EffectAssessmentHarmScope AssessmentHarmScope => EffectAssessmentHarmScope.NoAdditionalImmediateHarm;
+
         private readonly StationaryFireTraitDefinition _definition;
         private readonly StationaryFireTraitRule _rule;
         internal StationaryFireEffectRule(StationaryFireTraitDefinition definition, StationaryFireTraitRule rule)

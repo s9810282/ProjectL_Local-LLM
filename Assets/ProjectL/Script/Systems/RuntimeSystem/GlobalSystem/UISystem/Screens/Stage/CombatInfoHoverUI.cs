@@ -11,6 +11,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class CombatInfoHoverUI : UIBase, IUIInputReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUICombatInfoClick = new("Combat.Action.UI.CombatInfo.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUICombatInfoHoverEnter = new("Combat.Action.UI.CombatInfo.HoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUICombatInfoHoverExit = new("Combat.Action.UI.CombatInfo.HoverExit");
+#endif
+
         [SerializeField] private UIId id;
         [SerializeField] private Button hoverButton;
         private IUISystemService _ui;
@@ -48,9 +55,25 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public override void Hide() => gameObject.SetActive(false);
 
         // 호버 전용입니다. 클릭·Submit은 표시를 고정하지 않습니다.
-        void IUIInputReceiver.Click(int slot) { }
-        void IUIInputReceiver.HoverEnter(int slot) => _ui.OpenUI(ID);
-        void IUIInputReceiver.HoverExit(int slot) => _ui.CloseUI(ID);
+        void IUIInputReceiver.Click(int slot) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUICombatInfoClickSample = _profileUICombatInfoClick.Auto();
+#endif
+ }
+        void IUIInputReceiver.HoverEnter(int slot)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUICombatInfoHoverEnterSample = _profileUICombatInfoHoverEnter.Auto();
+#endif
+            _ui.OpenUI(ID);
+        }
+        void IUIInputReceiver.HoverExit(int slot)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUICombatInfoHoverExitSample = _profileUICombatInfoHoverExit.Auto();
+#endif
+            _ui.CloseUI(ID);
+        }
 
         private void ValidateReferences()
         {

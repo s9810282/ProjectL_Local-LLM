@@ -81,12 +81,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (defenderCategory.HasValue)
             {
                 // 2단계: 대상별 Category 상성. half-up 반올림은 계산기가 담당한다.
-                CategoryMatchupMultiplier multiplier =
-                    _matchupResolver.GetMultiplier(attackerCategory, defenderCategory.Value);
+                CategoryMatchupMultiplier multiplier = _matchupResolver.GetMultiplier(attackerCategory, defenderCategory.Value);
+
                 numerator = multiplier.Numerator;
+
                 denominator = multiplier.Denominator;
-                damageAfterMatchup = CategoryMatchupDamageCalculator.Apply(
-                    damageBeforeMatchup, numerator, denominator);
+
+                damageAfterMatchup = CategoryMatchupDamageCalculator.Apply(damageBeforeMatchup, numerator, denominator);
             }
             else
             {
@@ -96,9 +97,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 damageAfterMatchup = damageBeforeMatchup;
             }
 
-            // 3단계: 방어력 1당 피해 1% 감소. 100 이상은 100%로 제한하고 소수점을 버린다.
-            // 곱셈은 long으로 계산한다. Heavy가 실제 방어 후 피해를 받도록 여기서는 최소값을 보정하지 않는다.
-            int damageAfterPhysicalDefense = (int)((long)damageAfterMatchup * (100 - Math.Min(physicalDefense, 100)) / 100);
+            // 3단계: 방어력. Heavy가 실제 방어 후 피해를 받도록 여기서는 최소값을 보정하지 않는다.
+            int damageAfterPhysicalDefense = ApplyPhysicalDefense(damageAfterMatchup, physicalDefense);
 
             return new TargetDamageBreakdown(
                 damageBeforeMatchup,
@@ -108,6 +108,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 damageAfterPhysicalDefense,
                 0,
                 damageAfterPhysicalDefense);
+        }
+
+        /// <summary>
+        /// 방어력 1당 피해 1% 감소의 유일한 식이다. 100 이상은 100%로 제한하고 소수점을 버린다(곱셈은 long).
+        /// 최소값 보정은 하지 않는다. 공격 산식과 작렬 부딪힘 피해가 함께 쓴다.
+        /// </summary>
+        internal static int ApplyPhysicalDefense(int damage, int physicalDefense)
+        {
+            if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            if (physicalDefense < 0) throw new ArgumentOutOfRangeException(nameof(physicalDefense));
+            return (int)((long)damage * (100 - Math.Min(physicalDefense, 100)) / 100);
         }
     }
 }

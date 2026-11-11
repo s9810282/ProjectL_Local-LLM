@@ -23,6 +23,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
     // (경로 입력 분리 설계 RT1).
     internal sealed class CombatPathInput : ICombatAttackDragTarget, ICombatMoveModeReader
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathEnter = new("Combat.Action.Interaction.MovePath.Enter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathPointerMoved = new("Combat.Action.Interaction.MovePath.PointerMoved");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathSelect = new("Combat.Action.Interaction.MovePath.Select");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathRelease = new("Combat.Action.Interaction.MovePath.Release");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathCancel = new("Combat.Action.Interaction.MovePath.Cancel");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathExit = new("Combat.Action.Interaction.MovePath.Exit");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMovePathPoll = new("Combat.Action.Interaction.MovePath.Poll");
+#endif
+
         private readonly ICombatStateBufferReadSink _state;
         private readonly ICharacterBufferReadSink _characters;
         private readonly ICombatViewBufferReadSink _input;
@@ -34,6 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         // 씬 입력이 소유합니다. 배경 이동 범위보다 먼저 같은 슬롯의 선택 가용성 조회를 맞춥니다.
         private readonly CombatActionAvailabilityTracker _actionAvailability;
         private readonly ICombatActionRejectionSink _rejections;
+        private readonly Action _reportBlockedInput;
         private readonly CombatMovementInteraction _interaction;
         private bool _attached = true;
         private bool _draftShown;
@@ -46,6 +58,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private CellCoord _pathOrigin;
         private int _pathResultSequence;
         private int _planningVersion;
+        // 제한 중 누른 아군에서 다른 칸에 놓은 시도만 안내합니다. 단순 정보 선택·호버는 보고하지 않습니다.
+        private EntityId _blockedMoveActor;
+        private CellCoord _blockedMoveOrigin;
+        private int _blockedMoveResultSequence;
         // 이동 범위 하나의 요청·응답·표시 수명입니다(경로 입력 분리 설계 RT2). 이동 모드와 Drag 지정이 같이 씁니다.
         private readonly CombatMovementRangeTracker _range;
         // 이동 입력 정리 단계들입니다. 정리는 매 프레임 불릴 수 있어 생성 때 한 번 만들어 둡니다(GC 끊김 설계 GH4).
@@ -79,18 +95,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             CharacterData actor = _attached && _state.HasBattle && _state.BattleInstanceId == _battle
                 ? FindActor(selectedActor)
                 : null;
-            CombatMovementRangeFacts facts = actor != null && actor.Anchor.HasValue ? RangeFactsOf(actor) : default;
+            // 필드 유닛의 칸·방향은 Core 사실이 보장합니다(CharacterCombatFacts 위치 검사, 평가 C5-02). FindActor는 필드 유닛만 돌려줍니다.
+            CombatMovementRangeFacts facts = actor != null ? RangeFactsOf(actor) : default;
             return _range.HasAcceptedEmptyRange(facts);
         }
 
         internal CombatPathInput(ICombatStateBufferReadSink state, ICharacterBufferReadSink characters,
             ICombatViewBufferReadSink input, ICombatViewBufferWriteSink write,
             ICombatPointerMapping mapping, ICombatMovementFeedback presenter, Func<CombatInputFacts> readFacts,
-            ICombatActionRejectionSink rejections = null,
-            CombatActionAvailabilityTracker actionAvailability = null)
+            ICombatActionRejectionSink rejections,
+            CombatActionAvailabilityTracker actionAvailability, Action reportBlockedInput)
         {
-            _actionAvailability = actionAvailability;
-            _rejections = rejections;
+            // 거절 안내·가용성 추적은 운영 조립이 늘 넘깁니다(평가 C5-02). 빠지면 사전 거절이 조용히 사라지므로 생성 때 막습니다.
+            _actionAvailability = actionAvailability ?? throw new ArgumentNullException(nameof(actionAvailability));
+            _rejections = rejections ?? throw new ArgumentNullException(nameof(rejections));
+            _reportBlockedInput = reportBlockedInput ?? throw new ArgumentNullException(nameof(reportBlockedInput));
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _characters = characters ?? throw new ArgumentNullException(nameof(characters));
             _input = input ?? throw new ArgumentNullException(nameof(input));
@@ -150,7 +169,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return false;
             // 이동할 수 없는 행위자(이동한 뒤·이동 AP 부족)는 이동으로 넘기지 않습니다. 넘기면 공격 모드만 끝나고 이동은 거절됩니다.
             // 판정은 Core 가용성 응답 하나입니다. 운영 씬은 응답이 있어야 공격 모드에 들어가므로 여기서는 응답이 와 있습니다.
-            CombatActionAvailability availability = _actionAvailability?.Read(_readFacts());
+            CombatActionAvailability availability = _actionAvailability.Read(_readFacts());
             if (availability != null && !availability.CanMove)
                 return false;
             origin = new CombatAttackDragGesture.Origin(_battle, actor.EntityId, actor.Anchor.Value,
@@ -184,6 +203,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return;
 
             _attached = false;
+            _blockedMoveActor = EntityId.Empty;
             _waitingForOrigin = false;
             _released = false;
             _pathActor = EntityId.Empty;
@@ -194,6 +214,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal void OnPreview(CombatPreviewResult preview)
         {
+            // Poll은 새 응답이 없어도 마지막 응답을 전달합니다. 새 Preview를 내지 않는 금지 시도를 그 응답으로 취소하지 않습니다.
+            if (!_blockedMoveActor.IsEmpty && IsBlockedMoveOriginCurrent(_readFacts(), _blockedMoveActor))
+                return;
             bool allowed = AllowsInput();
             if (!allowed || !ValidatePlanning(allowed))
             {
@@ -239,6 +262,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         // 경로 지정의 시작이다. Drag 누름(SelectPressed)이 부른다(이동 Drag 입력 설계). 범위를 요청하고 시작 칸을 기다린다.
         internal void BeginPlanning()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathEnterSample = _profileInteractionMovePathEnter.Auto();
+#endif
+
             TryBeginPlanning(null);
         }
 
@@ -258,10 +285,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return false;
 
             // 현재 Core 응답이 있을 때만 사전 거절합니다. Unknown은 기존 범위/상세 승인 경로를 유지합니다.
-            CombatActionAvailability availability = _actionAvailability?.Read(_readFacts());
+            CombatActionAvailability availability = _actionAvailability.Read(_readFacts());
             if (availability != null && !availability.CanMove)
             {
-                _rejections?.MovementRejected(availability.MoveFailure);
+                _rejections.MovementRejected(availability.MoveFailure);
                 return false;
             }
 
@@ -371,6 +398,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         public void PointerMoved(float x, float y)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathPointerMovedSample = _profileInteractionMovePathPointerMoved.Auto();
+#endif
+
             if (!_attached || _pathActor.IsEmpty || _released)
                 return;
 
@@ -395,7 +426,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 _movementShown = true;
                 try
                 {
-                    _presenter.BeginMovementPlanning(actor.EntityId, actor.CharacterKey, actor.Rotation ?? Rotation4.R0);
+                    _presenter.BeginMovementPlanning(actor.EntityId, actor.CharacterKey, actor.Rotation.Value);
                 }
                 catch (Exception displayError)
                 {
@@ -423,6 +454,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// </summary>
         public void SelectPressed(float x, float y)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathSelectSample = _profileInteractionMovePathSelect.Auto();
+#endif
+
+            _blockedMoveActor = EntityId.Empty;
             if (!_attached || !_pathActor.IsEmpty)
                 return;
             if (!Map(x, y, out var grid, out var cancel) || cancel)
@@ -431,6 +467,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             var actor = ActiveActor();
             if (actor == null || actor.Anchor != MovementPointerSampler.CellAt(grid))
                 return;
+
+            CombatInputFacts facts = _readFacts();
+            if (IsTutorialMoveBlocked(facts))
+            {
+                _blockedMoveActor = actor.EntityId;
+                _blockedMoveOrigin = actor.Anchor.Value;
+                _blockedMoveResultSequence = _state.LatestResultSequence;
+                return;
+            }
 
             // 허용 판단·행위자 조건은 BeginPlanning이 기존 입구 검사로 한다.
             if (!TryBeginPlanning(null))
@@ -445,6 +490,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// </summary>
         public void SelectReleased(float x, float y)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathReleaseSample = _profileInteractionMovePathRelease.Auto();
+#endif
+
+            if (!_blockedMoveActor.IsEmpty)
+            {
+                ReportBlockedMoveRelease(x, y);
+                return;
+            }
             if (!_attached || _pathActor.IsEmpty || _released)
                 return;
             if (_waitingForOrigin || !ValidatePlanning(AllowsInput()))
@@ -471,8 +525,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             ShowDraft();
         }
 
+        private bool IsTutorialMoveBlocked(in CombatInputFacts facts) =>
+            _attached && _state.HasBattle && _state.BattleInstanceId == _battle
+                && facts.PointerTarget == CombatInputRouter.PointerTarget.Path
+                && facts.IsTutorialPracticeGoalPending && CombatInputPolicy.CanSelectUnit(facts)
+                && !CombatInputPolicy.AllowsTutorialCommand(facts, CombatViewCommandKind.Move);
+
+        private bool IsBlockedMoveOriginCurrent(in CombatInputFacts facts, EntityId actor) =>
+            IsTutorialMoveBlocked(facts) && facts.SelectedActorId == actor
+                && _state.LatestResultSequence == _blockedMoveResultSequence;
+
+        private void ReportBlockedMoveRelease(float x, float y)
+        {
+            EntityId actor = _blockedMoveActor;
+            _blockedMoveActor = EntityId.Empty;
+            CombatInputFacts facts = _readFacts();
+            if (!IsBlockedMoveOriginCurrent(facts, actor))
+                return;
+
+            // 같은 칸 클릭·필드 밖·UI 위 놓기는 이동 시도가 아닙니다. 수명 정리/중복 release도 알림을 재사용하지 않습니다.
+            if (Map(x, y, out var grid, out var cancel) && !cancel
+                && MovementPointerSampler.CellAt(grid) != _blockedMoveOrigin)
+                _reportBlockedInput();
+        }
+
         public void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathCancelSample = _profileInteractionMovePathCancel.Auto();
+#endif
+
             if (!_attached)
                 return;
 
@@ -489,10 +571,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// 이동 모드를 끝냅니다: 경로 지정·복귀 요청을 취소하고 이동 범위도 지웁니다(이동 모드 범위 설계 MR3).
         /// 공격 모드 진입·턴 종료처럼 새 의도를 시작하기 전에 부릅니다. 의도가 거절되면 다음 <see cref="Refresh"/>가 범위를 다시 맞춥니다.
         /// </summary>
-        internal void LeaveMoveMode() => CancelInputs(keepMoveModeRange: false);
+        internal void LeaveMoveMode()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathExitSample = _profileInteractionMovePathExit.Auto();
+#endif
+            CancelInputs(keepMoveModeRange: false);
+        }
 
         private void CancelInputs(bool keepMoveModeRange)
         {
+            _blockedMoveActor = EntityId.Empty;
             _waitingForOrigin = false;
             _released = false;
             _pathActor = EntityId.Empty;
@@ -615,6 +704,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// </summary>
         internal void Refresh()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMovePathPollSample = _profileInteractionMovePathPoll.Auto();
+#endif
+
             bool allowed = AllowsInput();
             if (!WatchPlanning(allowed))
                 return;
@@ -646,7 +739,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return;
             // Cancel/Q/확인 뒤 Refresh에서도 선택 가용성 → 배경 이동 범위 순서를 유지합니다.
             // 지정 중 범위는 이 메서드를 거치지 않아 Pending 가용성을 바로 선점할 수 있습니다.
-            _actionAvailability?.Sync(_readFacts(), _characters.Characters, false, _state.AnsweredPreviewNumber);
+            _actionAvailability.Sync(_readFacts(), _characters.Characters, false, _state.AnsweredPreviewNumber);
             if (!_attached || version != _planningVersion || !_pathActor.IsEmpty || !IsPreviewSlotIdle())
                 return;
             _range.Request(facts);

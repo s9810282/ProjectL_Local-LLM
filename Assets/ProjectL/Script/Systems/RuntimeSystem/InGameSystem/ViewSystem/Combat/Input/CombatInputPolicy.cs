@@ -52,6 +52,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             return IsInputClosed(facts) || facts.IsModalOpen || facts.IsEntryPresentationPending;
         }
 
+        /// <summary>조작 안내를 표시할 수 있는 안정된 입력 구간입니다. 개별 행동의 비용·대상 자격은 판단하지 않습니다.</summary>
+        internal static bool CanShowGuidance(in CombatInputFacts facts)
+        {
+            return facts.IsInputAvailable && PassesCommon(facts, facts.HasPendingCommand)
+                && !IsInputBlocked(facts) && !facts.IsPresenting && !facts.HasUnhandledCommand
+                && facts.Phase == CombatFlowPhase.PlayerInput
+                && (facts.StagePhase == StagePhase.Deployment || facts.StagePhase == StagePhase.Combat)
+                && facts.CurrentLayer == LayerOf(facts.StagePhase)
+                && !CombatProgressFacts.IsUnpresented(facts.PresentedResultSequence, facts.LatestResultSequence);
+        }
+
         /// <summary>
         /// 지금 연결해야 할 입력 Layer입니다. 입력을 받지 않아야 하면 기본값(Layer 없음)입니다(설계 §5.5 표).
         /// 종료·입력 닫힘이 다른 조건보다 우선하고, 그다음 Core의 배치/전투 단계를 따릅니다.
@@ -133,28 +144,74 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>선택 가용성을 조회할 수 있는 안정 상태입니다. 실행 허가나 비용 판정은 하지 않습니다.</summary>
         internal static bool CanQueryActionAvailability(in CombatInputFacts facts) =>
+            CanQueryInStableState(facts, CombatViewPreviewKind.ActionAvailability);
+
+        /// <summary>
+        /// 포효 예고를 새로 물어도 되는지의 유일한 식입니다(포효 예고 계획 TP-14). 행동 가능 여부 조회와 같은 안정 상태(플레이어 입력·재생 아님·
+        /// 처리 안 된 명령 없음)라 적 턴에는 묻지 않습니다(TP-13). 이미 받은 예고를 지울지는 조회 객체가 정합니다.
+        /// </summary>
+        internal static bool CanQueryRoarForecast(in CombatInputFacts facts) =>
+            CanQueryInStableState(facts, CombatViewPreviewKind.RoarForecast);
+
+        // 사용자 조작 없이 내는 배경 조회가 물어도 되는 안정 상태입니다. 행동 가능 여부와 포효 예고가 같이 씁니다.
+        private static bool CanQueryInStableState(in CombatInputFacts facts, CombatViewPreviewKind kind) =>
             facts.IsInputAvailable && !IsInputBlocked(facts) && !facts.IsPresenting && !facts.HasUnhandledCommand
-                && CanPreview(facts, facts.HasPendingCommand, CombatViewPreviewKind.ActionAvailability);
+                && CanPreview(facts, facts.HasPendingCommand, kind);
 
         /// <summary>튜토리얼 제한에 따른 명령 허용의 원본입니다. 기존 전투 자격 검사는 별도로 유지합니다.</summary>
         internal static bool AllowsTutorialCommand(in CombatInputFacts facts, CombatViewCommandKind kind)
         {
-            return facts.CombatInputRestriction == TutorialCombatInputRestriction.None
-                || (facts.CombatInputRestriction == TutorialCombatInputRestriction.MoveOnly
-                    && (kind == CombatViewCommandKind.Move
-                        || kind == CombatViewCommandKind.EndPlayerTurn
-                        || (kind == CombatViewCommandKind.EnterCombat && facts.StagePhase == StagePhase.Deployment
-                            && facts.IsTutorialPracticeGoalPending)));
+            if (facts.CombatInputRestriction == TutorialCombatInputRestriction.None)
+                return true;
+            // 안내 표시 전·통과 뒤 설명 대기에는 새 제출만 닫습니다. 전투 진행과 취소는 이 허용표를 쓰지 않습니다.
+            if (!facts.IsTutorialPracticeGoalPending)
+                return false;
+            if (facts.StagePhase == StagePhase.Deployment)
+                return AllowsTutorialRedeployment(facts.CombatInputRestriction)
+                    && (kind == CombatViewCommandKind.PlaceMainCharacter || kind == CombatViewCommandKind.PlaceUnit
+                        || kind == CombatViewCommandKind.ReturnUnit || kind == CombatViewCommandKind.EnterCombat);
+            if (facts.StagePhase != StagePhase.Combat)
+                return false;
+
+            return facts.CombatInputRestriction switch
+            {
+                TutorialCombatInputRestriction.MoveOnly => kind == CombatViewCommandKind.Move
+                    || kind == CombatViewCommandKind.EndPlayerTurn,
+                TutorialCombatInputRestriction.AttackPractice => kind == CombatViewCommandKind.Move
+                    || kind == CombatViewCommandKind.Attack || kind == CombatViewCommandKind.UndoMove
+                    || kind == CombatViewCommandKind.EndPlayerTurn,
+                TutorialCombatInputRestriction.EndTurnOnly => kind == CombatViewCommandKind.EndPlayerTurn,
+                _ => false
+            };
         }
 
         /// <summary>튜토리얼 제한에 따른 미리보기·모드 진입 허용의 원본입니다. 조회만으로 안내를 제출하지 않습니다.</summary>
         internal static bool AllowsTutorialPreview(in CombatInputFacts facts, CombatViewPreviewKind kind)
         {
-            return facts.CombatInputRestriction == TutorialCombatInputRestriction.None
-                || (facts.CombatInputRestriction == TutorialCombatInputRestriction.MoveOnly
-                    && (kind == CombatViewPreviewKind.Move || kind == CombatViewPreviewKind.MoveRange
-                        || kind == CombatViewPreviewKind.ActionAvailability));
+            if (facts.CombatInputRestriction == TutorialCombatInputRestriction.None)
+                return true;
+            if (!facts.IsTutorialPracticeGoalPending)
+                return false;
+            if (facts.StagePhase == StagePhase.Deployment)
+                return AllowsTutorialRedeployment(facts.CombatInputRestriction)
+                    && (kind == CombatViewPreviewKind.MainCharacterPlacement || kind == CombatViewPreviewKind.UnitPlacement);
+            if (facts.StagePhase != StagePhase.Combat)
+                return false;
+
+            return facts.CombatInputRestriction switch
+            {
+                TutorialCombatInputRestriction.MoveOnly => kind == CombatViewPreviewKind.Move
+                    || kind == CombatViewPreviewKind.MoveRange || kind == CombatViewPreviewKind.ActionAvailability,
+                TutorialCombatInputRestriction.AttackPractice => kind == CombatViewPreviewKind.Move
+                    || kind == CombatViewPreviewKind.MoveRange || kind == CombatViewPreviewKind.AttackRange
+                    || kind == CombatViewPreviewKind.Attack || kind == CombatViewPreviewKind.UnitAttackRange
+                    || kind == CombatViewPreviewKind.ActionAvailability,
+                _ => false
+            };
         }
+
+        private static bool AllowsTutorialRedeployment(TutorialCombatInputRestriction restriction) =>
+            restriction == TutorialCombatInputRestriction.MoveOnly || restriction == TutorialCombatInputRestriction.AttackPractice;
 
         // 배치·전투 어느 국면에서나 내는 미리보기 종류입니다. 판별은 CanPreview 한 곳에서만 합니다.
         private static bool IsAnyStage(CombatViewPreviewKind kind) => kind == CombatViewPreviewKind.UnitAttackRange;
@@ -267,6 +324,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 case CombatViewPreviewKind.Move:
                 case CombatViewPreviewKind.AttackRange:
                 case CombatViewPreviewKind.Attack:
+                case CombatViewPreviewKind.RoarForecast:
                     return StagePhase.Combat;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, "단계가 없는 미리보기 종류입니다.");

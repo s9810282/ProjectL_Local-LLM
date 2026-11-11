@@ -1,3 +1,7 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatPlaybackProfile = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatPlaybackProfile;
+using CombatEventProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support.CombatEventProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Framework.Utility;
@@ -13,15 +17,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private sealed class Instance
         {
             internal readonly GameObject Object;
+            // 꼬리(TrailRenderer)는 만들 때 한 번 모읍니다. 다시 쏠 때 지난 착탄점에서 이어지지 않게 비웁니다(평가 G1-03).
+            private readonly TrailRenderer[] _trails;
 
             internal Instance(GameObject gameObject)
             {
                 Object = gameObject;
+                _trails = gameObject != null ? gameObject.GetComponentsInChildren<TrailRenderer>(true) : Array.Empty<TrailRenderer>();
+            }
+
+            internal void ClearTrails()
+            {
+                for (int i = 0; i < _trails.Length; i++)
+                    if (_trails[i] != null) _trails[i].Clear();
             }
         }
 
         private sealed class Flight
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            internal CombatPlaybackProfile Profile;
+#endif
             internal Instance Instance;
             internal CombatProjectileLease Lease;
             internal Vector3 From;
@@ -38,6 +54,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             internal Action<float> Advanced;
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        internal CombatPlaybackProfile ProfilingProfile { get; set; } = CombatEventProfiler.Unknown;
+
+#endif
         private readonly GameObject _prefab;
         private readonly Transform _root;
         private readonly Vector3 _prefabScale;
@@ -176,6 +196,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (lease == null || !_active.TryGetValue(lease, out Flight flight))
                 return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var cancelSample = flight.Profile.ProjectileCancel.Auto();
+#endif
             Close(flight);
             Return(flight.Instance);
         }
@@ -253,6 +276,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Vector3 up, Vector3 spin, Action completed, Action<float> advanced = null, CombatProjectileEasing easing = default,
             CombatArcRotationMode rotationMode = CombatArcRotationMode.Spin)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var profile = ProfilingProfile;
+            using var projectileSample = profile.ProjectileBegin.Auto();
+#endif
+
             EnsureCanStart();
             if (completed == null)
                 throw new ArgumentNullException(nameof(completed));
@@ -264,6 +292,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
             var flight = new Flight
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Profile = profile,
+#endif
                 Instance = instance,
                 Lease = lease,
                 From = from,
@@ -287,6 +318,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 transform.localScale = _prefabScale;
                 transform.SetPositionAndRotation(from, rotation);
                 SetActiveSafely(instance.Object, true);
+                // 새 자리로 옮긴 뒤 같은 프레임 그리기 전에 꼬리를 비웁니다(평가 G1-03).
+                instance.ClearTrails();
                 EnsureCurrent(flight);
                 return lease;
             }
@@ -301,6 +334,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private void Advance(Flight flight, float deltaTime)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var projectileSample = flight.Profile.ProjectileTick.Auto();
+#endif
+
             if (flight.Instance.Object == null)
                 throw new InvalidOperationException("[CombatProjectilePool] 활성 발사체가 외부에서 파괴됐습니다.");
             flight.Elapsed = Mathf.Min(flight.Elapsed + deltaTime, flight.Duration);
@@ -332,6 +369,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (!IsCurrent(flight) || t < 1f)
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var endSample = flight.Profile.ProjectileEnd.Auto();
+#endif
             Action completed = flight.Completed;
             long cancellationVersion = _cancellationVersion;
             Close(flight);
@@ -436,6 +476,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _active.Clear();
             for (int i = 0; i < flights.Length; i++)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var cancelSample = flights[i].Profile.ProjectileCancel.Auto();
+#endif
                 flights[i].Completed = null;
                 flights[i].Lease.Invalidate();
             }

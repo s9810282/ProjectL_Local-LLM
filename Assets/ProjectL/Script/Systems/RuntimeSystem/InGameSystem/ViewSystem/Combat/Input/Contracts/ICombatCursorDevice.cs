@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts
 {
     /// <summary>
-    /// 커서 그리드 스냅이 쓰는 장치·좌표 계약입니다(커서 그리드 스냅 설계 C3). 구현은 표시 쪽이 맡고 Unity 입력 장치 호출은 그곳에만 둡니다.
+    /// 커서 그리드 스냅이 쓰는 장치·좌표 계약입니다(커서 그리드 스냅 설계 C3). 구현은 포인터 매퍼(<c>CombatPointerMapper</c>)가 맡고 Unity 입력 장치 호출은 그곳에만 둡니다(씬 표시 나누기 설계 DS2).
     /// </summary>
     internal interface ICombatCursorDevice
     {

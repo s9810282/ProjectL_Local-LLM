@@ -293,3 +293,10 @@
 - `RockfallVisual` 표: `dropSideDistance`를 지웠습니다(§13의 "옆 거리"). 새 칸은 `dropStartScatter`, `stoneScaleMin`·`stoneScaleMax`, `spinDegreesMin`·`spinDegreesMax`입니다. `dropHeight`는 능선이 없는 맵에서만 씁니다.
 - 능선은 맵 프리팹 안의 빈 오브젝트 `RockfallRidgeStart`·`RockfallRidgeEnd`입니다. 돌산의 전투판 쪽 경사면 위에 놓습니다. 빠지면 돌이 칸 위에서 곧게 떨어집니다. 같은 이름이 둘 이상이면 낙석이 꺼져 있어도 전투 진입 때 멈춥니다.
 - SO 모드: 검사에 경고·오류를 더했고 사용법 §5.11에 적었습니다. 3D 미리보기는 능선을 그리지 않습니다.
+
+## 16. 2026-11-11 — 작렬 날려 감 걸음 시간·특성 외형 (작렬 전투 View, 미전달)
+
+- 설정 표 "유닛 이동 연출" 묶음에 `flungStepSeconds`(기본 0.08초, 양수)를 더했습니다. 작렬로 날아가는 걸음 한 칸의 시간이고, 일반 넉백·끌어오기는 `movementStepSeconds` 그대로입니다. 기본 에셋에도 같은 값을 넣었습니다(코드와 한 커밋).
+- 특성 외형 표에 `TraitVisual_CrashImpact`(키 520)를 더했습니다. 부딪힘 발동(410) 줄 하나 — 대상 몸에 `Boom`, 흔들림 0.3·0.3초(임시 값, 에디터에서 바꿔도 됩니다). 날기 시작(`KnockbackApplied`) 줄은 두지 않았습니다.
+- 막은 칸이 맵 밖일 수 있어 칸 자리(`EventCell`)는 쓰지 않았습니다. 이제 맵 밖 발동 칸은 자리 목록에서 빠지므로 써도 멈추지는 않지만, 맵 끝 부딪힘에서는 이펙트가 나오지 않습니다.
+- 설계: `docs/superpowers/specs/2026-11-11-combat-crash-impact-view-design.md`

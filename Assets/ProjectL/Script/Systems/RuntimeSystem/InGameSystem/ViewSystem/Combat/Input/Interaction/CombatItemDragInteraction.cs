@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
+using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -20,6 +21,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </remarks>
     internal sealed class CombatItemDragInteraction
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionItemSelect = new("Combat.Action.Interaction.Item.Select");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionItemDrag = new("Combat.Action.Interaction.Item.Drag");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionItemRelease = new("Combat.Action.Interaction.Item.Release");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionItemUnequip = new("Combat.Action.Interaction.Item.Unequip");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionItemCancel = new("Combat.Action.Interaction.Item.Cancel");
+#endif
+
         private readonly ICombatPointerPicker _picker;
         private readonly ICombatItemDragFeedback _drag;
         private readonly CombatCommandGate _gate;
@@ -30,15 +40,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private int _itemKey;
 
         /// <param name="stock">아이템 키의 지금 재고 수입니다. 조정자가 Buffer에서 읽습니다.</param>
-        internal CombatItemDragInteraction(ICombatPointerPicker picker, ICombatInteractionFeedback feedback,
+        /// <param name="hover">놓을 칸 강조를 그리는 호버 칸 계약입니다(씬 표시 나누기 설계 DS2).</param>
+        internal CombatItemDragInteraction(ICombatPointerPicker picker, ICombatHoverCellFeedback hover,
             ICombatItemDragFeedback drag, CombatCommandGate gate, Func<int, int> stock)
         {
             _picker = picker ?? throw new ArgumentNullException(nameof(picker));
-            if (feedback == null) throw new ArgumentNullException(nameof(feedback));
+            if (hover == null) throw new ArgumentNullException(nameof(hover));
             _drag = drag ?? throw new ArgumentNullException(nameof(drag));
             _gate = gate ?? throw new ArgumentNullException(nameof(gate));
             _stock = stock ?? throw new ArgumentNullException(nameof(stock));
-            _hover = new CombatHoverTracker(feedback, CombatHoverKind.Default);
+            _hover = new CombatHoverTracker(hover, CombatHoverKind.Default);
             InputOwner = new OwnerAdapter(this);
         }
 
@@ -62,6 +73,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>아이템을 집습니다. 집을 수 없으면 아무것도 바꾸지 않고 false입니다.</summary>
         internal bool Select(in CombatInputFacts facts, int itemKey)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionItemSelectSample = _profileInteractionItemSelect.Auto();
+#endif
+
             if (!CanSelect(facts, itemKey))
                 return false;
             End();
@@ -73,6 +88,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void PointerMoved(IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionItemDragSample = _profileInteractionItemDrag.Auto();
+#endif
+
             if (!_dragging)
                 return;
             _drag.MoveItemDrag(screenX, screenY);
@@ -89,6 +108,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         internal bool SelectReleased(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionItemReleaseSample = _profileInteractionItemRelease.Auto();
+#endif
+
             if (!_dragging)
                 return false;
             CharacterData target = _picker.TryPickCell(screenX, screenY, out CellCoord cell) ? FindTarget(characters, cell) : null;
@@ -115,6 +138,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </remarks>
         internal bool RequestUnequip(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, EntityId unitId)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionItemUnequipSample = _profileInteractionItemUnequip.Auto();
+#endif
+
             if (unitId.IsEmpty || characters == null
                 || !CombatInputPolicy.CanSubmit(facts, _gate.HasPending, CombatViewCommandKind.UnequipItem))
                 return false;
@@ -134,6 +161,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>놓지 않고 끝냅니다. 집지 않았으면 아무것도 하지 않습니다.</summary>
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionItemCancelSample = _profileInteractionItemCancel.Auto();
+#endif
+
             if (_dragging)
                 End();
         }
@@ -144,8 +175,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 return;
             _dragging = false;
             _itemKey = 0;
-            _hover.Clear();
-            _drag.HideItemDrag();
+            // 깃발을 먼저 내렸으므로 단계 하나가 실패해도 나머지 정리를 시도한 뒤 모아 던집니다(평가 G3-02).
+            CleanupErrors.RunAll("[CombatItemDragInteraction] 아이템 Drag 정리 중 실패했습니다.", _hover.Clear, _drag.HideItemDrag);
         }
 
         // 장착을 받을 수 있는 유닛은 필드의 살아 있는 아군 메인·서브다(Core 장착 대상과 같은 사실).

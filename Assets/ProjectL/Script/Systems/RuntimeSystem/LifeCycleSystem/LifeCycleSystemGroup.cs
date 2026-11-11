@@ -25,6 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
 
         /// <summary>이번 Stage 방문의 진행 사실과 상태 바꿈 입구입니다. Stage Plan만 씁니다(검사 후속 정리 계획 TP-R9).</summary>
         IStageProgress StageProgress { get; }
+        IStageRunAbandonRequestService StageRunAbandon { get; }
 
         /// <summary>증강 선택이 남아 있는지 읽는 자리입니다(강화 View 설계 §14 TG2). 읽기만 합니다.</summary>
         IStageTraitGrowthFacts StageTraitGrowthFacts { get; }
@@ -56,6 +57,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
         public ICombatProgressReader CombatProgress { get; }
         public IStageEntryAttemptRead StageEntryAttempts { get; }
         public IStageProgress StageProgress { get; }
+        public IStageRunAbandonRequestService StageRunAbandon { get; }
         public IStageTraitGrowthFacts StageTraitGrowthFacts { get; }
         public ILobbyProgressReader LobbyProgress { get; }
         public ILobbyArtifactChecks LobbyArtifactChecks { get; }
@@ -69,6 +71,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem
             CombatProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.CombatProgress);
             StageEntryAttempts = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageEntryAttempts);
             StageProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageProgress);
+            StageRunAbandon = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageRunAbandon);
             StageTraitGrowthFacts = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.StageTraitGrowthFacts);
             LobbyProgress = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.LobbyProgress);
             LobbyArtifactChecks = systemReader.ServiceStoreReader.GetService(LifeCycleSystemServiceKey.LobbyArtifactChecks);

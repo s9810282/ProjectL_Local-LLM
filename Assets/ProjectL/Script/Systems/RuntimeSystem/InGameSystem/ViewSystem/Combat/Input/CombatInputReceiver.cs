@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
     /// </summary>
     /// <remarks>
     /// 소유: 슬롯 연결 상태(<see cref="IsBound"/>)와 입구 검사(오류·연결·활성·확인창)·분배 예외 보고.
-    /// 하지 않는 것: 목표 Layer 계산과 Layer 변경(조정자), 입력 해석·허용 판단(Router·Policy·각 입력 소유자).
+    /// 하지 않는 것: 목표 Layer 계산과 Layer 변경(입력 분배 <c>CombatSceneInputDriver.SyncInputLayer</c>·입력 연결), 입력 해석·허용 판단(Router·Policy·각 입력 소유자).
     /// Unity 입력 콜백은 Runtime Tick 밖에서 오므로 분배 중 예외는 같은 오류 경계로 보고합니다(§10.1).
     /// </remarks>
     internal sealed class CombatInputReceiver : IStageInputReceiver
@@ -105,14 +105,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// </summary>
         private void Receive(CombatInputRouter.Request request, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInput = CombatInputProfiler.Input(request).Auto();
+#endif
             if (_faults.IsFaulted || !IsBound || !_canReceive())
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                CombatInputProfiler.InputBlocked(request);
+#endif
                 return;
+            }
             // 카메라 입력도 통과시킨다. 카메라 입력은 키·휠 상태만 저장하고 움직일지는 Tick에서 정책이 정하므로,
             // 확인창 동안 뗀 키가 버려져 닫힌 뒤 계속 움직이는 일이 없다(카메라 조작 계획 P5).
             if (_isConfirmOpen() && request != CombatInputRouter.Request.FocusLost
                 && request != CombatInputRouter.Request.SelectCanceled
                 && !CombatInputRouter.IsCameraRequest(request))
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                CombatInputProfiler.InputBlocked(request);
+#endif
                 return;
+            }
 
             try
             {

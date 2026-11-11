@@ -23,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </para>
     /// <para>
     /// 씬 루트는 입력 표면 하나가 갖습니다. 구독을 풀 때도 표면의 루트를 씁니다(2라운드가 남긴 "씬 루트 두 필드" 해소).
-    /// 조정자 안에서만 씁니다(설계 P25).
+    /// 조정자 안에서 쓰고, 조정자가 나눈 입력 분배·결과 소비는 필드로 갖지 않고 매 호출 인자로 받습니다(설계 P25, 조정자 나누기 설계 CS1).
     /// </para>
     /// </remarks>
     internal sealed class CombatViewConnection
@@ -41,13 +41,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             EntryPresentation = entryPresentation;
             Preparation = preparation;
             // 입력 표면은 표시와 함께 만들고 함께 놓는다(View 2라운드 W6-2). 생성은 예외가 없어 소유권 이전이 마지막 실패 지점으로 남는다.
-            Surfaces = new CombatInputSurfaces(display);
+            Surfaces = new CombatInputSurfaces(display.Actions);
         }
 
         /// <summary>인수한 표시입니다.</summary>
         internal ICombatBattleDisplay Display { get; }
 
-        /// <summary>표시가 소유하는 진입 연출입니다. 생성 타일 없는 시험 표시는 생략합니다.</summary>
+        /// <summary>표시가 소유하는 진입 연출입니다. 운영 표시는 늘 넘깁니다(없으면 null).</summary>
         internal ICombatEntryPresentation EntryPresentation { get; }
         internal ILodingPreparation Preparation { get; }
         // 취소/실패가 입력 허용으로 바뀌지 않습니다. 해당 연결은 오류 경계와 Detach가 정리합니다.
@@ -65,7 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         /// </summary>
         internal bool Shown { get; private set; }
 
-        /// <summary>선택 누름 입구입니다. 첫 표시 전에 실제/가짜 모두 명시적으로 연결합니다.</summary>
+        /// <summary>선택 누름 입구입니다. 첫 표시 전에 명시적으로 연결합니다.</summary>
         internal ICombatUnitInspection Inspection { get; private set; }
 
         /// <summary>표시 소유 선택의 읽기 참조입니다. 연결은 별도 선택 원본을 만들지 않습니다.</summary>
@@ -123,13 +123,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         internal void UnbindRoot()
         {
             CombatSceneRoot root = Surfaces.Root;
-            Surfaces.UnbindRoot();
-            if (root == null)
-                return;
-            root.FocusLost -= _focusLost;
-            root.Disabled -= _disabled;
-            _focusLost = null;
-            _disabled = null;
+            try
+            {
+                Surfaces.UnbindRoot();
+            }
+            finally
+            {
+                // 표면 풀기가 실패해도 루트 구독은 풉니다(평가 C9-01). 정상일 때 순서는 같습니다.
+                if (root != null)
+                {
+                    root.FocusLost -= _focusLost;
+                    root.Disabled -= _disabled;
+                    _focusLost = null;
+                    _disabled = null;
+                }
+            }
         }
 
         /// <summary>

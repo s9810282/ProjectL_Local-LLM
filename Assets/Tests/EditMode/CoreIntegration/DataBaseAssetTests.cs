@@ -137,7 +137,8 @@ namespace ProjectL.Tests.CoreIntegration
         public void GrowthProduction_OnlyTheSeventeenRankedKeysCanTrain()
         {
             Assert.That(ActiveGrowthCatalog().Definitions.Where(d => d.IsTrainable).Select(d => d.Key),
-                Is.EquivalentTo(ProductionRanks.Select(row => row.Key)));
+                Is.EquivalentTo(ProductionRanks.Select(row => row.Key)
+                    .Concat(new[] { TraitKey.Sacrifice, TraitKey.DustScreen })));
         }
 
         [TestCaseSource(nameof(ProductionRankCases))]
@@ -392,6 +393,35 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.DoesNotThrow(() => UnitSpecAdapter.ReadUnit(data));
         }
 
+        [TestCase(5, 1, 0, 1)]
+        [TestCase(7, 0, 2, 0)]
+        public void ConfiguredRoarUnit_ExportsThresholdAndCounts(int threshold, int perHit, int perOwnEnd, int perOpposingEnd)
+        {
+            using var fixture = new CoreAuthoringFixture();
+            var authoring = new RoarTraitAuthoring();
+            CoreAuthoringFixture.Set(authoring, "hitThreshold", threshold);
+            CoreAuthoringFixture.Set(authoring, "countPerHit", perHit);
+            CoreAuthoringFixture.Set(authoring, "countPerOwnSideTurnEnd", perOwnEnd);
+            CoreAuthoringFixture.Set(authoring, "countPerOpposingSideTurnEnd", perOpposingEnd);
+            var asset = fixture.CreateUnit(EntityKey.Unit_UndeadHeavy, CategoryKey.Heavy, authoring);
+            CoreAuthoringFixture.Set(asset, "ownerEligibility", UnitOwnerEligibility.EnemyOnly);
+            var roar = ((UnitData)asset.GetData()).Traits.OfType<RoarTraitData>().Single();
+            Assert.That((roar.HitThreshold, roar.CountPerHit, roar.CountPerOwnSideTurnEnd, roar.CountPerOpposingSideTurnEnd),
+                Is.EqualTo((threshold, perHit, perOwnEnd, perOpposingEnd)));
+            var spec = (RoarTraitSpec)TraitSpecAdapter.Read(roar);
+            Assert.That((spec.HitThreshold, spec.CountPerHit, spec.CountPerOwnSideTurnEnd, spec.CountPerOpposingSideTurnEnd),
+                Is.EqualTo((threshold, perHit, perOwnEnd, perOpposingEnd)));
+        }
+
+        [Test]
+        public void RoarData_WithNoPositiveCount_IsRejected()
+        {
+            Assert.Throws<InvalidOperationException>(() => new RoarTraitData(5, 0, 0, 0).Validate());
+            Assert.Throws<InvalidOperationException>(() => new RoarTraitData(5, -1, 1, 0).Validate());
+            Assert.Throws<InvalidOperationException>(() => new RoarTraitData(0, 1, 0, 0).Validate());
+            Assert.DoesNotThrow(() => new RoarTraitData(5, 0, 0, 1).Validate());
+        }
+
         [TestCase(30, 1)]
         [TestCase(25, 3)]
         public void ConfiguredExposureUnit_ExportsPercentageAndDuration(int percent, int duration)
@@ -416,6 +446,7 @@ namespace ProjectL.Tests.CoreIntegration
         {
             using var fixture = new CoreAuthoringFixture();
             var asset = fixture.Create<TraitGrowthDefinitionDataSO>();
+            CoreAuthoringFixture.Set(asset, "group", TraitGrowthGroup.Common);
             UnitTraitAuthoring normal = regeneration ? new RegenerationTraitAuthoring() : new HuntersMarkTraitAuthoring();
             UnitTraitAuthoring enhanced = regeneration ? new RegenerationTraitAuthoring() : new HuntersMarkTraitAuthoring();
             string field = regeneration ? "healEveryOwnSideTurnEnds" : "durationAffectedSideTurnEnds";
@@ -443,6 +474,7 @@ namespace ProjectL.Tests.CoreIntegration
         {
             using var fixture = new CoreAuthoringFixture();
             var asset = fixture.Create<TraitGrowthDefinitionDataSO>();
+            CoreAuthoringFixture.Set(asset, "group", TraitGrowthGroup.Common);
             var normal = new HuntersMarkTraitAuthoring();
             UnitTraitAuthoring enhanced = invalid == "key" ? new RegenerationTraitAuthoring() : new HuntersMarkTraitAuthoring();
             if (invalid == "normalClock") CoreAuthoringFixture.Set(normal, "durationAffectedSideTurnEnds", 0);

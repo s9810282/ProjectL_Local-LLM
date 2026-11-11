@@ -1,17 +1,18 @@
-# 전투 소리 현황·조절 안내 — 사운드 작업자께 (2026-10-28, 미전달)
+# 전투 소리 현황·조절 안내 — 공격·포효 슬롯 갱신 (2026-11-10, 미전달)
 
 > 보내는 사람: 용근(전투 View). 받는 사람: 사운드 작업자(FMOD·AudioSystem 담당).
-> 기준: 사용자 커밋 `efa5e7d7`(전투 소리 창구 1차·2차 코드 포함, 2026-10-29 갱신). Boot 씬의 FMOD 플레이어 슬롯은 `5fe2ce1b` 그대로입니다.
-> 이펙트·흔들림 칸과 사건마다 넣는 칸의 지도는 [이펙트·소리 창구 안내](2026-10-29-combat-effect-sound-cue-guide.md)에 있습니다. 소리 번호·슬롯·시점 값은 이 문서가 원본입니다.
+> 공격·포효는 2026-11-10 커밋 `686900826`의 `UnitAttack` 플레이어와 유닛 외형 에셋을 기준으로 갱신했습니다. 그 밖의 소리 안내는 2026-10-29 기준이며, 최신 슬롯 설정은 `Assets/Scenes/Boot.unity`에서 확인합니다.
+> 이펙트·흔들림 칸과 사건마다 넣는 칸의 지도는 [이펙트·소리 창구 안내](2026-10-29-combat-effect-sound-cue-guide.md)에 있습니다. 슬롯 배치의 원본은 Boot 씬이고, 유닛별 공격 슬롯 번호의 원본은 유닛 외형 에셋입니다.
 > 이 문서는 "지금 어떤 소리가, 언제, 어떤 번호로 나는지"와 "번호·타이밍을 바꾸려면 어디를 고치는지"를 모은 안내입니다. 새 슬롯 요청은 [슬롯 요청 메모](2026-10-27-combat-projectile-hit-sound-audio-request.md)에 따로 있습니다.
 
 ## 1. 소리가 나는 길
 
 ```text
 FMOD 이벤트
-  └ Boot 씬의 FMOD 플레이어(AMBGM·SFX)의 슬롯 ─ 슬롯 순번 = 코드 열거 값(AmbgmEvent·SfxEvent)
+  └ Boot 씬의 FMOD 플레이어(AMBGM·Unit·SFX)의 슬롯 ─ 슬롯 순번 = 코드 열거 값(AmbgmEvent·UnitEvent·SfxEvent)
        └ 슬롯의 Parameter Presets 목록 ─ 목록 순번(0부터) = "프리셋 번호"
-전투 코드: "이 사건은 이 슬롯, 이 번호" → AudioSystem.Play(슬롯, 번호) → 프리셋을 적용하고 재생
+전투 코드: 일반 효과음 → AudioSystem.Play(슬롯, 프리셋 번호)
+공격·포효: 유닛 외형의 attackSoundSlotIndex → AudioSystem.PlayUnitAttack(슬롯 번호)
 ```
 
 - **소리의 내용**(어떤 파일·변종)은 FMOD 이벤트와 Boot 슬롯의 프리셋이 정합니다.
@@ -19,12 +20,12 @@ FMOD 이벤트
 - **언제 낼지**는 일부는 DB의 시점 칸(§5.1~§5.5), 나머지는 코드에 고정돼 있습니다(§5.6).
 - **-1의 뜻이 두 가지**입니다.
   - DB 칸의 -1은 "소리를 내지 않음"입니다(우리 쪽 규칙).
-  - AudioSystem의 -1은 "프리셋을 바꾸지 않고 재생"입니다. 우리는 이것을 "프리셋 없이 내는 소리"(기차 호출, 토네이도 발동, 장애물 기본)에만 씁니다.
-- **주의:** 번호가 그 슬롯의 프리셋 목록 범위를 벗어나거나 프리셋이 꺼져 있으면, 재생하는 순간 AudioSystem이 예외를 내고 게임이 오류로 멈춥니다. DB 검사는 "-1 또는 0 이상"만 봅니다. 목록 범위는 보지 않습니다.
+  - `AudioSystem.Play`의 프리셋 인자 -1은 현재 프리셋을 유지하고 재생한다는 뜻입니다. `PlayUnitAttack`은 선택한 슬롯의 설정으로 재생합니다.
+- DB는 `-1` 또는 `0` 이상인지 검사합니다. 공격음 슬롯 범위와 이벤트 연결은 재생할 때 `AudioSystem`이 검사하며, 잘못된 구성은 예외로 보고합니다.
 
 ## 2. Boot 플레이어 슬롯 현황(`Assets/Scenes/Boot.unity`)
 
-### 2.1 AMBGM 플레이어
+### 2.1 AMBGM 플레이어 (2026-10-29 기준)
 
 | 순번 | 코드 열거 | FMOD 이벤트 | 프리셋 |
 |---|---|---|---|
@@ -36,7 +37,7 @@ FMOD 이벤트
 | 5 | `StageChanger` | `event:/BGM/StageChanger` | 없음 |
 | 6 | `GameStart` | `event:/UI/GameStart` | 없음 |
 
-### 2.2 SFX 플레이어
+### 2.2 효과음 슬롯 (2026-10-29 기준)
 
 | 순번 | 코드 열거 | FMOD 이벤트 | 프리셋(번호: 값) |
 |---|---|---|---|
@@ -44,7 +45,6 @@ FMOD 이벤트
 | 1 | `UnitCancel` | `…/SFX/Unit/Cancel` | 0 Base · 1 Base · 2 Rider · 3 Heavy · 4 Cannon (Enemy 없음) |
 | 2 | `UnitMovement` | `…/SFX/Unit/Movement` | UnitPick과 같음(0~5) |
 | 3 | `UnitDead` | `…/SFX/Unit/Dead` | UnitPick과 같음(0~5) |
-| 4 | `UnitAttack` | `…/SFX/Unit/AttackEvents/Attack` | 0 Akimbo · 1 Akimbo · 2 Sniper · 3 Batender · 4 Cowboy · 5 Hammer · 6 Shotgun · 7 GraveKeeper · 8 Umbrella · 9 Catus · 10 Minecart · 11 Balistar · 12 Pickel · 13 Shovel · 14 E_Cannon · 15 Boss_1 · 16 Shield (파라미터 UnitDetailType) |
 | 5 | `ObsDamaged` | `…/SFX/Obstacle/Damaged` | 없음 |
 | 6 | `ObsBroken` | `…/SFX/Obstacle/Broken` | 없음 |
 | 7·8·9 | (열거 없음) | `…/SFX/Artifact/Cancel`·`Pick`·`Placement` | 없음. 코드에서 부르는 곳이 없습니다 |
@@ -53,6 +53,26 @@ FMOD 이벤트
 | 12 | (열거 없음) | `…/SFX/Object/ObjectActive` | **없음**. 파라미터 `Object`(Mine·Badge·Flag)만 있습니다 |
 
 `…`는 `event:/PostFX`입니다.
+
+### 2.3 UnitAttack 플레이어 (2026-11-10 기준)
+
+`attackSoundSlotIndex`는 Boot의 `UnitAttack` 플레이어에서 0부터 센 이벤트 슬롯 순번입니다. 슬롯마다 FMOD 이벤트 하나를 연결합니다. 슬롯 순서를 바꾸면 그 슬롯을 가리키는 유닛 외형 값도 함께 갱신합니다.
+
+| 슬롯 | `event:/PostFX/SFX/Unit/AttackEvents/EachUnit/` 아래 이벤트 |
+|---|---|
+| 0 | `Akimbo` |
+| 1 | `Ballistar` |
+| 2 | `Catus` |
+| 3 | `Cowboy` |
+| 4 | `GraveKeeper` |
+| 5 | `Hammer` |
+| 6 | `Shotgun` |
+| 7 | `Sniper` |
+| 8 | `Enemy/E_Cannon` |
+| 9 | `Enemy/Pickel` |
+| 10 | `Enemy/Sheld` |
+| 11 | `Enemy/Shovel` |
+| 12 | `Enemy/Boss_Stage1` |
 
 ## 3. 전투 소리 목록
 
@@ -64,8 +84,8 @@ FMOD 이벤트
 | 배치 취소 | `UnitCancel` | 끌던 유닛을 내려놓지 않고 취소 | 집을 때와 같은 번호 | 코드 고정 | 나옴 |
 | 공격 조준 취소 | `UnitCancel` | 공격 모드를 취소 | 유닛 외형 `unitSoundPreset` | 코드 고정 | 나옴 |
 | 걸음 | `UnitMovement` | 한 칸 걸음 시작마다(아군만) | 유닛 외형 `unitSoundPreset` | 코드 고정 | 나옴 |
-| 공격 | `UnitAttack` | 공격 묶음의 소리 시점 | 유닛 외형 `attackSoundPreset` | 공격 묶음 `cues.sound` | 나옴 |
-| 보스 포효 | `UnitAttack` | 포효 박치기 순간 | 보스 외형 `attackSoundPreset` | 코드 고정 | 나옴 |
+| 공격 | `UnitAttack` 플레이어 | 공격 묶음의 소리 시점 | 공격한 유닛의 `attackSoundSlotIndex` | 공격 묶음 `cues.sound` | 나옴 |
+| 보스 포효 | `UnitAttack` 플레이어 | 포효 박치기 순간 | 포효한 유닛의 `attackSoundSlotIndex` | 코드 고정 | 나옴 |
 | 사망 | `UnitDead` | 반응 묶음의 사망 소리 시점 | 아군 = 유닛 외형 `unitSoundPreset`, 적 = 설정 표 `enemyUnitSoundPreset` | 반응 묶음 `deathCues.sound` | 나옴 |
 | 낭떠러지 추락 사망 | `UnitDead` | 가라앉기 시작 | 사망과 같음 | 코드 고정(사망 시점 칸을 쓰지 않음) | 나옴 |
 | 전투 시작(밤) | `StageChanger` + `BGM` | 전투가 시작되는 순간. 진입음을 내고 BGM 프리셋을 Night로 | 설정 표 `nightBgmPreset` | 코드 고정 | 나옴 |
@@ -97,31 +117,32 @@ FMOD 이벤트
 - 모든 UI 버튼 클릭·호버는 `UIClick`·`UIHover`입니다(`UIInputBinding`).
 - 타이틀 시작은 `GameStart`입니다(`TitleUI`).
 
-## 4. 프리셋 번호를 바꾸는 곳
+## 4. 프리셋과 공격음 슬롯 번호를 바꾸는 곳
 
-에셋 경로는 모두 `Assets/ProjectL/DataBaseSO/ViewGroup/` 아래입니다. 인스펙터에서 바로 고치면 됩니다. Play 중에 고친 값은 칸에 따라 다음 전투부터 반영되기도 하고, Play를 다시 시작해야 반영되기도 합니다. 확실히 하려면 Play를 다시 시작하세요. 넣는 번호는 §2 표의 프리셋 번호입니다.
+에셋 경로는 모두 `Assets/ProjectL/DataBaseSO/ViewGroup/` 아래입니다. 인스펙터에서 바로 고치면 됩니다. Play 중에 고친 값은 칸에 따라 다음 전투부터 반영되기도 하고, Play를 다시 시작해야 반영되기도 합니다. 확실히 하려면 Play를 다시 시작하세요. 일반 효과음에는 해당 슬롯의 프리셋 번호를 넣고, 공격·포효에는 §2.3의 `UnitAttack` 슬롯 순번을 넣습니다.
 
 ### 4.1 유닛 외형 `UnitVisual/Item/…/UnitVisual_*.asset`
 
 - `unitSoundPreset`: 아군의 집기·취소·걸음·사망 소리 번호입니다. 장애물 외형이면 피해·파괴 번호입니다.
-- `attackSoundPreset`: 공격(포효 포함) 소리 번호입니다.
-- **적은 `unitSoundPreset` 대신 설정 표의 `enemyUnitSoundPreset`(지금 5 = Enemy) 하나를 씁니다.** 그래서 적 외형의 `unitSoundPreset` 값은 지금 쓰이지 않습니다. 적의 공격은 각 외형의 `attackSoundPreset`을 씁니다.
+- `attackSoundSlotIndex`는 공격·포효가 사용할 `UnitAttack` 슬롯 순번입니다. `-1`이면 공격·포효 소리를 생략합니다.
+- **적은 `unitSoundPreset` 대신 설정 표의 `enemyUnitSoundPreset`(지금 5 = Enemy) 하나를 씁니다.** 그래서 적 외형의 `unitSoundPreset` 값은 지금 쓰이지 않습니다. 적의 공격은 각 외형의 `attackSoundSlotIndex`를 씁니다.
 
-| 에셋 | 이름 | `unitSoundPreset` | `attackSoundPreset` |
+| 에셋 | 이름 | `unitSoundPreset` | `attackSoundSlotIndex` |
 |---|---|---|---|
-| `Playerable/UnitVisual_Akimbo` | 에블린 | 0 (Base) | 0 (Akimbo) |
-| `Playerable/UnitVisual_ShotGun` | 와이엇 | 3 (Heavy) | 6 (Shotgun) |
-| `Playerable/UnitVisual_Sniper` | 로즈 | 1 (Base) | 2 (Sniper) |
-| `Playerable/UnitVisual_Ballista` | 셰인 | 4 (Cannon) | 11 (Balistar) |
-| `Playerable/UnitVisual_CactusCannon` | 조세핀 | 4 (Cannon) | 9 (Catus) |
-| `Playerable/UnitVisual_Cowboy` | 웨이드 | 2 (Rider) | 4 (Cowboy) |
+| `Playerable/UnitVisual_Akimbo` | 에블린 | 0 (Base) | 0 |
+| `Playerable/UnitVisual_ShotGun` | 와이엇 | 3 (Heavy) | 6 |
+| `Playerable/UnitVisual_Sniper` | 로즈 | 1 (Base) | 7 |
+| `Playerable/UnitVisual_Ballista` | 셰인 | 4 (Cannon) | 1 |
+| `Playerable/UnitVisual_CactusCannon` | 조세핀 | 4 (Cannon) | 2 |
+| `Playerable/UnitVisual_Cowboy` | 웨이드 | 2 (Rider) | 3 |
+| `Playerable/UnitVisual_Boomber` | — | 2 (Rider) | 5 |
 | `Playerable/UnitVisual_Shielder` | 아이비 | -1 (없음) | -1 (없음) |
 | `Playerable/UnitVisual_MainCharacter` | MainCharacter | -1 (없음) | -1 (없음) |
-| `Enemy/UnitVisual_Demon` | 언데드 광부 | (적이라 안 씀) | 12 (Pickel) |
-| `Enemy/UnitVisual_Gravekeeper` | 언데드 무덤지기 | (안 씀) | 13 (Shovel) |
-| `Enemy/UnitVisual_Cannon` | 언데드 포병 | (안 씀) | 14 (E_Cannon) |
-| `Enemy/UnitVisual_Heavy` | 언데드 마인카트 | (안 씀) | 16 (Shield) |
-| `Enemy/UnitVisual_StageBoss1` | 보스 | (안 씀) | 15 (Boss_1) |
+| `Enemy/UnitVisual_Demon` | 언데드 광부 | (적 공용) | 9 |
+| `Enemy/UnitVisual_Gravekeeper` | 언데드 무덤지기 | (적 공용) | 11 |
+| `Enemy/UnitVisual_Cannon` | 언데드 포병 | (적 공용) | 8 |
+| `Enemy/UnitVisual_Heavy` | 언데드 마인카트 | (적 공용) | 10 |
+| `Enemy/UnitVisual_StageBoss1` | 보스 | (적 공용) | 12 |
 | `Enemy/UnitVisual_Headquarters` | 적 넥서스 | -1 | -1 |
 | `Object/UnitVisual_PowderBarrel` | 화약통 | -1 (프리셋 없이) | -1 |
 | `Object/UnitVisual_Supplies` | 보급품 | -1 (프리셋 없이) | -1 |
@@ -222,10 +243,9 @@ FMOD 이벤트
 
 ## 7. 데이터에서 본 것(확인 부탁)
 
-- **프리셋 0과 1이 같습니다.** `UnitPick`·`UnitCancel`·`UnitMovement`·`UnitDead`는 0·1이 모두 Base이고, `UnitAttack`은 0·1이 모두 Akimbo입니다. 일부러 그렇게 둔 것인지 확인 부탁드립니다. 지금 에블린이 0, 로즈가 1을 씁니다.
+- **`unitSoundPreset` 0과 1은 둘 다 Base입니다.** 에블린이 0, 로즈가 1을 씁니다.
 - **`UnitCancel`에는 Enemy(5) 프리셋이 없습니다.** 적은 취소 소리를 내지 않으므로 지금은 문제가 없습니다.
-- **언데드 마인카트**(`UnitVisual_Heavy`)의 공격 번호가 16(Shield)입니다. Minecart(10) 프리셋은 아무도 쓰지 않습니다. 의도인지 확인 부탁드립니다.
-- **아이비**(`UnitVisual_Shielder`)와 **MainCharacter**는 두 번호가 모두 -1이라 집기·걸음·공격·사망 소리가 나지 않습니다. Shield(16) 프리셋이 아이비용이라면 아이비에 넣으면 됩니다.
+- **아이비**(`UnitVisual_Shielder`)와 **MainCharacter**는 두 번호가 모두 -1이라 집기·걸음·공격·사망 소리가 나지 않습니다.
 - SFX 7~9(Artifact)는 Boot에 있지만 코드 열거에 없고, 부르는 곳도 없습니다.
 - SFX 12(ObjectActive)는 프리셋이 0개입니다. 오브젝트 외형에 번호를 넣기 전에 프리셋부터 있어야 합니다. 프리셋 없이 번호를 넣으면 재생 때 오류가 납니다(§1 주의).
 
@@ -233,9 +253,9 @@ FMOD 이벤트
 
 | 무엇 | 파일 |
 |---|---|
-| 슬롯 열거 | `Script/Systems/RuntimeSystem/GlobalSystem/AudioSystem/AudioSystem.cs` (`AmbgmEvent`·`SfxEvent`) |
+| 슬롯 열거 | `Script/Systems/RuntimeSystem/GlobalSystem/AudioSystem/AudioSystem.cs` (`AmbgmEvent`·`UnitEvent`·`SfxEvent`) |
 | 사건 → 슬롯·번호(소리 표), 연결 대기 칸 | `Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Combat/Playback/Support/CombatEventSounds.cs` |
 | 번호를 DB에서 읽는 곳 | 같은 폴더 `CombatSoundPresets.cs` |
-| 실제 재생 입구 | 같은 폴더 `CombatEventAudio.cs`, 입력 `Input/Interaction/CombatInputSounds.cs` |
+| 실제 재생 입구 | 같은 폴더 `CombatEventAudio.cs`(공격·포효는 `AudioSystem.PlayUnitAttack`), 입력 `Input/Interaction/CombatInputSounds.cs` |
 | 시점 칸으로 소리 항목을 붙이는 곳 | `Presentation/Pieces/CombatCueComposer.cs` |
 | 관련 설계 | [투사체·피격 소리](../specs/2026-10-27-combat-projectile-hit-sound-design.md) · [소리 창구 2차](../specs/2026-10-27-combat-environment-item-sound-design.md) |

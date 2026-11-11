@@ -1,8 +1,12 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
+using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -23,12 +27,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// </remarks>
     internal sealed class PlacementDragInteraction
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementSelect = new("Combat.Action.Interaction.Placement.Select");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementDeselect = new("Combat.Action.Interaction.Placement.Deselect");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementDrag = new("Combat.Action.Interaction.Placement.Drag");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementPick = new("Combat.Action.Interaction.Placement.Pick");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementRelease = new("Combat.Action.Interaction.Placement.Release");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementCancel = new("Combat.Action.Interaction.Placement.Cancel");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionPlacementReturn = new("Combat.Action.Interaction.Placement.Return");
+#endif
+
         // 누른 자리에서 이만큼(픽셀) 안에서 떼면 클릭으로 보고, 집은 채로 다음 누름·뗌에서 놓는다(옛 배치 입력과 같음).
         private const float ClickMovementThreshold = 5f;
 
         private readonly ICombatViewBufferWriteSink _input;
         private readonly ICombatPointerPicker _picker;
-        private readonly ICombatInteractionFeedback _feedback;
+        // 고스트·원본 숨김 계약입니다. 호버 칸은 호버 추적이 따로 받습니다(씬 표시 나누기 설계 DS2, 결정 Q-DS2 A).
+        private readonly ICombatPlacementFeedback _feedback;
         private readonly CombatCommandGate _gate;
         private readonly CombatHoverTracker _hover;
         // 선택·취소 효과음 창구입니다(View 3라운드 W9-2 검토). 필수입니다(평가 C5-02).
@@ -53,7 +69,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         internal PlacementDragInteraction(
             ICombatViewBufferWriteSink input,
             ICombatPointerPicker picker,
-            ICombatInteractionFeedback feedback,
+            ICombatPlacementFeedback feedback,
+            ICombatHoverCellFeedback hover,
             CombatCommandGate gate, CombatInputSounds sounds)
         {
             // 자기 요청 비우기는 Buffer의 번호 있는 비우기가 판단하므로 읽기 Sink는 받지 않는다(View 2라운드 W5-4, 3라운드 W12-2).
@@ -61,7 +78,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _picker = picker ?? throw new ArgumentNullException(nameof(picker));
             _feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
             _gate = gate ?? throw new ArgumentNullException(nameof(gate));
-            _hover = new CombatHoverTracker(feedback, CombatHoverKind.Default);
+            _hover = new CombatHoverTracker(hover, CombatHoverKind.Default);
             _sounds = sounds ?? throw new ArgumentNullException(nameof(sounds));
             InputOwner = new OwnerAdapter(this);
         }
@@ -84,6 +101,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void SelectDeckUnit(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, CharacterInstanceId ownedId)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementSelectSample = _profileInteractionPlacementSelect.Auto();
+#endif
+
             if (!CanSelectDeckUnit(facts, characters, ownedId)) return;
             CharacterData picked = FindDeckUnit(characters, ownedId);
             EndDrag();
@@ -96,12 +117,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void CancelDeckSelection()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementDeselectSample = _profileInteractionPlacementDeselect.Auto();
+#endif
+
             if (_deckSelection) Cancel();
         }
 
         private static CharacterData FindDeckUnit(IReadOnlyList<CharacterData> characters, CharacterInstanceId ownedId)
         {
-            if (characters == null || ownedId.IsEmpty) return null;
+            if (ownedId.IsEmpty) return null;
             for (int i = 0; i < characters.Count; i++)
             {
                 CharacterData unit = characters[i];
@@ -117,6 +142,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void PointerMoved(in CombatInputFacts facts, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementDragSample = _profileInteractionPlacementDrag.Auto();
+#endif
+
             RememberPointer(screenX, screenY);
             if (_dragging)
             {
@@ -133,6 +162,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void SelectPressed(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementPickSample = _profileInteractionPlacementPick.Auto();
+#endif
+
             RememberPointer(screenX, screenY);
             _pressX = screenX;
             _pressY = screenY;
@@ -147,6 +180,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
         internal void SelectReleased(in CombatInputFacts facts, float screenX, float screenY)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementReleaseSample = _profileInteractionPlacementRelease.Auto();
+#endif
+
             if (!_dragging)
                 return;
 
@@ -178,6 +215,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
             if (_hover.HasHover && answer.Placement.HasValue)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                using var profilePreview = CombatInputProfiler.Apply(_dragIsMain ? CombatViewPreviewKind.MainCharacterPlacement : CombatViewPreviewKind.UnitPlacement).Auto();
+#endif
+
                 bool canPlace = answer.Placement.Value.CanPlace;
                 _hover.SetStateIfHovered(canPlace ? CombatHoverState.Valid : CombatHoverState.Invalid);
                 if (_dragging)
@@ -207,6 +248,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>Drag 중이면 놓지 않고 끝냅니다(취소 키·선택 취소).</summary>
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementCancelSample = _profileInteractionPlacementCancel.Auto();
+#endif
+
             if (_dragging) _sounds.Play(UnitEvent.UnitCancel, _dragPreset);
             EndDrag();
         }
@@ -218,6 +263,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// </summary>
         internal bool TryReturnUnderPointer(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionPlacementReturnSample = _profileInteractionPlacementReturn.Auto();
+#endif
+
             if (_dragging || !_hasPointer || characters == null)
                 return false;
             if (!_picker.TryPickCell(_pointerX, _pointerY, out CellCoord cell))
@@ -315,7 +364,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _feedback.SetGhostPlaceable(true);
 
             if (CombatInputPolicy.CanPreview(facts, _gate.HasPending, preview.Kind))
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                _previewRequestNumber = CombatInputProfiler.SetPreview(_input, preview);
+#else
                 _previewRequestNumber = _input.SetPreview(preview);
+#endif
+            else
+                ClearOwnedPreview(); // 옛 칸의 늦은 답이 새 칸에 칠해지지 않게 합니다(평가 C10-14).
         }
 
         private void CommitDrag(in CombatInputFacts facts, float screenX, float screenY)
@@ -340,10 +395,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _dragFromField = false;
             _pressStartedDrag = false;
 
-            _feedback.HideGhost();
-            _feedback.ShowOriginal();
-            _hover.Clear();
-            ClearOwnedPreview();
+            // 깃발을 먼저 내렸으므로 단계 하나가 실패해도 나머지 정리를 모두 시도한 뒤 모아 던집니다(평가 G3-02).
+            CleanupErrors.RunAll("[PlacementDragInteraction] 배치 Drag 정리 중 실패했습니다.",
+                _feedback.HideGhost, _feedback.ShowOriginal, _hover.Clear, ClearOwnedPreview);
         }
 
         /// <summary>Buffer의 최신 미리보기 요청이 자기 번호일 때만 비웁니다. 다른 소유자의 요청은 지우지 않습니다(판단은 Buffer).</summary>

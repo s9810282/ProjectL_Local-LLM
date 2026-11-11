@@ -96,7 +96,7 @@ namespace ProjectL.Tool.Editor
             if (nextMap != mapKey)
             {
                 mapKey = nextMap;
-                RebuildMap(view, backgroundMode, space);
+                RebuildMap(view, backgroundMode, space, visuals.FieldView);
                 // 맵과 함께 타일·그 아래 교체 외형이 없어졌으므로 배치를 다시 놓습니다(설계 P-UT15).
                 placementKey = null;
             }
@@ -151,10 +151,10 @@ namespace ProjectL.Tool.Editor
             preview.camera.aspect = rect.width / Mathf.Max(1f, rect.height);
         }
 
-        // StageViewPropPresenter.Show: 필드 루트 아래에 배경을 보정 셋으로 놓습니다(배율 = 프리팹 배율 × 보정).
+        // StageViewPropPresenter.Show와 같이 타일 방식은 공통 자동 배율, 나머지는 원본 배율 × 보정을 적용합니다.
         // 배경은 방식이 고릅니다(게임 StageViewPropData.GameObject, 설계 §12 UT5): MapDefinition이면 맵 SO의 프리팹, 그 밖은 맵 프리팹입니다.
         // 타일 방식이고 맞춤이 성립하면(space.Tiles) 바닥 타일을 놓고 배경을 맞춥니다(BuildTiles).
-        private void RebuildMap(CombatStageSoView view, string backgroundMode, CombatStageSoSpace space)
+        private void RebuildMap(CombatStageSoView view, string backgroundMode, CombatStageSoSpace space, CombatStageSoFieldView fieldView)
         {
             if (map != null) Object.DestroyImmediate(map);
             map = null;
@@ -172,15 +172,27 @@ namespace ProjectL.Tool.Editor
                 Problem = usesMap ? "View에 맵 SO(또는 그 프리팹)가 없어 맵을 그리지 않습니다." : "View에 맵 프리팹이 없어 맵을 그리지 않습니다.";
                 return;
             }
+            Vector3 scale;
+            try
+            {
+                scale = CombatStageSoBackground.UsesTiles(backgroundMode)
+                    ? CombatMapScaleEditor.Resolve(prefab, fieldView, view.tiles)
+                    : Vector3.Scale(prefab.transform.localScale, view.scaleOffset);
+            }
+            catch (Exception exception)
+            {
+                Problem = exception.Message;
+                return;
+            }
             map = Object.Instantiate(prefab, root.transform, false);
             map.transform.localPosition = view.positionOffset;
             map.transform.localRotation = Quaternion.Euler(view.rotationOffset);
-            map.transform.localScale = Vector3.Scale(prefab.transform.localScale, view.scaleOffset);
+            map.transform.localScale = scale;
             if (space.Tiles != null && CombatStageSoBackground.UsesTiles(backgroundMode)) BuildTiles(space);
             Quiet(map);
         }
 
-        // StageMapTiles.Build + StageViewPropPresenter.ShowTiles의 사본입니다(설계 §12 UT5). 미리보기 루트가 게임의 필드 칸 루트입니다(회전 없음·원점).
+        // 타일 생성은 프리뷰가 소유하고, 배경/타일의 축·위치 보정은 운영과 같은 공통 계산을 씁니다.
         // 1) MapTileRoot를 배경 자식으로 offset에 두고 칸마다 타일 → 2) 남은 각만큼 격자 가운데 기준으로 배경 회전 → 3) 기준 타일이 게임 (0,0) 칸에 오게 배경 이동
         // → 4) 필드 칸 → 타일 표. 칸 → 타일 대응은 2D와 같은 맞춤 계산(TryTileOfCell)을 씁니다(설계 P-UT12).
         private void BuildTiles(CombatStageSoSpace space)
@@ -213,11 +225,12 @@ namespace ProjectL.Tool.Editor
             Vector3 ToField(Vector3 tileLocal) => field.InverseTransformVector(tileRoot.TransformVector(tileLocal));
             var columnLocal = new Vector3(layout.tileSize.x, 0f, 0f);
             var rowLocal = new Vector3(0f, 0f, layout.tileSize.y);
-            // 격자 가운데는 타일 루트 원점입니다(CombatMapTilesData.GridCenter).
-            backdrop.RotateAround(tileRoot.position, field.up, CombatStageSoTileFit.YawCorrection(ToField(columnLocal)));
             Vector3 center = field.InverseTransformPoint(tileRoot.position);
-            backdrop.localPosition += CombatStageSoTileFit.AnchorShift(center, ToField(columnLocal), ToField(rowLocal), layout.columns, layout.rows,
-                layout.anchorTile, new Vector2Int(space.Columns, space.Rows), space.CellWidth, space.CellLength);
+            CombatMapPlacementLayout placement = CombatMapPlacementLayout.Align(center, ToField(columnLocal), ToField(rowLocal),
+                field.InverseTransformDirection(tileRoot.up), layout.columns, layout.rows, layout.anchorTile,
+                new Vector2Int(space.Columns, space.Rows), space.CellWidth, space.CellLength);
+            backdrop.localPosition = placement.TransformPoint(backdrop.localPosition);
+            backdrop.localRotation = placement.Rotation * backdrop.localRotation;
             for (int y = 0; y < space.Rows; y++)
             {
                 for (int x = 0; x < space.Columns; x++)

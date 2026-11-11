@@ -12,7 +12,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         EnemyPathfind,
         EnemyCanAttackFrom,
         AttackRange,
-        MovementUndoReconcile
+        MovementUndoReconcile,
+        EnemyPreparation,
+        EnemyCandidates,
+        EnemyHazardForecast,
+        EnemyCheapScore,
+        EnemyPreciseAssessment,
+        EnemySourceValidation,
+        EnemyActionExecution,
+        AttackAdmission,
+        AttackGeometry,
+        AttackSelection,
+        AttackProjectionSetup,
+        AttackCommonDamage,
+        AttackDelivery,
+        AttackResultConstruction,
+        CommandCompletion,
+        AttackEffectBinding,
+        TraitRegistryBuild,
+        ProjectionCurrentInput,
+        TraitPresenceReconcile,
+        CommandFinalization,
+        AttackSacrificePlanning,
+        AttackForcedPath,
+        AttackForcedPathStep,
+        /// <summary>전투 첫 동작 Core 준비의 단계 하나입니다(<c>CombatFirstUseRehearsal.RunNext</c>).</summary>
+        FirstUseRehearsal
     }
 
     /// <summary>구간 시작·끝을 받는 측정기입니다. 계산기는 Unity를 참조하지 않으므로 Unity Profiler 연결은 Systems가 구현합니다.</summary>

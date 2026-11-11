@@ -77,7 +77,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<OverflowException>(() => CombatCommandCalculator.Calculate(Input(new UnitKillRewardSpec(10, 10), goldBalance: int.MaxValue), Array.Empty<IMovementTileRule>()));
             var input = Input(new UnitKillRewardSpec(10, 10));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,s.ItemRandomState,                new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), int.MaxValue)));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,s.ItemRandomState,                new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), int.MaxValue)));
             Assert.Throws<OverflowException>(() => CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>()));
         }
 
@@ -107,7 +107,7 @@ namespace ProjectL.Tests.Core
         {
             var source = Input(new UnitKillRewardSpec(10, 10));
             var s = source.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(new EntityId(3)),s.Allocation,s.ItemRandomState,                new CombatRewardFacts(true, source.Owned.Select(o => o.Id).ToArray(), 0));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(new EntityId(3)),s.Allocation,s.ItemRandomState,                new CombatRewardFacts(true, source.Owned.Select(o => o.Id).ToArray(), 0));
             var chars = source.Characters.Select(c => c.EntityId.Value != 3 ? c : new CharacterCombatFacts(c.EntityId,
                 c.OwnedId, EntityKey.Unit_Gravekeeper, c.Owner, c.OwnershipRole, c.Area, c.Health, c.Stats,
                 c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells, c.ActionUse,
@@ -164,10 +164,10 @@ namespace ProjectL.Tests.Core
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             projected.Add(dead.EntityId, dead);
             var events = new List<CombatEvent> { new CombatCharacterEvent(CombatEventKind.Died, before, dead) };
-            var kill = ConfirmedKillCalculator.Collect(input, projected, events).Single();
+            var kill = ConfirmedKillCalculator.Collect(input, projected, events, input.State).Single();
             Assert.That((kill.VictimId, kill.RecipientId, kill.Gold, kill.Experience), Is.EqualTo((dead.EntityId, input.ActorId, 20, 20)));
             events.Add(events[0]);
-            Assert.Throws<InvalidOperationException>(() => ConfirmedKillCalculator.Collect(input, projected, events));
+            Assert.Throws<InvalidOperationException>(() => ConfirmedKillCalculator.Collect(input, projected, events, input.State));
         }
 
         [TestCase(false)]
@@ -181,7 +181,7 @@ namespace ProjectL.Tests.Core
             projected[victim.EntityId] = CombatCommandCalculator.Hurt(victim, 1000);
             var origins = automatic ? null : new[] { new CombatDamageOrigin(victim.Anchor, new EntityId(3), 1) };
             var events = new[] { new CombatCharacterEvent(CombatEventKind.Died, victim, projected[victim.EntityId], origins) };
-            Assert.That(ConfirmedKillCalculator.Collect(input, projected, events), Is.Empty);
+            Assert.That(ConfirmedKillCalculator.Collect(input, projected, events, input.State), Is.Empty);
         }
 
         [Test]
@@ -210,7 +210,7 @@ namespace ProjectL.Tests.Core
                     new UnitKillRewardSpec(20, 20)), p.Method)).ToArray());
             seed = CliffFallTests.WithEnvironment(seed, MineEnvironmentTests.Mine(cell: new CellCoord(5, 3)));
             var s = seed.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,BattleObjective.DesignatedBoss(target),s.Allocation,s.ItemRandomState,s.Rewards);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,BattleObjective.DesignatedBoss(target),s.Allocation,s.ItemRandomState,s.Rewards);
             var input = new CombatCommandInput(seed.Number, seed.Kind, seed.ActorId, seed.Aim, state, seed.Characters,
                 seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(10, 37, 0, 0, Array.Empty<CharacterInstanceId>(), 0,
@@ -241,7 +241,7 @@ namespace ProjectL.Tests.Core
             Assert.That(CombatCommandCalculator.Calculate(aimed, Array.Empty<IMovementTileRule>()).RewardChange.FinalGold, Is.EqualTo(17));
         }
 
-        private static CombatCommandInput Input(UnitKillRewardSpec reward, int level = 1,
+        internal static CombatCommandInput Input(UnitKillRewardSpec reward, int level = 1,
             EntityKey key = EntityKey.Unit_Demon, int? goldBalance = 7)
         {
             var seed = CombatCommandTestData.Input(new TargetingMethodSpec(TargetingShape.RadialSquare,

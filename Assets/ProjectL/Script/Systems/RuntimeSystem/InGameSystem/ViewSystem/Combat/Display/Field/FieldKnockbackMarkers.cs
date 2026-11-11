@@ -22,13 +22,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly Color _pushColor;
         private readonly Color _blockedColor;
         private readonly Color _immuneColor;
+        private readonly Color _collisionColor;
         private readonly IMeshSystemService _meshes;
         private readonly IColorSystemService _colors;
         private readonly List<FieldArrowhead> _markers = new();
         private GameObject _root;
 
         internal FieldKnockbackMarkers(Transform parent, StageFieldViewData config, Color pushColor, Color blockedColor,
-            Color immuneColor, IMeshSystemService meshes, IColorSystemService colors)
+            Color immuneColor, Color collisionColor, IMeshSystemService meshes, IColorSystemService colors)
         {
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             if (config == null)
@@ -42,6 +43,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _pushColor = pushColor;
             _blockedColor = blockedColor;
             _immuneColor = immuneColor;
+            _collisionColor = collisionColor;
             _meshes = meshes ?? throw new ArgumentNullException(nameof(meshes));
             _colors = colors ?? throw new ArgumentNullException(nameof(colors));
         }
@@ -137,6 +139,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 case FieldKnockbackMarkKind.Push: return _pushColor;
                 case FieldKnockbackMarkKind.Blocked: return _blockedColor;
                 case FieldKnockbackMarkKind.Immune: return _immuneColor;
+                case FieldKnockbackMarkKind.Collision: return _collisionColor;
                 default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
         }

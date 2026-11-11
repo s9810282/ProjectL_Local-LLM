@@ -150,7 +150,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 .Where(s => s.kind == TraitGrowthKind.Enhance).Select(s => s.selection.TraitKey).ToArray();
             var effective = new CombatAttackProfile(current, basis.Method);
             var candidates = EligibleTraits(effective, ranks.Keys.ToArray(), enhanced, step.Kind, progression, catalog);
-            return step.Kind == TraitGrowthKind.Enhance ? candidates.Where(key => ranks[key] < 3).ToArray() : candidates;
+            if (step.Kind != TraitGrowthKind.Enhance)
+                return candidates;
+            return candidates.Where(key =>
+            {
+                var definition = catalog.GetTrait(key);
+                return !definition.IsTrainable || definition.CanAdvanceFrom(ranks[key]);
+            }).ToArray();
         }
 
         public static TraitGrowthDecision PlanChoice(OwnedCharacterRecord owned, TraitGrowthChoiceRequest request,

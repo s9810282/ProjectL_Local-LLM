@@ -41,7 +41,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int BoardWidth { get; }
         public int BoardHeight { get; }
         public CombatFlowPhase Phase { get; }
-        public bool IsNight { get; }
         public StagePhase StagePhase { get; }
         public bool HasExpectedFacts { get; }
         public IReadOnlyList<(EntityId Id, Owner Owner, IReadOnlyList<CellCoord> Cells)> Occupancy { get; }
@@ -111,7 +110,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             HasExpectedFacts = admission != null;
             BoardWidth = admission?.BoardWidth ?? 0; BoardHeight = admission?.BoardHeight ?? 0;
             Phase = admission?.Phase ?? CombatFlowPhase.None;
-            IsNight = admission?.IsNight ?? false; StagePhase = admission?.Turn.StagePhase ?? default;
+            StagePhase = admission?.Turn.StagePhase ?? default;
 
             Occupancy = Array.AsReadOnly((occupancy ?? Array.Empty<(EntityId, Owner, IReadOnlyList<CellCoord>)>())
                 .Select(o => (o.Id, o.Owner, (IReadOnlyList<CellCoord>)Array.AsReadOnly(o.Cells.ToArray()))).ToArray());

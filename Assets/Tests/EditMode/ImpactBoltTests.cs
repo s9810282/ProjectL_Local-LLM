@@ -419,7 +419,7 @@ namespace ProjectL.Tests.Core
                 profiles: input.Profiles.Append(new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Gravekeeper, 1), Method())).ToArray());
             input = CliffFallTests.WithEnvironment(input, MineEnvironmentTests.Mine(id: 60, damage: 7, cell: new CellCoord(4, 6)));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(2, 4), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(2, 4), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation));
             var result = Run(input, MineEnvironmentTests.Rules);
             Assert.That(Final(result, 8).Health.IsDead, Is.True);
             Assert.That(result.Outcome.Reason, Is.EqualTo(StageOutcomeReason.DesignatedBossDefeated));

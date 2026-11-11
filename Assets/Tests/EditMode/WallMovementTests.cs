@@ -102,7 +102,7 @@ namespace ProjectL.Tests.Core
                 source = CombatCommandTestData.With(source, characters: source.Characters.Select(c => c.EntityId == source.ActorId
                     ? CombatPlacementCalculator.Location(c, CharacterRuntimeArea.Hand, 0, null, null) : c).ToArray());
             var s = source.State;
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,false,                s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                s.Environment,s.EnvironmentProgress,s.WallBlocking);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                s.Environment,s.EnvironmentProgress,s.WallBlocking);
             var battle = new CombatBattleFacts(8, 42, 2, 2, Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(1, CombatCommandKind.PlaceUnit, source.ActorId, default, state, source.Characters,
                 source.Profiles, source.Main, source.Owned, source.SoulCounts, source.Souls, source.Artifacts,
@@ -124,7 +124,7 @@ namespace ProjectL.Tests.Core
             var characters = source.Characters.Select(c => c.OwnershipRole == CharacterOwnershipRole.Main
                 ? CombatCommandTestData.With(c, position: new CellCoord(7, 4)) : c).Append(enemy).ToArray();
             var s = source.State;
-            var state = new CombatCommandState(8,8,s.Phase,false,s.Structures,s.ThornFields,                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, new CellCoord(2, 7), Rotation4.R0) }),                s.Environment,s.EnvironmentProgress,s.WallBlocking);
+            var state = new CombatCommandState(8,8,s.Phase,s.Structures,s.ThornFields,                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, new CellCoord(2, 7), Rotation4.R0) }),                s.Environment,s.EnvironmentProgress,s.WallBlocking);
             var battle = new CombatBattleFacts(8, 42, 7, 1, Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(1, CombatCommandKind.EnterCombat, source.ActorId, default, state, characters,
                 source.Profiles, source.Main, source.Owned, source.SoulCounts, source.Souls, source.Artifacts,
@@ -143,7 +143,7 @@ namespace ProjectL.Tests.Core
         {
             var input = WithWalls(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right), Wall(71, new CellCoord(2, 0)));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray()),wallBlocking: s.WallBlocking));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray()),wallBlocking: s.WallBlocking));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new PushRule(cause) });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(CellCoord.Right));
@@ -171,7 +171,7 @@ namespace ProjectL.Tests.Core
         {
             var s = input.State;
             var environment = new MovementEnvironmentFacts(walls);
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,environment,EnvironmentProgressFacts.Initial(environment),                wallBlocking: new WallBlockingSpec(257),objective: s.Objective,allocation: s.Allocation);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,environment,EnvironmentProgressFacts.Initial(environment),                wallBlocking: new WallBlockingSpec(257),objective: s.Objective,allocation: s.Allocation);
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell,
                 input.Rotation, input.Battle, input.ProcessingKind, input.Path, input.MovementContext, input.BattleInstanceId,

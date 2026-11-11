@@ -69,7 +69,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>Spawn after projected deaths.</summary>
         public SoulFieldChange PlanDeaths(SoulFieldSnapshot field,
-            IReadOnlyList<SoulDeathFacts> deaths, bool isNight)
+            IReadOnlyList<SoulDeathFacts> deaths, bool inCombat)
         {
             return new SoulFieldChange(field, field);
         }

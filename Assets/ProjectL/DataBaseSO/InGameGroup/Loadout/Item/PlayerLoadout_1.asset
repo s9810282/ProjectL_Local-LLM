@@ -23,4 +23,4 @@ MonoBehaviour:
     count: 1
   initialDeckGrantIndices: 00000000010000000200000003000000
   startingHandSize: 4
-  startingRunCurrency: 5000
+  startingRunCurrency: 200

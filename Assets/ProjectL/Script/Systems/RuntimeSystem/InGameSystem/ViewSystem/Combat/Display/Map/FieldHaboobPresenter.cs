@@ -101,7 +101,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             for (int i = 0; i < from.Count; i++)
             {
                 if (_clouds.Remove(from[i], out CombatEffectHandle cloud) && cloud.IsLive)
-                    _moves.Add(new CloudMove(cloud, to[i], CloudPose(from[i], mapper).position, CloudPose(to[i], mapper).position));
+                    // 효과 자식은 큐 보정만큼 받침 위에 있습니다. 이동하는 받침에는 표면 자리만 넘깁니다(EF1).
+                    _moves.Add(new CloudMove(cloud, to[i], mapper.CellSurfaceToWorld(from[i]), mapper.CellSurfaceToWorld(to[i])));
                 else
                     _gone.Add(to[i]);
             }

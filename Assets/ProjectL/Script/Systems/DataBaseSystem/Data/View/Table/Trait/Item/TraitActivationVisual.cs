@@ -12,7 +12,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 큐(<see cref = "Cues"/>)는 발동의 이펙트·흔들림입니다. 시점은 선택한 Cue Timing 기준의 Start만, 이펙트 자리는 발동 유닛 몸·대상 몸·칸입니다(큐 칸 <see cref = "CombatCueEvent.TraitActivation"/>).
+    /// 큐(<see cref = "Cues"/>)는 발동의 이펙트·흔들림입니다. 시점은 선택한 Cue Timing 기준의 Start만, 이펙트 자리는 발동 유닛 몸·대상 몸·영향 칸·선택 칸입니다(큐 칸 <see cref = "CombatCueEvent.TraitActivation"/>).
     /// 큐만 있는 줄은 사건을 막지 않고 냅니다(Q-TA4 A). 소리는 특성 소리 갈래를 소리 표에 둘 때 정합니다(계획 P5).
     /// </para>
     /// <para>
@@ -44,7 +44,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         internal CombatActivationCueTiming CueTiming => cueTiming;
         internal CombatBodyTextData BodyText => bodyText?.ToData();
 
-        [Tooltip("선택한 Cue Timing의 이펙트·흔들림입니다. Anchor는 Start만 됩니다. 이펙트 자리는 ActorBody(발동 유닛)·SubjectBody(대상마다)·EventCell(칸마다)입니다(StateApplied는 몸만). " + "지연을 주어도 다음 사건은 기다리지 않습니다.")]
+        [Tooltip("선택한 Cue Timing의 이펙트·흔들림입니다. Anchor는 Start만 됩니다. 이펙트 자리는 ActorBody(발동 유닛)·SubjectBody(대상마다)·EventCell(영향 칸마다)·SelectedCell(선택 칸 하나, 자폭은 사망 칸)입니다(StateApplied는 몸만). " + "지연을 주어도 다음 사건은 기다리지 않습니다.")]
         [SerializeField]
         private CombatVisualCueInput cues = new();
         [Tooltip("이 발동이 추가 공격(난사·2연발·연쇄 폭발·행운의 탄환 등)을 낼 때의 공격 동작·투사체입니다. 비우면 그 유닛의 일반 공격 표시를 씁니다. " + "추가 공격을 내지 않는 발동 줄에서는 쓰이지 않습니다. 이펙트 큐가 이펙트 지점·발사 지점 자리를 쓰면 DB 생성이 멈춥니다(어느 유닛이 쓸지 모름). " + "공격 클립이 있는 유닛은 그 계열(근접/원거리)과 같을 때만 쓰고, 다르면 경고 뒤 그 유닛의 공격 표시를 씁니다.")]
@@ -55,9 +55,21 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         private List<CombatUnitActionInput> unitActions = new();
         [SerializeField]
         private CombatPositionSwapVisualInput positionSwap = new();
+        [SerializeField]
+        private CombatDeathBlinkVisualInput deathBlink = new();
 
         /// <summary>위치 교환 전용 시간 연출입니다. 비어 있거나 꺼져 있으면 기존 유닛 행동을 사용합니다.</summary>
         internal CombatPositionSwapVisualData PositionSwap => positionSwap?.ToData();
+
+        /// <summary>
+        /// 터지기 전 깜빡임입니다(자폭 깜빡임 설계 SD2). 비어 있거나 꺼져 있으면 null이고, 터질 유닛도 지금 사망 반응을 씁니다. 읽을 때마다 새 값입니다.
+        /// </summary>
+        /// <exception cref = "ArgumentException">켜져 있는데 값·회차 곡선이 맞지 않을 때입니다.</exception>
+        internal CombatDeathBlinkVisualData DeathBlink => deathBlink?.ToData();
+
+        /// <summary>깜빡임 칸을 켤 수 있는 줄인지입니다(자폭 깜빡임 설계 SD2). 규칙의 원본은 이곳 하나입니다.</summary>
+        internal static bool AllowsDeathBlink(TraitKey owner, TraitActivationKind kind) =>
+            owner == TraitKey.SelfDestruct && kind == TraitActivationKind.SelfDestructExploded;
 
         /// <summary>발동 종류입니다.</summary>
         public TraitActivationKind Kind => kind;
@@ -141,6 +153,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
                 throw new InvalidOperationException($"{context}: 유닛 행동 값이 맞지 않습니다. {error.Message}", error);
             }
             CombatPositionSwapVisualData swap = ValidatePositionSwap(owner, context, actions);
+            ValidateDeathBlink(owner, context);
             // 행동 끝 큐의 끝은 그 줄의 유닛 행동 또는 위치 교환 전용 대기가 소유합니다(이펙트 끝 규칙 계획 TP-E2, PS1).
             // 대신 맞기(DamageRedirected)는 공격 조립 안에서 행동하고 행동 끝을 세는 곳이 없어 결과 끝까지 남으므로 막습니다(묶음 끝 검토 M1).
             if (Cues.EndsWithAction)
@@ -156,11 +169,27 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
             // 공격 표시 값은 만들 때 스스로 검사합니다.
             CombatAttackPresentationData presentation = attackPresentation.CreateData();
             if (CombatPresentationCueRules.UsesAdditionalEvents(presentation.Cues))
-                throw new InvalidOperationException($"{context}: 공격 표시 덮어쓰기는 Cue2·Cue3를 쓸 수 없습니다. 어느 유닛의 공격 클립을 쓸지 모르기 때문입니다.");
+                throw new InvalidOperationException($"{context}: 공격 표시 덮어쓰기는 선택 이벤트 시점(Cue2 이상)을 쓸 수 없습니다. 어느 유닛의 공격 클립을 쓸지 모르기 때문입니다.");
             // 행위자 지점 자리는 유닛마다 다른 조건(공격 클립·프리팹 지점)인데, 이 줄은 그 특성을 가진 어느 유닛이 쓸지 모릅니다. 그래서 여기서 막습니다
             // (묶음 끝 검토 M2). 유닛 자신의 공격 표시는 외형 표 검사가 그 유닛 기준으로 봅니다.
             if (CombatPresentationCueRules.UsesActorPoint(presentation.Cues))
                 throw new InvalidOperationException($"{context}: 공격 표시 덮어쓰기의 이펙트 큐는 행위자 지점 자리(ActorEffectPoint·ActorMuzzle)를 쓸 수 없습니다. 어느 유닛이 쓸지 모르기 때문입니다. " + "ActorBody 등 다른 자리를 고르거나 덮어쓰기를 비우세요(비우면 그 유닛의 공격 표시를 씁니다).");
+        }
+
+        // 깜빡임 값은 만들 때 스스로 검사합니다. 어느 특성 줄인지 알 수 있게 감싸고, 허용 줄(AllowsDeathBlink)이 아니면 막습니다.
+        private void ValidateDeathBlink(TraitKey owner, string context)
+        {
+            CombatDeathBlinkVisualData blink;
+            try
+            {
+                blink = DeathBlink;
+            }
+            catch (ArgumentException error)
+            {
+                throw new InvalidOperationException($"{context}: 깜빡임 값이 맞지 않습니다. {error.Message}", error);
+            }
+            if (blink != null && !AllowsDeathBlink(owner, kind))
+                throw new InvalidOperationException($"{context}: 깜빡임(Death Blink)은 자폭(SelfDestruct)의 SelfDestructExploded 줄에서만 켤 수 있습니다.");
         }
 
         private CombatPositionSwapVisualData ValidatePositionSwap(TraitKey owner, string context, IReadOnlyList<CombatUnitActionData> actions)

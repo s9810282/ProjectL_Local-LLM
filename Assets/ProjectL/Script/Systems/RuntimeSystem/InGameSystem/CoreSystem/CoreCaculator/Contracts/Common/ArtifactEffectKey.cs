@@ -49,10 +49,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         // 추가 조건 없음.
         None,
-        // 현재 낮 페이즈인 경우.
+        // 전투 진입 전(배치 국면)인 경우. 낮밤 순환이 없어진 뒤로 이 조건을 쓰는 유물은 없다.
         IsDay,
-        // 현재 밤 페이즈인 경우.
-        IsNight,
+        // 전투 진입 뒤인 경우. 옛 이름 IsNight(값 2 그대로 — DB 에셋은 숫자로 저장).
+        InCombat,
         // 필드에 배치된 아군 수와 적군 수를 comparison으로 비교합니다.
         CompareUnitCounts
     }

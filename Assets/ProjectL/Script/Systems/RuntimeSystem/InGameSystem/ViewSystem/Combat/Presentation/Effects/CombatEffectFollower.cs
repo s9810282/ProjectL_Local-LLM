@@ -7,12 +7,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 {
     /// <summary>
     /// 이펙트 하나의 받침입니다(이펙트 따라가기·회수 설계 FE2·FE6, 이펙트 끝 규칙 설계 EL5). 이펙트 창구(<see cref="CombatEffectWindow"/>)가 필드 루트 아래에 두고 빌려 주며,
-    /// 창구가 내는 모든 이펙트가 이 받침의 자식으로 놓입니다(그 자리 이펙트도, 계획 TP-E30). 하는 일은 넷입니다: 유닛 몸 위치 따라가기(위치만, 결정 Q-FE2),
-    /// 시간 끝(낸 뒤 정한 초에 거둠), 손잡이(<see cref="CombatEffectHandle"/>)로 거두기. 오래 보이는 이펙트의 "언제 거두나"는 유지 표시 부품(<see cref="CombatPersistentEffects"/>)이 정합니다.
+    /// 창구가 내는 모든 이펙트가 이 받침의 자식으로 놓입니다(그 자리 이펙트도, 계획 TP-E30). 하는 일은 넷입니다: 유닛의 표면 위치 따라가기(위치만, 표면 기준 EF1),
+    /// 따라가던 표시가 숨으면 그리기 끄기·사라지면 바로 멈추기(FE11·Q-FE3), 시간 끝(낸 뒤 정한 초에 거둠), 손잡이(<see cref="CombatEffectHandle"/>)로 거두기. 오래 보이는 이펙트의 "언제 거두나"는 유지 표시 부품(<see cref="CombatPersistentEffects"/>)이 정합니다.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 매 프레임 끝(<see cref="LateUpdate"/>, 결과 재생이 유닛을 옮긴 뒤)에 몸 위치를 읽어 옮기고, 시간 끝을 셉니다. 결과 재생이 끝난 뒤에도 남은
+    /// 매 프레임 끝(<see cref="LateUpdate"/>, 결과 재생이 유닛을 옮긴 뒤)에 추적 위치를 읽어 옮기고, 시간 끝을 셉니다. 결과 재생이 끝난 뒤에도 남은
     /// 이펙트를 다뤄야 해서 재생 Tick이 아니라 Unity 프레임 콜백을 씁니다(몸 글자 창구와 같은 까닭).
     /// </para>
     /// <para>
@@ -31,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         // 숨긴 동안 끈 그리기입니다(FE11). 다시 보이거나 이펙트가 풀로 돌아갈 때 켜 둡니다(숨긴 채 돌아가면 다음에 쓸 때 보이지 않음).
         private readonly List<Renderer> _hiddenRenderers = new(2);
         private bool _hidden;
-        private Func<(bool Bound, Vector3? Body)> _body;
+        private Func<(bool Bound, Vector3? Position)> _trackPosition;
         private bool _released;
         // 빌릴 때마다 오르는 사용 번호입니다. 손잡이가 같은 이펙트인지 판단합니다(받침은 다시 쓰임).
         private int _use;
@@ -65,7 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>
         /// 그 사용 번호의 이펙트가 살아 있으면 받침을 월드 위치로 옮깁니다(하붑 View 계획 HP-23). 지역(Local) 파티클은 입자도 함께 움직이고, 월드(World) 파티클은 입자가 뒤에 남습니다.
-        /// 유닛을 따라가는 받침은 다음 <see cref="LateUpdate"/>가 몸 위치로 덮으므로, 따라가지 않는 이펙트에만 부릅니다.
+        /// 유닛을 따라가는 받침은 다음 <see cref="LateUpdate"/>가 표면 위치로 덮으므로, 따라가지 않는 이펙트에만 부릅니다.
         /// </summary>
         internal void MoveTo(int use, Vector3 position)
         {
@@ -74,21 +74,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>
-        /// 받침을 켭니다. <paramref name="body"/>가 있으면 그 몸 위치를 따라가고, 없으면 <paramref name="position"/>에 머뭅니다. 회전은 부모 기준 그대로입니다.
+        /// 받침을 켭니다. <paramref name="trackPosition"/>이 있으면 그 표면 위치를 따라가고, 없으면 <paramref name="position"/>에 머뭅니다. 회전은 부모 기준 그대로입니다.
         /// </summary>
         /// <param name="body">
-        /// 따라갈 몸 읽기입니다(<c>FieldUnitPresenter.TrackBodyPresence</c>). <c>Bound</c>가 거짓이면 유닛 표시가 사라진 것이고, <c>Body</c>가 null이면 숨었을 뿐입니다.
+        /// 따라갈 위치 읽기입니다(<c>FieldUnitPresenter.TrackSurfacePresence</c>). <c>Bound</c>가 거짓이면 유닛 표시가 사라진 것이고, <c>Position</c>이 null이면 숨었을 뿐입니다.
         /// 따라가지 않으면 null입니다.
         /// </param>
-        /// <param name="position">받침을 둘 월드 위치입니다(따라가면 지금 몸 위치, 숨어 있으면 낸 자리).</param>
+        /// <param name="position">받침을 둘 월드 위치입니다(따라가면 지금 표면 위치, 숨어 있으면 낸 자리).</param>
         /// <param name="seconds">0보다 크면 낸 뒤 이 초에 거둡니다(시간 끝). 0이면 시간 끝이 아닙니다.</param>
-        internal void Begin(Func<(bool Bound, Vector3? Body)> body, Vector3 position, float seconds)
+        internal void Begin(Func<(bool Bound, Vector3? Position)> trackPosition, Vector3 position, float seconds)
         {
             ShowRenderers();
             _use++;
             _seconds = seconds > 0f ? seconds : 0f;
             _ringBuffer = false;
-            _body = body;
+            _trackPosition = trackPosition;
             _released = false;
             transform.localRotation = Quaternion.identity;
             transform.position = position;
@@ -104,25 +104,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             {
                 // 이펙트가 숨은 채 풀로 돌아갔으면 그리기를 되돌립니다(숨긴 그리기는 끝난 이펙트에도 남아 있음).
                 ShowRenderers();
-                _body = null;
+                _trackPosition = null;
                 _seconds = 0f;
                 gameObject.SetActive(false);
                 return;
             }
-            if (_body != null)
+            if (_trackPosition != null)
             {
-                (bool bound, Vector3? body) = _body();
+                (bool bound, Vector3? trackedPosition) = _trackPosition();
                 if (!bound)
                 {
                     // 표시가 사라졌습니다(사망 뒤 제거·풀 반환). 바로 멈춥니다(결정 Q-FE3).
-                    _body = null;
+                    _trackPosition = null;
                     ShowRenderers();
                     StopNow();
                     return;
                 }
-                if (body.HasValue)
+                if (trackedPosition.HasValue)
                 {
-                    transform.position = body.Value;
+                    transform.position = trackedPosition.Value;
                     ShowRenderers();
                 }
                 else
@@ -143,7 +143,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             }
         }
 
-        // 자연스러운 회수입니다. 방출만 멈추고 남은 입자는 수명대로 사라집니다. 몸 위치 따라가기는 다 사라질 때까지 이어집니다.
+        // 자연스러운 회수입니다. 방출만 멈추고 남은 입자는 수명대로 사라집니다. 표면 위치 따라가기는 다 사라질 때까지 이어집니다.
         // 링 버퍼(Ring Buffer) 입자는 수명이 끝나도 죽지 않아(대체될 때까지 멈춰 남음) 방출만 멈추면 영원히 남으므로 바로 지웁니다(FE12).
         // 링 버퍼인지는 창구가 종류마다 한 번 판단해 넘긴 값입니다(Adopt, 계획 TP-E25).
         private void Recall()

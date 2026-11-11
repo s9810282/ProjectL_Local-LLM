@@ -85,9 +85,12 @@ namespace ProjectL.Tool.Editor
             duringSceneGui += DrawWorkspaceGui;
             Selection.selectionChanged += UpdateSelection;
             Undo.postprocessModifications += TrackModifications;
-            Undo.undoRedoPerformed += OnWorkspaceUndo;
+            Undo.undoRedoEvent += OnWorkspaceUndo;
             EditorApplication.projectChanged += RefreshCatalog;
+            EditorApplication.projectChanged += OnCombatPreviewProjectChanged;
             EditorApplication.update += UpdateVirtualCameraPreview;
+            EditorApplication.update += UpdateCombatPreview;
+            EditorApplication.playModeStateChanged += OnCombatPreviewPlayModeChanged;
             rootVisualElement.RegisterCallback<GeometryChangedEvent>(OnRootGeometryChanged);
             InitializeCatalog();
         }
@@ -101,18 +104,23 @@ namespace ProjectL.Tool.Editor
             _pendingEditorAction = null;
             ClearVolumeProfileEditor();
             ReleaseVirtualCameraPreview();
+            ReleaseCombatPreview();
             duringSceneGui -= DrawWorkspaceGui;
             Selection.selectionChanged -= UpdateSelection;
             Undo.postprocessModifications -= TrackModifications;
-            Undo.undoRedoPerformed -= OnWorkspaceUndo;
+            Undo.undoRedoEvent -= OnWorkspaceUndo;
             EditorApplication.projectChanged -= RefreshCatalog;
+            EditorApplication.projectChanged -= OnCombatPreviewProjectChanged;
             EditorApplication.update -= UpdateVirtualCameraPreview;
+            EditorApplication.update -= UpdateCombatPreview;
+            EditorApplication.playModeStateChanged -= OnCombatPreviewPlayModeChanged;
             rootVisualElement.UnregisterCallback<GeometryChangedEvent>(OnRootGeometryChanged);
             _catalogPanel?.RemoveFromHierarchy();
             _catalogPanel = null;
             _sidebar?.RemoveFromHierarchy();
             _sidebar = null;
             RemoveVirtualCameraPreviewPanel();
+            RemoveCombatPreviewPanel();
             RemovePanelResizers();
             _placementToolbar?.RemoveFromHierarchy();
             _placementToolbar = null;
@@ -137,6 +145,7 @@ namespace ProjectL.Tool.Editor
             BuildPanelResizers();
             BuildPlacementToolbar();
             BuildVirtualCameraPreviewPanel();
+            BuildCombatPreviewPanel();
             ApplyPanelLayout();
             Repaint();
         }
@@ -239,6 +248,7 @@ namespace ProjectL.Tool.Editor
         public new void OnDestroy()
         {
             if (FbxPlacementBaker.Current != null && FbxPlacementBaker.Current.Root == workspaceRoot) FbxPlacementBaker.Current.Cancel();
+            ReleaseCombatPreview();
             base.OnDestroy();
             ReleaseWorkspaceProfiles();
             FbxPlacementWorkspace.Close(workspaceRoot);
@@ -280,6 +290,11 @@ namespace ProjectL.Tool.Editor
             foreach (UndoPropertyModification change in changes)
             {
                 UnityEngine.Object target = change.currentValue.target;
+                if (target == combatPreviewViewStage)
+                {
+                    RefreshCombatStageContext();
+                    break;
+                }
                 if ((target is UnityEngine.Rendering.Volume volume && Owns(volume.transform)) || IsWorkspaceProfileObject(target))
                 {
                     MoodChanged();
@@ -287,20 +302,26 @@ namespace ProjectL.Tool.Editor
                 }
                 Transform transform = target is Component component ? component.transform :
                     target is GameObject go ? go.transform : null;
-                if (Owns(transform)) { Changed(); break; }
+                if (Owns(transform)) { Changed(target is not Transform); break; }
             }
             return changes;
         }
 
-        private void OnWorkspaceUndo()
+        private void OnWorkspaceUndo(in UndoRedoInfo info)
         {
+            if (info.undoName == "전투 배경 보정")
+            {
+                RefreshCombatStageContext();
+                return;
+            }
             if (workspaceRoot != null) Changed();
         }
 
-        private void Changed()
+        private void Changed(bool previewRebuild = true)
         {
             ShowEditingView();
             hasUnsavedChanges = true;
+            if (previewRebuild) _combatPreviewNeedsRebuild = true;
             Repaint();
         }
 
@@ -357,6 +378,7 @@ namespace ProjectL.Tool.Editor
                 if (GUILayout.Button("맵 프리팹을 가상 씬으로 열기")) DeferEditorAction(OpenMap);
             }
             if (!string.IsNullOrEmpty(savePath)) EditorGUILayout.LabelField(savePath, EditorStyles.wordWrappedMiniLabel);
+            DrawCombatPreviewContext();
         }
 
         private void DrawAddAsset()
@@ -451,7 +473,7 @@ namespace ProjectL.Tool.Editor
                     selected.localPosition = localPosition;
                     selected.localEulerAngles = localRotation;
                     selected.localScale = localScale;
-                    Changed();
+                    Changed(false);
                 }
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -614,6 +636,7 @@ namespace ProjectL.Tool.Editor
             ShowEditingView();
             GameObject old = workspaceRoot;
             ReleaseVirtualCameraPreview();
+            ReleaseCombatPreview();
             ReleaseWorkspaceProfiles();
             workspaceRoot = root;
             BindWorkspace();

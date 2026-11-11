@@ -91,19 +91,6 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         [Test]
-        public void SameBattleReturnToDeploymentKeepsPreparedStateAndPlacementInactive()
-        {
-            var db = new CoreIntegrationTestData(ConfiguredMovementBattle.Config);
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new Source(enemy: false), database: db);
-            for (int i = 0; i < 8; i++) { RockfallPublicationTests.EndPlayer(battle); battle.AdvanceToPlayerOrDay(); }
-            var before = battle.Buffers.CombatStateReadSink.Current.CommandState;
-            Assert.That(before.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            battle.Submit(CombatViewCommandData.PlaceUnit(battle.Actor.EntityId, new CellCoord(0, 1), Rotation4.R0));
-            var after = battle.Buffers.CombatStateReadSink.Current.CommandState;
-            Assert.That(after.Gimmicks.SameValues(before.Gimmicks), Is.True);
-            Assert.That(after.EnvironmentProgress.SameValues(before.EnvironmentProgress), Is.True);
-        }
-        [Test]
         public void ProductionPreparationAndBothSideEndsRunWarningTravelCycles()
         {
             using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new Source());

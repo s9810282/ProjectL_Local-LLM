@@ -7,15 +7,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         public int RadiusCells { get; }
         public int MaxTriggersPerEnemyTurn { get; }
+        public bool PreventsLethalSacrificeDamage { get; }
+        public int ShieldOnActivation { get; }
 
-        public SacrificeTraitSpec(int radiusCells, int maxTriggersPerEnemyTurn) : base(TraitKey.Sacrifice)
+        public SacrificeTraitSpec(int radiusCells, int maxTriggersPerEnemyTurn)
+            : this(radiusCells, maxTriggersPerEnemyTurn, false, 0)
+        {
+        }
+
+        public SacrificeTraitSpec(int radiusCells, int maxTriggersPerEnemyTurn,
+            bool preventsLethalSacrificeDamage = false, int shieldOnActivation = 0) : base(TraitKey.Sacrifice)
         {
             if (radiusCells < 1)
                 throw new ArgumentOutOfRangeException(nameof(radiusCells));
             if (maxTriggersPerEnemyTurn < 1)
                 throw new ArgumentOutOfRangeException(nameof(maxTriggersPerEnemyTurn));
+            if (shieldOnActivation < 0)
+                throw new ArgumentOutOfRangeException(nameof(shieldOnActivation));
             RadiusCells = radiusCells;
             MaxTriggersPerEnemyTurn = maxTriggersPerEnemyTurn;
+            PreventsLethalSacrificeDamage = preventsLethalSacrificeDamage;
+            ShieldOnActivation = shieldOnActivation;
         }
 
         /// <inheritdoc />
@@ -23,7 +35,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             var otherSpec = (SacrificeTraitSpec)other;
             return RadiusCells == otherSpec.RadiusCells &&
-                MaxTriggersPerEnemyTurn == otherSpec.MaxTriggersPerEnemyTurn;
+                MaxTriggersPerEnemyTurn == otherSpec.MaxTriggersPerEnemyTurn &&
+                PreventsLethalSacrificeDamage == otherSpec.PreventsLethalSacrificeDamage &&
+                ShieldOnActivation == otherSpec.ShieldOnActivation;
         }
     }
 }

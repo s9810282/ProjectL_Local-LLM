@@ -15,6 +15,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRegister;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.TutorialInput;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial;
@@ -28,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
     /// <remarks>
     /// <para>
     /// 맡는 것: 정의를 상태 Store에 한 번 설치, Tick 트리거(조건 없이 Next 등록), Combat 화면 연결·해제와 1-1 판정·Start 제출,
-    /// 설명 자동 진행 시간의 원본, 표시·정리가 끝났다는 사실 기록, 화면 해제·런타임 정지의 Job 없는 마감, 오류 때 자원 반환.
+    /// 표시·정리가 끝났다는 사실 기록, 화면 해제·런타임 정지의 Job 없는 마감, 오류 때 자원 반환.
     /// </para>
     /// <para>
     /// 맡기는 것: 다음 할 일 판단과 설명 구간 시작 조건(TutorialPlan), 상태 전이 규칙(상태 Store), 세션 Snapshot 만들기(<see cref="TutorialSessionChanges"/>),
@@ -51,9 +52,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         private const string CleanupFailure = "[TutorialViewSystem] 튜토리얼 입력·표시 정리나 세션 마감에 실패했습니다.";
 
         private readonly RuntimeFaultBoundary _faults;
-        private readonly TutorialViewTimer _timer;
+        private readonly Func<CombatInputWindow> _readInputWindow;
         private readonly TutorialViewPresentationRecord _presentation = new();
-        private readonly Func<bool> _readFocus;
         private readonly Action<string> _log;
         private readonly ITutorialInputReceiverSlot _inputSlot;
 
@@ -86,16 +86,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         // 개발 로그에 마지막으로 남긴 세션 상태.
         private TutorialSessionSnapshot _loggedSession;
 
-        /// <param name="clock">시간 배율이 없는 실제 시간(초)입니다. 운영에서는 <c>Time.realtimeSinceStartupAsDouble</c>입니다.</param>
-        /// <param name="readFocus">지금 게임 창이 활성인지입니다. 운영에서는 <c>Application.isFocused</c>입니다.</param>
         /// <param name="log">세션 진행을 남기는 개발 로그입니다. 없으면 남기지 않습니다.</param>
         /// <param name="inputSlot">튜토리얼 "다음" 입력의 수신 자리입니다. 초기화 때 입력 어댑터를 연결합니다. 입력을 조립하지 않는 시험에서는 생략합니다.</param>
-        internal TutorialViewSystem(RuntimeFaultBoundary faults, Func<double> clock, Func<bool> readFocus,
-            Action<string> log = null, ITutorialInputReceiverSlot inputSlot = null)
+        internal TutorialViewSystem(RuntimeFaultBoundary faults, Func<CombatInputWindow> readInputWindow, Action<string> log = null,
+            ITutorialInputReceiverSlot inputSlot = null)
         {
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
-            _timer = new TutorialViewTimer(clock ?? throw new ArgumentNullException(nameof(clock)));
-            _readFocus = readFocus ?? throw new ArgumentNullException(nameof(readFocus));
+            _readInputWindow = readInputWindow ?? throw new ArgumentNullException(nameof(readInputWindow));
             _log = log;
             _inputSlot = inputSlot;
         }
@@ -141,7 +138,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
                 new TutorialViewInputLease(global.InputServiceCommand.InputLayerServices,
                     global.InputServiceCommand.InputLayerOverrides, new TutorialViewEventSystemSelection()),
                 new TutorialViewUIDisplay(buffers.CharacterReadSink, buffers.CombatStateReadSink,
-                    global.UIServiceCommand, NotifyFocusChanged));
+                    buffers.TutorialStateReadSink, _readInputWindow));
         }
 
         /// <summary>필요한 Buffer·Global 서비스와 표시·입력 부품을 보관합니다(시험 입구이기도 합니다).</summary>
@@ -205,7 +202,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         }
 
         /// <summary>
-        /// 설명 시간을 깎고, 오류·로딩 중이 아니고 Runner가 비었으면 조건 없이 <c>Register(Tutorial, Next)</c>를 부릅니다(설계 §9.3).
+        /// 오류·로딩 중이 아니고 Runner가 비었으면 조건 없이 <c>Register(Tutorial, Next)</c>를 부릅니다(설계 §9.3).
         /// 할 일 판단은 TutorialPlan만 합니다. 할 일이 없으면 Runner가 빈 채로 남아 같은 프레임의 전투가 자기 Next를 겁니다.
         /// </summary>
         public void Tick(float deltaTime)
@@ -214,7 +211,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             if (!_isInitialized || _isShutdown || _faults.IsFaulted)
                 return;
 
-            _timer.Advance();
             LogSessionChange();
             if (_loading.IsLoading)
                 return;
@@ -278,12 +274,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             if (_lastContextId == int.MaxValue)
                 throw new InvalidOperationException("[TutorialViewSystem] 화면 연결 번호를 더 발급할 수 없습니다.");
 
-            // 씬의 튜토리얼 화면을 잡고 창 활성 알림을 구독한다(설계 §10). 없으면 설정 오류라 연결하지 않는다.
+            // 씬의 튜토리얼 화면을 잡는다(설계 §10). 없으면 설정 오류라 연결하지 않는다.
             _display.Attach();
             _contextId = ++_lastContextId;
             _store.SetContext(_contextId, TutorialUnavailableReason.None);
 
-            TutorialViewTargetMiss miss = TutorialViewTarget.Find(_combat, _current, _stages, _definitions, out int tutorialKey);
+            TutorialViewTargetMiss miss = TutorialViewTarget.Find(_combat, _current, _stages, _definitions, _state,
+                out int tutorialKey);
             if (miss != TutorialViewTargetMiss.None)
             {
                 _log?.Invoke($"[Tutorial] 화면 연결 {_contextId}: 실행 대상이 아닙니다({miss}).");
@@ -328,15 +325,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         }
 
         /// <summary>
-        /// 게임 창 활성 변경 알림을 받습니다(설계 §15.4.1). 사실만 기록하고 단계를 바꾸지 않습니다.
-        /// 튜토리얼 화면의 알림 컴포넌트(<see cref="TutorialViewFocusNotifier"/>)를 화면 연결 동안 구독합니다.
-        /// </summary>
-        internal void NotifyFocusChanged(bool isFocused)
-        {
-            _timer.SetFocused(isFocused);
-        }
-
-        /// <summary>
         /// 오류 정리 콜백입니다(설계 §10). 빌린 입력과 표시를 돌려줍니다. 세션 상태는 바꾸지 않고 Shutdown이 마감합니다.
         /// 실패는 모아 던지고, 오류 경계의 정리가 함께 보고합니다.
         /// </summary>
@@ -350,8 +338,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         #region 실행 창구
 
         public bool IsInputMonopolized => _input.IsMonopolized;
-
-        public bool IsTimerExpired(int sessionId, int stepRevision) => _timer.IsExpired(sessionId, stepRevision);
 
         public bool TryGetCompletedPresentation(int sessionId, int stepRevision, out TutorialViewPresentationKind kind) =>
             _presentation.TryGetCompleted(sessionId, stepRevision, out kind);
@@ -401,16 +387,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             TutorialViewPresentationKind kind)
         {
             var request = new TutorialViewDisplayRequest(_definitions.Get(tutorialKey), stepKey, kind);
-            // 새 표시는 앞 표시의 완료 사실과 자동 진행 시간을 대신한다.
-            _timer.Stop();
+            // 새 표시는 앞 표시의 완료 사실을 대신한다.
             int generation = _presentation.Begin(sessionId, stepRevision, kind);
             _display.Present(request, () => _presentation.Complete(generation));
-        }
-
-        public void StartTimer(int sessionId, int stepRevision, int tutorialKey)
-        {
-            // 비활성 오브젝트는 창 활성 알림을 받지 못하므로 시간을 시작할 때마다 지금 값을 다시 읽는다(설계 §15.4.1 1번).
-            _timer.Start(sessionId, stepRevision, _definitions.Get(tutorialKey).AutoAdvanceSeconds, _readFocus());
         }
 
         public void ShowBlockedInputNotice(int sessionId, int stepRevision, int tutorialKey, int stepKey)
@@ -435,10 +414,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 
         #region 내부
 
-        /// <summary>빌린 입력·표시·시간·표시 기록을 모두 놓습니다. 하나가 실패해도 나머지를 시도하고 실패 목록을 돌려줍니다.</summary>
+        /// <summary>빌린 입력·표시·표시 기록을 모두 놓습니다. 하나가 실패해도 나머지를 시도하고 실패 목록을 돌려줍니다.</summary>
         private List<Exception> ReleaseResources()
         {
-            _timer.Stop();
             _presentation.Forget();
             if (_input == null)
                 return null;

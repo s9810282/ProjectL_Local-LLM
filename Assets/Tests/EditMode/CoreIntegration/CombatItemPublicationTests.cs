@@ -70,7 +70,7 @@ namespace ProjectL.Tests.CoreIntegration
             {
                 var items = changed == "Slot" ? new CharacterItemState(2, enemy.Items.Effects)
                     : new CharacterItemState(enemy.Items.EquippedItemKey,
-                        new[] { new ItemTemporaryEffect(2, ItemStatKind.PhysicalDefense, 3, input.State.Turn.PreparationIndex) });
+                        new[] { new ItemTemporaryEffect(2, ItemStatKind.PhysicalDefense, 3) });
                 b.BattleWriteSink.Apply(new CharacterChanges(new[]
                 {
                     new CharacterStateChange(enemy, ItemCharacterChanges.WithItems(enemy, items))

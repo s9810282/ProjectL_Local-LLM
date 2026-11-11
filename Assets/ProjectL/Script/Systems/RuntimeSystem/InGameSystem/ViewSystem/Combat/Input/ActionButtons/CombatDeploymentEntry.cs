@@ -28,11 +28,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         private readonly CombatActionNotice _notices;
         private readonly Action _afterSubmit;
 
-        /// <param name="confirmation">배치 확인창 표시입니다. 텍스트 표시가 확인창을 제공하지 않으면(시험 조립) null이고, 확인이 필요한 요청에서 오류로 보고합니다.</param>
-        /// <param name="isInputReady">입력 판단에 쓸 수 있는지입니다(씬 연결 활성 ∧ 입력 슬롯 연결, 조정자의 판정식).</param>
+        /// <param name="confirmation">배치 확인창 표시입니다. 필수입니다(입력 재료 묶음 <c>CombatSceneInputSources</c>가 null을 거절하고, 조정자가 서비스 바인딩 때 확인창 계약을 검사).</param>
+        /// <param name="isInputReady">입력 판단에 쓸 수 있는지입니다(씬 연결 활성 ∧ 입력 슬롯 연결 ∧ 진입 연출 완료, 조정자의 판정식).</param>
         /// <param name="readInputFacts">진입 가능 판단에 쓸 사실 공급자입니다(인자 = 선행 미처리 명령까지 읽을지).</param>
         /// <param name="router">진입 제출·입력 정리를 넘길 Router입니다(좌표 없는 명령, 환경 호버는 건드리지 않음).</param>
-        /// <param name="afterSubmit">진입을 제출한 뒤 행동 버튼을 바로 맞추는 조정자의 입구입니다(계획 TP-21).</param>
+        /// <param name="afterSubmit">진입을 제출한 뒤 행동 버튼을 바로 맞추는 입력 분배의 입구(<c>CombatSceneInputDriver.SyncActionButtons</c>)입니다(계획 TP-21).</param>
         internal CombatDeploymentEntry(
             ICombatStateBufferReadSink state,
             ICharacterBufferReadSink characters,

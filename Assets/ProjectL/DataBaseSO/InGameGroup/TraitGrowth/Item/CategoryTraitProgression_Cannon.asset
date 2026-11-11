@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: CategoryTraitProgression_Cannon
   m_EditorClassIdentifier: 
   category: 40
+  commonWeight: 1
+  categoryWeight: 2
   steps:
   - stepId: 10
     unlockLevel: 2

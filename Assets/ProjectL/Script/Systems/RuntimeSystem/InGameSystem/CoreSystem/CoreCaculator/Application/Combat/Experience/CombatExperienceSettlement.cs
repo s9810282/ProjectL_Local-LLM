@@ -90,8 +90,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         gain.LevelsGained, growth));
                 }
                 rows.Add(new CharacterRewardReceipt(record.Id, record.CharacterKey, killXp, participantXp,
-                    record.Level, record.Experience, spec.IsEnabled ? ExperienceRules.Required(record.Role, record.Level, spec) : 0,
-                    final.Level, final.Experience, spec.IsEnabled ? ExperienceRules.Required(final.Role, final.Level, spec) : 0,
+                    record.Level, record.Experience, ExperienceRules.Progress(record, spec).Required,
+                    final.Level, final.Experience, ExperienceRules.Progress(final, spec).Required,
                     facts.StageRecord));
             }
 

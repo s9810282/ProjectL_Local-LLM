@@ -83,7 +83,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="attackFacing">접촉 자리가 수평 길이 없이 정해질 때의 회전(공격 방향)입니다.</param>
         internal virtual ICombatShot FireShot(ICombatAttackStyleContext context, CombatAttackShape shape, CombatAttackPresentationData settings,
             Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action hit, Action arrived, int version) =>
-            throw new InvalidOperationException($"[CombatAttackPlayback] 출처 발사는 직선·곡사만 쏩니다: {Kind}");
+            throw new InvalidOperationException($"[CombatAttackStyle] 출처 발사는 직선·곡사만 쏩니다: {Kind}");
 
         /// <summary>
         /// 빌린 공격 자세로 연출을 시작합니다. 시작이 실패하면 자세를 되돌리고, 되돌리기도 실패하면 둘을 함께 던집니다.

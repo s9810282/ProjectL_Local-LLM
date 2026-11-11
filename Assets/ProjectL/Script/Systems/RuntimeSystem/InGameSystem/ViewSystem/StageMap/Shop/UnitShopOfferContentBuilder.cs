@@ -31,7 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         public StageOfferCardContent Build(ShopPurchaseSnapshot offer, bool purchased, bool hasPurchase, StageOfferTextData text)
         {
             return new StageOfferCardContent(_findIcon(offer.CharacterKey),
-                _findName(offer.CharacterKey) ?? offer.CharacterKey.ToString(), text.FormatPrice(offer.Cost),
+                _findName(offer.CharacterKey), text.FormatPrice(offer.Cost),
                 text.FormatLine(StageOfferLineKind.UnitDetails, offer.InitialLevel, CountOwned(offer.CharacterKey)),
                 purchased ? text.CompletedButtonText : text.SelectButtonText, !hasPurchase, purchased);
         }

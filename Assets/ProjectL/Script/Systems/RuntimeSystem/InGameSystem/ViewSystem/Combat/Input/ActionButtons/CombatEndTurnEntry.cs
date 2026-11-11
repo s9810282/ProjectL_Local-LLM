@@ -25,11 +25,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         private readonly ICharacterBufferReadSink _characters;
         private readonly Action _afterSubmit;
 
-        /// <param name="confirmation">공용 확인창입니다. 텍스트 표시가 확인창을 제공하지 않으면(시험 조립) null이고, 확인이 필요한 요청에서 오류로 보고합니다.</param>
-        /// <param name="isInputReady">입력 판단에 쓸 수 있는지입니다(씬 연결 활성 ∧ 입력 슬롯 연결, 조정자의 판정식).</param>
+        /// <param name="confirmation">공용 확인창입니다. 필수입니다(입력 재료 묶음 <c>CombatSceneInputSources</c>가 null을 거절).</param>
+        /// <param name="isInputReady">입력 판단에 쓸 수 있는지입니다(씬 연결 활성 ∧ 입력 슬롯 연결 ∧ 진입 연출 완료, 조정자의 판정식).</param>
         /// <param name="readInputFacts">종료 가능 판단에 쓸 사실 공급자입니다(인자 = 선행 미처리 명령까지 읽을지).</param>
         /// <param name="router">턴 종료·입력 정리를 넘길 Router입니다.</param>
-        /// <param name="afterSubmit">확인창에서 턴 종료를 제출한 뒤 행동 버튼을 바로 맞추는 조정자의 입구입니다.</param>
+        /// <param name="afterSubmit">확인창에서 턴 종료를 제출한 뒤 행동 버튼을 바로 맞추는 입력 분배의 입구(<c>CombatSceneInputDriver.SyncActionButtons</c>)입니다.</param>
         internal CombatEndTurnEntry(
             ICharacterBufferReadSink characters,
             IUIConfirmationPresentation confirmation,

@@ -15,21 +15,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             if (sources == null) throw new ArgumentNullException(nameof(sources));
             if (into == null) throw new ArgumentNullException(nameof(into));
 
+            // 먼지 연막 판정과 보임은 CombatEnvironmentFacts 한 곳입니다(평가 C1-05, 작은 묶음 설계 P11). 조건은 모두 부작용 없는 읽기입니다.
             for (int i = 0; i < sources.Count; i++)
             {
-                if (sources[i] is not TraitTrailFact hovered || hovered.Cell != cell || !IsVisibleDust(hovered))
+                if (!CombatEnvironmentFacts.IsDustScreen(sources[i], out TraitTrailFact hovered) || hovered.Cell != cell
+                    || !CombatEnvironmentFacts.IsShown(hovered))
                     continue;
 
                 for (int j = 0; j < sources.Count; j++)
                 {
-                    if (sources[j] is TraitTrailFact trail && trail.Origin == hovered.Origin
-                        && IsVisibleDust(trail) && !into.Contains(trail.Cell))
+                    if (CombatEnvironmentFacts.IsDustScreen(sources[j], out TraitTrailFact trail) && trail.Origin == hovered.Origin
+                        && CombatEnvironmentFacts.IsShown(trail) && !into.Contains(trail.Cell))
                         into.Add(trail.Cell);
                 }
             }
         }
-
-        private static bool IsVisibleDust(TraitTrailFact trail) =>
-            trail.Key == TraitKey.DustScreen && CombatEnvironmentFacts.IsShown(trail);
     }
 }

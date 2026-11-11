@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPa
         [SerializeField, Min(0.01f)] private float closeDuration = 0.8f;
 
         private RectTransform _rect;
+        private IAudioSystemService _audio;
         private float _progress;
         private bool _requestedOpen;
         private bool _initialized;
@@ -48,6 +50,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPa
             EnsureInitialized();
         }
 
+        internal void BindAudio(IAudioSystemService audio)
+        {
+            _audio = audio ?? throw new ArgumentNullException(nameof(audio));
+        }
+
         /// <summary>현재 위치에서 엽니다. 화면 등록과 입력 Layer는 변경하지 않습니다.</summary>
         public void PlayOpen()
         {
@@ -56,6 +63,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPa
             if (GetComponentInParent<Canvas>(true) == null)
                 throw new InvalidOperationException("[ScrollPanelPresentation] 기존 화면 Canvas 아래에 배치해야 합니다.");
             ValidateContent();
+            if (!_requestedOpen) PlaySound(UiEvent.ScrollOpen);
             _requestedOpen = true;
             Apply();
         }
@@ -70,6 +78,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPa
                 return false;
             }
             EnsureCanAnimate();
+            if (_requestedOpen) PlaySound(UiEvent.ScrollClose);
             _requestedOpen = false;
             Apply();
             return true;
@@ -139,6 +148,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common.ScrollPa
         {
             if (!isActiveAndEnabled)
                 throw new InvalidOperationException("[ScrollPanelPresentation] 소유 화면을 UI 서비스로 연 뒤 연출을 요청해야 합니다.");
+        }
+
+        private void PlaySound(UiEvent cue)
+        {
+            if (_audio == null)
+                throw new InvalidOperationException($"[ScrollPanelPresentation] '{name}'에 {cue} 재생을 위한 오디오 서비스가 연결되지 않았습니다.");
+            _audio.Play(cue);
         }
 
         private void ValidateComposition()

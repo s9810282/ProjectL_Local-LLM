@@ -1,0 +1,501 @@
+fixture	seed	inputHash	decision	accepted	actor	kind	targetCell	resolvedRotation	path	taunt	beforeUse	afterUse	finalController	events	aimKind	aimCell	aimDirection
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	1	673c6619dd36c9250115bd97e5aff241f63c15ac62e9af41b955063d19979932	6	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	7	14502351997f8c477d03d83635effaa0d018e39e6a42630a5664cc246673cdec	6	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	19	ac3ef772e3a4a0c0c32a0c5d7d3af784b0aa32dda908334010bac5339f71d6e9	6	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	41	dfbacaee0ab2f08f9e962fb8a62c61cae46356c1160207e3b93da2d2f5333ee9	6	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N5	97	e949a61f3a00434ff5f747711970aef43c154edfe70563bde2deb7f930188c4f	6	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	1	54e92f622abf7bfa7b1a61a915813bc88b7617886bf8c0d4209a495a96fcb4cc	7	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	7	2fb16e56b28ae9afc1085f1a57a145f40e4149e9e279f68b2fb12be5f5b100f9	7	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	19	a986d0b03ba7bacef6b186ea5f9896ff6e88e02f598e07a2e61259355a9120d2	7	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	41	62793b3881345cd166971ec12afb95d12f6a89f69a92005075e33c5bb1a5eae2	7	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N6	97	b51af2da1812c2ed9134d1d7c6c666fbd4bbbe07ec9c386e5dc18e68cd77a2db	7	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	1	785a2cd20af10912917e393733f17326af82afe0085f1f3e0676229cdc1ed4c4	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	7	9d38553b67d99cf785ec80dee98027991b029d1f1e0a9e2da5566be7014a6f30	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	19	ba26fb48721b0e73ef79fe32f297850195ae37348ff8b60edef13221d5db0264	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	41	a3e19e540150c760f5ab56504bb06a6e6dd6ffae8942eb8e623954c1f0003931	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+N8	97	aa153f62735d224b8a9a35e28da43c52adb6cc0041e233edf2ff820fdd12fb2a	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	1	True	11	Move			2:2;1:2;1:3;1:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	2	True	12	Move			3:2;3:1;4:1;5:1	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	3	True	13	Move			4:2;5:2;6:2;7:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	4	True	14	Move			2:3;2:2;3:2;4:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	5	True	15	Move			3:3;2:3;1:3;0:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	6	True	16	Move			4:3;5:3;6:3;7:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	7	True	17	Move			2:4;2:5;3:5;4:5	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	8	True	18	Move			3:4;4:4;5:4;6:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	1	8613f74bcc6287c9d5e8f11bff680993e733df9709991940ed6961255817f96d	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	1	True	11	Move			2:2;1:2;1:3;1:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	2	True	12	Move			3:2;3:1;4:1;5:1	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	3	True	13	Move			4:2;5:2;6:2;7:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	4	True	14	Move			2:3;2:2;3:2;4:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	5	True	15	Move			3:3;2:3;1:3;0:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	6	True	16	Move			4:3;5:3;6:3;7:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	7	True	17	Move			2:4;2:5;3:5;4:5	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	8	True	18	Move			3:4;4:4;5:4;6:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	7	578daed769bc380706998aecfc1714efd171b337c712676a7254e989a81bbaee	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	1	True	11	Move			2:2;1:2;1:3;1:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	2	True	12	Move			3:2;3:1;4:1;5:1	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	3	True	13	Move			4:2;5:2;6:2;7:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	4	True	14	Move			2:3;2:2;3:2;4:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	5	True	15	Move			3:3;2:3;1:3;0:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	6	True	16	Move			4:3;5:3;6:3;7:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	7	True	17	Move			2:4;2:5;3:5;4:5	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	8	True	18	Move			3:4;4:4;5:4;6:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	19	95e90285a0dd8cd04b9dd4c12e2a156cb955b6c79af01aaee8b4e3b0ed729ea3	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	1	True	11	Move			2:2;1:2;1:3;1:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	2	True	12	Move			3:2;3:1;4:1;5:1	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	3	True	13	Move			4:2;5:2;6:2;7:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	4	True	14	Move			2:3;2:2;3:2;4:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	5	True	15	Move			3:3;2:3;1:3;0:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	6	True	16	Move			4:3;5:3;6:3;7:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	7	True	17	Move			2:4;2:5;3:5;4:5	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	8	True	18	Move			3:4;4:4;5:4;6:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	41	26f488b6c0e1c3e92336524c535080af0a8016749ab8e719d5361e227dd9c954	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	1	True	11	Move			2:2;1:2;1:3;1:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	2	True	12	Move			3:2;3:1;4:1;5:1	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	3	True	13	Move			4:2;5:2;6:2;7:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	4	True	14	Move			2:3;2:2;3:2;4:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	5	True	15	Move			3:3;2:3;1:3;0:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	6	True	16	Move			4:3;5:3;6:3;7:3	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	7	True	17	Move			2:4;2:5;3:5;4:5	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	8	True	18	Move			3:4;4:4;5:4;6:4	0	Available	Moved	Enemy	Moved,Moved,Moved			
+W8	97	57788bbe1441523db545e6851289ff5e3a660398ef487082e149e4494d6684ca	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+U8	1	66dc0d905330ee4145de0ea8520a3637cbb17cb6eea604aac0d190c56c8c24a9	1	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+U8	7	608be4c5a10fa51a6d884cf2d21449d049a5186680de144feaff2e64277d6974	1	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+U8	19	e0f8fee9fc60f099e2f5968d9c7d12bba0fc74bc86bd8eff43d19638290a1f70	1	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+U8	41	aa7caf83c2c2c2591a7a2ca35023bc5d1d3c4a45f604dd49ab04f947d0e052dc	1	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+U8	97	617bb277dfe64b9349602610afcc971b7227d0a269988dac6c046a54b492ba65	1	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	1	True	11	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	2	True	12	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged,HealthChanged	Direction		Left
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	3	True	13	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	5	True	15	Move			5:2;4:2	0	Available	Moved	Enemy	Moved			
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	6	True	15	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	7	True	16	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Direction		Left
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	8	True	17	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	9	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	1	3729c6b879e5c665208ebcef6204a0c925ef15371d6081fddddeb847d17110df	10	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	1	True	11	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	2	True	12	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged,HealthChanged	Direction		Left
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	3	True	13	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	5	True	15	Move			5:2;4:2	0	Available	Moved	Enemy	Moved			
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	6	True	15	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	7	True	16	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Direction		Left
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	8	True	17	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	9	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	7	8d5103e086e71d55b60596196109cb6fb11fb2835c41c027488c8b11895c06f1	10	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	1	True	11	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	2	True	12	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged,HealthChanged	Direction		Left
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	3	True	13	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	5	True	15	Move			5:2;4:2	0	Available	Moved	Enemy	Moved			
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	6	True	15	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	7	True	16	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Direction		Left
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	8	True	17	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	9	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	19	5902f6520fcf66be201010f7adffe6bd5af7909d86ffff059f9b7af6a1ae8d89	10	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	1	True	11	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	2	True	12	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged,HealthChanged	Direction		Left
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	3	True	13	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	5	True	15	Move			5:2;4:2	0	Available	Moved	Enemy	Moved			
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	6	True	15	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	7	True	16	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Direction		Left
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	8	True	17	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	9	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	41	2978b3c969cbb1e9a71862eeeda14c51daf90d8e61e259ed86f59488cb5af7c1	10	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	1	True	11	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	2	True	12	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged,HealthChanged	Direction		Left
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	3	True	13	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	5	True	15	Move			5:2;4:2	0	Available	Moved	Enemy	Moved			
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	6	True	15	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	7	True	16	Attack		R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Direction		Left
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	8	True	17	Attack		R0		0	Available	Attacked	Enemy	Attacked,HealthChanged	All		None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	9	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+A8	97	fc4b54c22a6561c461e9f6436c6c040eb6702f22e1303357dbdd862e5d359ebb	10	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	1	True	11	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,EffectsActivated,EffectsActivated,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	2	True	12	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	3	True	13	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	4	True	14	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	5	True	15	Attack	4:0	R180		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	6	True	16	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	7	True	17	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	8	True	18	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	1	9792340bbc2c8725f2fbb4e7c83d9802527f6685b4703829deaaa4ecceedbcf0	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,EffectsActivated,TraitStateChanged			
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	1	True	11	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,EffectsActivated,EffectsActivated,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	2	True	12	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	3	True	13	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	4	True	14	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	5	True	15	Attack	4:0	R180		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	6	True	16	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	7	True	17	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	8	True	18	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	7	0fab9c20dde966a0163346f20d2a4b1a0e8a63f2ca98758b9eec57f5d4c337fd	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,EffectsActivated,TraitStateChanged			
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	1	True	11	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,EffectsActivated,EffectsActivated,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	2	True	12	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	3	True	13	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	4	True	14	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	5	True	15	Attack	4:0	R180		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	6	True	16	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	7	True	17	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	8	True	18	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	19	47d87c152494efcc87506aef9daf1e1ca18bbd118b25099f5499ae69bdf476b7	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,EffectsActivated,TraitStateChanged			
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	1	True	11	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,EffectsActivated,EffectsActivated,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	2	True	12	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	3	True	13	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	4	True	14	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	5	True	15	Attack	4:0	R180		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	6	True	16	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	7	True	17	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	8	True	18	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	41	29509e40aa01304380229fcbd1044e147304e570c68b1aa66d7c32c34042b2e9	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,EffectsActivated,TraitStateChanged			
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	1	True	11	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,EffectsActivated,EffectsActivated,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,TraitStateChanged,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	2	True	12	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	3	True	13	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	4	True	14	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	5	True	15	Attack	4:0	R180		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	6	True	16	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	7	True	17	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	8	True	18	Attack	4:0	R270		4	Available	Attacked	Enemy	EffectsActivated,Attacked,EffectsActivated,HealthChanged	Cell	4:0	None
+T8	97	2e977ea18fbe379c3bd3cb9ab92649de0988482bf41bdf8787df2b65b2d608bc	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,EffectsActivated,TraitStateChanged			
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	1	7d00927ed170ffa745465172630e83498584d9d4079d00def4b86209e00eba7b	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,GimmickActivated,Died,Died,Died,RockfallAdvanced			
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	7	82031013668b8f0862100b1f32ed478082a2e27e5ddc23ec52baf985e2e21727	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,GimmickActivated,Died,Died,Died,RockfallAdvanced			
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	19	bb6972379c3658283f0b2688a4d17fdc6b857e00e7ce62abd145422a578fb497	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,GimmickActivated,Died,Died,Died,RockfallAdvanced			
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	41	86e1b07842726591f0f09f6fa09a3bff80feb53abaf45cf1c0d6ab9f5fa253fa	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,GimmickActivated,Died,Died,Died,RockfallAdvanced			
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+R8	97	438c16c1fe4b309ca9967e84e6ca4c9ea8051326d28839c73a7bc68b677ec04f	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,GimmickActivated,Died,Died,Died,RockfallAdvanced			
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	1	5001edb6020c4b91113c083d1c15ec90145913a2b84f714ab73ad328f95cad19	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,TornadoAdvanced,TornadoCenterReached,Relocated,Relocated,Relocated,Relocated,TornadoCenterReached,Relocated,Relocated,TornadoCenterReached,Relocated,TornadoCenterReached,TornadoMemberAdvanced,GimmickActivated,Died,RockfallAdvanced			
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	7	33ce87148b8ca3bbcff628e5f57361264bb72b5ec546d8a676b2139b5f06c24a	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,TornadoAdvanced,TornadoCenterReached,Relocated,Relocated,Relocated,Relocated,TornadoCenterReached,Relocated,Relocated,TornadoCenterReached,Relocated,TornadoCenterReached,TornadoMemberAdvanced,GimmickActivated,Died,RockfallAdvanced			
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	19	c3204e24404e5f9c9f355fde9c40a8bdb0009a29f8242d42764ef9e4382214f6	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,TornadoAdvanced,TornadoCenterReached,Relocated,Relocated,Relocated,Relocated,TornadoCenterReached,Relocated,Relocated,TornadoCenterReached,Relocated,TornadoCenterReached,TornadoMemberAdvanced,GimmickActivated,Died,RockfallAdvanced			
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	41	352632699ac1260c8f04326f097394198577b4138664a1dce3f38b911f12c1f0	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,TornadoAdvanced,TornadoCenterReached,Relocated,Relocated,Relocated,Relocated,TornadoCenterReached,Relocated,Relocated,TornadoCenterReached,Relocated,TornadoCenterReached,TornadoMemberAdvanced,GimmickActivated,Died,RockfallAdvanced			
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+X8	97	e757e767ea082dc9d0f255be6a46ac6db296f8a8636de69c75b1651e2af56947	9	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,TornadoAdvanced,TornadoCenterReached,Relocated,Relocated,Relocated,Relocated,TornadoCenterReached,Relocated,Relocated,TornadoCenterReached,Relocated,TornadoCenterReached,TornadoMemberAdvanced,GimmickActivated,Died,RockfallAdvanced			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	1	True	11	Move			5:1;5:0	0	Available	Moved	Enemy	Moved			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	2	True	11	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	3	True	12	Move			6:1;6:0	0	Available	Moved	Enemy	Moved			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	4	True	12	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	5	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	6	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	7	True	15	Move			5:2;4:2;4:1	0	Available	Moved	Enemy	Moved,MovementSourceChanged,HealthChanged,Moved			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	8	True	15	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	9	True	16	Move			6:2;5:2;4:2;3:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	10	True	16	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	11	True	17	Move			7:2;7:3;8:3	0	Available	Moved	Enemy	Moved,Moved			
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	12	True	17	Attack	4:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	13	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	1	21920550257d64864a01b71022ea6d1d129031d3a394224312454236a0d6a08b	14	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,HaboobAdvanced			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	1	True	11	Move			5:1;5:0	0	Available	Moved	Enemy	Moved			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	2	True	11	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	3	True	12	Move			6:1;6:0	0	Available	Moved	Enemy	Moved			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	4	True	12	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	5	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	6	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	7	True	15	Move			5:2;4:2;4:1	0	Available	Moved	Enemy	Moved,MovementSourceChanged,HealthChanged,Moved			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	8	True	15	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	9	True	16	Move			6:2;5:2;4:2;3:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	10	True	16	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	11	True	17	Move			7:2;7:3;8:3	0	Available	Moved	Enemy	Moved,Moved			
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	12	True	17	Attack	4:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	13	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	7	7800ddc529f86b700fccde0aa1eeb7732e3478bc4cc818e78c605c80a83e1341	14	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,HaboobAdvanced			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	1	True	11	Move			5:1;5:0	0	Available	Moved	Enemy	Moved			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	2	True	11	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	3	True	12	Move			6:1;6:0	0	Available	Moved	Enemy	Moved			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	4	True	12	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	5	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	6	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	7	True	15	Move			5:2;4:2;4:1	0	Available	Moved	Enemy	Moved,MovementSourceChanged,HealthChanged,Moved			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	8	True	15	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	9	True	16	Move			6:2;5:2;4:2;3:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	10	True	16	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	11	True	17	Move			7:2;7:3;8:3	0	Available	Moved	Enemy	Moved,Moved			
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	12	True	17	Attack	4:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	13	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	19	57b281145ac31263497a2d25a73d6fae3019581d4618917eddd61d6d50569a26	14	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,HaboobAdvanced			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	1	True	11	Move			5:1;5:0	0	Available	Moved	Enemy	Moved			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	2	True	11	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	3	True	12	Move			6:1;6:0	0	Available	Moved	Enemy	Moved			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	4	True	12	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	5	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	6	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	7	True	15	Move			5:2;4:2;4:1	0	Available	Moved	Enemy	Moved,MovementSourceChanged,HealthChanged,Moved			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	8	True	15	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	9	True	16	Move			6:2;5:2;4:2;3:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	10	True	16	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	11	True	17	Move			7:2;7:3;8:3	0	Available	Moved	Enemy	Moved,Moved			
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	12	True	17	Attack	4:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	13	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	41	5f6addcca803352d5b55add2b7873b0e70fe89541ae6b5ebf9b6a385f2530fda	14	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,HaboobAdvanced			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	1	True	11	Move			5:1;5:0	0	Available	Moved	Enemy	Moved			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	2	True	11	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	3	True	12	Move			6:1;6:0	0	Available	Moved	Enemy	Moved			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	4	True	12	Attack	2:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	5	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	6	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	7	True	15	Move			5:2;4:2;4:1	0	Available	Moved	Enemy	Moved,MovementSourceChanged,HealthChanged,Moved			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	8	True	15	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	9	True	16	Move			6:2;5:2;4:2;3:2	0	Available	Moved	Enemy	Moved,Moved,Moved			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	10	True	16	Attack	0:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	0:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	11	True	17	Move			7:2;7:3;8:3	0	Available	Moved	Enemy	Moved,Moved			
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	12	True	17	Attack	4:0	R270		0	Moved	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	13	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+H8	97	f346338dd3fe5fe45538ae73c7836c9bc7ba76185c26cf12b31b8126c85dfbfc	14	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded,HaboobAdvanced			
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	9	True	19	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	10	True	20	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	11	True	21	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	12	True	22	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	13	True	23	Attack	2:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	14	True	24	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	15	True	25	Attack	4:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	16	True	26	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	1	1e93eb864febd912b332d1fd963339426c7ee971630deb78164dbbb785fadbe7	17	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	9	True	19	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	10	True	20	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	11	True	21	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	12	True	22	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	13	True	23	Attack	2:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	14	True	24	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	15	True	25	Attack	4:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	16	True	26	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	7	bc1ecc46ae5fe794547897c4f3a9fe2073095fc83878903922df95b4c4d009f8	17	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	9	True	19	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	10	True	20	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	11	True	21	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	12	True	22	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	13	True	23	Attack	2:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	14	True	24	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	15	True	25	Attack	4:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	16	True	26	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	19	daf205b73a843858652ae78f770cb1bf92e65c3b2c32f8330f2224a88812040f	17	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	9	True	19	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	10	True	20	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	11	True	21	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	12	True	22	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	13	True	23	Attack	2:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	14	True	24	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	15	True	25	Attack	4:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	16	True	26	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	41	dffb6fb4d232dbea3ca1a83fbb1de910d071cf9c4db296349e072e5c34bebc71	17	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	1	True	11	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	2	True	12	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	3	True	13	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	4	True	14	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	5	True	15	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	6	True	16	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	7	True	17	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	8	True	18	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	9	True	19	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	10	True	20	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	11	True	21	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	12	True	22	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	13	True	23	Attack	2:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	14	True	24	Attack	2:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	2:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	15	True	25	Attack	4:0	R180		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	16	True	26	Attack	4:0	R270		0	Available	Attacked	Enemy	Attacked,HealthChanged	Cell	4:0	None
+G16	97	66a46d45b53598ede2f0a910a3a928eaa178bff0d45a0b5fe60185f77d9d3f8a	17	True	0	Boundary				0			StartingPlayer	EnemyPhaseEnded			

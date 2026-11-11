@@ -15,6 +15,6 @@ MonoBehaviour:
   key: 20
   footprintWidth: 2
   footprintHeight: 2
-  maxHealth: 10
+  maxHealth: 30
   isAttackable: 0
   attackPower: 0

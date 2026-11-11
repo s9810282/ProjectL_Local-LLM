@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
@@ -23,13 +25,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal CharacterCombatFacts Actor { get; }
         internal AttackTraitScope TraitScope { get; }
         internal CharacterCombatFacts DamageActor => TraitScope?.ForDamage(Actor) ?? Actor;
-        /// <summary>실행은 실제 환경, 공개 미리보기는 공격자 진영에 보이는 환경이다.</summary>
+        /// <summary>실행은 실제 환경, 공개 미리보기는 <see cref="PreviewObserver"/> 진영에 보이는 환경이다.</summary>
         internal MovementEnvironmentFacts Environment { get; }
+        /// <summary>
+        /// 공개 미리보기를 보는 진영이다. 지정하지 않으면 공격자 진영이다. 포효 예고처럼 적의 행동을 플레이어에게 보일 때만 플레이어다
+        /// (포효 예고 계획 TP-2). 실행(공개 미리보기 아님)에서는 쓰지 않는다.
+        /// </summary>
+        internal Owner PreviewObserver { get; }
         internal WallGeometry Walls { get; }
         internal ResolvedAttackSelection Selection { get; }
         /// <summary>최초 조준의 셀입니다. 도착 후 재구성한 전달 위치와 구분합니다.</summary>
         internal Contracts.Results.AttackCellSelection RequestedCells { get; }
         internal ResolvedAttackDelivery Delivery { get; }
+        /// <summary>수락 시 확정된 주 대상·스플래시 적입니다. 후속 이동과 공격자 사망으로 다시 선택하지 않습니다.</summary>
+        internal IReadOnlyList<EntityId> CapturedEnemyIds { get; }
         internal CombatEffectEngine Engine { get; }
         /// <summary>확정한 공격자의 효과 바인딩이다.</summary>
         internal EffectRuleBinding[] Bindings { get; }
@@ -63,7 +72,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             EffectCausalChain cause = null,
             ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.AttackAim? aim = null,
             Contracts.Results.AttackCellSelection requestedCells = null,
-            AttackTraitScope traitScope = null)
+            AttackTraitScope traitScope = null,
+            Owner? previewObserver = null)
         {
             Input = input ?? throw new ArgumentNullException(nameof(input));
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
@@ -73,6 +83,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Environment = environment ?? throw new ArgumentNullException(nameof(environment));
             Walls = walls ?? throw new ArgumentNullException(nameof(walls));
             Selection = selection ?? throw new ArgumentNullException(nameof(selection));
+            var selectedIds = selection.Targets.Select(t => t.Key).ToHashSet();
+            CapturedEnemyIds = Array.AsReadOnly(selection.EligibleCharacters.Where(c => selectedIds.Contains(c.EntityId) &&
+                new HostilityPolicy().AreHostile(actor.Owner, c.Owner)).Select(c => c.EntityId).Distinct().OrderBy(id => id).ToArray());
             RequestedCells = requestedCells ?? selection.Cells;
             Delivery = delivery ?? throw new ArgumentNullException(nameof(delivery));
             Engine = engine ?? throw new ArgumentNullException(nameof(engine));
@@ -82,6 +95,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CommonDamage = commonDamage;
             Direction = direction;
             PublicPreview = publicPreview;
+            PreviewObserver = previewObserver ?? originalActor.Owner;
             DamageKind = damageKind;
             AttackGroup = attackGroup;
             Cause = cause ?? EffectCausalChain.Empty;

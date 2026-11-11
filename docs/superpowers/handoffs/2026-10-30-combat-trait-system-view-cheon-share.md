@@ -60,3 +60,76 @@
 
 - Core 전달 문서 §53 — 대신 맞은 공격의 넉백 요청 R-AA1(지금 Core는 지켜진 유닛을 밂). 사용자가 나중에 전달합니다.
 - Core 요청 문서(§49)의 R5 보강·Q14 — 걸린 상태 공통 목록. 처음 전달한 뒤에 더한 것입니다.
+
+## 7. 2026-11-05 전투 View 평가 후속 5차 — 끌어오기 도착 사건 한 줄·질문 둘 (미전달)
+
+[후속 수정 계획](../plans/2026-11-04-combat-view-evaluation-fixes-plan.md) §9(5차)에서 천명님 줄 하나를 고쳤습니다. 줄 번호는 HEAD `fd8b0d2f` 기준입니다. 컴파일 미확인, 새 시험 없음.
+
+- `Playback/Support/CombatShownFacts.cs` 295(`4bd6b574`, C10-13): 끌어오기 도착 뒤 체력·사망 사건을 보인 자리로 바꿔 만들 때 `DamageOrigins`까지만 넘겨, 피해 원인(`DamageCause`, 예: 직접 처치)이 기본값으로 바뀌던 것을 고쳤습니다. 위치 보존 갈래(바로 위)와 같이 사건 칸 여덟을 모두 넘깁니다. 지금 View가 피해 원인을 읽지 않아 화면 변화는 없습니다.
+
+- 6차 주석 정리(평가 C12)에서 천명님 줄의 주석 둘을 고쳤습니다(`d4a6d6fd`, `ICombatActionDisplay` 12·`ICombatMovementFeedback` 11, 지운 시험 가짜·폐지된 복귀 슬롯 설명). 동작은 같습니다.
+- 천명님 계정 커밋 `57af3244`의 줄 넷(`CombatSceneInputFactory` 61, `CombatEndTurnConfirmation` 35, `CombatEndTurnEntry` 28·29)도 주석을 고쳤습니다. 프로젝트 기록상 11-03 턴 종료 확인창은 용근 작업이라 작성자를 확인한 뒤 알려 드립니다.
+
+여쭐 것
+
+- **C1-57 특성 발동 → 상태 연결 사실(Core 요청):** View는 어느 특성 발동이 어느 상태를 걸었는지를 사본 표(`CombatTraitFeedbackProfiles` 38-48: CleanSweep → 공격력 증가, ReconSquad·HuntersMark → 약점 노출, 가속 → 보유 공격 보너스)로 짐작합니다. Core 상태 형식이 바뀌면 그 특성의 상태 이펙트·글자가 빠집니다(경고는 남음). `TraitActivationSnapshot`이나 `CombatTraitStateEvent`가 그 발동이 부여·변경한 상태 항목(출처 키와 상태 식별)을 함께 공개해 주실 수 있을까요? 공개하지 않기로 하시면 지금 사본 표를 받아들인다고 기록만 남기겠습니다. Core 전달 문서 §65에도 같은 요청을 적었습니다.
+- **C1-42 곡사 공통 수명:** `CombatMortarAnimation`(천명님 파일)을 공통 기반 `CombatAttackMotion`(호진님 파일)에 훅 둘을 더해 올리려 합니다(약 130줄, 구조 단계). 정리 순서가 '무기 해제 → 탄 회수 → 무기 자세 → 유닛 자세'에서 기반의 해제 → 자세 복원으로 바뀝니다. 진행해도 될지 호진님과 함께 합의를 부탁드립니다.
+
+## 8. 2026-11-05 전투 View 조정자 나누기 — 확인창·턴 종료 줄 (미전달)
+
+[조정자 나누기 계획](../plans/2026-11-05-combat-view-coordinator-split-plan.md)(설계 [coordinator-split-design](../specs/2026-11-05-combat-view-coordinator-split-design.md) CS1~CS6)에서 천명님 계정 커밋 `57af3244`의 줄을 고치거나 옮겼습니다. 줄 번호는 HEAD `dfb49b34` 기준입니다. 새 시험 없음, 시험 변경 없음. Unity 컴파일·재생 문제 없음(사용자, Ua~Ud).
+
+동작은 그대로입니다. 바뀐 것은 자리와 이름입니다.
+
+- `Input/CombatSceneInput.cs`
+  - 확인창 입구 속성 `EndTurn`(82-83)을 private 필드 `_endTurn`으로 바꿨습니다. 배치 진입 `Deployment`도 같이 `_deployment`가 되었습니다(CS-a). 밖에서는 묶음 입구 `RequestEndTurn()`·`RequestEnterCombat()`을 부릅니다.
+  - 생성자 대입(57)·`IsConfirmationOpen`(86)·`CloseConfirmations`(95·97)·`SyncConfirmations`(106-107)는 필드 이름만 바뀌었습니다. 클래스 설명(28)은 "부품은 밖에 내지 않는다"로 고쳤습니다.
+- `Input/ActionButtons/CombatEndTurnConfirmation.cs` 47: `CountIdleUnits`가 자기 클래스 안에서만 쓰여 internal → private으로 내렸습니다(CS-a).
+- `CombatViewSystem.cs`
+  - 1128-1132 턴 종료 갈래(`connection.Input.EndTurn.Request()`)는 새 입력 분배 `Input/CombatSceneInputDriver.Route`로 옮기고 `connection.Input.RequestEndTurn()`을 부릅니다(CS-a·CS-b).
+  - 1175 `SyncConfirmations()`는 입력 분배의 `SyncActionButtons`로 옮겼습니다(CS-b). 순서(확인창 맞춤 → 보임 확인 → 표면 맞춤)는 같습니다.
+  - 719 입력 재료 `afterConfirmedSubmit: SyncActionButtons`는 람다 `() => _inputDriver.SyncActionButtons(_connection)`가 되었습니다(CS-b, 계획 TP-1). 부를 때 지금 연결을 읽는 것은 같습니다.
+  - 760·769·801·939 확인창 닫기와 1030-1033 `IsModalOpen`은 그대로입니다.
+- `Input/CombatSceneInputSources.cs` 33(주석만): `afterConfirmedSubmit` 인자 설명의 "조정자의 입구"를 "입력 분배 `SyncActionButtons`"로 고쳤습니다.
+- `Input/ActionButtons/CombatEndTurnEntry.cs` 32(주석만): `afterSubmit` 인자 설명을 같은 뜻으로 고쳤습니다(묶음 끝 검토 낮음).
+
+여쭐 것
+
+- `57af3244` 줄의 작성자: 프로젝트 기록상 11-03 턴 종료 확인창은 용근 작업입니다. 천명님 계정으로 커밋된 까닭을 확인한 뒤, 이 절을 천명님께 넘길지 정합니다(§7 끝의 같은 질문).
+
+## 9. 2026-11-06 전투 View 선택 인자 나머지 — 생성자 서명·입력 사실·턴 종료 확인창 (미전달)
+
+[선택 인자 나머지 계획](../plans/2026-11-06-combat-view-optional-args-plan.md)(설계 [optional-args-design](../specs/2026-11-06-combat-view-optional-args-design.md) OA1·OA3·OA4·OA5, 평가 C5-02 2단계)에서 천명님 줄을 고쳤습니다. 작성자는 전체 이력으로 셌습니다(설계 §1.7). 줄 번호는 고친 뒤(기준 판 `7279a9d5` 위) 기준입니다. 컴파일 미확인(전투 View 작업 규칙상 MSBuild 없음), 새 시험 없음. 시험 변경은 우리 시험(`StructureHitPresentationTests.cs:168`) 호출 한 곳뿐이고, 천명님 시험은 고치지 않았습니다.
+
+운영 조립이 늘 넘기는 협력자·값을 필수로 받고, 쓰는 곳의 `?.`·null 갈래를 지웠습니다. 운영에서 보이는 동작은 같습니다.
+
+- `Input/MovePath/CombatPathInput.cs` 88-91 생성자 서명(`e0b02cc7`): 마지막 두 인자 `rejections`·`actionAvailability`의 기본값 `= null`을 지우고 93-95에서 `?? throw`로 막습니다. 쓰는 곳의 `?.` 넷(155·263·266·651)을 지웠습니다.
+- `Input/MovePath/CombatMovementInteraction.cs` 76-77 생성자 서명(`87348b86`): `rejections` 기본값을 지우고 86에서 막습니다.
+- `Input/CombatInputFacts.cs` 40 `battleInstanceId`·`controllerTurnSequence`(`d4a6d6fd`): 기본값을 지웠습니다. 입력 사실 인자 28개가 모두 필수입니다(결정 Q-OA1 A). 운영 읽기는 이미 모두 넘깁니다.
+- `Input/ActionButtons/CombatActionButtons.cs` 19 `canUseReturn = false`(`d4a6d6fd`): 기본값을 지웠습니다.
+- `Input/ActionButtons/CombatEndTurnConfirmation.cs`(`57af3244`)
+  - 36 생성자: `presentation ?? throw new ArgumentNullException(nameof(presentation))`. 35 주석도 같은 뜻으로 고쳤습니다.
+  - 44 `IsOpen`·93 `Close`: `_presentation?.`·`?? false`를 지웠습니다.
+  - 확인창을 여는 곳(옛 74-75)의 `InvalidOperationException` 갈래를 지웠습니다. 예외 종류가 생성 때 `ArgumentNullException`으로 바뀝니다(계획 TP-5). 운영에서는 둘 다 나지 않습니다.
+
+참고 — View가 기대는 Core 보장(요청 없음)
+
+- 경로 입력이 필드 유닛의 칸·방향을 다시 확인하지 않게 되었습니다(`actor.Anchor.HasValue` 삭제, `actor.Rotation.Value`). 근거는 `CharacterCombatFacts` 생성자의 위치 검사(255-258)가 `Area == Field`인 유닛의 Anchor·Rotation을 요구한다는 것입니다. 이 보장을 풀게 되면(필드 유닛의 위치를 비워 두는 사실을 허용) View 경로 입력이 `InvalidOperationException`으로 멈춥니다. 그때 알려 주시면 됩니다.
+
+여쭐 것
+
+- `57af3244` 줄의 작성자: §8 끝과 같은 질문입니다. 확인한 뒤 이 절을 천명님께 넘길지 정합니다.
+
+## 10. 2026-11-07 전투 View 씬 표시 나누기 — 공격 범위·막힌 벽 계약과 재화 표시 (미전달)
+
+[씬 표시 나누기 계획](../plans/2026-11-07-combat-view-scene-display-split-plan.md)(설계 [scene-display-split-design](../specs/2026-11-07-combat-view-scene-display-split-design.md) DS2·DS4, 평가 C2-03 2·3단계)에서 천명님 줄을 옮기거나 고쳤습니다. 작성자는 기준 판 `eafd42f5`의 전체 이력으로 셌습니다(계획 T0.2). 줄 번호는 고친 뒤 기준입니다. 컴파일 미확인, 새 시험 없음. 천명님 시험은 고치지 않았고, 바뀐 형식을 쓰는 시험도 없습니다(T0.3 grep). Core 파일은 건드리지 않았고 요청도 없습니다.
+
+- 공격 범위·막힌 벽 계약(`4bd6b574` `basicCells` 인자, `66f6bb41` `ShowAttackBlockers`·`ClearAttackBlockers`)
+  - 입력 피드백 계약 `ICombatInteractionFeedback`(17)을 쓰는 쪽마다 셋으로 나눴습니다(결정 Q-DS2 A). 공격 조준 몫은 `git mv`로 `Input/Contracts/ICombatAttackRangeFeedback.cs`가 되었고, 천명님 줄(20 `ShowRangeCells(…, basicCells = null)`, 30-32 막힌 벽 둘과 문서)은 글자 그대로입니다.
+  - `CombatSceneDisplay`의 위임 셋(`ShowRangeCells`·`ShowAttackBlockers`·`ClearAttackBlockers`)을 지웠습니다. `Display/Feedback/CombatAttackFeedback.cs`가 계약을 직접 구현합니다(91·140·151, 명시적 구현). 본문은 같고, 맨 앞에 해제 뒤 막기(`_lifetime.IsReleased`) 한 줄이 생겼습니다(설계 DS1, 옛 표시의 `ThrowIfReleased` 자리). `basicCells` 기본값은 계약에만 있습니다.
+- 재화 표시(`d4d9fb24` `_hud.Render(values.RunGold)`)
+  - 새 `Display/Hud/CombatHudSurfaces.RenderStatus(runGold, turn, phase)`가 HUD 재화와 턴 표시를 함께 그립니다. 표시는 `_hud.RenderStatus(values.RunGold, …)`(223)로 부릅니다. 값과 차례는 같습니다.
+- 해제 목록 줄(`98fd0c64`, `ClearTurnCost`를 걷은 줄)
+  - `HideCompletion, _turnDisplay.Clear`는 `_completion.Hide, _hud.ClearTurn`(290)이 되었습니다. 차례는 같습니다.
+- 그대로인 줄: `CombatAttackFeedback`의 칸 필드 셋(`_blockedWallCells`·`_extensionCells`·`_basicCells`), `CombatPointerMapper._uiHits`, `AttackTargetingInteraction`의 `_input`·`_requests`·`_requestBattleId`·`_requestTurnSequence`·`_rangeBlockers`.
+- `57af3244` 줄은 이번에 바뀌지 않았습니다(§8·§9의 작성자 질문은 그대로).

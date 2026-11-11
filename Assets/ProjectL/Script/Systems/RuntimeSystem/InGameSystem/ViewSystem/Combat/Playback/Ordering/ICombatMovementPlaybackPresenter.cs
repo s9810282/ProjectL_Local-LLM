@@ -4,7 +4,6 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ordering
 {
     /// <summary>확정된 이동 사건의 재생만 담당하는 계약입니다. 이동 연결(<see cref="CombatMovementPlayback"/>)이 받습니다.</summary>
-    /// <remarks>이동 시작 알림(<c>BeginMovement</c>)은 소비자가 순차 연출뿐이라 <see cref="ICombatEventPlayback"/>에 두었습니다(구조 개선 SV3).</remarks>
     internal interface ICombatMovementPlaybackPresenter
     {
         /// <summary>

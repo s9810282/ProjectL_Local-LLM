@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_SupportingCharacterGrowth
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 28
     stageKey: 1202
     stageType: 2
     mapRole: 0

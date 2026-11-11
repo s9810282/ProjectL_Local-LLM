@@ -7,7 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
 {
     /// <summary>
     /// 이번 Stage 방문의 진행 사실과 상태 바꿈 입구입니다(검사 후속 정리 계획 TP-R9). <c>StagePlan</c>만 씁니다.
-    /// Core 호출은 Job이 하고, 이 입구는 전투 진입 요청·시도 닫기·도메인 멈춤·확인 Job 만들기만 합니다.
+    /// Core 호출은 Job이 하고, 이 입구는 전투 진입·런 포기·도메인 진행과 확인 Job을 다룹니다.
     /// </summary>
     public interface IStageProgress : IServiceModule
     {
@@ -23,7 +23,10 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
         /// <summary>끝난 전투 진입 시도를 닫습니다.</summary>
         void CloseCombatEntry();
 
-        /// <summary>기록 누락으로 도메인 하나를 멈추고 진단을 남깁니다. 다른 도메인은 계속합니다.</summary>
+        /// <summary>포기 Job의 처리 결과를 기록합니다. 성공이면 Runner 배출 뒤 로비로 전환합니다.</summary>
+        void CompleteRunAbandon(bool abandoned);
+
+        /// <summary>기록 누락으로 도메인 하나를 멈추고 공용 오류 경계(F1)에 보고합니다. 정지 깃발은 같은 Tick의 다음 등록을 막습니다.</summary>
         void Stop(StageDomain domain, string reason);
 
         /// <summary>처리 Job 바로 뒤에서 그 처리가 끝났는지 확인하는 Job입니다. 아직 남았으면 그 도메인을 멈춥니다.</summary>

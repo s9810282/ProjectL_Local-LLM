@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.JobSystem.JobRunner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Jobs;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Plans
@@ -45,7 +46,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
                 case JobType.None:
                     return NoJobs;
                 case JobType.Next:
-                    return Next(TutorialPlanSources.From(buffers, RequireExecution(service)));
+                    return Next(TutorialPlanSources.From(buffers, RequireExecution(service), RequireProgress(service)));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(jobType), jobType, "Tutorial은 Next만 받습니다.");
             }
@@ -85,7 +86,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
             if (session != null && session.Status == TutorialSessionStatus.Ending && facts.HasCleanupResult)
                 return SessionStep(TutorialPlanStepKind.Finalize, session);
 
-            // 3. 미처리 요청은 번호순으로 하나씩 처리한다. 같은 기회의 확인과 만료가 겹치면 확인이 이긴다(설계 §6.1).
+            // 3. 미처리 요청은 번호순으로 하나씩 처리한다. 설명 진행은 이 경로의 Continue 요청만 받는다.
             if (facts.HasPendingRequest)
                 return new TutorialPlanStep(TutorialPlanStepKind.Request, facts.NextRequestNumber, 0);
 
@@ -98,7 +99,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
             if (session.Status != TutorialSessionStatus.Running)
                 return TutorialPlanStep.Nothing;
 
-            // 4. 설명 단계: 표시·전환 끝 → 다음 대기, 확인 대기 중 만료 → 닫기, 시작 조건 충족 → 설명 시작.
+            // 4. 설명 단계: 표시·전환 끝 → 다음 대기, 시작 조건 충족 → 설명 시작. 확인 대기는 요청이 올 때까지 유지한다.
             if (session.StepKind == TutorialStepKind.Explanation)
             {
                 switch (session.WaitReason)
@@ -107,10 +108,6 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
                         if (facts.CompletedPresentation == TutorialViewPresentationKind.Explanation
                             || facts.CompletedPresentation == TutorialViewPresentationKind.Transition)
                             return SessionStep(TutorialPlanStepKind.Advance, session);
-                        break;
-                    case TutorialWaitReason.ContinueOrTimeout:
-                        if (facts.IsTimerExpired)
-                            return SessionStep(TutorialPlanStepKind.Expire, session);
                         break;
                     case TutorialWaitReason.StartCondition:
                         if (CanStartExplanation(in facts))
@@ -136,14 +133,18 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
         }
 
         /// <summary>
-        /// 설명 구간 시작 조건입니다(설계 §8.1, 유일한 정의). 조건 5(입력 독점)는 설명 시작 Job이 빌리기 직전에 다시 확인합니다.
+        /// 설명 구간 시작 조건의 유일한 정의입니다. 진입 연출·제출 수명·입력 독점을 포함해 시작 Job이 빌리기 직전에 다시 확인합니다.
         /// </summary>
         internal static bool CanStartExplanation(in TutorialFacts facts)
         {
             return Combat.Plans.CombatPlan.IsAwaitingPlayerCommand(facts.Phase, facts.PresentedResultSequence,
                        facts.LatestResultSequence, facts.HasUnhandledCommand)
                 && !facts.IsSessionBattleEnded
-                && !facts.IsInputMonopolized;
+                && !facts.IsInputMonopolized
+                && facts.IsCombatViewAttached
+                && !facts.IsEntryPresentationPending
+                && !facts.IsSubmissionSuspended
+                && !facts.IsAbandonRequested;
         }
 
         /// <summary>실습 통과 조건을 정의의 종류에 따라 사실에 맞춥니다(설계 §15.5).</summary>
@@ -155,6 +156,10 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
                     return facts.HasEnteredCombat;
                 case TutorialPracticeGoal.MoveAtLeastOneCell:
                     return facts.HasPresentedMove;
+                case TutorialPracticeGoal.AttackEnemyOnce:
+                    return facts.HasPresentedEnemyAttack;
+                case TutorialPracticeGoal.EndPlayerTurnOnce:
+                    return facts.HasPresentedPlayerTurnEnd;
                 default:
                     return false;
             }
@@ -180,8 +185,6 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
                     return One(new TutorialStartExplanationJob(sources, step.Number, step.StepRevision, JobPriority));
                 case TutorialPlanStepKind.Advance:
                     return One(new TutorialAdvanceJob(sources, step.Number, step.StepRevision, JobPriority));
-                case TutorialPlanStepKind.Expire:
-                    return One(new TutorialExpireJob(sources, step.Number, step.StepRevision, JobPriority));
                 case TutorialPlanStepKind.PassPractice:
                     return One(new TutorialPassPracticeJob(sources, step.Number, step.StepRevision, JobPriority));
                 default:
@@ -193,6 +196,12 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Tutorial.Pla
         {
             return service.ViewGroup?.TutorialExecution
                 ?? throw new InvalidOperationException("TutorialPlan: 튜토리얼 실행 소유자가 조립되지 않았습니다.");
+        }
+
+        private static ICombatProgressView RequireProgress(IInGameSystemGroupService service)
+        {
+            return service.ViewGroup?.Combat?.Progress
+                ?? throw new InvalidOperationException("TutorialPlan: 전투 View 진행 사실이 조립되지 않았습니다.");
         }
 
         private static TutorialPlanStep SessionStep(TutorialPlanStepKind kind, TutorialSessionSnapshot session)

@@ -5,6 +5,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,7 +19,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     [DisallowMultipleComponent]
     public sealed class CombatUnitInfoView : UIWidgetBase
     {
-        private const int AbilitySlotCount = 3;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitInfoAbilityHoverEnter = new("Combat.Action.UI.UnitInfo.AbilityHoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitInfoAbilityHoverExit = new("Combat.Action.UI.UnitInfo.AbilityHoverExit");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitInfoStatusHoverEnter = new("Combat.Action.UI.UnitInfo.StatusHoverEnter");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIUnitInfoStatusHoverExit = new("Combat.Action.UI.UnitInfo.StatusHoverExit");
+#endif
 
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text structureInfoText;
@@ -27,8 +34,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [SerializeField] private GameObject categoryRoot;
         [SerializeField] private Image categoryIcon;
         [SerializeField] private TMP_Text categoryText;
-        [Tooltip("프리팹에 배치한 특성 세 개의 Icon을 연결합니다. 이름·설명 호버는 아이콘을 감싼 특성 칸의 Button이 받습니다. 비활성 슬롯도 내용을 갱신하며 활성 상태는 유지합니다.")]
-        [SerializeField] private AbilityText[] abilitySlots;
+        [SerializeField] private ScrollRect abilityScroll;
+        [SerializeField] private AbilitySection unitAbilities;
+        [SerializeField] private AbilitySection categoryAbilities;
+        [SerializeField] private AbilitySection growthAbilities;
         [SerializeField] private Image unitIcon;
         [SerializeField] private Image healthFill;
         [SerializeField] private Image healthSubFill;
@@ -62,8 +71,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private float _statusWidth;
         private int _statusCount;
 
-        // 특성 설명 호버입니다. 입력 연결·배열은 준비 때 한 번만 만들고 호버 중에는 새로 할당하지 않습니다.
-        private readonly UIInputBinding[] _abilityBindings = new UIInputBinding[AbilitySlotCount];
+        private readonly List<UnitAbilitySlot> _abilitySlots = new();
+        private readonly List<UIInputBinding> _abilityBindings = new();
+        private AbilityInputReceiver _abilityReceiver;
         private IUITextPresentation _hoverText;
         private Canvas _canvas;
         private int _hoveredAbility = -1;
@@ -71,10 +81,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private uint _abilityHoverVersion;
         private string _abilityHoverName;
         private string _abilityHoverDescription;
+        private Vector2 _abilityHoverPoint;
 
         private bool _prepared;
         private bool _hasContent;
-        private bool _warnedAbilityOverflow;
         private readonly HealthFillAnimation _healthAnimation = new();
         private bool _hasHealth;
         private int _currentHealth, _maxHealth, _currentShield;
@@ -129,16 +139,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if ((nameText != null && !IsChild(nameText.transform)) || !IsChild(levelText.transform) || !IsChild(categoryIcon.transform) ||
                 !IsChild(categoryText.transform))
                 throw ConfigurationError("이름·레벨·카테고리는 화면 내부에 있어야 합니다.");
-            if (abilitySlots == null || abilitySlots.Length != AbilitySlotCount)
-                throw ConfigurationError($"abilitySlots는 {AbilitySlotCount}개여야 합니다.");
-            for (int i = 0; i < abilitySlots.Length; i++)
-            {
-                if (abilitySlots[i] == null) throw ConfigurationError($"abilitySlots[{i}] 참조가 필요합니다.");
-                abilitySlots[i].Validate(this, i);
-                for (int previous = 0; previous < i; previous++)
-                    if (abilitySlots[i].SharesReferencesWith(abilitySlots[previous]))
-                        throw ConfigurationError($"abilitySlots[{i}]의 Icon·호버 Button 참조가 다른 슬롯과 중복됩니다.");
-            }
+            if (abilityScroll == null || !IsChild(abilityScroll.transform) || abilityScroll.content == null ||
+                !abilityScroll.content.IsChildOf(abilityScroll.transform) || abilityScroll.content == abilityScroll.transform ||
+                unitAbilities == null || categoryAbilities == null || growthAbilities == null)
+                throw ConfigurationError("UnitInfo 내부의 abilityScroll·content와 유닛·병종·추가 특성 영역 참조가 필요합니다.");
+            if (!abilityScroll.enabled || !abilityScroll.horizontal || abilityScroll.vertical || abilityScroll.viewport == null ||
+                !abilityScroll.content.IsChildOf(abilityScroll.viewport) ||
+                !abilityScroll.viewport.TryGetComponent(out RectMask2D mask) || !mask.enabled ||
+                !abilityScroll.content.TryGetComponent(out HorizontalLayoutGroup layout) || !layout.enabled ||
+                !abilityScroll.content.TryGetComponent(out ContentSizeFitter fitter) || !fitter.enabled ||
+                fitter.horizontalFit != ContentSizeFitter.FitMode.PreferredSize)
+                throw ConfigurationError("abilityScroll에는 가로 스크롤·뷰포트 마스크·가로 자동 배치가 필요합니다.");
+            unitAbilities.Validate(this, nameof(unitAbilities));
+            categoryAbilities.Validate(this, nameof(categoryAbilities), allowIndependentPlacement: true);
+            growthAbilities.Validate(this, nameof(growthAbilities));
+            if (unitAbilities.Root == categoryAbilities.Root || unitAbilities.Root == growthAbilities.Root ||
+                categoryAbilities.Root == growthAbilities.Root)
+                throw ConfigurationError("유닛·병종·추가 특성은 서로 다른 영역에 연결해야 합니다.");
         }
 
         internal void Prepare()
@@ -153,9 +170,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _statusLayoutRect = (RectTransform)statusLayout.transform;
             _statusReceiver = new StatusInputReceiver(this);
             AddStatusIcon(statusIconTemplate);
-            var abilityReceiver = new AbilityInputReceiver(this);
-            for (int i = 0; i < abilitySlots.Length; i++)
-                _abilityBindings[i] = UIInputBinding.Attach(abilitySlots[i].HoverButton, abilityReceiver, i, hasHover: true);
+            _abilityReceiver = new AbilityInputReceiver(this);
             _prepared = true;
             Clear();
         }
@@ -177,16 +192,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _statusBindings.Add(UIInputBinding.Attach(icon.GetComponent<Button>(), _statusReceiver, index, hasHover: true));
         }
 
+        private void AddAbilitySlot(UnitAbilitySlot slot)
+        {
+            _abilityBindings.Add(UIInputBinding.Attach(slot.Button, _abilityReceiver, _abilitySlots.Count, hasHover: true));
+            _abilitySlots.Add(slot);
+        }
+
+        private void RenderAbilities(UnitCardTraitContent[] contents)
+        {
+            unitAbilities.Render(this, contents, TraitOrigin.Unit);
+            categoryAbilities.Render(this, contents, TraitOrigin.Category);
+            growthAbilities.Render(this, contents, TraitOrigin.Growth);
+            RefreshAbilityHover();
+        }
+
         internal void Show(string unitName, int? level, Sprite category, string categoryName, UnitCardTraitContent[] abilities,
             bool showCharacterDetails = true)
         {
             if (abilities == null) throw new ArgumentNullException(nameof(abilities));
-            // 임시(2026-11-03): 칸을 늘리기 전까지 앞 세 개만 보이고 멈추지 않습니다. 잘린 사실은 한 번만 알립니다.
-            if (abilities.Length > AbilitySlotCount && !_warnedAbilityOverflow)
-            {
-                _warnedAbilityOverflow = true;
-                Debug.LogWarning($"[CombatUnitInfoView] '{name}': 특성 {abilities.Length}개 중 앞 {AbilitySlotCount}개만 표시합니다. 고정 슬롯은 {AbilitySlotCount}개입니다.", this);
-            }
             Prepare();
             SetCharacterDetailsVisible(showCharacterDetails);
             _hasContent = true;
@@ -195,10 +218,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             categoryIcon.sprite = category;
             categoryIcon.enabled = category != null;
             categoryText.text = categoryName;
-            for (int i = 0; i < abilitySlots.Length; i++)
-                abilitySlots[i].Render(i < abilities.Length ? abilities[i] : default,
-                    showCharacterDetails && i < abilities.Length);
-            RefreshAbilityHover();
+            RenderAbilities(showCharacterDetails ? abilities : Array.Empty<UnitCardTraitContent>());
         }
 
         /// <summary>공통 내용과 선택적인 캐릭터 그룹을 한 곳에서 적용합니다.</summary>
@@ -242,7 +262,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             categoryIcon.sprite = null;
             categoryIcon.enabled = false;
             categoryText.text = string.Empty;
-            foreach (AbilityText slot in abilitySlots) slot.Render(default, false);
+            RenderAbilities(Array.Empty<UnitCardTraitContent>());
+            abilityScroll.StopMovement();
+            abilityScroll.content.anchoredPosition = Vector2.zero;
             unitIcon.sprite = null;
             unitIcon.enabled = false;
             _hasHealth = false;
@@ -357,20 +379,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_prepared && _hoveredStatus >= 0) PositionStatusTooltip();
             // 공용 Hover 패널은 필드 설명 호버와 같이 씁니다. 같은 프레임에 그쪽이 먼저 열었던 패널을 닫으면
             // 특성 칸 위에 있는 동안 한 번 다시 엽니다. 띄운 동안에만 숨김 번호 하나를 읽습니다.
-            if (_abilityHoverShown && _hoverText.HoverHideVersion != _abilityHoverVersion) ShowAbilityHover();
+            if (_abilityHoverShown)
+            {
+                if (_hoverText.HoverHideVersion != _abilityHoverVersion) ShowAbilityHover();
+                else MoveAbilityHover();
+            }
         }
 
         private void HoverAbilityEnter(int slot)
         {
-            if (_hoverText == null || !isActiveAndEnabled || !_hasContent || slot < 0 || slot >= abilitySlots.Length) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitInfoAbilityHoverEnterSample = _profileUIUnitInfoAbilityHoverEnter.Auto();
+#endif
+
+            if (_hoverText == null || !isActiveAndEnabled || !_hasContent || slot < 0 || slot >= _abilitySlots.Count ||
+                !_abilitySlots[slot].Button.gameObject.activeInHierarchy) return;
             _hoveredAbility = slot;
             ShowAbilityHover();
         }
 
         private void ShowAbilityHover()
         {
-            AbilityText ability = abilitySlots[_hoveredAbility];
-            // 빈 칸·숨긴 칸은 이름·설명이 모두 null입니다. 표시 중인 특성은 설명이 비어도 이름은 띄웁니다.
+            UnitCardTraitContent ability = _abilitySlots[_hoveredAbility].Content;
             string abilityName = ability.Name;
             string description = ability.Description;
             if (string.IsNullOrEmpty(abilityName) && string.IsNullOrEmpty(description))
@@ -384,14 +414,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _abilityHoverVersion = _hoverText.HoverHideVersion;
             _abilityHoverName = abilityName;
             _abilityHoverDescription = description;
-            _hoverText.MoveHover(AbilityHoverPoint(ability.HoverArea));
+            _abilityHoverPoint = AbilityHoverPoint((RectTransform)_abilitySlots[_hoveredAbility].Button.transform);
+            _hoverText.MoveHover(_abilityHoverPoint);
         }
 
         /// <summary>정보 갱신 때 호버 중인 칸의 글이 바뀌었을 때만 다시 띄웁니다. 같은 글이면 패널을 건드리지 않습니다.</summary>
         private void RefreshAbilityHover()
         {
             if (_hoveredAbility < 0) return;
-            AbilityText ability = abilitySlots[_hoveredAbility];
+            UnitAbilitySlot slot = _abilitySlots[_hoveredAbility];
+            if (!slot.Button.gameObject.activeInHierarchy)
+            {
+                ResetAbilityHover();
+                return;
+            }
+            UnitCardTraitContent ability = slot.Content;
             if (_abilityHoverShown &&
                 string.Equals(ability.Name, _abilityHoverName, StringComparison.Ordinal) &&
                 string.Equals(ability.Description, _abilityHoverDescription, StringComparison.Ordinal)) return;
@@ -407,6 +444,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return RectTransformUtility.WorldToScreenPoint(camera, area.TransformPoint(new Vector3(rect.xMax, rect.yMax, 0f)));
         }
 
+        private void MoveAbilityHover()
+        {
+            Vector2 point = AbilityHoverPoint((RectTransform)_abilitySlots[_hoveredAbility].Button.transform);
+            if (point == _abilityHoverPoint) return;
+            _abilityHoverPoint = point;
+            _hoverText.MoveHover(point);
+        }
+
         private void HideAbilityHover()
         {
             if (!_abilityHoverShown) return;
@@ -419,14 +464,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void ResetAbilityHover()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitInfoAbilityHoverExitSample = _profileUIUnitInfoAbilityHoverExit.Auto();
+#endif
+
             _hoveredAbility = -1;
             HideAbilityHover();
-            for (int i = 0; i < _abilityBindings.Length; i++)
-                if (_abilityBindings[i] != null) _abilityBindings[i].OnHoverExit();
+            foreach (UIInputBinding binding in _abilityBindings) binding.OnHoverExit();
         }
 
         private void HoverStatusEnter(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitInfoStatusHoverEnterSample = _profileUIUnitInfoStatusHoverEnter.Auto();
+#endif
+
             if (!isActiveAndEnabled || !_hasContent || slot < 0 || slot >= _statusContent.Count ||
                 !_statusIcons[slot].gameObject.activeInHierarchy) return;
             _hoveredStatus = slot;
@@ -453,51 +505,71 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void ResetStatusHover()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIUnitInfoStatusHoverExitSample = _profileUIUnitInfoStatusHoverExit.Auto();
+#endif
+
             _hoveredStatus = -1;
             if (statusTooltipPanel != null) statusTooltipPanel.gameObject.SetActive(false);
             foreach (UIInputBinding binding in _statusBindings) binding.OnHoverExit();
         }
 
-        /// <summary>
-        /// 프리팹의 특성 아이콘만 갱신하고, 호버로 띄울 이름·설명은 기억만 합니다. 배치·오브젝트 활성 상태는 변경하지 않습니다.
-        /// </summary>
+        /// <summary>한 출처의 아이콘과 입력을 재사용합니다. 입력 번호는 각 슬롯이 생성될 때 고정합니다.</summary>
         [Serializable]
-        private sealed class AbilityText
+        private sealed class AbilitySection
         {
-            [SerializeField] private Image icon;
-            [NonSerialized] private Button _hoverButton;
-            [NonSerialized] private RectTransform _hoverArea;
-            [NonSerialized] private string _name;
-            [NonSerialized] private string _description;
+            [SerializeField] private RectTransform root;
+            [SerializeField] private UnitAbilitySlot template;
+            private readonly List<UnitAbilitySlot> _slots = new();
 
-            /// <summary>이름·설명 호버를 받는 특성 칸의 Button입니다. 아이콘을 감싼 칸에 이미 있는 Button을 씁니다.</summary>
-            internal Button HoverButton => _hoverButton;
-            internal RectTransform HoverArea => _hoverArea;
-            /// <summary>표시 중인 특성의 이름입니다. 빈 칸·숨긴 칸은 null입니다.</summary>
-            internal string Name => _name;
-            /// <summary>표시 중인 특성의 설명입니다. 빈 칸·숨긴 칸은 null입니다.</summary>
-            internal string Description => _description;
+            internal RectTransform Root => root;
 
-            internal void Validate(CombatUnitInfoView owner, int index)
+            internal void Validate(CombatUnitInfoView owner, string field, bool allowIndependentPlacement = false)
             {
-                if (icon == null || !owner.IsChild(icon.transform))
-                    throw owner.ConfigurationError($"abilitySlots[{index}].icon이 UnitInfo 내부에 연결돼야 합니다.");
-                // 등록 때만 찾습니다. 비활성 칸(Ability2)도 찾도록 비활성 부모를 포함합니다.
-                _hoverButton = icon.GetComponentInParent<Button>(true);
-                _hoverArea = _hoverButton != null ? _hoverButton.transform as RectTransform : null;
-                if (_hoverArea == null || !owner.IsChild(_hoverArea))
-                    throw owner.ConfigurationError($"abilitySlots[{index}].icon 자신이나 부모에 설명 호버용 Button이 UnitInfo 내부에 필요합니다.");
+                if (root == null || !owner.IsChild(root))
+                    throw owner.ConfigurationError($"{field}.root는 UnitInfo 내부에 연결해야 합니다.");
+                if (template == null)
+                    throw owner.ConfigurationError($"{field}.template 참조가 필요합니다.");
+
+                Transform scroll = owner.abilityScroll.transform;
+                bool inScrollList = root.parent == owner.abilityScroll.content;
+                // 병종 고유 특성은 Core에서 최대 한 개를 제공하므로 스크롤과 분리해서 배치할 수 있습니다.
+                bool independent = allowIndependentPlacement && !root.IsChildOf(scroll) && !scroll.IsChildOf(root);
+                if (!inScrollList && !independent)
+                    throw owner.ConfigurationError(allowIndependentPlacement
+                        ? $"{field}.root는 스크롤 콘텐츠의 직계 자식이거나 스크롤과 분리된 UnitInfo 내부 영역이어야 합니다."
+                        : $"{field}.root는 스크롤 콘텐츠의 직계 자식이어야 합니다.");
+
+                template.Validate(root, field + ".template");
+                Transform button = template.Button.transform;
+                if (!(button is RectTransform))
+                    throw owner.ConfigurationError($"{field}.template 버튼에는 RectTransform이 필요합니다.");
+                if (inScrollList && (button.parent.parent != root ||
+                    !button.parent.TryGetComponent(out HorizontalLayoutGroup layout) || !layout.enabled))
+                    throw owner.ConfigurationError($"{field}.template 버튼은 영역 내부의 가로 목록에 연결해야 합니다.");
             }
 
-            internal bool SharesReferencesWith(AbilityText other) =>
-                icon == other.icon || _hoverButton == other._hoverButton;
-
-            internal void Render(in UnitCardTraitContent content, bool visible)
+            internal void Render(CombatUnitInfoView owner, UnitCardTraitContent[] contents, TraitOrigin origin)
             {
-                icon.sprite = visible ? content.Icon : null;
-                icon.enabled = visible && content.Icon != null;
-                _name = visible ? content.Name : null;
-                _description = visible ? content.Description : null;
+                if (_slots.Count == 0)
+                {
+                    owner.AddAbilitySlot(template);
+                    _slots.Add(template);
+                }
+                int count = 0;
+                foreach (UnitCardTraitContent content in contents)
+                {
+                    if (content.Origin != origin) continue;
+                    if (count == _slots.Count)
+                    {
+                        UnitAbilitySlot slot = template.Clone(template.Button.transform.parent);
+                        owner.AddAbilitySlot(slot);
+                        _slots.Add(slot);
+                    }
+                    _slots[count++].Render(content, true);
+                }
+                for (int i = count; i < _slots.Count; i++) _slots[i].Render(default, false);
+                root.gameObject.SetActive(count > 0);
             }
         }
 

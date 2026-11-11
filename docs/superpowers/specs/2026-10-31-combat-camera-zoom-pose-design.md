@@ -1,5 +1,7 @@
 # 전투 카메라 줌 자세 설계
 
+> **2026-11-09 대체 범위:** 기준 자세는 맵 캡처 대신 씬 공용 VirtualCamera의 CombatCameraSnapshot에서 읽고, 설정 SO는 공용 Binding이 참조한다. 자세 수식·실제 렌즈 기반 adapter는 유지하고 연결·복원은 CameraSession이 소유한다. 최신 원본은 [씬 공용 카메라 설계](2026-11-08-combat-scene-camera-design.md)와 [사용 안내](../viewDocs/combat-camera-zoom-pose-guide.md)다. 아래 결정·구현 기록은 이전 시점 이력으로 보존한다.
+
 작성: 2026-10-31. 최신 결정: 사용자 요청으로 모든 줌 설정을 CombatCameraSettingsSO로 통합. CP1~CP3 코드·문서 완료, Unity 확인 대기. 기존 마커 방식은 아래 설계로 대체한다.
 
 ## 1. 현재 구조

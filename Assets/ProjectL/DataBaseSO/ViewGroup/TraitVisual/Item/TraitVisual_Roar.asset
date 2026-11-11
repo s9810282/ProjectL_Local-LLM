@@ -16,7 +16,7 @@ MonoBehaviour:
     key: 90
     displayName: "\uD3EC\uD6A8"
     icon: {fileID: 21300000, guid: 7e1dc9b7d98d4c1408aa736c603683e0, type: 3}
-    description: "피격 횟수가 5회에 도달하면\n범위 내 적에게 자신의 공격력만큼 피해를 주고 \n3칸 밀어냅니다."
+    description: "카운트 {필요피격횟수}에서 시작해 피격될 때마다 {피격당카운트},\n플레이어 턴이 끝날 때마다 {상대턴종료카운트}씩 줄어듭니다.\n0이 되면 범위 내 적에게 자신의 공격력만큼 피해를 주고 \n3칸 밀어냅니다."
     activations:
     - kind: 360
       cueTiming: 0

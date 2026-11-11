@@ -9,6 +9,7 @@ namespace ProjectL.Systems.ServiceKeys.DBFactory.Group
         public static readonly SystemGroupKey<ITraitGrowthDefinitionTableQuery> TraitGrowthDefinition = new(nameof(TraitGrowthDefinition));
         public static readonly SystemGroupKey<IEnhancementTableQuery> Enhancement = new(nameof(Enhancement));
         public static readonly SystemGroupKey<IConsumableItemTableQuery> ConsumableItem = new(nameof(ConsumableItem));
+        public static readonly SystemGroupKey<IEnemyAiTuningTableQuery> EnemyAiTuning = new(nameof(EnemyAiTuning));
 
         public static readonly SystemGroupKey<IStageMapTableQuery> StageMap =
             new(nameof(StageMap));

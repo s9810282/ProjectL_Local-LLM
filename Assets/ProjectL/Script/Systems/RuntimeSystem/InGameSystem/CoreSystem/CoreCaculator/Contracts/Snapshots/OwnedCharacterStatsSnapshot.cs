@@ -16,6 +16,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CharacterOwnershipRole Role { get; }
         /// <summary>보유 단계다. 현재 규칙에서는 능력치를 바꾸지 않는다.</summary>
         public int Level { get; }
+        /// <summary>
+        /// <see cref="Level"/>에서 다음 레벨까지의 진행값이다(현재·요구량·남은 양, 경험치 꺼짐 여부).
+        /// 요구량은 Core 규칙이 계산하므로 View는 이 값을 그리기만 한다.
+        /// </summary>
+        public ExperienceProgressSnapshot Experience { get; }
         /// <summary>이 카드가 가진 영혼 수다. 영혼 기여분은 이미 <see cref="Stats"/>에 포함돼 있다.</summary>
         public int SoulCount { get; }
         public CharacterBaselineStatsSnapshot Stats { get; }
@@ -55,7 +60,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyDictionary<TraitKey, int> TraitRanks { get; }
 
         public OwnedCharacterStatsSnapshot(CharacterInstanceId ownedId, EntityKey characterKey,
-            CharacterOwnershipRole role, int level, int soulCount, CharacterBaselineStatsSnapshot stats,
+            CharacterOwnershipRole role, int level, ExperienceProgressSnapshot experience, int soulCount, CharacterBaselineStatsSnapshot stats,
             AttackPatternSnapshot attackPattern, TraitSettingsSet traitSettings, ThornFieldTraitStatusSnapshot thornFieldDescription, HuntersMarkTraitStatusSnapshot huntersMarkDescription = null,
             PullTraitStatusSnapshot pullDescription = null, ImpactBoltTraitStatusSnapshot impactBoltDescription = null,
             IReadOnlyList<TraitAvailabilitySnapshot> traitAvailability = null, ReconSquadTraitStatusSnapshot reconSquadDescription = null,
@@ -69,6 +74,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(role));
             if (level < 1)
                 throw new ArgumentOutOfRangeException(nameof(level));
+            if (experience == null)
+                throw new ArgumentNullException(nameof(experience));
             if (soulCount < 0)
                 throw new ArgumentOutOfRangeException(nameof(soulCount));
             if (stats == null)
@@ -127,6 +134,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CharacterKey = characterKey;
             Role = role;
             Level = level;
+            Experience = experience;
             SoulCount = soulCount;
             Stats = stats;
             AttackPattern = attackPattern;

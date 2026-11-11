@@ -168,7 +168,7 @@ Unity 확인에는 같은 정의의 서로 다른 설정 2개체, 덱 상세창/
 | 끌어오기 / `PullTraitSpec` | `{추가사거리}` → `ExtraRangeCells` | 칸. **기존 이름 유지** |
 | 정찰 부대 / `ReconSquadTraitSpec` | `{피해증가율}` → `IncreasePercent`; `{반경}` → `Radius` | 받는 피해 증가 백분율 / 직교 탐색 반경(칸). **기존 이름 유지** |
 | 재생 / `RegenerationTraitSpec` | `{회복량}` → `HealAmount`; `{회복주기}` → `HealEveryOwnSideTurnEnds` | 회복량 / 자기 진영 턴 종료 횟수 |
-| 포효 / `RoarTraitSpec` | `{필요피격횟수}` → `HitThreshold` | 밤 피격 발동 횟수. 현재 누적 피격 횟수가 아님 |
+| 포효 / `RoarTraitSpec` | `{필요피격횟수}` → `HitThreshold`; `{피격당카운트}` → `CountPerHit`; `{자기턴종료카운트}` → `CountPerOwnSideTurnEnd`; `{상대턴종료카운트}` → `CountPerOpposingSideTurnEnd` | 포효 발동 카운트(밤 피격·진영 턴 종료로 쌓임, **기존 이름 유지**) / 밤 피격 1회당 양 / 보유자 진영 턴 종료마다 양 / 상대 진영 턴 종료마다 양(보스면 플레이어 턴 종료). 현재 누적 카운트가 아님. 2026-11-10 턴 종료 카운트 추가 |
 | 희생 / `SacrificeTraitSpec` | `{반경}` → `RadiusCells`; `{최대발동횟수}` → `MaxTriggersPerEnemyTurn` | 칸 / 적 턴당 횟수 |
 | 단독 행동 / `SoloActionTraitSpec` | `{보호막량}` → `ShieldAmount`; `{반경}` → `RadiusCells`; `{필요주변점유칸수}` → `RequiredOccupiedNeighborCount`; `{초기화주기}` → `ResetEveryControllerTurnEnds` | 설정량 / 칸 / 주변의 서로 다른 점유 **칸 수** / **자기 진영 턴 종료 횟수**. 유닛 수가 아니며 점유 수는 정확히 일치 조건. 원본 프로퍼티의 옛 이름과 실제 주기 단위를 구분 |
 | 고정 사격 / `StationaryFireTraitSpec` | `{피해증가율}` → `ExtraDamagePercent` | 가하는 피해 증가 백분율 |

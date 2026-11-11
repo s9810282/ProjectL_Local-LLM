@@ -1,4 +1,5 @@
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
 namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
 {
@@ -47,7 +48,8 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
             int shopCommandNumber = 0,
             bool canReserveRecovery = false,
             bool canReserveGrowth = false,
-            bool growthNeedsOffer = false)
+            bool growthNeedsOffer = false,
+            RunId abandonRunId = default)
         {
             IsLoading = isLoading;
             CombatEntry = combatEntry;
@@ -64,10 +66,14 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage
             CanReserveRecovery = canReserveRecovery;
             CanReserveGrowth = canReserveGrowth;
             GrowthNeedsOffer = growthNeedsOffer;
+            AbandonRunId = abandonRunId;
         }
 
         /// <summary>씬 로딩 중입니다. 이때는 다른 사실을 읽지 않습니다.</summary>
         public bool IsLoading { get; }
+
+        /// <summary>포기할 런의 ID입니다. 요청이 없으면 비어 있습니다.</summary>
+        public RunId AbandonRunId { get; }
 
         public StageCombatEntryState CombatEntry { get; }
 

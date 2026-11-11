@@ -67,8 +67,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Outcome.IsStageEnded, Is.True);
             Assert.That(result.FinalState.Phase, Is.EqualTo(CombatFlowPhase.Finished));
             Assert.That(result.FinalState.Turn.SameValues(input.State.Turn), Is.True);
-            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.ControllerTurnStarted ||
-                e.Kind == CombatEventKind.NightEnded), Is.False);
+            Assert.That(result.Events.Any(e => e.Kind == CombatEventKind.ControllerTurnStarted), Is.False);
         }
 
         internal static CombatCommandInput Scheduled(int priority = 10)

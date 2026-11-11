@@ -90,7 +90,7 @@ namespace ProjectL.Tests.Core
             var state = main ? new MainCharacterPersistentState(10, 10, 10) : null;
             var souls = new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 };
             int Read(OwnedCharacterRecord record) => OwnedCharacterStatsCalculator.Calculate(new[] { profile },
-                UnitSpecTestFactory.CreateGrowthCategoryCatalog(), new[] { record }, state, souls)[0].Stats.AttackPower;
+                UnitSpecTestFactory.CreateGrowthCategoryCatalog(), new[] { record }, state, souls, default)[0].Stats.AttackPower;
             Assert.That(Read(owned), Is.EqualTo(Read(basis) + 2));
             var registry = TraitRegistry.CreateDefault();
             var definition = new UnitCatalog(new[] { profile.Definition }, registry,
@@ -106,7 +106,7 @@ namespace ProjectL.Tests.Core
         [Test]
         public void TraitTurn_CopyAndEqualityPreserveBothSides()
         {
-            var state = new CombatCommandState(4,4,CombatFlowPhase.PlayerInput,false,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
+            var state = new CombatCommandState(4,4,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
             var factsType = ContractType("TraitTurnFacts");
             object turns = Activator.CreateInstance(factsType, 2, 3);
             var changed = (CombatCommandState)With(state, "traitTurn", turns);

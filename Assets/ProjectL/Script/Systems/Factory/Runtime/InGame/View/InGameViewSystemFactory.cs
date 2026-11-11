@@ -37,7 +37,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
         /// <summary>View 그룹을 조립합니다.</summary>
         /// <remarks>
         /// 같은 오류 경계를 각 View에 넘기고 그룹이 소유하는 단일 입력 정리 콜백을 연결합니다(P3.9).
-        /// 오류 경계를 생략하면(하위 Factory를 따로 부르는 테스트) 로그를 남기는 기본 경계를 만듭니다.
+        /// 오류 경계를 생략하면 로그를 남기는 기본 경계를 만듭니다. 운영 조립(<c>InGameSystemFactory.CreateComposition</c>)은 늘 경계를 넘깁니다.
         /// 사건 순서대로 연출한 뒤 기존 View가 결과를 한 번 확인합니다.
         /// </remarks>
         public static IExportSystemServices Create(
@@ -77,9 +77,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             // 증강 선택 요청 소유자도 씬보다 오래 사는 런타임 수명이다(강화 View 설계 §14 TG6).
             var traitGrowth = new TraitGrowthRequestLifetime(faults);
             traitGrowth.ExportServices(builder);
-            // 튜토리얼 실행 소유자는 씬보다 오래 사는 런타임 수명이다(튜토리얼 설계 §10). 시간은 배율 없는 실제 시간으로 잰다(§15.4.1).
-            var tutorial = new TutorialViewSystem(faults, () => Time.realtimeSinceStartupAsDouble,
-                () => Application.isFocused, TutorialDevLog, tutorialInput.Slot);
+            // 튜토리얼 실행 소유자는 씬보다 오래 사는 런타임 수명이다(튜토리얼 설계 §10).
+            var tutorial = new TutorialViewSystem(faults, combatView.ReadInputWindow, TutorialDevLog, tutorialInput.Slot);
             tutorial.ExportServices(builder);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 {
     /// <summary>
     /// 연출 없이 사실만 반영하는 사건의 표시입니다(Presenter 분리 설계 S3). 표에 이 처리기로 등록한 형식 가운데
-    /// 영혼(캐릭터 사실)·구조물·가시 소비·오브젝트 발동·지형 종류 바뀜(약한 지반 붕괴)·특성 흔적·아이템·추락·표식·걸린 상태 바뀜만 반영할 것이 있고,
+    /// 영혼(캐릭터 사실)·가시 소비·오브젝트 발동·지형 종류 바뀜(약한 지반 붕괴)·특성 흔적·아이템·추락·표식·걸린 상태 바뀜만 반영할 것이 있고(구조물 사실은 <see cref="CombatStructureEventHandler"/>가 반영),
     /// 나머지는 틀의 일반 경로(소리·순간 큐·다시 그리기)만 탑니다.
     /// </summary>
     internal sealed class CombatFactEventHandler : CombatEventHandler

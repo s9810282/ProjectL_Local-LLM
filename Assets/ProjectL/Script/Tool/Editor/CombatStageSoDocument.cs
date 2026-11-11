@@ -679,7 +679,7 @@ namespace ProjectL.Tool.Editor
     {
         // 배경 방식(StageViewPropMode)의 순번입니다. 방식이 쓰지 않는 칸(맵 SO·맵 프리팹·타일)도 지우지 않고 그대로 둡니다(설계 §12 UT2, P-UT4).
         public int mode;
-        public string gameObjectGuid = "", mapGuid = "", cameraGuid = "";
+        public string gameObjectGuid = "", mapGuid = "";
         public bool disableRockfallTunnelExplosion;
         public Vector3 positionOffset, rotationOffset, scaleOffset = Vector3.one;
         public CombatStageSoTileLayout tiles = new CombatStageSoTileLayout();

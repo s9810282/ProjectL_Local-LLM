@@ -28,6 +28,40 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Structure = 2,
     }
 
+    /// <summary>강제 이동이 다음 칸에 들어가지 못한 이유입니다. 작렬 같은 넉백 변형의 부딪힘 종류이기도 합니다.</summary>
+    public enum AttackKnockbackCollisionKind
+    {
+        /// <summary>맵 끝, 벽 지형, 낮은 칸에서 고지대로 들어가려는 턱입니다.</summary>
+        Wall = 1,
+        /// <summary>살아 있는 구조물(장애물·화약통·본부 등)입니다.</summary>
+        Structure = 2,
+        /// <summary>살아 있는 필드 캐릭터입니다.</summary>
+        Character = 3,
+    }
+
+    /// <summary>
+    /// 넉백이 막혀 멈춘 곳에서 부딪힘 피해가 난 사실입니다. 부딪힘 피해를 내는 넉백(작렬)일 때만 넉백 요약에 붙습니다.
+    /// 피해량은 체력 사건과 발동 사건(<see cref="TraitActivationKind.CrashImpactCollided"/>)이 나타냅니다.
+    /// </summary>
+    public sealed class AttackKnockbackCollision
+    {
+        public AttackKnockbackCollisionKind Kind { get; }
+        /// <summary>막은 칸입니다. 맵 밖일 수 있습니다.</summary>
+        public CellCoord Cell { get; }
+        /// <summary>부딪힌 구조물·캐릭터입니다. 벽이면 비어 있습니다.</summary>
+        public EntityId? EntityId { get; }
+
+        public AttackKnockbackCollision(AttackKnockbackCollisionKind kind, CellCoord cell, EntityId? entityId)
+        {
+            if (!Enum.IsDefined(typeof(AttackKnockbackCollisionKind), kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+            if (kind == AttackKnockbackCollisionKind.Wall ? entityId.HasValue : !entityId.HasValue || entityId.Value.IsEmpty)
+                throw new ArgumentException("벽 부딪힘은 개체가 없고, 구조물·캐릭터 부딪힘은 개체가 있어야 합니다.", nameof(entityId));
+            Kind = kind;
+            Cell = cell;
+            EntityId = entityId;
+        }
+    }
+
     /// <summary>
     /// 이 공격의 넉백 요약입니다. 칸 단위 재생 원본은 Moved 사건입니다(설계 2026-10-27 §5.3).
     /// 다칸 대상의 최종 점유 칸은 현재 점유 칸에 FinalAnchor - StartAnchor를 더해 얻습니다.
@@ -45,9 +79,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>경로의 마지막 칸이며, 경로가 비었으면 시작 칸입니다.</summary>
         public CellCoord FinalAnchor { get; }
         public AttackKnockbackStop Stop { get; }
+        /// <summary>막혀 멈춘 곳에서 부딪힘 피해가 났으면 그 사실입니다. 일반 넉백·완주·면역·중단이면 비어 있습니다.</summary>
+        public AttackKnockbackCollision Collision { get; }
 
         public AttackKnockbackSnapshot(EntityId targetId, AttackKnockbackTargetKind targetKind, CellCoord startAnchor,
-            CellCoord step, int requestedDistance, IReadOnlyList<CellCoord> path, AttackKnockbackStop stop)
+            CellCoord step, int requestedDistance, IReadOnlyList<CellCoord> path, AttackKnockbackStop stop,
+            AttackKnockbackCollision collision = null)
         {
             if (targetId.IsEmpty) throw new ArgumentOutOfRangeException(nameof(targetId));
             if (!Enum.IsDefined(typeof(AttackKnockbackTargetKind), targetKind)) throw new ArgumentOutOfRangeException(nameof(targetKind));
@@ -72,6 +109,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             };
             if (!countMatchesStop)
                 throw new ArgumentException("넉백 경로의 칸 수가 멈춘 이유와 맞지 않습니다.", nameof(path));
+            if (collision != null)
+            {
+                var blocked = (copy.Length == 0 ? startAnchor : copy[copy.Length - 1]) + step;
+                if (stop != AttackKnockbackStop.Blocked || collision.Cell != blocked || targetKind != AttackKnockbackTargetKind.Character)
+                    throw new ArgumentException("부딪힘은 막혀 멈춘 캐릭터 넉백의 다음 칸에서만 납니다.", nameof(collision));
+            }
             TargetId = targetId;
             TargetKind = targetKind;
             StartAnchor = startAnchor;
@@ -80,6 +123,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Path = Array.AsReadOnly(copy);
             FinalAnchor = copy.Length == 0 ? startAnchor : copy[copy.Length - 1];
             Stop = stop;
+            Collision = collision;
         }
     }
 }

@@ -125,7 +125,7 @@ namespace ProjectL.Tests.Core
             var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Tile(71, CellCoord.Right, StaticTerrainKind.Sandstorm));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
             input = Rebind(input, input.EnvironmentBindings);
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             var expected = MovementContextCalculator.Capture(input, Owner.Player, rules);
@@ -143,7 +143,7 @@ namespace ProjectL.Tests.Core
             var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right),
                 Tile(71, new CellCoord(2, 0), StaticTerrainKind.HighGround));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray())));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Append(new PushFact()).ToArray())));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new PushRule(knockback) });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(moved ? new CellCoord(2, 0) : CellCoord.Right));
@@ -236,7 +236,7 @@ namespace ProjectL.Tests.Core
             var input = Terrain(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0)),
                 Tile(71, CellCoord.Right, StaticTerrainKind.Sandstorm));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.IsNight,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 10) },s.Turn,s.Environment));
             var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
             Assert.That(CombatMovementCalculator.Preview(input, rules).ProjectedActor.Health.CurrentHealth, Is.EqualTo(92));
             var result = CombatCommandCalculator.Calculate(input, rules);
@@ -253,7 +253,7 @@ namespace ProjectL.Tests.Core
             var moved = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             var after = MovementTestData.After(moved);
             Assert.That(EnvironmentTerrainRules.AppointRange(after, MovementTestData.Actor(moved)), Is.EqualTo(4));
-            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(after, CombatControllerPhase.StartingPlayer));
+            var started = CombatTurnCalculator.BeginControllerTurn(EnemyControllerPhaseTests.Input(after, CombatControllerPhase.StartingPlayer), Array.Empty<IMovementTileRule>());
             var nextMove = CombatCommandTestData.FreshCommand(CombatCommandComposition.Project(started), CombatCommandKind.Move, input.ActorId);
             var returned = CombatCommandCalculator.Calculate(MovementTestData.Route(nextMove, CellCoord.Right, CellCoord.Zero), Array.Empty<IMovementTileRule>());
             var restored = MovementTestData.After(returned);
@@ -288,7 +288,7 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput Terrain(CombatCommandInput input, params StaticTerrainFact[] terrain)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(terrain));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(terrain));
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts, input.TargetCell,
                 input.Rotation, input.Battle, input.ProcessingKind, input.Path, input.MovementContext, input.BattleInstanceId,

@@ -29,8 +29,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             Color allyHoverMoveRange,
             Color enemyMoveRange,
             Color rockfallWarning,
+            Color nexusReinforcementRange,
             float fillAlpha,
-            Color gimmickHoverRange = default)
+            Color gimmickHoverRange = default,
+            Color roarForecast = default)
         {
             if (!float.IsFinite(fillAlpha) || fillAlpha < 0f || fillAlpha > 1f)
                 throw new ArgumentOutOfRangeException(nameof(fillAlpha), fillAlpha, "채우기 알파는 [0, 1]이어야 합니다.");
@@ -55,7 +57,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             AllyHoverMoveRange = allyHoverMoveRange;
             EnemyMoveRange = enemyMoveRange;
             RockfallWarning = rockfallWarning;
+            NexusReinforcementRange = nexusReinforcementRange;
             GimmickHoverRange = gimmickHoverRange;
+            RoarForecast = roarForecast;
             FillAlpha = fillAlpha;
         }
 
@@ -89,6 +93,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal Color RockfallWarning { get; }
         /// <summary>호버한 토네이도·하붑·Rider 먼지 연막의 현재 영역 색입니다.</summary>
         internal Color GimmickHoverRange { get; }
+        /// <summary>적 본부 증원 범위의 테두리 색입니다.</summary>
+        internal Color NexusReinforcementRange { get; }
+        /// <summary>포효가 임박한 보스의 포효 범위 색입니다(테두리·채우기, 포효 예고 설계 RF4).</summary>
+        internal Color RoarForecast { get; }
 
         /// <summary>칸 채우기 불투명도입니다. 모든 채우기가 함께 쓰고, 강조 색 알파에 곱합니다.</summary>
         internal float FillAlpha { get; }
@@ -123,6 +131,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 case FieldHighlightColor.EnemyMoveRange: color = EnemyMoveRange; return true;
                 case FieldHighlightColor.RockfallWarning: color = RockfallWarning; return true;
                 case FieldHighlightColor.GimmickHoverRange: color = GimmickHoverRange; return true;
+                case FieldHighlightColor.NexusReinforcementRange: color = NexusReinforcementRange; return true;
+                case FieldHighlightColor.RoarForecast: color = RoarForecast; return true;
                 case FieldHighlightColor.Static: return TryGetZone(zone, out color);
                 default: color = default; return false;
             }

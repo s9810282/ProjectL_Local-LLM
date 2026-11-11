@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: RecoveryOption_3
   m_EditorClassIdentifier: 
   optionId: 3
-  cost: 10
+  cost: 200
+  effectKind: 0
+  maxHealthIncrease: 10
   healMode: 2
   healValue: 0

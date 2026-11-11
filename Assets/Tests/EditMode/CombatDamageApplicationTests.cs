@@ -23,7 +23,7 @@ namespace ProjectL.Tests.Core
             var characters = input.Characters.ToDictionary(c => c.EntityId);
             var holder = new EntityId(2);
             characters[holder] = CombatItemDirectDamageTests.Equip(characters[holder], 100, 4);
-            var damage = new CombatDamageApplication(new[] { Lantern }, 0, characters, new List<CombatEvent>());
+            var damage = new CombatDamageApplication(new[] { Lantern }, characters, new List<CombatEvent>());
 
             var outcome = damage.Apply(holder, CombatDamageKind.OrdinaryAttack,
                 new CombatDamageOrigin(CellCoord.Zero, input.ActorId, 1), 0);
@@ -41,7 +41,7 @@ namespace ProjectL.Tests.Core
             var characters = input.Characters.ToDictionary(c => c.EntityId);
             foreach (int id in new[] { 2, 3 })
                 characters[new EntityId(id)] = CombatItemDirectDamageTests.Equip(characters[new EntityId(id)], 60, 1);
-            var damage = new CombatDamageApplication(CombatItemDirectDamageTests.Definitions, 0, characters, new List<CombatEvent>());
+            var damage = new CombatDamageApplication(CombatItemDirectDamageTests.Definitions, characters, new List<CombatEvent>());
 
             var first = damage.Apply(new EntityId(2), CombatDamageKind.EnvironmentDamage, new CombatDamageOrigin(null, null, 1), 15);
             var captured = damage.CaptureRecovery();
@@ -65,16 +65,5 @@ namespace ProjectL.Tests.Core
             Assert.That(hit.DamageDealt, Is.EqualTo(15));
         }
 
-        [Test]
-        public void SharedProjection_RejectsBoundaryWithDifferentPreparationIndex()
-        {
-            var input = CombatCommandTestData.Input();
-            var damage = new CombatDamageApplication(input.ItemDefinitions, input.State.Turn.PreparationIndex + 1,
-                input.Characters.ToDictionary(c => c.EntityId), new List<CombatEvent>());
-            Assert.Throws<ArgumentException>(() => new MovementProjection(input, input.State, damage,
-                input.State.Structures.ToDictionary(s => s.EntityId), input.State.ThornFields.ToDictionary(f => f.Cell),
-                input.SoulCounts.ToDictionary(p => p.Key, p => p.Value), input.Souls, new List<long>(),
-                new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts)));
-        }
     }
 }

@@ -9,10 +9,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// 층 구성: 시작 노드 하나(깊이 0) → 깊이 1~DepthCount-2 층마다 WidthMin~WidthMax개의 일반 노드 → 보스 노드 하나.
     /// SingleFirstLayer면 깊이 1은 노드 하나다.
     /// 연결: 앞 층의 모든 노드는 다음 층으로 하나 이상 이어지고, 다음 층의 모든 노드는 들어오는 연결이 하나 이상 있다.
+    /// 줄 바꾸기: 한 갈래인 노드는 확률로 지금 대상의 바로 옆 노드에 한 갈래 더 이어진다(최대 두 갈래, 같은 층 사이 선과 교차 금지).
+    /// 모든 층을 이은 뒤 갈래 노드가 맵당 최소 수보다 적으면 같은 규칙으로 더 잇는다.
+    /// 갈래 노드는 노드가 둘 이상인 층에서 다음 노드 둘 이상과 이어진 노드다. 노드 하나뿐인 층은 모두 지나가므로 세지 않는다.
     /// 배정: 고정 노드(개발 진입 고정·첫 층 스테이지) → 종류별 최소 개수 → 남은 자리는 종류 가중치 추첨
-    /// → 종류 안에서 스테이지 키 균등 추첨(첫 층 스테이지는 추첨 후보에서 뺀다).
-    /// 종류는 출현 시작 깊이 이상의 노드에만 놓인다(고정 노드는 예외). WidthMin 1, 모든 시작 깊이 1이면
-    /// 깊이 규칙이 없던 때와 같은 시드에서 같은 그래프를 만든다.
+    /// → 선택한 종류의 연속 완화 → 종류 안에서 스테이지 키 균등 추첨(첫 층 스테이지는 추첨 후보에서 뺀다).
+    /// 종류는 출현 시작 깊이 이상의 노드에만 놓인다(고정 노드는 예외). 연속 완화 없이 WidthMin 1, 모든 시작 깊이 1,
+    /// 줄 바꾸기 확률 0, 최소 갈래 0이면 깊이 규칙이 없던 때와 같은 시드에서 같은 그래프를 만든다.
+    /// (그때의 Nearest 추가 연결은 늘 이미 이어진 노드를 골라 효과가 없었으므로, Nearest는 어떤 확률이었든 같다.)
     /// </summary>
     public static class ChapterGraphGenerator
     {
@@ -33,6 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (pinned != null) fixedNodes.Add(pinned);
             if (spec.PlacesFirstStage) fixedNodes.Add(PlaceFirstStage(spec, layers));
             AssignKinds(spec, middle, fixedNodes, new Random(unchecked(spec.Seed ^ DistributionSeedMask)));
+            ReduceConsecutiveKinds(middle, fixedNodes);
             AssignStageKeys(spec, middle, fixedNodes, new Random(unchecked(spec.Seed ^ StageKeySeedMask)));
             EnsureMinimums(spec, middle);
 
@@ -43,7 +48,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return result.AsReadOnly();
         }
 
-        // 층 폭 → 층 사이 연결 순서로 모양 전용 난수만 쓴다. 이 순서를 바꾸지 않는다.
+        // 층 폭 → 층 사이 연결 → 맵당 최소 갈래 순서로 모양 전용 난수만 쓴다. 이 순서를 바꾸지 않는다.
+        // 최소 갈래는 모든 연결 뒤에 돌므로 그 값을 바꿔도 앞의 폭·연결은 같다.
         private static List<List<Node>> BuildTopology(ChapterGraphSpec spec, Random random)
         {
             var layers = new List<List<Node>> { new() { new Node(1, 0, 0) } };
@@ -60,6 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             layers.Add(new List<Node> { new Node(nextId, spec.DepthCount - 1, 0) { StageKey = spec.BossStageKey } });
 
             for (int depth = 0; depth < layers.Count - 1; depth++) Connect(layers[depth], layers[depth + 1], random, spec);
+            EnsureForks(layers, random, spec.MinimumBranchCount);
             return layers;
         }
 
@@ -144,6 +151,81 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
         }
 
+        // 생성 중 임시 배정만 교환한다. 종류별 개수와 모양은 그대로이고, 난수도 추가로 쓰지 않는다.
+        private static void ReduceConsecutiveKinds(List<Node> middle, List<Node> fixedNodes)
+        {
+            if (!middle.Exists(node => node.Pool.Rule.ReduceConsecutive)) return;
+
+            var movable = new List<Node>();
+            var indices = new Dictionary<int, int>(middle.Count);
+            for (int i = 0; i < middle.Count; i++)
+            {
+                indices.Add(middle[i].Id, i);
+                if (!fixedNodes.Contains(middle[i])) movable.Add(middle[i]);
+            }
+            if (movable.Count < 2) return;
+
+            var edges = new List<(int From, int To)>();
+            for (int i = 0; i < middle.Count; i++)
+            {
+                foreach (int nextId in middle[i].Next)
+                {
+                    if (indices.TryGetValue(nextId, out int target)) edges.Add((i, target));
+                }
+            }
+
+            var incoming = new int[middle.Count];
+            var outgoing = new int[middle.Count];
+            long score = RepeatScore(middle, edges, incoming, outgoing);
+            // middle은 생성 순서상 노드 ID 오름차순이다. 동점이면 먼저 본 쌍을 유지한다.
+            // 개선 교환은 이동 가능한 노드 수까지만 수행하여 큰 맵에서도 탐색 횟수를 제한한다.
+            for (int round = 0; round < movable.Count && score > 0; round++)
+            {
+                long bestScore = score;
+                Node bestLeft = null;
+                Node bestRight = null;
+                for (int left = 0; left < movable.Count - 1; left++)
+                {
+                    for (int right = left + 1; right < movable.Count; right++)
+                    {
+                        Node a = movable[left];
+                        Node b = movable[right];
+                        if (a.Pool == b.Pool || a.Depth < b.Pool.Rule.MinDepth || b.Depth < a.Pool.Rule.MinDepth) continue;
+
+                        (a.Pool, b.Pool) = (b.Pool, a.Pool);
+                        long candidate = RepeatScore(middle, edges, incoming, outgoing);
+                        (a.Pool, b.Pool) = (b.Pool, a.Pool);
+                        if (candidate >= bestScore) continue;
+                        bestScore = candidate;
+                        bestLeft = a;
+                        bestRight = b;
+                    }
+                }
+                if (bestLeft == null) break;
+                (bestLeft.Pool, bestRight.Pool) = (bestRight.Pool, bestLeft.Pool);
+                score = bestScore;
+            }
+        }
+
+        // 같은 종류의 연결 하나와 세 노드 연속 경로 하나마다 1점이다. 고정 노드도 계산에 포함한다.
+        // 각 노드의 같은 종류 진입 수 × 진출 수로 세 노드 경로를 세므로 전체 경로를 열거하지 않는다.
+        private static long RepeatScore(List<Node> middle, List<(int From, int To)> edges, int[] incoming, int[] outgoing)
+        {
+            Array.Clear(incoming, 0, incoming.Length);
+            Array.Clear(outgoing, 0, outgoing.Length);
+            long score = 0;
+            foreach (var edge in edges)
+            {
+                ChapterStagePool pool = middle[edge.From].Pool;
+                if (!pool.Rule.ReduceConsecutive || pool != middle[edge.To].Pool) continue;
+                outgoing[edge.From]++;
+                incoming[edge.To]++;
+                score++;
+            }
+            for (int i = 0; i < middle.Count; i++) score += (long)incoming[i] * outgoing[i];
+            return score;
+        }
+
         // 키 추첨은 키 전용 난수로 노드 ID 순서에 한 번씩 한다. 후보가 하나여도 건너뛰지 않는다.
         // 건너뛰면 한 종류에 후보를 추가할 때 뒤 노드들의 다른 종류 키까지 바뀐다.
         // 첫 층 스테이지는 그 종류의 후보에서 빼고 뽑는다(입력 검사가 다른 후보가 있음을 보장한다).
@@ -197,9 +279,92 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 foreach (Node node in from) if (node.Next.Contains(to[target].Id)) { hasIncoming = true; break; }
                 if (!hasIncoming) Add(from[Math.Min(target * from.Count / to.Count, from.Count - 1)], to[target].Id);
             }
+            // 다음 층이 둘 이상이면 노드마다 한 번 굴린다. 굴리는 횟수는 확률·결과와 무관하고,
+            // 옆 노드 둘이 다 될 때만 고르는 난수를 하나 더 쓴다. 확률 0이면 줄 바꾸기가 없던 때와 같은 난수를 쓴다.
             for (int source = 0; source < from.Count; source++)
-                if (to.Count > 1 && random.NextDouble() < spec.AdditionalConnectionChance)
-                    Add(from[source], to[Select(source, from.Count, to.Count, random, spec)].Id);
+            {
+                if (to.Count <= 1 || random.NextDouble() >= spec.AdditionalConnectionChance) continue;
+                int count = LaneChangeTargets(from, to, source, out int first, out int second);
+                if (count == 0) continue;
+                Add(from[source], to[count == 2 && random.Next(2) == 1 ? second : first].Id);
+            }
+        }
+
+        // 맵 전체의 갈래 노드가 최소 수보다 적으면 줄 바꾸기와 같은 규칙의 후보 중 하나를 고르게 뽑아 잇는다.
+        // 후보는 노드가 둘 이상인 층의 노드만이라 하나 이을 때마다 갈래 노드가 하나 는다.
+        // 맵 모양상 후보가 없으면 있는 만큼만 두고 끝낸다. 이미 충분하면 난수를 쓰지 않는다.
+        private static void EnsureForks(List<List<Node>> layers, Random random, int minimum)
+        {
+            int forks = CountForks(layers);
+            var candidates = new List<(int Depth, int Source, int Target)>();
+            while (forks < minimum)
+            {
+                candidates.Clear();
+                for (int depth = 0; depth < layers.Count - 1; depth++)
+                {
+                    List<Node> from = layers[depth];
+                    if (from.Count < 2) continue;
+                    for (int source = 0; source < from.Count; source++)
+                    {
+                        int count = LaneChangeTargets(from, layers[depth + 1], source, out int first, out int second);
+                        if (count > 0) candidates.Add((depth, source, first));
+                        if (count > 1) candidates.Add((depth, source, second));
+                    }
+                }
+                if (candidates.Count == 0) return;
+                var pick = candidates[random.Next(candidates.Count)];
+                Add(layers[pick.Depth][pick.Source], layers[pick.Depth + 1][pick.Target].Id);
+                forks++;
+            }
+        }
+
+        private static int CountForks(List<List<Node>> layers)
+        {
+            int forks = 0;
+            foreach (List<Node> layer in layers)
+                if (layer.Count > 1)
+                    foreach (Node node in layer)
+                        if (node.Next.Count > 1) forks++;
+            return forks;
+        }
+
+        // 줄 바꾸기로 이을 수 있는 다음 층 폭 번호를 작은 쪽부터 돌려준다(최대 둘).
+        // 지금 한 갈래인 노드만, 그 대상의 바로 옆 노드로, 같은 층 사이의 다른 선과 교차하지 않을 때만 잇는다.
+        private static int LaneChangeTargets(List<Node> from, List<Node> to, int source, out int first, out int second)
+        {
+            first = second = -1;
+            if (from[source].Next.Count != 1) return 0;
+            int current = WidthOf(to, from[source].Next[0]);
+            int count = 0;
+            for (int target = current - 1; target <= current + 1; target += 2)
+            {
+                if (target < 0 || target >= to.Count || Crosses(from, to, source, target)) continue;
+                if (count++ == 0) first = target;
+                else second = target;
+            }
+            return count;
+        }
+
+        // 선 (source→target)과 (c→d)는 source < c이면서 target > d이거나 그 반대일 때 교차한다. 끝점을 나누면 교차가 아니다.
+        private static bool Crosses(List<Node> from, List<Node> to, int source, int target)
+        {
+            for (int other = 0; other < from.Count; other++)
+            {
+                if (other == source) continue;
+                foreach (int nextId in from[other].Next)
+                {
+                    int width = WidthOf(to, nextId);
+                    if ((source < other && target > width) || (source > other && target < width)) return true;
+                }
+            }
+            return false;
+        }
+
+        private static int WidthOf(List<Node> layer, int nodeId)
+        {
+            for (int width = 0; width < layer.Count; width++)
+                if (layer[width].Id == nodeId) return width;
+            throw new InvalidOperationException($"노드 {nodeId}가 다음 층에 없습니다.");
         }
 
         private static int Select(int source, int sourceCount, int targetCount, Random random, ChapterGraphSpec spec)

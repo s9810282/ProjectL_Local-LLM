@@ -87,12 +87,26 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
             summonedUnit != null ? summonedUnit.Key : EntityKey.None, maxLivingSummons, firstActionDelay);
     }
 
-    /// <summary>포효를 발동하는 밤 피격 횟수입니다. 넉백 거리는 기존 넉백 특성에 입력합니다.</summary>
+    /// <summary>
+    /// 포효 발동 카운트와 카운트가 쌓이는 양입니다. 넉백 거리는 기존 넉백 특성에 입력합니다.
+    /// 카운트는 밤 피격과 진영 턴 종료로 쌓이고, 발동 카운트에 닿으면 포효한 뒤 0으로 돌아갑니다.
+    /// </summary>
     [Serializable]
     internal sealed class RoarTraitAuthoring : UnitTraitAuthoring
     {
+        [Tooltip("포효가 발동하는 카운트입니다. 아래 양들로 쌓인 카운트가 이 값에 닿으면 포효합니다.")]
         [SerializeField, Min(1)] private int hitThreshold = 1;
 
-        internal override UnitTraitData ToData() => new RoarTraitData(hitThreshold);
+        [Tooltip("밤에 피격될 때마다 쌓이는 카운트입니다(한 공격으로 여러 번 맞아도 한 번). 0이면 피격으로는 쌓이지 않습니다.")]
+        [SerializeField, Min(0)] private int countPerHit = 1;
+
+        [Tooltip("이 유닛의 진영 턴이 끝날 때마다 쌓이는 카운트입니다(보스면 적 턴 종료). 0이면 쌓이지 않습니다.")]
+        [SerializeField, Min(0)] private int countPerOwnSideTurnEnd;
+
+        [Tooltip("상대 진영 턴이 끝날 때마다 쌓이는 카운트입니다(보스면 플레이어 턴 종료). 0이면 쌓이지 않습니다.")]
+        [SerializeField, Min(0)] private int countPerOpposingSideTurnEnd;
+
+        internal override UnitTraitData ToData() =>
+            new RoarTraitData(hitThreshold, countPerHit, countPerOwnSideTurnEnd, countPerOpposingSideTurnEnd);
     }
 }

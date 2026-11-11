@@ -27,8 +27,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public float NearestWeight { get; }
         /// <summary>WeightedRandom에서 나머지 노드 하나의 가중치.</summary>
         public float OtherWeight { get; }
-        /// <summary>노드마다 다음 층으로 연결을 하나 더 만들 확률(0~1).</summary>
+        /// <summary>
+        /// 한 갈래인 노드가 지금 대상의 바로 옆 노드에 한 갈래 더 이어질 확률(0~1). 노드는 최대 두 갈래이고,
+        /// 같은 층 사이의 다른 선과 교차하면 잇지 않는다. 연결 방식과 무관하게 같은 규칙이다.
+        /// </summary>
         public float AdditionalConnectionChance { get; }
+        /// <summary>
+        /// 맵 전체에 둘 갈래 노드의 최소 수. 0이면 보장하지 않는다. 갈래 노드는 노드가 둘 이상인 층에서 다음 노드 둘 이상과
+        /// 이어진 노드다. 모자라면 줄 바꾸기와 같은 규칙으로 더 잇고, 맵 모양상 더 이을 곳이 없으면 있는 만큼만 둔다.
+        /// </summary>
+        public int MinimumBranchCount { get; }
         /// <summary>종류별 후보 묶음. 종류 오름차순이며 종류·스테이지 키가 묶음 사이에서 겹치지 않는다.</summary>
         public IReadOnlyList<ChapterStagePool> StagePools { get; }
         public int BossStageKey { get; }
@@ -44,9 +52,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public ChapterGraphSpec(int depthCount, int widthMax, int widthMin, bool singleFirstLayer, int seed, ChapterGraphConnection connection,
             float nearestWeight, float otherWeight, float additionalConnectionChance,
-            IReadOnlyList<ChapterStagePool> stagePools, int bossStageKey, ChapterStagePin pin = null, int firstStageKey = 0)
+            IReadOnlyList<ChapterStagePool> stagePools, int bossStageKey, ChapterStagePin pin = null, int firstStageKey = 0,
+            int minimumBranchCount = 0)
         {
             if (firstStageKey < 0) throw new ArgumentOutOfRangeException(nameof(firstStageKey));
+            if (minimumBranchCount < 0) throw new ArgumentOutOfRangeException(nameof(minimumBranchCount));
             if (depthCount < 2) throw new ArgumentOutOfRangeException(nameof(depthCount));
             if (widthMax < 1) throw new ArgumentOutOfRangeException(nameof(widthMax));
             if (widthMin < 1 || widthMin > widthMax) throw new ArgumentOutOfRangeException(nameof(widthMin));
@@ -123,6 +133,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             NearestWeight = nearestWeight;
             OtherWeight = otherWeight;
             AdditionalConnectionChance = additionalConnectionChance;
+            MinimumBranchCount = minimumBranchCount;
             StagePools = Array.AsReadOnly(pools);
             BossStageKey = bossStageKey;
             Pin = pin;

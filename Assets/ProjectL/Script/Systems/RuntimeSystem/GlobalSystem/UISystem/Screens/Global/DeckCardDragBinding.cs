@@ -10,6 +10,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
     [RequireComponent(typeof(Button))]
     public sealed class DeckCardDragBinding : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIDeckCardBeginDrag = new("Combat.Action.UI.DeckCard.BeginDrag");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIDeckCardDrag = new("Combat.Action.UI.DeckCard.Drag");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIDeckCardEndDrag = new("Combat.Action.UI.DeckCard.EndDrag");
+#endif
+
         private IUIInputReceiver _receiver;
         private Object _receiverObject;
         private Button _button;
@@ -28,6 +35,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIDeckCardBeginDragSample = _profileUIDeckCardBeginDrag.Auto();
+#endif
+
             if (_dragging || eventData.button != PointerEventData.InputButton.Left || !isActiveAndEnabled ||
                 _receiver == null || (_receiver is Object && _receiverObject == null) ||
                 _button == null || !_button.IsActive() || !_button.IsInteractable()) return;
@@ -41,11 +52,19 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         public void OnDrag(PointerEventData eventData)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIDeckCardDragSample = _profileUIDeckCardDrag.Auto();
+#endif
+
             // EventSystem이 드래그 시작을 인식하도록 구현합니다. 포인터 추적은 InputSystem 소유입니다.
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIDeckCardEndDragSample = _profileUIDeckCardEndDrag.Auto();
+#endif
+
             if (eventData.button == PointerEventData.InputButton.Left && eventData.pointerId == _pointerId)
                 EndDrag();
         }

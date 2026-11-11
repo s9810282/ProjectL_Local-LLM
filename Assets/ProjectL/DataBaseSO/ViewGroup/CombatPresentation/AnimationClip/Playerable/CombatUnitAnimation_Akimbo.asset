@@ -20,5 +20,8 @@ MonoBehaviour:
     point: 0
   - eventId: 2
     point: 1
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
   hitClip: {fileID: 0}
   hitCompanionClips: []

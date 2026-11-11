@@ -7,6 +7,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 {
     internal interface ICombatEffectEngine
     {
+        bool RequiresOrderedHits(IReadOnlyList<EffectRuleBinding> bindings);
+
         EffectAttackTargetingEvaluation EvaluateAttackTargeting(IReadOnlyList<EffectRuleBinding> bindings);
 
 
@@ -40,6 +42,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// </summary>
         EffectKillChainAttackEvaluation EvaluateKillChainAttack(
             IReadOnlyList<EffectRuleBinding> bindings);
+
+        /// <summary>
+        /// 죽은 유닛의 사망 특성 기여를 모읍니다. 상태는 바꾸지 않습니다.
+        /// </summary>
+        EffectDeathTraitEvaluation EvaluateDeathTraits(IReadOnlyList<EffectRuleBinding> bindings);
 
         /// <summary>
         /// 환급 요청을 모아 남은 AP 용량 상한까지만 배분합니다.

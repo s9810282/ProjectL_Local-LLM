@@ -4,6 +4,7 @@ using System.Linq;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
+using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Artifact.Item;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Artifact;
 using ProjectL.Systems.ServiceKeys.Runtime;
@@ -18,6 +19,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
     {
         private IDataBaseQueryContext _database;
         private IArtifactBufferReadSink _artifacts;
+
+        internal object Configuration => _database;
+
+        internal ArtifactDefinitionData ReadDefinition(int artifactId)
+        {
+            if (_database == null)
+                throw new InvalidOperationException("배치 Artifact 정의에는 DB 초기화가 필요합니다.");
+            return _database.InGameQuery.ArtifactDefinitionTableQuery.GetDefinition(artifactId);
+        }
 
         public void InitData(IDataBaseQueryContext data)
         {
@@ -38,9 +48,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             var effects = new List<ArtifactPlacedEffectSnapshot>();
             foreach (var item in _artifacts.Current.PlacedItems.OrderBy(i => i.InstanceId))
             {
-                if (_database == null)
-                    throw new InvalidOperationException("배치 Artifact 정의에는 DB 초기화가 필요합니다.");
-                var definition = _database.InGameQuery.ArtifactDefinitionTableQuery.GetDefinition(item.ArtifactId);
+                var definition = ReadDefinition(item.ArtifactId);
                 foreach (var effect in definition.Effects)
                     effects.Add(new ArtifactPlacedEffectSnapshot(item.ArtifactId, item.InstanceId, effect));
             }

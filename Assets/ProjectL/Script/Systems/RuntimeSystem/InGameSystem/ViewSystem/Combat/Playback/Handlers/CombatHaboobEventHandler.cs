@@ -46,6 +46,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
             var composition = CombatComposition.ForAction(CombatPieceCompletion.General);
             composition.Add(new CombatHaboobMovePiece(_haboob, _haboob.Settings.RelocationSeconds), CombatPieceStart.AtStart(), waits: true);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            composition.ProfilingEvent = e;
+#endif
             return _pieces.TryBegin(composition, completed, version);
         }
 

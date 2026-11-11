@@ -16,7 +16,7 @@ MonoBehaviour:
     trainHeadPrefab: {fileID: 3241690100717179933, guid: cb5c9fddb4fb1274b92d7ed2cfa841d3, type: 3}
     trainBodyPrefab: {fileID: 2323463617592482009, guid: 90314b5065509b745a26b377436984ef, type: 3}
     trainBodyCount: 80
-    railPrefab: {fileID: 3846322698156452841, guid: b572839a3fab16c4eaa2e723ec0e5517, type: 3}
+    railPrefab: {fileID: 2384066323462532329, guid: a073ed600e60b7045952effdbd592b51, type: 3}
     railTilePrefab: {fileID: 0}
     railTileYOffset: -0.2233546
     railYOffset: 0.045

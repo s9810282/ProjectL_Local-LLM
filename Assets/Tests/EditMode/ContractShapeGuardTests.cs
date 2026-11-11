@@ -25,7 +25,7 @@ namespace ProjectL.Tests.Core
                 "Cell", "Tiles", "TerrainSourceIds", "ObjectSourceIds", "Thorns", "Souls");
             AssertProperties(typeof(MovementUndoState), "SameValues·WithoutAffected", "Checkpoints");
             AssertProperties(typeof(CombatCommandState), "With·SameValues·SameGameplayValues·이동 투영",
-                "MovementUndo", "Gimmicks", "BoardWidth", "BoardHeight", "Phase", "IsNight", "ItemRandomState", "Rewards",
+                "MovementUndo", "Gimmicks", "Reinforcements", "BoardWidth", "BoardHeight", "Phase", "InCombat", "ItemRandomState", "Rewards",
                 "Structures", "ThornFields", "Turn", "TraitTurn", "Environment", "EnvironmentProgress", "WallBlocking", "Objective", "Allocation");
             AssertProperties(typeof(CombatActionAvailability), "생성자 기본값·WithSourceRevision",
                 "SourceRevision", "MovementUndo", "BattleInstanceId", "ControllerTurnSequence", "ActorId", "ActionUse",

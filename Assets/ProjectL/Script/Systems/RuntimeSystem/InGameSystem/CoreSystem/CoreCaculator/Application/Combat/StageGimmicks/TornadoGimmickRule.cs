@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -10,6 +11,53 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 {
     internal sealed class TornadoGimmickRule : IStageGimmickRule
     {
+        public IEnumerator<HazardCellFact?> EnumerateForecast(CombatCommandInput input, StageGimmickSpec definition,
+            StageGimmickId id, long lastBoundaryCount)
+        {
+            var spec = definition as TornadoGimmickSpec ?? throw new InvalidOperationException("토네이도 설정 형식이 다릅니다.");
+            var group = (TornadoGimmickState)input.State.Gimmicks.Get(id);
+            long current = input.State.Turn.CompletedControllerTurnCount;
+            var seen = new HashSet<(long Boundary, CellCoord Cell)>();
+            var unknown = new HashSet<(long Boundary, bool Contact)>();
+            for (int i = 0; i < spec.Members.Count; i++)
+            {
+                yield return null;
+                var member = spec.Members[i];
+                if (!member.KnownTo.Contains(Owner.Enemy)) continue;
+                var state = group.Members[i];
+                if (state.SourceId != member.SourceId || state.NextBoundaryCount <= current)
+                    throw new InvalidOperationException("토네이도 원본이나 예정 경계가 올바르지 않습니다.");
+                foreach (var cell in TornadoGeometry.FootprintSteps(state.Center, member.SideLength))
+                    yield return Contact(current, cell, member.SourceId);
+
+                long warning = state.NextBoundaryCount;
+                if (state.Phase == TornadoGimmickPhase.Warning)
+                {
+                    if (state.NextBoundaryCount > lastBoundaryCount) continue;
+                    foreach (var center in TornadoGeometry.TravelSteps(state.Center, member.SideLength, member.DiagonalDistance,
+                        input.State.BoardWidth, input.State.BoardHeight, state.LockedDirection.Value))
+                        foreach (var cell in TornadoGeometry.FootprintSteps(center, member.SideLength))
+                            yield return Contact(state.NextBoundaryCount, cell, member.SourceId);
+                    warning = TornadoGimmickPreparationCalculator.WarningAfterTravel(member, state.NextBoundaryCount);
+                }
+                if (warning > lastBoundaryCount) continue;
+                yield return Unpublished(warning, false, member.SourceId);
+                long travel = TornadoGimmickPreparationCalculator.TravelAfterWarning(member, warning);
+                if (travel <= lastBoundaryCount)
+                    yield return Unpublished(travel, true, member.SourceId);
+            }
+
+            HazardCellFact? Contact(long boundary, CellCoord cell, long source) => seen.Add((boundary, cell))
+                ? new HazardCellFact(id, Key, boundary, cell, gaps: StageHazardForecast.TornadoThrowGaps, tornadoSourceId: source)
+                : null;
+
+            HazardCellFact? Unpublished(long boundary, bool contact, long source) => unknown.Add((boundary, contact))
+                ? new HazardCellFact(id, Key, boundary, null, gaps: CombatAssessmentGap.FutureWarning |
+                    (contact ? StageHazardForecast.TornadoThrowGaps : CombatAssessmentGap.None),
+                    tornadoSourceId: contact ? source : null)
+                : null;
+        }
+
         public StageGimmickKey Key => StageGimmickKey.Tornado;
         private readonly IReadOnlyList<IMovementTileRule> _rules;
         internal TornadoGimmickRule(IReadOnlyList<IMovementTileRule> rules)

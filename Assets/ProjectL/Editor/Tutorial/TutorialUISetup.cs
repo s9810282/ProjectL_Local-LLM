@@ -26,6 +26,7 @@ namespace ProjectL.Tool.Editor
         private const string PrefabPath = PrefabFolder + "/TutorialUI.prefab";
         private const string GlobalCanvasPath = "Assets/ProjectL/Prefabs/UI/GlobalUICanvas.prefab";
         private const string NoticePanelName = "NoticePannel";
+        private const string TextBoxSpritePath = "Assets/ProjectL/Sprites/TextBox/Box.png";
         private const string CombatScenePath = "Assets/Scenes/Combat.unity";
         // 전역 UI(GlobalUICanvas 정렬 5·99) 위에서 클릭을 막는 정렬이다(설계 §15.4.3, TutorialViewUI가 100 이상을 검사).
         private const int SortingOrder = 110;
@@ -40,6 +41,8 @@ namespace ProjectL.Tool.Editor
             bool created = prefab == null;
             if (created)
                 prefab = CreatePrefab();
+            else
+                prefab = EnsureFocusBorder(prefab);
 
             int placed = PlaceInCombatScene(prefab);
             Debug.Log($"[TutorialUISetup] 프리팹 {(created ? "만듦" : "이미 있음")}: {PrefabPath}, Combat 씬 인스턴스 {(placed > 0 ? "추가함" : "이미 있음")}.");
@@ -68,7 +71,6 @@ namespace ProjectL.Tool.Editor
                 scaler.referenceResolution = new Vector2(1920f, 1080f);
                 scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 scaler.matchWidthOrHeight = 0f;
-                TutorialViewFocusNotifier notifier = root.AddComponent<TutorialViewFocusNotifier>();
 
                 GameObject uiObject = Child(root.transform, "TutorialUI", uiLayer);
                 Stretch((RectTransform)uiObject.transform);
@@ -86,16 +88,22 @@ namespace ProjectL.Tool.Editor
                 blocker.raycastTarget = true;
 
                 GameObject explanation = CopyNotice(notice, uiObject.transform, "ExplanationBox", new Vector2(0f, -220f),
-                    new Vector2(520f, 120f));
-                GameObject practice = CopyNotice(notice, uiObject.transform, "PracticeGuide", new Vector2(0f, -40f),
-                    new Vector2(760f, 88f));
+                    new Vector2(560f, 144f));
+                ConfigureTextBoxBackground(explanation);
+                GameObject practice = CopyNotice(notice, uiObject.transform, "PracticeGuide", new Vector2(-24f, -136f),
+                    new Vector2(520f, 112f), alignRight: true);
+                ConfigureTextBoxBackground(practice);
                 float practiceHeight = ((RectTransform)practice.transform).sizeDelta.y;
                 GameObject blocked = CopyNotice(notice, uiObject.transform, "BlockedNotice",
-                    new Vector2(0f, -40f - practiceHeight - 16f), new Vector2(520f, 64f));
+                    new Vector2(-24f, -136f - practiceHeight - 16f), new Vector2(520f, 64f), alignRight: true);
+                // 튜토리얼 안내 상자 셋은 모두 같은 배경(Box.png)을 씁니다. 복사한 공용 패널의 배경을 그대로 두지 않습니다.
+                ConfigureTextBoxBackground(blocked);
 
                 using (var data = new SerializedObject(ui))
                 {
                     data.FindProperty("overlay").objectReferenceValue = overlay;
+                    data.FindProperty("focusBorder").objectReferenceValue = CreateFocusBorder(uiObject.transform, explanation.transform);
+                    data.FindProperty("targetBorder").objectReferenceValue = CreateTargetBorder(uiObject.transform, explanation.transform);
                     data.FindProperty("blocker").objectReferenceValue = blocker;
                     data.FindProperty("explanationRoot").objectReferenceValue = explanation;
                     data.FindProperty("explanationText").objectReferenceValue = MessageText(explanation);
@@ -103,7 +111,6 @@ namespace ProjectL.Tool.Editor
                     data.FindProperty("practiceText").objectReferenceValue = MessageText(practice);
                     data.FindProperty("blockedRoot").objectReferenceValue = blocked;
                     data.FindProperty("blockedText").objectReferenceValue = MessageText(blocked);
-                    data.FindProperty("focusNotifier").objectReferenceValue = notifier;
                     data.ApplyModifiedPropertiesWithoutUndo();
                 }
 
@@ -128,8 +135,77 @@ namespace ProjectL.Tool.Editor
             }
         }
 
-        // 공용 안내 패널을 복사해 상단 가운데에 둔다. 화면 스크립트·버튼은 지우고, 아래 칸의 입력을 가리지 않게 클릭을 끈다.
-        private static GameObject CopyNotice(Transform notice, Transform parent, string name, Vector2 position, Vector2 size)
+        private static TutorialFocusBorderGraphic CreateFocusBorder(Transform parent, Transform explanation)
+        {
+            GameObject border = Child(parent, "FocusBorder", parent.gameObject.layer);
+            Stretch((RectTransform)border.transform);
+            border.transform.SetSiblingIndex(explanation.GetSiblingIndex());
+            TutorialFocusBorderGraphic graphic = border.AddComponent<TutorialFocusBorderGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private static TutorialTargetBorderGraphic CreateTargetBorder(Transform parent, Transform explanation)
+        {
+            GameObject border = Child(parent, "TargetBorder", parent.gameObject.layer);
+            Stretch((RectTransform)border.transform);
+            border.transform.SetSiblingIndex(explanation.GetSiblingIndex());
+            TutorialTargetBorderGraphic graphic = border.AddComponent<TutorialTargetBorderGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        // 기존 프리팹은 점선 참조가 없을 때만 보완합니다. 문구·크기·스타일 등 수동 조정값은 유지합니다.
+        private static GameObject EnsureFocusBorder(GameObject prefab)
+        {
+            GameObject contents = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
+            {
+                TutorialViewUI[] screens = contents.GetComponentsInChildren<TutorialViewUI>(true);
+                if (screens.Length != 1)
+                    throw new InvalidOperationException("[TutorialUISetup] UIId.Tutorial 화면은 프리팹에 하나 있어야 합니다.");
+                using var data = new SerializedObject(screens[0]);
+                SerializedProperty reference = data.FindProperty("focusBorder");
+                SerializedProperty targetReference = data.FindProperty("targetBorder");
+                if (reference.objectReferenceValue != null && targetReference.objectReferenceValue != null) return prefab;
+                var explanation = data.FindProperty("explanationRoot").objectReferenceValue as GameObject;
+                if (explanation == null)
+                    throw new InvalidOperationException("[TutorialUISetup] UIId.Tutorial의 explanationRoot 참조가 없습니다.");
+                if (reference.objectReferenceValue == null)
+                {
+                    TutorialFocusBorderGraphic existing = screens[0].GetComponentInChildren<TutorialFocusBorderGraphic>(true);
+                    reference.objectReferenceValue = existing != null ? existing
+                        : CreateFocusBorder(screens[0].transform, explanation.transform);
+                }
+                if (targetReference.objectReferenceValue == null)
+                {
+                    TutorialTargetBorderGraphic existing = screens[0].GetComponentInChildren<TutorialTargetBorderGraphic>(true);
+                    targetReference.objectReferenceValue = existing != null ? existing
+                        : CreateTargetBorder(screens[0].transform, explanation.transform);
+                }
+                var focus = (TutorialFocusBorderGraphic)reference.objectReferenceValue;
+                var target = (TutorialTargetBorderGraphic)targetReference.objectReferenceValue;
+                MoveBefore(focus.transform, explanation.transform);
+                MoveBefore(target.transform, explanation.transform);
+                data.ApplyModifiedPropertiesWithoutUndo();
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(contents, PrefabPath, out bool success);
+                if (!success || saved == null)
+                    throw new InvalidOperationException("[TutorialUISetup] UIId.Tutorial의 점선 연결을 저장하지 못했습니다.");
+                return saved;
+            }
+            finally { PrefabUtility.UnloadPrefabContents(contents); }
+        }
+
+        private static void MoveBefore(Transform item, Transform next)
+        {
+            int index = next.GetSiblingIndex();
+            if (item.GetSiblingIndex() < index) index--;
+            item.SetSiblingIndex(index);
+        }
+
+        // 공용 안내 패널을 복사해 지정한 상단 위치에 둡니다. 화면 스크립트·버튼은 지우고 클릭을 끕니다.
+        private static GameObject CopyNotice(Transform notice, Transform parent, string name, Vector2 position, Vector2 size,
+            bool alignRight = false)
         {
             GameObject copy = UnityEngine.Object.Instantiate(notice.gameObject, parent, false);
             copy.name = name;
@@ -141,8 +217,8 @@ namespace ProjectL.Tool.Editor
                 graphic.raycastTarget = false;
 
             var rect = (RectTransform)copy.transform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
+            var anchor = new Vector2(alignRight ? 1f : 0.5f, 1f);
+            rect.anchorMin = rect.anchorMax = rect.pivot = anchor;
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
             copy.SetActive(true);
@@ -152,6 +228,23 @@ namespace ProjectL.Tool.Editor
             MessageText(copy).enableAutoSizing = false;
             MessageText(copy).fontSize = 24f;
             return copy;
+        }
+
+        private static void ConfigureTextBoxBackground(GameObject panel)
+        {
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(TextBoxSpritePath)
+                ?? throw new InvalidOperationException($"[TutorialUISetup] 안내 배경 Sprite가 없습니다: {TextBoxSpritePath}");
+            Image background = panel.GetComponent<Image>();
+            TMP_Text text = MessageText(panel);
+            if (background == null || text == null)
+                throw new InvalidOperationException($"[TutorialUISetup] UIId.Tutorial의 {panel.name}에는 배경 Image와 본문 TMP_Text가 필요합니다.");
+            background.sprite = sprite;
+            background.type = Image.Type.Sliced;
+            background.pixelsPerUnitMultiplier = 2f;
+            background.preserveAspect = false;
+            background.color = Color.white;
+            text.rectTransform.offsetMin = new Vector2(32f, 32f);
+            text.rectTransform.offsetMax = new Vector2(-32f, -32f);
         }
 
         private static TMP_Text MessageText(GameObject panel) => panel.GetComponentInChildren<TMP_Text>(true);

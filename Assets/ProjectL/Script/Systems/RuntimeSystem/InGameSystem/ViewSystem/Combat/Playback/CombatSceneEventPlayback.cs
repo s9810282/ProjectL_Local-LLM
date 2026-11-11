@@ -13,8 +13,8 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 {
     /// <summary>
-    /// 전투 씬에서 결과 하나의 사건 재생을 조정합니다(구조 리팩토링 설계 D5). 기차 발동은 기차 접촉 재생에, 그 밖의 사건은
-    /// 단계 전환은 전용 Presenter에, 그 밖의 사건은 사건 Presenter에 넘기며 실패 정리 버전을 소유합니다.
+    /// 전투 씬에서 결과 하나의 사건 재생을 조정합니다(구조 리팩토링 설계 D5). 기차 접촉이 이미 보인 사망 사건은 바로 끝냅니다.
+    /// 기차 발동은 기차 접촉 재생에, 그 밖의 사건은 사건 Presenter에 넘기며 실패 정리 버전을 소유합니다.
     /// </summary>
     /// <remarks>
     /// <c>CombatSceneDisplayFactory</c>가 조립하고, 재생 계약(<see cref="ICombatEventPlayback"/>)의 구현으로 순차 연출에 직접 연결됩니다.
@@ -30,7 +30,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly FieldView _field;
         private readonly FieldThornPresenter _thorns;
         private readonly CombatRailwayContactPlayback _railwayContact;
-        private readonly CombatPhaseTransitionPresenter _phaseTransition;
         // 기차가 필드를 지나는 동안의 카메라 연출(흔들림·줌)입니다(카메라 연출 조각 설계 K9·K10). 늘 있고, 낼 값이 없으면 진입·이탈 알림을 받지 않습니다.
         private readonly CombatTrainCamera _trainCamera;
         // 실패 정리용 버전입니다. 기차 접촉 취소·결과 준비·사건 시작마다 올립니다. 재진입한 취소 뒤 이전 실패 정리가 새 재생을 지우지 않게 합니다.
@@ -39,7 +38,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private bool _released;
 
         /// <param name="characterBody">사망 직전 캐릭터 사실에서 기차 접촉 몸을 만드는 변환입니다(히트 타이밍 설계 H7). 표시 Presenter 전체는 받지 않습니다.</param>
-        /// <param name="phaseTransition">국면 사건(전투 진입·밤 끝·승리)의 화면 전환입니다. 필수이고, 시험 조립은 바로 끝나는 가짜 전환을 넘깁니다(View 2라운드 Q-V2g-1).</param>
         /// <param name="camera">맵 카메라 창구입니다(사건 Presenter와 같은 것). 필수입니다. 맵 카메라가 없으면 창구가 줌·흔들림을 내지 않습니다.</param>
         /// <param name="cameraMotion">카메라 연출 값입니다. 필수입니다. 기차 흔들림·줌 값이 없으면 기차에 카메라 연출을 넣지 않습니다.</param>
         internal CombatSceneEventPlayback(
@@ -48,7 +46,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             FieldView field,
             FieldThornPresenter thorns,
             Func<CharacterCombatFacts, FieldGridMapper, CombatBody> characterBody,
-            CombatPhaseTransitionPresenter phaseTransition,
             CombatCameraWindow camera,
             CombatCameraMotionSettings cameraMotion)
         {
@@ -56,7 +53,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _railway = railway ?? throw new ArgumentNullException(nameof(railway));
             _field = field != null ? field : throw new ArgumentNullException(nameof(field));
             _thorns = thorns ?? throw new ArgumentNullException(nameof(thorns));
-            _phaseTransition = phaseTransition ?? throw new ArgumentNullException(nameof(phaseTransition));
             _trainCamera = new CombatTrainCamera(camera ?? throw new ArgumentNullException(nameof(camera)),
                 cameraMotion ?? throw new ArgumentNullException(nameof(cameraMotion)));
             // 기차 카메라 값이 없으면 진입·이탈 알림을 받지 않습니다(필드 구간도 계산하지 않음).
@@ -66,11 +62,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 trainCues ? _trainCamera.Entered : null, trainCues ? _trainCamera.Left : null);
         }
 
-        public bool IsPresentationComplete => _railwayContact.IsComplete && _events.IsPresentationComplete &&
-            !_phaseTransition.IsPlaying;
+        public bool IsPresentationComplete => _railwayContact.IsComplete && _events.IsPresentationComplete;
 
         public bool CanBeginPresentationEvent(CombatEvent item) => !_railwayContact.IsPlaying &&
-            !_phaseTransition.IsPlaying &&
             (CombatEventTypeTable.IsRailway(item) ? _events.IsPresentationComplete : _events.CanBeginPresentationEvent(item));
 
         /// <summary>순차 재생기의 후속 정리 질문을 사건 Presenter에 넘깁니다(유닛 행동 계획 TP-13).</summary>
@@ -79,7 +73,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public void BeginPresentation(CombatResult result)
         {
             ThrowIfReleased();
-            if (!_railwayContact.IsComplete || _phaseTransition.IsPlaying || !_events.CanBeginResult)
+            if (!_railwayContact.IsComplete || !_events.CanBeginResult)
                 throw new InvalidOperationException("이전 결과의 표시가 남아 있습니다.");
             ++_cleanupVersion;
             _events.BeginPresentation(result);
@@ -93,12 +87,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _events.BeginStep(step, completed);
         }
 
-        public void BeginMovement(CombatCharacterEvent firstStep)
-        {
-            ThrowIfReleased();
-            _events.BeginMovement(firstStep);
-        }
-
         public void BeginMovementEnd(CombatCharacterEvent lastStep, Action completed)
         {
             ThrowIfReleased();
@@ -108,6 +96,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         public void ShowReturn(CombatCharacterEvent returned)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var dispatchSample = _events.ProfileOf(returned).Dispatch.Auto();
+#endif
+
             ThrowIfReleased();
             RequireNoActiveRailway();
             _events.ShowReturn(returned);
@@ -115,6 +107,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         public void BeginEvent(CombatEvent e, Action completed)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var dispatchSample = _events.ProfileOf(e).Dispatch.Auto();
+#endif
+
             ThrowIfReleased();
             if (e == null) throw new ArgumentNullException(nameof(e));
             if (completed == null) throw new ArgumentNullException(nameof(completed));
@@ -124,16 +120,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             {
                 completed();
                 return;
-            }
-            try
-            {
-                if (_phaseTransition.TryBegin(e, completed))
-                    return;
-            }
-            catch (Exception error)
-            {
-                CleanupFailedPresentation(version, error);
-                throw;
             }
             if (!CombatEventTypeTable.IsRailway(e))
             {
@@ -163,7 +149,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         {
             int version = _cleanupVersion;
             bool railwayPlaying = _railwayContact.IsPlaying;
-            bool transitionPlaying = _phaseTransition.IsPlaying;
             try
             {
                 // 기존 반응을 먼저 진행한 뒤 이번 프레임 접촉을 시작합니다.
@@ -171,11 +156,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 // 기차 카메라는 레일 Tick 앞입니다. 이번 프레임 레일 Tick에서 시작한 줌 복귀가 같은 프레임 시간을 받지 않게 합니다(줌 조각과 같은 규칙).
                 if (version == _cleanupVersion) _trainCamera.Tick(deltaTime);
                 if (version == _cleanupVersion) _railway.Tick(deltaTime);
-                if (version == _cleanupVersion) _phaseTransition.Tick();
             }
             catch (Exception error)
             {
-                if (railwayPlaying || transitionPlaying) CleanupFailedPresentation(version, error);
+                if (railwayPlaying) CleanupFailedPresentation(version, error);
                 throw;
             }
         }
@@ -186,9 +170,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public void CancelPresentation() => RunAll(CancelPendingEvents, _events.CancelPresentation, _railway.Cancel, _thorns.Clear);
 
         /// <summary>표시 재연결·해제 시 진행 중인 사건 자원을 모두 반환합니다.</summary>
-        internal void CancelPendingEvents() => RunAll(CancelRailwayContacts, CancelPhaseTransition);
-
-        private void CancelPhaseTransition() => _phaseTransition.Cancel();
+        internal void CancelPendingEvents() => CancelRailwayContacts();
 
         /// <summary>
         /// 진행 중인 기차 접촉 묶음을 버리고 실패 정리 버전을 올립니다. 표시 재연결·해제는 CancelPendingEvents를 통해 부릅니다.

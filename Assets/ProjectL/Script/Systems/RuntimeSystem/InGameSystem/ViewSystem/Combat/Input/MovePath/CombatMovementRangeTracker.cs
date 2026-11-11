@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
@@ -74,7 +77,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         internal void Request(in CombatMovementRangeFacts facts)
         {
             InvalidateAcceptedRange();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            CombatInputProfiler.SetPreview(_write, CombatViewPreviewData.MoveRange(facts.ActorId));
+#else
             _write.SetPreview(CombatViewPreviewData.MoveRange(facts.ActorId));
+#endif
             _generation = _request.Begin(facts, _input.Preview);
         }
 
@@ -87,6 +94,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (!_request.TryConsume(_generation, facts, _input.HasPreview, _input.Preview, preview, out MovementRangeResult range))
                 return false;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.MoveRange).Auto();
+#endif
             _hasAcceptedEmptyRange = range.Succeeded && range.Destinations.Length == 0;
             _acceptedEmptyRangeFacts = facts;
 

@@ -1,9 +1,11 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
+using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Feedback;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Hud;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
@@ -40,6 +42,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         internal TurnCost TurnCost => turnCost;
         [SerializeField] private TurnDisplayUI turnDisplay;
         internal TurnDisplayUI TurnDisplay => turnDisplay;
+        [SerializeField] private DeckCardList deckCards;
+        internal DeckCardList DeckCards => deckCards;
         [SerializeField] private PlacementGhost ghost;
         [Tooltip("공격·턴 종료·복귀 버튼입니다(행동 버튼 설계). 키 입력과 같은 입구로 들어갑니다.")]
         [SerializeField] private CombatActionPanel actionPanel;
@@ -68,9 +72,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         /// <summary>연결된 카메라입니다. 비어 있으면 null이며, 쓰는 쪽이 MainCamera로 대신합니다.</summary>
         internal Camera WorldCamera => worldCamera;
 
+        [Tooltip("씬이 소유하는 공용 전투 시점입니다. 배경·필드 표시 인스턴스 밖에 배치합니다.")]
+        [SerializeField] private CombatSceneCameraBinding sceneCamera;
+        internal CombatSceneCameraBinding SceneCamera => sceneCamera;
+
+        /// <summary>배경 생성 전에도 확인할 수 있는 카메라 참조와 씬 소유 경계입니다.</summary>
+        internal void ValidateCameraReferences()
+        {
+            if (sceneCamera == null)
+                throw new InvalidOperationException("[CombatSceneRoot] 공용 카메라 참조(sceneCamera)가 비어 있습니다.");
+            if (sceneCamera.gameObject.scene != gameObject.scene
+                || (field != null && field.CellsRoot != null && sceneCamera.transform.IsChildOf(field.CellsRoot)))
+                throw new InvalidOperationException("[CombatSceneRoot] 공용 카메라는 같은 씬의 배경·필드 표시 밖에 있어야 합니다.");
+            sceneCamera.ValidateReferences();
+        }
+
         /// <summary>빠진 참조가 있으면 이름을 담아 예외를 던집니다.</summary>
         internal void ValidateReferences()
         {
+            ValidateCameraReferences();
             string missing = FindMissingReference();
             if (missing != null)
                 throw new InvalidOperationException($"[CombatSceneRoot] 씬 참조가 비어 있습니다: {missing}");
@@ -78,6 +98,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
 
         private string FindMissingReference()
         {
+            if (sceneCamera == null)
+                return nameof(sceneCamera);
             if (field == null)
                 return nameof(field);
             if (fieldUnits == null)
@@ -87,6 +109,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             if (turnDisplay == null)
                 return nameof(turnDisplay);
             turnDisplay.ValidateReferences();
+            if (deckCards == null)
+                return nameof(deckCards);
             if (ghost == null)
                 return nameof(ghost);
             if (actionPanel == null)

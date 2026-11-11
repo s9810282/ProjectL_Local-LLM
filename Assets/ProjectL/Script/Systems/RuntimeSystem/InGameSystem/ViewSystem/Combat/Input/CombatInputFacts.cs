@@ -11,9 +11,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
     /// 호출할 때마다 Buffer·수명 상태에서 새로 읽어 만들며, 저장하거나 다음 입력까지 들고 있지 않습니다.
     /// </summary>
     /// <remarks>
-    /// 판단 시점의 일시적 사본입니다. 시작/턴 종료 대기의 원본은 <see cref="CombatCommandGate"/>이고 여기에는 읽은 값만 담습니다.
+    /// 판단 시점의 일시적 사본입니다. 시작/턴 종료/이동 되돌리기 대기의 원본은 <see cref="CombatCommandGate"/>이고 여기에는 읽은 값만 담습니다.
     /// 같은 입력 처리 안에서 대기를 기록하거나 외부 표시 콜백을 부른 뒤에는 이 사본으로 다시 판단하지 않고 새로 읽습니다.
     /// 선행 미처리 명령 여부는 EndTurn·경로 편집·필드 선택 판단 때 읽습니다(그 밖에는 false).
+    /// 생성자 인자는 모두 필수입니다. 사실을 더하면 읽는 곳(<see cref="CombatInputFactsReader"/>)이 넘기기를 빠뜨렸을 때 컴파일이 막습니다(평가 C5-02).
     /// </remarks>
     internal readonly struct CombatInputFacts
     {
@@ -23,27 +24,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             CombatFlowPhase phase,
             StagePhase stagePhase,
             bool hasCompletion,
-            InputLayer currentLayer = default,
-            int latestResultSequence = 0,
-            int presentedResultSequence = 0,
-            bool isFinalizing = false,
-            EntityId selectedActorId = default,
-            bool hasUnhandledCommand = false,
-            CombatPreviewResult previewAnswer = null,
-            bool hasPendingCommand = false,
-            bool isPresenting = false,
-            bool isInputAvailable = false,
-            bool isAttackActive = false,
-            TutorialCombatInputRestriction combatInputRestriction = TutorialCombatInputRestriction.None,
-            bool hasCurrentAcceptedEmptyMovementRange = false,
-            long battleInstanceId = 0, long controllerTurnSequence = 0,
-            bool isSubmissionSuspended = false,
-            bool isAbandonRequested = false,
-            bool isModalOpen = false,
-            bool isItemDragActive = false,
-            bool isTutorialPracticeGoalPending = false, long queryRevision = 0,
-            bool isEntryPresentationPending = false,
-            CombatInputRouter.PointerTarget pointerTarget = CombatInputRouter.PointerTarget.None)
+            InputLayer currentLayer,
+            int latestResultSequence,
+            int presentedResultSequence,
+            bool isFinalizing,
+            EntityId selectedActorId,
+            bool hasUnhandledCommand,
+            CombatPreviewResult previewAnswer,
+            bool hasPendingCommand,
+            bool isPresenting,
+            bool isInputAvailable,
+            bool isAttackActive,
+            TutorialCombatInputRestriction combatInputRestriction,
+            bool hasCurrentAcceptedEmptyMovementRange,
+            long battleInstanceId, long controllerTurnSequence,
+            bool isSubmissionSuspended,
+            bool isAbandonRequested,
+            bool isModalOpen,
+            bool isItemDragActive,
+            bool isTutorialPracticeGoalPending, long queryRevision,
+            bool isEntryPresentationPending,
+            CombatInputRouter.PointerTarget pointerTarget)
         {
             PointerTarget = pointerTarget;
             QueryRevision = queryRevision;
@@ -118,7 +119,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// <summary>처리 번호 뒤에 아직 처리되지 않은 명령이 있는지입니다. EndTurn·경로 편집·필드 선택 판단에 씁니다.</summary>
         internal bool HasUnhandledCommand { get; }
 
-        /// <summary>시작/턴 종료 결과를 기다리는 중인지입니다. 읽은 시점의 <see cref="CombatCommandGate.HasPending"/> 값입니다.</summary>
+        /// <summary>시작/턴 종료/이동 되돌리기 결과를 기다리는 중인지입니다. 읽은 시점의 <see cref="CombatCommandGate.HasPending"/> 값입니다.</summary>
         internal bool HasPendingCommand { get; }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// </summary>
         internal bool IsPresenting { get; }
 
-        /// <summary>입력 수신이 연결돼 있고 오류 정지 전이며 전투가 활성인지입니다. 경로 입력의 Tick 갱신 입구에서도 씁니다.</summary>
+        /// <summary>입력 판단에 쓸 수 있는지입니다: 씬 연결 활성(오류 정지 전·진입 활성·표시 연결) ∧ 입력 슬롯 연결 ∧ 진입 연출 완료(조정자 <c>IsInputReady</c>). 경로 입력의 Tick 갱신 입구에서도 씁니다.</summary>
         internal bool IsInputAvailable { get; }
 
         /// <summary>
@@ -162,7 +163,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>
         /// 이 판단 시점에 포인터 입력을 받을 대상입니다(평가 C4-13). 입력 사실 읽기가 입력 기능 묶음의 <c>CombatInteraction.ResolvePointerTarget</c>
-        /// (판정 한 곳)로 채우고, 연결 입력이 없으면 공격 모드·아이템 드래그가 없는 것으로 정합니다. 생성자 기본값은 None입니다.
+        /// (판정 한 곳)로 채우고, 연결 입력이 없으면 공격 모드·아이템 드래그가 없는 것으로 정합니다. <c>default(CombatInputFacts)</c>이면 None입니다.
         /// 사실만 받는 곳(경로 입력·환경 호버)이 읽습니다. Router와 감시 단계는 이 사본 대신 묶음에 바로 묻습니다.
         /// </summary>
         internal CombatInputRouter.PointerTarget PointerTarget { get; }

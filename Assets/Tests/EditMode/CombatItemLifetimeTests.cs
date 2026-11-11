@@ -18,19 +18,6 @@ namespace ProjectL.Tests.Core
     public sealed class CombatItemLifetimeTests
     {
         [Test]
-        public void ClearRoundItems_IsIdempotentAndPreservesOtherFacts()
-        {
-            var original = CombatCommandTestData.Input().Characters[0];
-            var marked = CombatItemTimelineTests.Mark(CombatItemDirectDamageTests.Equip(original, 80, 1));
-            var cleared = ItemLifetimeCalculator.ClearRoundItems(marked);
-            Assert.That(cleared.Items.SameValues(CharacterItemState.Empty), Is.True);
-            Assert.That(cleared.Health, Is.EqualTo(marked.Health));
-            Assert.That(cleared.Stats, Is.EqualTo(marked.Stats));
-            Assert.That(cleared.Debuffs, Is.SameAs(marked.Debuffs));
-            Assert.That(ItemLifetimeCalculator.ClearRoundItems(cleared), Is.SameAs(cleared));
-        }
-
-        [Test]
         public void TemporaryStateCleanup_ClearsDebuffsSlotAndEffects_AndKeepsReferenceWhenEmpty()
         {
             var original = CombatCommandTestData.Input().Characters[0];
@@ -63,63 +50,6 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void OutgoingEnvironmentalDamage_ActivatesWhiskeyBeforeRoundExpiry()
-        {
-            var seed = CombatCommandTestData.Input(empty: true);
-            var actor = CombatItemDirectDamageTests.Equip(CombatMovementCalculator.MoveTo(seed.Characters[0], CellCoord.Zero), 51, 1);
-            var main = CombatItemTimelineTests.Mark(CombatItemDirectDamageTests.Equip(
-                CombatMovementCalculator.MoveTo(seed.Characters[1], new CellCoord(2, 0)), 100, 2));
-            var enemy = CombatCommandTestData.Character(20, EntityKey.Unit_Demon, new CellCoord(2, 1), Owner.Enemy);
-            var input = CombatItemDirectDamageTests.Items(TornadoEnvironmentTests.Input(completed: 8,
-                sources: new MovementTileFact[] { new MineSourceFact(34, new CellCoord(1, 1), 1, 1, true, new[] { Owner.Player, Owner.Enemy }) },
-                characters: new[] { enemy, actor, main }, width: 3, height: 2, phase: CombatControllerPhase.Enemy));
-            input = MovementTestData.Route(input.WithActor(enemy.EntityId), new CellCoord(2, 1), new CellCoord(1, 1));
-            var movement = CombatCommandCalculator.Calculate(input, TornadoEnvironmentTests.Rules);
-            Assert.That(movement.Accepted, Is.True, movement.Reason);
-            var day = CombatTurnCalculator.EndEnemyPhase(CombatCommandComposition.Project(movement), TornadoEnvironmentTests.Rules);
-            var result = CombatCommandComposition.Merge(input, new[] { movement, day });
-            Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(result.FinalState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            Assert.That(CombatItemDirectDamageTests.Final(result, 1).Health.CurrentHealth, Is.EqualTo(60));
-            Assert.That(CombatItemDirectDamageTests.Final(result, 10).Items.SameValues(CharacterItemState.Empty), Is.True);
-            var events = result.Events.ToList();
-            int activation = events.FindIndex(e => e is CombatItemEvent item && item.Reason == ItemEventReason.Activated);
-            int expiry = events.FindIndex(e => e is CombatItemEvent item && item.Reason == ItemEventReason.RoundEnded);
-            Assert.That(activation, Is.GreaterThanOrEqualTo(0));
-            Assert.That(expiry, Is.GreaterThan(activation));
-            Assert.That(result.InventoryChange, Is.Null);
-        }
-
-        [Test]
-        public void RoundEnd_ClearsPlayerAndEnemyItems_AndRedeploymentDoesNotRegrant()
-        {
-            var seed = CombatCommandTestData.Input();
-            var characters = seed.Characters.Select(c => CombatItemTimelineTests.Mark(
-                CombatItemDirectDamageTests.Equip(c, c.Health.CurrentHealth, c.Owner == Owner.Enemy ? 2 : 1))).ToArray();
-            var input = CombatItemDirectDamageTests.Items(TornadoEnvironmentTests.Input(sources: Array.Empty<MovementTileFact>(),
-                completed: 8, phase: CombatControllerPhase.Enemy, characters: characters));
-            var origins = characters.Where(c => c.Owner == Owner.Enemy)
-                .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray();
-            var t = input.State.Turn;
-            var headquarters = new StructureCombatFacts(new EntityId(20), new StructureSpec(EntityKey.Structure_Headquarters,
-                1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100),
-                new CellCoord(7, 0), Rotation4.R0, new[] { new CellCoord(7, 0) });
-            var initial = new CombatCommandState(8,8,input.State.Phase,true,                new[] { headquarters },input.State.ThornFields,t);
-            input = CombatCommandTestData.With(input, state: initial.With(turn: new CombatTurnFacts(StagePhase.Combat,
-                controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: t.ControllerTurnSequence,
-                completedPlayerTurnCount: 8, enemyOrigins: origins)));
-            var result = CombatTurnCalculator.EndEnemyPhase(input, CombatItemDirectDamageTests.NoRules);
-            var day = CombatCommandComposition.Project(result);
-            Assert.That(day.Characters.All(c => c.Items.SameValues(CharacterItemState.Empty)), Is.True);
-            Assert.That(day.Characters.Where(c => c.Owner == Owner.Enemy).All(c => c.Area == CharacterRuntimeArea.EnemyWaiting), Is.True);
-            Assert.That(result.InventoryChange, Is.Null);
-            var night = CombatCommandCalculator.Calculate(Recommand(day, CombatCommandKind.EnterCombat), CombatItemDirectDamageTests.NoRules);
-            Assert.That(night.Accepted, Is.True, night.Reason);
-            Assert.That(CombatCommandComposition.Project(night).Characters.Where(c => c.Owner == Owner.Enemy)
-                .All(c => c.Items.EquippedItemKey == null), Is.True);
-        }
-
-        [Test]
         public void FallDiscardsWithoutActivation_AndSourceDeathDoesNotRemoveOtherTargetsEffects()
         {
             var seed = CombatCommandTestData.Input();
@@ -149,7 +79,7 @@ namespace ProjectL.Tests.Core
                 var structure = new StructureCombatFacts(new EntityId(20), new StructureSpec(EntityKey.Structure_Headquarters,
                     1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(0, 100),
                     new CellCoord(7, 0), Rotation4.R0, new[] { new CellCoord(7, 0) });
-                input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,s.IsNight,                    new[] { structure },s.ThornFields,s.Turn));
+                input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                    new[] { structure },s.ThornFields,s.Turn));
             }
             var changed = input.Characters.Single(c => c.EntityId.Value == (defeat ? 10 : 1));
             if (defeat) changed = CombatCommandCalculator.Hurt(changed, 100);

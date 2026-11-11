@@ -15,10 +15,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly ThornHeartRule _rule;
         private readonly EffectOriginKey _origin;
         private readonly bool _actualOrdinaryAttack;
-        private readonly bool _isNight;
+        private readonly bool _inCombat;
         private bool _consumed;
 
-        internal ThornHeartAttackScope(CompiledArtifactLoadout loadout, bool actualOrdinaryAttack, bool isNight)
+        internal ThornHeartAttackScope(CompiledArtifactLoadout loadout, bool actualOrdinaryAttack, bool inCombat)
         {
             if (loadout == null) throw new ArgumentNullException(nameof(loadout));
             foreach (var compiled in loadout.Rules.Span)
@@ -30,7 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 _origin = compiled.Origin;
             }
             _actualOrdinaryAttack = actualOrdinaryAttack;
-            _isNight = isNight;
+            _inCombat = inCombat;
         }
 
         private ThornHeartAttackScope(ThornHeartAttackScope source)
@@ -38,7 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _rule = source._rule;
             _origin = source._origin;
             _actualOrdinaryAttack = source._actualOrdinaryAttack;
-            _isNight = source._isNight;
+            _inCombat = source._inCombat;
             _consumed = source._consumed;
         }
 
@@ -52,7 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (attacker.EntityId == struckAllyBeforeDamage.EntityId)
                 throw new ArgumentException("공격자와 피격 아군은 다른 개체여야 합니다.", nameof(struckAllyBeforeDamage));
 
-            return !_consumed && _rule != null && _actualOrdinaryAttack && _isNight &&
+            return !_consumed && _rule != null && _actualOrdinaryAttack && _inCombat &&
                 attacker.Owner == Owner.Enemy && struckAllyBeforeDamage.Owner == Owner.Player &&
                 attacker.Area == CharacterRuntimeArea.Field && !attacker.Health.IsDead &&
                 struckAllyBeforeDamage.Area == CharacterRuntimeArea.Field && !struckAllyBeforeDamage.Health.IsDead;
@@ -66,7 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!CanReflect(attacker, struckAllyBeforeDamage)) return false;
             var context = new ThornHeartReflectionContext(struckAllyBeforeDamage.EntityId,
                 CommandAttackGroups.Direct, reflectionGroup);
-            int requested = _rule.EvaluateDamage(_isNight, hasEnemyDirectHitOnAlly: true);
+            int requested = _rule.EvaluateDamage(_inCombat, hasEnemyDirectHitOnAlly: true);
             if (requested == 0)
             {
                 _consumed = true;

@@ -62,6 +62,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             }
 
             var unitKeys = new HashSet<EntityKey>(roster.UnitKeys);
+            if (combat.NexusReinforcements != null)
+                foreach (var entry in combat.NexusReinforcements.Pool)
+                    if (!unitKeys.Contains(entry.UnitKey))
+                        throw new InvalidOperationException($"증원 풀 유닛 {entry.UnitKey}이 스테이지 UnitRoster에 없습니다.");
             foreach (var card in owned) unitKeys.Add(card.CharacterKey);
             foreach (var placement in combat.InitialEnemyPlacements) unitKeys.Add(placement.Key);
             var growth = query as IHasTraitGrowthTables;
@@ -132,7 +136,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 environment: environment.Environment, environmentBindings: environment.Bindings,
                 obstaclePlacements: obstacles, wallBlocking: combat.WallBlocking, objectiveKind: combat.ObjectiveKind, itemDefinitions: itemDefinitions,
                 progression: category.LevelProgression, initialRandomTornadoPlacements: combat.Tornado == null ? combat.InitialRandomTornadoPlacements : null,
-                clearRewards: economy.ClearRewards, traitGrowth: catalog);
+                clearRewards: economy.ClearRewards, traitGrowth: catalog, nexusReinforcements: combat.NexusReinforcements);
         }
 
         /// <summary>

@@ -9,17 +9,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     /// <summary>한 계산에서 파생한 불변 벽 형상이다. 전투 상태나 저장소를 소유하지 않는다.</summary>
     internal sealed class WallGeometry
     {
-        private readonly HashSet<CellCoord> occupied;
+        private readonly Dictionary<CellCoord, WallRun> _runByCell;
         public IReadOnlyList<WallRun> Runs { get; }
 
         internal WallGeometry(IEnumerable<WallRun> runs)
         {
-            var copy = runs.OrderBy(run => run.ComponentKey).ToArray();
-            Runs = Array.AsReadOnly(copy);
-            occupied = new HashSet<CellCoord>(copy.SelectMany(run => run.Cells));
+            var ordered = runs.OrderBy(run => run.ComponentKey).ToArray();
+            Runs = Array.AsReadOnly(ordered);
+            _runByCell = new Dictionary<CellCoord, WallRun>();
+            foreach (var run in ordered)
+                foreach (var cell in run.Cells)
+                    _runByCell.TryAdd(cell, run);
         }
 
-        public bool Occupies(CellCoord cell) => occupied.Contains(cell);
+        // 빌더는 셀 색인과 컴포넌트 순서를 완성한 뒤 이 인스턴스로 소유권을 넘긴다.
+        internal WallGeometry(List<WallRun> orderedRuns, Dictionary<CellCoord, WallRun> runByCell)
+        {
+            Runs = orderedRuns.AsReadOnly();
+            _runByCell = runByCell;
+        }
+
+        public bool Occupies(CellCoord cell) => _runByCell.ContainsKey(cell);
+
+        internal bool TryGetOccupyingRun(CellCoord cell, out WallRun run) => _runByCell.TryGetValue(cell, out run);
     }
 
     /// <summary>연결 성분의 실제 볼록 조각과 원본 증거를 보관한다. 범위는 감싼 사각형이다.</summary>

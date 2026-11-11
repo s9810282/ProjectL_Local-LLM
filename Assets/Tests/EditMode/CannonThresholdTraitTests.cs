@@ -83,11 +83,12 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Finishing_BypassesShieldWithoutSacrifice()
+        public void Finishing_BypassesShield()
         {
+            // 보호막 무시만 본다. 희생이 있으면 대신 맞아 즉사가 터지지 않으므로(2026-11-10) 결속 보호막만 둔다.
             var input = SacrificeTraitTests.Input();
             input = TraitCombatFixtures.Equip(input, EntityKey.Unit_Akimbo, new FinishingShotTraitSpec(20));
-            input = TraitCombatFixtures.Equip(input, EntityKey.Unit_Shielder, new SacrificeTraitSpec(2, 1), new CohesionTraitSpec(0, 100, 1, 1));
+            input = TraitCombatFixtures.Equip(input, EntityKey.Unit_Shielder, new CohesionTraitSpec(0, 100, 1, 1));
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId.Value == 1
                 ? c.With(stats: c.Stats.With(attackPower: 100)) : c.EntityId.Value == 2
                 ? c.With(health: new HealthStateSnapshot(15, 100)) : c).ToArray());
@@ -233,8 +234,9 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void MixedArea_InstantVictimSkipsSacrificeButNormalLethalVictimStillUsesIt()
+        public void MixedArea_SacrificeProtectsOneLethalVictim_WhetherFinishingOrNumeric()
         {
+            // 즉사가 걸릴 대상(2)과 숫자 치명 대상(3)이 모두 희생 후보다. 발동은 한 번이라 하나만 지켜지고 다른 하나는 죽는다(2026-11-10).
             var input = TraitCombatFixtures.Equip(SacrificeTraitTests.Input(splash: true), EntityKey.Unit_Akimbo, new FinishingShotTraitSpec(20));
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId.Value == 1
                 ? c.With(stats: c.Stats.With(attackPower: 100)) : c.EntityId.Value == 2
@@ -242,10 +244,12 @@ namespace ProjectL.Tests.Core
                 ? c.WithHealth(new HealthStateSnapshot(25, 100)) : c).ToArray());
             var result = TraitCombatFixtures.Attack(input);
             Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(TraitCombatFixtures.Final(result, 2).Health.IsDead, Is.True);
-            Assert.That(TraitCombatFixtures.Final(result, 3).Health.CurrentHealth, Is.EqualTo(25));
-            Assert.That(result.Attack.Value.TraitActivations.ToArray()
-                .Count(t => t.TraitKey == TraitKey.Sacrifice && t.Interception != null), Is.EqualTo(1));
+            var protectedId = result.Attack.Value.TraitActivations.ToArray()
+                .Single(t => t.TraitKey == TraitKey.Sacrifice && t.Interception != null).Interception.ProtectedId;
+            int other = protectedId.Value == 2 ? 3 : 2;
+            Assert.That(TraitCombatFixtures.Final(result, protectedId.Value).Health.IsDead, Is.False);
+            Assert.That(TraitCombatFixtures.Final(result, other).Health.IsDead, Is.True);
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
         }
 
         private static CombatDamageCause Cause(object hit)

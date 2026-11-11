@@ -116,7 +116,7 @@ namespace ProjectL.Tests.Core
         {
             var target = Character(recipient, 100, 100, Roket.Key);
             var context = new ItemDamageContext(CombatDamageKind.OrdinaryAttack,
-                Character(attacker, 100, 100), target, 30, 0);
+                Character(attacker, 100, 100), target, 30);
             Assert.That(CombatItemResolver.BeforeDamage(Roket, context).Activated, Is.EqualTo(activates));
         }
 
@@ -125,7 +125,7 @@ namespace ProjectL.Tests.Core
         {
             var target = Character(Owner.Player, 100, 100, Roket.Key);
             Assert.That(CombatItemResolver.BeforeDamage(Roket,
-                new ItemDamageContext(CombatDamageKind.OrdinaryAttack, null, target, 30, 0)).Activated, Is.False);
+                new ItemDamageContext(CombatDamageKind.OrdinaryAttack, null, target, 30)).Activated, Is.False);
             Assert.That(CombatItemResolver.BeforeDamage(Roket,
                 Hit(Character(Owner.Player, 0, 100, Roket.Key), 30)).Activated, Is.False);
             foreach (int? slot in new int?[] { null, 1 })
@@ -176,7 +176,7 @@ namespace ProjectL.Tests.Core
             {
                 var holder = Character(Owner.Player, 100, 100, definition.Key);
                 var context = new ItemAttackContext(holder, CellCoord.Zero,
-                    Array.Empty<ItemAttackCandidate>(), new[] { holder }, 0, seed);
+                    Array.Empty<ItemAttackCandidate>(), new[] { holder }, seed);
                 var decision = CombatItemResolver.AfterOrdinaryAttack(definition, context);
                 Assert.That(decision.Activated, Is.False);
                 Assert.That(decision.Consume, Is.False);
@@ -208,7 +208,7 @@ namespace ProjectL.Tests.Core
             var hit = Hit(Character(Owner.Player, 100, 100, Roket.Key), 30);
             var after = After(Whiskey, 100, 60, 10);
             var attack = new ItemAttackContext(hit.Recipient, CellCoord.Zero,
-                Array.Empty<ItemAttackCandidate>(), new[] { hit.Recipient }, 0, 1);
+                Array.Empty<ItemAttackCandidate>(), new[] { hit.Recipient }, 1);
             Assert.Throws<ArgumentNullException>(() => ItemRuleRegistry.CreateDefault().GetRequired(null));
             Assert.Throws<ArgumentNullException>(() => CombatItemResolver.BeforeDamage(null, hit));
             Assert.Throws<ArgumentNullException>(() => CombatItemResolver.BeforeDamage(Roket, null));
@@ -229,7 +229,7 @@ namespace ProjectL.Tests.Core
 
         private static ItemDamageContext Hit(CharacterCombatFacts recipient, int damage,
             CombatDamageKind kind = CombatDamageKind.OrdinaryAttack) => new ItemDamageContext(kind,
-                Character(Owner.Enemy, 100, 100), recipient, damage, 0);
+                Character(Owner.Enemy, 100, 100), recipient, damage);
 
         private static ItemAfterDamageContext After(ItemDefinition definition, int max, int hp, int damage,
             CombatDamageKind kind = CombatDamageKind.OrdinaryAttack, CharacterCombatFacts attacker = null)
@@ -237,7 +237,7 @@ namespace ProjectL.Tests.Core
             var before = Character(Owner.Player, hp, max, definition.Key);
             int loss = Math.Min(hp, damage);
             var after = CharacterSettlementCalculator.Copy(before, new HealthStateSnapshot(hp - loss, max), before.Stats);
-            return new ItemAfterDamageContext(new ItemDamageContext(kind, attacker, before, damage, 0), after, loss);
+            return new ItemAfterDamageContext(new ItemDamageContext(kind, attacker, before, damage), after, loss);
         }
 
         private sealed class UnknownSpec : ItemEffectSpec { }

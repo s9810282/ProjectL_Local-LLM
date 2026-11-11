@@ -1,5 +1,13 @@
 # DeckEdit 병과 슬롯과 미편성 목록
 
+## 공용 상세 EXP 표기와 Core 조회 (2026-11-11)
+
+Deck의 SlotInfoPannel과 Combat의 ScrollContentFrame은 공용 DeckSlotInfoExperience에서 `현재 레벨 내 진행 EXP / 다음 레벨 요구 EXP`를 표시하고 같은 비율로 Fill을 채운다. 조회 대기 또는 EXP 비활성 상태는 `-`와 빈 Fill로 표시한다.
+
+- 두 화면은 `DeckEditorSnapshot.Stats`의 `OwnedCharacterStatsSnapshot.Experience`에서 보유 ID별 `IsEnabled`, `Current`, `Required`를 읽는다. Deck은 카드 모델에 담긴 스냅샷을 쓰고 Combat은 로스터 버전이 바뀌면 기존 덱 조회를 갱신한다.
+- 공격은 `DeckEditorSnapshot.Stats` 및 비전투 보유 능력치 조회가 `OwnedCharacterStatsSnapshot.AttackPattern`을 제공한다. `Method`는 지정 방식, `RangeCells`는 아군 정면 기준 지정 범위, `SplashOffsets`는 주 칸 기준 추가 범위다. 활성 Combat의 카드는 전투 데이터 경로를 사용한다.
+- 이동 방식과 거리는 `CharacterBaselineStatsSnapshot`의 `MoveMethod`와 `MoveRange`로 읽을 수 있다. 전투 밖 카드용 이동 범위 셀은 공개 스냅샷에 없다. `MovementRangeResult.Destinations`는 실제 전투 보드의 이동 결과다.
+
 ## 공용 상세 특성 슬롯의 개수 제한 해제 (2026-11-02)
 
 UnitCard와 공유하는 DeckSlotInfoAbilities에서 특성 상한을 제거했다. 3개 이상은 기존 3칸 영역을 사용하고, 4번째부터는 3번 슬롯을 같은 위치에 복제해 원본 뒤에 겹쳐 숨긴다(사용자 배치 지시). 각 복제본에도 해당 특성 내용을 적용하며, 부족할 때만 추가하고 남는 복제본은 비워 숨겨 재사용한다. DeckEdit의 선택·개폐·UIId/부모/Parallel·입력·서비스 조립은 변경하지 않는다. 설계·Task·SSOT/SOLID/FW·수명과 확인 항목은 [UnitCardSharedInfo.md의 Phase 2](UnitCardSharedInfo.md#phase-2--특성-개수-제한-해제-2026-11-02)를 따른다. 컴파일 미확인. Test 코드·MSBuild·Unity 실행은 수행하지 않았다. 아래 이전 단계의 3개 상한/초과 예외는 이 변경 전 이력이다.
@@ -56,7 +64,7 @@ Open에서 진행 중인 교체/드래그를 정리하고 설정에 맞춰 표�
 | 1 | Owned 내부 Info 참조/개폐/내부 수치 삭제, Info/카드 클릭·Submit의 공용 ID 전달, Deck/Owned 공용 ShowInfo 경로, 재사용/편성 우선 입력 회귀 | 구현 완료, 아래 실행 결과 참조 |
 | 2A | 아래 새 레이아웃 설계의 기본 정보·특성·Close, UISystem 개폐·포커스, 프리팹 참조 검증 후 임시 SlotInfoEnabled 비활성 제거 | 구현 완료, 관련 EditMode 26/26 통과. Phase 리뷰 지점 |
 | 2B | 미편성 유닛 ChangeButton 교체·기존 편집 정책, 편성 유닛 문구·닫기, 실제 클릭/Submit 회귀 | 동작 확정, 2A 리뷰 뒤 구현 |
-| 3 | Core EXP 계약 인수, 같은 스냅샷→표시 모델→EXP Fill/잔여 문구와 상태 표시 | Core 계약 대기, 미구현 |
+| 3 | Core EXP 계약 인수, 같은 스냅샷→표시 모델→EXP Fill/진행 문구와 상태 표시 | 코드 완료, 컴파일 미확인 |
 
 기존 Phase 3에 포함했던 전투 밖 이동/공격 범위 그림은 Core 요청 §60을 유지하되 EXP와 별도 후속 Task로 분리한다. 이번 사용자가 명시한 MoveText·AtkDText는 거리 수치이며 범위 그림 계약을 기다릴 필요가 없다. PortraitArea의 이름·초상화는 아래 2026-11-02 사용자 후속 지시로 연결한다. 나머지 저작 영역은 추가 동작을 정하지 않는다.
 
@@ -77,7 +85,7 @@ Phase 1 실행 결과: Unity 6000.0.73f1 재컴파일 성공. Test Runner API로
 | PortraitArea/Portrait | 같은 UnitVisual 조회의 InfoIcon을 표시한다. 이미지 미입력은 기존 View DB의 선택 계약이며 이전 Sprite를 비우고 Image를 끈다. 이미지가 있는 유닛으로 바뀌면 다시 켠다. |
 | LevelCount | 같은 카드의 Level 숫자만 표시. `Lv` 등 접두어를 붙이지 않는다. |
 | EXP Image | Ready인 경우 Core가 제공한 현재 레벨 내 진행 EXP / 다음 레벨 요구 EXP를 fillAmount에 반영한다. View에서 요구량·성장 공식을 만들지 않는다. |
-| LeftEXP | Ready인 경우 `다음 레벨까지 {요구 EXP - 진행 EXP} EXP`. 표시 때만 차이·비율을 계산하고 모델에 파생 필드를 저장하지 않는다. |
+| LeftEXP | Ready인 경우 `{현재 레벨 내 진행 EXP} / {다음 레벨 요구 EXP}`. 두 값은 Core에서 받고 비율은 표시할 때 계산한다. |
 | CloseButton | 실제 하위 CloseButton을 UIInputBinding으로 연결. 수신자 → DeckEditUI.CloseInfo → IUISystemService.CloseUI(DeckSlotInfo) → DeckSlotInfoUI.Hide 경로를 사용한다. |
 | Statatics/HPText | 같은 카드 Stats.MaxHealth 숫자. 현재 체력과 혼용하지 않는다. 프리팹의 기존 Statatics 이름은 유지한다. |
 | AtkText / DefText | Stats.AttackPower / Stats.PhysicalDefense 숫자. |
@@ -103,7 +111,7 @@ Phase별 Task와 리뷰 지점:
 | --- | --- | --- |
 | 2A | A1. DeckSlotInfoUI의 Description/단일 Grid/본체 닫기 전제를 새 필드와 내부 위젯으로 교체. A2. DeckEditUI가 기존 View 조회의 이름·병종 및 같은 카드 수치를 전달. A3. 두 AbilityArea와 슬롯의 Icon/Name/Description 연결·재사용. A4. 실제 DeckEditUI.prefab의 참조를 연결하고 상태 변경 전 필수 구성 검증. A5. Close 개폐·포커스 수명을 연결한 뒤 SlotInfoEnabled 임시 차단 제거. EXP는 제안한 대기 표시, Change는 아직 비활성. | Unity 컴파일, 실제 프리팹 표시와 EventSystem 클릭/Submit: Deck/Owned 공용 선택, 동일 ID 재클릭 닫기, 다른 ID 전환, hover 고정 유지, 수치·레벨·문구 일치, 특성 0/1/2/3/4개 이상·많음→적음·반복 열기, Close·부모 닫기·포커스 복원, 누락 참조의 명시적 예외. 결과 보고 후 정지. |
 | 2B | B1. 기존 수신자에 공용 상세창 교체 입력을 추가. B2. 최신 미편성 카드와 같은 병과 슬롯을 찾고 CanChangeSlot을 재사용. B3. 교체/드래그 모드를 정리하고 기존 PlaceOwned로 한 번 전달한 뒤 UISystem을 통해 닫기. 편성 유닛은 문구를 `편성된 유닛`으로 바꾸고 Close 경로로만 전달. B4. 모델 갱신·편집 권한 변경 시 버튼 표시/포커스도 갱신. Draft·Core 교체 규칙은 변경하지 않는다. | 실제 프리팹의 클릭/Submit에서 미편성→같은 병과 교체·빈칸 배치, 편성 유닛 문구·닫기·편성 명령 없음, 메인 잠금·전체 편집 불가·편집 권한 전환, 동일 정의의 다른 OwnedId 구분, 사라진 ID/지난 입력 무시, 거절 시 이전 Draft 유지·기존 거절 사유 표시, 명령 중복 없음, 닫기/재개방. 기존 슬롯 교체·드래그 중 영향받는 경로만 회귀. 결과 보고 후 정지. |
-| 3 | C1. Core §60 공개 계약과 버전/진행 EXP 의미·최대 레벨·비활성 상태 인수. C2. DeckEditModelBuilder/CardModel에 원본 값과 상태만 전달. C3. EXP 위젯에서 비율·잔여 문구 표시. C4. Ready/대기/비활성/최대 레벨 전환과 유닛 변경 시 이전 Fill 제거. | 레벨업 뒤 잔여 EXP·0 진행·다음 레벨 직전·서로 다른 OwnedId·상태 전환, UI 비율/잔여 문구, 0 나누기 없음과 잘못된 Ready 계약 예외. Core 계산 재현 테스트를 View에 만들지 않는다. Unity 컴파일/대상 EditMode 결과 보고 후 정지. |
+| 3 | C1. Core §60 공개 계약과 버전/진행 EXP 의미·최대 레벨·비활성 상태 인수. C2. DeckEditModelBuilder/CardModel에 원본 값과 상태만 전달. C3. Deck과 Combat 카드의 공용 EXP 위젯에서 비율·진행 문구 표시. C4. Ready/대기/비활성/최대 레벨 전환과 유닛 변경 시 이전 Fill 제거. | 레벨업 뒤 잔여 EXP·0 진행·다음 레벨 직전·서로 다른 OwnedId·상태 전환, UI 비율/진행 문구, 0 나누기 없음과 잘못된 Ready 계약 예외. Core 계산 재현 테스트를 View에 만들지 않는다. Unity 컴파일/대상 EditMode 결과 보고 후 정지. |
 
 등록·서비스 경로 확인:
 

@@ -5,7 +5,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         SaveSettings,
         SaveProgress,
         AbandonRun,
-        QuitGame
+        QuitGame,
+        AbandonStageRun
     }
 
     public interface IConfirmReceiver

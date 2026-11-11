@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c4af9bd96934e3cae5ae59f1998d613, type: 3}
   m_Name: Combat_Chapter2_Boss
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   timelineSeed: 1
   fieldDefinition: {fileID: 11400000, guid: b97591644ec8c4dfab1aef299420cb09, type: 2}
   unitRoster: {fileID: 11400000, guid: 8d7a8a554bd442a1a1e4aee5a492bb78, type: 2}
@@ -69,6 +69,12 @@ MonoBehaviour:
     startingItem: {fileID: 0}
   enemyLoadout: {fileID: 0}
   enemyLevel: 1
+  nexusReinforcements:
+    enabled: 0
+    spawnCountPerTurn: 2
+    rangePadding: 2
+    fieldEnemyLimit: 5
+    pool: []
   structureCatalog: []
   initialEnemyStructurePlacements: []
   playerDeploymentCells:

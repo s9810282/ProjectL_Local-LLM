@@ -214,7 +214,7 @@ namespace ProjectL.Tests.Core
                 cell, Rotation4.R0, new[] { cell }, Owner.Enemy);
             var s = input.State;
             input = CombatCommandTestData.With(input, characters: input.Characters.Where(c => c.EntityId.Value != 9).ToArray(),
-                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.IsNight,                    new[] { structure },s.ThornFields,turn: s.Turn));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    new[] { structure },s.ThornFields,turn: s.Turn));
             var result = Execute(input);
             Assert.That(result.PrimaryTargetId.Value, Is.EqualTo(2));
             Assert.That(result.Hits.ToArray().Select(h => h.TargetId.Value), Is.EqualTo(new[] { 20 }));

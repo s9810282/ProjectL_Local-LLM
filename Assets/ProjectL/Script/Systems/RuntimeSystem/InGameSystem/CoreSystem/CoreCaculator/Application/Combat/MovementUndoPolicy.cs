@@ -67,7 +67,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var change in evidence) records = records.WithoutAffected(change);
             if (uses.Length != 0) records = records.WithoutAffected(new CombatChangeEvidence(CombatChangeEvidenceKind.Action,
                 Array.Empty<EntityId>(), Array.Empty<CellCoord>(), uses.Where(u => u.Movement.HasValue).Select(u => u.Movement.Value).ToArray()));
-            if (!InPlayerTurn(final) || final.State.IsNight != input.State.IsNight ||
+            if (!InPlayerTurn(final) ||
                 final.State.Turn.ControllerTurnSequence != input.State.Turn.ControllerTurnSequence)
                 records = MovementUndoState.Empty;
             var retained = records.Checkpoints.Where(c => c.BattleInstanceId == input.BattleInstanceId &&
@@ -227,7 +227,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var attack = execution is CombatAttackEvent attacked ? attacked.Attack :
                     execution is CombatRoarEvent roar ? roar.Attack : null;
                 if (attack.HasValue && attack.Value.Succeeded && characters.TryGetValue(attack.Value.AttackerId, out var attacker) && attacker.Anchor.HasValue)
-                    foreach (var trail in DustScreenTraitRule.RangeSourcesAt(attacker.Anchor.Value, new MovementEnvironmentFacts(environment.Values.ToArray())))
+                    foreach (var trail in DustScreenTraitRule.RangeSourcesAt(attacker.Anchor.Value,
+                        new MovementEnvironmentFacts(environment.Values.ToArray()), attacker.Owner))
                         yield return new MovementEffectUse(TrailMovement(input, trail.Id), trail.Origin, attacker.EntityId,
                             MovementEffectUseKind.DustAttackRange, execution, sourceId: trail.Id);
                 if (execution is CombatCharacterEvent character) characters[character.Final.EntityId] = character.Final;

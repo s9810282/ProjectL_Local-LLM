@@ -338,6 +338,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -10.044
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 4d3c16eb880e8f54bb285a444e6bd0ca, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 99603b300cedc8248b5ec78a4593e43d, type: 2}
     - target: {fileID: 919132149155446097, guid: 4d3c16eb880e8f54bb285a444e6bd0ca, type: 3}
       propertyPath: m_Name
       value: wooden_gate_prop_3d_model
@@ -412,6 +416,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 6e9057ac8f48aa94dbed3eafe011c811, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 73dae5b393adb6b4da38cb52d4d60c2a, type: 2}
     - target: {fileID: 919132149155446097, guid: 6e9057ac8f48aa94dbed3eafe011c811, type: 3}
       propertyPath: m_Name
       value: orange_wooden_floor_3d_model
@@ -486,6 +494,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6054648167012071458, guid: 46a903abd2377f84480e491508080d63, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
+    - target: {fileID: -4683669308469848369, guid: 46a903abd2377f84480e491508080d63, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
+    - target: {fileID: -2474432806101076370, guid: 46a903abd2377f84480e491508080d63, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
+    - target: {fileID: -1555687714242853918, guid: 46a903abd2377f84480e491508080d63, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value:
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     - target: {fileID: 919132149155446097, guid: 46a903abd2377f84480e491508080d63, type: 3}
       propertyPath: m_Name
       value: BaseModel

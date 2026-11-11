@@ -12,6 +12,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
     /// <summary>미배치된 편성 개체가 있으면 시작 확인을 거치며, 확정 때 현재 입력 상태를 다시 검사합니다.</summary>
     internal sealed class CombatDeploymentConfirmation : IUIConfirmationReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEnterCombatAccept = new("Combat.Action.UI.EnterCombat.Accept");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEnterCombatDecline = new("Combat.Action.UI.EnterCombat.Decline");
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEnterCombatRequest = new("Combat.Action.UI.EnterCombat.Request");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEnterCombatRespond = new("Combat.Action.UI.EnterCombat.Respond");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIEnterCombatClose = new("Combat.Action.UI.EnterCombat.Close");
+#endif
+
         private readonly ICharacterBufferReadSink _characters;
         private readonly Func<RunDeckSnapshot> _membership;
         private readonly IUIConfirmationPresentation _presentation;
@@ -28,8 +41,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         {
             _characters = characters ?? throw new ArgumentNullException(nameof(characters));
             _membership = membership ?? throw new ArgumentNullException(nameof(membership));
-            // 표시를 쓰지 않는 시험 조립은 생략할 수 있지만 확인이 필요한 요청에서는 누락을 오류로 보고합니다.
-            _presentation = presentation;
+            // 운영은 늘 넘깁니다(입력 재료 묶음이 null을 거절). 쓰는 곳마다 다시 보지 않도록 생성 때 막습니다(평가 C5-02).
+            _presentation = presentation ?? throw new ArgumentNullException(nameof(presentation));
             _canEnter = canEnter ?? throw new ArgumentNullException(nameof(canEnter));
             _enter = enter ?? throw new ArgumentNullException(nameof(enter));
             _cancelInputs = cancelInputs ?? throw new ArgumentNullException(nameof(cancelInputs));
@@ -37,9 +50,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             _mainNotPlaced = mainNotPlaced ?? throw new ArgumentNullException(nameof(mainNotPlaced));
         }
 
-        internal bool IsOpen => _presentation?.IsConfirmationOpen(this) ?? false;
+        internal bool IsOpen => _presentation.IsConfirmationOpen(this);
 
-        internal bool HasUnplacedUnits()
+        private bool HasUnplacedUnits()
         {
             // 덱 밖 보유 유닛은 전투에 들어오지 않으므로 참가 목록만 셉니다(Run 덱 설계 D10, 계획 RD-2 Q-RD3).
             RunDeckSnapshot membership = _membership();
@@ -80,15 +93,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
 
         internal void Request()
         {
-            if (IsOpen || !_canEnter()) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEnterCombatRequestSample = _profileUIEnterCombatRequest.Auto();
+#endif
+
+            if (IsOpen) return;
+            // 제출할 수 없는 요청은 기존 경로(Router)로 넘겨 튜토리얼 막힘 안내를 받습니다. 턴 종료 확인창과 같습니다(평가 C10-09).
+            // 다른 이유로 제출할 수 없으면 Router의 대기 제출이 지금처럼 조용히 거절합니다.
+            if (!_canEnter())
+            {
+                _enter();
+                return;
+            }
             if (!CheckMainPlacement()) return;
             if (!HasUnplacedUnits())
             {
                 _enter();
                 return;
             }
-            if (_presentation == null)
-                throw new InvalidOperationException("[CombatDeploymentConfirmation] 미배치 유닛의 전투 시작 확인에 IUIConfirmationPresentation이 필요합니다.");
             _cancelInputs();
             if (_canEnter())
                 _presentation.ShowConfirmation("아직 배치하지 않은 유닛이 있습니다. 전투를 시작할까요?", this);
@@ -96,6 +118,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
 
         public void Respond(bool accepted)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileDecision = (accepted ? _profileUIEnterCombatAccept : _profileUIEnterCombatDecline).Auto();
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEnterCombatRespondSample = _profileUIEnterCombatRespond.Auto();
+#endif
+
             try
             {
                 if (accepted && _canEnter() && CheckMainPlacement()) _enter();
@@ -108,6 +138,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             if (IsOpen && !_canEnter()) Close();
         }
 
-        internal void Close() => _presentation?.HideConfirmation(this);
+        internal void Close()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIEnterCombatCloseSample = _profileUIEnterCombatClose.Auto();
+#endif
+            _presentation.HideConfirmation(this);
+        }
     }
 }

@@ -10,8 +10,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class KillChainAttackEffectRule : IEffectKillChainAttackRule
+    internal sealed class KillChainAttackEffectRule : IEffectKillChainAttackRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.ActualOnlyReaction;
+
         private readonly KillChainAttackTraitDefinition _definition;
         private readonly KillChainAttackTraitRule _rule;
 

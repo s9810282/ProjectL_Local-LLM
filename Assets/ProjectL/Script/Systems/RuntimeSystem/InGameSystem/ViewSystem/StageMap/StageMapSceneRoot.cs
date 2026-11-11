@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 {
     /// <summary>
-    /// 스테이지 맵 씬의 참조 묶음입니다. 동작은 없고 <see cref="StageMapViewSystem"/>이 씬 진입 때 한 번 찾아 씁니다.
+    /// 스테이지 맵 씬의 참조를 보관합니다. <see cref="StageMapViewSystem"/>이 씬 진입 때 한 번 찾아 씁니다.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class StageMapSceneRoot : MonoBehaviour
@@ -29,11 +29,5 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         internal StageMapCanvasView UI => ui;
 
         internal CinemachineVirtualCamera MapCamera => mapCamera;
-
-#if UNITY_EDITOR
-        // 작업값은 씬에 저장하지 않습니다. 확정값의 원본은 가상 카메라 Transform입니다.
-        internal string CameraFramingKey => "ProjectL.StageCamera." + gameObject.scene.path + "." + mapCamera.name;
-#endif
-
     }
 }

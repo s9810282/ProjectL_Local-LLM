@@ -19,7 +19,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly Func<ObjectContentKind, TView> _rent;
         private readonly Action<ObjectContentKind, TView> _return;
         private readonly Dictionary<long, Entry> _entries = new();
-        private readonly HashSet<long> _classified = new();
         private readonly List<long> _removal = new();
         private long _pass;
 
@@ -37,16 +36,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (apply == null) throw new ArgumentNullException(nameof(apply));
 
-            _classified.Clear();
-            foreach (long id in bindings.ObjectSourceIds) _classified.Add(id);
             _pass++;
             try
             {
                 foreach (MovementTileFact tile in environment.Tiles)
                 {
-                    if (!_classified.Contains(tile.Id)) continue;
-                    if (tile is not ObjectSourceFact source)
-                        throw new InvalidOperationException($"[ObjectViewSet] Object 분류와 원본 형식이 다릅니다: {tile.Id}.");
+                    // 분류 → 형식(어긋나면 예외) → 보임 순서입니다. 분류·형식 판단은 CombatEnvironmentFacts 한 곳입니다(평가 C1-05, 작은 묶음 설계 SB3).
+                    if (!CombatEnvironmentFacts.TryGetObject(bindings, tile, out ObjectSourceFact source)) continue;
                     if (!CombatEnvironmentFacts.IsShown(source)) continue;
 
                     ObjectContentKind kind = EnvironmentVisualKinds.ObjectKind(source);
@@ -85,7 +81,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
             finally
             {
-                _classified.Clear();
                 _removal.Clear();
             }
         }
@@ -99,6 +94,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
             view = null;
             return false;
+        }
+
+        /// <summary>지금 연결된 View를 모두 돕니다. 연결은 바꾸지 않습니다(진입 연출의 숨김 대상 수집, 평가 C10-06).</summary>
+        internal void VisitViews(Action<TView> visit)
+        {
+            if (visit == null) throw new ArgumentNullException(nameof(visit));
+            foreach (Entry entry in _entries.Values) visit(entry.View);
         }
 
         /// <summary>반환 하나가 실패해도 남은 View를 모두 반환하고 연결을 비웁니다.</summary>
@@ -117,7 +119,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 }
             }
             _entries.Clear();
-            _classified.Clear();
             _removal.Clear();
             if (errors != null) throw new AggregateException("[ObjectViewSet] View 반환에 실패했습니다.", errors);
         }

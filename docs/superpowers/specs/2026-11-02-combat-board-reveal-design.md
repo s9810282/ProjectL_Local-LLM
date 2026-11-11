@@ -246,3 +246,14 @@ R8 반영: 외부 생성 호출과 ExtendEnd를 제거했다. 설치/등장 목�
 사용자 최종 요청에 따라 직선의 첫 칸에서 반대 방향으로 5칸, 마지막 칸에서 진행 방향으로 5칸을 더 만든다. 별도 `RailExtensionCells`가 표시 연장 개수의 원본이며 기본값과 RailwayVisual_Default 에셋은 5다. 0은 맵 내부만 생성한다. 기존 OutsideCells/TravelPaddingCells는 열차 이동 여유로 유지하며 표시 개수로 사용하지 않는다.
 
 첫 외부 끝부터 순서대로 생성/등록하고 기존 낙하 부품을 사용한다. 총 조각은 N+10, 현재 0.08초 간격에서 추가 시간은 0.8초다. 실제 RailCells·열차 경로·접촉 계산은 늘리지 않는다. 설정/생성/진행의 책임을 유지하고 새 서비스/등록/Export/의존성을 추가하지 않는다(SSOT·SOLID·FW/JMH·기능 독립성). 코드와 정적 검토 완료, **컴파일 미확인**. Task/인수는 계획 R9에 기록했다.
+
+## 18. 보드 위 물체 등장 순서 (R10, 평가 C10-06, 2026-11-05)
+
+- 문제(평가 C10-06): 진입 준비가 숨기는 대상은 타일·배경·지형, 선로, 낙하가 켜진 적 Nexus, 필드 적뿐이었다. 장애물 등 Nexus가 아닌 구조물(체력 HUD 포함), 필드 Object, 낙하가 꺼진 Nexus는 설치 때 완성 자리에 그려진 채 보여, 보드가 올라오는 동안 빈 구멍 위에 떠 있었다. 지금 운영 스테이지에는 이런 배치가 없어 드러나지 않았다.
+- 사용자 결정(Q-N7, 2026-11-05): "타일이 올라온 이후에 구조물부터 차례대로".
+- 순서: 로딩 중 완성 배치/숨김 → 보드·배경 상승 → 격자·기믹 공개와 선로 낙하 → **보드 위 구조물 상승** → **Object 표시** → 적 Nexus 낙하·착지 이펙트 → 적 소환 → 상시 효과/입력 재개.
+- 구조물: 첫 적과 같은 소환 상승 조각(`CombatRisePiece`, 설정 `Summon Rise*`)으로 함께 올라온다. 모델은 Begin이 아래쪽 자세를 적용한 뒤 보이고, 체력 HUD는 모두 안착한 뒤 보인다. 대상은 살아 있는 구조물 전부이고, 적 Nexus는 낙하가 켜졌으면 빼고(낙하 단계가 맡음) 꺼졌으면 함께 올린다. 적 Nexus를 가르는 조건은 `FieldUnitPresenter.IsEnemyNexus` 하나다.
+- Object: 자세 대여가 없어(인스턴스 배치가 곧 표시) 움직이지 않고, 구조물이 다 선 그 프레임에 한 번에 보인다. 숨김은 Renderer만 끈다(`CombatEntryVisibility`). 발동해 꺼진 인스턴스는 넣지 않는다.
+- 코드: 적 등장 부품을 일반 부품 `CombatEntryRiseAppearance`(옛 `CombatEntryEnemyAppearance`, `git mv`로 GUID 유지, 생성자 끝 인자 = 문구의 대상 이름)로 바꿔 구조물·적이 하나씩 쓴다. `CombatBoardEntryPresentation`에 `Structures` 단계와 Object 숨김 목록, `FieldUnitPresenter.CollectEntryStructures`, `CombatEntryNexusAppearance.Drops`, `FieldObjectPresenter.CollectEntryObjects`·`ObjectViewSet.VisitViews`, Factory 두 줄(`CombatBoardEntryFactory.Create`의 `objects` 인자). 정리(Cancel)는 숨긴 Object와 구조물 자세·HUD를 되돌린다.
+- 정한 것(사용자 확인 대상): 구조물도 적처럼 회전하며 올라온다(같은 설정 값). Object는 움직임 없이 나타난다. Object를 구조물 다음, Nexus 앞에 둔다.
+- SSOT: 적 Nexus 판정 하나, 상승 수치는 기존 소환 설정 한 곳. S/O: 순서는 Entry 한 곳, 상승 실행은 일반 부품 하나를 두 번 쓴다. FW/JMH: 새 서비스·등록·Export·MonoBehaviour 없음. 기능 독립성: 전투 중 소환 처리기·Core 사건은 바꾸지 않는다. 컴파일·Unity 재생은 미확인이다.

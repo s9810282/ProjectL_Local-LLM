@@ -61,7 +61,7 @@ namespace ProjectL.Tests.Core
                 .Where(k => k != TraitKey.None && !DeferredCombatFeatures.IsTraitRetired(k) &&
                     DeferredCombatFeatures.GetTraitUnavailableReason(k) != "ImplementationPending").ToArray();
             Assert.That(keys, Is.EquivalentTo(declared));
-            Assert.That(keys.Distinct().Count(), Is.EqualTo(37));
+            Assert.That(keys.Distinct().Count(), Is.EqualTo(44));
         }
 
         [Test]

@@ -15,36 +15,6 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class ControllerTurnCountPublicationTests
     {
-        [Test]
-        public void RealProgressCountsEachSideOnce_PreservesAcrossDayAndNewNight()
-        {
-            using var battle = Create();
-            var b = battle.Buffers;
-            Assert.That(Count(battle), Is.Zero);
-            for (int turn = 1; turn <= 8; turn++)
-            {
-                battle.Submit(battle.EndPlayerTurn());
-                Assert.That(Count(battle), Is.EqualTo(turn * 2 - 1));
-                Assert.That(battle.Core.CombatCommands.ProcessNextCommand(), Is.False);
-                Assert.That(Count(battle), Is.EqualTo(turn * 2 - 1));
-                Assert.That(battle.Core.CombatAdvance.AdvanceCombat(), Is.True);
-                Assert.That(Count(battle), Is.EqualTo(turn * 2 - 1), "적 시작은 종료가 아니다.");
-                battle.AdvanceToPlayerOrDay();
-                Assert.That(Count(battle), Is.EqualTo(turn * 2));
-                Assert.That(b.CombatResultHistoryReadSink.Results.SelectMany(r => r.Events).OfType<CombatGimmickEvent>(), Is.Empty);
-            }
-            Assert.That(b.CombatStateReadSink.Current.CommandState.Turn.StagePhase, Is.EqualTo(StagePhase.Deployment));
-            battle.Submit(CombatViewCommandData.EnterCombat());
-            Assert.That(Count(battle), Is.EqualTo(16));
-            battle.AdvanceToPlayerOrDay();
-            Assert.That(Count(battle), Is.EqualTo(16));
-            battle.Submit(battle.EndPlayerTurn());
-            Assert.That(Count(battle), Is.EqualTo(17));
-            b.BattleWriteSink.EndBattle();
-            using var fresh = Create();
-            Assert.That(Count(fresh), Is.Zero);
-        }
-
         [TestCase(false, 0)]
         [TestCase(false, 2)]
         [TestCase(true, 1)]
@@ -74,8 +44,8 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(valid.Accepted, Is.True, valid.Reason);
             Assert.That(valid.FinalState.Turn.CompletedControllerTurnCount, Is.EqualTo(enemy ? 2 : 1));
             var t = valid.FinalState.Turn;
-            var wrong = new CombatTurnFacts(t.StagePhase, t.PreparationIndex, t.MainPlacementLocked, t.ControllerPhase,
-                t.ControllerTurnSequence, t.CompletedPlayerTurnCount, t.NightStartPlayerTurnCount, t.EnemyOrigins, t.Summons, wrongCount);
+            var wrong = new CombatTurnFacts(t.StagePhase, t.ControllerPhase,
+                t.ControllerTurnSequence, t.CompletedPlayerTurnCount, t.EnemyOrigins, t.Summons, wrongCount);
             var corrupt = new CombatCommandTransition(input, true, "", valid.Characters, valid.Field,
                 valid.FinalState.With(turn: wrong), valid.Outcome, events: valid.Events);
             var snapshot = new CoreIntegrationSnapshot(b);
@@ -144,7 +114,7 @@ namespace ProjectL.Tests.CoreIntegration
                 current.TimelineSeed, CombatFlowPhase.PlayerInput, current.DrawOrder, current.TraitSettings, current.DrawCursor,
                 current.PlayerDeploymentDepth, current.EnemyDeploymentDepth, current.RailCells.ToArray(), current.StageGimmicks.ToArray(),
                 current.Environment, current.EnvironmentBindings, current.ObstacleContents, current.CommandState.WallBlocking);
-            var initial = current.CommandState.With(phase: CombatFlowPhase.PlayerInput,                isNight: false,turn: new CombatTurnFacts(StagePhase.Deployment),rewards: CombatRewardFacts.Empty);
+            var initial = current.CommandState.With(phase: CombatFlowPhase.PlayerInput,turn: new CombatTurnFacts(StagePhase.Deployment),rewards: CombatRewardFacts.Empty);
             var invalid = new BattlePreparation(characters, combat, initial.Structures,
                 commandState: initial.With(turn: new CombatTurnFacts(StagePhase.Deployment, completedControllerTurnCount: 16)),
                 objective: initial.Objective, membership: current.Membership);

@@ -99,6 +99,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// </summary>
         internal Vector3 StepToLocal(CellCoord step) => new(step.X * _cellWidth, 0f, step.Y * _cellLength);
 
+        /// <summary>
+        /// 두 칸 사이 변위(칸 좌표 차이, 크기 제한 없음)의 월드 벡터입니다. 판 안 두 칸이면 두 칸 중심 월드 위치의 차이와 같고(칸 중심 식이 선형),
+        /// 한쪽이 판 밖이어도 됩니다. 맞은 방향(<c>CombatHitDirection</c>)이 씁니다 — 작렬이 맵 끝에 부딪히면 피해 근원 칸이 판 밖입니다(작렬 View 계획 §4.3 H1).
+        /// </summary>
+        internal Vector3 CellOffsetToWorld(CellCoord offset) => _fieldRoot.TransformVector(StepToLocal(offset));
+
         /// <summary>칸 하나를 접촉 계산의 몸(칸 크기 사각형, 필드 로컬)으로 돌려줍니다. 기차의 필드 진입 시각이 씁니다(카메라 연출 조각 설계 K9).</summary>
         internal CombatBody CellBody(CellCoord cell) =>
             new(CombatBody.Flatten(CellCenterToLocal(cell)), new Vector2(_cellWidth * 0.5f, _cellLength * 0.5f));

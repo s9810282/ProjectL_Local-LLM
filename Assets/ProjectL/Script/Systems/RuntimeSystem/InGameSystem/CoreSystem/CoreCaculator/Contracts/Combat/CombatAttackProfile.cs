@@ -28,10 +28,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (definition.FootprintLocalCells.Length != 1)
                 throw new ArgumentException("다칸 유닛의 새 공격 경로는 기획 검토 전까지 지원하지 않습니다.");
             UsesPiercingShot = HasTrait(definition, TraitKey.PiercingFalloff);
-            // 충격 볼트는 하나의 중심을 요구하며, 공격자 기준 밀치기·관통 전달과 결합하지 않습니다.
+            // 충격 볼트는 하나의 중심을 요구하며, 공격자 기준 밀치기(넉백·작렬)·관통 전달과 결합하지 않습니다.
+            // 넉백 평가는 방향 모드가 다른 기여를 함께 받지 않으므로, 여기서 전투 준비 때 거절합니다.
             if (HasTrait(definition, TraitKey.ImpactBolt) &&
-                (method.ChoiceMode != TargetingChoiceMode.Single || UsesPiercingShot || HasTrait(definition, TraitKey.Knockback)))
-                throw new ArgumentException("충격 볼트는 단일 칸 지정에서만 쓰며 넉백·관통 특성과 함께 쓸 수 없습니다.");
+                (method.ChoiceMode != TargetingChoiceMode.Single || UsesPiercingShot || HasTrait(definition, TraitKey.Knockback) ||
+                 HasTrait(definition, TraitKey.CrashImpact)))
+                throw new ArgumentException("충격 볼트는 단일 칸 지정에서만 쓰며 넉백·작렬·관통 특성과 함께 쓸 수 없습니다.");
             // 끌어오기의 아군 선택 권한을 관통 피격 목록으로 확장하지 않습니다. 두 전달 방식의 조합은 지원하지 않습니다.
             if (UsesPiercingShot && HasTrait(definition, TraitKey.Pull))
                 throw new ArgumentException("끌어오기와 관통 특성은 함께 쓸 수 없습니다.");

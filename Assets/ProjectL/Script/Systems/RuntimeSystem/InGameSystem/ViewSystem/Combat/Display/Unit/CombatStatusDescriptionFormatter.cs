@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Rockfall.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
@@ -38,6 +39,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                         (value.Movement.HasValue ? $" / 이동 기록 #{value.Movement.Value.MoveCommandNumber}" : string.Empty),
                     ActionRestrictionStatus value => value.Key == StatusEffectKey.Bind ? "이동 제한" : "행동 제한",
                     TauntedStatus => "도발",
+                    // 2026-11-07 폭주·용암포·출혈, 2026-11-10 재구성으로 생긴 상태입니다(값은 Core 상태가 그대로 줌).
+                    FireStatus value => $"턴 시작마다 피해 {value.Damage}",
+                    BleedingStatus value => $"출혈 {value.Stacks.Count}중첩 / 턴 시작마다 피해 {BleedingDamage(value.Stacks)}",
+                    MovementRangeDecreaseStatus value => $"이동력 {value.Magnitude} 감소",
+                    ReconstructionStatus => "재구성 중(이동·공격 불가)",
                     _ => throw new InvalidOperationException($"상태 세부 표시가 없습니다: {source.Status.GetType().Name}")
                 });
                 text.Append(" / ").Append(source.LifetimeKind switch
@@ -49,11 +55,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     StatusEffectLifetimeKind.BattleEnd => "전투 종료까지",
                     StatusEffectLifetimeKind.ReconciledBudget => "예산·적용 조건에 따라 유지",
                     StatusEffectLifetimeKind.CurrentEligibility => "조건이 맞는 동안",
+                    StatusEffectLifetimeKind.AffectedSideTurnStarts => $"대상 진영 턴 시작 {source.RemainingAffectedSideStarts}회 남음",
+                    StatusEffectLifetimeKind.NextAffectedSideTurnEnd => "대상 진영의 다음 턴 종료까지",
                     _ => throw new InvalidOperationException($"출처 수명 표시가 없습니다: {source.LifetimeKind}")
                 });
             }
             return text.ToString();
         }
+        /// <summary>
+        /// 출혈의 다음 턴 시작 피해입니다. 중첩마다 걸어 준 유닛의 단계 피해를 그대로 가지므로 중첩 피해의 합입니다(Core 출혈 규칙).
+        /// HUD 표시 변환(<c>CombatUnitStatusFactory</c>)과 이 설명 문구가 함께 부르는 한 곳입니다.
+        /// </summary>
+        internal static int BleedingDamage(IReadOnlyList<BleedingStack> stacks)
+        {
+            if (stacks == null) throw new ArgumentNullException(nameof(stacks));
+            int total = 0;
+            for (int i = 0; i < stacks.Count; i++)
+                total += stacks[i].Damage;
+            return total;
+        }
+
         private string Origin(EffectOriginKey? origin)
         {
             if (!origin.HasValue) return "출처 정보 없음";

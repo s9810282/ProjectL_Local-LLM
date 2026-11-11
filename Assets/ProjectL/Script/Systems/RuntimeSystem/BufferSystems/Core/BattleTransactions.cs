@@ -230,7 +230,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
             // 슬롯에서 발동한 명령도 계산 때 읽은 공용 재고와 일치해야 한다. 검증용 제안은 설치하지 않는다.
             if (transition.InventoryChange == null)
                 _items.Prepare(new ItemInventoryChange(transition.Input.ItemInventory, transition.Input.ItemInventory));
-            PreparedCharacterChanges characters = _characterStore.PrepareCommandChanges(transition.Characters, ActiveMembership(), transition.UndoMovement);
+            PreparedCharacterChanges characters = _characterStore.PrepareCommandChanges(transition.Characters, ActiveMembership(), transition.UndoMovement,
+                transition.Events.OfType<CombatReinforcementEvent>().ToArray());
             SoulFieldSnapshot field = _combatStore.PrepareSoulField(transition.Field);
             PreparedCombatCommand command = _combatStore.PrepareCommand(transition,
                 characters.Views.Select(c => c.ToFacts()).ToArray());

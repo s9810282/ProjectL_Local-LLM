@@ -11,7 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
     /// </summary>
     /// <remarks>
     /// Core 상태를 화면에 적용하거나 Buffer를 확인하지 않습니다(표시 반영과 확인은 CombatViewSystem).
-    /// Play·Cancel의 동기 예외는 호출자에게 전파합니다. 구현: 순차 사건 어댑터(<see cref="OrderedCombatPresentation"/>), 테스트 가짜.
+    /// Play·Cancel의 동기 예외는 호출자에게 전파합니다. 구현: 순차 사건 어댑터(<see cref="OrderedCombatPresentation"/>).
     /// </remarks>
     internal interface ICombatPresentation
     {

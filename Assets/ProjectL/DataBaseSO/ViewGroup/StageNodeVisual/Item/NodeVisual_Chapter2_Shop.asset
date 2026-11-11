@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NodeVisual_Chapter2_Shop
   m_EditorClassIdentifier: 
   stageNodeVisualData:
+    breakEffect: 25
     stageKey: 2202
     stageType: 2
     mapRole: 0

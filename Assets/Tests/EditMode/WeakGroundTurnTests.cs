@@ -16,7 +16,6 @@ namespace ProjectL.Tests.Core
     {
         [TestCase(CombatControllerPhase.Player, 0)]
         [TestCase(CombatControllerPhase.Enemy, 1)]
-        [TestCase(CombatControllerPhase.Enemy, 8)]
         [TestCase(CombatControllerPhase.Player, 0, 1)]
         [TestCase(CombatControllerPhase.Enemy, 1, 5)]
         public void ControllerCompletion_DoesNotCollapseOrCountGround(CombatControllerPhase phase, long completed, int entryThreshold = 2)

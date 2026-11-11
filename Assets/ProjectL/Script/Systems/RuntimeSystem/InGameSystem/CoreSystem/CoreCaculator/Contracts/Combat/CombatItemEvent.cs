@@ -29,8 +29,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Replaced,
         ReturnedToHand,
         Death,
-        RoundEnded,
-        BattleEnded
+        // 폐기된 라운드 종료 이유의 번호 7은 재사용하지 않습니다(밤 삭제 설계 2026-11-10).
+        BattleEnded = 8
     }
 
     /// <summary>계산을 끝낸 아이템 사실입니다. 체력 피해와 회복 사건은 기존 체력 사건으로 각각 기록합니다.</summary>
@@ -71,7 +71,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
             if (stage == ItemEventStage.Lifecycle)
             {
-                if ((reason != ItemEventReason.Death && reason != ItemEventReason.RoundEnded && reason != ItemEventReason.BattleEnded) ||
+                if ((reason != ItemEventReason.Death && reason != ItemEventReason.BattleEnded) ||
                     oldItemKey != itemKey || newItemKey.HasValue || targetId.HasValue || appliedMagnitude != 0 || damageKind.HasValue)
                     throw new ArgumentException("폐기 사건은 기존 슬롯만 비우며 발동 효과를 포함하지 않습니다.");
             }

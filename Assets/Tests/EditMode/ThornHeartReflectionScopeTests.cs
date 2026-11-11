@@ -225,7 +225,7 @@ namespace ProjectL.Tests.Core
             CharacterCombatFacts attacker, CharacterCombatFacts ally, long group = 2)
         {
             var characters = new System.Collections.Generic.Dictionary<EntityId, CharacterCombatFacts> { [attacker.EntityId] = attacker };
-            var damage = new CombatDamageApplication(Array.Empty<ItemDefinition>(), 0, characters,
+            var damage = new CombatDamageApplication(Array.Empty<ItemDefinition>(), characters,
                 new System.Collections.Generic.List<CombatEvent>());
             bool reflected = scope.TryReflect(attacker, ally, group, damage, out var result);
             Assert.That(reflected, Is.EqualTo(result != null));

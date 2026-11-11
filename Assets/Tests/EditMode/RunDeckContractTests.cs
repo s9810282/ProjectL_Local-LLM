@@ -37,7 +37,7 @@ namespace ProjectL.Tests.Core
         };
         private static OwnedCharacterStatsSnapshot[] Stats() => new[]
         {
-            new OwnedCharacterStatsSnapshot(MainId, EntityKey.Unit_Akimbo, CharacterOwnershipRole.Main, 1, 0,
+            new OwnedCharacterStatsSnapshot(MainId, EntityKey.Unit_Akimbo, CharacterOwnershipRole.Main, 1, new ExperienceProgressSnapshot(false, 0, 0), 0,
                 new CharacterBaselineStatsSnapshot(10,10,2,0,MoveMethod.LiftAndPlace,3,1,10,CategoryKey.Main,Array.Empty<TraitKey>()),
                 new AttackPatternSnapshot(UnitSpecTestFactory.DefaultMethod(), Array.Empty<CellCoord>(), Array.Empty<CellCoord>()),
                 TraitSettingsSet.Empty, null),

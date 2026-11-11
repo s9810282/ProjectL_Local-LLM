@@ -29,8 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             DeckSlotInfoReferences.RequireChild(category, owner, "stats.category");
             DeckSlotInfoReferences.RequireChild(unitName, owner, "stats.unitName");
             DeckSlotInfoReferences.RequireChild(portrait, owner, "stats.portrait");
-            if (unitName.transform.parent != portrait.transform.parent)
-                throw DeckSlotInfoReferences.Error(owner, "stats.unitName·stats.portrait는 같은 PortraitArea의 직계 자식이어야 합니다.");
+            // 이름의 부모를 PortraitArea로 삼고 초상화의 Mask 등 중간 컨테이너를 허용합니다.
+            Transform portraitArea = unitName.transform.parent;
+            if (portrait.transform == portraitArea || !portrait.transform.IsChildOf(portraitArea))
+                throw DeckSlotInfoReferences.Error(owner,
+                    $"stats.portrait '{portrait.name}'는 stats.unitName '{unitName.name}'의 부모 PortraitArea '{portraitArea.name}' 하위에 있어야 합니다.");
             DeckSlotInfoReferences.RequireChild(level, owner, "stats.level");
             DeckSlotInfoReferences.RequireChild(health, owner, "stats.health");
             DeckSlotInfoReferences.RequireChild(attack, owner, "stats.attack");

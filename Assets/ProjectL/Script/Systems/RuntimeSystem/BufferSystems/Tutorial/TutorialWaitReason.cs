@@ -9,8 +9,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial
         StartCondition = 1,
         /// <summary>표시나 다음 단계로 넘어가는 전환을 기다립니다.</summary>
         Presentation = 2,
-        /// <summary>표시된 설명이 사용자 확인이나 5초 만료를 기다립니다.</summary>
-        ContinueOrTimeout = 3,
+        /// <summary>표시된 설명이 시간 제한 없이 사용자 확인을 기다립니다.</summary>
+        Continue = 3,
         /// <summary>실습 단계가 통과 조건이 되는 게임 결과를 기다립니다.</summary>
         PracticeGoal = 4,
         /// <summary>종료 정리를 기다립니다.</summary>

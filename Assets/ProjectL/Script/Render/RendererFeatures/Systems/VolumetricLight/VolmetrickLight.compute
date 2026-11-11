@@ -1,4 +1,5 @@
 #pragma kernel CSMain
+#pragma kernel CSComposite
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
@@ -6,11 +7,15 @@ Texture2D<float4> _ActiveColor;
 Texture2D<float> _CameraDepth;
 Texture2D<float> _LightDepth;
 RWTexture2D<float4> _Result;
+// R은 효과 누적값, G는 계산 당시 깊이이며 배경색은 저장하지 않는다.
+RWTexture2D<float2> _History;
 
 SamplerState sampler_LinearClamp;
 
 int _width;
 int _height;
+int _FullRefresh;
+uint _FrameParity;
 float _LightingRange;
 int _LightingSteps;
 
@@ -82,7 +87,9 @@ float GetShadowAttenuation(float3 positionWS)
     // URP packs two cascades horizontally, and three/four in a 2x2 atlas.
     float2 tileScale = float2(_VolumetricCascadeCount > 1 ? 0.5 : 1.0,
                              _VolumetricCascadeCount > 2 ? 0.5 : 1.0);
-    float2 tileMin = float2(cascade % 2, cascade / 2) * tileScale;
+    // 음수 반환을 처리한 뒤 0~3 인덱스의 나머지·나눗셈을 비트 연산으로 대체한다.
+    uint cascadeIndex = (uint) cascade;
+    float2 tileMin = float2(cascadeIndex & 1u, cascadeIndex >> 1u) * tileScale;
     float2 tileMax = tileMin + tileScale;
     if (any(shadowCoord.xy < tileMin) || any(shadowCoord.xy > tileMax) ||
         shadowCoord.z <= 0.0 || shadowCoord.z >= 1.0)
@@ -116,14 +123,9 @@ float GetShadowAttenuation(float3 positionWS)
     return shadow * 0.25;
 }
 
-[numthreads(8, 8, 1)]
-void CSMain(uint3 id : SV_DispatchThreadID)
+float TraceVolumetricLight(uint2 pixel, float deviceDepth)
 {
-    if (id.x >= (uint) _width || id.y >= (uint) _height)
-        return;
-
-    float2 uv = float2((id.x + 0.5) / (float) _width, (id.y + 0.5) / (float) _height);
-    float deviceDepth = _CameraDepth[id.xy];
+    float2 uv = (float2(pixel) + 0.5) / float2(_width, _height);
 
 #if UNITY_REVERSED_Z
     const float nearDepth = 1.0;
@@ -142,8 +144,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     
     if (rayLength <= 0.001)
     {
-        _Result[id.xy] = _ActiveColor[id.xy];
-        return;
+        return 0.0;
     }
 
     rayDir = normalize(rayDir);
@@ -151,7 +152,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float stepSize = rayLength / (float) _LightingSteps;
     float totalScattering = 0.0;
     
-    float ditherOffset = InterleavedGradientNoise(float2(id.x, id.y));
+    float ditherOffset = InterleavedGradientNoise(float2(pixel));
 
     for (int i = 0; i < _LightingSteps; i++)
     {
@@ -171,7 +172,46 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         }
     }
 
-    float4 originalColor = _ActiveColor[id.xy];
-    _Result[id.xy] = originalColor + float4(totalScattering, totalScattering, totalScattering, 0.0);
+    return totalScattering;
+}
 
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    // 반폭 스레드를 짝수·홀수 체커보드 픽셀에 대응시킨다.
+    uint2 pixel = id.xy;
+    if (_FullRefresh == 0)
+    {
+        pixel.x = id.x * 2u + ((id.y + _FrameParity) & 1u);
+    }
+
+    if (pixel.x >= (uint) _width || pixel.y >= (uint) _height)
+    {
+        return;
+    }
+
+    float depth = _CameraDepth[pixel];
+    _History[pixel] = float2(TraceVolumetricLight(pixel, depth), depth);
+}
+
+[numthreads(8, 8, 1)]
+void CSComposite(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) _width || id.y >= (uint) _height)
+    {
+        return;
+    }
+
+    float depth = _CameraDepth[id.xy];
+    float2 history = _History[id.xy];
+    // 깊이가 바뀐 픽셀은 이번 갱신 그룹에 속하지 않아도 즉시 다시 계산한다.
+    [branch]
+    if (history.y != depth)
+    {
+        history = float2(TraceVolumetricLight(id.xy, depth), depth);
+        _History[id.xy] = history;
+    }
+
+    float4 originalColor = _ActiveColor[id.xy];
+    _Result[id.xy] = originalColor + float4(history.xxx, 0.0);
 }

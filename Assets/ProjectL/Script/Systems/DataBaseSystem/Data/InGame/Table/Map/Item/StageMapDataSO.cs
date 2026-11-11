@@ -19,7 +19,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
         [SerializeField, Min(0), Tooltip("첫 층(깊이 1) 노드에 늘 놓을 일반 스테이지 키입니다. 예: 챕터 1-1 고정 맵. 0이면 무작위입니다. " +
             "'첫 층 노드 1개'를 켜야 하고, 이 맵의 일반 스테이지여야 합니다. 이 스테이지는 다른 노드에는 나오지 않습니다.")]
         private int firstStageKey;
-        [SerializeField, Range(0f, 1f)] private float additionalConnectionChance = 0.25f;
+        [SerializeField, Range(0f, 1f), Tooltip("한 갈래인 노드가 지금 잇는 노드의 바로 옆 다음 층 노드에 한 갈래 더 이어질 확률입니다. " +
+            "노드는 최대 두 갈래이고, 다른 선과 교차하면 잇지 않습니다. 0.1이면 노드마다 10%입니다.")]
+        private float additionalConnectionChance = 0.1f;
+        [SerializeField, Min(0), Tooltip("맵 전체에 둘 갈래 노드(다음 층 노드 두 개와 이어진 노드)의 최소 수입니다. 모자라면 옆 노드로 더 잇습니다. " +
+            "노드 하나뿐인 층은 세지 않습니다. 0이면 보장하지 않습니다. 맵 모양상 더 이을 곳이 없으면 있는 만큼만 둡니다.")]
+        private int minimumBranchCount;
         [SerializeField] private StageConnectionAlgorithm connectionAlgorithm = StageConnectionAlgorithm.Nearest;
         [SerializeField, Min(0.01f)] private float nearestConnectionWeight = 10f;
         [SerializeField, Min(0.01f)] private float otherConnectionWeight = 1f;
@@ -31,13 +36,23 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
 
         [Header("스테이지 출현 설정 (시작·보스 노드 제외)")]
         [SerializeField, Tooltip("보스가 아닌 전투 스테이지입니다.")]
-        private DistributionInput combatDistribution = new(80, 1, 1);
+        private DistributionInput combatDistribution = new(80, 1, 1, false);
         [SerializeField, Tooltip("일반 상점입니다. 강화는 포함하지 않습니다. 최소 개수는 1 이상이어야 합니다.")]
-        private DistributionInput shopDistribution = new(9, 1, 1);
+        private DistributionInput shopDistribution = new(9, 1, 1, false);
         [SerializeField, Tooltip("회복 스테이지입니다. 최소 개수는 1 이상이어야 합니다.")]
-        private DistributionInput recoveryDistribution = new(7, 1, 1);
+        private DistributionInput recoveryDistribution = new(7, 1, 1, false);
         [SerializeField, Tooltip("강화(훈련소) 스테이지입니다.")]
-        private DistributionInput enhancementDistribution = new(4, 1, 1);
+        private DistributionInput enhancementDistribution = new(4, 1, 1, false);
+
+        // 새 에셋 생성·인스펙터 초기화에서만 기본 완화·최소 갈래를 켭니다. 기존 에셋의 누락 필드는 false·0으로 읽습니다.
+        private void Reset()
+        {
+            additionalConnectionChance = 0.1f;
+            minimumBranchCount = 1;
+            shopDistribution = new DistributionInput(9, 1, 1, true);
+            recoveryDistribution = new DistributionInput(7, 1, 1, true);
+            enhancementDistribution = new DistributionInput(4, 1, 1, true);
+        }
 
         public override IData GetData()
         {
@@ -49,6 +64,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
                 singleFirstLayer,
                 firstStageKey,
                 additionalConnectionChance,
+                minimumBranchCount,
                 connectionAlgorithm,
                 nearestConnectionWeight,
                 otherConnectionWeight,
@@ -70,7 +86,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
             if (input == null) throw new InvalidOperationException($"MapKey {mapKey}의 {kind} 출현 설정이 비어 있습니다.");
             try
             {
-                return new ChapterStageDistributionRule(kind, input.Weight, input.MinimumCount, input.MinDepth);
+                return new ChapterStageDistributionRule(kind, input.Weight, input.MinimumCount, input.MinDepth, input.ReduceConsecutive);
             }
             catch (ArgumentOutOfRangeException exception)
             {
@@ -93,18 +109,22 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Map.Item
             [SerializeField, Min(1),
              Tooltip("이 깊이부터 나옵니다. 1은 시작 바로 다음 층입니다. 첫 층 스테이지와 개발 진입 고정 노드에는 적용하지 않습니다.")]
             private int minDepth = 1;
+            [SerializeField, Tooltip("연결된 경로에서 같은 종류의 연속을 줄입니다. 최소 개수·고정 스테이지·출현 시작 깊이를 유지하며, 피할 수 없는 연속은 허용합니다.")]
+            private bool reduceConsecutive;
 
             internal int Weight => weight;
             internal int MinimumCount => minimumCount;
             internal int MinDepth => minDepth;
+            internal bool ReduceConsecutive => reduceConsecutive;
 
             public DistributionInput() { }
 
-            public DistributionInput(int weight, int minimumCount, int minDepth)
+            public DistributionInput(int weight, int minimumCount, int minDepth, bool reduceConsecutive)
             {
                 this.weight = weight;
                 this.minimumCount = minimumCount;
                 this.minDepth = minDepth;
+                this.reduceConsecutive = reduceConsecutive;
             }
         }
     }

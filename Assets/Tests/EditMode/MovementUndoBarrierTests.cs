@@ -31,7 +31,7 @@ namespace ProjectL.Tests.Core
                     .WithHealth(new HealthStateSnapshot(beforeHealth, 120))
                 : c.EntityId.Value == 2 ? c.WithHealth(new HealthStateSnapshot(1, 100)) : c).ToArray();
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.IsNight, s.Structures, s.ThornFields,
+            var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, s.Structures, s.ThornFields,
                 s.Turn, s.Environment, s.EnvironmentProgress, s.WallBlocking, BattleObjective.DesignatedBoss(new EntityId(2)),
                 s.Allocation, s.ItemRandomState, s.Rewards, s.TraitTurn, s.MovementUndo);
             var effect = new ArtifactEffectData {

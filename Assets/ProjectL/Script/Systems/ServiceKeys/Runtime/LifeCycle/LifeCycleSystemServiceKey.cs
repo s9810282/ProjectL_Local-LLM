@@ -22,6 +22,8 @@ namespace ProjectL.Systems.ServiceKeys.Runtime.LifeCycle
         /// <summary>이번 Stage 방문의 진행 사실·상태 바꿈 입구. Stage Plan만 쓴다(검사 후속 정리 계획 TP-R9).</summary>
         public static readonly SystemGroupKey<IStageProgress> StageProgress = new(nameof(StageProgress));
 
+        public static readonly SystemGroupKey<IStageRunAbandonRequestService> StageRunAbandon = new(nameof(StageRunAbandon));
+
         /// <summary>증강 선택이 남아 있는지(읽기 전용, 강화 View 설계 §14 TG2).</summary>
         public static readonly SystemGroupKey<IStageTraitGrowthFacts> StageTraitGrowthFacts = new(nameof(StageTraitGrowthFacts));
 

@@ -39,7 +39,7 @@ namespace ProjectL.Tests.CoreIntegration
             var owned = new OwnedCharacterRecord(new CharacterInstanceId(91), profile.Definition.Key, CharacterOwnershipRole.Sub);
             var read = OwnedCharacterStatsCalculator.Calculate(new[] { profile },
                 UnitSpecAdapter.ReadCategories(ConfiguredMovementBattle.Config), new[] { owned }, null,
-                new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }).Single();
+                new Dictionary<CharacterInstanceId, int> { [owned.Id] = 0 }, default).Single();
             Assert.That((read.ReconSquadDescription.IncreasePercent, read.ReconSquadDescription.Radius), Is.EqualTo((percent, radius)));
             Assert.That(read.TraitAvailability.Single().UnavailableReason, Is.Empty);
         }

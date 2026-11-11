@@ -24,6 +24,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </remarks>
     internal sealed class FieldTornadoPresenter : ICombatTornadoField
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profilePlaybackSystemTornadoAppearancePoll = new("Combat.Action.Playback.System.TornadoAppearance.Poll");
+#endif
+
         private sealed class Instance
         {
             internal readonly GameObject Body;
@@ -94,6 +99,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         internal void TickAppearance(float deltaTime)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePlaybackSystemTornadoAppearancePollSample = _profilePlaybackSystemTornadoAppearancePoll.Auto();
+#endif
+
             foreach (Instance instance in _active.Values)
                 if (instance.Appearance.IsPlaying) instance.Appearance.Tick(deltaTime);
         }

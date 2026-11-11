@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,6 +22,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
     /// </summary>
     internal sealed class CombatMovementInteraction
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMoveBegin = new("Combat.Action.Interaction.Move.Begin");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMoveDrag = new("Combat.Action.Interaction.Move.Drag");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMoveConfirm = new("Combat.Action.Interaction.Move.Confirm");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMoveCancel = new("Combat.Action.Interaction.Move.Cancel");
+#endif
+
         private readonly ICombatViewBufferWriteSink _input;
         private readonly ICombatViewBufferReadSink _requests;
         private readonly ICombatStateBufferReadSink _combat;
@@ -74,7 +85,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             (Draft.PointerValid || _rejectedCell == CandidateCell);
 
         internal CombatMovementInteraction(ICombatViewBufferWriteSink input, ICombatViewBufferReadSink requests,
-            ICombatStateBufferReadSink combat, float innerCellInset, ICombatActionRejectionSink rejections = null)
+            ICombatStateBufferReadSink combat, float innerCellInset, ICombatActionRejectionSink rejections)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
             _requests = requests ?? throw new ArgumentNullException(nameof(requests));
@@ -82,7 +93,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (float.IsNaN(innerCellInset) || innerCellInset < 0 || innerCellInset >= .5f)
                 throw new ArgumentOutOfRangeException(nameof(innerCellInset));
             _innerCellInset = innerCellInset;
-            _rejections = rejections;
+            // 거절 안내는 경로 입력이 늘 넘깁니다(평가 C5-02).
+            _rejections = rejections ?? throw new ArgumentNullException(nameof(rejections));
         }
 
         internal void Attach()
@@ -109,6 +121,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         // 붙은 칸 시작은 칸 경계 떨림으로 시작되지 않도록 안쪽 영역에 들어왔을 때만 받는다.
         internal bool Begin(EntityId actor, CellCoord origin, Vector2 pointerGrid, bool allowed, bool deferPreview = false)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMoveBeginSample = _profileInteractionMoveBegin.Auto();
+#endif
+
             CellCoord start = MovementPointerSampler.CellAt(pointerGrid);
             if (!_attached || !_combat.HasBattle || IsAwaitingPreview || !allowed ||
                 !MovementDraft.CanStartAt(origin, start) || actor.IsEmpty ||
@@ -136,6 +152,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal void PointerMoved(Vector2? grid, bool overCancelArea, bool allowed)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMoveDragSample = _profileInteractionMoveDrag.Auto();
+#endif
+
             if (!EnsureLive(allowed) || _frozen || IsSubmitted)
                 return;
 
@@ -208,6 +228,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 _requestRevision != Draft.Revision || !OwnsLatestRequest())
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.Move).Auto();
+#endif
             var move = result.Move.Value;
             if (!move.CanMove)
             {
@@ -246,7 +269,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 _resumeAdjacent = !_requiresEndpointReentry;
                 _frozen = false;
                 if (wasConfirming)
-                    _rejections?.MovementRejected(move.FailureReason);
+                    _rejections.MovementRejected(move.FailureReason);
                 return;
             }
 
@@ -272,6 +295,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal void Confirm(CellCoord? cell, bool overCancelArea, bool allowed)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMoveConfirmSample = _profileInteractionMoveConfirm.Auto();
+#endif
+
             if (!EnsureLive(allowed) || IsSubmitted || _frozen)
                 return;
 
@@ -279,7 +306,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 Draft.StepCount == 0 || cell.Value != Draft.Endpoint)
             {
                 if (!overCancelArea && cell.HasValue && cell == _rejectedCell && Preview?.Move != null)
-                    _rejections?.MovementRejected(Preview.Move.Value.FailureReason);
+                    _rejections.MovementRejected(Preview.Move.Value.FailureReason);
                 return;
             }
 
@@ -291,6 +318,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal void Cancel()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionMoveCancelSample = _profileInteractionMoveCancel.Auto();
+#endif
+
             ClearOwnedPreview();
             Draft.Cancel();
             _lastPointer = null;
@@ -358,7 +389,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _requestPath = Draft.Snapshot();
             _requestRevision = Draft.Revision;
             _requestLifetime = _lifetime;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _requestNumber = CombatInputProfiler.SetPreview(_input, CombatViewPreviewData.Move(Draft.Actor, _requestPath));
+#else
             _requestNumber = _input.SetPreview(CombatViewPreviewData.Move(Draft.Actor, _requestPath));
+#endif
         }
 
         // 범위 응답을 받은 뒤 최신 초안(확정 대기 중이면 동결된 초안) 하나만 게시한다.
@@ -411,7 +446,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private void SubmitFrozen()
         {
             var command = CombatViewCommandData.Move(Draft.Actor, _requestPath, _context);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _submittedNumber = CombatInputProfiler.Submit(_input, command);
+#else
             _submittedNumber = _input.Submit(command);
+#endif
             ClearOwnedPreview();
         }
 

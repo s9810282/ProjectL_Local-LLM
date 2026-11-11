@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Rules;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -41,21 +42,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     ? UnitActionUseRules.CanStartMove(actor.ActionUse)
                     : UnitActionUseRules.CanStartAttack(actor.ActionUse)))
                 return MovementFailureReason.ActionAlreadyUsed;
+            if ((action == CombatCommandKind.Attack || action == CombatCommandKind.Move) && ReconstructionTraitRule.IsReconstructing(actor))
+                return MovementFailureReason.Reconstructing;
             if (action == CombatCommandKind.Attack && IsAttackRestricted(actor)) return MovementFailureReason.Disarmed;
             if (action == CombatCommandKind.Move && IsMovementRestricted(actor)) return MovementFailureReason.AnkleBroken;
             return MovementFailureReason.None;
         }
 
-        internal static bool IsAttackRestricted(CharacterCombatFacts actor) => AppliedStatusRules.IsRestricted(actor.StatusEffects, StatusEffectKey.Disarm);
-        internal static bool IsMovementRestricted(CharacterCombatFacts actor) => AppliedStatusRules.IsRestricted(actor.StatusEffects, StatusEffectKey.Bind);
+        /// <summary>공격할 수 없는 상태입니다(무장 해제 또는 재구성 중). 행동 입장·AI·포효·예보가 이 판단 하나를 읽습니다.</summary>
+        internal static bool IsAttackRestricted(CharacterCombatFacts actor) =>
+            AppliedStatusRules.IsRestricted(actor.StatusEffects, StatusEffectKey.Disarm) || ReconstructionTraitRule.IsReconstructing(actor);
+        /// <summary>이동할 수 없는 상태입니다(속박 또는 재구성 중).</summary>
+        internal static bool IsMovementRestricted(CharacterCombatFacts actor) =>
+            AppliedStatusRules.IsRestricted(actor.StatusEffects, StatusEffectKey.Bind) || ReconstructionTraitRule.IsReconstructing(actor);
 
-
-        internal static int? MovementAllowance(CharacterCombatFacts actor) =>
-            actor.Stats.MoveRange == 0 ? (int?)null : actor.Stats.MoveRange;
 
         internal static int? MovementAllowance(CombatCommandInput input, CharacterCombatFacts actor) =>
-            actor.Stats.MoveRange == 0 ? (int?)null : !actor.Anchor.HasValue ? actor.Stats.MoveRange : checked(actor.Stats.MoveRange + GroundCompactionTraitRule.MovementBonusAt(
-                actor.Anchor.Value, input.State.Environment.VisibleTo(actor.Owner)));
+            VoluntaryMovementRules.Allowance(actor, actor.Anchor.HasValue ? input.State.Environment.VisibleTo(actor.Owner) : null);
 
 
         internal static UnitActionUseSettlementSnapshot Settlement(CharacterCombatFacts actor, UnitActionUse finalActionUse) =>

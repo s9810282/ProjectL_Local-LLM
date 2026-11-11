@@ -52,7 +52,7 @@ namespace ProjectL.Tests.Core
             var selection = new TraitGrowthSelection(10, TraitKey.ThornField);
             var owned = new[] { new OwnedCharacterRecord(new CharacterInstanceId(1), basis.Key, CharacterOwnershipRole.Sub, 2),
                 new OwnedCharacterRecord(new CharacterInstanceId(2), basis.Key, CharacterOwnershipRole.Sub, 2, growth: new OwnedTraitGrowth(new[] { selection })) };
-            var result = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(basis), UnitSpecTestFactory.CreateDefaultCategoryCatalog(), owned, null, owned.ToDictionary(o => o.Id, _ => 0), catalog);
+            var result = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(basis), UnitSpecTestFactory.CreateDefaultCategoryCatalog(), owned, null, owned.ToDictionary(o => o.Id, _ => 0), default, catalog);
             var plain = result[0].ThornFieldDescription;
             var selected = result[1].ThornFieldDescription;
             Assert.That((plain.ThornDamage, plain.LifetimeUnitTurns, plain.DefenseReductionPercent, plain.TickPhase), Is.EqualTo((5, 5, 0, UnitTurnTickPhase.Ended)));
@@ -127,7 +127,7 @@ namespace ProjectL.Tests.Core
                 Rotation4.R0, new[] { mainSpec, basis }, Array.Empty<StructureSpec>(), categories).WithTraitGrowth(Catalog()).WithAttackProfiles(Array.Empty<CombatAttackProfile>());
             Assert.That(init.TraitGrowth, Is.Not.SameAs(TraitGrowthCatalog.Disabled));
             var prepared = BattlePreparationCalculator.Prepare(init, owned, main, souls, new InitialDrawPlan(new[] { owned[1].Id, owned[2].Id }), Array.Empty<CharacterCombatFacts>());
-            var stats = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(init.Units), categories, owned, main, souls, init.TraitGrowth);
+            var stats = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(init.Units), categories, owned, main, souls, default, init.TraitGrowth);
             foreach (var c in prepared.Characters)
             {
                 var q = stats.Single(s => s.OwnedId == c.OwnedId).Stats;

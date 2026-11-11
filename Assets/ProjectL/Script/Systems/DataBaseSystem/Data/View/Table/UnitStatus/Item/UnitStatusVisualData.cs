@@ -20,7 +20,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.UnitStatus.Item
     internal sealed class UnitStatusVisualData : IData
     {
         internal UnitStatusVisualData(StatusEffectKey key, string displayName, Sprite icon,
-            string descriptionTemplate, CombatHeldEffect whileEffect = null, IReadOnlyList<TraitActivationKind> restartOn = null)
+            string descriptionTemplate, CombatHeldEffect whileEffect = null, IReadOnlyList<TraitActivationKind> restartOn = null,
+            GameObject whileAppearance = null)
         {
             Key = key;
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? key.ToString() : displayName;
@@ -28,6 +29,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.UnitStatus.Item
             DescriptionTemplate = descriptionTemplate ?? string.Empty;
             WhileEffect = whileEffect;
             RestartOn = restartOn ?? Array.Empty<TraitActivationKind>();
+            WhileAppearance = whileAppearance;
         }
 
         public StatusEffectKey Key { get; }
@@ -48,6 +50,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.UnitStatus.Item
         /// 이 발동 종류가 그 유닛에 오면 유지 이펙트를 거두고 다시 냅니다(설계 EL2, 결정 Q-EL3 A — 예: 보호막의 <c>ShieldReset</c>). 유지 이펙트가 없으면 비어 있습니다.
         /// </summary>
         internal IReadOnlyList<TraitActivationKind> RestartOn { get; }
+
+        /// <summary>
+        /// 이 상태가 유닛에 보이는 동안 원래 모델 대신 보일 모델 프리팹입니다(재구성 연출 설계 RE2 — 예: 재구성 중 잔해). 없으면 null이고 모습은 그대로입니다.
+        /// 몸 상자·HUD 기준점·자리·회전·크기는 원래 유닛 것을 씁니다. 상태가 여럿이면 HUD 순서의 첫 상태가 정합니다.
+        /// </summary>
+        internal GameObject WhileAppearance { get; }
 
         /// <summary>
         /// HUD 설명 문구입니다. 틀에 값을 차례로 넣고 "표시 이름: 설명"으로 만듭니다. 틀이 비면 표시 이름만입니다.

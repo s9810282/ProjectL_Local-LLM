@@ -51,7 +51,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 6ea6d4aa31de4684db89b32800d67eee, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 29de41ffcb45f4141860bb7bd08438d7, type: 2}
+      objectReference: {fileID: 2100000, guid: 2f7b5d8a269c89a4c91c1518f49cb340, type: 2}
     - target: {fileID: 919132149155446097, guid: 6ea6d4aa31de4684db89b32800d67eee, type: 3}
       propertyPath: m_Name
       value: dummy_background_tile

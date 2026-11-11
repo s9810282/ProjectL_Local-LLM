@@ -15,6 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int MovementRangeBonus { get; }
         public int AttackRangeReduction { get; }
         public int AttackDamageReductionPercent { get; }
+        public bool ExemptsAlliedAttackRangePenalty { get; }
         public int RemainingTurnEnds { get; }
         // 이전 조회 계약의 이름을 유지한다. 감소할 진영은 흔적 종류가 결정한다.
         public int RemainingOpposingTurnEnds => RemainingTurnEnds;
@@ -29,8 +30,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         public TraitTrailFact(long id, CellCoord cell, EffectOriginKey origin, Owner creatingSide, int movementRangeBonus,
+            int attackRangeReduction, int attackDamageReductionPercent, int remainingOpposingTurnEnds, bool active,
+            IReadOnlyList<Owner> knownTo, bool exemptsAlliedAttackRangePenalty)
+            : this(id, cell, origin, creatingSide, movementRangeBonus, attackRangeReduction, attackDamageReductionPercent,
+                remainingOpposingTurnEnds, active, knownTo, 0, exemptsAlliedAttackRangePenalty)
+        {
+        }
+
+        public TraitTrailFact(long id, CellCoord cell, EffectOriginKey origin, Owner creatingSide, int movementRangeBonus,
             int attackRangeReduction, int attackDamageReductionPercent, int remainingTurnEnds, bool active,
-            IReadOnlyList<Owner> knownTo, long creationControllerTurnSequence)
+            IReadOnlyList<Owner> knownTo, long creationControllerTurnSequence, bool exemptsAlliedAttackRangePenalty = false)
             : base(id, cell, "trait-trail", 0, active, knownTo)
         {
             if (!origin.IsValid || origin.Kind != EffectOwnerKind.Trait || origin.OwnerInstanceId < 1 || origin.RuleKey != "main" ||
@@ -42,7 +51,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (attackDamageReductionPercent < 0 || attackDamageReductionPercent > 100) throw new ArgumentOutOfRangeException(nameof(attackDamageReductionPercent));
             if (remainingTurnEnds < 0 || active != (remainingTurnEnds > 0)) throw new ArgumentOutOfRangeException(nameof(remainingTurnEnds));
             if (creationControllerTurnSequence < 0) throw new ArgumentOutOfRangeException(nameof(creationControllerTurnSequence));
-            if (origin.DefinitionKey == (int)TraitKey.GroundCompaction && (attackRangeReduction != 0 || attackDamageReductionPercent != 0) ||
+            if (origin.DefinitionKey == (int)TraitKey.GroundCompaction && (attackRangeReduction != 0 || attackDamageReductionPercent != 0 || exemptsAlliedAttackRangePenalty) ||
                 origin.DefinitionKey == (int)TraitKey.DustScreen && movementRangeBonus != 0)
                 throw new ArgumentException("흔적 종류와 수치 필드가 일치해야 합니다.", nameof(origin));
             Origin = origin;
@@ -50,6 +59,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             MovementRangeBonus = movementRangeBonus;
             AttackRangeReduction = attackRangeReduction;
             AttackDamageReductionPercent = attackDamageReductionPercent;
+            ExemptsAlliedAttackRangePenalty = exemptsAlliedAttackRangePenalty;
             RemainingTurnEnds = remainingTurnEnds;
             CreationControllerTurnSequence = creationControllerTurnSequence;
         }
@@ -65,10 +75,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public TraitTrailFact WithRemainingOpposingTurnEnds(int remaining) => WithRemainingTurnEnds(remaining);
 
         internal TraitTrailFact WithRemainingTurnEnds(int remaining) => new(Id, Cell, Origin, CreatingSide, MovementRangeBonus,
-            AttackRangeReduction, AttackDamageReductionPercent, remaining, remaining > 0, KnownTo, CreationControllerTurnSequence);
+            AttackRangeReduction, AttackDamageReductionPercent, remaining, remaining > 0, KnownTo, CreationControllerTurnSequence,
+            ExemptsAlliedAttackRangePenalty);
 
         public override MovementTileFact WithKnownTo(IReadOnlyList<Owner> knownTo) => new TraitTrailFact(Id, Cell, Origin, CreatingSide,
-            MovementRangeBonus, AttackRangeReduction, AttackDamageReductionPercent, RemainingTurnEnds, Active, knownTo, CreationControllerTurnSequence);
+            MovementRangeBonus, AttackRangeReduction, AttackDamageReductionPercent, RemainingTurnEnds, Active, knownTo, CreationControllerTurnSequence,
+            ExemptsAlliedAttackRangePenalty);
 
         public override bool SameValues(MovementTileFact other) => SameSourceValues(other) && other is TraitTrailFact trail &&
             SameConfiguration(trail) && RemainingTurnEnds == trail.RemainingTurnEnds;
@@ -80,6 +92,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         private bool SameConfiguration(TraitTrailFact other) => Origin == other.Origin && CreatingSide == other.CreatingSide &&
             CreationControllerTurnSequence == other.CreationControllerTurnSequence &&
             MovementRangeBonus == other.MovementRangeBonus && AttackRangeReduction == other.AttackRangeReduction &&
-            AttackDamageReductionPercent == other.AttackDamageReductionPercent;
+            AttackDamageReductionPercent == other.AttackDamageReductionPercent &&
+            ExemptsAlliedAttackRangePenalty == other.ExemptsAlliedAttackRangePenalty;
     }
 }

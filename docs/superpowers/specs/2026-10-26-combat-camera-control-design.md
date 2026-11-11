@@ -1,5 +1,7 @@
 # 전투 카메라 조작(이동·줌) 설계 초안
 
+> **2026-11-09 대체 범위:** 맵의 Day/Night 공급·StageViewProp.cameraSettings 연결은 씬 공용 Binding/설정 SO로 대체했다. 이동·제한·줌 입력 및 기존 계산은 유지하고, 연결·복원은 CameraSession이 소유한다. 최신 원본은 [씬 공용 카메라 설계](2026-11-08-combat-scene-camera-design.md)와 [사용 안내](../viewDocs/combat-camera-zoom-pose-guide.md)다. 아래 결정·구현 기록은 이전 시점 이력으로 보존한다.
+
 - 작성일: 2026-10-26. 코드 변경 없음(설계만).
 - 사용자 요청: "WASD 및 화살표, 화면 테두리에 마우스 갖다대기를 통한 카메라 위치 이동을 구현하고자 함."
   1. 이동하면 Day Camera·Night Camera가 함께 움직인다.

@@ -23,7 +23,7 @@ MonoBehaviour:
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
     animationPresentation: {fileID: 11400000, guid: 7a40457783d7bf5b44deab016f974d5b, type: 2}
     unitSoundPreset: -1
-    attackSoundPreset: 15
+    attackSoundSlotIndex: 12
     obstacleHitCues:
       effects: []
       shakes: []

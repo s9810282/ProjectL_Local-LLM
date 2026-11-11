@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat
@@ -67,6 +68,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 default:
                     return CreateFilledMask(shape, range, forward, CheckedCellCount((long)range * (2L * range + 1L)));
             }
+        }
+
+        /// <summary>행·열 순서를 유지하고, 칸을 내지 않는 검사도 한 진행 단위로 남긴다.</summary>
+        internal static IEnumerable<CellCoord?> MaskSteps(TargetingShape shape, int range, AttackDirection? direction)
+        {
+            ValidateRange(range);
+            ValidateShape(shape);
+            if (direction.HasValue && !IsDirectionSupported(shape, direction.Value))
+                throw new ArgumentOutOfRangeException(nameof(direction));
+            if (shape is TargetingShape.CardinalLine or TargetingShape.DiagonalLine or TargetingShape.EightDirectionLine)
+            {
+                var steps = direction.HasValue ? CreateOrderedRaySteps(shape, direction.Value) :
+                    shape == TargetingShape.CardinalLine ? CardinalSteps :
+                    shape == TargetingShape.DiagonalLine ? DiagonalSteps : EightSteps;
+                CheckedCellCount(range, steps.Length);
+                foreach (var cell in RayMaskSteps(steps, range)) yield return cell;
+                yield break;
+            }
+            var forward = direction.HasValue ? GetDirectionStep(direction.Value) : (CellCoord?)null;
+            if (shape == TargetingShape.Fan) CheckedCellCount((long)range * range, forward.HasValue ? 1 : 4);
+            else if (forward.HasValue) CheckedCellCount((long)range * (2L * range + 1L));
+            else CheckedSquareCount(range);
+            foreach (var cell in FilledMaskSteps(shape, range, forward)) yield return cell;
         }
 
         public static CellCoord[] CreateSplashOffsets(TargetingSplash splash)
@@ -138,6 +162,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             var cells = new CellCoord[count];
             int index = 0;
+            foreach (var cell in FilledMaskSteps(shape, range, forward))
+                if (cell.HasValue) cells[index++] = cell.Value;
+            return cells;
+        }
+
+        private static IEnumerable<CellCoord?> FilledMaskSteps(TargetingShape shape, int range, CellCoord? forward)
+        {
             for (long y = -(long)range; y <= range; y++)
                 for (long x = -(long)range; x <= range; x++)
                 {
@@ -148,37 +179,49 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                         include = ContainsExpanding(x, y, forward.Value, range);
                     else
                         include = x * forward.Value.X + y * forward.Value.Y >= 1L;
-                    if (include)
-                        cells[index++] = new CellCoord((int)x, (int)y);
+                    yield return include ? new CellCoord((int)x, (int)y) : (CellCoord?)null;
                 }
-            return cells;
         }
 
         private static CellCoord[] MergeRays(CellCoord[] steps, int range)
         {
             int count = CheckedCellCount(range, steps.Length);
-            if (count == 0)
-                return Array.Empty<CellCoord>();
-            var rays = new CellCoord[steps.Length][];
-            var positions = new int[steps.Length];
-            for (int i = 0; i < rays.Length; i++)
-            {
-                rays[i] = CreateRay(steps[i], range);
-                if (CompareCells(rays[i][0], rays[i][range - 1]) > 0)
-                    Array.Reverse(rays[i]);
-            }
+            if (count == 0) return Array.Empty<CellCoord>();
             var cells = new CellCoord[count];
+            int index = 0;
+            foreach (var cell in RayMaskSteps(steps, range)) cells[index++] = cell;
+            return cells;
+        }
+
+        private static IEnumerable<CellCoord> RayMaskSteps(CellCoord[] steps, int range)
+        {
+            if (range == 0) yield break;
+            var positions = new long[steps.Length];
+            var directions = new int[steps.Length];
+            for (int i = 0; i < steps.Length; i++)
+            {
+                bool reversed = CompareCells(steps[i], CellCoord.Zero) < 0;
+                positions[i] = reversed ? range : 1;
+                directions[i] = reversed ? -1 : 1;
+            }
             // 최대 여덟 개의 정렬된 광선을 병합하므로 광선 길이에 선형이다.
-            for (int output = 0; output < cells.Length; output++)
+            while (true)
             {
                 int next = -1;
-                for (int ray = 0; ray < rays.Length; ray++)
-                    if (positions[ray] < range &&
-                        (next < 0 || CompareCells(rays[ray][positions[ray]], rays[next][positions[next]]) < 0))
-                        next = ray;
-                cells[output] = rays[next][positions[next]++];
+                CellCoord cell = default;
+                for (int ray = 0; ray < steps.Length; ray++)
+                {
+                    long depth = positions[ray];
+                    if (depth < 1 || depth > range) continue;
+                    var candidate = new CellCoord((int)(steps[ray].X * depth), (int)(steps[ray].Y * depth));
+                    if (next >= 0 && CompareCells(candidate, cell) >= 0) continue;
+                    next = ray;
+                    cell = candidate;
+                }
+                if (next < 0) yield break;
+                positions[next] += directions[next];
+                yield return cell;
             }
-            return cells;
         }
 
         private static int CompareCells(CellCoord left, CellCoord right)
@@ -203,27 +246,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public static CellCoord[] CreateSquare(int range)
         {
             ValidateRange(range);
+            return CreateFilledMask(TargetingShape.RadialSquare, range, null, CheckedSquareCount(range));
+        }
 
+        private static int CheckedSquareCount(int range)
+        {
             long sideLength = 2L * range + 1L;
             if (sideLength > (int.MaxValue + 1L) / sideLength)
                 throw new ArgumentOutOfRangeException(nameof(range), "결과 셀 배열이 너무 큽니다.");
 
-            long cellCount = sideLength * sideLength - 1L;
-            CellCoord[] cells = new CellCoord[(int)cellCount];
-            int index = 0;
-
-            for (long y = -(long)range; y <= range; y++)
-            {
-                for (long x = -(long)range; x <= range; x++)
-                {
-                    if (ContainsSquare(x, y, range) == false)
-                        continue;
-
-                    cells[index++] = new CellCoord((int)x, (int)y);
-                }
-            }
-
-            return cells;
+            return (int)(sideLength * sideLength - 1L);
         }
 
         public static CellCoord[] CreateRay(CellCoord directionStep, int range)

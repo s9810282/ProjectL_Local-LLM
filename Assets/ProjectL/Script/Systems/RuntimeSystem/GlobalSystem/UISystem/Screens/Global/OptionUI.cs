@@ -7,6 +7,8 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.ServiceKeys.Runtime;
 using ProjectL.Systems.ServiceKeys.Runtime.Global;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -17,6 +19,20 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
     [DisallowMultipleComponent]
     public sealed class OptionUI : UIBase, IUIInputReceiver, IOptionInputReceiver, IConfirmReceiver
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIOptionClick = new("Combat.Action.UI.Option.Click");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIOptionOpen = new("Combat.Action.UI.Option.Open");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIOptionClose = new("Combat.Action.UI.Option.Close");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIOptionConfirmOpen = new("Combat.Action.UI.Option.ConfirmOpen");
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIAbandonAccept = new("Combat.Action.UI.Abandon.Accept");
+        private static readonly Unity.Profiling.ProfilerMarker _profileUIAbandonDecline = new("Combat.Action.UI.Abandon.Decline");
+#endif
+
         private const int OpenSlot = 0;
         private const int CloseSlot = 1;
         private const int AbandonSlot = 3;
@@ -40,7 +56,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         private IAudioSystemService _audio;
         private IOptionCloseRequestService _closeRequests;
         private IKeyBindingService _keys;
-        private ICombatAbandonRequestService _abandon;
+        private ICombatAbandonRequestService _combatAbandon;
+        private IStageRunAbandonRequestService _stageAbandon;
+        private ILifeCycleManager _lifeCycleManager;
         private IOptionGameExit _gameExit = new OptionGameExit();
         private bool _quitAfterSettings;
         private bool _quitRequested;
@@ -113,7 +131,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             _keys = global.InputServiceCommand.KeyBindings;
             _audio = global.AudioServiceCommand;
             _closeRequests = global.OptionCloseRequests;
-            _abandon = resolver.GetService(SystemGroupsService.InGame).ViewGroup.Combat;
+            _combatAbandon = resolver.GetService(SystemGroupsService.InGame).ViewGroup.Combat;
+            var lifeCycles = resolver.GetService(SystemGroupsService.LifeCycle);
+            _lifeCycleManager = lifeCycles.LifeCycleManager;
+            _stageAbandon = lifeCycles.StageRunAbandon;
             if (isActiveAndEnabled) _closeRequests.Bind(this);
         }
 
@@ -234,10 +255,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         void IUIInputReceiver.Click(int slot)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIOptionClickSample = _profileUIOptionClick.Auto();
+#endif
+
             if (_ui == null) return;
             if (slot == OpenSlot) RequestOpen();
             else if (slot == CloseSlot) RequestClose();
-            else if (_isOpen && slot == AbandonSlot) ShowConfirm(ConfirmAction.AbandonRun);
+            else if (_isOpen && slot == AbandonSlot) RequestRunAbandonConfirmation();
             else if (_isOpen && slot == ExitSlot) ShowConfirm(ConfirmAction.QuitGame);
             else if (_isOpen && !confirm.IsOpen && slot == GamePlaySlot)
             {
@@ -253,6 +278,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         public void RequestOpen()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIOptionOpenSample = _profileUIOptionOpen.Auto();
+#endif
+
             if (_isOpen || _ui == null) return;
             // 부모가 열린 것으로 등록된 뒤 기본 자식을 연다.
             _ui.OpenUI(ID);
@@ -262,6 +291,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         public void RequestClose()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIOptionCloseSample = _profileUIOptionClose.Auto();
+#endif
+
             if (!_isOpen || _ui == null) return;
             if (confirm.IsOpen)
             {
@@ -280,14 +313,35 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             ShowConfirm(ConfirmAction.SaveSettings);
         }
 
+        private void RequestRunAbandonConfirmation()
+        {
+            if (_lifeCycleManager.CurrentKey == LifeCycleKeys.Stage)
+            {
+                if (_stageAbandon.CanRequestAbandon)
+                    ShowConfirm(ConfirmAction.AbandonStageRun);
+            }
+            else
+            {
+                ShowConfirm(ConfirmAction.AbandonRun);
+            }
+        }
+
         private void ShowConfirm(ConfirmAction action)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileUIOptionConfirmOpenSample = _profileUIOptionConfirmOpen.Auto();
+#endif
+
             keySetting.CancelWaiting();
             confirm.Show(action);
         }
 
         void IConfirmReceiver.Respond(ConfirmAction action, bool accepted)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileAbandon = action == ConfirmAction.AbandonRun ? (accepted ? _profileUIAbandonAccept : _profileUIAbandonDecline).Auto() : default;
+#endif
+
             if (!_isOpen) return;
             if (accepted)
             {
@@ -299,7 +353,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                         break;
                     case ConfirmAction.AbandonRun:
                         // Y 확인 뒤에만 요청한다. 수락되면 일시정지를 풀어 기존 전투 종료 흐름을 진행한다.
-                        if (_abandon != null && _abandon.TryRequestAbandon())
+                        if (_combatAbandon != null && _combatAbandon.TryRequestAbandon())
+                            _ui.CloseUI(ID);
+                        break;
+                    case ConfirmAction.AbandonStageRun:
+                        if (_stageAbandon.TryRequestAbandon())
                             _ui.CloseUI(ID);
                         break;
                     case ConfirmAction.QuitGame:

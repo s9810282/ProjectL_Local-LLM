@@ -9,8 +9,12 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects
 {
-    internal sealed class ArmorBreakerEffectRule : ICombatEffectRule
+    internal sealed class ArmorBreakerEffectRule : IEffectOrderedHitRule, IEffectAssessmentCoverageRule
     {
+        public Contracts.CombatEffects.CombatAssessmentGap AssessmentGaps => Contracts.CombatEffects.CombatAssessmentGap.None;
+
+        public bool RequiresOrderedHits => true;
+
         private readonly ArmorBreakerTraitDefinition _definition;
         private readonly ArmorBreakerTraitRule _rule;
         internal ArmorBreakerEffectRule(ArmorBreakerTraitDefinition definition, ArmorBreakerTraitRule rule)

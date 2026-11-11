@@ -11,6 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     {
         private readonly IUISystemService _ui;
         private readonly StageScreenRootUI _root;
+        private readonly StageSelectPanelUI _selection;
         private readonly Func<bool> _isCurrent;
         private readonly Func<bool> _canWork;
         private readonly Func<bool> _canShowSelection;
@@ -23,11 +24,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         private bool _initialPending;
         private bool _disposed;
 
-        internal StageMapSelectionPresentation(IUISystemService ui, StageScreenRootUI root,
+        internal StageMapSelectionPresentation(IUISystemService ui, StageScreenRootUI root, StageSelectPanelUI selection,
             Func<bool> isCurrent, Func<bool> canWork, Func<bool> canShowSelection)
         {
             _ui = ui ?? throw new ArgumentNullException(nameof(ui));
             _root = root != null ? root : throw new ArgumentNullException(nameof(root));
+            _selection = selection != null ? selection : throw new ArgumentNullException(nameof(selection));
             _isCurrent = isCurrent ?? throw new ArgumentNullException(nameof(isCurrent));
             _canWork = canWork ?? throw new ArgumentNullException(nameof(canWork));
             _canShowSelection = canShowSelection ?? throw new ArgumentNullException(nameof(canShowSelection));
@@ -36,6 +38,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         internal bool CanOpenScreens => !_disposed && _lifetime != null && _canWork();
 
         internal object Lifetime => CanOpenScreens ? _lifetime : null;
+
+        /// <summary>
+        /// 선택 화면(StageSelect)이 실제로 보이는지입니다. 덱 편집은 이 화면을 부모로 열리므로 노드 진입의 조건입니다.
+        /// UISystem에는 공개 열림 조회가 없고, 등록된 UI는 닫혀 있으면 숨겨지므로 화면 객체의 표시 상태를 읽습니다.
+        /// 열고 닫은 호출을 따로 기억하지 않습니다(외부 CloseUI·HideAllUI가 그 기록을 거치지 않음).
+        /// </summary>
+        internal bool IsSelectionShown => CanOpenScreens && _selection.isActiveAndEnabled;
 
         internal void Start()
         {
@@ -75,6 +84,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
         internal void Tick()
         {
+            // 선택 화면 부모가 밖에서 숨으면 이 연결 동안 팝업·선택 화면이 모두 멈춥니다. 맵이 한가해지면 부모를 다시 엽니다(평가 N-04).
+            // 로딩 등으로 맵이 바쁜 동안에는 다시 열지 않습니다.
+            if (_started && _lifetime == null && !_disposed && _canWork() && _canShowSelection()) Start();
             if (!CanOpenScreens) return;
             if (_pendingScreen != null && (!Owns(_pendingLifetime) ||
                 !_pendingScreen.CanReturn(_pendingDisplay, _pendingLifetime)))

@@ -35,36 +35,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             for (int i = 0; i < tiles.Count; i++)
             {
                 MovementTileFact tile = tiles[i];
-                if (tile.Cell != cell || !Contains(bindings.ObjectSourceIds, tile.Id)) continue;
-                if (tile is not ObjectSourceFact)
-                    throw new InvalidOperationException("Object 분류와 Buffer 원본 형식이 다릅니다.");
-                if (tile is not MineSourceFact || !CombatEnvironmentFacts.IsShown(tile)) continue;
-                CombatHazardAreas.MineCells(tile.Cell, boardWidth, boardHeight, into);
+                // 칸 → 분류·형식(어긋나면 예외) → 지뢰·보임 순서입니다. 분류·형식 판단은 CombatEnvironmentFacts 한 곳입니다(평가 C1-05).
+                if (tile.Cell != cell || !CombatEnvironmentFacts.TryGetObject(bindings, tile, out ObjectSourceFact item)) continue;
+                if (item is not MineSourceFact || !CombatEnvironmentFacts.IsShown(item)) continue;
+                CombatHazardAreas.MineCells(item.Cell, boardWidth, boardHeight, into);
                 found = true;
             }
 
             for (int i = 0; i < structures.Count; i++)
             {
                 StructureCombatFacts structure = structures[i];
-                if (structure.Health.IsDead || !Contains(structure.OccupiedCells, cell)) continue;
-                if (!CombatEnvironmentFacts.TryGetObstacle(bindings, obstacles, structure, out ObstacleContentProfile obstacle)
+                if (!CombatEnvironmentFacts.TryGetObstacleAt(bindings, obstacles, structure, cell, out ObstacleContentProfile obstacle)
                     || obstacle.Kind != ObstacleContentKind.PowderBarrel) continue;
                 CombatHazardAreas.PowderBarrelCells(structure.Anchor, boardWidth, boardHeight, into);
                 found = true;
             }
             return found;
-        }
-
-        private static bool Contains(IReadOnlyList<long> values, long id)
-        {
-            for (int i = 0; i < values.Count; i++) if (values[i] == id) return true;
-            return false;
-        }
-
-        private static bool Contains(IReadOnlyList<CellCoord> values, CellCoord cell)
-        {
-            for (int i = 0; i < values.Count; i++) if (values[i] == cell) return true;
-            return false;
         }
     }
 }

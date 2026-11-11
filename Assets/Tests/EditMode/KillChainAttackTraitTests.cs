@@ -397,7 +397,7 @@ namespace ProjectL.Tests.Core
             new HealthStateSnapshot(hp, hp), cell, Rotation4.R0, new[] { cell }, Owner.Enemy);
 
         private static CombatCommandState WithStructures(CombatCommandInput input, params StructureCombatFacts[] structures) =>
-            new CombatCommandState(8,8,input.State.Phase,false,                structures,input.State.ThornFields,turn: input.State.Turn);
+            new CombatCommandState(8,8,input.State.Phase,                structures,input.State.ThornFields,turn: input.State.Turn);
 
         private static CharacterCombatFacts Final(CombatCommandTransition result, CombatCommandInput input, int id)
         {

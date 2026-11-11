@@ -92,6 +92,8 @@ Akimbo의 입력 예:
 
 ## 6. MS4 — 개별 접촉과 한 번의 피해 표시
 
+> 2026-11-10 사용자 요청으로 **유닛·건물 피해 숫자**를 탄별 정수 분할로 변경했다(DN1 유닛, DN2 건물). 아래의 첫 탄 숫자 금지/숫자 한 번은 이전 정책이다. 체력·피격·사망/파괴 후속의 한 번 해제는 유지한다. 현재 설계·Task·검증 상태는 [연발 정수 피해 숫자 DN1·DN2](../plans/2026-11-10-combat-volley-damage-numbers.md)을 따른다.
+
 `CombatClipAttack`은 공통 방향·클립·가로채기 앞 항목을 유지한다. 원거리의 탄별 조립은 `CombatClipRangedAttack`(예정 이름)에 분리한다.
 
 - 각 발사 조각은 선택한 클립 이벤트 신호 뒤에 연결한다. 첫 발은 `After(played, ClipEvent)`, 둘째는 `After(played, ClipEvent2)`다. 시각 오프셋이나 추가 발사 시계를 만들지 않는다.

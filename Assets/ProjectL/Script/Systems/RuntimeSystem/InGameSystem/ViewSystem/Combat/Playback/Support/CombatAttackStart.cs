@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
@@ -48,6 +49,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatCameraWindow _camera;
         private readonly CombatShownFacts _facts;
         private readonly CombatGuardLead _guards;
+        private readonly CombatVolleyDamageNumbers _damageNumbers;
+        private readonly CombatVolleyContactHits _contactHits;
         // 계열이 다른 덮어쓰기를 경고한 (공격자, 덮어쓰기)입니다. 연결 동안 한 번씩만 남깁니다.
         private readonly HashSet<(EntityId Attacker, CombatAttackPresentationData Settings)> _mismatchWarned = new();
 
@@ -57,9 +60,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name="camera">맵 카메라 창구입니다. 공격 칸의 흔들림 큐가 씁니다(범용 연출 구조 설계 G2). 흔들림을 낼 수 없으면 그 큐를 넣지 않습니다.</param>
         /// <param name="facts">보인 사실입니다. 공격 칸 큐의 행위자 몸 자리(ActorBody)를 여기서 구합니다.</param>
         /// <param name="guards">대신 맞기 앞 항목을 만드는 곳입니다(묶음 끝 검토 M2).</param>
+        /// <param name="damageNumbers">연발 탄별 피해 숫자입니다.</param>
+        /// <param name="contactHits">연발 앞 탄의 접촉 피격입니다(2026-11-11). 숫자와 같은 접촉 입구로 묶습니다(<see cref="ContactFeedback"/>).</param>
         internal CombatAttackStart(CombatAttackPlayback attacks, Func<FieldGridMapper> mapper, CombatEventAudio sound,
             CombatPieceRunPlayer pieces, CombatUnitPresentationWindow presentation, CombatEffectWindow effects, CombatCameraWindow camera,
-            CombatShownFacts facts, CombatGuardLead guards)
+            CombatShownFacts facts, CombatGuardLead guards, CombatVolleyDamageNumbers damageNumbers, CombatVolleyContactHits contactHits)
         {
             _attacks = attacks ?? throw new ArgumentNullException(nameof(attacks));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -70,6 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _camera = camera ?? throw new ArgumentNullException(nameof(camera));
             _facts = facts ?? throw new ArgumentNullException(nameof(facts));
             _guards = guards ?? throw new ArgumentNullException(nameof(guards));
+            _damageNumbers = damageNumbers ?? throw new ArgumentNullException(nameof(damageNumbers));
+            _contactHits = contactHits ?? throw new ArgumentNullException(nameof(contactHits));
+            // 클립 이벤트 신호 표를 한 번 건드려, 줄이 빠졌으면 첫 클립 공격이 아니라 전투 연결 때 드러나게 합니다(작은 묶음 설계 P10).
+            CombatClipEventSignals.Validate();
         }
 
         /// <summary>
@@ -98,13 +107,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             FieldGridMapper mapper = _mapper();
             CombatComposition composition = CombatCodeMotionAttack.Compose(shape, settings.Cues,
                 (end, cue, hit) => _attacks.TryBeginMotion(attacker, shape, mapper, cue, hit, end, version, settings),
-                () => _attacks.ReleaseAll(shape.Source, version), _sound, _effects, _camera, ActorBodyOf(attacker, settings.Cues),
-                CombatProjectileSounds.From(settings), _guards.LeadOf(shape));
+                () => _attacks.ReleaseAll(shape.Source, version), SinksFor(shape, CombatProjectileSounds.From(settings)),
+                ActorBodyOf(attacker, settings.Cues), _guards.LeadOf(shape));
             return _pieces.TryBegin(composition, completed, version);
         }
 
         private bool BeginClip(CombatAttackShape shape, CombatClipAttackData clip, CombatAttackPresentationData settings, Action completed,
             int version)
+        {
+            CombatComposition composition = ComposeClip(shape, clip, settings, version, _attacks, null);
+            if (!_pieces.TryBegin(composition, completed, version))
+                throw new InvalidOperationException(
+                    $"[CombatAttackStart] 클립 공격 조립을 시작하지 못했습니다(공격자 표시가 꺼졌거나 클립을 쓸 수 없음): {shape.AttackerId}");
+            return true;
+        }
+
+        /// <summary>조기 공격도 같은 조립을 한 번 사용합니다. 선행 사건 중에는 출처와 Hit 신호를 보류합니다.</summary>
+        internal bool TryBeginDeferred(CombatAttackShape shape, CombatDeferredAttackSource source, int version,
+            Action<CombatPieceRun> unavailable, out CombatPieceRun run)
+        {
+            run = null;
+            if (!_presentation.CanBeginAttackClip(shape.AttackerId) || _pieces.HasActionRun || _pieces.HasUnitRun(shape.AttackerId))
+                return false;
+            if (!_presentation.TryGetAttackClip(shape.AttackerId, out var clip))
+                throw new InvalidOperationException($"조기 공격의 클립 설정이 없습니다: {shape.AttackerId}");
+            CombatComposition composition = ComposeClip(shape, clip, null, version, source, () => source.CanRelease);
+            return _pieces.TryBeginDeferredAttack(composition, source, version, unavailable, out run);
+        }
+
+        private CombatComposition ComposeClip(CombatAttackShape shape, CombatClipAttackData clip,
+            CombatAttackPresentationData settings, int version, ICombatSourceLifetime lifetime, Func<bool> canRelease)
         {
             EntityId attacker = shape.AttackerId;
             // 목표점 해석은 외형 종류마다 다릅니다(원본 CombatAttackStyle.TryTarget). 공격 클립 묶음은 공격 연출 설정을 요구합니다(CombatUnitAnimationRules).
@@ -123,21 +155,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatAttackPresentationKind kind = settings.Kind;
             FieldGridMapper mapper = _mapper();
             Func<ICombatUnitPose, Quaternion> facing = pose => CombatAttackFacing.For(kind, shape, mapper, pose.Position);
+            Vector3? launchAimPoint = CombatAttackStyles.Of(kind) is CombatMortarStyle mortar
+                ? mortar.LaunchAimPoint(shape, settings, mapper)
+                : null;
             // 해제는 종류와 상관없이 이 출처의 대상을 모두 해제합니다(출처 수명 계약, 세대가 같을 때만).
-            Action release = () => _attacks.ReleaseAll(shape.Source, version);
+            Action release = () => lifetime.ReleaseAll(shape.Source, version);
             CombatAttackLead lead = _guards.LeadOf(shape);
             // 원거리 판정은 DB 검사와 같은 함수 하나입니다(설계 5차 AC11, 계획 P10).
+            // 근접 클립에는 투사체 소리를 넣지 않습니다(옛 입구의 projectileSounds: null).
             CombatComposition composition = CombatUnitAnimationRules.FiresProjectile(kind)
                 ? CombatClipAttack.ComposeRanged(shape, clip, settings.Cues, facing,
-                    (from, hit, arrived) => _attacks.FireShot(shape, settings, from, mapper, hit, arrived, version), release, _sound, _effects,
-                    _camera, ActorBodyOf(attacker, settings.Cues), CombatProjectileSounds.From(settings), lead)
-                : CombatClipAttack.ComposeMelee(shape, clip, settings.Cues, facing, release, _sound, _effects, _camera,
-                    ActorBodyOf(attacker, settings.Cues), lead);
-            if (!_pieces.TryBegin(composition, completed, version))
-                throw new InvalidOperationException(
-                    $"[CombatAttackStart] 클립 공격 조립을 시작하지 못했습니다(공격자 표시가 꺼졌거나 클립을 쓸 수 없음): {attacker}");
-            return true;
+                    (from, hit, arrived) => _attacks.FireShot(shape, settings, from, mapper, hit, arrived, version), release,
+                    SinksFor(shape, CombatProjectileSounds.From(settings)), ActorBodyOf(attacker, settings.Cues), lead, launchAimPoint, canRelease,
+                    ContactFeedback(shape.Source, clip.Shots.Count, version))
+                : CombatClipAttack.ComposeMelee(shape, clip, settings.Cues, facing, release, SinksFor(shape, null),
+                    ActorBodyOf(attacker, settings.Cues), lead, canRelease);
+            return composition;
         }
+
+        /// <summary>
+        /// 연발 접촉 순번마다 낼 표시입니다: 탄별 숫자, 그다음 앞 탄의 접촉 피격(마지막 탄은 Core 피해 사건이 피격을 냄). 둘 다 없으면 null입니다.
+        /// </summary>
+        private Action<int> ContactFeedback(CombatEvent source, int count, int version)
+        {
+            Action<int> numbers = _damageNumbers.ContactNumbers(source, count, version);
+            Action<int> hits = _contactHits.ContactHits(source, count, version);
+            if (numbers == null) return hits;
+            if (hits == null) return numbers;
+            return index =>
+            {
+                numbers(index);
+                hits(index);
+            };
+        }
+
+        /// <summary>
+        /// 공격 하나의 창구 묶음입니다(평가 C4-08 2단계, 작은 묶음 설계 SB1). 세 조립 길이 이 한 곳에서 같은 창구·같은 소리 사건(모양의 출처 사건)을 받습니다.
+        /// 공격용 창구를 더하면 <see cref="CombatCueSinks.ForAttack"/>의 인자와 이 줄만 고칩니다.
+        /// </summary>
+        private CombatCueSinks SinksFor(CombatAttackShape shape, CombatProjectileSounds projectileSounds) =>
+            CombatCueSinks.ForAttack(_effects, _camera, _sound, shape.Source, projectileSounds);
 
         /// <summary>
         /// 공격 칸 큐의 행위자 몸 자리입니다(큐 자리 <c>ActorBody</c>, 범용 연출 구조 설계 G3). 그 자리를 쓰는 큐가 없거나 보인 사실에서 몸을 찾지 못하면 null이고,

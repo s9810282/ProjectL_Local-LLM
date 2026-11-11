@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster
 {
@@ -29,6 +30,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>
+        /// 보유 기록의 다음 레벨 진행 조회값이다. 꺼진 설정이면 요구량 0의 꺼짐 값이다.
+        /// 켜진 설정에서 진행 경험치가 현재 레벨 요구량 이상이면 깨진 기록이므로 예외다(진행값 상한의 유일한 검사).
+        /// </summary>
+        internal static ExperienceProgressSnapshot Progress(OwnedCharacterRecord record, LevelProgressionSpec spec)
+        {
+            if (record == null)
+                throw new ArgumentNullException(nameof(record));
+            if (!spec.IsEnabled)
+                return new ExperienceProgressSnapshot(false, record.Experience, 0);
+            int required = Required(record.Role, record.Level, spec);
+            if (record.Experience >= required)
+                throw new InvalidOperationException("보유 기록의 진행 경험치가 현재 레벨 요구량 이상입니다.");
+            return new ExperienceProgressSnapshot(true, record.Experience, required);
+        }
+
+        /// <summary>
         /// 보유 기록에 경험치를 더한 결과다. 요구량을 채울 때마다 레벨을 1 올리고 남은 값을 넘긴다(여러 단계 상승 가능).
         /// 꺼진 설정이거나 획득량이 0이면 요구량을 계산하지 않고 같은 기록을 돌려준다.
         /// </summary>
@@ -41,9 +58,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!spec.IsEnabled || amount == 0)
                 return new ExperienceGain(record, 0);
             int level = record.Level;
-            int required = Required(record.Role, level, spec);
-            if (record.Experience >= required)
-                throw new InvalidOperationException("보유 기록의 진행 경험치가 현재 레벨 요구량 이상입니다.");
+            int required = Progress(record, spec).Required;
 
             int experience = checked(record.Experience + amount);
             while (experience >= required)

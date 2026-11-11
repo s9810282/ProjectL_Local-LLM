@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ProjectL.Systems.DataBaseSystem.Data.Common;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Background;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Entry;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
@@ -13,29 +13,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     /// </summary>
     internal sealed class StageMapViewScene
     {
-        private readonly StageMapViewServices _services;
+        private readonly StageMapViewSceneServices _services;
         private readonly StageMapBackgroundDisplay _background;
+        private readonly Camera _output;
         private StageMapCameraDrag _cameraDrag;
 
-        internal StageMapViewScene(StageMapSceneRoot root, Camera output, StageMapViewServices services)
+        internal StageMapViewScene(StageMapSceneRoot root, Camera output, StageMapViewSceneServices services)
         {
             Root = root != null ? root : throw new ArgumentNullException(nameof(root));
-            Output = output != null ? output : throw new ArgumentNullException(nameof(output));
+            _output = output != null ? output : throw new ArgumentNullException(nameof(output));
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _background = new StageMapBackgroundDisplay(services.Backgrounds);
-            Display = new StageMapViewDisplay(services.Colors);
-#if UNITY_EDITOR
-            CameraFraming = new Editor.StageMapCameraFramingSettings(root);
-#endif
+            var placement = new StageMarkerPlacement(services.MapData.MarkerVisit.FrontClearance);
+            Display = new StageMapViewDisplay(services.Colors, services.Outlines, placement);
         }
 
         internal StageMapSceneRoot Root { get; }
-        internal Camera Output { get; }
         internal StageMapViewDisplay Display { get; }
         internal StageMapCameraDrag CameraDrag => _cameraDrag;
 
         /// <summary>맵 카메라 끌기를 만듭니다. 핸들은 <see cref="BindCameraHandle"/>에서 빌립니다.</summary>
-        internal StageMapCameraDrag CreateCameraDrag() => new(Output, Root.MapCamera, _services.Cameras);
+        internal StageMapCameraDrag CreateCameraDrag() => new(_output, Root.MapCamera, _services.Cameras);
+
+        /// <summary>출력 카메라로 표시된 노드를 집는 부품을 만듭니다. 출력 카메라는 씬 부품 밖에 내놓지 않습니다(평가 N-03).</summary>
+        internal StageNodePicker CreatePicker(float pickDistance) => new(_output, Display, pickDistance);
 
         internal void AdoptCameraDrag(StageMapCameraDrag drag)
         {
@@ -54,31 +55,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
         internal void ClearBackground() => _background.Dispose();
 
-#if UNITY_EDITOR
-        internal Editor.StageMapCameraFramingSettings CameraFraming { get; }
-        internal void PreviewCameraFraming() => _cameraDrag?.PreviewFraming(CameraFraming);
-#endif
+        internal void CollectLinkDrawTargets(List<IStageLinkDrawTarget> targets) => Display.CollectLinkDrawTargets(targets);
 
-        internal void ShowNodes(int mapKey, IReadOnlyList<StageProgressData> nodes, int currentNodeId)
+        internal void ShowNodes(int mapKey, IReadOnlyList<StageProgressData> nodes, int currentNodeId,
+            List<StageNodeDropTarget> dropTargets = null)
         {
-            Display.Show(mapKey, nodes, _services.MapData, _services.FindVisual, Root.MapRoot, currentNodeId);
+            Display.Show(mapKey, nodes, _services.MapData, _services.FindVisual, Root.MapRoot, currentNodeId, dropTargets);
         }
 
-        /// <summary>표시된 시작·Boss 노드에서 카메라 이동 범위를 정합니다. 끌기가 없으면 아무것도 하지 않습니다.</summary>
+        /// <summary>표시된 노드로 카메라 이동 범위를 정합니다(규칙은 <see cref="StageMapCameraBounds"/>). 끌기가 없으면 아무것도 하지 않습니다.</summary>
         internal void ConfigureCameraBounds(IReadOnlyList<StageProgressData> nodes)
         {
             if (_cameraDrag == null) return;
-            Transform start = null;
-            Transform boss = null;
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                StageProgressData node = nodes[i];
-                if (node.IsStart) Display.TryGetNode(node.NodeId, out start);
-                else if (node.MapRole == StageMapRole.Boss) Display.TryGetNode(node.NodeId, out boss);
-            }
-            if (start == null || boss == null)
-                throw new InvalidOperationException("[StageMap] 카메라 이동 범위에 필요한 시작·Boss 노드가 없습니다.");
-            _cameraDrag.SetBounds(start.position, boss.position, Root.MapRoot.forward, Root.MapRoot.up);
+            StageMapCameraBounds.Find(nodes, Display, out Vector3 start, out Vector3 boss);
+            _cameraDrag.SetBounds(start, boss, Root.MapRoot.forward, Root.MapRoot.up);
         }
 
         /// <summary>카메라 → 노드 표시 → 배경 순으로 정리합니다(옛 Scope 정리 순서).</summary>

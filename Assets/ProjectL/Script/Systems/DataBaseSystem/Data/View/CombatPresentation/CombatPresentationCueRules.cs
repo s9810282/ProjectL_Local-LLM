@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 {
     /// <summary>
     /// 연출 큐가 붙는 사건 칸입니다(범용 연출 구조 설계 G3). 공격은 전달 종류(근접·원거리)에 따라 고를 수 있는 시점·자리가 다릅니다.
-    /// 5 이후는 사실 사건·토네이도 칸이고 이펙트·흔들림만 받습니다(이펙트 창구 확장 설계 EC3, 계획 P4). 이 사건들의 소리는 사건 소리 표가 냅니다.
+    /// 5 이후는 사실 사건·토네이도·특성 발동·낙석·구조물 피격 칸이고 이펙트·흔들림만 받습니다(이펙트 창구 확장 설계 EC3, 계획 P4). 구조물 피격(StructureHit)은 흔들림 없이 지연 0 이펙트만 받습니다. 이 사건들의 소리는 사건 소리 표가 냅니다.
     /// </summary>
     internal enum CombatCueEvent
     {
@@ -36,7 +37,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 
         /// <summary>
         /// 특성이 발동한 순간입니다(특성 발동 연출 설계 TA2, 계획 Tb.3). 시점은 Start만이고, 이펙트 자리는 발동 유닛 몸(ActorBody)·대상 몸(SubjectBody, 대상마다)·
-        /// 칸(EventCell, 칸마다)입니다. 추가 공격의 공격 동작 큐는 이 칸이 아니라 그 줄이 쓰는 공격 표시의 칸 규칙을 따릅니다.
+        /// 칸(EventCell, 칸마다)·선택 칸(SelectedCell, 한 번)입니다. 추가 공격의 공격 동작 큐는 이 칸이 아니라 그 줄이 쓰는 공격 표시의 칸 규칙을 따릅니다.
         /// </summary>
         TraitActivation = 12,
 
@@ -56,11 +57,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     /// 유닛마다 다른 조건(공격 클립·지점·피격 클립)은 외형 표 검사가 <see cref="FindUnitError"/>로 봅니다.
     /// </summary>
     /// <remarks>
-    /// 기준 시점 표: 공격·피격·사망은 시작·끝, Cue는 공격 둘과 피격(피격 클립이 있을 때만), Cue2·3는 해당 이벤트가 있는 원거리 클립만입니다.
+    /// 기준 시점 표: 공격·피격·사망은 시작·끝, Cue는 공격 둘과 피격(피격 클립이 있을 때만), 선택 이벤트 시점(Cue2 이상, 번호 표 <see cref="CombatClipEventIds"/>)은 해당 이벤트가 있는 원거리 클립만입니다.
     /// 맞음(Hit)은 공격 둘, 접촉(Contact)은 원거리 공격만입니다.
     /// 사실 사건 칸 여섯은 시작(사건 순간)만, 토네이도는 시작(휩쓸림)·끝(착지)입니다(이펙트 창구 확장 설계 EC3). 특성 발동은 시작(발동 순간)만이고,
     /// 자리는 발동 유닛 몸·대상 몸·칸입니다(특성 발동 연출 설계 TA2). 낙석은 경고가 시작, 돌이 닿는 순간이 끝이고 자리는 사건 칸입니다(낙석 View 계획 RP-3).
-    /// 접촉 시점에는 이펙트만 두고 지연은 0이며, 자리는 접촉점입니다(계획 P5). 자리는 공격이 행위자 쪽, 피격·사망·아이템·토네이도가 주체 몸,
+    /// 구조물 피격(StructureHit)은 시작만이고 자리는 주체 몸이며, 흔들림을 둘 수 없고 이펙트 지연은 0이어야 합니다.
+    /// 접촉 시점에는 이펙트만 두고 지연은 0이며, 자리는 접촉점입니다(계획 P5). 자리는 공격이 행위자 쪽, 피격·사망·아이템·토네이도·구조물 피격이 주체 몸,
     /// 나머지 사실 사건이 사건 칸입니다. 소리 시점은 공격·사망 칸에만 있습니다.
     /// 토네이도 칸의 큐는 지연이 0입니다(<see cref="TornadoNoDelayRule"/>).
     /// </remarks>
@@ -83,7 +85,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         {
             CombatCueEvent.MeleeAttack => anchor is CombatCueAnchor.Start or CombatCueAnchor.Cue or CombatCueAnchor.Hit or CombatCueAnchor.End,
             CombatCueEvent.RangedAttack => anchor is CombatCueAnchor.Start or CombatCueAnchor.Cue or CombatCueAnchor.Hit or CombatCueAnchor.Contact
-                or CombatCueAnchor.End or CombatCueAnchor.Cue2 or CombatCueAnchor.Cue3,
+                or CombatCueAnchor.End || CombatClipEventIds.IsEventAnchor(anchor),
             CombatCueEvent.Hit => anchor is CombatCueAnchor.Start or CombatCueAnchor.Cue or CombatCueAnchor.End,
             CombatCueEvent.Death => anchor is CombatCueAnchor.Start or CombatCueAnchor.End,
             CombatCueEvent.ObjectActivated or CombatCueEvent.ObstacleHit or CombatCueEvent.ObstacleDestroyed or CombatCueEvent.Fall
@@ -107,7 +109,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                     point == CombatCuePoint.SubjectBody,
                 CombatCueEvent.ObjectActivated or CombatCueEvent.ObstacleHit or CombatCueEvent.ObstacleDestroyed or CombatCueEvent.Fall
                     or CombatCueEvent.WeakGroundCollapse or CombatCueEvent.RockfallWarning or CombatCueEvent.RockfallImpact => point == CombatCuePoint.EventCell,
-                CombatCueEvent.TraitActivation => point is CombatCuePoint.ActorBody or CombatCuePoint.SubjectBody or CombatCuePoint.EventCell,
+                CombatCueEvent.TraitActivation => point is CombatCuePoint.ActorBody or CombatCuePoint.SubjectBody or CombatCuePoint.EventCell
+                    or CombatCuePoint.SelectedCell,
                 _ => false,
             };
         }
@@ -212,31 +215,31 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                         (attackClip == null || points == null || !points.TryGetMuzzle(cue.ActorPoint, out _)))
                         return $"공격 이펙트 큐 {i}의 총구 지점 {cue.ActorPoint}가 없습니다. 공격 클립과 해당 muzzle을 지정해야 합니다";
                 }
-                string error = FindEventError(attack, attackClip, CombatClipEventId.Event2)
-                    ?? FindEventError(attack, attackClip, CombatClipEventId.Event3);
-                if (error != null) return error;
+                // 선택 이벤트(번호 표의 둘째 줄부터)를 번호 순으로 봅니다. 처음 나온 오류를 돌려줍니다.
+                IReadOnlyList<CombatClipEventId> ids = CombatClipEventIds.All;
+                for (int i = 1; i < ids.Count; i++)
+                {
+                    string error = FindEventError(attack, attackClip, ids[i]);
+                    if (error != null) return error;
+                }
             }
             if (hit != null && !hasHitClip && UsesAnchor(hit, CombatCueAnchor.Cue))
                 return "피격 칸의 큐가 기준 순간(Cue)을 씁니다. 피격 클립이 있는 유닛만 됩니다";
             return null;
         }
 
-        /// <summary>클립 이벤트에서 큐 시점으로의 대응입니다. 런타임 연결과 DB 존재 검사가 함께 사용합니다.</summary>
-        internal static CombatCueAnchor AnchorOf(CombatClipEventId id) => id switch
+        /// <summary>유닛마다 클립 존재를 확인해야 하는 선택 시점(번호 표의 둘째 줄부터)을 쓰는지입니다.</summary>
+        internal static bool UsesAdditionalEvents(CombatEventCues cues)
         {
-            CombatClipEventId.Event => CombatCueAnchor.Cue,
-            CombatClipEventId.Event2 => CombatCueAnchor.Cue2,
-            CombatClipEventId.Event3 => CombatCueAnchor.Cue3,
-            _ => throw new ArgumentOutOfRangeException(nameof(id), id, "정의되지 않은 클립 이벤트입니다."),
-        };
-
-        /// <summary>유닛마다 클립 존재를 확인해야 하는 선택 시점을 쓰는지입니다.</summary>
-        internal static bool UsesAdditionalEvents(CombatEventCues cues) =>
-            UsesAnchor(cues, AnchorOf(CombatClipEventId.Event2)) || UsesAnchor(cues, AnchorOf(CombatClipEventId.Event3));
+            IReadOnlyList<CombatClipEventId> ids = CombatClipEventIds.All;
+            for (int i = 1; i < ids.Count; i++)
+                if (UsesAnchor(cues, CombatClipEventIds.AnchorOf(ids[i]))) return true;
+            return false;
+        }
 
         private static string FindEventError(CombatEventCues cues, CombatClipData clip, CombatClipEventId id)
         {
-            CombatCueAnchor anchor = AnchorOf(id);
+            CombatCueAnchor anchor = CombatClipEventIds.AnchorOf(id);
             if (!UsesAnchor(cues, anchor)) return null;
             return clip == null || !clip.Timings.TryGetEventTime(id, out _)
                 ? $"공격 큐가 {anchor}를 쓰지만 해당 공격 클립 이벤트 {id}가 없습니다" : null;
@@ -279,8 +282,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         {
             for (int i = 0; i < cues.Effects.Count; i++)
                 if (cues.Effects[i].Anchor == anchor) return true;
+            // 세기 0 흔들림은 런타임 조립이 건너뛰므로(CombatCueComposer) 사용으로 세지 않습니다(평가 C10-21).
             for (int i = 0; i < cues.Shakes.Count; i++)
-                if (cues.Shakes[i].Anchor == anchor) return true;
+                if (cues.Shakes[i].IsOn && cues.Shakes[i].Anchor == anchor) return true;
             for (int i = 0; i < cues.PresetSounds.Count; i++)
                 if (cues.PresetSounds[i].Anchor == anchor) return true;
             for (int i = 0; i < cues.SoundTimings.Count; i++)

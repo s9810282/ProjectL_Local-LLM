@@ -75,3 +75,13 @@
 
 - 따로 하실 일은 없습니다. 브랜치에서 `TraitVisualDataSO.cs`·`ViewGroup.asset`·`ViewDataBase.cs`를 고치셨다면 병합 때 위 칸·줄을 남겨 주세요.
 - SO 모드 도구나 다른 화면에서 걸린 상태 외형이 필요하면 이 표를 쓰시면 됩니다(같은 표를 두 번 만들지 않게 알려 드립니다).
+
+## 4. 2026-11-11 추가 — 상태 외형 새 칸 `whileAppearance`(재구성 연출, 미전달)
+
+- 상태 외형 표 SO(`UnitStatusVisualDataSO`)에 칸 하나를 더했습니다: `whileAppearance`(GameObject). 그 상태가 유닛에 보이는 동안(HUD 아이콘과 같은 순간) 원래 모델 대신 보일 모델 프리팹입니다. 비우면 모습 그대로입니다.
+- 지금 쓰는 곳은 `UnitStatusVisual_Reconstructing`(재구성 중) 하나이고, 값은 민형님 `Prefabs/Characters/New/Enemy/EnemyRecover.prefab`(잔해)입니다.
+- 넣는 모델은 렌더러만 두세요. 유닛 아래 자식으로 놓여 넉백·피격 자세를 따라가고, 몸 상자·HUD·자리는 원래 유닛 것을 씁니다. 레이어는 코드가 유닛 레이어(Entity)로 맞춥니다. 충돌체·`FieldUnitView`는 넣지 않습니다.
+- 상태가 여럿이면 HUD 순서의 첫 상태가 정합니다(판단은 전투 View `CombatUnitStatuses.TryGetAppearance` 한 곳).
+- 코드와 에셋은 한 커밋입니다(코드 없이 에셋만 들어가면 알 수 없는 칸이라 무시되고, 에셋 없이 코드만 들어가면 잔해가 안 보일 뿐입니다).
+- 설계 [reconstruction-view-design](../specs/2026-11-11-combat-reconstruction-view-design.md) RE2.
+

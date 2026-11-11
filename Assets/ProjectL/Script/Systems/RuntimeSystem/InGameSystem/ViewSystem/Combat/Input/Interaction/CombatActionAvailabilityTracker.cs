@@ -1,3 +1,6 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
+#endif
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
@@ -89,7 +92,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 _input.HasPreview, _input.HasPreview ? _input.Preview.Number : 0, answeredPreviewNumber))
                 return;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _requestNumber = CombatInputProfiler.SetPreview(_write, CombatViewPreviewData.ActionAvailability(_actor));
+#else
             _requestNumber = _write.SetPreview(CombatViewPreviewData.ActionAvailability(_actor));
+#endif
             State = CombatActionAvailabilityState.Pending;
         }
 
@@ -126,6 +133,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 
             int number = _requestNumber;
             _requestNumber = 0;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.ActionAvailability).Auto();
+#endif
             _answer = answer;
             State = CombatActionAvailabilityState.Ready;
             _write.ClearPreview(number);
@@ -148,11 +158,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             for (int i = 0; i < characters.Count; i++)
             {
                 CharacterData character = characters[i];
-                if (character.EntityId == actor && character.Owner == Owner.Player
-                    && character.Area == CharacterRuntimeArea.Field && !character.Health.IsDead)
+                if (character.EntityId == actor && IsEligibleActor(character.ToFacts()))
                     return true;
             }
             return false;
         }
+
+        internal static bool IsEligibleActor(CharacterCombatFacts character) =>
+            character.Owner == Owner.Player && character.Area == CharacterRuntimeArea.Field && !character.Health.IsDead;
     }
 }

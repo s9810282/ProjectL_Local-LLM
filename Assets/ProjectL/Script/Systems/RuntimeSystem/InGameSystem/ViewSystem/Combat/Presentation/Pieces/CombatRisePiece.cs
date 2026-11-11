@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// 소환 등장 조각입니다(조각·조립 설계 BP7, 보스 활성화 설계 D6b). 시작 즉시 유닛을 제자리에서 깊이만큼 아래에 두고,
     /// 대기 뒤 올라오며 위쪽 축으로 돕니다. 식은 옛 소환 등장과 같습니다. 자세 대여는 실행이 빌리고 되돌립니다(설계 Q-B6 A).
     /// 값은 소환 조립이 설정에서 꺼내 넘기고, 값 조건은 설정 Data 한 곳을 씁니다(연출 조립 설계 §9 I-5).
-    /// 회전은 관리 코드만으로 계산해 Unity 없이 시험할 수 있습니다.
+    /// 회전은 관리 코드만으로 계산합니다(Unity 없이 계산 가능).
     /// </summary>
     internal sealed class CombatRisePiece : ICombatPresentationPiece
     {

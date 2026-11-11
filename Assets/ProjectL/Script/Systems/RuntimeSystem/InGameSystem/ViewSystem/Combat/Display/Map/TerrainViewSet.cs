@@ -24,7 +24,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly Func<TerrainContentKind, bool> _canDisplay;
         private readonly Func<MovementTileFact, TerrainContentKind, TerrainLook> _lookOf;
         private readonly Dictionary<long, Entry> _entries = new();
-        private readonly HashSet<long> _classified = new();
         private readonly List<long> _removal = new();
         private long _pass;
 
@@ -48,13 +47,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (apply == null) throw new ArgumentNullException(nameof(apply));
 
-            Classify(bindings);
             _pass++;
             try
             {
                 foreach (MovementTileFact source in environment.Tiles)
                 {
-                    if (!TryShow(source, out TerrainContentKind kind) || !_canDisplay(kind)) continue;
+                    if (!TryShow(bindings, source, out TerrainContentKind kind) || !_canDisplay(kind)) continue;
                     ShowOne(source, kind, apply);
                 }
 
@@ -78,7 +76,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
             finally
             {
-                _classified.Clear();
                 _removal.Clear();
             }
         }
@@ -94,16 +91,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
-            Classify(bindings);
-            try
-            {
-                foreach (MovementTileFact source in environment.Tiles)
-                    if (TryShow(source, out TerrainContentKind kind)) visit(source, kind);
-            }
-            finally
-            {
-                _classified.Clear();
-            }
+            foreach (MovementTileFact source in environment.Tiles)
+                if (TryShow(bindings, source, out TerrainContentKind kind)) visit(source, kind);
         }
 
         /// <summary>현재 대여 중인 외형만 방문합니다. 목록을 변경하지 않는 진입 대상 수집에 씁니다.</summary>
@@ -163,7 +152,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 }
             }
             _entries.Clear();
-            _classified.Clear();
             _removal.Clear();
             if (errors != null) throw new AggregateException("[TerrainViewSet] View 반환에 실패했습니다.", errors);
         }
@@ -199,22 +187,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             (leave ?? _return)(entry.Key, entry.View);
         }
 
-        private void Classify(EnvironmentSemanticBindings bindings)
-        {
-            _classified.Clear();
-            foreach (long id in bindings.TerrainSourceIds) _classified.Add(id);
-        }
-
         /// <summary>
         /// 원본 하나를 보여 줄지 정하는 지형 표시의 판단입니다(Render·VisitShown이 함께 씀): Terrain 분류 · 외형 종류 · 보임.
         /// 보임(켜짐 · Player 공개)은 환경 표시·입력이 함께 쓰는 <see cref="CombatEnvironmentFacts.IsShown"/> 한 곳이 정합니다(평가 C1-05).
         /// 바닥 교체 지형도 같은 판단을 거치고, 그릴지는 외형(프리팹 유무)이 정합니다(고지대 View 설계 HG2).
-        /// 분류된 원본의 형식이 지원되지 않으면 종류 해석이 계약 오류를 냅니다.
+        /// 분류된 원본의 형식이 지원되지 않으면 종류 해석이 계약 오류를 냅니다. 분류 소속도 <see cref="CombatEnvironmentFacts.IsTerrain"/> 한 곳이 정합니다
+        /// (작은 묶음 설계 SB3 — Render마다 채우던 분류 집합을 걷음, Render 안에서 VisitShown이 불려도 서로 지우지 않음).
         /// </summary>
-        private bool TryShow(MovementTileFact source, out TerrainContentKind kind)
+        private static bool TryShow(EnvironmentSemanticBindings bindings, MovementTileFact source, out TerrainContentKind kind)
         {
             kind = TerrainContentKind.None;
-            if (!_classified.Contains(source.Id)) return false;
+            if (!CombatEnvironmentFacts.IsTerrain(bindings, source.Id)) return false;
             kind = EnvironmentVisualKinds.TerrainKind(source);
             return CombatEnvironmentFacts.IsShown(source);
         }

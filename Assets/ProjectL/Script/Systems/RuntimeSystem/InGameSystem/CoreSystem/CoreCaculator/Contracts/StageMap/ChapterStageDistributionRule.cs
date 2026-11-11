@@ -20,10 +20,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int MinimumCount { get; }
         /// <summary>이 종류가 놓일 수 있는 가장 얕은 깊이(1 이상). 1은 시작 바로 다음 층이다.</summary>
         public int MinDepth { get; }
+        /// <summary>연결 경로에서 같은 종류의 연속을 줄인다. 최소 개수·고정 배치·깊이 규칙을 우선하며 완전 금지는 아니다.</summary>
+        public bool ReduceConsecutive { get; }
         /// <summary>가중치나 최소 개수가 있어 이 종류가 생성될 수 있는지. 활성 종류는 후보 스테이지가 하나 이상 필요하다.</summary>
         public bool IsActive => Weight > 0 || MinimumCount > 0;
 
-        public ChapterStageDistributionRule(ChapterStageKind kind, int weight, int minimumCount, int minDepth)
+        public ChapterStageDistributionRule(ChapterStageKind kind, int weight, int minimumCount, int minDepth,
+            bool reduceConsecutive = false)
         {
             if (!System.Enum.IsDefined(typeof(ChapterStageKind), kind)) throw new ArgumentOutOfRangeException(nameof(kind));
             if (weight < 0 || weight > MaxWeight) throw new ArgumentOutOfRangeException(nameof(weight));
@@ -34,6 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Weight = weight;
             MinimumCount = minimumCount;
             MinDepth = minDepth;
+            ReduceConsecutive = reduceConsecutive;
         }
 
         /// <summary>

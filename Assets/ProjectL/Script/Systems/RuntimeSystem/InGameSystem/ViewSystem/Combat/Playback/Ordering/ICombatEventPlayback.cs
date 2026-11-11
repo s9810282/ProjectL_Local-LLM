@@ -19,7 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// 걸음별 사건 완료는 시작 때 넘긴 통지로 받습니다(동시 처리 설계 C5·C6).
     /// </para>
     /// <para>
-    /// 구현: 재생 조정 <see cref="CombatSceneEventPlayback"/>(해제 뒤 사건 시작 거절, 리팩토링 설계 D9), 테스트 가짜.
+    /// 구현: 재생 조정 <see cref="CombatSceneEventPlayback"/>(해제 뒤 사건 시작 거절, 리팩토링 설계 D9).
     /// 표시는 <see cref="ICombatBattleDisplay.EventPlayback"/>으로 이 구현을 넘기기만 합니다(연출 조립 설계 §9 I-4).
     /// 사건 Presenter(<see cref="CombatSceneEventPresenter"/>)는 같은 이름의 멤버를 갖지만 이 계약을 구현하지 않습니다.
     /// 해제 방어가 없는 사건 Presenter를 연출(<see cref="ICombatPresentation.Attach"/>)에 넘기면 컴파일 오류가 납니다.
@@ -53,9 +53,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         /// <summary>남은 표시가 없는지입니다(Barrier). 결과의 최종 사실은 이것이 참일 때만 표시합니다.</summary>
         bool IsPresentationComplete { get; }
-
-        /// <summary>한 이동 결과에서 유닛별 첫 이동 시작을 한 번 알립니다. 칸별 보간과는 별개입니다.</summary>
-        void BeginMovement(CombatCharacterEvent firstStep);
 
         /// <summary>
         /// 마지막 걸음 뒤 경로 종료 연출이 끝나야 다음 사건으로 진행합니다. 취소는 완료가 아닙니다. 접촉으로 걸음 사건 완료가 일찍 와서
