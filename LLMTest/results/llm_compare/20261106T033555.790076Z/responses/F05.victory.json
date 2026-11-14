@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:36:12.9997171Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"이동 후 공격으로 일반 유닛을 처치하여 다음 턴의 위협을 제거하고, 낙석 피해 없이 생존할 수 있습니다.\", \"scores\": [5, 9, 3]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1374456000,
+  "load_duration": 6912300,
+  "prompt_eval_count": 1717,
+  "prompt_eval_cached_count": 914,
+  "prompt_eval_duration": 383621000,
+  "eval_count": 54,
+  "eval_duration": 811222000
+}

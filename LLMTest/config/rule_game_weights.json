@@ -1,0 +1,25 @@
+{
+  "version": "rule-game-1.0-2026-11-13",
+  "source": {
+    "game": "ProjectL Core, Project_L develop 424242ab8 (이 저장소 c449c977)",
+    "scorer": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyUtilityScorer.cs",
+    "session": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSession.cs",
+    "tuningAsset": "Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyAiTuning_Default.asset",
+    "note": "점수식 상수(처치 2000 등)는 게임 코드 상수라 tools/rule_game.py에 둔다. 여기에는 게임에서 조정 에셋으로 바꾸는 세 값만 둔다."
+  },
+  "defaultProfile": "asset",
+  "profiles": {
+    "asset": {
+      "note": "실제 게임 값(조정 에셋)",
+      "deathTradeThresholdPercent": 20,
+      "threatAversionPercent": 20,
+      "nextTurnApproachPercent": 200
+    },
+    "codeDefault": {
+      "note": "EnemyDecisionSettings.Default(에셋 없이 쓰는 경로)",
+      "deathTradeThresholdPercent": 50,
+      "threatAversionPercent": 50,
+      "nextTurnApproachPercent": 50
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "rule-v3.0-2026-11-06",
+  "mainDamageMode": "reference_hp",
+  "mainReferenceHp": 10,
+  "riskMode": "faction_turn",
+  "weights": {
+    "main": 30,
+    "damage": 20,
+    "kill": 30,
+    "progress": 15,
+    "friendlyLoss": 35,
+    "selfLoss": 35,
+    "baseLoss": 60
+  },
+  "riskDiscounts": { "in_place": 0.75, "after_move": 0.5, "chain": 0, "hazard": 1.0 },
+  "unitWorth": { "Demon": 1.0, "Gravekeeper": 1.0, "UndeadHeavy": 1.0, "UndeadCannonCart": 1.0 },
+  "roleMaxLoss": 6,
+  "roleBonus": 20,
+  "roleProfiles": {
+    "Demon": { "threat": 0.6, "approach": 0.4 },
+    "Gravekeeper": { "knockback": 0.7, "threat": 0.3 },
+    "UndeadHeavy": { "threat": 0.4, "approach": 0.6 },
+    "UndeadCannonCart": { "threat": 0.5, "spacing": 0.5 }
+  },
+  "spacingMin": 1,
+  "spacingFull": 3
+}

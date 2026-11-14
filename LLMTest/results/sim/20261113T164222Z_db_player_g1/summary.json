@@ -1,0 +1,22 @@
+[
+  {
+    "enemy": "enemy-game-asset",
+    "player": "player-plan8:d1",
+    "battles": 12,
+    "enemy_win": 0.667,
+    "player_win": 0.333,
+    "timeout": 0.0,
+    "rounds": 9.33,
+    "first_enemy_attack_round": 1,
+    "never_attacked": 0,
+    "enemy_hold_ratio": 0.024,
+    "mean_gap": 6.34,
+    "player_units_lost": 2.75,
+    "enemy_units_lost": 5,
+    "seconds": 7.08,
+    "enemy_flip": null,
+    "player_flip": 0.325,
+    "enemy_beam_results": null,
+    "player_beam_results": 5.79
+  }
+]

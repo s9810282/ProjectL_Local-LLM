@@ -1,0 +1,181 @@
+{
+  "situationId": "F02",
+  "title": "이동 없이 닿는 위협으로 죽는 자리와 이동해야만 닿는 위협으로 죽는 자리",
+  "profile": "codeDefault",
+  "choice": "b_hit_shotgun",
+  "choiceAction": "move",
+  "holdReason": "selected",
+  "hold": {
+    "id": "(hold)",
+    "label": "대기(덧붙임 파일)",
+    "kind": "wait",
+    "gameAction": "hold",
+    "eligible": true,
+    "reason": "",
+    "facts": {
+      "attackBenefit": 0,
+      "positionHp": 8,
+      "hazardLoss": 0,
+      "threatDamage": 0,
+      "threatPermille": 0,
+      "threatLethal": false,
+      "progress": 0,
+      "followup": 0,
+      "nextTurnStrike": 200,
+      "bind": false
+    },
+    "terms": {
+      "attack": 0,
+      "hazard": 0,
+      "playerRisk": 0,
+      "progress": 0,
+      "followup": 0,
+      "nextTurn": 100,
+      "bind": 0,
+      "total": 100
+    },
+    "tier": 0,
+    "lethal": false,
+    "lethalRank": [
+      false,
+      0,
+      0
+    ],
+    "notes": []
+  },
+  "candidates": [
+    {
+      "id": "a_hit_main",
+      "label": "이동 2 뒤 메인 6 피해, 메인·ShotGun 제자리 위협",
+      "kind": "move_attack",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 8,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 260,
+        "threatLethal": false,
+        "progress": 2,
+        "followup": 200,
+        "nextTurnStrike": 200,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": -130,
+        "progress": 40,
+        "followup": 200,
+        "nextTurn": 100,
+        "bind": 0,
+        "total": 210
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [
+        "move_attack → 이동 + 후속 공격 값"
+      ],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "b_hit_shotgun",
+      "label": "이동 2 뒤 ShotGun 6 피해·넉백, 이동해야 닿는 위협만",
+      "kind": "move_attack",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 8,
+        "hazardLoss": 0,
+        "threatDamage": 0,
+        "threatPermille": 0,
+        "threatLethal": false,
+        "progress": 2,
+        "followup": 171,
+        "nextTurnStrike": 171,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": 0,
+        "progress": 40,
+        "followup": 171,
+        "nextTurn": 85,
+        "bind": 0,
+        "total": 296
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [
+        "move_attack → 이동 + 후속 공격 값"
+      ],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "c_retreat",
+      "label": "3칸 후퇴, 위협 없음",
+      "kind": "move",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 8,
+        "hazardLoss": 0,
+        "threatDamage": 0,
+        "threatPermille": 0,
+        "threatLethal": false,
+        "progress": -3,
+        "followup": 0,
+        "nextTurnStrike": 0,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": 0,
+        "progress": -60,
+        "followup": 0,
+        "nextTurn": 0,
+        "bind": 0,
+        "total": -60
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [],
+      "beatsHold": false,
+      "admitted": false
+    }
+  ],
+  "approximations": [
+    "이동 후보가 3개 이상: 게임은 상위 2개만 정밀 평가한다(여기서는 모두 정밀로 봄)"
+  ],
+  "assumptions": [
+    "v2에 대기 후보가 없어 대기(hold) 사실을 여기 적는다. 출발 칸의 제자리 위협은 없다고 가정한다(v2에 없는 값).",
+    "출발 칸 교전 비용 2: a·b 모두 2칸 이동으로 메인·ShotGun 공격 위치에 닿는다.",
+    "a 종점은 메인 공격 위치, b 종점은 ShotGun 공격 위치라 교전 비용 0이다. c는 approachCostAfter 5를 그대로 쓴다(이동력 4 초과 → 다음 턴 공격 없음).",
+    "다음 턴 공격: 같은 비용이면 값이 큰 대상. 출발 칸은 메인(6/30 = 200‰) > ShotGun(6/35 = 171‰)."
+  ]
+}

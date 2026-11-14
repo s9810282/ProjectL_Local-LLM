@@ -1,0 +1,16 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F04",
+  "base": "rule_fixtures_v2/F04.json",
+  "assumptions": [
+    "v2에 대기 후보가 없어 대기 사실을 적는다. 출발 칸 위협은 제자리 공격 후보 a의 위협과 같다(메인 6, Sniper는 앞선 Demon이 처치).",
+    "후퇴 b의 교전 비용 4는 approachCostAfter를 그대로 쓴다. 이동력 4 이하라 게임 규칙상 다음 턴 메인 공격이 잡힌다(v2 canThreatenNext false와 다름)."
+  ],
+  "engagementCostBefore": 0,
+  "hold": {"inPlaceThreats": [{"opponentId": "main", "damage": 6}], "hazardDamage": 0,
+           "nextTurn": {"targetId": "main", "damage": 6}},
+  "candidates": {
+    "a_hit_main": {"nextTurn": {"targetId": "main", "damage": 6}},
+    "b_retreat": {"engagementCostAfter": 4, "nextTurn": {"targetId": "main", "damage": 6}}
+  }
+}

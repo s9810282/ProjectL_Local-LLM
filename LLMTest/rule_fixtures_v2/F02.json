@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 2,
+  "situationId": "F02",
+  "title": "이동 없이 닿는 위협으로 죽는 자리와 이동해야만 닿는 위협으로 죽는 자리",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-11-06 DB 값이다(형식 v2 문서 §1.1). 피해는 방어 5(5% 감소, 소수점 버림)·상성 1.0 가정이다.",
+    "좌표·경로·점유를 제공하거나 검증하지 않는다. legal·moveSteps·도달 여부(reach)는 작성자가 Core 규칙으로 확인했다고 가정한 값이다.",
+    "반격은 다음 아군 진영 턴 한 번이며, 플레이어마다 이동 1회 뒤 공격 1회다. 위협자 전원이 행위자에게 몰리는 최악의 경우를 적는다.",
+    "Gravekeeper 공격은 대상을 2칸 넉백한다(ShotGun 본진 접근 이동 비용 4 → 6).",
+    "넉백된 ShotGun은 이동해야 Gravekeeper에 닿는다. 이 자리에서 Cowboy도 이동해야 닿는다."
+  ],
+  "turn": {
+    "dayNight": "day",
+    "enemyOrder": [
+      "e_grave"
+    ],
+    "actingId": "e_grave",
+    "actedAllies": []
+  },
+  "self": {
+    "id": "e_grave",
+    "unit": "Gravekeeper",
+    "hp": 8,
+    "maxHp": 23,
+    "moveRange": 4,
+    "attackRange": 1
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "unit": "MainCharacter",
+      "hp": 30,
+      "maxHp": 30,
+      "moveRange": 3,
+      "attackRange": 1,
+      "traits": []
+    },
+    {
+      "id": "shotgun",
+      "role": "regular",
+      "unit": "ShotGun",
+      "hp": 35,
+      "maxHp": 35,
+      "moveRange": 3,
+      "attackRange": 2,
+      "traits": []
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "unit": "Sniper",
+      "hp": 10,
+      "maxHp": 10,
+      "moveRange": 3,
+      "attackRange": 4,
+      "traits": []
+    },
+    {
+      "id": "cowboy",
+      "role": "regular",
+      "unit": "Cowboy",
+      "hp": 25,
+      "maxHp": 25,
+      "moveRange": 4,
+      "attackRange": 1,
+      "traits": []
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 5,
+    "maxHp": 5
+  },
+  "announcedHazards": [],
+  "approachCostBefore": 2,
+  "candidates": [
+    {
+      "id": "a_hit_main",
+      "label": "이동 2 뒤 메인 6 피해, 메인·ShotGun 제자리 위협",
+      "legal": true,
+      "kind": "move_attack",
+      "moveSteps": 2,
+      "selfHpAfter": 8,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 24,
+        "shotgun": 35,
+        "sniper": 10,
+        "cowboy": 25
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          },
+          {
+            "opponentId": "shotgun",
+            "reach": "in_place",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "sniper",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "cowboy",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "b_hit_shotgun",
+      "label": "이동 2 뒤 ShotGun 6 피해·넉백, 이동해야 닿는 위협만",
+      "legal": true,
+      "kind": "move_attack",
+      "moveSteps": 2,
+      "selfHpAfter": 8,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "shotgun": 29,
+        "sniper": 10,
+        "cowboy": 25
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [
+        "shotgun"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 3,
+        "knockbackDelays": [
+          {
+            "targetId": "shotgun",
+            "before": 4,
+            "after": 6
+          }
+        ]
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "shotgun",
+            "reach": "after_move",
+            "damage": 6
+          },
+          {
+            "opponentId": "cowboy",
+            "reach": "after_move",
+            "damage": 9
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "c_retreat",
+      "label": "3칸 후퇴, 위협 없음",
+      "legal": true,
+      "kind": "move",
+      "moveSteps": 3,
+      "selfHpAfter": 8,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "shotgun": 35,
+        "sniper": 10,
+        "cowboy": 25
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 5,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 5,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "shotgun",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "cowboy",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_hit_shotgun"
+    ],
+    "role": [
+      "b_hit_shotgun"
+    ],
+    "reason": "확실히 죽는 자리(제자리 위협만으로 사망)는 피한다. 이동해야만 닿는 위협은 피해 이득이 있으면 감수한다."
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "enemy": "enemy-greedy",
+    "player": "player-cautious",
+    "battles": 45,
+    "enemy_win": 0.889,
+    "player_win": 0.089,
+    "timeout": 0.022,
+    "rounds": 7.22,
+    "first_enemy_attack_round": 1.47,
+    "never_attacked": 0,
+    "enemy_hold_ratio": 0.013,
+    "mean_gap": 5.15,
+    "player_units_lost": 2.67,
+    "enemy_units_lost": 4.84,
+    "seconds": 1.46
+  },
+  {
+    "enemy": "enemy-greedy",
+    "player": "player-rush",
+    "battles": 45,
+    "enemy_win": 0.822,
+    "player_win": 0.178,
+    "timeout": 0.0,
+    "rounds": 6.42,
+    "first_enemy_attack_round": 1,
+    "never_attacked": 0,
+    "enemy_hold_ratio": 0.01,
+    "mean_gap": 4.72,
+    "player_units_lost": 3.36,
+    "enemy_units_lost": 4.8,
+    "seconds": 1.25
+  }
+]

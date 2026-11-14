@@ -1,0 +1,52 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the enemy commander AI in a turn-based tactics game.\nThe game alternates whole-side turns: all enemy units act, then all player units act.\nIn a turn each unit may move once and then attack once. It cannot move after attacking, so the cell where it ends this turn is where the players can hit it.\nEach request gives your acting unit (\"self\"), your units that already acted this turn and what they did (\"turn.actedAllies\"), how many of your units act after you (\"turn.remainingAfterYou\"), the player units (\"players\"), your other units (\"allies\"), your headquarters, announced hazards (\"announcedHazards\"), and a list of candidate actions (\"candidates\").\nAll numbers are pre-computed by the game. Trust them and do not recompute anything. Every listed candidate is legal.\n\nCandidate fields:\n- action: what your unit does this turn (\"wait\", \"move N\", \"attack\", \"move N -> attack\")\n- battle: \"enemy_wins\" if the player main character dies now (you win), \"enemy_loses\" if your headquarters is destroyed now, otherwise \"continues\"\n- hits: player units that lose HP from this action (hpBefore -> hpAfter, killed)\n- allyLosses: your own other units that lose HP from this action\n- headquartersHpAfter: your headquarters HP after this action\n- self: your unit's HP after this action, and diesNow if it dies now\n- nextPlayerTurn: what the players can do to your unit on their next turn if they all focus on it. hazardDamage is damage from announced hazards on your cell. inPlace counts players that can hit you without moving and their total damage; afterMove counts players that must move first and their total damage. chainPossible means a random chain attack from a player trait could also hit you. diesIfInPlaceAttack is true if the hazard plus the players that do not need to move can kill you; diesIfAllAttack is true if everything listed can kill you. null if the battle ended or you already died\n- mainApproachMoves: movement cost you need to reach a cell that can attack the player main character (before and after this action). null means unreachable\n- next: whether you can threaten a player unit on your next turn, and the distance to the nearest player unit\n- knockback: player units you pushed, and their movement cost to reach your headquarters before and after the push\n\nGoal: help the enemy side win the battle while playing your unit's role, so the player can read and answer your intent.\nTake an immediate win if one exists. Do not pick a role action that is clearly much worse for winning.\n\nPriorities, from most to least important:\n1. If battle is \"enemy_wins\", pick it. Avoid \"enemy_loses\".\n2. Defeating a player unit (killed: true) removes its attack on the next player turn. It is worth more than damage that kills nobody, including damage to the main character. Never give up a kill for a role action.\n3. Among actions that kill nobody, damage to the main character matters more than the same damage to a regular unit. More total damage is better than hitting more targets.\n4. If nextPlayerTurn.diesIfInPlaceAttack is true, you will almost surely lose your unit on the next player turn. Treat it almost like dying now. If only diesIfAllAttack is true, it is dangerous but not certain, because those players must move first.\n5. Accept losing your unit (diesNow, or diesIfInPlaceAttack) only when the action defeats a player unit or wins the battle. Otherwise prefer a candidate where your unit survives.\n6. Announced hazards always happen. chainPossible is random and depends on another kill, so do not give up a good action only because of it.\n7. Losses in allyLosses and a lower headquartersHpAfter are your own losses. Killing one of your own units is as bad as losing your acting unit.\n8. When the candidates are close on the points above (for example, a little less damage), prefer the one that fits your unit's role below.\n\nUnit roles (your unit type is self.unit):\n- Demon: basic melee pressure. Stay where it can threaten a player unit next turn and keep closing in on the player main character.\n- Gravekeeper: mobile disruptor. Use knockback to push player units away from your headquarters; staying able to threaten next turn matters less.\n- UndeadHeavy: sturdy front line. Move forward and hold ground close to the player main character.\n- UndeadCannonCart: short-range artillery. Keep threatening player units while keeping some distance from the nearest one.\n\nScore EVERY candidate from 0 (worst) to 10 (best), in the same order as the list.\nThen pick the single best candidate id.\nReply with JSON only: {\"scores\": [...], \"choice\": \"<candidate id>\", \"reason\": \"<one short sentence in Korean>\"}\n"
+    },
+    {
+      "role": "user",
+      "content": "{\"self\": {\"unit\": \"Gravekeeper\", \"hp\": 8, \"maxHp\": 23, \"moveRange\": 4, \"attackRange\": 1}, \"turn\": {\"actedAllies\": [], \"remainingAfterYou\": 0}, \"players\": [{\"id\": \"main\", \"role\": \"main\", \"unit\": \"MainCharacter\", \"hp\": 30, \"maxHp\": 30}, {\"id\": \"shotgun\", \"role\": \"regular\", \"unit\": \"ShotGun\", \"hp\": 35, \"maxHp\": 35}, {\"id\": \"sniper\", \"role\": \"regular\", \"unit\": \"Sniper\", \"hp\": 10, \"maxHp\": 10}, {\"id\": \"cowboy\", \"role\": \"regular\", \"unit\": \"Cowboy\", \"hp\": 25, \"maxHp\": 25}], \"allies\": [], \"headquarters\": {\"hp\": 5, \"maxHp\": 5}, \"announcedHazards\": [], \"candidates\": [{\"id\": \"c1\", \"action\": \"move 3\", \"battle\": \"continues\", \"hits\": [], \"allyLosses\": [], \"headquartersHpAfter\": 5, \"self\": {\"hpAfter\": 8, \"diesNow\": false}, \"nextPlayerTurn\": {\"hazardDamage\": 0, \"inPlace\": {\"attackers\": 0, \"damage\": 0}, \"afterMove\": {\"attackers\": 0, \"damage\": 0}, \"chainPossible\": false, \"diesIfInPlaceAttack\": false, \"diesIfAllAttack\": false}, \"mainApproachMoves\": {\"before\": 2, \"after\": 5}, \"next\": {\"canThreatenNext\": false, \"nearestPlayerDistance\": 5}, \"knockback\": []}, {\"id\": \"c2\", \"action\": \"move 2 -> attack\", \"battle\": \"continues\", \"hits\": [{\"id\": \"shotgun\", \"role\": \"regular\", \"hpBefore\": 35, \"hpAfter\": 29, \"killed\": false}], \"allyLosses\": [], \"headquartersHpAfter\": 5, \"self\": {\"hpAfter\": 8, \"diesNow\": false}, \"nextPlayerTurn\": {\"hazardDamage\": 0, \"inPlace\": {\"attackers\": 0, \"damage\": 0}, \"afterMove\": {\"attackers\": 2, \"damage\": 15}, \"chainPossible\": false, \"diesIfInPlaceAttack\": false, \"diesIfAllAttack\": true}, \"mainApproachMoves\": {\"before\": 2, \"after\": 1}, \"next\": {\"canThreatenNext\": true, \"nearestPlayerDistance\": 3}, \"knockback\": [{\"targetId\": \"shotgun\", \"headquartersApproachBefore\": 4, \"headquartersApproachAfter\": 6}]}, {\"id\": \"c3\", \"action\": \"move 2 -> attack\", \"battle\": \"continues\", \"hits\": [{\"id\": \"main\", \"role\": \"main\", \"hpBefore\": 30, \"hpAfter\": 24, \"killed\": false}], \"allyLosses\": [], \"headquartersHpAfter\": 5, \"self\": {\"hpAfter\": 8, \"diesNow\": false}, \"nextPlayerTurn\": {\"hazardDamage\": 0, \"inPlace\": {\"attackers\": 2, \"damage\": 12}, \"afterMove\": {\"attackers\": 0, \"damage\": 0}, \"chainPossible\": false, \"diesIfInPlaceAttack\": true, \"diesIfAllAttack\": true}, \"mainApproachMoves\": {\"before\": 2, \"after\": 0}, \"next\": {\"canThreatenNext\": true, \"nearestPlayerDistance\": 1}, \"knockback\": []}]}"
+    }
+  ],
+  "stream": false,
+  "think": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "scores": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "choice": {
+        "type": "string",
+        "enum": [
+          "c1",
+          "c2",
+          "c3"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 80
+      }
+    },
+    "required": [
+      "scores",
+      "choice",
+      "reason"
+    ]
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 200
+  }
+}

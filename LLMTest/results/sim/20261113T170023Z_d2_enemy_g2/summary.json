@@ -1,0 +1,42 @@
+[
+  {
+    "enemy": "enemy-plan4:d2",
+    "player": "player-plan8:r0",
+    "battles": 12,
+    "enemy_win": 0.167,
+    "player_win": 0.833,
+    "timeout": 0.0,
+    "rounds": 5.92,
+    "first_enemy_attack_round": 1.5,
+    "never_attacked": 0,
+    "enemy_hold_ratio": 0.098,
+    "mean_gap": 4.55,
+    "player_units_lost": 1.33,
+    "enemy_units_lost": 5.25,
+    "seconds": 5.82,
+    "enemy_flip": 0.197,
+    "player_flip": null,
+    "enemy_beam_results": 2.19,
+    "player_beam_results": 3.61
+  },
+  {
+    "enemy": "enemy-plan4:d2",
+    "player": "player-rush",
+    "battles": 12,
+    "enemy_win": 0.667,
+    "player_win": 0.333,
+    "timeout": 0.0,
+    "rounds": 5.33,
+    "first_enemy_attack_round": 1,
+    "never_attacked": 0,
+    "enemy_hold_ratio": 0.053,
+    "mean_gap": 3.92,
+    "player_units_lost": 2.75,
+    "enemy_units_lost": 4.25,
+    "seconds": 3.29,
+    "enemy_flip": 0.1,
+    "player_flip": null,
+    "enemy_beam_results": 2.3,
+    "player_beam_results": null
+  }
+]

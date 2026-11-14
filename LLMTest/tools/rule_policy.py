@@ -108,6 +108,9 @@ def _bounded_hp(value, maximum, path):
 def validate_weights(settings):
     """공식 설정을 검사한다. 기대 선택이나 fixture에 의존하지 않는다."""
     settings = _object(settings, "settings")
+    if settings.get("riskMode") == "faction_turn":
+        from rule_policy_v3 import validate_weights_v3   # 진영 턴 설정(rule-v3)
+        return validate_weights_v3(settings)
     _text(_required(settings, "version", "settings"), "settings.version")
     if settings.get("mainDamageMode") not in ("reference_hp", "max_hp"):
         raise PolicyInputError("settings.mainDamageMode: reference_hp/max_hp required")
@@ -339,6 +342,9 @@ def _role_score(unit, facts, hit_count, after_potential, terminal, alive, settin
 
 def evaluate_case(case, settings):
     """기대 선택을 참조하지 않고 동일 후보의 두 정책 선택과 기여도를 반환한다."""
+    if isinstance(case, dict) and case.get("schemaVersion") == 2:
+        from rule_policy_v3 import evaluate_case_v3   # 진영 턴 상황 형식 v2
+        return evaluate_case_v3(case, settings)
     validate_weights(settings)
     case = _object(case, "case")
     if type(case.get("schemaVersion")) is not int or case["schemaVersion"] != 1:

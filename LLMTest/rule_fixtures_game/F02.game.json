@@ -1,0 +1,18 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F02",
+  "base": "rule_fixtures_v2/F02.json",
+  "assumptions": [
+    "v2에 대기 후보가 없어 대기(hold) 사실을 여기 적는다. 출발 칸의 제자리 위협은 없다고 가정한다(v2에 없는 값).",
+    "출발 칸 교전 비용 2: a·b 모두 2칸 이동으로 메인·ShotGun 공격 위치에 닿는다.",
+    "a 종점은 메인 공격 위치, b 종점은 ShotGun 공격 위치라 교전 비용 0이다. c는 approachCostAfter 5를 그대로 쓴다(이동력 4 초과 → 다음 턴 공격 없음).",
+    "다음 턴 공격: 같은 비용이면 값이 큰 대상. 출발 칸은 메인(6/30 = 200‰) > ShotGun(6/35 = 171‰)."
+  ],
+  "engagementCostBefore": 2,
+  "hold": {"inPlaceThreats": [], "hazardDamage": 0, "nextTurn": {"targetId": "main", "damage": 6}},
+  "candidates": {
+    "a_hit_main": {"engagementCostAfter": 0, "nextTurn": {"targetId": "main", "damage": 6}},
+    "b_hit_shotgun": {"engagementCostAfter": 0, "nextTurn": {"targetId": "shotgun", "damage": 6}},
+    "c_retreat": {"engagementCostAfter": 5, "nextTurn": null}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:35:31.0267142Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"주인공을 공격하고 위험한 낙석 피해를 피하며 다음 턴에도 위협할 수 있는 최적의 위치로 이동합니다.\", \"scores\": [5, 9, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1298814800,
+  "load_duration": 3700600,
+  "prompt_eval_count": 1420,
+  "prompt_eval_cached_count": 617,
+  "prompt_eval_duration": 375720000,
+  "eval_count": 52,
+  "eval_duration": 744548000
+}

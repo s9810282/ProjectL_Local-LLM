@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "situationId": "F05",
+  "title": "UndeadHeavy가 낙석 예고 칸을 피하는가",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-11-06 DB 값이다(형식 v2 문서 §1.1). 피해는 방어 5(5% 감소, 소수점 버림)·상성 1.0 가정이다.",
+    "좌표·경로·점유를 제공하거나 검증하지 않는다. legal·moveSteps·도달 여부(reach)는 작성자가 Core 규칙으로 확인했다고 가정한 값이다.",
+    "반격은 다음 아군 진영 턴 한 번이며, 플레이어마다 이동 1회 뒤 공격 1회다. 위협자 전원이 행위자에게 몰리는 최악의 경우를 적는다.",
+    "낙석 피해 15는 가정값이다(Core 값 확인 전, 행위자 HP 이상이라는 것만 중요하다)."
+  ],
+  "turn": {
+    "dayNight": "day",
+    "enemyOrder": [
+      "e_heavy"
+    ],
+    "actingId": "e_heavy",
+    "actedAllies": []
+  },
+  "self": {
+    "id": "e_heavy",
+    "unit": "UndeadHeavy",
+    "hp": 12,
+    "maxHp": 30,
+    "moveRange": 3,
+    "attackRange": 1
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "unit": "MainCharacter",
+      "hp": 30,
+      "maxHp": 30,
+      "moveRange": 3,
+      "attackRange": 1,
+      "traits": []
+    },
+    {
+      "id": "akimbo",
+      "role": "regular",
+      "unit": "Akimbo",
+      "hp": 25,
+      "maxHp": 25,
+      "moveRange": 3,
+      "attackRange": 2,
+      "traits": []
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 5,
+    "maxHp": 5
+  },
+  "announcedHazards": [
+    {
+      "id": "rockfall_1",
+      "description": "다음 아군 턴 시작에 메인 앞 칸에 낙석(예고됨)",
+      "damage": 15
+    }
+  ],
+  "approachCostBefore": 1,
+  "candidates": [
+    {
+      "id": "a_hazard_main",
+      "label": "낙석 예고 칸으로 이동해 메인 3 피해",
+      "legal": true,
+      "kind": "move_attack",
+      "moveSteps": 1,
+      "selfHpAfter": 12,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 27,
+        "akimbo": 25
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "akimbo",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 15,
+        "hazardIds": [
+          "rockfall_1"
+        ]
+      }
+    },
+    {
+      "id": "b_safe_akimbo",
+      "label": "옆 칸으로 이동해 Akimbo 3 피해",
+      "legal": true,
+      "kind": "move_attack",
+      "moveSteps": 1,
+      "selfHpAfter": 12,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "akimbo": 22
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [
+        "akimbo"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "akimbo",
+            "reach": "in_place",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "c_wait",
+      "label": "대기",
+      "legal": true,
+      "kind": "wait",
+      "moveSteps": 0,
+      "selfHpAfter": 12,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "akimbo": 25
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 1,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 2,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "after_move",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "akimbo",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_safe_akimbo"
+    ],
+    "role": [
+      "b_safe_akimbo"
+    ],
+    "reason": "예고된 기믹은 반드시 일어나는 피해다. 메인 3 피해를 위해 확실히 죽는 칸에 서지 않는다."
+  }
+}

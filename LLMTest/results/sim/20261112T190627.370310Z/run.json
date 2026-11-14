@@ -1,0 +1,12 @@
+{
+  "args": {
+    "stages": "['Combat_LD_P20', 'Combat_LD_P21', 'Combat_LD_P22', 'Combat_LD_P23', 'Combat_LD_P24', 'Combat_LD_P25', 'Combat_LD_P26', 'Combat_LD_P27', 'Combat_LD_P28', 'Combat_LD_P29', 'Combat_LD_P30', 'Combat_LD_P31', 'Combat_LD_P32', 'Combat_LD_P33', 'Combat_LD_P34']",
+    "seeds": "3",
+    "player": "rush,cautious",
+    "enemy": "greedy",
+    "max_rounds": "20",
+    "log": "False",
+    "out": "None"
+  },
+  "battles": 90
+}

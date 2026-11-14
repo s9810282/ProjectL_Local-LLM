@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 2,
+  "situationId": "F01",
+  "title": "Demon의 빈사 Sniper 처치와 메인 피해",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-11-06 DB 값이다(형식 v2 문서 §1.1). 피해는 방어 5(5% 감소, 소수점 버림)·상성 1.0 가정이다.",
+    "좌표·경로·점유를 제공하거나 검증하지 않는다. legal·moveSteps·도달 여부(reach)는 작성자가 Core 규칙으로 확인했다고 가정한 값이다.",
+    "반격은 다음 아군 진영 턴 한 번이며, 플레이어마다 이동 1회 뒤 공격 1회다. 위협자 전원이 행위자에게 몰리는 최악의 경우를 적는다.",
+    "Demon은 메인·Sniper와 모두 붙어 있다. 세 후보 모두 같은 자리다."
+  ],
+  "turn": {
+    "dayNight": "day",
+    "enemyOrder": [
+      "e_demon"
+    ],
+    "actingId": "e_demon",
+    "actedAllies": []
+  },
+  "self": {
+    "id": "e_demon",
+    "unit": "Demon",
+    "hp": 15,
+    "maxHp": 15,
+    "moveRange": 3,
+    "attackRange": 1
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "unit": "MainCharacter",
+      "hp": 30,
+      "maxHp": 30,
+      "moveRange": 3,
+      "attackRange": 1,
+      "traits": []
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "unit": "Sniper",
+      "hp": 4,
+      "maxHp": 10,
+      "moveRange": 3,
+      "attackRange": 4,
+      "traits": []
+    }
+  ],
+  "allies": [],
+  "headquarters": {
+    "hp": 5,
+    "maxHp": 5
+  },
+  "announcedHazards": [],
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_kill_sniper",
+      "label": "제자리 Sniper 처치",
+      "legal": true,
+      "kind": "attack",
+      "moveSteps": 0,
+      "selfHpAfter": 15,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "sniper": 0
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "sniper"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "sniper",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "b_hit_main",
+      "label": "제자리 메인 5 피해",
+      "legal": true,
+      "kind": "attack",
+      "moveSteps": 0,
+      "selfHpAfter": 15,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 25,
+        "sniper": 4
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          },
+          {
+            "opponentId": "sniper",
+            "reach": "in_place",
+            "damage": 4
+          }
+        ],
+        "nonThreats": [],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "c_wait",
+      "label": "대기",
+      "legal": true,
+      "kind": "wait",
+      "moveSteps": 0,
+      "selfHpAfter": 15,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "sniper": 4
+      },
+      "allyHpAfter": {},
+      "approachCostAfter": 0,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          },
+          {
+            "opponentId": "sniper",
+            "reach": "in_place",
+            "damage": 4
+          }
+        ],
+        "nonThreats": [],
+        "hazardDamage": 0
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_kill_sniper"
+    ],
+    "role": [
+      "a_kill_sniper"
+    ],
+    "reason": "처치는 다음 아군 턴의 공격 하나를 없앤다. 같은 자리에서 메인 5 피해보다 낫다."
+  }
+}

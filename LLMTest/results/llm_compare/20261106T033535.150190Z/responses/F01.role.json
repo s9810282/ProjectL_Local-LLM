@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:35:39.0192671Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c3\", \"reason\": \"사격으로 스니퍼를 처치하여 위협을 제거하고, 다음 턴에도 메인 캐릭터를 위협할 수 있는 위치를 유지합니다.\", \"scores\": [5, 6, 10]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1326513600,
+  "load_duration": 4107400,
+  "prompt_eval_count": 1504,
+  "prompt_eval_cached_count": 744,
+  "prompt_eval_duration": 361621000,
+  "eval_count": 56,
+  "eval_duration": 799780000
+}

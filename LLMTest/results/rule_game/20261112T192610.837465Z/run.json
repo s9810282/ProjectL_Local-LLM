@@ -1,0 +1,115 @@
+{
+  "startedUtc": "2026-11-12T19:26:10.837465+00:00",
+  "weights": {
+    "version": "rule-game-1.0-2026-11-13",
+    "profile": "codeDefault",
+    "deathTradePermille": 500,
+    "threatPercent": 50,
+    "nextTurnPercent": 50
+  },
+  "sources": {
+    "F01.game.json": "dde581128c56da057ff725c2805ac1e280dd02f71f76def86f00e0294a527a39",
+    "F01.json": "124058c0592c008be4ef3032ca2ac2a63e2e343f9484980c7a610c4354d2ee94",
+    "F02.game.json": "0dc6b9470bafccf910bef343d4b2e87cb2f8bc4ce7eb785f4f6d5fb7e724a28d",
+    "F02.json": "e77adf0cae4dc47c66d9464d24c50a5ae6c2866a30ceada292958d8a75a8ee5d",
+    "F03.game.json": "6d2fb224fbfd6fb623a0b06f4c5ffebc4cf6a5b25870cf5e398bf762246cae38",
+    "F03.json": "847a86faa3f3ab8736ba57e022998a238ea1e0137a9c4211fe63ae300861a63c",
+    "F04.game.json": "085d618d6fa5e4eff0bb509734853ac9116b2526cbb8bfadb92d8ca6174ccbef",
+    "F04.json": "7d3801d0668da2bfe3119e3f881f0ada1968f77f7f78baa57fef36a29c6aba02",
+    "F04b.game.json": "57e41623d72ac902beebb9a9dc2b92eea48b52eed233aba5ebf6201d9e7c7942",
+    "F04b.json": "03fee762f6d87478c378c75c3963b291acd5caba303b52ae9645020ac2941950",
+    "F05.game.json": "5bab223a4ffa3787864dd3602f1ad2da1c4a57249ab89002cbef93abae4b54e9",
+    "F05.json": "51536c89b3f7756c7cb6006f44945fe063c9fede4aca70cf2abdc9ae82245b93",
+    "F06.game.json": "c3e3256b90da01c85b0536708b833e7f8e19243ce874ec14b854820310f9d9a9",
+    "F06.json": "4fbe681716729fe02b3a9e5c569bda67bf9516ef785a45e4804703e861e4830b"
+  },
+  "evaluatorSha256": "5bd7d868f5fbbef58cbb6d9843bbe960e2898caba52d975b9041ad23d3fdf74f",
+  "summary": [
+    {
+      "situationId": "F01",
+      "game": "a_kill_sniper",
+      "holdReason": "selected",
+      "ruleV3Victory": "a_kill_sniper",
+      "expectedVictory": [
+        "a_kill_sniper"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": true,
+      "approximations": []
+    },
+    {
+      "situationId": "F02",
+      "game": "b_hit_shotgun",
+      "holdReason": "selected",
+      "ruleV3Victory": "c_retreat",
+      "expectedVictory": [
+        "b_hit_shotgun"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": false,
+      "approximations": [
+        "이동 후보가 3개 이상: 게임은 상위 2개만 정밀 평가한다(여기서는 모두 정밀로 봄)"
+      ]
+    },
+    {
+      "situationId": "F03",
+      "game": "b_move_main",
+      "holdReason": "selected",
+      "ruleV3Victory": "b_move_main",
+      "expectedVictory": [
+        "b_move_main"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": true,
+      "approximations": []
+    },
+    {
+      "situationId": "F04",
+      "game": "a_hit_main",
+      "holdReason": "selected",
+      "ruleV3Victory": "a_hit_main",
+      "expectedVictory": [
+        "a_hit_main"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": true,
+      "approximations": []
+    },
+    {
+      "situationId": "F04b",
+      "game": "a_hit_main",
+      "holdReason": "selected",
+      "ruleV3Victory": "b_retreat",
+      "expectedVictory": [
+        "b_retreat"
+      ],
+      "gameMatchesExpected": false,
+      "gameMatchesRuleV3": false,
+      "approximations": []
+    },
+    {
+      "situationId": "F05",
+      "game": "b_safe_akimbo",
+      "holdReason": "selected",
+      "ruleV3Victory": "b_safe_akimbo",
+      "expectedVictory": [
+        "b_safe_akimbo"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": true,
+      "approximations": []
+    },
+    {
+      "situationId": "F06",
+      "game": "a_hit_main",
+      "holdReason": "selected",
+      "ruleV3Victory": "a_hit_main",
+      "expectedVictory": [
+        "a_hit_main"
+      ],
+      "gameMatchesExpected": true,
+      "gameMatchesRuleV3": true,
+      "approximations": []
+    }
+  ]
+}

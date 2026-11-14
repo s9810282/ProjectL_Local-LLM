@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 2,
+  "situationId": "F04b",
+  "title": "앞선 적 유닛의 결과가 이번 Gravekeeper 선택을 바꾸는가 (Sniper 생존 대조)",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-11-06 DB 값이다(형식 v2 문서 §1.1). 피해는 방어 5(5% 감소, 소수점 버림)·상성 1.0 가정이다.",
+    "좌표·경로·점유를 제공하거나 검증하지 않는다. legal·moveSteps·도달 여부(reach)는 작성자가 Core 규칙으로 확인했다고 가정한 값이다.",
+    "반격은 다음 아군 진영 턴 한 번이며, 플레이어마다 이동 1회 뒤 공격 1회다. 위협자 전원이 행위자에게 몰리는 최악의 경우를 적는다.",
+    "적 행동 순서는 엔티티 ID 순이며 Demon이 먼저 행동했다. 그 결과는 현재 상태에 반영돼 있다."
+  ],
+  "turn": {
+    "dayNight": "day",
+    "enemyOrder": [
+      "e_demon",
+      "e_grave"
+    ],
+    "actingId": "e_grave",
+    "actedAllies": [
+      {
+        "id": "e_demon",
+        "summary": "메인에게 5 피해, 제자리"
+      }
+    ]
+  },
+  "self": {
+    "id": "e_grave",
+    "unit": "Gravekeeper",
+    "hp": 10,
+    "maxHp": 23,
+    "moveRange": 4,
+    "attackRange": 1
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "unit": "MainCharacter",
+      "hp": 25,
+      "maxHp": 30,
+      "moveRange": 3,
+      "attackRange": 1,
+      "traits": []
+    },
+    {
+      "id": "sniper",
+      "role": "regular",
+      "unit": "Sniper",
+      "hp": 10,
+      "maxHp": 10,
+      "moveRange": 3,
+      "attackRange": 4,
+      "traits": []
+    }
+  ],
+  "allies": [
+    {
+      "id": "e_demon",
+      "unit": "Demon",
+      "hp": 15,
+      "maxHp": 15
+    }
+  ],
+  "headquarters": {
+    "hp": 5,
+    "maxHp": 5
+  },
+  "announcedHazards": [],
+  "approachCostBefore": 0,
+  "candidates": [
+    {
+      "id": "a_hit_main",
+      "label": "제자리 메인 6 피해",
+      "legal": true,
+      "kind": "attack",
+      "moveSteps": 0,
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 19,
+        "sniper": 10
+      },
+      "allyHpAfter": {
+        "e_demon": 15
+      },
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          },
+          {
+            "opponentId": "sniper",
+            "reach": "in_place",
+            "damage": 4
+          }
+        ],
+        "nonThreats": [],
+        "hazardDamage": 0
+      }
+    },
+    {
+      "id": "b_retreat",
+      "label": "3칸 후퇴, 위협 없음",
+      "legal": true,
+      "kind": "move",
+      "moveSteps": 3,
+      "selfHpAfter": 10,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 25,
+        "sniper": 10
+      },
+      "allyHpAfter": {
+        "e_demon": 15
+      },
+      "approachCostAfter": 4,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "sniper",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "b_retreat"
+    ],
+    "role": [
+      "b_retreat"
+    ],
+    "reason": "Sniper가 살아 있으면 메인 6 + Sniper 4 = 10으로 확실히 죽는다. 처치 없는 메인 피해를 위해 죽지 않는다."
+  }
+}

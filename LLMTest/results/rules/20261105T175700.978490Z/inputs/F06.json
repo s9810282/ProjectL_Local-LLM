@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 2,
+  "situationId": "F06",
+  "title": "KillChain 무작위 연쇄 위험이 있을 때 Gravekeeper가 공격하는가",
+  "source": "synthetic",
+  "assumptions": [
+    "synthetic 기획 판단 사례다. 제공된 최종 결과의 산술만 비교하며 실제 엔진·Core 검증 결과가 아니다.",
+    "유닛 능력치는 2026-11-06 DB 값이다(형식 v2 문서 §1.1). 피해는 방어 5(5% 감소, 소수점 버림)·상성 1.0 가정이다.",
+    "좌표·경로·점유를 제공하거나 검증하지 않는다. legal·moveSteps·도달 여부(reach)는 작성자가 Core 규칙으로 확인했다고 가정한 값이다.",
+    "반격은 다음 아군 진영 턴 한 번이며, 플레이어마다 이동 1회 뒤 공격 1회다. 위협자 전원이 행위자에게 몰리는 최악의 경우를 적는다.",
+    "KillChain 연쇄 피해 9는 Cowboy 공격력 10 기준이다. 연쇄는 맵 전체 무작위라 두 후보 모두에 같다."
+  ],
+  "turn": {
+    "dayNight": "day",
+    "enemyOrder": [
+      "e_demon",
+      "e_grave",
+      "e_heavy"
+    ],
+    "actingId": "e_grave",
+    "actedAllies": [
+      {
+        "id": "e_demon",
+        "summary": "대기"
+      }
+    ]
+  },
+  "self": {
+    "id": "e_grave",
+    "unit": "Gravekeeper",
+    "hp": 9,
+    "maxHp": 23,
+    "moveRange": 4,
+    "attackRange": 1
+  },
+  "players": [
+    {
+      "id": "main",
+      "role": "main",
+      "unit": "MainCharacter",
+      "hp": 30,
+      "maxHp": 30,
+      "moveRange": 3,
+      "attackRange": 1,
+      "traits": []
+    },
+    {
+      "id": "cowboy",
+      "role": "regular",
+      "unit": "Cowboy",
+      "hp": 25,
+      "maxHp": 25,
+      "moveRange": 4,
+      "attackRange": 1,
+      "traits": [
+        "KillChainAttack"
+      ]
+    }
+  ],
+  "allies": [
+    {
+      "id": "e_demon",
+      "unit": "Demon",
+      "hp": 3,
+      "maxHp": 15
+    },
+    {
+      "id": "e_heavy",
+      "unit": "UndeadHeavy",
+      "hp": 30,
+      "maxHp": 30
+    }
+  ],
+  "headquarters": {
+    "hp": 5,
+    "maxHp": 5
+  },
+  "announcedHazards": [],
+  "approachCostBefore": 2,
+  "candidates": [
+    {
+      "id": "a_hit_main",
+      "label": "제자리 메인 6 피해",
+      "legal": true,
+      "kind": "attack",
+      "moveSteps": 0,
+      "selfHpAfter": 9,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 24,
+        "cowboy": 25
+      },
+      "allyHpAfter": {
+        "e_demon": 3,
+        "e_heavy": 30
+      },
+      "approachCostAfter": 0,
+      "hitIds": [
+        "main"
+      ],
+      "roleFacts": {
+        "canThreatenNext": true,
+        "nearestPlayerDistance": 1,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [
+          {
+            "opponentId": "main",
+            "reach": "in_place",
+            "damage": 6
+          }
+        ],
+        "nonThreats": [
+          {
+            "opponentId": "cowboy",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0,
+        "chains": [
+          {
+            "opponentId": "cowboy",
+            "damage": 9,
+            "note": "Cowboy가 빈사 Demon(HP 3)을 처치하면 남은 적 둘(Gravekeeper·UndeadHeavy) 중 하나를 무작위로 추가 공격한다(확률 1/2). 맵 전체 무작위라 자리와 무관하다."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b_retreat",
+      "label": "3칸 후퇴",
+      "legal": true,
+      "kind": "move",
+      "moveSteps": 3,
+      "selfHpAfter": 9,
+      "headquartersHpAfter": 5,
+      "playerHpAfter": {
+        "main": 30,
+        "cowboy": 25
+      },
+      "allyHpAfter": {
+        "e_demon": 3,
+        "e_heavy": 30
+      },
+      "approachCostAfter": 4,
+      "hitIds": [],
+      "roleFacts": {
+        "canThreatenNext": false,
+        "nearestPlayerDistance": 4,
+        "knockbackDelays": []
+      },
+      "exposure": {
+        "complete": true,
+        "assumptions": "다음 아군 진영 턴 한 번. 위협자 전원이 행위자에게 몰리는 최악의 경우.",
+        "threats": [],
+        "nonThreats": [
+          {
+            "opponentId": "main",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          },
+          {
+            "opponentId": "cowboy",
+            "reason": "행동 뒤 자리에 이동 1회 뒤 공격 1회로 닿지 않는다고 가정한다."
+          }
+        ],
+        "hazardDamage": 0,
+        "chains": [
+          {
+            "opponentId": "cowboy",
+            "damage": 9,
+            "note": "Cowboy가 빈사 Demon(HP 3)을 처치하면 남은 적 둘(Gravekeeper·UndeadHeavy) 중 하나를 무작위로 추가 공격한다(확률 1/2). 맵 전체 무작위라 자리와 무관하다."
+          }
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "victory": [
+      "a_hit_main"
+    ],
+    "role": [
+      "a_hit_main"
+    ],
+    "reason": "연쇄는 확실하지 않고 자리를 옮겨도 피할 수 없다. 피해 이득을 포기하면서까지 피하지 않는다."
+  }
+}

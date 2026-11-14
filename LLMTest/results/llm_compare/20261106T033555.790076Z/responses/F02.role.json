@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:36:03.1605129Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 역할인 플레이어 유닛을 밀어내어 본체에게 직접 공격할 수 있는 위치로 이동시키는 것이 가장 유리합니다.\", \"scores\": [5, 9, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1455866100,
+  "load_duration": 10309200,
+  "prompt_eval_count": 1926,
+  "prompt_eval_cached_count": 1058,
+  "prompt_eval_duration": 425949000,
+  "eval_count": 55,
+  "eval_duration": 807222000
+}

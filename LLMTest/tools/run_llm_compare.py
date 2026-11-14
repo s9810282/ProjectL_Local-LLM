@@ -29,7 +29,8 @@ from run_ollama_test import DEFAULT_MODEL, OPTIONS, TIMEOUT_S, post, schema, sen
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICIES = ("victory", "role")
-PROMPTS = {"basic": "compare.{policy}.txt", "guide": "compare.{policy}.guide.txt"}
+PROMPTS = {"basic": "compare.{policy}{v}.txt", "guide": "compare.{policy}{v}.guide.txt"}
+WEIGHTS = {1: "rule_weights.json", 2: "rule_weights_v3.json"}   # 상황 형식 버전별 기본 설정
 COLUMNS = ["situation", "policy", "status", "detail", "llm_choice", "llm_alias", "rule_choice", "expected",
            "match_rule", "match_expected", "choice_is_max", "candidates", "scores", "reason", "wall_ms",
            "total_s", "load_s", "prompt_s", "eval_s", "prompt_tokens", "out_tokens", "tokens_per_s",
@@ -102,7 +103,7 @@ def main():
     parser.add_argument("case", nargs="?", help="상황 ID(예: R19). 없으면 모든 R 상황")
     parser.add_argument("--policy", choices=POLICIES + ("both",), default="both")
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--weights", type=Path, default=ROOT / "config" / "rule_weights.json")
+    parser.add_argument("--weights", type=Path, default=None, help="없으면 상황 형식 버전으로 고름(v1 rule_weights, v2 rule_weights_v3)")
     parser.add_argument("--fixtures", type=Path, default=ROOT / "rule_fixtures", help="상황 폴더(보류 검증은 validation_fixtures)")
     parser.add_argument("--output", type=Path, default=ROOT / "results" / "llm_compare")
     parser.add_argument("--no-warmup", action="store_true", help="모델 로딩용 첫 요청을 생략")
@@ -114,15 +115,21 @@ def main():
     order = {"order": args.order, **({"seed": args.seed} if args.order == "shuffle" else {})}
 
     try:
-        settings = load_json(args.weights)
-        validate_weights(settings)
         paths = sorted(args.fixtures.glob("*.json"))
         if args.case:
             paths = [p for p in paths if p.stem.casefold() == args.case.casefold()]
         if not paths:
             raise PolicyInputError(f"상황을 찾지 못했습니다: {args.case or args.fixtures}")
         sources = [(p, p.read_bytes(), load_json(p)) for p in paths]
-        prompts = {policy: (ROOT / "prompts" / PROMPTS[args.prompt].format(policy=policy)).read_bytes() for policy in policies}
+        versions = {case.get("schemaVersion") for _, _, case in sources}
+        if len(versions) != 1 or not versions <= set(WEIGHTS):
+            raise PolicyInputError(f"한 실행에는 같은 상황 형식만 넣는다(받은 버전: {sorted(map(str, versions))})")
+        version = versions.pop()
+        args.weights = args.weights or ROOT / "config" / WEIGHTS[version]
+        settings = load_json(args.weights)
+        validate_weights(settings)
+        suffix = ".v2" if version == 2 else ""   # 진영 턴 지시문(v1 지시문 네 개는 해시 고정)
+        prompts = {policy: (ROOT / "prompts" / PROMPTS[args.prompt].format(policy=policy, v=suffix)).read_bytes() for policy in policies}
         server_version = post("/api/version").get("version", "")
     except (OSError, ValueError, urllib.error.URLError) as e:
         print(f"실행 준비 실패: {e}", file=sys.stderr)
@@ -179,11 +186,11 @@ def main():
     write_json(run_dir / "run.json", to_jsonable({
         "startedUtc": started.isoformat(), "model": args.model, "options": OPTIONS, "ollamaVersion": server_version,
         "python": platform.python_version(), "timeoutSeconds": TIMEOUT_S, "warmup": warmup,
-        "weightsVersion": settings["version"], "candidateOrder": order, "promptVariant": args.prompt,
+        "weightsVersion": settings["version"], "candidateOrder": order, "promptVariant": args.prompt + suffix, "schemaVersion": version,
         "fixturesDir": args.fixtures.resolve().name,
         "promptSha256": {policy: hashlib.sha256(raw).hexdigest() for policy, raw in prompts.items()},
         "codeSha256": {name: hashlib.sha256((tools / name).read_bytes()).hexdigest()
-                       for name in ("run_llm_compare.py", "llm_projection.py", "rule_policy.py", "run_ollama_test.py")},
+                       for name in ("run_llm_compare.py", "llm_projection.py", "rule_policy.py", "rule_policy_v3.py", "run_ollama_test.py")},
         "fixtures": {p.name: hashlib.sha256(raw).hexdigest() for p, raw, _ in sources},
         "skipped": skipped, "summary": summary, "rows": rows,
     }))

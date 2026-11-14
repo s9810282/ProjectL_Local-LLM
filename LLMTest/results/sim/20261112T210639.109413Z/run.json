@@ -1,0 +1,12 @@
+{
+  "args": {
+    "stages": "['Combat_LD_P20', 'Combat_LD_P24', 'Combat_LD_P26', 'Combat_LD_P29', 'Combat_LD_P31']",
+    "seeds": "2",
+    "player": "plan1,plan4,plan8,rush",
+    "enemy": "greedy,game",
+    "max_rounds": "20",
+    "log": "False",
+    "out": "None"
+  },
+  "battles": 80
+}

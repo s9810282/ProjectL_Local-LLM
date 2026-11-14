@@ -1,0 +1,172 @@
+{
+  "situationId": "F01",
+  "title": "Demon의 빈사 Sniper 처치와 메인 피해",
+  "profile": "asset",
+  "choice": "a_kill_sniper",
+  "choiceAction": "attack",
+  "holdReason": "selected",
+  "hold": {
+    "id": "c_wait",
+    "label": "대기",
+    "kind": "wait",
+    "gameAction": "hold",
+    "eligible": true,
+    "reason": "",
+    "facts": {
+      "attackBenefit": 0,
+      "positionHp": 15,
+      "hazardLoss": 0,
+      "threatDamage": 6,
+      "threatPermille": 400,
+      "threatLethal": false,
+      "progress": 0,
+      "followup": 0,
+      "nextTurnStrike": 2400,
+      "bind": false
+    },
+    "terms": {
+      "attack": 0,
+      "hazard": 0,
+      "playerRisk": -80,
+      "progress": 0,
+      "followup": 0,
+      "nextTurn": 4800,
+      "bind": 0,
+      "total": 4720
+    },
+    "tier": 0,
+    "lethal": false,
+    "lethalRank": [
+      false,
+      0,
+      0
+    ],
+    "notes": []
+  },
+  "candidates": [
+    {
+      "id": "a_kill_sniper",
+      "label": "제자리 Sniper 처치",
+      "kind": "attack",
+      "gameAction": "attack",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 2400,
+        "positionHp": 15,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 400,
+        "threatLethal": false,
+        "progress": 0,
+        "followup": 0,
+        "nextTurnStrike": 2400,
+        "bind": false
+      },
+      "terms": {
+        "attack": 2400,
+        "hazard": 0,
+        "playerRisk": -80,
+        "progress": 0,
+        "followup": 0,
+        "nextTurn": 4800,
+        "bind": 0,
+        "total": 7120
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "b_hit_main",
+      "label": "제자리 메인 5 피해",
+      "kind": "attack",
+      "gameAction": "attack",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 166,
+        "positionHp": 15,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 400,
+        "threatLethal": false,
+        "progress": 0,
+        "followup": 0,
+        "nextTurnStrike": 2400,
+        "bind": false
+      },
+      "terms": {
+        "attack": 166,
+        "hazard": 0,
+        "playerRisk": -80,
+        "progress": 0,
+        "followup": 0,
+        "nextTurn": 4800,
+        "bind": 0,
+        "total": 4886
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "c_wait",
+      "label": "대기",
+      "kind": "wait",
+      "gameAction": "hold",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 15,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 400,
+        "threatLethal": false,
+        "progress": 0,
+        "followup": 0,
+        "nextTurnStrike": 2400,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": -80,
+        "progress": 0,
+        "followup": 0,
+        "nextTurn": 4800,
+        "bind": 0,
+        "total": 4720
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": []
+    }
+  ],
+  "approximations": [],
+  "assumptions": [
+    "세 후보가 같은 자리다(F01 가정). 출발 칸이 메인·Sniper의 공격 위치라 교전 비용은 0이다.",
+    "다음 턴 공격: 비용 0인 대상 중 값이 큰 Sniper(피해 5 ≥ HP 4 → 처치 값). 피해 5는 b_hit_main의 메인 피해를 Demon 공통 피해로 본 근사다.",
+    "a_kill_sniper가 처치한 Sniper의 제자리 위협 4는 게임 위협 필드(결정 시작 때 한 번 만듦)에 남는다."
+  ]
+}

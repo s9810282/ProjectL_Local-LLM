@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:35:32.3389015Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"아군 전선 유지와 메인 캐릭터 공격을 동시에 수행하며, 다음 턴에도 위협할 수 있는 최적의 위치로 이동합니다.\", \"scores\": [5, 8, 2]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1310191700,
+  "load_duration": 7748400,
+  "prompt_eval_count": 1547,
+  "prompt_eval_cached_count": 744,
+  "prompt_eval_duration": 384862000,
+  "eval_count": 53,
+  "eval_duration": 751687000
+}

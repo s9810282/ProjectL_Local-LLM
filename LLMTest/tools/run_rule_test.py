@@ -38,6 +38,9 @@ def profiles(settings, sweep):
     yield "revised", copy.deepcopy(settings)
     if not sweep:
         return
+    if settings.get("riskMode") == "faction_turn":
+        yield from _profiles_v3(settings)
+        return
     changes = [
         ("legacy", {"mainDamageMode": "max_hp", "riskMode": "single_attack", "main": 60}),
         ("main_only", {"mainDamageMode": "reference_hp", "riskMode": "single_attack", "main": settings["weights"]["main"]}),
@@ -54,6 +57,19 @@ def profiles(settings, sweep):
                 item["weights"]["main"] = value
             else:
                 item[key] = value
+        yield name, item
+
+
+def _profiles_v3(settings):
+    """rule-v3(진영 턴) sweep. 기준 문서 §5 Q1의 확실성 단계 할인과 역할 허용 차이를 한 항목씩 바꾼다."""
+    changes = [(f"in_place_{v}", ("riskDiscounts", "in_place", Decimal(v))) for v in ("0.5", "1")]
+    changes += [(f"after_move_{v}", ("riskDiscounts", "after_move", Decimal(v))) for v in ("0.25", "0.75")]
+    changes += [("chain_0.5", ("riskDiscounts", "chain", Decimal("0.5")))]
+    changes += [(f"role_loss_{v}", (None, "roleMaxLoss", v)) for v in (0, 12)]
+    changes += [(f"role_bonus_{v}", (None, "roleBonus", v)) for v in (10, 30)]
+    for name, (group, key, value) in changes:
+        item = copy.deepcopy(settings)
+        (item[group] if group else item)[key] = value
         yield name, item
 
 

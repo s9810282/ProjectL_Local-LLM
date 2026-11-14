@@ -1,0 +1,16 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F03",
+  "base": "rule_fixtures_v2/F03.json",
+  "assumptions": [
+    "출발 칸에서 Akimbo를 칠 수 있어(a) 교전 비용은 0이다. v2 approachCostBefore 2는 메인 기준 값이다.",
+    "b 종점은 메인 공격 위치라 교전 비용 0이다. 그래서 a·b 모두 접근 진척 0이다.",
+    "다음 턴 공격: 출발 칸은 Akimbo(피해 5), b 종점은 메인(피해 5). 피해는 v2 공격 결과를 공통 피해로 본 근사다."
+  ],
+  "engagementCostBefore": 0,
+  "candidates": {
+    "a_inplace_akimbo": {"nextTurn": {"targetId": "akimbo", "damage": 5}},
+    "b_move_main": {"engagementCostAfter": 0, "nextTurn": {"targetId": "main", "damage": 5}},
+    "c_wait": {"nextTurn": {"targetId": "akimbo", "damage": 5}}
+  }
+}

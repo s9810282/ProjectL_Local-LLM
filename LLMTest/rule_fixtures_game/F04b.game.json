@@ -1,0 +1,17 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F04b",
+  "base": "rule_fixtures_v2/F04b.json",
+  "assumptions": [
+    "v2에 대기 후보가 없어 대기 사실을 적는다. 출발 칸 위협은 제자리 공격 후보 a의 위협과 같다(메인 6, Sniper 4).",
+    "다음 턴 공격 대상은 메인(인접, 비용 0). Sniper는 Gravekeeper 사거리 1 밖이라고 본다.",
+    "후퇴 b의 교전 비용 4는 approachCostAfter를 그대로 쓴다. 이동력 4 이하라 다음 턴 메인 공격이 잡힌다."
+  ],
+  "engagementCostBefore": 0,
+  "hold": {"inPlaceThreats": [{"opponentId": "main", "damage": 6}, {"opponentId": "sniper", "damage": 4}],
+           "hazardDamage": 0, "nextTurn": {"targetId": "main", "damage": 6}},
+  "candidates": {
+    "a_hit_main": {"nextTurn": {"targetId": "main", "damage": 6}},
+    "b_retreat": {"engagementCostAfter": 4, "nextTurn": {"targetId": "main", "damage": 6}}
+  }
+}

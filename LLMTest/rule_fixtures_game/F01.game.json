@@ -1,0 +1,17 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F01",
+  "base": "rule_fixtures_v2/F01.json",
+  "assumptions": [
+    "세 후보가 같은 자리다(F01 가정). 출발 칸이 메인·Sniper의 공격 위치라 교전 비용은 0이다.",
+    "다음 턴 공격: 비용 0인 대상 중 값이 큰 Sniper(피해 5 ≥ HP 4 → 처치 값). 피해 5는 b_hit_main의 메인 피해를 Demon 공통 피해로 본 근사다.",
+    "a_kill_sniper가 처치한 Sniper의 제자리 위협 4는 게임 위협 필드(결정 시작 때 한 번 만듦)에 남는다."
+  ],
+  "engagementCostBefore": 0,
+  "candidates": {
+    "a_kill_sniper": {"nextTurn": {"targetId": "sniper", "damage": 5},
+                      "killedThreats": [{"opponentId": "sniper", "damage": 4}]},
+    "b_hit_main": {"nextTurn": {"targetId": "sniper", "damage": 5}},
+    "c_wait": {"nextTurn": {"targetId": "sniper", "damage": 5}}
+  }
+}

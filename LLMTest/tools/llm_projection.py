@@ -56,6 +56,8 @@ def project(case, settings, order="file", seed=0):
     """(LLM 화면, 별칭→원래 ID, 룰 평가 결과)를 돌려준다.
     미평가 상황은 rule_policy와 같은 PolicyInputError를 던져 LLM에도 보내지 않는다.
     order는 file(파일 순서)·reverse·shuffle(seed와 상황 ID로 고정)이다. 룰 평가는 순서와 무관하다."""
+    if case.get("schemaVersion") == 2:
+        return project_v2(case, settings, order, seed)
     result = evaluate_case(copy.deepcopy(case), copy.deepcopy(settings))
     evaluated = {item["id"]: item for item in result["candidates"]}
     actor = case["self"]
@@ -85,6 +87,71 @@ def project(case, settings, order="file", seed=0):
         "players": [{key: p[key] for key in ("id", "role", "hp", "maxHp")} for p in case["players"]],
         "allies": [{key: a[key] for key in ("id", "hp", "maxHp")} for a in case["allies"]],
         "headquarters": dict(case["headquarters"]),
+        "candidates": view_candidates,
+    }
+    return view, aliases, result
+
+
+ACTION_TEXT = {"wait": "wait", "attack": "attack"}
+
+
+def _action_v2(raw):
+    kind, steps = raw["kind"], raw["moveSteps"]
+    if kind == "move":
+        return f"move {steps}"
+    if kind == "move_attack":
+        return f"move {steps} -> attack"
+    return ACTION_TEXT[kind]
+
+
+def _next_player_turn(evaluated, self_hp_after):
+    """다음 아군 진영 턴 노출 사실. 할인·점수는 넣지 않는다(기준 문서 §3.1)."""
+    if evaluated["outcome"] != "ongoing" or self_hp_after == 0:
+        return None
+    facts = evaluated["response"]
+    return {"hazardDamage": facts["hazardDamage"],
+            "inPlace": dict(facts["inPlace"]), "afterMove": dict(facts["afterMove"]),
+            "chainPossible": facts["chainDamage"] > 0,
+            "diesIfInPlaceAttack": facts["hpAfterInPlace"] == 0,
+            "diesIfAllAttack": facts["hpAfterAll"] == 0}
+
+
+def project_v2(case, settings, order="file", seed=0):
+    """진영 턴 상황(schemaVersion 2)의 LLM 화면. 반환 모양은 project와 같다."""
+    result = evaluate_case(copy.deepcopy(case), copy.deepcopy(settings))
+    evaluated = {item["id"]: item for item in result["candidates"]}
+    actor = case["self"]
+    turn = case["turn"]
+    order_ids = turn["enemyOrder"]
+    view_candidates, aliases = [], {}
+    eligible = [raw for raw in case["candidates"] if evaluated[raw["id"]]["eligible"]]
+    for raw in _ordered(eligible, order, seed, case["situationId"]):
+        item = evaluated[raw["id"]]
+        alias = f"c{len(view_candidates) + 1}"
+        aliases[alias] = raw["id"]
+        facts = raw["roleFacts"]
+        view_candidates.append({
+            "id": alias,
+            "action": _action_v2(raw),
+            "battle": BATTLE[item["outcome"]],
+            "hits": _losses(case["players"], raw["playerHpAfter"]),
+            "allyLosses": _losses(case["allies"], raw["allyHpAfter"]),
+            "headquartersHpAfter": raw["headquartersHpAfter"],
+            "self": {"hpAfter": raw["selfHpAfter"], "diesNow": raw["selfHpAfter"] == 0},
+            "nextPlayerTurn": _next_player_turn(item, raw["selfHpAfter"]),
+            "mainApproachMoves": {"before": case["approachCostBefore"], "after": raw["approachCostAfter"]},
+            "next": {"canThreatenNext": facts["canThreatenNext"], "nearestPlayerDistance": facts["nearestPlayerDistance"]},
+            "knockback": [{"targetId": k["targetId"], "headquartersApproachBefore": k["before"],
+                           "headquartersApproachAfter": k["after"]} for k in facts["knockbackDelays"]],
+        })
+    view = {
+        "self": {key: actor[key] for key in ("unit", "hp", "maxHp", "moveRange", "attackRange")},
+        "turn": {"actedAllies": [dict(a) for a in turn["actedAllies"]],
+                 "remainingAfterYou": len(order_ids) - order_ids.index(turn["actingId"]) - 1},
+        "players": [{key: p[key] for key in ("id", "role", "unit", "hp", "maxHp")} for p in case["players"]],
+        "allies": [{key: a[key] for key in ("id", "unit", "hp", "maxHp")} for a in case["allies"]],
+        "headquarters": dict(case["headquarters"]),
+        "announcedHazards": [{"description": h["description"], "damage": h["damage"]} for h in case["announcedHazards"]],
         "candidates": view_candidates,
     }
     return view, aliases, result

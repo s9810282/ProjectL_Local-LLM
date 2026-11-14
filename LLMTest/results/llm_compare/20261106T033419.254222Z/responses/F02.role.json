@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:35:22.1462839Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c2\", \"reason\": \"Gravekeeper의 역할인 플레이어 유닛을 HQ에서 밀어내는 효과 (knockback) 가 가장 강력하게 작용하며, 다음 턴에도 위협할 수있\", \"scores\": [5, 10, 3]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1400398600,
+  "load_duration": 4151100,
+  "prompt_eval_count": 1612,
+  "prompt_eval_cached_count": 744,
+  "prompt_eval_duration": 373426000,
+  "eval_count": 62,
+  "eval_duration": 895300000
+}

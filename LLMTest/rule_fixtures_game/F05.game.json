@@ -1,0 +1,17 @@
+{
+  "schema": "rule-game-overlay-1",
+  "situationId": "F05",
+  "base": "rule_fixtures_v2/F05.json",
+  "assumptions": [
+    "출발 칸 교전 비용 1: 메인·Akimbo 모두 1칸 이동으로 공격 위치에 닿는다(a·b가 1칸 이동).",
+    "a·b 종점은 각각 메인·Akimbo 공격 위치라 교전 비용 0이다.",
+    "낙석 피해 15는 확실한 피해(known)로 본다. 행위자 HP 12 이상이라 a는 게임의 확실한 치명 후보다.",
+    "다음 턴 공격: 출발 칸은 같은 비용 1에서 값이 큰 Akimbo(3/25 = 120‰ > 메인 3/30 = 100‰)."
+  ],
+  "engagementCostBefore": 1,
+  "candidates": {
+    "a_hazard_main": {"engagementCostAfter": 0, "nextTurn": {"targetId": "main", "damage": 3}},
+    "b_safe_akimbo": {"engagementCostAfter": 0, "nextTurn": {"targetId": "akimbo", "damage": 3}},
+    "c_wait": {"nextTurn": {"targetId": "akimbo", "damage": 3}}
+  }
+}

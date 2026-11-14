@@ -1,0 +1,177 @@
+{
+  "situationId": "F05",
+  "title": "UndeadHeavy가 낙석 예고 칸을 피하는가",
+  "profile": "codeDefault",
+  "choice": "b_safe_akimbo",
+  "choiceAction": "move",
+  "holdReason": "selected",
+  "hold": {
+    "id": "c_wait",
+    "label": "대기",
+    "kind": "wait",
+    "gameAction": "hold",
+    "eligible": true,
+    "reason": "",
+    "facts": {
+      "attackBenefit": 0,
+      "positionHp": 12,
+      "hazardLoss": 0,
+      "threatDamage": 0,
+      "threatPermille": 0,
+      "threatLethal": false,
+      "progress": 0,
+      "followup": 0,
+      "nextTurnStrike": 120,
+      "bind": false
+    },
+    "terms": {
+      "attack": 0,
+      "hazard": 0,
+      "playerRisk": 0,
+      "progress": 0,
+      "followup": 0,
+      "nextTurn": 60,
+      "bind": 0,
+      "total": 60
+    },
+    "tier": 0,
+    "lethal": false,
+    "lethalRank": [
+      false,
+      0,
+      0
+    ],
+    "notes": []
+  },
+  "candidates": [
+    {
+      "id": "a_hazard_main",
+      "label": "낙석 예고 칸으로 이동해 메인 3 피해",
+      "kind": "move_attack",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 12,
+        "hazardLoss": 400,
+        "threatDamage": 6,
+        "threatPermille": 200,
+        "threatLethal": false,
+        "progress": 1,
+        "followup": 100,
+        "nextTurnStrike": 100,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": -1600,
+        "playerRisk": -100,
+        "progress": 20,
+        "followup": 100,
+        "nextTurn": 50,
+        "bind": 0,
+        "total": -1530
+      },
+      "tier": 0,
+      "lethal": true,
+      "lethalRank": [
+        true,
+        15,
+        15
+      ],
+      "notes": [
+        "move_attack → 이동 + 후속 공격 값"
+      ],
+      "beatsHold": false,
+      "admitted": false
+    },
+    {
+      "id": "b_safe_akimbo",
+      "label": "옆 칸으로 이동해 Akimbo 3 피해",
+      "kind": "move_attack",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 12,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 200,
+        "threatLethal": false,
+        "progress": 1,
+        "followup": 120,
+        "nextTurnStrike": 120,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": -100,
+        "progress": 20,
+        "followup": 120,
+        "nextTurn": 60,
+        "bind": 0,
+        "total": 100
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [
+        "move_attack → 이동 + 후속 공격 값"
+      ],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "c_wait",
+      "label": "대기",
+      "kind": "wait",
+      "gameAction": "hold",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 12,
+        "hazardLoss": 0,
+        "threatDamage": 0,
+        "threatPermille": 0,
+        "threatLethal": false,
+        "progress": 0,
+        "followup": 0,
+        "nextTurnStrike": 120,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": 0,
+        "progress": 0,
+        "followup": 0,
+        "nextTurn": 60,
+        "bind": 0,
+        "total": 60
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": []
+    }
+  ],
+  "approximations": [],
+  "assumptions": [
+    "출발 칸 교전 비용 1: 메인·Akimbo 모두 1칸 이동으로 공격 위치에 닿는다(a·b가 1칸 이동).",
+    "a·b 종점은 각각 메인·Akimbo 공격 위치라 교전 비용 0이다.",
+    "낙석 피해 15는 확실한 피해(known)로 본다. 행위자 HP 12 이상이라 a는 게임의 확실한 치명 후보다.",
+    "다음 턴 공격: 출발 칸은 같은 비용 1에서 값이 큰 Akimbo(3/25 = 120‰ > 메인 3/30 = 100‰)."
+  ]
+}

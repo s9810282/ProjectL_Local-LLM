@@ -1,0 +1,17 @@
+{
+  "model": "hf.co/unsloth/Qwen3.5-4B-GGUF:Q4_K_M",
+  "created_at": "2026-11-06T03:35:25.9819955Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\"choice\": \"c1\", \"reason\": \"주인공을 즉시 공격하여 체력을 6으로 줄이고 다음 턴에 위협할 수 있는 위치를 유지해야 합니다.\", \"scores\": [9, 3]}"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 1135522300,
+  "load_duration": 3947600,
+  "prompt_eval_count": 1222,
+  "prompt_eval_cached_count": 617,
+  "prompt_eval_duration": 307235000,
+  "eval_count": 49,
+  "eval_duration": 674466000
+}

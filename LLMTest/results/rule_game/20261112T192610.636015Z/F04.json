@@ -1,0 +1,133 @@
+{
+  "situationId": "F04",
+  "title": "앞선 적 유닛의 결과가 이번 Gravekeeper 선택을 바꾸는가",
+  "profile": "asset",
+  "choice": "a_hit_main",
+  "choiceAction": "attack",
+  "holdReason": "selected",
+  "hold": {
+    "id": "(hold)",
+    "label": "대기(덧붙임 파일)",
+    "kind": "wait",
+    "gameAction": "hold",
+    "eligible": true,
+    "reason": "",
+    "facts": {
+      "attackBenefit": 0,
+      "positionHp": 10,
+      "hazardLoss": 0,
+      "threatDamage": 6,
+      "threatPermille": 260,
+      "threatLethal": false,
+      "progress": 0,
+      "followup": 0,
+      "nextTurnStrike": 200,
+      "bind": false
+    },
+    "terms": {
+      "attack": 0,
+      "hazard": 0,
+      "playerRisk": -52,
+      "progress": 0,
+      "followup": 0,
+      "nextTurn": 400,
+      "bind": 0,
+      "total": 348
+    },
+    "tier": 0,
+    "lethal": false,
+    "lethalRank": [
+      false,
+      0,
+      0
+    ],
+    "notes": []
+  },
+  "candidates": [
+    {
+      "id": "a_hit_main",
+      "label": "제자리 메인 6 피해",
+      "kind": "attack",
+      "gameAction": "attack",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 200,
+        "positionHp": 10,
+        "hazardLoss": 0,
+        "threatDamage": 6,
+        "threatPermille": 260,
+        "threatLethal": false,
+        "progress": 0,
+        "followup": 0,
+        "nextTurnStrike": 200,
+        "bind": false
+      },
+      "terms": {
+        "attack": 200,
+        "hazard": 0,
+        "playerRisk": -52,
+        "progress": 0,
+        "followup": 0,
+        "nextTurn": 400,
+        "bind": 0,
+        "total": 548
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [],
+      "beatsHold": true,
+      "admitted": true
+    },
+    {
+      "id": "b_retreat",
+      "label": "3칸 후퇴, 위협 없음",
+      "kind": "move",
+      "gameAction": "move",
+      "eligible": true,
+      "reason": "",
+      "facts": {
+        "attackBenefit": 0,
+        "positionHp": 10,
+        "hazardLoss": 0,
+        "threatDamage": 0,
+        "threatPermille": 0,
+        "threatLethal": false,
+        "progress": -4,
+        "followup": 0,
+        "nextTurnStrike": 200,
+        "bind": false
+      },
+      "terms": {
+        "attack": 0,
+        "hazard": 0,
+        "playerRisk": 0,
+        "progress": -80,
+        "followup": 0,
+        "nextTurn": 400,
+        "bind": 0,
+        "total": 320
+      },
+      "tier": 0,
+      "lethal": false,
+      "lethalRank": [
+        false,
+        0,
+        0
+      ],
+      "notes": [],
+      "beatsHold": false,
+      "admitted": false
+    }
+  ],
+  "approximations": [],
+  "assumptions": [
+    "v2에 대기 후보가 없어 대기 사실을 적는다. 출발 칸 위협은 제자리 공격 후보 a의 위협과 같다(메인 6, Sniper는 앞선 Demon이 처치).",
+    "후퇴 b의 교전 비용 4는 approachCostAfter를 그대로 쓴다. 이동력 4 이하라 게임 규칙상 다음 턴 메인 공격이 잡힌다(v2 canThreatenNext false와 다름)."
+  ]
+}
