@@ -3,6 +3,7 @@
 사용:
   python LLMTest/sim/run.py                                   일반 15판 × 시드 3, 돌진형·신중형, 단순 탐욕 적
   python LLMTest/sim/run.py --stages Combat_LD_P20 --seeds 1 --log   한 판, 행동 기록까지
+  python LLMTest/sim/run.py --seeds 4 --seed-start 4               시드 4~7(앞서 잰 시드 0~3에 판을 더할 때)
 결과: LLMTest/results/sim/<UTC>/ (battles.csv, summary.json, run.json, --log면 battles/*.json)
 """
 
@@ -236,13 +237,17 @@ def summarize(records: list[BattleRecord]) -> list[dict]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="게임 스테이지 데이터로 전투를 끝까지 돌린다")
     parser.add_argument("--stages", nargs="*", default=DEFAULT_STAGES)
-    parser.add_argument("--seeds", type=int, default=3)
+    parser.add_argument("--seeds", type=int, default=3, help="판마다 돌릴 시드 수")
+    parser.add_argument("--seed-start", type=int, default=0,
+                        help="첫 시드. 시드는 seed-start부터 seeds개(기본 0이면 0..seeds-1)")
     parser.add_argument("--player", default="rush,cautious", help="쉼표로: rush, cautious, smart")
     parser.add_argument("--enemy", default="greedy", help="쉼표로: greedy")
     parser.add_argument("--max-rounds", type=int, default=20)
     parser.add_argument("--log", action="store_true", help="전투마다 행동 기록을 남긴다")
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args(argv)
+    if args.seeds < 1 or args.seed_start < 0:
+        parser.error("--seeds는 1 이상, --seed-start는 0 이상이어야 한다")
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
@@ -256,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         stage = assets.stage(name)
         for enemy_name in args.enemy.split(","):
             for style in args.player.split(","):
-                for seed in range(args.seeds):
+                for seed in range(args.seed_start, args.seed_start + args.seeds):
                     record, actions = run_battle(stage, assets, make_player_policy(style), make_enemy_policy(enemy_name),
                                                  seed, args.max_rounds, args.log)
                     records.append(record)

@@ -1,0 +1,14 @@
+{
+  "folders": [
+    "results\\sim\\20261114T143736Z_gc_s47_g1",
+    "results\\sim\\20261114T143736Z_gc_s47_g2",
+    "results\\sim\\20261114T143736Z_gc_s47_g3",
+    "results\\sim\\20261114T143736Z_gc_s47_g4",
+    "results\\sim\\20261114T143736Z_gc_s47_g5"
+  ],
+  "battles": 360,
+  "replay_only": false,
+  "mismatched": 0,
+  "kill_beam": 16,
+  "seconds": 31.7
+}

@@ -1,0 +1,14 @@
+{
+  "folders": [
+    "LLMTest\\results\\sim\\20261114T164020Z_gd_game_g1",
+    "LLMTest\\results\\sim\\20261114T164020Z_gd_game_g2",
+    "LLMTest\\results\\sim\\20261114T164020Z_gd_game_g3",
+    "LLMTest\\results\\sim\\20261114T164020Z_gd_game_g4",
+    "LLMTest\\results\\sim\\20261114T164020Z_gd_game_g5"
+  ],
+  "battles": 180,
+  "replay_only": false,
+  "mismatched": 0,
+  "kill_beam": 16,
+  "seconds": 26.7
+}

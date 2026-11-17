@@ -1,0 +1,168 @@
+[
+  {
+    "enemy": "game-asset",
+    "player": "plan8",
+    "battles": 60,
+    "enemy_turns": 557,
+    "share": {
+      "no_chance": 0.7,
+      "missed_attack": 0.063,
+      "missed_attack_unconfirmed": 0.0,
+      "short": 0.163,
+      "short_unconfirmed": 0.0,
+      "missed_kill": 0.005,
+      "kill": 0.059,
+      "outside_hit": 0.005,
+      "outside_kill": 0.004
+    },
+    "kill_conversion": 0.917,
+    "hit_when_reachable": 0.767,
+    "reach_units_when_reachable": 1.48,
+    "instead": {
+      "hit_other": 27,
+      "move_only": 13,
+      "kill_other": 13
+    },
+    "idle_walk": {
+      "units": 1278,
+      "toward": 0.874,
+      "still": 0.09,
+      "away": 0.036,
+      "closer_per_unit": 2.0,
+      "near2_end_per_turn": 1.74,
+      "near2_two_or_more": 0.54
+    },
+    "by_outcome": {
+      "enemy_win": {
+        "battles": 35,
+        "enemy_turns": 432,
+        "confirmed_turns_per_battle": 1.0,
+        "reach_turns_per_battle": 4.11,
+        "battles_with_kill_chance": 33,
+        "first_kill_chance_round": 12.21,
+        "nearest": 5.3
+      },
+      "other": {
+        "battles": 25,
+        "enemy_turns": 125,
+        "confirmed_turns_per_battle": 0.04,
+        "reach_turns_per_battle": 0.76,
+        "battles_with_kill_chance": 1,
+        "first_kill_chance_round": 10,
+        "nearest": 5.56
+      }
+    },
+    "seconds_per_turn": 0.074
+  },
+  {
+    "enemy": "game-asset",
+    "player": "plan8:r0",
+    "battles": 60,
+    "enemy_turns": 531,
+    "share": {
+      "no_chance": 0.637,
+      "missed_attack": 0.096,
+      "missed_attack_unconfirmed": 0.0,
+      "short": 0.185,
+      "short_unconfirmed": 0.0,
+      "missed_kill": 0.006,
+      "kill": 0.068,
+      "outside_hit": 0.008,
+      "outside_kill": 0.002
+    },
+    "kill_conversion": 0.923,
+    "hit_when_reachable": 0.73,
+    "reach_units_when_reachable": 1.47,
+    "instead": {
+      "move_only": 7,
+      "kill_other": 25,
+      "hit_other": 39
+    },
+    "idle_walk": {
+      "units": 1140,
+      "toward": 0.838,
+      "still": 0.12,
+      "away": 0.042,
+      "closer_per_unit": 1.92,
+      "near2_end_per_turn": 1.68,
+      "near2_two_or_more": 0.514
+    },
+    "by_outcome": {
+      "enemy_win": {
+        "battles": 37,
+        "enemy_turns": 415,
+        "confirmed_turns_per_battle": 1.05,
+        "reach_turns_per_battle": 4.38,
+        "battles_with_kill_chance": 36,
+        "first_kill_chance_round": 11.08,
+        "nearest": 5.54
+      },
+      "other": {
+        "battles": 23,
+        "enemy_turns": 116,
+        "confirmed_turns_per_battle": 0.0,
+        "reach_turns_per_battle": 1.17,
+        "battles_with_kill_chance": 0,
+        "first_kill_chance_round": null,
+        "nearest": 5.12
+      }
+    },
+    "seconds_per_turn": 0.075
+  },
+  {
+    "enemy": "game-asset",
+    "player": "rush",
+    "battles": 60,
+    "enemy_turns": 431,
+    "share": {
+      "no_chance": 0.603,
+      "missed_attack": 0.065,
+      "missed_attack_unconfirmed": 0.0,
+      "short": 0.202,
+      "short_unconfirmed": 0.002,
+      "missed_kill": 0.016,
+      "kill": 0.109,
+      "outside_hit": 0.002,
+      "outside_kill": 0.0
+    },
+    "kill_conversion": 0.87,
+    "hit_when_reachable": 0.835,
+    "reach_units_when_reachable": 1.64,
+    "instead": {
+      "move_only": 18,
+      "wait": 3,
+      "hit_other": 16,
+      "kill_other": 13
+    },
+    "idle_walk": {
+      "units": 852,
+      "toward": 0.84,
+      "still": 0.095,
+      "away": 0.065,
+      "closer_per_unit": 2.01,
+      "near2_end_per_turn": 1.81,
+      "near2_two_or_more": 0.629
+    },
+    "by_outcome": {
+      "enemy_win": {
+        "battles": 47,
+        "enemy_turns": 371,
+        "confirmed_turns_per_battle": 1.13,
+        "reach_turns_per_battle": 3.47,
+        "battles_with_kill_chance": 47,
+        "first_kill_chance_round": 7.72,
+        "nearest": 4.66
+      },
+      "other": {
+        "battles": 13,
+        "enemy_turns": 60,
+        "confirmed_turns_per_battle": 0.08,
+        "reach_turns_per_battle": 0.54,
+        "battles_with_kill_chance": 1,
+        "first_kill_chance_round": 4,
+        "nearest": 6.58
+      }
+    },
+    "seconds_per_turn": 0.076
+  }
+]
