@@ -29,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (expected.SpecializationCategory.HasValue)
                 return MainSpecializationDecision.Failure(MainSpecializationFailureReason.AlreadySpecialized);
             var final = new OwnedCharacterRecord(expected.Id, expected.CharacterKey, expected.Role, expected.Level,
-                expected.Experience, expected.Growth, expected.HunterAttackBonus, selected);
+                expected.Experience, expected.Growth, expected.HunterAttackBonus, selected, expected.PlayerSkillUpgrade);
             return MainSpecializationDecision.Success(new MainSpecializationChange(expected, final));
         }
 

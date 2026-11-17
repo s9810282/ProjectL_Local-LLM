@@ -46,18 +46,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>
-        /// 반응 자세를 시작합니다. 반응 설정(<see cref="TryGetReactionSettings"/>)을 읽은 뒤 부르므로 표시가 없으면 예외입니다.
-        /// 도약 중간 경유의 걸음 배치는 양보받고, 자세는 그 공중 자리에서 시작합니다(평가 C4-05). 자세를 여는 세 입구가 모두 같습니다.
+        /// 켜진 표시에 조립 실행의 자세를 시작합니다(조각 실행 대여 묶음이 부름 — 소환 등장·피격·사망 반응 등, 보스 활성화 설계 D6b·피격 구조 정리 설계 HC1).
+        /// 표시가 없거나 꺼져 있으면 false입니다. 도약 중간 경유의 걸음 배치는 양보받고, 자세는 그 공중 자리에서 시작합니다(평가 C4-05).
+        /// 자세를 여는 두 입구(이것과 <see cref="BeginAttackPose"/>)가 같은 규칙입니다. 옛 반응 자세 입구 <c>BeginPose</c>는 반응이 조립으로 옮겨 걷었습니다.
         /// </summary>
-        internal ICombatUnitPose BeginPose(EntityId id, Action cancelled)
-        {
-            if (!_targets.TryGet(id, out var target))
-                throw new InvalidOperationException($"[CombatUnitPresentationWindow] 유닛 표시가 없습니다: {id}.");
-            RequireNoPlacement(id);
-            return target.BeginPose(cancelled);
-        }
-
-        /// <summary>켜진 표시에 능력 동작(소환 등장)의 자세를 시작합니다(보스 활성화 설계 D6b). 표시가 없거나 꺼져 있으면 false입니다.</summary>
         internal bool TryBeginPose(EntityId id, Action cancelled, out ICombatUnitPose pose)
         {
             pose = null;
@@ -140,7 +132,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         /// <summary>
         /// 그 유닛의 지금 걸음 배치를 다른 대여에 양보할 수 있게 표시합니다(평가 C4-05). 도약 중간 경유에서 보간을 멈추고 배치만 쥔 레인이 부릅니다.
-        /// 그 뒤 자세(<see cref="BeginAttackPose"/>·<see cref="BeginPose"/>·<see cref="TryBeginPose"/>)나 서는 자리(<see cref="TryBeginStand"/>)를 빌리면
+        /// 그 뒤 자세(<see cref="BeginAttackPose"/>·<see cref="TryBeginPose"/>)나 서는 자리(<see cref="TryBeginStand"/>)를 빌리면
         /// 예외·거절 대신 이 배치를 빼고 <paramref name="yielded"/>를 한 번 부릅니다. 되찾기는 레인이 합니다.
         /// 표시는 지금 배치 하나에 붙어, 배치가 끝나거나 새 배치로 바뀌면 사라집니다. 배치가 없으면 아무 일도 하지 않습니다.
         /// </summary>
@@ -199,6 +191,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 return;
             if (_targets.TryGet(facts.EntityId, out var target))
                 target.ApplyFacing(_targets.FactRotation(facts, mapper));
+        }
+
+        /// <summary>
+        /// 사실 목록 유닛의 뒤 단계 꼬리를 모두 끊습니다(클립 칸 다시 짜기 설계 P8). 연출 취소가 부릅니다. 꼬리는 실행이 끝난 뒤에도 채널이 혼자 돌리므로
+        /// 실행 취소(대여 반환)만으로는 끊기지 않습니다.
+        /// </summary>
+        internal void CutClipTails(IReadOnlyList<CharacterCombatFacts> facts)
+        {
+            if (facts == null) throw new ArgumentNullException(nameof(facts));
+            for (int i = 0; i < facts.Count; i++)
+                if (_targets.TryGet(facts[i].EntityId, out var target))
+                    target.CutClipTail();
         }
 
         /// <summary>모든 표시 회전을 지웁니다. Mapper가 있으면 사실 목록의 유닛은 사실 회전으로 되돌립니다.</summary>
@@ -284,8 +288,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return true;
         }
 
-        /// <summary>켜진 표시의 피격 클립입니다(반응 설정 읽기와 같은 조건). 묶음이나 피격 칸이 없으면 false입니다.</summary>
-        internal bool TryGetHitClip(EntityId id, out CombatClipData clip)
+        /// <summary>켜진 표시의 피격 동작입니다(반응 설정 읽기와 같은 조건, 클립 칸 다시 짜기 설계 CS1). 묶음이나 피격 칸이 없으면 false입니다.</summary>
+        internal bool TryGetHitClip(EntityId id, out CombatClipMotion clip)
         {
             clip = null;
             if (!TryGetActive(id, out var target))
@@ -347,7 +351,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return true;
         }
 
-        /// <summary>켜진 표시의 피격·사망 연출 값만 읽습니다. 자세는 <see cref="BeginPose"/>로 따로 빌립니다.</summary>
+        /// <summary>켜진 표시의 피격·사망 연출 값만 읽습니다. 자세는 조립 실행이 따로 빌립니다(<see cref="TryBeginPose"/>, 피격 구조 정리 설계 HC1).</summary>
         internal bool TryGetReactionSettings(EntityId id, out CombatUnitReactionPresentationData settings)
         {
             settings = null;
@@ -356,6 +360,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             settings = _targets.ReactionSettingsOf(target.EntityKey);
             return settings != null;
         }
+
+        /// <summary>
+        /// 켜진 표시가 코드 피격 움직임(맞은 방향으로 밀렸다 돌아오며 젖힘, 넉백 때 밀리는 동안 젖힘)을 내는지입니다(2026-11-17 사용자 "끄고 켜는 옵션").
+        /// 규칙 원본은 반응 값의 <see cref="CombatUnitReactionPresentationData.PlaysHitMotion"/>이고, 그 입력(반응 값·피격 동작 유무)을 모으는 곳은 여기 하나입니다
+        /// (피격 뼈대 고르기와 넉백 젖힘이 함께 부름, 피격 구조 정리 계획 §6.7 ⑥). 표시나 반응 값이 없으면 false입니다.
+        /// </summary>
+        internal bool PlaysHitMotion(EntityId id) =>
+            TryGetReactionSettings(id, out CombatUnitReactionPresentationData settings) && settings.PlaysHitMotion(TryGetHitClip(id, out _));
 
         /// <summary>사망 모델 유지가 아직 같은 대여를 붙잡고 있는지입니다. 사실 그리기가 묻습니다.</summary>
         internal bool HoldsDeath(EntityId id) => _deathHolds.TryGetValue(id, out var hold) && hold.IsCurrent;

@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common
@@ -14,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common
 
         /// <summary>
         /// 복제본 루트 자세를 원점·배율 1로 두고(보정은 호출자의 부모가 맡음), 자식 레이어를 <see cref="DefaultLayer"/>로 바꾸고,
-        /// Collider를 끄고, Animator의 루트 모션·이벤트를 끕니다.
+        /// Collider를 끄고, Animator의 루트 모션·이벤트와 전투 사망 부품을 끕니다.
         /// </summary>
         internal static void Prepare(GameObject instance)
         {
@@ -30,6 +31,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common
                 animator.applyRootMotion = false;
                 animator.fireEvents = false;
             }
+            foreach (CombatUnitRagdoll ragdoll in instance.GetComponentsInChildren<CombatUnitRagdoll>(true))
+                ragdoll.enabled = false;
         }
     }
 }

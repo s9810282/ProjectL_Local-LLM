@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.ThornBombs;
 
 namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
 {
@@ -98,6 +102,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
         public bool TryGetLatestPreview(out CombatPreviewResult preview)
         {
             preview = _latestPreview;
+            if (preview?.PlatformForecast is { } forecast &&
+                !forecast.Source.Matches(BattleInstanceId, QueryRevision, _current?.CommandState))
+                preview = null;
             return preview != null;
         }
 
@@ -236,6 +243,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var before = _current.CommandState;
             var final = transition.FinalState;
             CombatChangeEvidenceReader.ValidateGimmickChanges(transition);
+            MeteorGimmickEvidenceValidator.Validate(transition);
+            LavaChainGimmickEvidenceValidator.Validate(transition);
+            CellEnvironmentQuery.ValidateGimmickOccupancy(transition, characters);
             if (!before.Objective.SameValues(final.Objective))
                 throw new InvalidOperationException("전투 중 승리 목표를 바꿀 수 없습니다.");
             if (before.BoardWidth != final.BoardWidth || before.BoardHeight != final.BoardHeight ||
@@ -250,8 +260,10 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                     throw new InvalidOperationException("공격으로 구조물 원본을 바꿀 수 없습니다.");
             }
             ValidateRewards(transition);
+            ValidatePlayerSkillState(transition);
             MovementUndoPolicy.ValidatePublication(transition, characters);
             ValidateActionState(transition, characters);
+            ThornBombPublicationPolicy.ValidatePlacement(transition, characters);
             ValidatePlacement(final, characters, _current.ReserveCapacity);
             var validatedBindings = ValidateEnvironmentChange(transition);
             var bindings = transition.EnvironmentBindings == null ? _current.EnvironmentBindings : validatedBindings;
@@ -261,9 +273,44 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                 transition.Accepted, transition.Reason, transition.Attack, transition.Outcome,
                 transition.Input.Kind, transition.ActionUseSettlement?.ActorId ?? transition.Input.ActorId, transition.Movement, transition.Events,
                 transition.PathMovement, transition.BlockedContacts, BattleInstanceId,
-                final.Turn.ControllerTurnSequence, transition.ActionUseSettlement, transition.UndoMovement);
+                final.Turn.ControllerTurnSequence, transition.ActionUseSettlement, transition.UndoMovement, transition.PlayerSkill);
             return new PreparedCombatCommand(new CombatStateData(_current, final, bindings), result,
                 QueryRevision, transition.Accepted ? checked(QueryRevision + 1) : QueryRevision);
+        }
+
+        /// <summary>스킬의 결합·사용량·조회 원본만 대조합니다. 효과와 대상 규칙은 Core 계산기가 소유합니다.</summary>
+        private void ValidatePlayerSkillState(CombatCommandTransition transition)
+        {
+            var input = transition.Input;
+            var before = input.State.PlayerSkill;
+            var final = transition.FinalState.PlayerSkill;
+            var skill = transition.PlayerSkill;
+            if (!transition.Accepted || input.Kind != CombatCommandKind.UsePlayerSkill)
+            {
+                if (skill != null || (before == null ? final != null : !before.SameValues(final)) ||
+                    transition.Events.Any(e => e is CombatPlayerSkillAttackEvent))
+                    throw new InvalidOperationException("수락된 스킬 명령 밖에서 스킬 결합·사용량을 바꿀 수 없습니다.");
+                return;
+            }
+            if (skill == null || before == null || final == null || input.ProcessingKind != CombatProcessingKind.Command ||
+                input.State.Phase != CombatFlowPhase.PlayerInput || input.State.Turn.StagePhase != StagePhase.Combat ||
+                input.State.Turn.ControllerPhase != CombatControllerPhase.Player)
+                throw new InvalidOperationException("스킬 사용 게시에는 유효한 플레이어 전투 명령과 결과가 필요합니다.");
+            var source = new PlayerSkillSourceStamp(BattleInstanceId, input.State.Turn.ControllerTurnSequence, QueryRevision, input.ActorId);
+            var expected = input.PlayerSkillRequest?.ExpectedSource;
+            if (!input.PlayerSkillSource.HasValue || !input.PlayerSkillSource.Value.Equals(source) ||
+                !expected.HasValue || !expected.Value.Equals(source))
+                throw new InvalidOperationException("스킬 명령의 전투·턴·행위자·조회 원본이 현재 게시 상태와 다릅니다.");
+            var use = skill.UseSettlement;
+            var actor = input.Characters.SingleOrDefault(c => c.EntityId == before.ActorId);
+            if (actor == null || actor.EntityId != input.ActorId || actor.OwnedId != before.MainInstanceId ||
+                actor.Owner != Owner.Player || actor.OwnershipRole != CharacterOwnershipRole.Main ||
+                actor.CharacterKey != before.Definition.MainCharacterKey || input.Membership?.MainId != before.MainInstanceId ||
+                use.ActorId != before.ActorId || skill.SkillKey != before.Definition.Key || skill.UpgradeKey != before.UpgradeKey ||
+                use.ExpectedRemainingUses != before.RemainingUses || use.ExpectedLastUsedControllerTurnSequence != before.LastUsedControllerTurnSequence ||
+                use.ControllerTurnSequence != input.State.Turn.ControllerTurnSequence ||
+                !before.WithUsage(use.FinalRemainingUses, use.FinalLastUsedControllerTurnSequence).SameValues(final))
+                throw new InvalidOperationException("스킬 사용 정산과 메인 결합·사용량의 원본 및 최종값이 다릅니다.");
         }
 
         /// <summary>공유 예산·행동 사용·진영 식별자의 정산 근거를 검증한다. 가격이나 행동 후보는 계산하지 않는다.</summary>
@@ -280,7 +327,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                 if (!before.SameValues(final) || transition.Characters.Characters.Count != 0 ||
                     transition.Characters.Created.Count != 0 || transition.Characters.Owned.Count != 0 ||
                     transition.Characters.Souls.Count != 0 || transition.Characters.Main != null ||
-                    !transition.Field.Expected.SameValues(transition.Field.Final) || settlement != null)
+                    !transition.Field.Expected.SameValues(transition.Field.Final) || settlement != null ||
+                    transition.Events.Any(e => e is CombatObstacleDurabilityEvent or CombatObstacleReactionEvent))
                     throw new InvalidOperationException("거절된 명령은 게임 사실이나 행동 정산을 바꿀 수 없습니다.");
                 return;
             }
@@ -302,7 +350,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             if (sideStart && (input.ProcessingKind != CombatProcessingKind.Advance || input.Kind != CombatCommandKind.StartControllerTurn))
                 throw new InvalidOperationException("진영 시작은 자동 시작 처리에서만 설치할 수 있습니다.");
             if (input.ProcessingKind == CombatProcessingKind.Command &&
-                (input.Kind == CombatCommandKind.Move || input.Kind == CombatCommandKind.Attack || input.Kind == CombatCommandKind.EndPlayerTurn || input.Kind == CombatCommandKind.UndoMove) &&
+                (input.Kind == CombatCommandKind.Move || input.Kind == CombatCommandKind.Attack ||
+                    input.Kind == CombatCommandKind.EndPlayerTurn || input.Kind == CombatCommandKind.UndoMove ||
+                    input.Kind == CombatCommandKind.UsePlayerSkill || input.Kind == CombatCommandKind.DetonatePowderBarrel) &&
                 (input.ExpectedBattleInstanceId != input.BattleInstanceId ||
                     input.ExpectedControllerTurnSequence != previousTurn.ControllerTurnSequence))
                 throw new InvalidOperationException("수락된 명령의 전투·진영 턴 식별자가 원본과 다릅니다.");
@@ -412,9 +462,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var walls = before.Environment.Tiles.OfType<StaticTerrainFact>().Where(t => t.Kind == StaticTerrainKind.Wall).ToArray();
             var finalWalls = final.Environment.Tiles.OfType<StaticTerrainFact>().Where(t => t.Kind == StaticTerrainKind.Wall)
                 .ToDictionary(t => t.Id);
-            if (walls.Length != finalWalls.Count || walls.Any(wall =>
-                !finalWalls.TryGetValue(wall.Id, out var same) || !wall.SameValues(same)))
+            if (walls.Any(wall =>
+                !finalWalls.TryGetValue(wall.Id, out var same) || !wall.SameValues(same)) ||
+                before.Environment.Tiles.Any(source => finalWalls.TryGetValue(source.Id, out var wall) && !source.SameValues(wall)))
                 throw new InvalidOperationException("전투 중 정적 벽 원본을 변경할 수 없습니다.");
+            PlatformMotionEvidenceValidator.Validate(transition);
+            PillarTerrainEvidenceValidator.Validate(transition);
             ValidateGroundChange(transition);
             ValidateTraitTrailEvents(transition);
             var expected = transition.Input.EnvironmentBindings;
@@ -422,17 +475,19 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var previous = before.Environment.Tiles.ToDictionary(t => t.Id);
             var allAdded = final.Environment.Tiles.Where(t => !previous.ContainsKey(t.Id)).ToArray();
             var added = allAdded.OfType<ObjectSourceFact>().OrderBy(t => t.Id).ToArray();
-            var generated = allAdded.Where(t => t is ObjectSourceFact || t is TraitTrailFact).OrderBy(t => t.Id).ToArray();
+            var newWalls = allAdded.OfType<StaticTerrainFact>().Where(t => t.Kind == StaticTerrainKind.Wall).ToArray();
+            var generated = allAdded.Where(t => t is ObjectSourceFact || t is TraitTrailFact ||
+                t is StaticTerrainFact terrain && terrain.Kind == StaticTerrainKind.Wall).OrderBy(t => t.Id).ToArray();
 
-            // 분류: Terrain·Obstacle은 고정하고, Object 분류는 새로 만든 Object와 같은 ID만 덧붙는다.
-            if (!new HashSet<long>(expected.TerrainSourceIds).SetEquals(bindings.TerrainSourceIds) ||
+            // 기존 분류는 유지한다. 기둥 근거를 검증한 새 벽과 새 Object만 각 분류에 추가한다.
+            if (!new HashSet<long>(expected.TerrainSourceIds.Concat(newWalls.Select(t => t.Id))).SetEquals(bindings.TerrainSourceIds) ||
                 !new HashSet<EntityId>(expected.ObstacleEntityIds).SetEquals(bindings.ObstacleEntityIds) ||
                 expected.ObjectSourceIds.Except(bindings.ObjectSourceIds).Any() ||
                 !bindings.ObjectSourceIds.Except(expected.ObjectSourceIds).OrderBy(id => id)
                     .SequenceEqual(added.Select(t => t.Id)))
                 throw new InvalidOperationException("환경 분류 변경은 새 Object와 함께 추가되어야 합니다.");
 
-            // 할당: Object와 흔적은 같은 ID 범위를 쓰고, 진입 순서는 Object만 늘립니다. 기존 미분류 원본 경로는 유지합니다.
+            // 벽·Object·흔적은 같은 ID 범위를 쓰고, 진입 순서는 Object만 늘린다.
             var p = before.EnvironmentProgress;
             var next = final.EnvironmentProgress;
             if (next.NextSourceId < p.NextSourceId || next.NextObjectEntryOrdinal < p.NextObjectEntryOrdinal ||
@@ -472,13 +527,24 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var final = transition.FinalState.Environment.Tiles.OfType<StaticTerrainFact>()
                 .Where(IsGround).ToDictionary(t => t.Id);
             if (before.Count != final.Count || before.Keys.Except(final.Keys).Any())
-                throw new InvalidOperationException("전투 중 약한 지반·낭떠러지 원본을 추가하거나 제거할 수 없습니다.");
+                throw new InvalidOperationException("전투 중 약한 지반·낭떠러지·메워진 낭떠러지 원본을 추가하거나 제거할 수 없습니다.");
 
             // 한 명령의 마지막 진입과 붕괴가 연이어 일어나면 중간 예정 상태는 사건에 남는다.
             var recorded = new Dictionary<long, StaticTerrainFact>(before);
             var changed = new HashSet<long>();
-            foreach (var source in transition.Events.OfType<CombatMovementSourceEvent>())
+            foreach (var occurrence in transition.Events)
             {
+                if (occurrence is CombatPillarTerrainEvent pillar)
+                {
+                    if (pillar.Expected == null) continue;
+                    if (!recorded.TryGetValue(pillar.Expected.Id, out var currentGround) ||
+                        !currentGround.SameValues(pillar.Expected) || !pillar.Expected.IsPillarFillSuccessor(pillar.Final))
+                        throw new InvalidOperationException("기둥 지형 사건의 현재 낭떠러지 기대값이 다릅니다.");
+                    recorded[pillar.Expected.Id] = pillar.Final;
+                    changed.Add(pillar.Expected.Id);
+                    continue;
+                }
+                if (occurrence is not CombatMovementSourceEvent source) continue;
                 if (!(source.Expected is StaticTerrainFact) && !(source.Final is StaticTerrainFact)) continue;
                 if (!(source.Expected != null && before.ContainsKey(source.Expected.Id)) &&
                     !(source.Final is StaticTerrainFact terrain && IsGround(terrain))) continue;
@@ -519,7 +585,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
         }
 
         private static bool IsGround(StaticTerrainFact terrain) =>
-            terrain.Kind == StaticTerrainKind.WeakGround || terrain.Kind == StaticTerrainKind.Cliff;
+            terrain.Kind is StaticTerrainKind.WeakGround or StaticTerrainKind.Cliff or StaticTerrainKind.FilledCliff;
 
         /// <summary>전투 중 생성의 저장 불변식만 검사한다. 어디에 무엇을 만들지는 Core 계산이 정한다.
         /// 할당은 빈틈없이 이어지고, 소환·증원 기록은 추가만 되며, 기록과 생성 개체는 1:1이어야 한다.</summary>
@@ -587,8 +653,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                 throw new InvalidOperationException("증원 이력마다 생성 사건이 하나 필요합니다.");
             if (addedCount == 0)
             {
-                if (previous.RandomState != next.RandomState)
-                    throw new InvalidOperationException("증원 생성 없이 증원 난수를 바꿀 수 없습니다.");
+                if (previous.RandomState != next.RandomState || previous.LastSpawnEnemyTurn != next.LastSpawnEnemyTurn)
+                    throw new InvalidOperationException("증원 생성 없이 증원 난수나 마지막 성공 턴을 바꿀 수 없습니다.");
                 return Array.Empty<NexusReinforcementRecord>();
             }
 
@@ -609,6 +675,11 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                 start.Final.ControllerPhase != CombatControllerPhase.Enemy ||
                 start.Final.ControllerTurnSequence != final.Turn.ControllerTurnSequence)
                 throw new InvalidOperationException("증원 사건 앞에 일치하는 적 진영 시작 사건이 필요합니다.");
+
+            if (start.Final.CompletedPlayerTurnCount != final.Turn.CompletedPlayerTurnCount ||
+                !previous.IsSpawnDue(spec, start.Final.CompletedPlayerTurnCount) ||
+                next.LastSpawnEnemyTurn != start.Final.CompletedPlayerTurnCount)
+                throw new InvalidOperationException("증원 간격 또는 마지막 성공 턴이 생성 사건과 일치하지 않습니다.");
 
             var addedOrigins = origins.Skip(previousOrigins.Count).ToDictionary(o => o.EntityId);
             var created = transition.Characters.Created.ToDictionary(c => c.EntityId);
@@ -704,11 +775,6 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
                     if (!state.IsInside(cell) || !occupied.Add(cell))
                         throw new InvalidOperationException("구조물 점유 위치가 보드 밖이거나 중복됩니다.");
             }
-            var fields = new HashSet<CellCoord>();
-            foreach (var field in state.ThornFields)
-                if (!state.IsInside(field.Cell) || !fields.Add(field.Cell) || field.RemainingUnitTurns < 1 || field.ThornDamage < 1 ||
-                    field.DefenseReductionPercent < 0 || field.DefenseReductionPercent > 100 || !Enum.IsDefined(typeof(UnitTurnTickPhase), field.TickPhase))
-                    throw new InvalidOperationException("가시밭 위치 또는 유지 값이 잘못되었습니다.");
             foreach (var tile in state.Environment.Tiles)
                 if (!state.IsInside(tile.Cell))
                     throw new InvalidOperationException("이동 타일 원본이 보드 밖에 있습니다.");

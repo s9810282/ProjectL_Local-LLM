@@ -22,11 +22,13 @@ namespace ProjectL.Tests.Core
                 "BattleInstanceId", "ControllerTurnSequence", "MoveCommandNumber", "ActorId", "Anchor", "Rotation",
                 "OccupiedCells", "RecordedDistance", "OriginFacts", "ExpectedActorAfterMove", "Movement", "Participants", "Effects");
             AssertProperties(typeof(MovementUndoOriginFacts), "Capture·SameValues·원점 의존 범위",
-                "Cell", "Tiles", "TerrainSourceIds", "ObjectSourceIds", "Thorns", "Souls");
+                "Cell", "Tiles", "TerrainSourceIds", "ObjectSourceIds", "Souls");
             AssertProperties(typeof(MovementUndoState), "SameValues·WithoutAffected", "Checkpoints");
             AssertProperties(typeof(CombatCommandState), "With·SameValues·SameGameplayValues·이동 투영",
                 "MovementUndo", "Gimmicks", "Reinforcements", "BoardWidth", "BoardHeight", "Phase", "InCombat", "ItemRandomState", "Rewards",
-                "Structures", "ThornFields", "Turn", "TraitTurn", "Environment", "EnvironmentProgress", "WallBlocking", "Objective", "Allocation");
+                "Structures", "Turn", "TraitTurn", "Environment", "EnvironmentProgress", "WallBlocking", "Objective", "Allocation",
+                nameof(CombatCommandState.PlayerSkill), nameof(CombatCommandState.LastPlatformBoundaryCount),
+                nameof(CombatCommandState.ThornBombs));
             AssertProperties(typeof(CombatActionAvailability), "생성자 기본값·WithSourceRevision",
                 "SourceRevision", "MovementUndo", "BattleInstanceId", "ControllerTurnSequence", "ActorId", "ActionUse",
                 "MovementAllowance", "MoveFailure", "AttackFailure", "CanMove", "CanAttack");
@@ -118,7 +120,8 @@ namespace ProjectL.Tests.Core
             AssertProperties(typeof(OwnedCharacterRecord), "SameValues·XP·성장 재구성·전투 준비·새 Run 초기화",
                 nameof(OwnedCharacterRecord.Id), nameof(OwnedCharacterRecord.CharacterKey), nameof(OwnedCharacterRecord.Role),
                 nameof(OwnedCharacterRecord.Level), nameof(OwnedCharacterRecord.Experience), nameof(OwnedCharacterRecord.Growth),
-                nameof(OwnedCharacterRecord.HunterAttackBonus), nameof(OwnedCharacterRecord.SpecializationCategory));
+                nameof(OwnedCharacterRecord.HunterAttackBonus), nameof(OwnedCharacterRecord.SpecializationCategory),
+                nameof(OwnedCharacterRecord.PlayerSkillUpgrade));
         }
 
         [Test]

@@ -55,6 +55,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 _target.ReleaseAll(source, version);
         }
 
+        // 합류 전에는 넘기지 않습니다. 합류 전 접촉은 접촉 집계가 해제 허용(CanRelease)까지 모았다가 순서대로 냅니다(계획 TP-5).
+        public void Release(CombatEvent source, EntityId target, int version)
+        {
+            if (Matches(source, version) && CanRelease)
+                _target.Release(source, target, version);
+        }
+
         public void EndSource(CombatEvent source, int version)
         {
             if (!Matches(source, version) || _cancelled) return;

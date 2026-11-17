@@ -839,6 +839,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return ground + mapper.SurfaceOffset(mapper.SurfaceHeightOf(cells, anchor));
         }
 
+        internal void AlignToSurface(EntityId id, CellCoord anchor, IReadOnlyList<CellCoord> cells, FieldGridMapper mapper)
+        {
+            if (_views == null || !_views.TryGet(id, out FieldUnitView view) || view == null || Presentation.KeepsPlacement(id))
+                return;
+            view.ApplyStandingPosition(CenterOf(cells, anchor, mapper));
+        }
+
         private FieldUnitView Rent(EntityKey key)
         {
             CustomPool<FieldUnitView> pool = PoolOf(key);

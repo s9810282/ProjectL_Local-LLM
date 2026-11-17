@@ -87,6 +87,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 throw new InvalidOperationException("활성 전투가 없습니다.");
             // 조립을 시작한 전투를 먼저 고정한다. 조립 도중 전투가 바뀌면 호출자의 재검증이 이 값과 비교해 결과를 버린다.
             long battleInstanceId = _combat.BattleInstanceId;
+            long queryRevision = _combat.QueryRevision;
             var battle = _combat.Current;
             var membership = battle.Membership ?? throw new InvalidOperationException("전투 진입 참가 목록이 없습니다.");
             var capturedMainId = membership.MainId;
@@ -114,7 +115,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                     true, default, default, Array.Empty<CellCoord>())).ToArray(), battle.EnvironmentBindings, battle.ObstacleContents, request.ItemKey, _items.Current, definitions.ItemDefinitions, _currency.Amount, _fame.Amount, membership,
                 expectedBattleInstanceId: request.ExpectedBattleInstanceId,
                 expectedControllerTurnSequence: request.ExpectedControllerTurnSequence,
-                expectedMoveCommandNumber: request.ExpectedMoveCommandNumber);
+                expectedMoveCommandNumber: request.ExpectedMoveCommandNumber, sweepSide: request.SweepSide,
+                playerSkillRequest: request.PlayerSkill,
+                playerSkillSource: request.Kind == CombatCommandKind.UsePlayerSkill
+                    ? new CoreCaculator.Contracts.PlayerSkills.PlayerSkillSourceStamp(battleInstanceId,
+                        battle.CommandState.Turn.ControllerTurnSequence, queryRevision, request.ActorId) : null);
         }
 
     }

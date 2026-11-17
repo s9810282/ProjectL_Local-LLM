@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Attack;
@@ -11,7 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <summary>
     /// 결과의 사건을 "같은 순간" 묶음으로 나눕니다(동시 처리 설계 C1, 사용자 결정 Q-C1 A). 근거는 Core 사실뿐입니다.
     /// 같은 행동 구간(<see cref="CombatEventTypeTable.IsActionStart"/> 사이)에서 피해 근원 열쇠(<see cref="CombatEventSubjects.OriginKey"/>)가 같은 사건과,
-    /// 그 출처의 이동 후속(넉백 등, <see cref="CombatHitFollowUps"/>)이 한 묶음입니다.
+    /// 그 출처의 이동 후속(넉백 등, <see cref="CombatHitFollowUps"/>)이 한 묶음입니다. 근원이 없어도 함께 움직이는 사건(죽음의 손 휩쓸기 걸음·낙석 수신자)은
+    /// 규칙마다 새 묶음을 붙입니다(<see cref="AttachSweepMoves"/>·<see cref="AttachRockfallRecipients"/>, 번호는 열쇠 묶음 뒤).
     /// </summary>
     /// <remarks>
     /// <para>
@@ -19,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// 기차 직후의 직접 사망은 근원이 없어 묶음 밖이며 기차 전용 재생이 맡습니다(설계 C7, Q-C3 A).
     /// </para>
     /// <para>
-    /// 한 대상의 넉백 경로(그 묶음의 첫 이동 ~ 마지막 이동) 안에 다른 사건(넉백 가시 피해·중간 칸 발동 등 묶음 밖이나 다른 묶음)이 끼면
+    /// 한 대상의 넉백 경로(그 묶음의 첫 이동 ~ 마지막 이동) 안에 다른 사건(넉백 경로의 지형 피해·중간 칸 발동 등 묶음 밖이나 다른 묶음)이 끼면
     /// 그 대상의 이동은 묶음 밖으로 둡니다(C-4 검토, 사용자 결정 (a)). 함께 출발했다가 낀 사건이 앞 대상 경로 끝을 기다리느라 경로 중간에 멈추지 않고,
     /// 그 대상은 옛 순서대로 앞 사건이 모두 끝난 뒤 걷습니다. 경로가 끊기지 않은 대상은 계속 함께 걷습니다.
     /// 약한 지반 진입 기록은 바로 앞 이동의 묶음에 붙으므로 경로를 끊지 않습니다(<see cref="AttachEntryRecords"/>).
@@ -36,6 +38,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly Dictionary<(int Segment, CombatEventSubjects.OriginKey Key), int> _keys = new();
         private readonly Dictionary<(int Group, EntityId Subject), (int First, int Last)> _paths = new();
         private readonly List<(int Group, EntityId Subject)> _interrupted = new();
+        // 근원 열쇠가 아닌 규칙(휩쓸기·낙석)이 만드는 묶음의 다음 번호입니다. 열쇠 묶음 번호 뒤부터 씁니다.
+        private int _nextGroup;
 
         /// <summary>해석한 사건 수입니다.</summary>
         internal int Count => _groups.Count;
@@ -67,10 +71,54 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 }
                 Add(group, subject, segment);
             }
+            _nextGroup = _keys.Count;
             AttachItemEvents(result);
+            AttachSweepMoves(result);
             AttachEntryRecords(result);
             AttachRockfallRecipients(result);
             SplitInterruptedPaths(result);
+        }
+
+        /// <summary>
+        /// 죽음의 손 휩쓸기(관통·죽음의 손 View 설계 §3.4, 계획 Tb.1)의 이동은 공격 사건보다 앞에 오고 피해 근원이 없어 그대로 두면 한 명씩 차례로 걷습니다.
+        /// 휩쓸기 머리 사건(<see cref="CombatSweepEvent"/>, 형식 표에는 없음 — 계획 TP-1) 뒤 같은 행동 구간에서 다음 행동 시작(그 공격 사건)까지 오는
+        /// 포착 대상의 죽음의 손 밀림 걸음을 머리마다 새 묶음으로 묶어 함께 밀리게 합니다(넉백·충격 볼트와 같은 동시 재생).
+        /// 경로 중간에 다른 사건이 낀 대상은 <see cref="SplitInterruptedPaths"/>가 묶음 밖으로 돌립니다(규칙 (a)). 같은 유닛의 순서는 <see cref="CanOverlap"/>이 지킵니다.
+        /// </summary>
+        private void AttachSweepMoves(CombatResult result)
+        {
+            for (int i = 0; i < result.Events.Count; i++)
+            {
+                if (result.Events[i] is not CombatSweepEvent sweep)
+                    continue;
+                int group = -1;
+                for (int next = i + 1; next < result.Events.Count; next++)
+                {
+                    CombatEvent item = result.Events[next];
+                    if (_segments[next] != _segments[i] || CombatEventTypeTable.IsActionStart(item))
+                        break;
+                    if (_groups[next] >= 0 || !IsSweepStep(item, sweep, out EntityId subject))
+                        continue;
+                    if (group < 0)
+                        group = _nextGroup++;
+                    _groups[next] = group;
+                    _subjects[next] = subject;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 그 휩쓸기가 포착한 대상의 죽음의 손 밀림 걸음인지입니다(Core 이동 원인 = Forced + DeadHand, 인계 문서). 이 판정의 원본은 여기 한 곳이고,
+        /// 동시 묶음과 공격 동작 싱크(<c>CombatPreAttackPresentationStarts</c>)가 같이 씁니다.
+        /// </summary>
+        internal static bool IsSweepStep(CombatEvent item, CombatSweepEvent sweep, out EntityId subject)
+        {
+            subject = EntityId.Empty;
+            if (item is not CombatCharacterEvent step || !CombatEventTypeTable.IsMovement(step)
+                || step.MovementCause?.Agency != CombatMovementAgency.Forced || step.MovementCause.TraitKey != TraitKey.DeadHand
+                || !CombatEventTypeTable.TryGetSubject(step, out subject))
+                return false;
+            return sweep.Sweep.CapturedTargetIds.Contains(subject);
         }
 
         /// <summary>
@@ -79,11 +127,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// </summary>
         private void AttachRockfallRecipients(CombatResult result)
         {
-            int group = _keys.Count;
             for (int i = 0; i < result.Events.Count; i++)
             {
                 if (result.Events[i] is not CombatRockfallEvent { Step: RockfallGimmickStep.Impact } rockfall)
                     continue;
+                // 근원 열쇠 묶음·휩쓸기 묶음과 번호가 겹치지 않게 다음 번호를 씁니다.
+                int group = _nextGroup++;
                 for (int next = i + 1; next < result.Events.Count; next++)
                 {
                     CombatEvent item = result.Events[next];
@@ -94,7 +143,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     _groups[next] = group;
                     _subjects[next] = subject;
                 }
-                group++;
             }
         }
 
@@ -202,6 +250,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _keys.Clear();
             _paths.Clear();
             _interrupted.Clear();
+            _nextGroup = 0;
         }
 
         // 넉백 경로 안에 다른 사건이 낀 대상의 이동을 묶음 밖으로 둡니다(클래스 설명). 판정을 모두 마친 뒤 바꿔 경로끼리 서로의 판정에 닿지 않게 합니다.

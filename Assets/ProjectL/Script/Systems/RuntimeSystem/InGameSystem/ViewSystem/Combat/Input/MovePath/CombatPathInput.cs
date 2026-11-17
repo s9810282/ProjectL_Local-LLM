@@ -47,6 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private readonly ICombatActionRejectionSink _rejections;
         private readonly Action _reportBlockedInput;
         private readonly CombatMovementInteraction _interaction;
+        private readonly CombatClickMove _click;
         private bool _attached = true;
         private bool _draftShown;
         private bool _planningShown;
@@ -56,7 +57,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private bool _released;
         private EntityId _pathActor;
         private CellCoord _pathOrigin;
-        private int _pathResultSequence;
         private int _planningVersion;
         // 제한 중 누른 아군에서 다른 칸에 놓은 시도만 안내합니다. 단순 정보 선택·호버는 보고하지 않습니다.
         private EntityId _blockedMoveActor;
@@ -66,6 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private readonly CombatMovementRangeTracker _range;
         // 이동 입력 정리 단계들입니다. 정리는 매 프레임 불릴 수 있어 생성 때 한 번 만들어 둡니다(GC 끊김 설계 GH4).
         private readonly Action _cancelInteraction;
+        private readonly Action _cancelClick;
         private readonly Action _keepRange;
         private readonly Action _clearRange;
         private readonly Action _endPlanning;
@@ -119,9 +120,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _readFacts = readFacts ?? throw new ArgumentNullException(nameof(readFacts));
             _battle = state.BattleInstanceId;
             _range = new CombatMovementRangeTracker(input, write, presenter);
-            _interaction = new CombatMovementInteraction(write, input, state, mapping.InnerCellInset, rejections);
+            var quote = new CombatMovementQuote(write, input, state);
+            _click = new CombatClickMove(quote, _range, presenter, rejections, ClickFacts);
+            _interaction = new CombatMovementInteraction(quote, state, mapping.InnerCellInset, rejections);
             _interaction.Attach();
             _cancelInteraction = _interaction.Cancel;
+            _cancelClick = _click.Cancel;
             _keepRange = KeepRangeForMoveMode;
             _clearRange = _range.Clear;
             _endPlanning = EndMovementPlanning;
@@ -132,28 +136,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         // 입구 검사: 이 객체의 수명·전투 일치 → 입력 가용성·대상 → 공통 경로 정책(Policy 한 곳).
         // 외부 표시 콜백 뒤에는 이 함수를 다시 불러 사실을 새로 읽는다.
-        private bool AllowsInput()
-        {
-            return AllowsInput(CombatInputRouter.PointerTarget.Path);
-        }
+        private bool IsBattleCurrent => _attached && _state.HasBattle && _state.BattleInstanceId == _battle;
 
-        private bool AllowsInput(CombatInputRouter.PointerTarget expectedTarget)
-        {
-            if (!_attached || !_state.HasBattle || _state.BattleInstanceId != _battle)
-                return false;
+        private bool AllowsInput() =>
+            IsBattleCurrent && AllowsInput(CombatInputRouter.PointerTarget.Path, _readFacts());
 
-            CombatInputFacts facts = _readFacts();
+        private static bool AllowsInput(CombatInputRouter.PointerTarget expectedTarget, in CombatInputFacts facts)
+        {
             return facts.IsInputAvailable
                 && facts.PointerTarget == expectedTarget
                 && CombatInputPolicy.CanEditPath(facts);
         }
 
         // 포인터 대상이 경로 입력인지는 사실에 담긴 대상 하나로 본다. 그 대상은 입력 기능 묶음 한 곳이 판정식으로 정한다(평가 C4-13).
-        private CharacterData PlanningActor(CombatInputRouter.PointerTarget expectedTarget)
+        private CharacterData PlanningActor(CombatInputRouter.PointerTarget expectedTarget) =>
+            IsBattleCurrent ? PlanningActor(expectedTarget, _readFacts()) : null;
+
+        private CharacterData PlanningActor(CombatInputRouter.PointerTarget expectedTarget, in CombatInputFacts facts)
         {
-            if (!AllowsInput(expectedTarget) || _state.Phase != CombatFlowPhase.PlayerInput)
+            if (!AllowsInput(expectedTarget, facts) || _state.Phase != CombatFlowPhase.PlayerInput)
                 return null;
-            var actor = ActiveActor();
+            var actor = FindActor(facts.SelectedActorId);
             return actor != null && actor.Stats.MoveMethod != MoveMethod.None ? actor : null;
         }
 
@@ -209,7 +212,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _pathActor = EntityId.Empty;
             _planningVersion++;
             _range.InvalidateAcceptedRange();
-            RunCleanup(_interaction.Detach, _range.Clear, EndMovementPlanning, ClearDraft, SyncPlanning);
+            RunCleanup(_cancelClick, _interaction.Detach, _range.Clear, EndMovementPlanning, ClearDraft, SyncPlanning);
         }
 
         internal void OnPreview(CombatPreviewResult preview)
@@ -218,7 +221,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (!_blockedMoveActor.IsEmpty && IsBlockedMoveOriginCurrent(_readFacts(), _blockedMoveActor))
                 return;
             bool allowed = AllowsInput();
-            if (!allowed || !ValidatePlanning(allowed))
+            if (!allowed || !ValidatePlanning(allowed, out var range))
             {
                 CancelInputs();
                 return;
@@ -234,14 +237,55 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return;
             }
 
-            _interaction.OnPreview(preview, allowed);
+            if (!_interaction.IsActive)
+                return;
+            bool applied = _interaction.TryApplyPreview(preview, allowed, range);
             // 놓은 뒤 승인이 "이동 불가"로 와 확정이 풀렸으면 앞부분으로 이어 그리지 않고 취소한다(M3).
             if (_released && _interaction.IsActive && !_interaction.IsAwaitingPreview && !_interaction.IsSubmitted)
             {
                 CancelInputs();
                 return;
             }
-            ShowDraft();
+            // 같은 응답을 감시하는 동안에는 커서를 다시 투영하지 않는다. 포인터·카메라 이동은 PointerMoved에서 갱신한다.
+            if (applied || !_interaction.IsActive)
+                ShowDraft();
+        }
+
+        internal bool HasClickCandidate => _click.HasCandidate;
+
+        private CombatMovementRangeFacts ClickFacts()
+        {
+            var facts = ClickFacts(out bool waiting);
+            return waiting ? default : facts;
+        }
+
+        private CombatMovementRangeFacts ClickFacts(out bool waiting)
+        {
+            waiting = false;
+            if (!IsBattleCurrent || IsPlanning)
+                return default;
+            var facts = _readFacts();
+            var actor = PlanningActor(CombatInputRouter.PointerTarget.Path, facts);
+            if (actor == null || facts.IsModalOpen)
+                return default;
+            var availability = _actionAvailability.Read(facts);
+            if (availability?.CanMove == false)
+                return default;
+            waiting = availability == null && CombatInputPolicy.CanQueryActionAvailability(facts);
+            return RangeFactsOf(actor);
+        }
+
+        internal bool TryPressDestination(CellCoord? cell, bool occupied)
+        {
+            if (!_attached || IsPlanning) return false;
+            var facts = ClickFacts(out bool waiting);
+            return _click.Press(facts, cell, occupied, waiting);
+        }
+
+        internal void ReleaseDestination(CellCoord? cell)
+        {
+            if (_attached)
+                _click.Release(cell, ActiveActor());
         }
 
         public void FocusLost() => CancelInputs();
@@ -305,7 +349,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _pathActor = actor.EntityId;
             _pathOrigin = actor.Anchor.Value;
             _released = false;
-            _pathResultSequence = _state.LatestResultSequence;
             _waitingForOrigin = true;
             if (!reuse)
                 _range.Request(facts);
@@ -334,27 +377,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         }
 
         private CombatMovementRangeFacts RangeFactsOf(CharacterData actor) =>
-            new CombatMovementRangeFacts(_state.BattleInstanceId, actor.EntityId, actor.Anchor.Value, _state.LatestResultSequence);
+            new CombatMovementRangeFacts(_state.BattleInstanceId, actor.EntityId, actor.Anchor.Value, _state.LatestResultSequence,
+                _state.QueryRevision, _state.Current.CommandState.Turn.ControllerTurnSequence);
 
         // 슬롯이 한가한지입니다(배경 요청 규칙 R-a). 답을 받지 않은 남의 요청이 있으면 배경 요청은 기다립니다.
         private bool IsPreviewSlotIdle() => CombatPreviewSlotRule.IsIdle(
             _input.HasPreview, _input.HasPreview ? _input.Preview.Number : 0, _state.AnsweredPreviewNumber);
 
-        // 지정 중인 행위자·시작 칸 수명 검사. allowed는 같은 호출에서 이미 평가한 입구 판단이다.
-        private bool ValidatePlanning(bool allowed)
+        // 드래그는 요청 중이거나 표시 중인 범위와 수명을 함께한다. 출처가 바뀌면 견적·Release도 취소한다.
+        private bool ValidatePlanning(bool allowed, out MovementRangeResult range)
         {
+            range = default;
             if (_pathActor.IsEmpty)
                 return true;
 
             var actor = ActiveActor();
-            return allowed && _state.Phase == CombatFlowPhase.PlayerInput &&
-                actor != null && actor.EntityId == _pathActor && actor.Anchor.Value == _pathOrigin &&
-                _state.LatestResultSequence == _pathResultSequence &&
-                (!_range.IsPending || _range.Matches(CurrentRangeFacts()));
+            if (!allowed || _state.Phase != CombatFlowPhase.PlayerInput ||
+                actor == null || actor.EntityId != _pathActor || actor.Anchor.Value != _pathOrigin)
+                return false;
+
+            var facts = CurrentRangeFacts();
+            return _range.IsPending ? _range.Matches(facts) : _range.TryGetShown(facts, out range);
         }
 
         private CombatMovementRangeFacts CurrentRangeFacts() =>
-            new CombatMovementRangeFacts(_state.BattleInstanceId, _pathActor, _pathOrigin, _state.LatestResultSequence);
+            new CombatMovementRangeFacts(_state.BattleInstanceId, _pathActor, _pathOrigin, _state.LatestResultSequence,
+                _state.QueryRevision, _state.Current.CommandState.Turn.ControllerTurnSequence);
 
         private void ConsumeMovementRange(CombatPreviewResult preview)
         {
@@ -366,7 +414,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             int version = _planningVersion;
             try
             {
-                if (!_range.TryShowAnswer(preview, facts))
+                var answer = _range.ShowAnswer(preview, facts);
+                if (answer == MovementRangeAnswer.Stale)
+                    CancelInputs(keepMoveModeRange: false);
+                if (answer != MovementRangeAnswer.Accepted)
                     return;
             }
             catch (Exception displayError)
@@ -387,12 +438,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (!_attached || version != _planningVersion || _pathActor.IsEmpty)
                 return;
             bool allowed = AllowsInput();
-            if (!ValidatePlanning(allowed))
+            if (!ValidatePlanning(allowed, out var range))
             {
                 CancelInputs();
                 return;
             }
-            _interaction.ResumePreview(allowed);
+            _interaction.ResumePreview(allowed, range);
             ShowDraft();
         }
 
@@ -406,7 +457,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 return;
 
             bool allowed = AllowsInput();
-            if (!ValidatePlanning(allowed))
+            if (!ValidatePlanning(allowed, out var range))
             {
                 CancelInputs();
                 return;
@@ -441,9 +492,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             }
 
             bool frozen = _interaction.IsAwaitingPreview;
-            _interaction.PointerMoved(mapped ? grid : (Vector2?)null, cancel, allowed);
+            _interaction.PointerMoved(mapped ? grid : (Vector2?)null, cancel, allowed, range);
             if (!frozen)
-                _movementPointer = mapped && !cancel ? new Vector2(x, y) : (Vector2?)null;
+                _movementPointer = !cancel ? new Vector2(x, y) : (Vector2?)null;
             ShowDraft();
         }
 
@@ -501,21 +552,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             }
             if (!_attached || _pathActor.IsEmpty || _released)
                 return;
-            if (_waitingForOrigin || !ValidatePlanning(AllowsInput()))
+            if (_waitingForOrigin)
             {
                 CancelInputs();
                 return;
             }
 
             // 놓은 위치까지 경로에 반영한 뒤 놓은 상태로 바꾼다. 이후 포인터 이동은 무시한다(C2).
+            int version = _planningVersion;
             PointerMoved(x, y);
-            if (_pathActor.IsEmpty)
+            if (version != _planningVersion || _pathActor.IsEmpty)
                 return;
 
             _released = true;
             bool mapped = Map(x, y, out var grid, out var cancel);
             // 위 PointerMoved가 표시 콜백을 불렀으므로 확정 직전에 사실을 다시 읽는다.
-            _interaction.Confirm(mapped && !cancel ? MovementPointerSampler.CellAt(grid) : (CellCoord?)null, cancel, AllowsInput());
+            bool allowed = AllowsInput();
+            if (version != _planningVersion) return;
+            if (!ValidatePlanning(allowed, out _))
+            {
+                CancelInputs();
+                return;
+            }
+            _interaction.Confirm(mapped && !cancel ? MovementPointerSampler.CellAt(grid) : (CellCoord?)null, cancel, allowed);
             if (!_interaction.IsAwaitingPreview && !_interaction.IsSubmitted)
             {
                 CancelInputs();
@@ -591,7 +650,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             // 경로 입력이 허용되지 않는 동안 매 프레임 불리므로 람다·배열 없이 미리 만든 대리자를 차례로 부릅니다
             // (GC 끊김 설계 GH4). 순서·실패 모으기·문구는 그대로입니다.
             List<Exception> errors = null;
-            CleanupErrors.Try(_cancelInteraction, ref errors);
+            CleanupErrors.Try(_cancelClick, ref errors);
+            if (version == _planningVersion)
+                CleanupErrors.Try(_cancelInteraction, ref errors);
             if (version == _planningVersion)
                 CleanupErrors.Try(keepMoveModeRange ? _keepRange : _clearRange, ref errors);
             if (version == _planningVersion)
@@ -652,7 +713,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 // 커서 추적을 먼저 하고, 그 표시 콜백 뒤에는 지정 세대를 다시 본다.
                 int versionBeforePointer = _planningVersion;
                 CombatPreviewResult quote = _interaction.Preview;
-                CombatHoverState tint = !_interaction.PointerValid ? CombatHoverState.Invalid
+                CombatHoverState tint = !_interaction.PointerValidForDisplay ? CombatHoverState.Invalid
                     : quote?.Move == null || _interaction.ValidatedRevision != _interaction.DraftRevision ? CombatHoverState.Neutral
                     : quote.Move.Value.CanMove ? CombatHoverState.Valid : CombatHoverState.Invalid;
                 try
@@ -673,7 +734,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 // 표시는 같은 값을 다시 받아도 화면이 바뀌지 않으므로(멱등) 입력은 무엇을 그렸는지 기억하지 않고 매번 보낸다.
                 // 그려진 상태의 원본은 표시 쪽 하나다(경로 입력 분리 설계 RT8).
                 _draftShown = true;
-                _presenter.ShowDraft(_interaction.RetainedPath, _interaction.Preview?.Move, _interaction.PointerValid,
+                _presenter.ShowDraft(_interaction.RetainedPath, _interaction.Preview?.Move, _interaction.PointerValidForDisplay,
                     _interaction.CandidateCell);
             }
             else
@@ -708,6 +769,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             using var profileInteractionMovePathPollSample = _profileInteractionMovePathPoll.Auto();
 #endif
 
+            if (_click.HasCandidate)
+            {
+                _click.Poll(null);
+                if (_click.HasCandidate) return;
+            }
             bool allowed = AllowsInput();
             if (!WatchPlanning(allowed))
                 return;
@@ -751,7 +817,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// </summary>
         private bool WatchPlanning(bool allowed)
         {
-            if (ValidatePlanning(allowed))
+            if (ValidatePlanning(allowed, out _))
                 return true;
 
             CancelInputs();
@@ -819,11 +885,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             internal override void Poll(CombatPreviewResult latestPreview)
             {
                 if (_path.IsDetached) return;
-                if (latestPreview != null)
+                if (_path._click.NeedsPolling)
+                {
+                    _path._click.Poll(latestPreview);
+                    if (_path.HasClickCandidate) return;
+                }
+                else if (latestPreview != null)
                     _path.OnPreview(latestPreview);
                 if (!_path.IsDetached)
                     _path.Refresh();
             }
+
+            internal override void CancelPresentation() => _path._click.Cancel();
 
             internal override void BeforeResult() => CancelInputs();
 

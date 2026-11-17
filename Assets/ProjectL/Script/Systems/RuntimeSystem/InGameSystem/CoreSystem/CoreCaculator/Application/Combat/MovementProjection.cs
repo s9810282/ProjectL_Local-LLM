@@ -1,8 +1,11 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.ThornBombs;
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -10,18 +13,18 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Experience;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Rules;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
 {
     /// <summary>한 명령 안에서만 존재하는 투영값이다. Buffer 원본과 매 단계의 현재값을 구분한다.
-    /// 캐릭터·구조물·가시밭 현재값과 이동 기록(진입 칸·거리·정지)를 소유하고,
+    /// 캐릭터·구조물·가시 폭탄 현재값과 이동 기록(진입 칸·거리·정지)를 소유하고,
     /// 환경 원본은 <see cref="CommandEnvironmentState"/>, 사망·영혼 정산은 <see cref="CommandDeathSettlement"/>,
     /// 공개 의존 기록은 <see cref="ProjectionDependencies"/>에 맡긴다.</summary>
     internal sealed class MovementProjection
     {
         private readonly Dictionary<EntityId, CharacterCombatFacts> _characters;
         private readonly List<CellCoord> _entered = new();
-        private readonly Dictionary<CellCoord, ThornFieldCellSnapshot> _thorns;
         private readonly Dictionary<EntityId, StructureCombatFacts> _structures;
         private readonly CommandEnvironmentState _environment;
         private readonly CommandDeathSettlement _deaths;
@@ -30,7 +33,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly CommandAttackGroups _attackGroups;
         private readonly CombatHitCause _sharedHitCause;
         private readonly CombatCommandState _state;
+        private readonly IReadOnlyList<IMovementTileRule> _movementRules;
+        internal IReadOnlyList<IMovementTileRule> MovementRules => _movementRules;
+        internal ThornBombResolution ThornBombs { get; }
         internal StageGimmickStateSet Gimmicks { get; private set; }
+        internal HashSet<CellCoord> GimmickReservations { get; set; }
         internal TornadoContactResolution TornadoResolution { get; set; }
         internal Owner? TornadoObserver { get; set; }
         /// <summary>
@@ -38,8 +45,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 기본 생성자는 <c>preview</c>로, 공격 도착 투영은 <see cref="CommandAttackProjection.CreateArrivalProjection"/>이 공개 미리보기 여부로 정합니다.
         /// </summary>
         internal bool DeathTraitsEnabled { get; set; } = true;
+        internal ISet<EntityId> SettledDeathEffects { get; } = new HashSet<EntityId>();
         /// <summary>이 투영이 다루는 턴 사실입니다. 행동 제한 기간의 종료 감소 진영 판단에 씁니다.</summary>
         internal CombatTurnFacts Turn => _state.Turn;
+        internal CombatResolutionWindow ResolutionWindow => Input.ResolutionWindow;
+        internal Owner? PendingEndCleanupSide => ResolutionWindow == CombatResolutionWindow.BeforeControllerTurn
+            ? null : ActionRestrictionTiming.PendingEndSide(Turn);
         /// <summary>이번 명령에서 정한 사망 위치입니다(넉백 끝 칸·이동 중 칸 포함). 읽기 전용으로 냅니다.</summary>
         internal IReadOnlyDictionary<EntityId, CellCoord> DeathAnchors => _deaths.DeathAnchors;
         internal uint ItemRandomState { get; set; }
@@ -48,6 +59,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private CellCoord _finalStop;
         internal EnvironmentSemanticBindings Bindings => _environment.Bindings;
         internal long NextAttackGroup() => _attackGroups.Next();
+        internal CommandAttackGroups AttackGroups => _attackGroups;
         /// <summary>포효 피격 원인이다. 공격 명령의 도착 투영은 공격 원인을 공유하고, 독립 투영은 환경 발동(피해 요청)마다 새 원인을 쓴다(D7).</summary>
         internal CombatHitCause NextHitCause() => _sharedHitCause ?? new CombatHitCause();
         internal HashSet<EntityId> EffectTargetIds => _dependencies.EffectTargetIds;
@@ -79,42 +91,46 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal MovementProjection(CombatCommandInput input, bool preview, CombatProfileReadSet profileReads,
-            MovementEnvironmentFacts visibleEnvironment)
+            MovementEnvironmentFacts visibleEnvironment, IReadOnlyList<IMovementTileRule> rules = null)
         {
             Input = input;
             _dependencies = new ProjectionDependencies(profileReads);
             _state = input.State;
+            _movementRules = rules;
+            ThornBombs = new ThornBombResolution(_state.ThornBombs);
             Gimmicks = _state.Gimmicks;
             ItemRandomState = _state.ItemRandomState;
             Rewards = _state.Rewards;
             TraitTurn = _state.TraitTurn;
             _characters = input.Characters.ToDictionary(c => c.EntityId);
-            TornadoObserver = preview ? Actor.Owner : (Owner?)null;
+            TornadoObserver = input.CalculationObserver ?? (preview ? Actor.Owner : (Owner?)null);
             DeathTraitsEnabled = !preview;
             Damage = CombatDamageApplication.For(input, _characters, Events, captureMovementUses: !preview, profileReads: ProfileReads);
             _environment = new CommandEnvironmentState(preview ? visibleEnvironment ?? input.State.Environment.VisibleTo(Actor.Owner) : input.State.Environment,
                 input.EnvironmentBindings, _state.EnvironmentProgress);
-            _thorns = input.State.ThornFields.ToDictionary(f => f.Cell);
             _structures = input.State.Structures.ToDictionary(s => s.EntityId);
             if (input.ObstacleContents.Count > 0 || input.State.Structures.Any(s => ObstacleContentProfile.IsNativeObstacleKey(s.Definition.Key)))
                 ObstacleContentProfile.Validate(input.ObstacleContents, input.EnvironmentBindings, input.State.Structures);
             _attackGroups = new CommandAttackGroups();
             _deaths = new CommandDeathSettlement(input.SoulCounts.ToDictionary(p => p.Key, p => p.Value), input.Souls,
                 new List<long>(), new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null);
-            _obstacles = new ObstacleReactionCalculator(input, Environment, Damage, _structures, _deaths.DeathAnchors, _attackGroups);
+            _obstacles = new ObstacleReactionCalculator(input, _environment, Damage, _structures, _deaths.DeathAnchors, _attackGroups);
             _finalStop = input.Path.Origin;
         }
 
         // 공격·배치의 현재 투영을 이어받아 동일한 진입 계산과 최종 게시 경계를 사용한다.
         internal MovementProjection(CombatCommandInput input, CombatCommandState state,
             CombatDamageApplication damage, Dictionary<EntityId, StructureCombatFacts> structures,
-            Dictionary<CellCoord, ThornFieldCellSnapshot> thorns, Dictionary<CharacterInstanceId, int> counts,
+            Dictionary<CharacterInstanceId, int> counts,
             SoulFieldSnapshot soulField, List<long> consumedSouls,
             Dictionary<EntityId, CellCoord> deathAnchors, SoulEffectCalculator souls, CommandAttackGroups attackGroups = null,
-            MovementEnvironmentFacts environment = null, CombatHitCause hitCause = null)
+            CommandEnvironmentState environment = null, CombatHitCause hitCause = null, ObstacleReactionCalculator obstacles = null,
+            ThornBombResolution thornBombs = null, IReadOnlyList<IMovementTileRule> rules = null)
         {
             Input = input;
             _state = state;
+            _movementRules = rules;
+            ThornBombs = thornBombs ?? new ThornBombResolution(state.ThornBombs);
             Gimmicks = state.Gimmicks;
             ItemRandomState = state.ItemRandomState;
             Rewards = state.Rewards;
@@ -123,22 +139,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _dependencies = new ProjectionDependencies(Damage.ProfileReads);
             _characters = damage.Characters;
             _structures = structures;
-            _thorns = thorns;
             Events = damage.Events;
             _attackGroups = attackGroups ?? new CommandAttackGroups();
             _sharedHitCause = hitCause;
-            _environment = new CommandEnvironmentState(environment ?? state.Environment, input.EnvironmentBindings, state.EnvironmentProgress);
+            _environment = environment ?? new CommandEnvironmentState(state.Environment, input.EnvironmentBindings, state.EnvironmentProgress);
             _deaths = new CommandDeathSettlement(counts, soulField, consumedSouls, deathAnchors, souls,
                 _characters.Values.Where(c => c.Health.IsDead).Select(c => c.EntityId));
-            _obstacles = new ObstacleReactionCalculator(input, Environment, Damage, _structures, _deaths.DeathAnchors, _attackGroups,
+            _obstacles = obstacles ?? new ObstacleReactionCalculator(input, _environment, Damage, _structures, _deaths.DeathAnchors, _attackGroups,
                 hitCause);
         }
 
         internal static MovementProjection ForArrival(CombatCommandInput input,
-            Dictionary<EntityId, CharacterCombatFacts> characters, List<CombatEvent> events, CombatCommandState state = null) =>
-            new(input, state ?? input.State, CombatDamageApplication.For(input, characters, events), input.State.Structures.ToDictionary(s => s.EntityId),
-                input.State.ThornFields.ToDictionary(f => f.Cell), input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, new List<long>(), new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts));
+            Dictionary<EntityId, CharacterCombatFacts> characters, List<CombatEvent> events, CombatCommandState state = null,
+            CombatResolutionWindow? resolutionWindow = null, IReadOnlyList<IMovementTileRule> rules = null)
+        {
+            if (resolutionWindow.HasValue) input = input.WithResolutionWindow(resolutionWindow.Value);
+            return new(input, state ?? input.State, CombatDamageApplication.For(input, characters, events), input.State.Structures.ToDictionary(s => s.EntityId),
+                input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
+                input.Souls, new List<long>(), new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), rules: rules);
+        }
 
         internal void BeginOrdinaryMove()
         {
@@ -184,7 +203,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             var before = Actor;
             var departed = PositionTileModifierCalculator.Replace(passenger, PositionTileModifier.None);
-            PositionTileModifierCalculator.RecordNormalization(Events, passenger, departed);
+            PositionTileModifierCalculator.RecordNormalization(Events, passenger, departed, Damage.HealthExecutions);
             var moved = CombatMovementCalculator.MoveTo(before, endpoint);
             var displaced = CombatMovementCalculator.MoveTo(departed, Input.Path.Origin);
             _characters[before.EntityId] = moved;
@@ -231,8 +250,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _environment.AddTraitTrail(trail);
             TraitTrailCalculator.RecordCreation(trail, Events);
         }
-        internal bool HasThorn(CellCoord cell) => _thorns.ContainsKey(cell);
-        internal ThornFieldCellSnapshot Thorn(CellCoord cell) => _thorns[cell];
 
         internal CombatCommandInput CurrentInput()
         {
@@ -325,16 +342,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     structures.Add(structure);
                     yield return 0;
                 }
-                var fields = new List<ThornFieldCellSnapshot>();
-                foreach (var field in projection._thorns.Values)
-                {
-                    fields.Add(field);
-                    yield return 0;
-                }
-                var s = projection._state;
-                var state = new CombatCommandState(s.BoardWidth, s.BoardHeight, s.Phase, structures, fields, s.Turn,
-                    projection.Environment, projection._environment.Progress, s.WallBlocking, s.Objective, s.Allocation,
-                    projection.ItemRandomState, projection.Rewards, projection.TraitTurn, s.MovementUndo, projection.Gimmicks, s.Reinforcements);
+                var state = projection._state.With(structures: structures,
+                    environment: projection.Environment, environmentProgress: projection._environment.Progress,
+                    itemRandomState: projection.ItemRandomState, rewards: projection.Rewards,
+                    traitTurn: projection.TraitTurn, gimmicks: projection.Gimmicks, thornBombs: projection.ThornBombs.Snapshot());
                 yield return 0;
                 var characters = new List<CharacterCombatFacts>();
                 foreach (var character in projection._characters.Values)
@@ -390,18 +401,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _characters[current.EntityId] = change.Final;
         }
 
-        internal void MergeStructure(StructureCombatFacts final, CombatMovementCause movementCause = null)
+        internal void MergeStructure(StructureCombatFacts final, CombatMovementCause movementCause = null, CombatFallEvent fall = null)
         {
             if (final == null) throw new ArgumentNullException(nameof(final));
             var before = _structures[final.EntityId];
             _structures[final.EntityId] = final;
-            Events.Add(new CombatStructureEvent(before, final, null, CombatDamageCause.NumericDamage, movementCause));
+            var evidence = new CombatStructureEvent(before, final, null, CombatDamageCause.NumericDamage, movementCause);
+            Events.Add(evidence);
+            if (before.Health.Equals(final.Health)) return;
+            var source = fall == null
+                ? new CombatHealthSource(CombatHealthOperationKind.Lifecycle, contextEvent: evidence)
+                : new CombatHealthSource(CombatHealthOperationKind.Environment, contextEvent: fall, damageCause: CombatDamageCause.InstantDefeat);
+            int delta = final.Health.CurrentHealth - before.Health.CurrentHealth;
+            CombatHealthRecording.Add(Damage.HealthExecutions, before.EntityId, before.Health, final.Health, source, evidence,
+                loss: Math.Max(0, -delta), recovery: Math.Max(0, delta));
         }
 
         /// <summary>추락은 피해·장애물 반응을 거치지 않는다. 원인 기록은 사망 정산 경계에서도 공유한다.</summary>
         internal void ApplyFall(EntityId id, long terrainSourceId, CellCoord cell)
         {
-            Events.Add(new CombatFallEvent(id, terrainSourceId, cell));
+            var fall = new CombatFallEvent(id, terrainSourceId, cell);
+            Events.Add(fall);
             if (_characters.TryGetValue(id, out var character))
             {
                 if (!character.HeldEnvironment.SameValues(CharacterHeldEnvironmentState.Empty))
@@ -414,15 +434,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var dead = CombatCommandCalculator.Hurt(character, character.Health.CurrentHealth);
                 MergeCharacter(new CharacterStateChange(character, dead));
                 _deaths.DeathAnchors[id] = cell;
-                CombatCommandEvents.Health(Events, character, dead);
+                var evidence = CombatCommandEvents.Health(Events, character, dead);
+                if (evidence != null)
+                    CombatHealthRecording.Add(Damage.HealthExecutions, id, character.Health, dead.Health,
+                        new CombatHealthSource(CombatHealthOperationKind.Environment, contextEvent: fall, damageCause: CombatDamageCause.InstantDefeat),
+                        evidence, loss: character.Health.CurrentHealth);
                 Damage.SettleTraitKills();
             }
             else
             {
                 var structure = Structure(id);
+                if (structure.ObstacleDurability != null)
+                {
+                    _obstacles.RemoveFallenObstacle(id, fall);
+                    return;
+                }
                 MergeStructure(new StructureCombatFacts(id, structure.Definition,
                     new HealthStateSnapshot(0, structure.Health.MaxHealth), structure.Anchor, structure.Rotation,
-                    structure.OccupiedCells, structure.Owner));
+                    structure.OccupiedCells, structure.Owner), fall: fall);
             }
         }
 
@@ -438,7 +467,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Events.Add(new CombatHeldEnvironmentEvent(before, after));
         }
 
-        internal int ChooseRandom(int count) => _environment.ChooseRandom(count);
+        internal int ChooseRandom(int count)
+        {
+            uint before = _environment.Progress.RandomState;
+            int index = _environment.ChooseRandom(count);
+            if (ResolutionWindow == CombatResolutionWindow.BeforeControllerTurn && before != _environment.Progress.RandomState)
+                Events.Add(new CombatEnvironmentRandomEvent(before, _environment.Progress.RandomState, count, index));
+            return index;
+        }
 
         internal void ReplaceGimmick(StageGimmickState expected, StageGimmickState final)
         {
@@ -453,6 +489,40 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             _environment.ChangeTerrain(expected, final);
             Events.Add(new CombatMovementSourceEvent(expected, final));
+        }
+
+        /// <summary>진입 효과를 호출하기 전에 플랫폼과 모든 탑승자의 위치를 한 프레임으로 반영한다.</summary>
+        internal CombatMovementSourceEvent ApplyPlatformFrame(MovingPlatformFact expected, MovingPlatformFact final,
+            IReadOnlyList<EntityId> passengerIds)
+        {
+            if (passengerIds == null) throw new ArgumentNullException(nameof(passengerIds));
+            var ids = passengerIds.ToArray();
+            if (ids.Distinct().Count() != ids.Length || ids.Any(id => !_characters.TryGetValue(id, out var c) ||
+                c.Health.IsDead || c.Area != CharacterRuntimeArea.Field || c.OccupiedCells.Count != 1 ||
+                !expected.Occupies(c.Anchor.Value)))
+                throw new InvalidOperationException("현재 플랫폼의 살아 있는 한 칸 탑승자만 옮길 수 있습니다.");
+            var source = new CombatMovementSourceEvent(expected, final);
+            var offset = final.Cell - expected.Cell;
+            if (offset == CellCoord.Zero && ids.Length != 0)
+                throw new ArgumentException("제자리 반전에는 탑승자 이동이 없습니다.", nameof(passengerIds));
+            var changes = new List<CharacterStateChange>();
+            foreach (var id in ids)
+            {
+                var before = _characters[id];
+                var departed = PositionTileModifierCalculator.Replace(before, PositionTileModifier.None);
+                PositionTileModifierCalculator.RecordNormalization(Events, before, departed, Damage.HealthExecutions);
+                if (before.Health.Equals(departed.Health))
+                    CombatCommandEvents.TraitState(Events, before, departed);
+                _characters[id] = departed;
+                changes.Add(new CharacterStateChange(departed, CombatMovementCalculator.MoveTo(departed, departed.Anchor.Value + offset)));
+            }
+            _environment.ChangePlatform(expected, final);
+            foreach (var change in changes) _characters[change.Final.EntityId] = change.Final;
+            Events.Add(source);
+            foreach (var change in changes)
+                Events.Add(new CombatCharacterEvent(CombatEventKind.Moved, change.Expected, change.Final, null, null,
+                    CombatDamageCause.NumericDamage, new CombatMovementCause(CombatMovementAgency.Forced)));
+            return source;
         }
 
         internal void ReconcilePresence(IReadOnlyList<CellCoord> cells)
@@ -471,7 +541,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var current = observation.Result;
             foreach (var change in EnvironmentPresenceReconciler.Calculate(current.Characters, Environment, cells, current.Main).Characters)
             {
-                PositionTileModifierCalculator.RecordNormalization(Events, change.Expected, change.Final);
+                PositionTileModifierCalculator.RecordNormalization(Events, change.Expected, change.Final, Damage.HealthExecutions);
                 if (change.Expected.Health.Equals(change.Final.Health))
                     CombatCommandEvents.TraitState(Events, change.Expected, change.Final);
                 MergeCharacter(change);
@@ -485,19 +555,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Events.Add(new CombatMovementSourceEvent(effects.ExpectedSource, effects.FinalSource));
         }
 
-        internal void ConsumeThorn(CellCoord cell)
-        {
-            var source = _thorns[cell];
-            CombatCommandCalculator.ConsumeFields(_thorns, new[] { cell });
-            Events.Add(new CombatThornConsumedEvent(source));
-        }
-
         internal void ChangeHealth(MovementHealthRequest request, bool heal, CombatDamageOrigin origin = null)
         {
             foreach (var _ in ChangeHealthSteps(request, heal, origin)) { }
         }
 
-        internal IEnumerable<string> ChangeHealthSteps(MovementHealthRequest request, bool heal, CombatDamageOrigin origin = null)
+        internal IEnumerable<string> ChangeHealthSteps(MovementHealthRequest request, bool heal, CombatDamageOrigin origin = null,
+            CombatEvent contextEvent = null, MovementTileFact environmentSource = null, EffectOriginKey? effectOrigin = null)
         {
             if (heal) origin = null;
             else if (request.DamageOrigin != null)
@@ -535,15 +599,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         (int)Math.Min(before.Health.MaxHealth, (long)before.Health.CurrentHealth + amount)).Characters.Single().Final;
                     if (before.Health.CurrentHealth == after.Health.CurrentHealth) yield break;
                     MergeCharacter(new CharacterStateChange(before, after));
-                    Damage.RecordRecovery(before.EntityId, after.Health.CurrentHealth - before.Health.CurrentHealth);
-                    CombatCommandEvents.Health(Events, before, after);
+                    int recovery = after.Health.CurrentHealth - before.Health.CurrentHealth;
+                    Damage.RecordRecovery(before.EntityId, recovery);
+                    var evidence = CombatCommandEvents.Health(Events, before, after);
+                    var source = new CombatHealthSource(CombatHealthOperationKind.Environment, contextEvent: contextEvent ?? evidence,
+                        environmentSource: environmentSource);
+                    CombatHealthRecording.Add(Damage.HealthExecutions, before.EntityId, before.Health, after.Health, source, evidence,
+                        recovery: recovery);
                 }
                 else
                 {
                     // 적용 경계가 소지자와 효과 대상의 최종 사실을 공유 사전에 반영한다.
                     CombatDamageOutcome outcome = default;
                     foreach (var phase in Damage.ApplySteps(before.EntityId, CombatDamageKind.EnvironmentDamage, origin,
-                        amount, value => outcome = value, heldDefenseGroups: _attackGroups))
+                        amount, value => outcome = value, heldDefenseGroups: _attackGroups, effectOrigin: effectOrigin, contextEvent: contextEvent,
+                        environmentSource: environmentSource))
                         yield return phase;
                     after = outcome.After;
                     if (outcome.ActualHealthLoss == 0 && before.Items.SameValues(after.Items)) yield break;
@@ -554,13 +624,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             else if (_structures.TryGetValue(request.TargetId, out var structure))
             {
                 if (structure.Health.IsDead) yield break;
-                if (!heal && _obstacles.HasProfile(request.TargetId))
+                if (_obstacles.HasProfile(request.TargetId))
                 {
-                    _obstacles.DamageStructure(request.TargetId, request.Amount, origin);
+                    if (heal) yield break;
+                    if (origin.PhysicalCell == null && environmentSource != null)
+                        origin = new CombatDamageOrigin(environmentSource.Cell, origin.CreditedCharacterId, origin.AttackGroup);
+                    _obstacles.ApplyHit(request.TargetId, origin, ObstacleDestructionCause.EnvironmentalContact, contextEvent, environmentSource);
                     yield return "MovementObstacleDamage";
                     foreach (var phase in _obstacles.ResolveExplosionSteps()) yield return phase;
                     EffectTargetIds.UnionWith(_obstacles.BlastTargetIds);
                     TerrainQueryCells.UnionWith(_obstacles.TerrainQueryCells);
+                    _obstacles.ResetHitSummaries();
                     yield return "MovementObstacleEvidence";
                     yield break;
                 }
@@ -572,7 +646,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     new HealthStateSnapshot(hp, structure.Health.MaxHealth), structure.Anchor, structure.Rotation,
                     structure.OccupiedCells, structure.Owner);
                 _structures[after.EntityId] = after;
-                Events.Add(new CombatStructureEvent(structure, after, origins));
+                var evidence = new CombatStructureEvent(structure, after, origins);
+                Events.Add(evidence);
+                var source = heal
+                    ? new CombatHealthSource(CombatHealthOperationKind.Environment, contextEvent: contextEvent ?? evidence,
+                        environmentSource: environmentSource)
+                    : new CombatHealthSource(CombatHealthOperationKind.Damage, effectOrigin, origins, contextEvent,
+                        damageCause: CombatDamageCause.NumericDamage, environmentSource: environmentSource);
+                int delta = hp - structure.Health.CurrentHealth;
+                CombatHealthRecording.Add(Damage.HealthExecutions, structure.EntityId, structure.Health, after.Health, source, evidence,
+                    loss: heal ? 0 : -delta, recovery: heal ? delta : 0);
                 yield return "MovementStructureHealth";
             }
             else throw new InvalidOperationException("효과 대상이 현재 투영에 없습니다.");
@@ -580,12 +663,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal void ResolveDeathBoundary()
         {
+            ThornBombs.ObserveDeaths(this);
             var fallen = Events.OfType<CombatFallEvent>().Select(e => e.EntityId).ToHashSet();
             _environment.ResolveFlagDrops(Input, _characters, _structures.Values.ToArray(), _deaths.DeathAnchors, Events, fallen);
             _deaths.SettleNewDeaths(Input, _characters, _state.InCombat, Events, fallen);
             Damage.SettleTraitKills();
             if (_characters.TryGetValue(Input.ActorId, out var actor) && actor.Health.IsDead) Stop(MovementStopReason.Dead);
             else if (Terminal) Stop(MovementStopReason.BattleEnded);
+        }
+
+        internal void DetonatePowderBarrel(EntityId id, CombatDamageOrigin origin)
+        {
+            _obstacles.DestroyObstacle(id, origin, ObstacleDestructionCause.ExplicitDetonation);
+            _obstacles.ResolveExplosions();
         }
 
         internal void ChangeDebuffs(MovementDebuffChange request)
@@ -675,6 +765,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             var actor = Character(id);
             if (Terminal || actor.Health.IsDead) yield break;
+            StageGimmickComposition.ApplyEntry(this, id);
+            actor = Character(id);
             ArrivalCells[id] = actor.Anchor.Value;
             if (actor.OwnedId.HasValue)
             {
@@ -684,7 +776,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     observation.Step();
                     yield return "MovementArrivalObservation";
                 }
-                _deaths.CollectOnArrival(observation.Result, _characters, actor, kind, Events);
+                _deaths.CollectOnArrival(observation.Result, _characters, actor, kind, Events, Damage.HealthExecutions);
                 yield return "MovementArrivalSouls";
             }
             var collected = Character(id);
@@ -693,7 +785,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             actor = collected;
             var final = PositionTileModifierCalculator.Replace(actor,
                 PositionTileModifierCalculator.ResolveAt(actor.Anchor.Value, Environment));
-            PositionTileModifierCalculator.RecordNormalization(Events, actor, final);
+            PositionTileModifierCalculator.RecordNormalization(Events, actor, final, Damage.HealthExecutions);
             MergeCharacter(new CharacterStateChange(actor, final));
             if (id == Input.ActorId) ArrivalResolved = true;
             completed?.Invoke(Math.Max(0, actor.Health.CurrentHealth - final.Health.CurrentHealth));
@@ -704,7 +796,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             var before = Actor;
             var after = PositionTileModifierCalculator.Replace(before, modifier);
-            PositionTileModifierCalculator.RecordNormalization(Events, before, after);
+            PositionTileModifierCalculator.RecordNormalization(Events, before, after, Damage.HealthExecutions);
             ReplaceActor(after);
         }
 
@@ -802,9 +894,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 yield return "CompletionTerrain";
                 // 사망 특성(자폭·공포)은 명령의 모든 피해·강제 이동·처치 연쇄가 끝난 뒤, 처치 특성·영혼·보상 정산 앞에서 한 번 확인한다.
                 // 실행할 것이 없으면 단계를 내지 않아 기존 명령의 단계 순서가 그대로다.
-                if (projection.DeathTraitsEnabled && !projection.Terminal)
-                    foreach (var child in DeathTraitApplication.ResolveSteps(projection))
-                        yield return child;
+                foreach (var child in projection.ThornBombs.ResolveSteps(projection, projection._movementRules))
+                    yield return child;
+                // 폭탄과 기존 사망 효과가 서로 새 사망을 만들 수 있다. 같은 명령에서 재귀 없이 소진한다.
+                while (projection.DeathTraitsEnabled && !projection.Terminal)
+                {
+                    foreach (var child in DeathTraitApplication.ResolveSteps(projection)) yield return child;
+                    int explosions = projection.ThornBombs.Explosions.Count;
+                    foreach (var child in projection.ThornBombs.ResolveSteps(projection, projection._movementRules)) yield return child;
+                    if (projection.ThornBombs.Explosions.Count == explosions) break;
+                }
                 projection.Damage.SettleTraitKills();
                 yield return "CompletionTraitKills";
                 if (!projection.Terminal)
@@ -833,7 +932,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     yield return "CompletionStructure";
                 }
                 using var finish = CombatCommandCalculator.BeginFinish(projection.Input, projection._characters,
-                    projection._deaths.Counts, projection._deaths.SoulField, projection._thorns, structures.ToArray(),
+                    projection._deaths.Counts, projection._deaths.SoulField, structures.ToArray(),
                     projection._deaths.ConsumedSouls, projection._deaths.DeathAnchors, projection._deaths.Souls, attack,
                     state, events: projection.Events, resolvedDeaths: projection._deaths.ResolvedDeaths,
                     environmentBindings: projection.Bindings, actionUseSettlement: projection.ActionUseSettlement,
@@ -845,7 +944,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     finish.Step();
                     yield return "CompletionFinish";
                 }
-                _result = finish.Result.WithDamageExecutions(projection.Damage.DamageExecutions);
+                var final = finish.Result;
+                _result = final.WithHealthEvidence(
+                    projection.Damage.HealthExecutions.Concat(final.HealthExecutions).ToArray(),
+                    projection.Damage.HealthClaims.Concat(final.HealthClaims).ToArray());
                 yield return "CompletionSeal";
             }
 
@@ -873,11 +975,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal CombatCommandTransition TransitionFromCompleted(CombatCommandTransition final)
         {
             if (final == null) throw new ArgumentNullException(nameof(final));
-            return new CombatCommandTransition(Input, true, "", final.Characters, final.Field, final.FinalState,
+            return new CombatCommandTransition(final.HealthExecutions, final.HealthClaims, Input, true, "", final.Characters, final.Field, final.FinalState,
                 final.Outcome, consumedSoulIds: final.ConsumedSoulIds, events: final.Events, pathMovement: PathResult(),
                 environmentBindings: final.EnvironmentBindings, blockedContacts: final.BlockedContacts,
                 rewardChange: final.RewardChange, rewardSettlement: final.RewardSettlement, actionUseSettlement: final.ActionUseSettlement,
-                movementEffectUses: final.MovementEffectUses, damageExecutions: final.DamageExecutions);
+                movementEffectUses: final.MovementEffectUses);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>
     /// 걸음 레인 하나(유닛 하나)의 회전·보간과, 경로 끝에서 원래 방향으로 돌아가는 회전을 재생합니다(구조 리팩토링 설계 D10, 동시 처리 설계 C5).
     /// 레인들은 <see cref="CombatUnitMotionSet"/>이 유닛별로 소유하고, 결과의 걸음 해석은 레인들이 공유합니다.
-    /// 걸음 도중 접촉 원본(가시·오브젝트)에 처음 닿는 순간 그 묶음을 해제합니다(이동 접촉 설계 M3·M4, 해제 원본은 <see cref="CombatStepContactGate"/>).
+    /// 걸음 도중 접촉 원본(오브젝트·타일)에 처음 닿는 순간 그 묶음을 해제합니다(이동 접촉 설계 M3·M4, 해제 원본은 <see cref="CombatStepContactGate"/>).
     /// 걸음 하나의 시간·높이·접촉 시점은 걸음을 시작할 때 이동 종류로 고른 모양(<see cref="CombatStepStyle"/>)에 묻습니다(걸음 모양 설계 ST3).
     /// </summary>
     /// <remarks>
@@ -56,7 +56,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly Func<int> _generation;
         private readonly Action<CharacterCombatFacts> _show;
         private readonly Action<CharacterCombatFacts> _playMovementSound;
-        private readonly Func<CellCoord, FieldGridMapper, CombatBody> _thornBody;
         private readonly Func<ObjectSourceFact, FieldGridMapper, CombatBody> _objectBody;
         private readonly CombatStepContactGate _contacts;
         // 현재 걸음의 사건 완료 통지입니다(동시 처리 설계 C6). 걸음당 한 번, 같은 재생 세대에서만 부릅니다.
@@ -101,13 +100,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="show">한 개체의 사실을 표시 사실에 넣고 다시 그립니다.</param>
         /// <param name="playMovementSound">스스로 이동하는 걸음의 시작 효과음입니다.</param>
         /// <param name="contacts">결과마다 한 번 해석한 걸음 구간·접촉 묶음입니다. 레인 집합이 결과마다 준비하고 레인들이 공유합니다.</param>
-        /// <param name="thornBody">가시 칸의 접촉 몸입니다(<see cref="FieldThornPresenter.BodyOf"/>). 없으면 가시 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="objectBody">오브젝트 원본의 접촉 몸입니다(<see cref="FieldObjectPresenter.BodyOf"/>). 없으면 오브젝트 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="leapMotion">뛰어넘기 구간 전체 시간·높이입니다. 생략하면 View 설정 기본값을 씁니다.</param>
         internal CombatUnitMotionPlayback(CombatUnitPresentationWindow presentation,
             Func<CharacterCombatFacts, Quaternion, FieldGridMapper, CombatBody> moverBody, CombatStepStyles styles, float turnSeconds,
             Func<int> generation, Action<CharacterCombatFacts> show, Action<CharacterCombatFacts> playMovementSound,
-            CombatStepContacts contacts, Func<CellCoord, FieldGridMapper, CombatBody> thornBody = null,
+            CombatStepContacts contacts,
             Func<ObjectSourceFact, FieldGridMapper, CombatBody> objectBody = null, CombatLeapMotionSettings leapMotion = null)
         {
             _presentation = presentation ?? throw new ArgumentNullException(nameof(presentation));
@@ -118,7 +116,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _generation = generation ?? throw new ArgumentNullException(nameof(generation));
             _show = show ?? throw new ArgumentNullException(nameof(show));
             _playMovementSound = playMovementSound ?? throw new ArgumentNullException(nameof(playMovementSound));
-            _thornBody = thornBody;
             _objectBody = objectBody;
             _contacts = new CombatStepContactGate(contacts ?? throw new ArgumentNullException(nameof(contacts)));
             _placementYielded = OnPlacementYielded;
@@ -187,7 +184,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// Core가 제공한 실제 끌어오기 경로를 같은 유닛의 이동 레인에서 재생합니다. 끌어오기는 밀림이라 밀림 모양으로 칸마다 옮깁니다(걸음 모양 계획 P10).
         /// 먼저 끌려가는 방향(도착 칸 쪽)으로 돌고, 도착하면 원래 방향으로 돌아온 뒤 완료를 알립니다(걸음 모양 계획 §7, 걸음 경로와 같은 회전·복귀).
         /// </summary>
-        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed, Action started = null)
+        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _movementProfile = _pullProfiles.Of(target?.Owner);
@@ -207,9 +204,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_stepVersion != _generation() || _pull == null) return;
             _placement = _presentation.BeginPlacement(target.EntityId);
             TurnToward(_pullFrom, At(target, movement.FinalAnchor), mapper);
-            // 배치를 빌려 선행 회전을 포함한 이동 실행을 연 순간입니다. 표시가 없거나 취소됐으면 통지하지 않습니다.
-            if (_stepVersion == _generation() && _pull != null && _placement != null)
-                started?.Invoke();
         }
 
         // 칸과 도착지는 Core의 실제 경로를 그대로 씁니다. 체력·디버프는 뒤따르는 사건 전까지 바꾸지 않습니다.
@@ -506,9 +500,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             switch (group.Kind)
             {
-                case CombatContactSourceKind.Thorn when _thornBody != null:
-                    body = _thornBody(group.Cell, mapper);
-                    return true;
                 case CombatContactSourceKind.Object when _objectBody != null && group.Source is CombatObjectActivationEvent activation:
                     body = _objectBody(activation.Source, mapper);
                     return true;

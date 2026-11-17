@@ -118,7 +118,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
                 return _model;
             }
 
-            _model.Reset(text.EventName, text.EventDescription, text.FormatGold(_currency.Amount), true, true, text.ExitButtonText);
+            _model.Reset(text.EventName, string.Empty, text.FormatGold(_currency.Amount), true, true, text.ExitButtonText);
             IReadOnlyList<ShopPurchaseSnapshot> offers = shop.Offers;
             for (int i = 0; i < offers.Count; i++)
             {
@@ -153,8 +153,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         private void BuildUnits(CurrentShopData shop, StageOfferTextData text)
         {
             string description = shop.TrainingChoices.Count == 0
-                ? text.EventDescription + "\n" + text.FormatLine(StageOfferLineKind.TrainingEmpty)
-                : text.EventDescription;
+                ? text.FormatLine(StageOfferLineKind.TrainingEmpty)
+                : string.Empty;
             _model.Reset(text.EventName, description, text.FormatGold(_currency.Amount), true, true, text.ExitButtonText);
             IReadOnlyList<OwnedCharacterRecord> owned = _characters.Owned;
             for (int i = 0; i < owned.Count; i++)

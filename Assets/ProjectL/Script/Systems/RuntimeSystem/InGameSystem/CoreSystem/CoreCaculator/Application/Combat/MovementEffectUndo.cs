@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domai
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
@@ -109,7 +110,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var effects = ActorEffects(movement, before, after).ToList();
             effects.AddRange(TraitPresenceReconciler.CaptureMovementEffects(movement, input.Characters, final.Characters));
             foreach (var character in input.Characters)
-                effects.AddRange(ExposureEffects(movement, character, final.Characters.Single(c => c.EntityId == character.EntityId)));
+            {
+                var afterMove = final.Characters.Single(c => c.EntityId == character.EntityId);
+                effects.AddRange(ExposureEffects(movement, character, afterMove));
+                StageGimmickComposition.CollectEntryReceipts(input, movement, character, afterMove, requireContact: false, effects);
+            }
             var oldIds = input.State.Environment.Tiles.Select(t => t.Id).ToHashSet();
             foreach (var source in final.State.Environment.Tiles.Where(t => !oldIds.Contains(t.Id)))
             {
@@ -149,6 +154,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                             restored = restored.With(traitEffects: new CharacterTraitEffects(restored.TraitEffects.AttackGrants,
                                 restored.TraitEffects.Shields, shield.PreviousDefenseBonus.Value));
                         characters[current.EntityId] = restored;
+                        break;
+                    case MovementFireReceipt fire:
+                        var statuses = current.StatusEffects.Entries.Select(s => s is FireStatus ? fire.PreviousStatus : s)
+                            .Where(s => s != null).ToArray();
+                        characters[current.EntityId] = current.WithStatusEffects(new StatusEffectSet(statuses));
                         break;
                     case MovementTrailReceipt trail:
                         var source = environment.Tiles.SingleOrDefault(t => t.Id == trail.CreatedSource.Id);
@@ -245,7 +255,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var movement = new MovementEffectId(input.BattleInstanceId, input.State.Turn.ControllerTurnSequence, input.ActorId, input.Number);
             var effects = ActorEffects(movement, before, after).Concat(
                 TraitPresenceReconciler.CaptureMovementEffects(movement, new[] { before }, new[] { after }))
-                .Concat(ExposureEffects(movement, before, after)).ToArray();
+                .Concat(ExposureEffects(movement, before, after)).ToList();
+            StageGimmickComposition.CollectEntryReceipts(input, movement, before, after, requireContact: true, effects);
             var projected = new Dictionary<EntityId, CharacterCombatFacts> { [after.EntityId] = after };
             return RestoreEffects(input, effects, projected, out _, out _) &&
                 MovementUndoResult.SameExceptCurrentEligibility(projected[after.EntityId], before);

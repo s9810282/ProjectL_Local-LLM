@@ -72,10 +72,25 @@ namespace ProjectL.Tests.Core
             Assert.That(best, Is.EqualTo(Second));
         }
 
+        [Test]
+        public void GimmickOccupancyBlocksLikeThisTurnTraversal()
+        {
+            // 사슬 머리 같은 기믹 확정 점유는 이번 턴 이동(PursuitTraversal)처럼 여러 턴 거리에서도 막는다.
+            // 한 칸 통로가 끊기면 닿는 공격 위치가 없어 출발 칸에 거리가 없다(막지 않으면 비용 5).
+            var corridor = Corridor();
+            var blocked = CombatCommandTestData.With(corridor, state: corridor.State.With(gimmicks: new StageGimmickStateSet(
+                new StageGimmickState[] { new LavaChainGimmickState(new StageGimmickId(1), new CellCoord(3, 1), 10) })));
+            var field = Build(blocked);
+            Assert.That(field.TryGetCost(new CellCoord(3, 1), out _), Is.False);
+            Assert.That(field.TryGetCost(new CellCoord(0, 1), out _), Is.False);
+            Assert.That(field.TryGetBestTarget(new CellCoord(0, 1), out _), Is.False);
+        }
+
         // 끌어오기 추가 사거리와 관통(전체 탐색)까지 공용 도달 판정과 목표 칸이 같아야 한다.
         [TestCase("Square1")]
         [TestCase("Cardinal3")]
         [TestCase("FanDirection2")]
+        [TestCase("WideRectangle")]
         [TestCase("RadialSplash2")]
         [TestCase("PullExtra")]
         [TestCase("Pierce")]
@@ -88,6 +103,8 @@ namespace ProjectL.Tests.Core
                 "Square1" => new EnemyPursuitEquivalenceTests.Scene(Method(TargetingShape.RadialSquare, TargetingChoiceMode.Single), 1),
                 "Cardinal3" => new EnemyPursuitEquivalenceTests.Scene(Method(TargetingShape.CardinalLine, TargetingChoiceMode.Single), 3),
                 "FanDirection2" => new EnemyPursuitEquivalenceTests.Scene(Method(TargetingShape.Fan, TargetingChoiceMode.Direction), 2),
+                "WideRectangle" => new EnemyPursuitEquivalenceTests.Scene(
+                    new TargetingMethodSpec(TargetingShape.ForwardRectangle, TargetingChoiceMode.Direction, TargetingSplash.None, 0, width: 7), 1),
                 "RadialSplash2" => new EnemyPursuitEquivalenceTests.Scene(
                     Method(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.Radial), 2),
                 "PullExtra" => new EnemyPursuitEquivalenceTests.Scene(Method(TargetingShape.CardinalLine, TargetingChoiceMode.Single), 1,

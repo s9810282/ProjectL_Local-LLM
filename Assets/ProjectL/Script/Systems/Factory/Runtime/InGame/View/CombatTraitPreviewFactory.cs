@@ -58,7 +58,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 FieldUnitPresenter ownedUnits = units;
                 result.Own(() => UnityEngine.Object.Destroy(ownedUnits.gameObject));
                 tables.PresentationSettings.Validate();
-                CombatCameraSession cameraSession = CombatCameraFactory.Create(sceneCamera, services.CameraCatalog, services.CameraEffects);
+                CombatCameraSession cameraSession = CombatCameraFactory.Create(sceneCamera, services.CameraCatalog, services.CameraEffects,
+                    CombatCameraFactory.GroundHeightOf(field));
                 result.Own(cameraSession.Release);
                 CombatCameraWindow camera = cameraSession.Window;
                 var objects = new FieldObjectPresenter(field.CellsRoot, tables.Objects, tables.Environments);
@@ -76,8 +77,6 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 result.Own(rockfall.Release);
                 var railway = new FieldRailwayPresenter(field.CellsRoot, tables.Railway, services.Effects);
                 result.Own(railway.Release);
-                var thorns = new FieldThornPresenter(tables.ThornField.Prefab, field.CellsRoot);
-                result.Own(thorns.Release);
                 var layer = CombatUnitHUDFactory.Create(parent, output);
                 result.Own(() =>
                 {
@@ -100,8 +99,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 var haboob = new FieldHaboobPresenter(tables.Haboob, effects);
                 result.Own(haboob.Release);
                 // 필드 창구는 운영 표시와 같은 함수로 만듭니다(평가 C4-02, 결정 Q-N2 A). 토네이도 외형 연출(진행·재생 중·막음·취소)도 운영과 같습니다.
-                CombatFieldEventPorts ports = CombatSceneDisplayFactory.CreateFieldPorts(field, thorns, objects, terrain, trails, tornado, rockfall, haboob);
-                CombatEventPlaybackComposition composition = CombatEventPlaybackFactory.Create(field, units, CombatEventPresentationValues.From(tables.PresentationSettings), services.Audio, tables.SoundPresets, tables.CueSources, camera, effects, ports, railway, thorns, output, tables.PresentationSettings);
+                CombatFieldEventPorts ports = CombatSceneDisplayFactory.CreateFieldPorts(field, objects, terrain, trails, tornado, rockfall, haboob);
+                CombatEventPlaybackComposition composition = CombatEventPlaybackFactory.Create(field, units, CombatEventPresentationValues.From(tables.PresentationSettings), services.Audio, tables.SoundPresets, tables.CueSources, camera, effects, ports, railway, output, tables.PresentationSettings);
                 result.Events = composition.Events;
                 result.Playback = composition.Playback;
                 result.Own(composition.Events.Release);

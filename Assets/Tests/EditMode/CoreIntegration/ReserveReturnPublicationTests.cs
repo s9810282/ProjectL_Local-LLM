@@ -70,10 +70,19 @@ namespace ProjectL.Tests.CoreIntegration
             battle.Buffers.BattleWriteSink.Apply(new CharacterChanges(new[] { new CharacterStateChange(initial, boosted) }, Array.Empty<SoulCountChange>()));
             var proposal = Return(battle);
             Assert.That(proposal.Accepted, Is.True, proposal.Reason);
-            Assert.That(proposal.DamageExecutions, Is.Empty);
+            var normalization = proposal.HealthExecutions.Single().Steps.Single();
+            var expected = new HealthStateSnapshot(
+                Math.Min(boosted.Health.CurrentHealth, initial.Health.MaxHealth), initial.Health.MaxHealth);
+            Assert.That(normalization.RecipientId, Is.EqualTo(initial.EntityId));
+            Assert.That(normalization.Source.Kind, Is.EqualTo(CombatHealthOperationKind.Normalization));
+            Assert.That(normalization.Before, Is.EqualTo(boosted.Health));
+            Assert.That(normalization.After, Is.EqualTo(expected));
+            Assert.That(normalization.NormalizationLoss, Is.EqualTo(boosted.Health.CurrentHealth - expected.CurrentHealth));
+            Assert.That(normalization.ActualLoss, Is.Zero);
+            Assert.That(normalization.ActualRecovery, Is.Zero);
             Assert.That(proposal.Events.OfType<CombatCharacterEvent>().Any(e => e.Kind == CombatEventKind.HealthChanged), Is.False);
             battle.Buffers.BattleWriteSink.Apply(proposal);
-            Assert.That(battle.Actor.Health.MaxHealth, Is.EqualTo(initial.Health.MaxHealth));
+            Assert.That(battle.Actor.Health, Is.EqualTo(expected));
             Assert.That(battle.Actor.StageRecord.SameValues(initial.StageRecord), Is.True);
             Assert.That(battle.Actor.TemporaryMaxHealthBonus, Is.Zero);
         }

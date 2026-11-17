@@ -22,6 +22,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
         {
             input.Vector2(StageInputNames.CombatCamera.Pan, _receiver.CameraPanChanged);
             input.Float(StageInputNames.CombatCamera.Zoom, _receiver.CameraZoomScrolled);
+            input.Float(StageInputNames.CombatCamera.Rotate, _receiver.CameraRotateChanged);
+            // 가운데 버튼 드래그 회전은 임시로 연결하지 않습니다.
         }
     }
 }

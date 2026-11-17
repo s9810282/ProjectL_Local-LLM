@@ -9,6 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         private readonly List<StageOfferCardContent> _cards = new();
 
         public string EventName { get; private set; } = string.Empty;
+        /// <summary>대상 유닛·훈련 상태 등 선택에 필요한 안내입니다. 일반 스테이지 설명은 넣지 않으며, 비면 안내 줄과 여백을 접습니다.</summary>
         public string EventDescription { get; private set; } = string.Empty;
         /// <summary>보유 골드 글입니다. 비어 있으면 골드 칸을 끕니다.</summary>
         public string GoldText { get; private set; } = string.Empty;

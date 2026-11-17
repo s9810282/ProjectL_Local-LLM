@@ -104,7 +104,7 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Stage.Plans
         {
             var jobs = new List<IJobService>();
             if (buffers.CharacterReadSink.Owned.Count == 0)
-                jobs.Add(new RunStartJob(service.CoreGroup.RunStart, StageRunStartOutcome.Instance,
+                jobs.Add(new RunStartJob(service.CoreGroup.RunStart, StageRunStartOutcome.Instance, mainCharacterKey: null,
                     buffers.CombatStateReadSink, buffers.StageViewWriteSink, buffers.CharacterReadSink, 0));
             jobs.Add(new StageJob(service.CoreGroup.ChapterProgression, 1, buffers.CurrentProgressReadSink,
                 buffers.StageViewWriteSink));

@@ -51,7 +51,7 @@ namespace ProjectL.Tests.Core
             var events = result.Events.ToList();
             Assert.That(events.FindIndex(e => IsActivation(e, TraitActivationKind.ReconstructionStarted)),
                 Is.LessThan(events.FindIndex(e => e is CombatCharacterEvent c && c.Kind == CombatEventKind.Reconstructed)));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -72,7 +72,7 @@ namespace ProjectL.Tests.Core
             Assert.That(Activations(second, TraitActivationKind.ReconstructionStarted), Is.Empty);
             Assert.That(Activations(second, TraitActivationKind.SelfDestructExploded).Single().SourceUnitId, Is.EqualTo(Holder));
             Assert.That(Final(second, again, 1).Health.CurrentHealth, Is.EqualTo(90));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(second.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(second.Events));
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace ProjectL.Tests.Core
             Assert.That(Activations(result, TraitActivationKind.InstantDefeat).Single().TargetIds, Is.EqualTo(new[] { Holder }));
             Assert.That(Activations(result, TraitActivationKind.ReconstructionStarted).Single().Magnitude, Is.EqualTo(5));
             Assert.That(result.Events.OfType<CombatCharacterEvent>().Any(e => e.Kind == CombatEventKind.Died), Is.False);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
 
             // 이미 쓴 재구성은 즉사를 버티지 못한다.
             var used = Input(2, used: true, finishingShot: true);

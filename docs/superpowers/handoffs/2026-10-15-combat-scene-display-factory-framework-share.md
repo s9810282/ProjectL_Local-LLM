@@ -762,3 +762,29 @@ D1은 조립 위치 분리다. 이동·배치·공격 구현 이전은 D2~D4이�
 - 쓰는 곳: 전투 View DB `CombatAttack_Hammer`(해머 공격 맞는 순간)·`TraitVisual_CrashImpact`(작렬 부딪힘).
 - 확인 부탁: 원본 프리팹을 고치면 복사본은 따라가지 않는다(프리팹 Variant가 아님). Variant로 바꾸거나 큐에 크기 칸을 두는 쪽이 나으면 알려 달라.
 - 컴파일·Unity 미확인. 코드·에셋은 한 커밋(enum 값 없이 표 항목만 있으면 정수 18·19가 정의되지 않은 값).
+
+## 57. 2026-11-12 Cartoon 대체 — 유닛 모델 부분만 바꿈 (미전달)
+
+[새 SSOT 계획](../plans/2026-11-11-combat-view-new-ssot-plan.md) SN-a(설계 SN1, 재평가 C1-N01)에서 민형님 줄(`7eb7bdf3`·`89e43fce`)을 고쳤습니다. 컴파일 미확인, 새 시험 없음.
+
+- `Display/Unit/CartoonModelMaterialFallback.cs` 생성자: `MeshRenderer`·`SkinnedMeshRenderer` 두 반복이 이제 유닛 모델 부분 규칙 `UnitModelParts.Is`(TMP·Canvas·`UnitModelBoundsExclusion` 아래가 아님)를 통과한 Renderer만 대체 목록에 넣습니다. remarks에 한 줄 더했습니다.
+- 바뀌는 것: 체력 숫자(TMP)·선택 커서처럼 몸이 아닌 표시의 재질은 더는 Cartoon으로 바꾸지 않습니다(설계 Q-SN2 A). 지금 데이터에서 보이는 차이는 없을 것으로 봅니다(Unity 확인 U-2·U-4).
+- Factory·서비스 키·생성 서명은 무변경입니다.
+
+## 58. 2026-11-14 카메라 회전 — 카메라 Factory 넷째 인자(바닥 높이) (미전달)
+
+[카메라 회전 계획](../plans/2026-11-14-combat-camera-rotation-plan.md) CR-a Ta.7(설계 CR1, 계획 TP-11)에서 Factory 연결 줄을 고쳤습니다. 줄 작성자는 모두 용근이고, 민형님 줄은 없습니다. 컴파일 미확인, 새 시험 없음.
+
+- `F/CombatCameraFactory.cs`: `Create(binding, catalog, effects, float groundY)` — 넷째 인자를 더해 시점 `CombatCameraView` 생성자로 넘깁니다. 같은 파일에 새 도우미 `GroundHeightOf(FieldView field)`(필드 Cells Root의 월드 y, Cells Root가 없으면 원인 문구로 예외)를 두었습니다.
+- 호출 두 줄: `CombatSceneDisplayFactory.cs:87`이 `CombatCameraFactory.GroundHeightOf(root.Field)`, `CombatTraitPreviewFactory.cs:61`이 `GroundHeightOf(field)`(그 위에서 만든 필드 사본)를 넘깁니다.
+- 이 높이는 카메라를 Z·C로 돌릴 때 "화면 가운데가 보는 바닥 점"을 찾는 데만 씁니다. 돌리지 않으면 쓰이지 않아 지금 화면과 같습니다.
+- 서비스 키·Framework·GlobalSystem·생성 순서는 무변경입니다.
+
+## 59. 2026-11-17 플레이어 액티브 스킬 — View 표 키 하나·DB Factory 한 줄·입력 Factory 생성 줄 (미전달)
+
+[플레이어 스킬 View 계획](../plans/2026-11-16-combat-player-skill-view-plan.md) SK-a·SK-b·SK-e(§6.2·§6.3)에서 연결 줄을 더했습니다. 기능·동작·계약을 바꾸지 않았고, 새 서비스·생성 순서 변경은 없습니다. 컴파일 미확인, 새 시험 없음. 사용자 Unity 확인 문제 없음(11-17).
+
+- `ServiceKeys/DBFactory/Group/ViewTableKey.cs:58-59`(민형님 파일): 새 View 표 키 `PlayerSkillVisual`(`IPlayerSkillVisualTableQuery`).
+- `Factory/DBFactory/Group/ViewDataBaseFactory.cs:84`: `new PlayerSkillVisualTable(…GetDataBase<PlayerSkillVisualDataTableSO>()).ExportServices(builder)` 한 줄 + using. 에셋(`ViewGroup.asset` 끝 한 줄)과 한 커밋이어야 DB 생성이 됩니다.
+- `Factory/Runtime/InGame/View/CombatSceneInputFactory.cs`: 스킬 버튼 배경 조회 `CombatPlayerSkillAvailabilityTracker` 생성 줄(:84)과 `CombatSceneInput` 끝 인자, 스킬 모드 `CombatPlayerSkillInteraction` 생성 줄(:179)과 `CombatInteraction` 끝 인자, `CreateSceneInteraction` 끝 인자 `playerSkills`(null 검사). 줄 작성자는 모두 용근입니다.
+- 참고(Factory 밖, 민형님 줄 무변경): 곡사 출발 접선 줄이 있는 `Presentation/Attack/CombatShotPath.cs`에 꺾인 선 함수(`FillPathLengths`·`PathPoint`·`PathTangent`)만 더했고, `CombatAttackPlayback.cs`에 경로 발사 입구 `FirePath`만 더했습니다.

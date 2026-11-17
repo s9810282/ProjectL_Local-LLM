@@ -69,10 +69,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>곡사 코드 모션입니다(옛 공격 재생 <c>TryBeginMortar</c>). 주 칸이 없으면 오류입니다.</summary>
         internal override bool TryBeginCodeMotion(ICombatAttackStyleContext context, EntityId attackerId, CombatAttackShape shape,
-            CombatAttackPresentationData settings, FieldGridMapper mapper, Action hit, Action cue, Action completed, int version)
+            CombatAttackPresentationData settings, FieldGridMapper mapper, CombatContactRelease hit, Action cue, Action completed, int version)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (shape == null) throw new ArgumentNullException(nameof(shape));
+            if (hit == null) throw new ArgumentNullException(nameof(hit));
             // 공격 성공은 공격 처리기가 조립을 만들기 전에 확인했습니다.
             if (!context.TryGetMortarWeapon(attackerId, out CatusCannonWeaponView weapon))
                 return false;
@@ -86,21 +87,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             StartWithPose(pose, () =>
             {
                 var animation = new CombatMortarAnimation(settings, mapper, pool, weapon, pose, target,
-                    mapper.RotationToWorld(shape.Direction), cue, context.CancelUnavailable, context.ImpactThen(settings, hit));
+                    // 곡사는 착탄 한 번에 모두 해제합니다(관통·죽음의 손 View 설계 D6의 접촉 하나 = 끝).
+                    mapper.RotationToWorld(shape.Direction), cue, context.CancelUnavailable, context.ImpactThen(settings, hit.Finish));
                 context.BeginAnimation(animation, completed, version);
             });
             return true;
         }
 
-        /// <summary>주 칸 중심에 착탄합니다. 착탄 순간이 맞음이고 같은 순간 도착입니다(맞음 먼저).</summary>
+        /// <summary>
+        /// 주 칸 중심에 착탄합니다. 착탄 순간이 맞음이고 같은 순간 도착입니다(맞음 먼저). 착탄은 대상 없는 마지막 접촉 하나입니다(관통·죽음의 손 View 설계 §3.1).
+        /// </summary>
         internal override ICombatShot FireShot(ICombatAttackStyleContext context, CombatAttackShape shape, CombatAttackPresentationData settings,
-            Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action hit, Action arrived, int version)
+            Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action<EntityId, bool> hit, Action arrived, int version)
         {
+            if (hit == null) throw new ArgumentNullException(nameof(hit));
             Vector3 landing = ResolveLanding(shape, mapper);
             return context.FireArc(settings.ProjectilePrefab, from, landing, settings.FlightDuration,
                 CombatShotPath.ArcHeight(mapper, settings), mapper.WorldUp, settings.SpinDegreesPerSecond, settings.ProjectileEasing,
-                context.ImpactThen(settings, hit, CombatProjectileContact.Along(from, landing, 1f, up, attackFacing)), arrived, version,
-                settings.ArcRotationMode);
+                context.ImpactThen(settings, () => hit(EntityId.Empty, true), CombatProjectileContact.Along(from, landing, 1f, up, attackFacing)),
+                arrived, version, settings.ArcRotationMode);
         }
 
         private Vector3 ResolveLanding(CombatAttackShape shape, FieldGridMapper mapper)

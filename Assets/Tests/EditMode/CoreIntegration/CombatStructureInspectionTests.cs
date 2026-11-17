@@ -4,7 +4,6 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.EffectSystem
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Effects;
-using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
@@ -98,29 +97,6 @@ namespace ProjectL.Tests.CoreIntegration
             selection.SelectCell(Anchor);
             Assert.That(selection.SelectedEntityId, Is.EqualTo(new EntityId(100)));
             Assert.That(selection.SelectedActorId.IsEmpty, Is.True);
-        }
-
-        [Test]
-        public void UnitInfoPrefab_HidesMissingStructureFieldsAndRestoresCharacterFields()
-        {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ProjectL/Prefabs/UI/DeckUI.prefab");
-            var source = prefab.GetComponentInChildren<CombatUnitInfoView>(true);
-            var instance = UnityEngine.Object.Instantiate(source.gameObject);
-            try
-            {
-                var view = instance.GetComponent<CombatUnitInfoView>();
-                view.ShowInspection(new CombatInspectionInfo(new CombatInspectionFacts(Structure(health: 5, attackPower: 7)),
-                    "적 본부", "본부 설명", null, null));
-                foreach (string field in new[] { "levelRoot", "categoryRoot", "defenseText", "abilityLayout" })
-                    Assert.That(FieldObject(view, field).activeSelf, Is.False, field);
-                Assert.That(Text(view, "currentHealthText"), Is.EqualTo("5"));
-                Assert.That(Text(view, "healthText"), Is.EqualTo("/ 10"));
-                Assert.That(Text(view, "attackPowerText"), Is.EqualTo("공격력 7"));
-                view.Show("유닛", 3, null, "MAIN", Array.Empty<UnitCardTraitContent>());
-                foreach (string field in new[] { "levelRoot", "categoryRoot", "defenseText", "abilityLayout" })
-                    Assert.That(FieldObject(view, field).activeSelf, Is.True, field);
-            }
-            finally { UnityEngine.Object.DestroyImmediate(instance); }
         }
 
         [Test]

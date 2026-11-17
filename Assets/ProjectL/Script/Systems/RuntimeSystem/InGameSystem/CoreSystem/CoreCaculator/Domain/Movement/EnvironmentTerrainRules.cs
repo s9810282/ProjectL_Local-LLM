@@ -15,14 +15,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             EnvironmentSemanticBindings bindings, CellCoord cell) =>
             HasTerrain(environment, bindings, cell, StaticTerrainKind.Wall);
 
-        internal static bool IsCliffOccupied(MovementEnvironmentFacts environment,
-            EnvironmentSemanticBindings bindings, CellCoord cell) =>
-            HasTerrain(environment, bindings, cell, StaticTerrainKind.Cliff);
-
         /// <summary>일반 이동·배치가 공유하는 지형 진입 제한이다. 강제 이동은 별도 규칙을 쓴다.</summary>
         internal static bool BlocksVoluntaryEntry(MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, CellCoord cell) =>
-            IsWallOccupied(environment, bindings, cell) || IsCliffOccupied(environment, bindings, cell);
+            IsWallOccupied(environment, bindings, cell) || BoardSurfaceRules.IsUnsupportedCliff(environment, bindings, cell);
+
+        internal static IEnumerable<CellCoord?> VoluntaryBlockedCellSteps(MovementEnvironmentFacts environment,
+            EnvironmentSemanticBindings bindings) => BoardSurfaceRules.BlockedSurfaceCellSteps(environment, bindings, includeWalls: true);
 
         internal static bool HasTerrain(MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, CellCoord cell, StaticTerrainKind kind)
@@ -61,7 +60,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         }
 
         /// <summary>"이 원본이 그 종류의 지형인가"의 유일한 판정이다: 활성 + 종류 + 지형 의미 분류 포함.</summary>
-        private static bool IsTerrain(StaticTerrainFact terrain, EnvironmentSemanticBindings bindings, StaticTerrainKind kind) =>
+        internal static bool IsTerrain(StaticTerrainFact terrain, EnvironmentSemanticBindings bindings, StaticTerrainKind kind) =>
             terrain.Active && terrain.Kind == kind && bindings.TerrainSourceIds.Contains(terrain.Id);
 
         internal static int SandstormRange(int inputRange)

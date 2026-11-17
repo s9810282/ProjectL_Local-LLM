@@ -67,6 +67,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
             set => EditorPrefs.SetBool(Prefix + "UseDevBattle", value);
         }
 
+        /// <summary>튜토리얼 자동 시작을 쓸지입니다. 기본값은 켜짐이며, 덮어쓰기가 켜진 에디터의 다음 재생부터 적용합니다.</summary>
+        public static bool UseTutorial
+        {
+            get => EditorPrefs.GetBool(Prefix + nameof(UseTutorial), true);
+            set => EditorPrefs.SetBool(Prefix + nameof(UseTutorial), value);
+        }
+
         public static int DevLoadoutKey
         {
             get => EditorPrefs.GetInt(Prefix + nameof(DevLoadoutKey), 1);

@@ -1,4 +1,25 @@
-# 전투 Core 변경·View–Core 경계 인계 — 2026-11-11 갱신 (StageSelect 런 포기 구현 §5.86·§71, 이전: 재구성 공격 미리보기 칸 §5.85)
+# Combat Core / View Boundary Handoff — 2026-11-17 (Thorn Bomb Phase 4: Rules, Preview, AI Cleanup, View Handoff)
+
+> **2026-11-17 가시 폭탄 Phase 4:** 정적 확인·집중 코드 리뷰·구조 정리를 반영했다. 이어서 사용자 결정 셋을 반영했다.
+> - 낙사한 유닛의 폭탄은 터지지 않고 사라진다(새 사건 `ThornBombDiscarded = 65`).
+> - 기차 즉사는 낙석처럼 이동 투영으로 정산해, 폭탄이 죽은 레일 칸에서 터진다.
+> - 같은 길로 자폭·공포도 기차 즉사에서 발동한다.
+>
+> §5.101과 §75 참조.
+>
+> **2026-11-17 가시 폭탄 Phase 3:** 선인장 캐논 SO 전환, 부착·기폭 표시와 조준 결과 연결, 기존 가시 장판 퇴역을 반영했다. §5.100과 §75 참조.
+
+> **2026-11-12 H4 fixture regression:** Unity compilation passed and all 20 authorized fixture regressions passed. Full Core/CoreIntegration EditMode returned 6,592 passed, 36 failed, and 11 ignored. See §5.92 for pending health-specific and player-build acceptance.
+
+> **2026-11-12 H2-T4 review and H3 implementation (compilation/runtime acceptance pending):** Publication now validates the canonical health executions and exact claims. Attack scopes preserve their capture membership and declaration identity; reflection preserves its actual damage-origin reference. See §5.91. Earlier H1/H2 interpreter-authority notes below are historical.
+
+> **2026-11-12 health execution producers H2 (compilation and runtime verification pending):** Core records applied health changes and binds existing declarations to their execution steps. The shared event interpreter remains the publication authority. See §5.90.
+
+> **2026-11-12 health execution contracts H1 (compilation and runtime verification pending):** The Core transition carries immutable execution and claim references through composition and completion. The existing event interpreter remains authoritative. See §5.89.
+
+> **2026-11-12 shared health evidence (user-authorized Core change, compilation and runtime verification pending, not sent):** Reflection, healing, and attack validation now use the same ordered health-event interpretation; see §5.88 for the reconstruction fix and future extension boundary.
+
+> **2026-11-12 enemy Ground Compaction departure fix (user-authorized Core change, compilation and runtime verification pending, not sent):** Movement-use evidence now follows the first voluntary movement event across AI result composition; see §5.87. Earlier handoff entries remain historical records.
 
 > **2026-11-11 StageSelect 런 포기 (사용자 승인으로 Core 포함 구현, 컴파일 미확인, 미전달):** `IRunAbandonService`로 맵에서 현재 런을 정리하고 Stage 흐름으로 로비에 복귀합니다(§5.86·§71).
 
@@ -31,7 +52,7 @@
 > View 작업에서 DB-SO를 새 Framework/Systems 구조에 맞게 재구성한다. 이 문서는 그중 **Core 작업에 영향을 주는 내용**과 **Core 작업자에게 확인받을 사항**을 전달한다.
 > 상세 설계는 [DB-SO 재구성 설계](../specs/2026-09-24-db-so-ingame-view-group-design.md)에, 옛 에셋 값은 [고아 에셋 인벤토리](../specs/2026-09-24-view-db-orphan-asset-inventory.md)에 있다.
 
-- 작성일: 2026-09-24 (최종 갱신 2026-11-11, 재구성 공격 미리보기 칸 §5.85)
+- Created 2026-09-24. Last updated 2026-11-12 for H4 health evidence integration verification (§5.92). H1–H3 are recorded in §§5.89–5.91.
 - 작성: View 작업
 - **2026-10-05 최신 Core 요청은 [별도 요청 문서](2026-10-05-combat-core-requests-phase6b.md)가 원본이다.** `e0b02cc7` 병합본과 골격 6B F1 작업 기준으로 남은 요청·담당·검증 조건을 정리했다. 아래 예전 요청의 해결 여부를 현재 미완료 상태로 읽지 않는다. 외부 전달·답변은 아직 확인하지 않았다.
 - 기준 브랜치: `develop`
@@ -1211,6 +1232,149 @@ The user confirmed that they will implement Tornado and explicitly instructed di
 - `RunSystem/RunAbandonService.cs`의 `TryAbandonRun(expectedRunId)`는 비어 있거나 다른 Run ID, 종료된 런, 준비·활성 전투가 남은 경우를 거절한다. 수락 시 기존 `IRunProgressBufferWriteSink.ResetRunProgress()`로 런을 정리한다. 종료 요약은 이전 값을 유지하며 이 요청으로 새 요약을 생성하지 않는다.
 - `InGameCoreSystemFactory`가 서비스 객체를 만들고 Core 내부 Builder에 `IRunAbandonService`와 바인딩 모듈을 등록한다. `InGameCoreSystemServiceKey.RunAbandon`으로 Core Group이 보관하며 `StagePlan`이 `InGame.CoreGroup.RunAbandon`을 `StageRunAbandonJob`에 넘긴다. 상위 Export는 기존 그룹 단위다.
 - 전투에서 포기할 때는 기존 전투 완료 경로를 쓴다. Stage의 UI와 이탈 연결은 §71에 있다.
+
+### 5.87 Enemy Ground Compaction departure fix (2026-11-12, user-authorized Core change, verification pending)
+
+- Evidence: the supplied `Player.log` ends with `MovementUndoPolicy.Reconcile` throwing the missing movement-use execution/source exception through `CombatCommandCalculator.FinishAdvance` / `AdvancePrepared`. The user recalls using Ground Compaction or seeing its trail. The log does not identify the failing actor, trail, or build commit; the exact play session has not been reproduced.
+- Cause in the current source: `EnemyAiTurnService.Execute` calculates a `Move` for the selected actor, then `CombatCommandComposition.Merge` restores the outer `CompleteEnemyTurn` input while retaining `GroundDeparture` uses. The final reconciliation previously required `input.Kind == Move` and the outer `input.ActorId`, so it could not reconstruct the retained use.
+- Implementation: only `CoreCaculator/Application/Combat/MovementUndoPolicy.cs`, in `CaptureTrailActionUses`, changes executable code. The first non-forced `Moved` event supplies its actor and departure position through `Expected`; the existing event-ordered environment supplies the active trail facts. The existing one-departure guard, forced-movement exclusion, source selection rule, event identity, and rejection of unsupported use declarations remain in place.
+- Boundaries: no public contract, persistent state, Buffer ownership, Job behavior, Factory registration, artifact rule, or View presentation changes. Evidence remains derived from Core events through the existing Ground Compaction rule; no second rule implementation or persistent state copy is introduced.
+- Change / understanding scope: previously, departure evidence depended on AI wrapper input details even though the movement event survived composition. After this change, that evidence depends on the actual movement event and the existing trail contract. AI composition and publication remain necessary regression boundaries; unrelated UI, rendering, and artifact internals do not need modification.
+- Verification performed: source tracing of ordinary movement, position-swap movement, forced movement, AI composition, and final reconciliation; whitespace validation with `git diff --check`. Independent read-only review found no critical or important issue and checked event/source identity preservation through composition and publication validation. No test code was added or changed. Unity, MSBuild, and automated tests were not run under the current task restrictions; compilation and runtime behavior remain unverified.
+- Unity follow-up: have an enemy start on an active Ground Compaction trail and execute a move through prepared AI advancement and publication, including a short move within its base allowance. Compare direct advancement and normal player movement; verify multi-cell movement records departure once, newly created trails are not treated as preexisting departure sources, and forced displacement / swap passengers do not consume departure effects. Run existing movement-effect, movement-undo, trail, AI, and CoreIntegration regression suites. Finally repeat the reported artifact loadout and restart sequence in a player build.
+
+### 5.88 Shared health evidence and lethal reflection reconstruction (2026-11-12, user-authorized Core change)
+
+- Authorization: the user requested the reflection/reconstruction fix through common damage/recovery interpretation, without trait-specific exceptions, and an investigation of how future traits can avoid repeating this integration failure. Plan: [Combat Health Evidence Consistency](../plans/2026-11-12-combat-health-evidence-consistency.md).
+- Confirmed source mismatch: `ThornHeartAttackScope` records `CombatDamageOutcome.ActualHealthLoss`. A lethal hit intercepted by Reconstruction emits `Reconstructed(before, restored)` rather than a separate death event. An enemy at 2/100 HP receiving lethal reflection therefore records loss 2 and an event 2 -> 100. `ReadArtifact` previously treated that event as loss 0, while `HasHealthChain` already understood the same event as 2 -> 0 -> 100. This is a separate existing defect, not the exception reported in the original Ground Compaction log.
+- Implementation: `CoreCaculator/Contracts/Combat/CombatChangeEvidenceReader.cs` now owns a private `ReadHealthChanges` projection and a small immutable `HealthChange` value. They interpret existing events into ordered before/after values, damage, recovery, and normalization loss. Artifact damage/healing, item healing, generic trait healing, and attack health-chain validation consume this same interpretation. The reconstruction mapping was moved from the old attack reader; no trait-key or artifact-plus-trait special case was added.
+- Scope preservation: attack health chains still require continuous before/after values and exact damage/recovery/normalization totals. Artifact/item checks still require sufficient evidence for the recipient, and their character-only scope is retained. Structure health events remain supported by attack validation. Non-health character events cannot supply damage/healing evidence; health-cap normalization cannot supply damage evidence. Public event constructors, result fields, effect rules, AI composition, Buffer ownership, and View presentation are unchanged.
+- SSOT and responsibility: combat execution still decides actual outcomes and owns the existing facts. The private projection is derived interpretation for validation, not a second mutable state store or a new damage calculation. Consumers retain their own validation responsibility (sum versus ordered chain) while sharing the meaning of each health event. No new Framework service, interface, factory, or external dependency is introduced.
+
+#### Extension contract and remaining limits
+
+| Change scenario | Required implementation understanding / edits | Required verification |
+|---|---|---|
+| New trait using ordinary damage, healing, or existing reconstruction | Trait rule and existing execution/health-event contract; no reader changes merely because the trait key is new | Trait behavior and its real integration paths; retain required Core/CoreIntegration regressions |
+| New health-event semantics | Define the operation once and map it in `ReadHealthChanges`; sum/chain consumers should not each acquire new trait branches | All shared health consumers, composed execution, publication, and relevant View compatibility |
+| New composite operation not fully represented by current event facts | Separate design for execution-owned immutable health receipts with actual loss/recovery/normalization and causal identity; do not infer hidden operations from final HP or copy Buffer state | Producer/receipt consistency, common consumer behavior, compound effects, and existing integration regressions |
+
+- Before this change, a new composite event could require independently updating attack, artifact, and item health interpretations. After this change, those consumers share one event interpretation. This reduces the modification and understanding scope; it does not make an undefined future event automatically meaningful.
+- Recommended future direction, not implemented: record primitive health outcomes at the execution boundary when a genuinely new composite operation needs more information than the current event can express. Keep presentation-specific events alongside those facts if necessary. Consumers should depend on the primitive outcome contract rather than special trait names. A public receipt migration needs its own approved design because all producers and consumers must agree.
+- Remaining existing limitation: artifact/item amount checks aggregate evidence for a recipient over the result. This fix does not introduce per-effect causal attribution or change the existing `>=` checks. A future receipt design must include execution/source identity to address that separate issue; sharing the interpreter alone does not establish causality.
+- Validation: scoped whitespace checks and source tracing cover lethal/nonlethal reflection, ordinary healing, full-HP reconstruction, health normalization, character/structure attack chains, and recipient filtering. Independent read-only review found no critical or important issue and confirmed the retained attack-chain semantics and recipient scope. Test code was not added or changed. Compilation, Unity play, player-build reproduction, and existing test execution are pending under the task restrictions; do not treat static review as a runtime pass.
+- User verification: repeat lethal reflection against an unused Reconstruction enemy at low HP and full HP, including ranks with reconstruction shields. Check ordinary lethal reflection, nonlethal reflection, complete absorption, artifact/item healing, normalization, ordinary character/structure attacks, and prepared AI publication. Run existing evidence, artifact, reconstruction, combat, movement-undo, and CoreIntegration regressions, then the reported artifact/restart player-build sequence.
+
+### 5.89 Health execution contracts and propagation (H1, 2026-11-12)
+
+- The user authorized H1 of the [Combat Health Execution Evidence Implementation Plan](../plans/2026-11-12-combat-health-execution-evidence-plan.md). `CombatDamageApplication` now collects the sealed `CombatHealthExecution` carrier. Existing damage executions retain their evidence events and numeric movement uses. Actual health steps and claim bindings are H2 work.
+- `CombatCommandTransition` owns one execution list and one claim list. Its legacy damage view and constructor remain available during migration. Copy, event insertion, AI and gimmick composition, turn cleanup and completion preserve execution and step identity. Movement projection appends the finalizer's evidence once. The publisher installs through the existing Buffer boundary.
+- A future producer can work at its operation owner and bind the affected event to returned steps. Composition depends on the two collections and their reference contract. This reduces the producer's need to understand movement undo or the AI wrapper. Changes to this shared transport still require movement, AI, completion, and publication regressions. Source inspection covered those paths. Runtime evidence is pending.
+- `CombatChangeEvidenceReader` remains the active health interpreter. The View-facing events and result shapes follow the existing contracts. Scoped Git whitespace validation and a source review were performed. Compilation and runtime verification remain pending. H2–H4 are separate review points.
+
+### 5.90 Health execution producers and claim binding (H2, 2026-11-12)
+
+- The user authorized H2 of the [Combat Health Execution Evidence Implementation Plan](../plans/2026-11-12-combat-health-execution-evidence-plan.md). Existing Core operation owners now provide applied loss, recovery and cap normalization to the transition. Primary and roar hits, kill-chain hits, item and artifact amounts, and trait recovery carry references to their own executed steps.
+- Reconstruction has separate depletion and restoration steps. Reflection receives only the returned damage step. The completion path carries experience, artifact recovery and cap cleanup in the same transition. The publisher continues to attach completion metadata and install through Buffer.
+- The producer of a new health effect now needs the existing health-operation contract and the declaration occurrence it emits. The transport depends on event and step references. It needs no trait rules, Framework services, or extra state owner. Required verification still includes movement and undo, nested attacks, direct and prepared AI, completion and CoreIntegration publication.
+- The existing View event shapes, playback order, and gameplay calculations follow their current contracts. H3 owns the validation cutover and fixture migration. The reserve-return test's empty legacy list expectation conflicts with the new normalization evidence. Source review, C# syntax and scoped whitespace checks were performed. Compilation, Unity and runtime verification remain pending.
+
+### 5.91 Health validation cutover and H2-T4 review (2026-11-12)
+
+- Authorization: the user requested review/fixes for H2-T4 and implementation through H3, preserving the H1/H2 work from another session. H4 was not started. Unrelated assets and the existing reserve-return fixture changes were preserved.
+- H2-T4 finding and repair: the original producer selected the correct execution slice but discarded the independent capture boundary. `CommandAttackLedger.CaptureHitHealth` now retains immutable step references; `BindHealthClaims` seals a `CombatHealthScope` with the final event and entry index. Child attacks use the same contract. A claim cannot borrow equal-valued later healing or replace its scope with a sibling attack's scope. No HP state is copied.
+- Reflection claim repair: `ThornHeartAttackScope` preserves the exact `CombatDamageOrigin` object already passed to damage execution. The claim and source must reference that same object; equal origin fields or a reused local group number are insufficient.
+- `CombatHealthEvidenceValidator` validates unique execution/step membership, exact event anchors, ordered health conservation, creation baselines, final character/structure health, damage-absorption coverage, complete claim coverage, actual amounts, source links, and immutable attack scope. It does not calculate damage rules or mutate Buffer. Primary/roar health summaries must share the canonical healing occurrence's snapshot.
+- `CombatChangeEvidenceReader.ReadAll(transition)` is the production entry point. Reconciliation and the existing Buffer publication validation reach it before installation. `ReadEventShapes(events)` retains standalone event-sample checks for existing fixtures; it is not used by production publication and is not a missing-receipt fallback. Numeric movement-source validation remains with its current owner.
+- Removed `MovementDamageExecution`, `DamageExecutions`, the legacy constructor adaptation and their duplicate compatibility entry points. `CombatHealthExecution` owns its evidence/uses directly; transitions expose `HealthExecutions` and `HealthClaims`. The public transition constructor accepts those canonical lists for permitted copying/fixtures. Existing View events/results, gameplay formulas and publication ownership are unchanged.
+- Existing tests changed only for compilation-facing API names (`ReadAll(events)` -> `ReadEventShapes(events)`, execution property/parameter renames). This session added no tests and changed no assertions. The pre-existing `ReserveReturnPublicationTests` normalization assertions belong to the earlier session and were preserved.
+- Independent read-only H2-T4 and H1-H3 reviews identified the scope/reflection reference gaps above; they were resolved. Source review covered nested sealing, soul collection, growth event replacement, completion normalization, creation and composed attacks. Roslyn parsing and scoped whitespace checks were performed without compilation or code execution.
+- **Runtime acceptance remains pending:** compilation, Unity playback, existing Core/CoreIntegration suites, original player-build reproduction and the negative/atomicity cases were not executed. H3 implementation is available for user verification; H3 runtime acceptance and H4 are not complete. Do not interpret syntax-only checks as a build or test pass.
+
+### 5.92 Health evidence integration verification (H4, 2026-11-12)
+
+| Boundary | Implementation |
+|---|---|
+| Health operations | `CombatDamageApplication` owns character damage, direct defeat, Reconstruction, and nested item recovery. Existing environment, structure, trait, growth, and completion owners record their applied values. |
+| Declaration links | Reflection binds the returned loss step. Item and trait healing bind the local recovery step. `CommandAttackLedger` and the child attack producer bind steps captured within the existing hit boundaries. |
+| Transport and installation | `CombatCommandTransition` and composition preserve execution, step, and event references. `MovementUndoPolicy` calls `CombatChangeEvidenceReader.ReadAll(transition)`. Buffer invokes existing publication validation before installation. |
+| Compatibility | H3 removed `MovementDamageExecution`, `DamageExecutions`, and the legacy constructor adapter. `ReadEventShapes` supports standalone event fixtures. View consumes the existing `CombatResult.Events` contract. |
+
+For an ordinary damage or healing trait, use the existing operation owner and retain the returned step references. When the trait emits a supported health declaration, bind its canonical event and recipient to those exact steps. Carry those references through the transition to the shared reader. This limits a trait change to its rule, application call, and declaration binding. Before the migration, a composite outcome could require tracing how attack, artifact, item, and undo consumers inferred amounts from events. The trait's actual combinations and affected publication paths still need Core/CoreIntegration regression coverage.
+
+A new health primitive needs contract review for its source, amounts, before/after snapshots, event anchor, claim semantics, and effect on final-state coverage. Update the operation owner and shared validator together when the new primitive requires both to change. Changes to View events require their own compatibility review. Existing Framework registration, Job, and Buffer ownership define the integration boundary.
+
+**H4 rerun.** Unity 6000.0.73f1 compiled the H3 worktree at `424242ab8` with the authorized fixture changes. Core returned 5,557 passed, 2 failed, and 8 ignored. CoreIntegration returned 1,035 passed, 34 failed, and 3 ignored. Reserve return passed 4/4. All 14 publication failures and 6 frozen comparison failures became passes. The other 36 failure names and messages matched the initial H4 run. The [H4 execution record](../plans/2026-11-12-combat-health-execution-evidence-plan.md#h4-execution-record--2026-11-12) names the fixtures, evidence files, and coverage gaps.
+
+**Player-build acceptance.** Use a build that includes the H3 worktree changes and reproduce the original artifact loadout and restart sequence. In direct and prepared AI, check an enemy leaving an active Ground Compaction trail and an enemy with unused Reconstruction receiving lethal Thorn Heart reflection, including low/full HP and a shield rank. Check damage numbers, reaction order and timing, and the final HP/status refresh. Record the build revision or worktree manifest and relevant log or video. The original session's exact actor, trail, and build revision were unavailable in §5.87.
+
+**Acceptance remains pending.** The full regression is red. The player-build cases, View playback, and direct health-forgery/atomicity cases lack execution evidence for H4. Fixture changes beyond the existing permission require separate authorization.
+
+### 5.93 Develop merge: skill and batch availability previews (2026-11-15)
+
+- The user requested resolution of the in-progress merge from `develop` (`3ccb8719a`) into `feature/Cheon/Core/NewCombatSytem` (`28d29b67e`), followed by publication to both branches.
+- Four conflict resolutions preserve player-skill availability/selection/forecast and Stun restrictions from the feature branch, plus the batch action-availability query and shared eligibility rule from `develop`. `CombatViewPreviewKind` retains skill values 11–13 and assigns `ActionAvailabilities` the distinct value 14; consumers use the enum names.
+- `CombatPreviewService` routes both query families and rejects obsolete revision/turn results. `CombatPreviewResult` keeps exactly one payload, including all skill variants and the batch result. `CombatActionAdmission.EligibilityFailure` remains the shared eligibility source, while single and batch action queries retain Stun restrictions.
+- The request factories, calculator entry point, Buffer publication guards, HUD consumer, and profiler enum indexing were inspected together. State ownership, Framework registration, Job responsibilities, and public factory signatures are preserved; no new abstraction or duplicate state source was introduced. The required regression scope remains skill queries/publication, single/batch availability, Stun restrictions, and HUD consumption.
+- Validation: after the user authorized compilation, Unity 6000.0.73f1 completed batch compilation and exited with code 0. There were no C# errors; the unchanged `CombatCommandEffects.cs:249` emitted one distinct CS8632 nullable-context warning. Independent read-only review found no merge-introduced blocker. Conflict-marker, enum-uniqueness, and scoped whitespace checks passed. No tests were added, changed, or executed; Unity playback remains unverified.
+
+### 5.94 클릭 최단 경로 이동 Phase 1 공통 탐색 분리 (2026-11-17)
+
+상세 이력은 [클릭 이동 전용 View 인계](2026-11-17-combat-click-shortest-move-view-handoff.md)의 §4.1로 이전했다(2026-11-17).
+
+### 5.95 클릭 최단 경로 이동 Phase 2 경로 응답 연결 (2026-11-17)
+
+상세 이력은 [클릭 이동 전용 View 인계](2026-11-17-combat-click-shortest-move-view-handoff.md)의 §4.2로 이전했다(2026-11-17).
+
+### 5.96 클릭 최단 경로 이동 Phase 3 출처 검증과 게시 (2026-11-17)
+
+상세 이력은 [클릭 이동 전용 View 인계](2026-11-17-combat-click-shortest-move-view-handoff.md)의 §4.3로 이전했다(2026-11-17).
+
+### 5.97 클릭 최단 경로 이동 Phase 4 정적 검토와 View 인계 (2026-11-17)
+
+상세 이력은 [클릭 이동 전용 View 인계](2026-11-17-combat-click-shortest-move-view-handoff.md)의 §4.4로 이전했다(2026-11-17).
+
+### 5.98 가시 폭탄 Phase 1 — 특성·상태 계약 (2026-11-17)
+
+사용자 지시로 이 Phase의 Core 및 Buffer 계약을 반영했다. 기존 특성 조립 경계와 명령 상태·투영·게시 경로에 연결했다. 기존 SO와 가시 장판은 그대로이며, 기폭 실행과 View 재생은 후속 Phase다. 변경 범위와 기존 시험 변경 승인 항목은 [Phase 1 실행 기록](../plans/2026-11-17-cactus-cannon-thorn-bomb-implementation-plan.md#3-phase-1--신규-특성-계약과-상태-보존)을 따른다. 컴파일 미확인.
+
+### 5.99 가시 폭탄 Phase 2 — 실행·공개 경계 (2026-11-17)
+
+사용자의 Phase 2 진행 지시와 `long`/지형 규칙 전달 보완 승인으로 Core 실행을 반영했다. 전용 resolver가 기존 피해·강제 이동 경계를 사용하고 부착·명중·사망·턴 시작·미리보기를 연결한다. 상세 변경·승인·확인 수준은 [Phase 2 실행 기록](../plans/2026-11-17-cactus-cannon-thorn-bomb-implementation-plan.md#4-phase-2--공통-실행-재사용과-폭탄-기능)을 따른다. 별도 읽기 전용 검토의 공개 부착 preview 누락을 보완했고 구문 파싱·diff 검사를 마쳤다. **컴파일 미확인**이다. View 인수와 운영 SO 교체·기존 장판 제거는 Phase 3이다. 외부 전달하지 않았다.
+### 5.100 가시 폭탄 Phase 3 — View·SO 전환과 장판 퇴역 (2026-11-17)
+
+사용자 지시로 선인장 캐논을 가시 폭탄에 연결하고 기존 장판을 제거했다. Core의 부착·기폭 사건과 최종 상태를 사용하며, 뷰는 기존 Effect scope와 유닛 표시 대여 수명을 따른다. 조준 체력은 Core가 폭발 수신자의 최종 체력과 재구성 여부를 제공한다. 모델 원본은 보존했다. 실행·검증 결과는 [Phase 3 실행 기록](../plans/2026-11-17-cactus-cannon-thorn-bomb-implementation-plan.md#2026-11-17-phase-3-실행-기록)에 있다.
+
+### 5.101 가시 폭탄 Phase 4 — 집중 리뷰와 정리 (2026-11-17)
+
+사용자 지시로 정적 확인과 집중 코드 리뷰를 했다. 동작을 바꾸지 않는 정리만 반영했다.
+
+- 처치 연쇄 초기 근거 식을 한 곳(`KillChainAttackCalculator`)으로 모았다. 폭탄은 폭발 중 사망만 `ThornBombResolution.KilledIds`로 알린다.
+- 폭발 범위·거리는 `ThornBombRules` 상수로 옮겼다.
+- 미리보기 재조립을 구조체 복사 생성자로 바꿨다.
+- 장판 제거로 빈 인자가 된 것을 걷었다. `CombatDamageApplication`의 `eventOrigins`·`resolvedHeldAbsorptions`, `MovementEnvironmentCalculator.ResolveForcedStepsSteps`의 `input`이다. 기존 시험 `GimmickOccupancyTests.cs:86`은 호출 한 줄만 맞췄다.
+- `CombatSceneEventPresenter.Refresh`의 폭탄 인자를 필수로 바꿨다.
+
+**후속(사용자 결정):**
+
+- 낙사한 유닛의 폭탄은 터지지 않고 사라진다. Core는 `CombatThornBombDiscardedEvent`(`CombatEventKind.ThornBombDiscarded = 65`, 대상의 낙사 사건 필요)를 남긴다. View는 사건 형식 표 한 줄과 처리기 한 갈래로 부착물을 거둔다.
+- D1: 기차 즉사가 `MovementProjection.ForArrival(...).Complete()`로 끝난다. 그래서 폭탄이 사망 칸에서 터진다.
+- 같은 길로 자폭·공포가 기차 즉사에서도 발동한다. 사망 특성 설계 §17에 있다.
+- View 확인 항목은 V19~V21이다. View 쪽 사건 소비자는 새 사건 하나를 더 받는다.
+
+**후속 2(사용자 지시 D2·D4·D3):**
+
+- D2: 가시 폭탄 TraitVisual 줄과 부착물 프리팹이 없으면 부트의 DB 생성에서 멈춘다. 규칙 원본은 `TraitVisualData.RequiresAttachment`이다.
+- D4: Core `ThornBombExplosionPreview`에 `BlastCells`와 `KnockbackOccupiedCellsOf`를 더했다. View 조준 표시는 연쇄 폭발 칸과 여러 칸 유닛의 넉백 도착 칸을 그대로 그린다.
+- D3: 새 열거 값 `TraitActivationKind.ThornBombDetonated = 420`이다. View 조회용 열쇠라 Core는 이 발동을 내지 않고, 판독기도 거절한다. 폭발 이펙트는 가시 폭탄 TraitVisual 발동 줄의 큐다(기본값 Boom, 옛 화면과 같음).
+  - **소리 창구 요청(미전달):** 가시 폭탄 폭발 소리 슬롯이 필요하다. 특성 발동 줄에는 소리 칸이 없어, 슬롯이 열리면 폭발 연출에 연결한다(사용자: 나중에 연다).
+- 기존 시험 `CombatChangeEvidenceVariantTests` 예약 목록에 새 값을 더했다.
+
+**후속 3(사용자: "나머지는 View 인계로, D7은 너가"):**
+
+- D7: 적 AI 치명 판정의 `transitLoss` 인자를 걷었다(`EnemyActionCandidates.IsCertainLethal`·`LethalRank`, `EnemyDecisionSession.CandidateLethality`). 진입 손실은 붕괴 착지 때만 0이 아니고, 그때는 붕괴 착지가 먼저 치명을 정해 결과가 같다.
+- D5·D6과 폭발 소리 슬롯은 [가시 폭탄 View 전용 인계](2026-11-17-cactus-cannon-thorn-bomb-view-handoff.md)로 넘겼다. View 쪽 Unity 확인 목록도 그 문서에 있다.
+- D8은 Core 보류다. 표와 권장안은 [Phase 4 실행 기록](../plans/2026-11-17-cactus-cannon-thorn-bomb-implementation-plan.md#2026-11-17-phase-4-실행-기록--정적-확인집중-코드-리뷰인계)에 있다. Core·CoreIntegration 배치 실행 결과도 같은 기록에 있다. 씬 재생은 미확인이다. 외부 전달하지 않았다.
 
 ## 6. Buffer B1 (View 작업에서 구현, Core 작업자 확인 요청)
 
@@ -2877,3 +3041,37 @@ View 호버(`Input/Interaction/CombatUnitRangeHover`)가 성능 계획 P4로 유
 - 사용자 승인 범위는 StageSelect 런 포기에 필요한 Core 변경이다. Core 계약은 §5.86, Task와 확인 목록은 [StageSelect 런 포기 계획](../plans/2026-11-11-stage-select-run-abandon-plan.md)에 있다.
 - `OptionUI`가 기존 `ConfirmUI`에서 Stage 전용 문구로 Y 확인을 받고 `LifeCycle.StageRunAbandon`에 요청한다. `StageLifeCycle`은 맵 준비·로딩·Runner·전투 진입·착지 대기를 확인한다. 수락 시 옵션을 닫고 `StagePlan`이 포기를 우선 실행한다.
 - Core가 런을 정리하고 Runner가 비면 `StageLifeCycle`이 로비로 전환한다. 새 런은 로비에서 출발할 때 시작한다. 기존 종료 요약·누적 명성·영구 유물을 유지한다.
+
+## 72. 덱·전투 특성 배지의 최대 등급 조회 요청 — 2026-11-13 (View → Core, 미전달)
+
+- 덱과 전투의 유닛·추가 특성 슬롯은 성장 등급이 정의된 특성에 현재 등급을 표시한다. 최대 등급이 1인 고정 특성은 Lv 이미지와 텍스트를 함께 숨긴다. 성장형 특성은 최고 등급에 도달한 뒤에도 현재 등급을 표시한다.
+- 현재 `OwnedCharacterStatsSnapshot.TraitRanks`는 보유 특성의 현재 등급을 제공한다. 1등급인 성장형 특성과 1등급 고정 특성을 구분하려면 최대 등급이 필요하다.
+- 기존 `TraitGrowthDefinition.MaxRank` 기준의 특성별 최대 등급을 현재 등급과 같은 보유 스냅샷에 제공해 주세요. 성장 등급 정의가 없는 보유 특성의 최대 등급은 1이다. StageSelect 덱과 전투의 카드·유닛 상세창이 기존 덱 스냅샷에서 이 값을 읽을 수 있다.
+
+## 73. 플레이어 액티브 스킬 View 대응 — 2026-11-17 (인계 답, 요청 없음, 확인 셋, 미전달)
+
+천명님 `1b76f69db`·`28d29b67e`와 [액티브 스킬 Core → View 인계](2026-11-15-player-active-skills-core-view-handoff.md)를 받아 View 쪽을 만들었다. 설계 [player-skill-view-design](../specs/2026-11-16-combat-player-skill-view-design.md), 계획 [player-skill-view-plan](../plans/2026-11-16-combat-player-skill-view-plan.md)(§6이 실행 기록). Core 파일·Core 시험 변경 없음. 사용자 Unity 확인(화약꽃·마탄 모드·예보·격발·재생·버튼) 문제 없음(11-17). 조건부 문구 없앰(계획 §6.4)도 확인됨. 메인을 골랐을 때만 진입(§6.6)·검토 반영(§6.7)은 컴파일 미확인·Unity 확인 대기.
+
+- **View가 쓰는 계약(인계 §2~§6 그대로):** 가용성 → 선택 → 예보를 한 슬롯 미리보기로 묻고, 답은 번호·종류·출처 네 칸(`PlayerSkillSourceStamp`)·고른 점 목록으로 대조해 낡은 답을 버린다. 제출은 그 예보의 `Source`로. 후보·완료·남은 점 수·쓸 수 있음·남은 횟수는 Core 답만 쓰고, 행위자는 스킬 상태의 `ActorId`. 사건 51(`CombatPlayerSkillAttackEvent`)은 사건 형식 표 한 줄·처리기 하나로 재생한다 — 투사체 경로가 있으면 꺾인 경로 비행·접촉 순번(`Hits[].Contacts[].DeliveryIndex` → `ImpactCells`)마다 그 대상 피격, 없으면 영역 일괄 해제.
+- **인계 §5 "예보 한계를 UI에 보이라"와 다른 점:** 처음엔 예보 동안 "알려진 정보 기준 예상입니다. 숨은 효과나 확률에 따라 달라질 수 있습니다."를 행동 안내로 띄웠으나, 사용자가 "띄울 이유가 없다"고 해 걷었다(공용 안내 창이라 호버마다 팝업이 깜빡였음, 계획 §6.4). 지금 UI에는 이 한계 문구가 없다. `Coverage`는 읽지 않는다.
+- **View 쪽 결정(Core 계약과 무관):** 스킬 모드 진입은 메인을 골랐을 때만(키 R·버튼 같음, 계획 §6.6). 마탄 점 고르기 거리(점마다 앞 점에서 공격 사거리 안, M01~M04)는 사용자 질문으로 확인했고 지금 규칙 그대로 둔다(요청 없음, 계획 §6.5).
+- **확인 부탁 셋(요청 아님):**
+  1. 사건 순서: 마탄은 사건 51 하나가 결과 맨 앞(`MagicBulletCalculator.cs:83` `Insert(0, …)`), 화약꽃은 폭발마다 그 폭발 사건들 바로 앞(`PowderBlossomCalculator.cs:74`)이라는 것을 View가 기대한다. 예보 사건 목록도 같은 순서라고 보고 영향 칸·예상 체력을 읽는다.
+  2. 접촉 칸 대조: `ImpactCells`의 칸은 모두 `ProjectilePath` 안이고(Core 생성자 검사), 접촉 순번(`DeliveryIndex`)이 `ImpactCells`의 열쇠라는 것을 기대한다. 어긋나면 예외는 없지만 연출이 틀어진다 — 칸이 경로 밖이면 그 접촉은 경로 끝으로 몰리고, 순번이 열쇠에 없으면 그 대상의 접촉 피격이 빠진다(`CombatAttackShape.ForPlayerSkill`·`CombatShotRoute`).
+  3. 표적 예산 0: 마탄 표적 예산이 0으로 작성되면(`MagicBulletCalculator.cs:73`) 경로가 빈 목록이라 View는 영역 길로 재생하고, 마탄 외형의 직선 투사체 연출로는 영역 길을 시작할 수 없어 예외(F1)다. 지금 에셋 값(예산 1·관통 4)에서는 닿지 않는다. 예산 0이 허용되는 값인지 확인 부탁.
+- 요청 없음.
+
+## 74. 클릭 최단 경로 이동 — 전용 인계 문서로 이전 (2026-11-17)
+
+이번 플랜의 제공 API·View 소비 조건·검증 상태·Phase 이력은 [클릭 이동 전용 View 인계](2026-11-17-combat-click-shortest-move-view-handoff.md)에 있다. 이후 갱신은 전용 문서에서 진행한다. 기존 §5.94~§5.97은 이전 링크만 유지한다.
+
+## 75. 선인장 캐논 가시 폭탄·기존 가시 장판 퇴역 요청 (2026-11-17)
+
+- **상태:** Phase 3 코드·SO 전환과 기존 장판 퇴역(§5.100), Phase 4 리뷰·정리와 낙사·기차 규칙(§5.101)을 반영했다. 씬 재생 확인(V01~V24)이 남았다. View 몫(D5·D6·폭발 소리)은 [View 전용 인계](2026-11-17-cactus-cannon-thorn-bomb-view-handoff.md)로 넘겼고, D8은 Core 보류다.
+- **규칙 원본:** [가시 폭탄 설계](../specs/2026-11-17-cactus-cannon-thorn-bomb-design.md) §3은 사용자 확정, §4는 설계자의 제안이다. 여기에서 수치/순서를 중복 정의하지 않는다.
+- **Task·Phase 원본:** [가시 폭탄 구현 계획](../plans/2026-11-17-cactus-cannon-thorn-bomb-implementation-plan.md). Phase마다 멈춰 보고하고, 설계와 다른 선택은 구현 전에 확인한다.
+- **Core 요청:** 명령 상태의 부착 폭탄 사실, 실제 명중에 따른 기폭 예약, 이동 후 위치에서의 연쇄, 턴 시작 만료, 종료 중단, 피해/이동 증거와 미리보기/Buffer 게시를 제공한다. 발리스타 중심 넉백과 기존 HP/이동 실행을 필요한 경계에서 재사용하고 여러 caller에 특성별 판단을 복제하지 않는다.
+- **View 인수:** 별도 조작 UI 없이 기존 공격의 중심 대상에 자동 부착한다. View는 공개된 폭탄 상태·순서 있는 부착/폭발 사건과 기존 피해/이동 결과만 소비한다. 타이머/피해/기폭 규칙 원본을 View에 만들지 않는다.
+- **퇴역 범위:** 기존 ThornField의 Core 실행·상태·저작·View/DB 연결을 함께 제거한다. 번호 40은 기존 퇴역 정책에 따른 예약만 유지한다. Missing Script 48개 및 무관한 ThornHeart/공유 상태는 삭제하지 않는다. API 보정과 기존 시험의 행동 기대값 변경/삭제를 구분하며, 후자는 기존 AGENTS.md의 작성자·승인 규칙을 따른다.
+- **Phase 0 기록:** [삭제·보존·GUID·시험 소유권 조사](../plans/2026-11-17-cactus-cannon-thorn-bomb-phase0-audit.md). `ThornFieldDomainTests`의 공통 이동 검증과 발리스타 공유 가시 아이콘은 보존한다. `ContractShapeGuardTests`의 공개 속성 기대 목록은 Phase 1부터 영향을 받으며, 시험 변경 승인은 일반 Phase 진행 지시와 분리한다.
+- 이 작업의 다음 지점은 사용자 Unity 확인(V01~V24)과 [View 전용 인계](2026-11-17-cactus-cannon-thorn-bomb-view-handoff.md)의 View 몫이다.

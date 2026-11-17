@@ -69,7 +69,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             IReadOnlyCollection<CharacterCombatFacts> taunters = null;
             foreach (var _ in TauntTargeting.SourceSteps(input, actor, value => taunters = value)) yield return "DecisionTauntSources";
-            int commonDamage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            int commonDamage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack);
             var aims = new List<AttackAim>();
             var candidates = suppliedAims == null
                 ? CombatAttackQueries.AiRangeCandidates(input, actor, profile, environment)
@@ -148,6 +148,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     targets.Add(preview.Preview.Targets.Span[i].TargetId);
                     yield return "DecisionScoreTarget";
                 }
+
+                foreach (var explosion in preview.Preview.ThornBombExplosions)
+                    foreach (var hit in explosion.Hits)
+                        targets.Add(hit.TargetId);
 
                 int allies = 0, hits = 0, unitHits = 0;
                 long damage = 0;

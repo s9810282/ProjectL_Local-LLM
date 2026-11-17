@@ -50,6 +50,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         EffectTargetDamageContribution EvaluateTargetDamage(in EffectRuleInput input, in TargetDamageEffectContext context);
     }
 
+    internal interface IEffectAttackSweepRule : ICombatEffectRule
+    {
+        EffectAttackSweepContribution? EvaluateAttackSweep(in EffectRuleInput input, in AttackSweepEffectContext context);
+    }
+
     internal interface IEffectAttackDamageRule : ICombatEffectRule
     {
         EffectAttackDamageContribution EvaluateAttackDamage(
@@ -74,11 +79,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             in TargetDistanceDamageEffectContext context);
     }
 
-    internal interface IEffectThornFieldRule : ICombatEffectRule
+    internal interface IEffectThornBombRule : ICombatEffectRule
     {
-        EffectThornFieldContribution EvaluateThornFieldApplication(
-            in EffectRuleInput input,
-            in ThornFieldApplicationEffectContext context);
+        int GetDamagePercent(in EffectRuleInput input);
     }
 
     internal interface IEffectKnockbackRule : ICombatEffectRule

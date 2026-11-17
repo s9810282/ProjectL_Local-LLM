@@ -144,16 +144,12 @@ namespace ProjectL.Tests.Core
         }
 
         [TestCase(false)] [TestCase(true)]
-        public void CannonEmptyAim_WithOrWithoutEncounters_IsAccepted(bool noEncounters)
+        public void CannonPiercing_RejectsEmptyAimEvenWithTargetsOnTheRay(bool noEncounters)
         {
             var input = PiercingShotTestData.Input(emptyAim: true);
             if (noEncounters) input = CombatCommandTestData.With(input, characters: input.Characters.Where(c => c.Owner == Owner.Player).ToArray());
-            var result = Execute(input);
-            Assert.That(result.PrimaryTargetId.IsEmpty, Is.True);
-            Assert.That(result.PrimaryCell, Is.EqualTo(new CellCoord(5, 3)));
-            Assert.That(result.Hits.Length, Is.EqualTo(noEncounters ? 0 : 2));
-            Assert.That(result.Hits.ToArray().All(h => h.Role == AttackTargetRole.Effect), Is.True);
-            Assert.That(CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>()).CanAttack, Is.True);
+            AssertRejected(input, input.Aim, AttackFailureReason.InvalidPrimaryTarget);
+            Assert.That(CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>()).CanAttack, Is.False);
         }
 
         [Test]
@@ -174,7 +170,8 @@ namespace ProjectL.Tests.Core
             var input = PiercingShotTestData.Input();
             var actor = CombatCommandTestData.With(input.Characters[0], position: new CellCoord(3, 3));
             var aim = new CellCoord(3 + 2*x, 3 + 2*y);
-            input = CombatCommandTestData.With(input, characters: new[] { actor, input.Characters[1],
+            var main = CombatCommandTestData.With(input.Characters[1], position: new CellCoord(7, 6));
+            input = CombatCommandTestData.With(input, characters: new[] { actor, main,
                 PiercingShotTestData.Character(9, 3+x, 3+y), PiercingShotTestData.Character(2, aim.X, aim.Y),
                 PiercingShotTestData.Character(7, 3+3*x, 3+3*y) });
             var result = Execute(CombatAttackQueries.WithAim(input, AttackAim.ForCell(aim)));
@@ -214,7 +211,7 @@ namespace ProjectL.Tests.Core
                 cell, Rotation4.R0, new[] { cell }, Owner.Enemy);
             var s = input.State;
             input = CombatCommandTestData.With(input, characters: input.Characters.Where(c => c.EntityId.Value != 9).ToArray(),
-                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    new[] { structure },s.ThornFields,turn: s.Turn));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    new[] { structure },turn: s.Turn));
             var result = Execute(input);
             Assert.That(result.PrimaryTargetId.Value, Is.EqualTo(2));
             Assert.That(result.Hits.ToArray().Select(h => h.TargetId.Value), Is.EqualTo(new[] { 20 }));
@@ -250,7 +247,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input,
                 characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray(),
                 artifacts: new ArtifactLoadoutSnapshot(0, new[] { new ArtifactPlacedEffectSnapshot(12, 4, ArtifactLastStandRuleTests.LastStandEffect()) }));
-            Assert.That(CombatAttackCalculator.CommonAttackDamage(input, actor, input.Profiles[0]), Is.EqualTo(5));
+            Assert.That(CombatAttackCalculator.CommonAttackDamage(input, actor, input.Profiles[0], CombatDamageKind.OrdinaryAttack), Is.EqualTo(5));
             var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>());
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
@@ -317,6 +314,9 @@ namespace ProjectL.Tests.Core
             profiles[0] = new CombatAttackProfile(profiles[0].Definition, new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0));
             input = CombatCommandTestData.With(input, profiles: profiles);
             var aim = AttackAim.ForCell(new CellCoord(x,y));
+            if (x != 1)
+                input = CombatCommandTestData.With(input, characters: input.Characters.Concat(
+                    new[] { PiercingShotTestData.Character(6, x, y) }).ToArray());
             var result = CombatCommandCalculator.Calculate(CombatAttackQueries.WithAim(input, aim), Array.Empty<IMovementTileRule>());
             Assert.That(result.Reason, Is.EqualTo(expected.ToString()));
             Assert.That(CombatCommandCalculator.GetAttackRange(input).AttackAims.ToArray(), Has.No.Member(aim));

@@ -20,9 +20,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         [SerializeField] private Sprite icon;
         [TextArea(2, 6)]
         [SerializeField] private string description;
-        [Tooltip("가시밭의 방어력 감소량이 양수일 때 덧붙일 문장입니다. {방어력감소율}을 사용할 수 있습니다. 다른 특성은 비워 둡니다.")]
-        [TextArea(1, 3)]
-        [SerializeField] private string defenseReductionDescription;
+        [Tooltip("대상 유닛에 부착하는 표시 프리팹입니다. 부착물을 붙이는 특성(지금은 가시 폭탄)만 쓰고, 그 특성은 필수입니다(비우면 부트의 DB 생성이 멈춤).")]
+        [SerializeField] private GameObject attachmentPrefab;
         [Tooltip("훈련 카드에 나오는 등급 수치 글입니다. {0} 지금, {1} 오르는 양, {2} 다음. 값이 둘인 특성은 {3}·{4}·{5}가 둘째 값입니다. "
             + "숫자 줄을 표시하는 훈련 카드에 필수이며, 효과 여부만 표시하는 카드는 사용하지 않습니다.")]
         [SerializeField] private string rankValueFormat;
@@ -52,7 +51,13 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
         /// <summary>비어 있으면 null입니다.</summary>
         public Sprite Icon => icon;
         public string Description => description ?? string.Empty;
-        internal string DefenseReductionDescription => defenseReductionDescription ?? string.Empty;
+        internal GameObject AttachmentPrefab => attachmentPrefab;
+
+        /// <summary>
+        /// 대상 유닛에 부착물을 붙이는 특성인지입니다. 지금은 가시 폭탄뿐이고, 전투 사건 재생 조립이 그 줄과 부착물 프리팹을 필수로 읽습니다.
+        /// 그래서 표에 그 줄이 있고 프리팹이 있는지를 부트의 DB 생성에서 확인합니다(가시 폭탄 Phase 4 D2). 규칙의 원본은 이곳 하나입니다.
+        /// </summary>
+        internal static bool RequiresAttachment(TraitKey key) => key == TraitKey.ThornBomb;
         /// <summary>등급 수치 글의 꼴입니다. 숫자 줄을 표시하지 않는 특성은 비어 있습니다.</summary>
         internal string RankValueFormat => rankValueFormat;
         /// <summary>현재·다음 효과 적용 여부를 표시하는 글의 꼴입니다. 숫자 전용 특성은 비어 있습니다.</summary>
@@ -129,6 +134,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
                 throw new InvalidOperationException($"[TraitVisualData] Trait key is invalid. Key: {key}");
             if (!IsFinite(trailLocalOffset))
                 throw new InvalidOperationException($"[TraitVisualData] 흔적 위치 보정이 유한한 수가 아닙니다. Key: {key}, Offset: {trailLocalOffset}");
+            if (RequiresAttachment(key) && attachmentPrefab == null)
+                throw new InvalidOperationException($"[TraitVisualData] 부착물을 붙이는 특성은 부착물 프리팹이 필요합니다. Key: {key}");
             ValidateRankValueFormat();
             ValidateRankEffectFormat();
             // 연결마다 새로 만들어 인스펙터에서 고친 값을 다음 DB 생성부터 씁니다.

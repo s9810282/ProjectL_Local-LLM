@@ -27,6 +27,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal MovementTileFact Source(long id) => _sources[id];
 
+        /// <summary>플랫폼의 정의·식별자를 유지하며 현재 위치와 진행 부호만 바꾼다.</summary>
+        internal void ChangePlatform(MovingPlatformFact expected, MovingPlatformFact final)
+        {
+            if (expected == null) throw new ArgumentNullException(nameof(expected));
+            if (final == null) throw new ArgumentNullException(nameof(final));
+            if (!_sources.TryGetValue(expected.Id, out var current) || !current.SameValues(expected) ||
+                !Bindings.TerrainSourceIds.Contains(expected.Id) || !expected.Spec.SameValues(final.Spec) ||
+                !expected.KnownTo.SequenceEqual(final.KnownTo))
+                throw new InvalidOperationException("플랫폼 변경은 현재 원본과 고정 정의를 보존해야 합니다.");
+            _sources[expected.Id] = final;
+        }
+
         internal void AddTraitTrail(TraitTrailFact trail)
         {
             if (trail == null) throw new ArgumentNullException(nameof(trail));
@@ -52,6 +64,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!entered && !collapsed)
                 throw new InvalidOperationException("지형 변경은 기존 구성과 식별자를 유지하는 한 번 진입 또는 예정된 붕괴여야 합니다.");
             _sources[expected.Id] = final;
+        }
+
+        /// <summary>기둥 영향의 기대값과 연속 할당을 모두 확인한 뒤 환경·분류·진행값을 함께 바꾼다.</summary>
+        internal void ApplyPillarTerrainChanges(IReadOnlyList<CombatPillarTerrainEvent> changes)
+        {
+            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            long nextId = Progress.NextSourceId;
+            var ids = new HashSet<long>();
+            var added = new List<long>();
+            foreach (var change in changes)
+            {
+                if (change == null || !ids.Add(change.Final.Id))
+                    throw new ArgumentException("기둥 지형 변경에는 중복이나 null을 넣을 수 없습니다.", nameof(changes));
+                if (change.Expected == null)
+                {
+                    if (_sources.ContainsKey(change.Final.Id) || change.Final.Id != nextId)
+                        throw new InvalidOperationException("잔해 벽은 기존 환경의 다음 원본 ID를 사용해야 합니다.");
+                    added.Add(nextId);
+                    nextId = checked(nextId + 1);
+                }
+                else if (!_sources.TryGetValue(change.Expected.Id, out var current) || !current.SameValues(change.Expected) ||
+                    !Bindings.TerrainSourceIds.Contains(change.Expected.Id))
+                    throw new InvalidOperationException("기둥 지형 변경의 기대 원본이 현재 지형과 다릅니다.");
+            }
+            foreach (var change in changes) _sources[change.Final.Id] = change.Final;
+            if (added.Count != 0)
+                Bindings = new EnvironmentSemanticBindings(Bindings.TerrainSourceIds.Concat(added).ToArray(),
+                    Bindings.ObjectSourceIds, Bindings.ObstacleEntityIds);
+            Progress = new EnvironmentProgressFacts(Progress.NextObjectEntryOrdinal, nextId, Progress.RandomState);
         }
 
         /// <summary>일반 진입 규칙에 넘길 셀의 원본을 기존 순서(Priority, ID)로 고른다.</summary>

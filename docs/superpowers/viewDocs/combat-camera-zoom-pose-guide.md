@@ -1,6 +1,6 @@
 # 전투 공용 카메라·줌 자세 설정 안내
 
-작성: 2026-10-31. 갱신: **2026-11-09, 씬 공용 카메라 Phase C 문서 인계**. MSBuild 재실행과 Unity Play 진입·종료 2회는 직접 확인했다. 현재 Combat 씬의 Binding 참조 누락을 복구했으며 화면 캡처 실패로 시각 동작 확인은 남아 있다.
+작성: 2026-10-31. 갱신: **2026-11-15, 가운데 버튼 끌기 회전 추가 — §1.2**. 그 전: **2026-11-14, 카메라 회전(Z·C) 추가 — §1.2·§3**([회전 설계](../specs/2026-11-14-combat-camera-rotation-design.md)·[계획](../plans/2026-11-14-combat-camera-rotation-plan.md), 컴파일 미확인). 그 전: **2026-11-09, 씬 공용 카메라 Phase C 문서 인계**. MSBuild 재실행과 Unity Play 진입·종료 2회는 직접 확인했다. 현재 Combat 씬의 Binding 참조 누락을 복구했으며 화면 캡처 실패로 시각 동작 확인은 남아 있다.
 
 설계는 [씬 공용 카메라 설계](../specs/2026-11-08-combat-scene-camera-design.md), 실행 상태와 **사용자 확인표의 원본**은 [Task 계획 §6](../plans/2026-11-08-combat-scene-camera-plan.md#6-사용자-unity-확인표)이다. 아래 §2.1과 §5.1은 이전 방식·시도 값의 이력이며 현재 설정 절차와 구분한다.
 
@@ -10,7 +10,7 @@
 |---|---|
 | 전투 시점·원래 구도·렌즈·클립·Listener·후처리 | `Assets/ProjectL/Prefabs/Stage/CombatCamera.prefab` |
 | 카메라와 조작 설정 연결 | 프리팹의 `CombatSceneCameraBinding`: **Virtual Camera**, **Settings** |
-| 이동·줌·줌 자세의 공용 값 | `Assets/ProjectL/DataBaseSO/ViewGroup/CombatCamera/CombatCameraSettings_Default.asset` |
+| 이동·회전·줌·줌 자세의 공용 값 | `Assets/ProjectL/DataBaseSO/ViewGroup/CombatCamera/CombatCameraSettings_Default.asset` |
 | 운영 씬 참조 | `Assets/Scenes/Combat.unity`의 `CombatSceneRoot.sceneCamera` → 씬의 공용 Binding |
 | 특성 확인 씬 참조 | `Assets/Scenes/Dev/TraitActivationPreview.unity`의 Host `sceneCamera` → 같은 프리팹의 Binding |
 | 실제 화면 출력 | 기존 Boot의 유지 Unity Camera/Brain. 특성 확인 환경은 그 씬의 기존 출력 Camera/Brain |
@@ -28,6 +28,18 @@ StageViewProp의 옛 `cameraSettings`와 스테이지 편집기의 맵별 카메
 5. 설정은 표시 연결마다 새 값으로 읽는다. SO 편집 후 재진입해 확인한다. 공유 SO의 변경은 운영과 특성 확인 환경 모두에 적용된다.
 
 위치 오프셋 X/Y/Z는 원래 카메라의 오른쪽/위/전방 축이며 월드 축이 아니다. 회전은 원래 회전에 곱하는 로컬 Euler 도이고 런타임은 Quaternion으로 보간한다. 별도 줌인 마커는 필요 없다. 자세 adapter는 실행 시 연결되고 표시 해제 시 Unbind된다.
+
+### 1.2. 회전 (2026-11-14)
+
+1. 공용 Settings SO의 **Rotate Speed**(초당 도, 기본 90)를 조정한다. 0이면 회전을 끈다.
+2. Z를 누르는 동안 카메라가 화면 가운데가 보는 바닥 점 둘레로 자기 왼쪽으로 돈다(화면 속 바닥은 시계 반대 방향으로 도는 것처럼 보인다). C는 반대다. 떼면 바로 멈추고, 둘 다 누르면 돌지 않는다.
+3. 위 축(Y)으로만 돈다. 내려다보는 각·롤은 프리팹 그대로이고, 줌 자세의 줌인 각 변화(Zoom In Rotation Offset)도 그대로 남는다.
+4. 회전 중심은 **지금 줌의 화면 가운데 바닥 점**이다. 줌인한 채 돌려도 화면 가운데가 제자리이고, 돌린 뒤 줌하면 줌 자세의 앞뒤 이동이 화면 기준 그대로(화면 위쪽으로 나아감)다. 구현은 자세를 줌아웃 중심 둘레로 돌리고, 돌릴 때마다 줌인 자세 때문에 생기는 어긋남만큼 이동 오프셋을 보정한다(`CombatCameraView.HoldCenterShift`). 이동 제한 끝에서는 제한이 먼저라 조금 밀릴 수 있다. 바닥 높이는 필드 Cells Root의 월드 높이다.
+5. 이동 제한(Pan Min/Max)은 그대로 원래 카메라 화면 축 기준이라, 돌려도 볼 수 있는 **바닥 범위가 같다**(제한 사각형이 바닥에 고정). 돌린 뒤 WASD·가장자리 이동은 지금 화면 방향대로 간다.
+6. 범위 제한은 없다(한 바퀴 이상 돌 수 있다). 전투를 나갔다 다시 들어오면 처음 방향이다.
+   - **가운데 버튼(휠)을 누른 채 좌우로 끌어도 돈다**(2026-11-15, 회전 설계 CR8). 오른쪽으로 끌면 Z와 같은 방향(화면 아래쪽 바닥이 커서를 따라감)이다. 세기는 Settings SO의 **Rotate Drag Degrees**(화면 너비만큼 끌면 도는 각, 기본 180)이고, 음수면 반대 방향, 0이면 끈다. 끄는 동안은 화면 가장자리 이동과 커서 칸 스냅을 하지 않는다(값이 0이어도 누르는 동안은 멈춤). 회전 중심·보정은 Z·C와 같다(시점 `TurnBy` 하나).
+7. 원래 카메라 회전에 롤이 있거나(오른쪽 축이 수평이 아님), 위아래가 뒤집혔거나(위 축이 아래를 향함), 바닥을 내려다보지 않으면 표시 연결 때 거절한다. 줌 자세 모드는 줌아웃 끝 자세의 회전으로 검사한다. 돌린 채 Play 중 Transform을 고쳐 바닥을 보지 않게 되면 그동안은 회전 없이 그린다(예외 없음).
+8. 계산 원본은 `Combat/Presentation/Cameras/CombatCameraOrbit.cs` 하나다. 줌 자세 모드는 adapter가 계산한 자세에 회전만 더하고 Transform은 쓰지 않는다(Play 중 Transform 편집·흔들림 보정 그대로). 줌 자세를 끈 모드는 시점이 Transform 위치와 회전을 함께 쓴다.
 
 ## 2. 공용 카메라의 전제조건
 
@@ -66,7 +78,9 @@ StageViewProp의 옛 `cameraSettings`와 스테이지 편집기의 맵별 카메
 - 자세 모드에서 Min=Max, 유효하지 않은 오프셋, 추적/extension 충돌은 거절한다.
 - 이미 발행한 흔들림은 원래 Duration까지 자연 종료한다. Stop 직후 같은 씬에서 다시 시작할 때 남은 짧은 신호와 새 요청이 계속 생기는 문제를 구분한다.
 - HUD·칸 집기·고스트는 기존 출력 Camera를 사용한다. 이동·줌·흔들림 중 표시와 포인터가 함께 맞는지 확인한다.
-- 회전 시 화면 중앙의 지면 교점이 변할 수 있다. 구도 조정은 줌 위치와 회전을 함께 본다. 맵별 자동 맞춤·override는 현재 범위 밖이다.
+- 줌 자세의 회전 오프셋 때문에 줌 정도에 따라 화면 중앙의 지면 교점이 변할 수 있다. 구도 조정은 줌 위치와 회전을 함께 본다. 맵별 자동 맞춤·override는 현재 범위 밖이다.
+- Z·C 회전(§1.2) 중에도 HUD·칸 집기·흔들림(카메라 공간)은 화면 기준으로 맞아야 한다. 돌아가는 동안 마우스 아래 칸을 다시 집는다. 회전은 연출 줌·흔들림 중에도 받고, 확인창·결과 화면에서는 막힌다.
+- 방위각이 0이면(돌리지 않음) 회전 전과 같은 자세가 나온다. 돌린 화면에서 배경 뒷면·잘린 가장자리·그림자 방향·가까운 자름면은 아트 확인 대상이다.
 - 연속 휠은 기존 렌즈 효과의 From=이전 목표 정책을 유지한다. 중간 Size가 순간 이동하는 느낌의 개선은 별도 범위다.
 - 자동 낮/밤 화면 전환은 비활성 그대로다. 맵의 Day/Night가 없어도 공용 카메라 조작은 가능해야 한다.
 

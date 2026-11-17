@@ -29,6 +29,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
             input.Press(StageInputNames.Combat.EndTurn, _receiver.EndTurnRequested);
             input.Press(StageInputNames.Combat.AttackMode, _receiver.AttackModeRequested);
             input.Press(StageInputNames.Combat.Return, _receiver.RequestReturn);
+            input.Press(StageInputNames.Combat.CycleUnitCategory, _receiver.CycleUnitCategoryRequested);
+            input.Press(StageInputNames.Combat.Skill, _receiver.SkillRequested);
         }
     }
 }

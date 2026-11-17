@@ -113,3 +113,16 @@
 - **에셋:** `StageFieldView_Default.asset`에 `cellOutlineStyle: 0`·`cellOutlineScale: 1`(화면 같음). 코드와 한 커밋입니다.
 - **값은 언제 반영되나:** 다음 Combat 진입부터입니다. 이번부터 `outlineCornerRadius`를 바꿔도 다음 진입 때 표시기를 다시 만듭니다(이전에는 처음 값이 남음).
 - **부탁:** 따로 하실 일은 없습니다.
+
+## 추가 — 필드 색이 View DB로 (2026-11-14, 미전달)
+
+전투 필드 색 30개와 채우기 불투명도를 `FieldView` 씬 값에서 필드 설정 표(`StageFieldViewDataSO.cs`)의 새 묶음 "Colors"로 옮겼습니다. 설계 [필드 색 DB](../specs/2026-11-14-combat-field-colors-db-design.md), 실행 기록 [계획](../plans/2026-11-14-combat-field-colors-db-plan.md) §7. 컴파일 미확인입니다.
+
+- **새 칸:** `colors`(새 직렬화 클래스 `FieldColorsData`, `neutralGhostTint` 바로 뒤). 칸 강조 층 색·`fillAlpha`·공격 궤적 색·넉백/끌어오기 화살표 색이 들어 있습니다. 읽기 `Colors`. 색마다 툴팁에 "무엇 / 쓰이는 곳 / 그리기"를 적었습니다.
+- **호진님 줄을 옮겼습니다:** 낙석 경고 색 `rockfallWarningColor`(낙석 RF-b `678dbafb7`, `FieldView` 씬 값)가 이 묶음으로 갔습니다. 값·뜻은 그대로입니다(느낌표 이미지 색). `FieldHighlightLayers.cs`의 `FieldHighlightColor.RockfallWarning` 문서 한 줄("씬 값" → "View DB 값")도 고쳤습니다. 낙석 계획 문서(RP-16의 "씬 값 `FieldView.rockfallWarningColor`")는 고치지 않았습니다.
+- **검사:** `Validate` 끝에서 묶음을 검사합니다(색은 성분이 유한하고 알파 [0, 1], `fillAlpha` [0, 1]). 묶음이 비면 예외입니다.
+- **에셋:** `StageFieldView_Default.asset`에 `colors:` 31줄(옮기기 전 `Combat.unity` 값과 같아 화면 같음). 코드와 한 커밋입니다. 새 필드 설정 에셋을 만들면 칸 기본값도 그 씬 값입니다.
+- **값은 언제 반영되나:** 색과 `fillAlpha`는 에디터에서 고치면 전투 중에도 바로 반영됩니다(에디터 전용 신호, 빌드에는 없음). 모양 값은 지금처럼 다음 Combat 진입부터입니다.
+- **주의:** 플레이 중에 고친 색은 플레이를 끝내도 에셋에 남습니다(SO라서). 튜닝한 뒤 커밋 전에 확인해 주세요.
+- **SO 모드 도구:** 필드 설정 표에서 이름으로 읽는 칸(표시 방식·칸 간격·유닛 크기)에 색은 없습니다.
+- **부탁:** 낙석 경고 색을 바꾸실 때는 이제 `StageFieldView_Default`의 Colors 묶음에서 고치시면 됩니다. 그 밖에 따로 하실 일은 없습니다.

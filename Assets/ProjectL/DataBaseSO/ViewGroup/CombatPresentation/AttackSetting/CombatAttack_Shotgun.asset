@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac07c2372c9a4448903e3cfed0d6856f, type: 3}
+  m_Name: CombatAttack_Shotgun
+  m_EditorClassIdentifier: 
+  projectile: {fileID: 11400000, guid: bd9bbd55b75009fa18235c2beb8ab83c, type: 2}
+  codeMotion: {fileID: 11400000, guid: d61d1eca5c59ec09ad322b20e2f44c5f, type: 2}
+  cues:
+    effects:
+    - effect: 3
+      anchor: 2
+      contactFilter: 1
+      delay: 0
+      point: 1
+      eventPoint: 0
+      eventPointRotation: 2
+      stayInPlace: 0
+      positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
+      rotationOffset: {x: 0, y: 0, z: 0}
+      end: 0
+      endSeconds: 0
+    shakes: []

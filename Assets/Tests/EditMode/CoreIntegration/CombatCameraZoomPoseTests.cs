@@ -237,7 +237,6 @@ namespace ProjectL.Tests.CoreIntegration
             }
         }
         [TestCase("Cinemachine.PostFX.CinemachineVolumeSettings", true)]
-        [TestCase("Cinemachine.CinemachineCameraOffset", false)]
         public void PostProcessingExtensionIsAllowedButPoseWriterIsRejected(string extensionName, bool allowed)
         {
             Type adapterType = typeof(CombatCameraZoomPosePath).Assembly.GetType(

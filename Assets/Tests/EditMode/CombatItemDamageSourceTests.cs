@@ -112,14 +112,13 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void MovementThorns_ObserveLatestSlotAndHealth()
+        public void MovementHazards_ObserveLatestSlotAndHealth()
         {
             var input = MovementTestData.SafeRoute(new CellCoord(1, 1),new CellCoord(2, 1),new CellCoord(3, 1));
             var s = input.State;
-            var state = new CombatCommandState(8,8,s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 5, 15),
-                    new ThornFieldCellSnapshot(new CellCoord(3, 1), 5, 15) },s.Turn,s.Environment);
+            var state = EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(8,8,s.Phase,s.Structures,                s.Turn,s.Environment), (new CellCoord(2, 1), 15), (new CellCoord(3, 1), 15));
             input = Items(CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId == input.ActorId ? Equip(c, 60, 1) : c).ToArray(), state));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Final(result, 1).Health.CurrentHealth, Is.EqualTo(40));
             AssertSequence(result.Events, 1, new[] { 45, 55, 40 });
@@ -136,13 +135,13 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void KnockbackThorns_ActivateAfterOrdinaryDamageWithoutRetestingOrdinaryRules()
+        public void KnockbackArrivalHazard_ActivateAfterOrdinaryDamageWithoutRetestingOrdinaryRules()
         {
             var input = CliffFallTests.Knockback();
             var s = input.State;
-            var state = new CombatCommandState(8,8,s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 15) },s.Turn,s.Environment);
+            var state = EnvironmentDamageTests.WithDamageObjects(new CombatCommandState(8,8,s.Phase,s.Structures,                s.Turn,s.Environment), (new CellCoord(5, 3), 15));
             input = Items(CombatCommandTestData.With(input, input.Characters.Select(c => c.EntityId.Value == 2 ? Equip(c, 80, 1) : c).ToArray(), state));
-            var result = CombatCommandCalculator.Calculate(input, NoRules);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Final(result, 2).Health.CurrentHealth, Is.EqualTo(55));
             Assert.That(result.Events.OfType<CombatItemEvent>().Single().DamageKind, Is.EqualTo(CombatDamageKind.EnvironmentDamage));

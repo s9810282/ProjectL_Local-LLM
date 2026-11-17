@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSettings.Item;
@@ -29,10 +30,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
         [SerializeField] private CombatUnitReactionPresentationSO reactionPresentation;
         [Tooltip("공격·피격 애니메이션 클립 묶음입니다. 비워 두면 코드 모션만 씁니다. 여러 유닛이 공유할 수 있습니다.")]
         [SerializeField] private CombatUnitAnimationSO animationPresentation;
-        [Tooltip("아군일 때 선택·이동·취소·사망 효과음 프리셋 번호입니다. -1이면 소리를 내지 않습니다. 적은 이 값 대신 전투 연출 설정의 적 공용 프리셋을 씁니다(View 3라운드 W9-2). 장애물(화약통·보급품) 외형이면 피해·파괴 효과음 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3).")]
+        [Tooltip("아군일 때 선택·이동·취소 효과음 프리셋 번호입니다. -1이면 소리를 내지 않습니다. 적은 이 값 대신 전투 연출 설정의 적 공용 프리셋을 씁니다(View 3라운드 W9-2). 장애물(화약통·보급품) 외형이면 피해·파괴 효과음 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3). "
+            + "공격·피격·사망 소리는 아래 \"전투 소리\" 줄입니다.")]
         [SerializeField, Min(-1)] private int unitSoundPreset = -1;
-        [Tooltip("UnitAttack 플레이어의 공격(포효 포함) 이벤트 슬롯 번호입니다. -1이면 소리를 내지 않습니다.")]
-        [SerializeField, Min(-1)] private int attackSoundSlotIndex = -1;
         [Tooltip("장애물(화약통·보급품) 외형에서만 씁니다. 다른 외형에 넣으면 DB 생성이 멈춥니다. 장애물이 피해를 받은 순간의 이펙트·흔들림이고, "
             + "시점은 Start(사건 순간)만, 이펙트 자리는 사건 칸(EventCell)만 됩니다. 지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다(이펙트 창구 확장 설계 EC5).")]
         [SerializeField] private CombatVisualCueInput obstacleHitCues = new();
@@ -41,6 +41,19 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
         [Tooltip("장애물(화약통·보급품) 외형에서만 씁니다. 다른 외형에 넣으면 DB 생성이 멈춥니다. 장애물이 파괴된 순간의 이펙트·흔들림이고, "
             + "시점은 Start(사건 순간)만, 이펙트 자리는 사건 칸(EventCell)만 됩니다. 지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다(이펙트 창구 확장 설계 EC5).")]
         [SerializeField] private CombatVisualCueInput obstacleDestroyedCues = new();
+
+        [Header("전투 소리 — 줄마다 번호 · 시점 · 지연, 이 유닛만의 값")]
+        [Tooltip("공격 소리 줄입니다(포효·스킬 공격 포함). 번호 = 공격 이벤트 칸 번호(UnitAttack 플레이어)입니다. 줄을 여럿 두면 다른 소리를 다른 시점에 냅니다. 비우면 공격 소리가 없습니다. "
+            + "시점은 Start · Event1~3 · Contact(FirstHit) · End이고, Event2·3은 공격 본 단계 몸 클립에 그 표식이 있어야 합니다(코드 모션 공격은 Event1 = 타격·발사 순간). "
+            + "공격 표시(attackPresentation)가 없으면 사건 순간에만 나서 Start · 지연 0만 됩니다. 포효는 정면 공격의 타격 순간에 시점·지연 없이 냅니다. "
+            + "스킬이 다른 공격 표시를 쓰면 그 공격이 받지 못하는 시점의 줄은 Event1에 냅니다. 소리 줄은 재생을 시작할 때 읽어 두므로, 재생 중에 고치면 다음 재생부터 반영됩니다.")]
+        [SerializeField] private List<CombatUnitSoundCueEntry> attackSounds = new();
+        [Tooltip("피격 소리 줄입니다. 번호 = 피격 효과음 프리셋입니다. 시점은 Start · Event1~3(피격 본 단계 몸 클립 표식) · End입니다. "
+            + "반응 묶음(reactionPresentation)이 있어야 합니다. 피격 효과음 칸이 아직 AudioSystem에 없어 지금은 소리가 나지 않습니다(연결 대기).")]
+        [SerializeField] private List<CombatUnitSoundCueEntry> hitSounds = new();
+        [Tooltip("사망 소리 줄입니다. 번호 = 사망 효과음 프리셋(UnitDead)입니다. 시점은 사망 반응 기준 Start · End입니다. "
+            + "반응 묶음(reactionPresentation)이 없으면 사건 순간에만 나서 Start · 지연 0만 됩니다. 추락 사망·자폭 사망(사망 큐 없음)은 그 순간에 시점·지연 없이 냅니다.")]
+        [SerializeField] private List<CombatUnitSoundCueEntry> deathSounds = new();
 
         public EntityKey Key => key;
         public string Description => description ?? string.Empty;
@@ -64,15 +77,19 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
         public CombatUnitAnimationData AnimationPresentation => animationPresentation != null
             ? animationPresentation.CreateData()
             : null;
-        /// <summary>아군일 때의 유닛 효과음 프리셋입니다. -1이면 소리 없음입니다. 장애물 외형이면 피해·파괴 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3).</summary>
+        /// <summary>아군일 때의 선택·이동·취소 효과음 프리셋입니다. -1이면 소리 없음입니다. 장애물 외형이면 피해·파괴 프리셋이고, -1이면 프리셋 없이 냅니다(소리 창구 2차 Q-ES3).</summary>
         public int UnitSoundPreset => unitSoundPreset;
-        /// <summary>UnitAttack 플레이어의 공격 이벤트 슬롯 번호입니다. -1이면 소리 없음입니다.</summary>
-        public int AttackSoundSlotIndex => attackSoundSlotIndex;
         /// <summary>장애물 피해 순간 큐입니다. 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(이펙트 창구 확장 계획 P6).</summary>
         internal CombatEventCues ObstacleHitCues => ReadCues(obstacleHitCues, nameof(obstacleHitCues));
         internal CombatEventCues StructureHitCues => (structureHitCues ?? new CombatVisualCueInput()).ToCues();
         /// <summary>장애물 파괴 순간 큐입니다. 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(이펙트 창구 확장 계획 P6).</summary>
         internal CombatEventCues ObstacleDestroyedCues => ReadCues(obstacleDestroyedCues, nameof(obstacleDestroyedCues));
+        /// <summary>
+        /// 공격·피격·사망 소리 줄 묶음입니다(유닛 소리 설계 US1). 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(DB 규칙 P2).
+        /// 그 유닛에서 쓸 수 있는 시점인지는 <see cref="Validate"/>가 외형 검사 한 곳에서 봅니다(계획 TP-3).
+        /// </summary>
+        /// <exception cref="ArgumentException">빈 줄이 있거나 줄 값이 규칙에 맞지 않을 때입니다.</exception>
+        internal CombatUnitSoundsData Sounds => CombatUnitSoundsData.Read(attackSounds, hitSounds, deathSounds);
 
         internal void Validate()
         {
@@ -83,10 +100,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
             CombatAttackPresentationData attack = attackPresentation != null ? attackPresentation.CreateData() : null;
             CombatUnitReactionPresentationData reaction = reactionPresentation != null ? reactionPresentation.CreateData() : null;
             // 전투 클립 규칙(이벤트 컴포넌트·Idle 컨트롤러·클립 묶음)은 규칙 클래스 한 곳이 원본입니다(클립 설계 AC1·AC4).
-            CombatUnitAnimationRules.ValidateUnit(prefab, animationPresentation, attack, reaction, $"Key: {key}");
+            CombatUnitAnimationRules.ValidateUnit(prefab, animationPresentation, attack, reaction, ReadSounds(), $"Key: {key}");
             CombatPresentationSettingsData.ValidateSoundPreset(unitSoundPreset, $"{nameof(unitSoundPreset)} (Key: {key})");
-            if (attackSoundSlotIndex < -1)
-                throw new InvalidOperationException($"[UnitVisualData] Key: {key}, {nameof(attackSoundSlotIndex)}: 슬롯 번호는 -1 또는 0 이상이어야 합니다.");
             CombatEventCues obstacleHit = ObstacleHitCues;
             CombatEventCues structureHit = StructureHitCues;
             CombatPresentationCueRules.Require(structureHit, CombatCueEvent.StructureHit, $"[UnitVisualData] Key: {key}, structureHitCues");
@@ -99,6 +114,18 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item
             if (!ObstacleContentProfile.IsNativeObstacleKey(key) && (!obstacleHit.IsEmpty || !obstacleDestroyed.IsEmpty))
                 throw new InvalidOperationException(
                     $"[UnitVisualData] 장애물 큐({nameof(obstacleHitCues)}·{nameof(obstacleDestroyedCues)})는 장애물(화약통·보급품) 외형에서만 씁니다. Key: {key}");
+        }
+
+        private CombatUnitSoundsData ReadSounds()
+        {
+            try
+            {
+                return Sounds;
+            }
+            catch (ArgumentException error)
+            {
+                throw new InvalidOperationException($"[UnitVisualData] 전투 소리 값이 잘못되었습니다: {error.Message} Key: {key}", error);
+            }
         }
 
         private CombatEventCues ReadCues(CombatVisualCueInput input, string name) =>

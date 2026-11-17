@@ -124,7 +124,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 TornadoAreaFact area = areas[i];
                 if (!_active.TryGetValue(area.SourceId, out Instance instance))
                 {
-                    instance = Create(area);
+                    instance = Create(area, mapper.TerrainCellScale);
                     _active.Add(area.SourceId, instance);
                 }
                 _wanted.Add(area.SourceId);
@@ -289,7 +289,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
         }
 
-        private Instance Create(TornadoAreaFact area)
+        private Instance Create(TornadoAreaFact area, float cellScale)
         {
             TerrainVisualData visual = _visuals.GetTerrainVisual(TerrainContentKind.Tornado);
             if (visual.Prefab == null)
@@ -312,9 +312,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 body.SetActive(false);
                 arrow = new FieldArrowhead(_root, $"FieldTornadoArrow_{area.SourceId}", settings.DirectionArrowMaterial,
                     settings.DirectionArrowLength, settings.DirectionArrowWidth, _meshes, _colors);
-                Vector3 scale = Vector3.Scale(visual.Prefab.transform.localScale, visual.LocalScale) * ratio;
+                Vector3 scale = Vector3.Scale(visual.Prefab.transform.localScale, visual.LocalScale * cellScale) * ratio;
                 return new Instance(body, new CombatTornadoAppearance(body, scale, settings), arrow, visual.Prefab.transform.localRotation,
-                    settings.DirectionArrowLength * .5f, visual.LocalOffset * ratio, area.SideLength,
+                    settings.DirectionArrowLength * .5f, visual.LocalOffset * cellScale * ratio, area.SideLength,
                     settings.DirectionArrowMaterial.GetColor(MaterialBaseTypeKey.MainColor.Name));
             }
             catch (Exception error)

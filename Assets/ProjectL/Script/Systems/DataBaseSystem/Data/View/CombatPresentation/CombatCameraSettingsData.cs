@@ -3,12 +3,14 @@ using UnityEngine;
 namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 {
     /// <summary>
-    /// 전투 카메라 조작(이동·줌) 값입니다(카메라 조작 설계 CC5). 스테이지 맵 프랍(<c>StageViewPropData</c>)이 SO로 참조하고,
+    /// 전투 카메라 조작(이동·회전·줌) 값입니다(카메라 조작 설계 CC5, 카메라 회전 설계 CR4·CR8). 스테이지 맵 프랍(<c>StageViewPropData</c>)이 SO로 참조하고,
     /// <see cref="CombatCameraSettingsSO.CreateData"/>가 검사한 뒤 새로 만듭니다(DB 규칙 P2). 값 조건의 원본은 <see cref="FindError"/> 하나입니다.
     /// 이동은 처음 카메라 위치에서 카메라 화면 축(오른쪽·위쪽)으로 떨어진 거리(월드 단위)이고, 줌은 정사영 크기입니다.
     /// </summary>
     internal sealed class CombatCameraSettingsData
     {
+        private readonly AnimationCurve _rotateCurve;
+
         internal CombatCameraSettingsData(
             float keyPanSpeed,
             float edgePanSpeed,
@@ -23,10 +25,13 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
             Vector3 zoomOutPositionOffset = default,
             Vector3 zoomOutRotationOffset = default,
             Vector3 zoomInPositionOffset = default,
-            Vector3 zoomInRotationOffset = default)
+            Vector3 zoomInRotationOffset = default,
+            float rotateSpeed = 0f,
+            float rotateDragDegrees = 0f,
+            AnimationCurve rotateCurve = null)
         {
             string error = FindError(keyPanSpeed, edgePanSpeed, edgeThickness, panMin, panMax, zoomMin, zoomMax, zoomStep, zoomSeconds,
-                useZoomPose, zoomOutPositionOffset, zoomOutRotationOffset, zoomInPositionOffset, zoomInRotationOffset);
+                useZoomPose, zoomOutPositionOffset, zoomOutRotationOffset, zoomInPositionOffset, zoomInRotationOffset, rotateSpeed, rotateDragDegrees);
             if (error != null)
                 throw new System.ArgumentException($"[CombatCameraSettingsData] {error}");
 
@@ -44,6 +49,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
             ZoomOutRotationOffset = zoomOutRotationOffset;
             ZoomInPositionOffset = zoomInPositionOffset;
             ZoomInRotationOffset = zoomInRotationOffset;
+            _rotateCurve = rotateCurve != null && rotateCurve.length >= 2 ? new AnimationCurve(rotateCurve.keys) : null;
+            RotateSpeed = rotateSpeed;
+            RotateDragDegrees = rotateDragDegrees;
         }
 
         /// <summary>WASD·화살표 이동 속도(초당 월드 단위, 처음 보기 크기 기준)입니다.</summary>
@@ -89,8 +97,25 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         internal Vector3 ZoomInRotationOffset { get; }
 
         /// <summary>
+        /// 카메라가 화면 가운데 바닥 점 둘레로 도는 빠르기(초당 도)입니다. 0이면 회전을 끕니다(카메라 회전 설계 CR4).
+        /// 생성자 기본값은 0이고, 운영 값은 SO의 기본값·에셋(90)이 원본입니다(카메라 회전 계획 TP-7).
+        /// </summary>
+        internal float RotateSpeed { get; }
+
+        internal float EvaluateRotation(float progress) =>
+            _rotateCurve == null ? progress : Mathf.Clamp01(_rotateCurve.Evaluate(progress));
+
+        /// <summary>
+        /// 가운데 버튼 끌기로 화면 너비만큼 끌면 도는 각(도)입니다(카메라 회전 설계 CR8). 양수 = 오른쪽으로 끌면 Z와 같은 방향, 음수 = 반대, 0 = 끔.
+        /// 0이어도 가운데 버튼을 누르는 동안 가장자리 이동·커서 스냅은 멈춥니다(검토 L3, 그대로 두기로 함).
+        /// 생성자 기본값은 0이고, 운영 값은 SO의 기본값·에셋(180)이 원본입니다.
+        /// </summary>
+        internal float RotateDragDegrees { get; }
+
+        /// <summary>
         /// 값 조건을 검사하고 첫 문제를 돌려줍니다. 없으면 null입니다.
         /// 속도·시간은 0 이상, 가장자리 두께는 0 이상 0.5 이하, 이동 범위는 처음 위치(0)를 품고, 줌은 0 &lt; 최소 ≤ 최대, 한 칸은 0보다 큽니다.
+        /// 회전 빠르기는 0 이상, 끌기 회전 각은 유한한 수(음수 = 반대 방향)입니다.
         /// </summary>
         internal static string FindError(
             float keyPanSpeed,
@@ -106,7 +131,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
             Vector3 zoomOutPositionOffset = default,
             Vector3 zoomOutRotationOffset = default,
             Vector3 zoomInPositionOffset = default,
-            Vector3 zoomInRotationOffset = default)
+            Vector3 zoomInRotationOffset = default,
+            float rotateSpeed = 0f,
+            float rotateDragDegrees = 0f)
         {
             if (!IsNonNegative(keyPanSpeed))
                 return $"keyPanSpeed({keyPanSpeed})는 0 이상이어야 합니다";
@@ -131,6 +158,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                 return "줌 자세의 위치·회전 오프셋은 모두 유한해야 합니다";
             if (useZoomPose && zoomMin == zoomMax)
                 return "자세 줌을 사용하면 zoomMin은 zoomMax보다 작아야 합니다";
+            if (!IsNonNegative(rotateSpeed))
+                return $"rotateSpeed({rotateSpeed})는 0 이상이어야 합니다";
+            if (!IsFinite(rotateDragDegrees))
+                return $"rotateDragDegrees({rotateDragDegrees})는 유한해야 합니다";
             return null;
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Experience;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
@@ -34,6 +35,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>현재 공개 사실로 선택 유닛의 일반 행동 가능 여부를 반환한다.</summary>
         public static CombatActionAvailability GetActionAvailability(CombatCommandInput input) => CombatActionAdmission.GetAvailability(input);
+
+        /// <summary>자격 아군 모두의 일반 행동 가능 여부를 한 번에 반환한다(입력 유닛 순, 새 SSOT 설계 SN2). 행위자 값은 보지 않는다.</summary>
+        public static IReadOnlyList<CombatActionAvailability> GetActionAvailabilities(CombatCommandInput input) =>
+            CombatActionAdmission.GetAvailabilities(input);
 
         /// <summary>필드 유닛 하나의 공격 범위 칸 조회다. 차례·국면과 무관하고 지형은 플레이어 시점이다(호버 공격 범위 설계 UR2).</summary>
         public static UnitAttackRangeResult GetUnitAttackRange(CombatCommandInput input) => CombatAttackQueries.UnitRange(input);
@@ -69,7 +74,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             RequireAdvance(input);
             var transition = input.State.Turn.ControllerPhase == CombatControllerPhase.Enemy
                 ? EnemyAi.EnemyAiTurnService.Calculate(input, rules, diagnostics, immediateCompatibility, sideCache)
-                : CombatTurnCalculator.BeginControllerTurn(input, rules);
+                : AdvanceStartingSide(input, rules);
             return FinishAdvance(transition, rules);
         }
 
@@ -88,13 +93,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             MovementEnvironmentCalculator.RequireRules(rules);
             RequireAdvance(input);
             if (input.State.Turn.ControllerPhase != CombatControllerPhase.Enemy)
-                return FinishAdvance(CombatTurnCalculator.BeginControllerTurn(input, rules), rules);
+                return FinishAdvance(AdvanceStartingSide(input, rules), rules);
             var pending = BossRoarCalculator.PendingBosses(input);
             if (pending.Count > 0)
                 return FinishAdvance(BossRoarCalculator.TryRoar(input, pending[0], rules), rules);
             if (decision == null) throw new ArgumentNullException(nameof(decision));
             return FinishAdvance(EnemyAi.EnemyAiTurnService.Execute(input, decision, rules), rules);
         }
+
+        private static CombatCommandTransition AdvanceStartingSide(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules) =>
+            PlatformMotionCalculator.TryAdvanceBeforeTurn(input, rules) ?? CombatTurnCalculator.BeginControllerTurn(input, rules);
 
         private static void RequireAdvance(CombatCommandInput input)
         {
@@ -142,43 +150,53 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 return CombatPlacementCalculator.Place(input, rules);
             if (input.Kind == CombatCommandKind.ReturnUnit) return CombatPlacementCalculator.Return(input);
             if (input.Kind == CombatCommandKind.Attack) return CombatAttackCalculator.Calculate(input, rules, publicPreview, out preview);
+            if (!publicPreview && input.Kind == CombatCommandKind.UsePlayerSkill)
+                return PlayerSkillCalculator.CalculateCast(input, rules);
             return Reject(input, "UnsupportedCommand");
         }
 
         internal static CombatCommandTransition Finish(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> projected, Dictionary<CharacterInstanceId, int> counts,
-            SoulFieldSnapshot soulField, Dictionary<CellCoord, ThornFieldCellSnapshot> fields,
+            SoulFieldSnapshot soulField,
             StructureCombatFacts[] structures, List<long> consumed, Dictionary<EntityId, CellCoord> deathAnchors,
             SoulEffectCalculator souls, AttackResult? attack, CombatCommandState proposedState = null,
             List<CombatEvent> events = null, ISet<EntityId> resolvedDeaths = null,
             EnvironmentSemanticBindings environmentBindings = null, UnitActionUseSettlementSnapshot actionUseSettlement = null,
-            CombatStageTally stageTally = null, IReadOnlyList<OwnedCharacterChange> proposedOwned = null)
+            CombatStageTally stageTally = null, IReadOnlyList<OwnedCharacterChange> proposedOwned = null,
+            IReadOnlyList<CombatHealthExecution> priorHealthExecutions = null)
         {
-            using var work = BeginFinish(input, projected, counts, soulField, fields, structures, consumed, deathAnchors, souls, attack, proposedState, events, resolvedDeaths, environmentBindings, actionUseSettlement, stageTally, proposedOwned);
+            using var work = BeginFinish(input, projected, counts, soulField, structures, consumed, deathAnchors, souls, attack,
+                proposedState, events, resolvedDeaths, environmentBindings, actionUseSettlement, stageTally, proposedOwned, priorHealthExecutions);
             while (!work.IsComplete) work.Step();
             return work.Result;
         }
 
         internal static Finalization BeginFinish(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> projected, Dictionary<CharacterInstanceId, int> counts,
-            SoulFieldSnapshot soulField, Dictionary<CellCoord, ThornFieldCellSnapshot> fields,
+            SoulFieldSnapshot soulField,
             StructureCombatFacts[] structures, List<long> consumed, Dictionary<EntityId, CellCoord> deathAnchors,
             SoulEffectCalculator souls, AttackResult? attack, CombatCommandState proposedState = null,
             List<CombatEvent> events = null, ISet<EntityId> resolvedDeaths = null,
             EnvironmentSemanticBindings environmentBindings = null, UnitActionUseSettlementSnapshot actionUseSettlement = null,
-            CombatStageTally stageTally = null, IReadOnlyList<OwnedCharacterChange> proposedOwned = null) =>
-            new Finalization(completed => FinishSteps(input, projected, counts, soulField, fields, structures, consumed, deathAnchors, souls, attack, proposedState, events, resolvedDeaths, environmentBindings, actionUseSettlement, stageTally, proposedOwned, completed).GetEnumerator());
+            CombatStageTally stageTally = null, IReadOnlyList<OwnedCharacterChange> proposedOwned = null,
+            IReadOnlyList<CombatHealthExecution> priorHealthExecutions = null) =>
+            new Finalization(completed => FinishSteps(input, projected, counts, soulField, structures, consumed, deathAnchors,
+                souls, attack, proposedState, events, resolvedDeaths, environmentBindings, actionUseSettlement, stageTally,
+                proposedOwned, priorHealthExecutions, completed).GetEnumerator());
 
         private static IEnumerable<int> FinishSteps(CombatCommandInput input,
             Dictionary<EntityId, CharacterCombatFacts> projected, Dictionary<CharacterInstanceId, int> counts,
-            SoulFieldSnapshot soulField, Dictionary<CellCoord, ThornFieldCellSnapshot> fields,
+            SoulFieldSnapshot soulField,
             StructureCombatFacts[] structures, List<long> consumed, Dictionary<EntityId, CellCoord> deathAnchors,
             SoulEffectCalculator souls, AttackResult? attack, CombatCommandState proposedState,
             List<CombatEvent> events, ISet<EntityId> resolvedDeaths,
             EnvironmentSemanticBindings environmentBindings, UnitActionUseSettlementSnapshot actionUseSettlement,
-            CombatStageTally stageTally, IReadOnlyList<OwnedCharacterChange> proposedOwned, Action<CombatCommandTransition> completed)
+            CombatStageTally stageTally, IReadOnlyList<OwnedCharacterChange> proposedOwned,
+            IReadOnlyList<CombatHealthExecution> priorHealthExecutions, Action<CombatCommandTransition> completed)
         {
             events ??= new List<CombatEvent>();
+            var healthExecutions = new List<CombatHealthExecution>(priorHealthExecutions ?? Array.Empty<CombatHealthExecution>());
+            var healthClaims = new List<CombatHealthClaim>();
             var sourceState = proposedState ?? input.State;
             var environment = sourceState.Environment;
             var progress = sourceState.EnvironmentProgress;
@@ -238,6 +256,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 rewards = new CombatRewardFacts(rewards.ParticipantsCaptured, rewards.ClearParticipantIds,
                     checked(rewards.KillGoldEarned + gold));
             var experience = CombatExperienceSettlement.Settle(ownedInput, projected, events, outcome, kills, rewards, clear);
+            var growthOccurrence = experience.GrowthOccurrence;
             yield return 0;
             var finalOwned = new Dictionary<CharacterInstanceId, OwnedCharacterRecord>();
             foreach (var record in ownedInput.Owned)
@@ -264,10 +283,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     if (events[i] is CombatExperienceEvent applied && applied.Kind == CombatEventKind.ExperienceApplied)
                     {
                         var combined = ownedChanges.Single(c => c.Final.Id == applied.Owned.Final.Id);
-                        events[i] = CombatExperienceEvent.Applied(applied.RecipientId, combined, applied.Amount,
+                        var occurrence = CombatExperienceEvent.Applied(applied.RecipientId, combined, applied.Amount,
                             applied.LevelsGained, applied.MainGrowth);
+                        events[i] = occurrence;
+                        if (ReferenceEquals(growthOccurrence, applied)) growthOccurrence = occurrence;
                     }
                 }
+            if (experience.GrowthEvidence is CombatCharacterEvent growth)
+                CombatHealthRecording.Add(healthExecutions, growth.Final.EntityId, growth.Expected.Health, growth.Final.Health,
+                    new CombatHealthSource(CombatHealthOperationKind.Growth, contextEvent: growthOccurrence), growth);
             var rewardSettlement = new CombatRewardSettlement(kills.Count, gold, clear?.Gold ?? 0, clear?.Fame ?? 0,
                 clear != null, experience.Characters);
             int totalGold = rewardSettlement.GoldAwarded;
@@ -295,7 +319,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 finalMain = projected[main.EntityId];
                 var terminal = new BattleCompletionCalculator(input.Artifacts).PlanTerminalHealth(finalMain,
-                    mainState.WithCurrentHealth(finalMain.Health.CurrentHealth), outcome, events);
+                    mainState.WithCurrentHealth(finalMain.Health.CurrentHealth), outcome, events, healthExecutions, healthClaims);
                 projected[main.EntityId] = finalMain = terminal.Characters[0].Final;
                 yield return 0;
             }
@@ -336,7 +360,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 개별 유닛 사망은 진영 턴을 끝내거나 예산을 채우지 않는다. 종료 결과만 모든 추가 진행을 막는다.
             var state = sourceState.With(
                 phase: outcome.IsStageEnded ? CombatFlowPhase.Finished : sourceState.Phase,
-                structures: structures, thornFields: fields.Values.OrderBy(f => f.Cell.Y).ThenBy(f => f.Cell.X).ToArray(),
+                thornBombs: outcome.IsStageEnded ? new ThornBombStateSet(sourceState.ThornBombs.NextBombId, Array.Empty<ThornBombSnapshot>()) : sourceState.ThornBombs,
+                structures: structures,
                 environment: environment, environmentProgress: progress, rewards: rewards);
             if (outcome.IsStageEnded)
             {
@@ -344,7 +369,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 events.Add(new CombatOutcomeEvent(outcome));
             }
             yield return 0;
-            completed(new CombatCommandTransition(input, true, "", characterChanges,
+            completed(new CombatCommandTransition(healthExecutions, healthClaims, input, true, "", characterChanges,
                 new SoulFieldChange(input.Souls, soulField), state, outcome, attack, consumed, events: events,
                 environmentBindings: input.EnvironmentBindings.SameValues(environmentBindings) ? null :
                     new EnvironmentBindingsChange(input.EnvironmentBindings, environmentBindings), blockedContacts: attack?.BlockedContacts,
@@ -435,14 +460,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal static void Collect(CombatCommandInput input, SoulEffectCalculator souls,
             Dictionary<EntityId, CharacterCombatFacts> projected, Dictionary<CharacterInstanceId, int> counts,
-            CharacterCombatFacts actor, SoulArrivalKind arrivalKind, ref SoulFieldSnapshot field, List<long> consumed, List<CombatEvent> events = null)
+            CharacterCombatFacts actor, SoulArrivalKind arrivalKind, ref SoulFieldSnapshot field, List<long> consumed, List<CombatEvent> events = null,
+            List<CombatHealthExecution> healthExecutions = null)
         {
             var owned = input.Owned.Single(o => o.Id == actor.OwnedId.Value);
             var main = actor.OwnershipRole == CharacterOwnershipRole.Main
                 ? input.Main.WithCurrentHealth(actor.Health.CurrentHealth) : null;
             int baseMax = main?.PersistentMaxHealth ?? SubBaseMaxHealth(actor);
-            var collected = souls.Collect(new SoulCollectorInput(actor, owned, counts[owned.Id], baseMax, main, arrivalKind), field, true);
-            if (collected.ConsumedSoulIds.Count != 0) events?.Add(new CombatSoulEvent(collected.Field, actor.EntityId, collected));
+            var healthAfterEachSoul = healthExecutions == null ? null : new List<HealthStateSnapshot>();
+            var collected = souls.Collect(new SoulCollectorInput(actor, owned, counts[owned.Id], baseMax, main, arrivalKind),
+                field, true, healthAfterEachSoul);
+            if (collected.ConsumedSoulIds.Count != 0 && events != null)
+            {
+                var evidence = new CombatSoulEvent(collected.Field, actor.EntityId, collected);
+                events.Add(evidence);
+                if (healthAfterEachSoul != null)
+                {
+                    var source = new CombatHealthSource(CombatHealthOperationKind.Growth, contextEvent: evidence);
+                    var steps = new CombatHealthStep[healthAfterEachSoul.Count];
+                    var before = actor.Health;
+                    for (int i = 0; i < steps.Length; i++)
+                    {
+                        var after = healthAfterEachSoul[i];
+                        steps[i] = new CombatHealthStep(actor.EntityId, before, after, 0,
+                            after.CurrentHealth - before.CurrentHealth, 0, source, evidence, i);
+                        before = after;
+                    }
+                    healthExecutions.Add(new CombatHealthExecution(steps, new[] { evidence }));
+                }
+            }
             foreach (var change in collected.Characters.Characters) projected[change.Final.EntityId] = change.Final;
             foreach (var change in collected.Characters.Souls) counts[change.Id] = change.FinalCount;
             field = collected.Field.Final;
@@ -455,19 +501,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// </summary>
         private static int SubBaseMaxHealth(CharacterCombatFacts actor) => SoulGrowthMath.BaseMaxHealth(actor.Health,
             actor.Stats.SoulMaxHealthBonus, actor.TemporaryMaxHealthBonus, actor.PositionModifier.MaxHealthBonus);
-
-        internal static int ConsumeFields(Dictionary<CellCoord, ThornFieldCellSnapshot> fields, CellCoord[] visited,
-            List<ThornFieldCellSnapshot> consumed = null)
-        {
-            int damage = 0;
-            foreach (var cell in visited)
-                if (fields.Remove(cell, out var field))
-                {
-                    consumed?.Add(field);
-                    damage = checked(damage + field.ThornDamage);
-                }
-            return damage;
-        }
 
         internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character)
         {
@@ -512,14 +545,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 health: health, stats: stats));
         }
 
-        internal static Rotation4 AttackRotation(AttackAim aim, CellCoord origin)
-        {
-            if (aim.Kind == AttackAimKind.Direction)
-                return aim.Direction == AttackDirection.Right ? Rotation4.R90 : aim.Direction == AttackDirection.Down ? Rotation4.R180 :
-                    aim.Direction == AttackDirection.Left ? Rotation4.R270 : Rotation4.R0;
-            if (!aim.Cell.HasValue) return Rotation4.R0;
-            long x = (long)aim.Cell.Value.X - origin.X, y = (long)aim.Cell.Value.Y - origin.Y;
-            return Math.Abs(x) >= Math.Abs(y) ? x > 0 ? Rotation4.R90 : x < 0 ? Rotation4.R270 : Rotation4.R0 : y > 0 ? Rotation4.R0 : Rotation4.R180;
-        }
+        internal static Rotation4 AttackRotation(AttackAim aim, CellCoord origin) =>
+            AttackFacingCalculator.Resolve(aim, origin);
     }
 }

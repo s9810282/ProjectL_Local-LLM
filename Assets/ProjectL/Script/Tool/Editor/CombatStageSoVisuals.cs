@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Tool.Runtime;
 using UnityEngine;
 
 namespace ProjectL.Tool.Editor
@@ -44,9 +45,20 @@ namespace ProjectL.Tool.Editor
             Dictionary<int, CombatStageSoVisual> objects, CombatStageSoFieldView fieldView)
         {
             this.units = units; this.terrains = terrains; this.objects = objects; FieldView = fieldView;
+            // 외형 표를 읽을 때 한 번 검사하고, 3D 창은 다음 목록 새로고침까지 같은 결과를 사용합니다.
+            try
+            {
+                TerrainCellScale = CombatMapAuthoringMetrics.CellScale(fieldView.CellWidth, fieldView.CellLength, "SO 모드 3D");
+            }
+            catch (InvalidOperationException exception)
+            {
+                TerrainScaleError = exception.Message;
+            }
         }
 
         public CombatStageSoFieldView FieldView { get; }
+        public float TerrainCellScale { get; }
+        public string TerrainScaleError { get; }
 
         // 잘못된 입력은 공개로 간주하지 않되, 편집 UI가 원인을 보여 주고 복구할 수 있게 합니다.
         internal static bool TryIsShown(object item, bool playerOnly, string[] owners, out string problem)
@@ -141,7 +153,11 @@ namespace ProjectL.Tool.Editor
                 {
                     if (!replacedBases.TryGetValue(cell, out float replaced) || visual.SurfaceHeight < replaced) replacedBases[cell] = visual.SurfaceHeight;
                 }
-                else if (visual.Prefab != null && visual.SurfaceHeight > OverlayAt(cell)) terrains[cell] = visual.SurfaceHeight;
+                else if (visual.Prefab != null)
+                {
+                    float height = visual.SurfaceHeight * visuals.TerrainCellScale;
+                    if (height > OverlayAt(cell)) terrains[cell] = height;
+                }
             }
         }
 

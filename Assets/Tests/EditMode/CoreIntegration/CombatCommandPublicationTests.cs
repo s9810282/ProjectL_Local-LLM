@@ -286,6 +286,7 @@ namespace ProjectL.Tests.CoreIntegration
             CharacterChanges characters = null, SoulFieldChange field = null) =>
             new(input ?? t.Input, t.Accepted, t.Reason, characters ?? t.Characters, field ?? t.Field, t.FinalState,
                 t.Outcome, t.Attack, t.ConsumedSoulIds, t.Completion, t.Movement, t.Events, t.PathMovement,
-                t.EnvironmentBindings, t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement);
+                t.EnvironmentBindings, t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement,
+                t.UndoMovement, t.MovementEffectUses, t.HealthExecutions, t.HealthClaims);
     }
 }

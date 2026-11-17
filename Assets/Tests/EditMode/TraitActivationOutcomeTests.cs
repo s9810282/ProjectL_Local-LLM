@@ -554,7 +554,9 @@ namespace ProjectL.Tests.Core
             var boss = input.Characters.Single(c => c.Owner == Owner.Enemy);
             var result = BossRoarCalculator.TryRoar(input, boss.EntityId, Array.Empty<IMovementTileRule>());
             var value = Activations(result.Events, TraitKey.Roar).Single();
-            var direct = result.Events.OfType<CombatStructureEvent>().First().DamageOrigins.Single();
+            var direct = explosion
+                ? result.Events.OfType<CombatObstacleDurabilityEvent>().Single().Origin
+                : result.Events.OfType<CombatStructureEvent>().Single().DamageOrigins.Single();
             AssertOrigin(value.ResultOrigin, direct);
             Assert.That(direct.PhysicalCell, Is.EqualTo(new CellCoord(3, 3)));
             Assert.That(direct.CreditedCharacterId, Is.EqualTo(boss.EntityId));
@@ -616,7 +618,8 @@ namespace ProjectL.Tests.Core
                 ? c.WithPlacement(CharacterRuntimeArea.Field, null, cell, Rotation4.R0, new[] { cell }) : c).ToArray());
             var result = CombatCommandCalculator.Advance(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
-            var values = Activations(result.Events, TraitKey.Taunt).ToArray();
+            var values = Activations(result.Events, TraitKey.Taunt)
+                .Where(a => a.TraitActivationKind == TraitActivationKind.TauntSelected).ToArray();
             Assert.That(values.Length, Is.EqualTo(active ? 1 : 0));
             if (!active) return;
             Assert.That(values[0].SourceUnitId, Is.EqualTo(new EntityId(2)));

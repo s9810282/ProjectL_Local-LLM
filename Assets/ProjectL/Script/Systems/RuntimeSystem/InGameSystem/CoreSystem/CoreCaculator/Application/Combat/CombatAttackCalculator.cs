@@ -76,6 +76,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             yield return "Admission";
             var aim = reactionAim ?? input.Aim;
+            if (reaction)
+                input = input.WithIntent(input.Kind, input.Aim, input.TargetCell, input.Path, input.MovementContext,
+                    sweepSide: null);
             var profile = CombatCommandCalculator.RequiredProfile(input, originalActor);
             yield return "Profile";
             var environment = input.State.Environment;
@@ -92,7 +95,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 yield return phase;
             AttackSelectionEvaluation evaluation = null;
             foreach (var phase in CombatAttackQueries.SelectionSteps(input, originalActor, profile, aim, environment, walls,
-                elevation, value => evaluation = value)) yield return phase;
+                elevation, value => evaluation = value,
+                damageKind: reaction ? CombatDamageKind.ReactionAttack : CombatDamageKind.OrdinaryAttack)) yield return phase;
             if (evaluation.FailureReason != AttackFailureReason.None)
             {
                 completed(reaction ? null : CombatCommandCalculator.Reject(input, evaluation.FailureReason.ToString(),
@@ -121,7 +125,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bool publicPreview, bool reaction, Action<CombatCommandTransition, AttackPreview, IReadOnlyList<CellCoord>> completed,
             Owner observer)
         {
-            var direction = CombatCommandCalculator.AttackRotation(aim, originalActor.Anchor.Value);
+            var direction = evaluation.Sweep?.Facing ?? CombatCommandCalculator.AttackRotation(aim, originalActor.Anchor.Value);
             // S2~S4: 명령 투영, 공통 피해와 전달을 준비한다.
             CommandAttackProjection world;
             using (var construction = CommandAttackProjection.BeginCreate(input, environment, evaluation.BlockedContacts, captureMovementUses: !publicPreview))
@@ -138,25 +142,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var bindings = CombatCommandEffects.Capture(actor, profile);
             var traitScope = new AttackTraitScope(actor, capturedEnemyCount: AttackTraitScope.CountEnemies(actor, evaluation.Selection));
             int actionEventStart = world.Events.Count;
-            TraitAttackNotifications.Apply(input, world, traitScope);
-            actor = world.Characters[actor.EntityId];
-            yield return "AttackNotifications";
-            bool requiresPreHitMovement = evaluation.Pull?.RequiresPull == true;
-            int commonDamage = requiresPreHitMovement ? 0 : CommonAttackDamage(input, actor, profile, world.Events, traitScope);
-            yield return "DeliveryCommonDamage";
-            ResolvedAttackDelivery delivery = null;
-            if (requiresPreHitMovement)
-                delivery = new ResolvedAttackDelivery(Array.Empty<DeliveredAttackHit>(), Array.Empty<CellCoord>());
-            else
-                foreach (var phase in CombatAttackDelivery.ResolveSteps(input, traitScope.ForDamage(actor), profile,
-                    evaluation.Selection, commonDamage, walls, elevation, value => delivery = value)) yield return phase;
-            foreach (var contact in delivery.BlockedContacts)
-            {
-                world.BlockedContacts.Add(contact);
-                yield return "BlockedContact";
-            }
-            var plan = new CommandAttackPlan(input,rules,profile,originalActor,actor,environment,walls,evaluation.Selection,                delivery,engine,bindings,new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())),                commonDamage,direction,publicPreview,                reaction ? CombatDamageKind.ReactionAttack : CombatDamageKind.OrdinaryAttack,aim: aim,traitScope: traitScope,
+            bool requiresPreHitMovement = evaluation.Pull?.RequiresPull == true || evaluation.Sweep != null;
+            bool attackStarted = !requiresPreHitMovement;
+            var delivery = new ResolvedAttackDelivery(Array.Empty<DeliveredAttackHit>(), Array.Empty<CellCoord>());
+            var plan = new CommandAttackPlan(input, rules, profile, originalActor, actor, environment, walls, evaluation.Selection,
+                delivery, engine, bindings, new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())),
+                0, direction, publicPreview, reaction ? CombatDamageKind.ReactionAttack : CombatDamageKind.OrdinaryAttack,
+                aim: aim, traitScope: traitScope,
                 previewObserver: observer);
+            if (attackStarted)
+            {
+                TraitAttackNotifications.Apply(input, world, traitScope);
+                actor = world.Characters[actor.EntityId];
+                yield return "AttackNotifications";
+                // 공통 전달 준비에 공개 미리보기의 관찰 환경을 명시하되, 명령 기대값은 최초 계획에 보존합니다.
+                var deliveryInput = publicPreview
+                    ? input.WithWorld(input.State.With(environment: environment), input.Characters, input.Main,
+                        input.SoulCounts, input.Souls, input.EnvironmentBindings)
+                    : input;
+                foreach (var phase in PrepareDeliverySteps(plan, world, deliveryInput, evaluation.Selection, elevation,
+                    rebuilt => plan = rebuilt)) yield return phase;
+            }
             var ledger = new CommandAttackLedger();
             ledger.BeginScope(plan, world);
             yield return "PlanLedger";
@@ -174,20 +180,82 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 yield return "HunterReconcile";
             }
             AttackPullSnapshot pullMovement = null;
-            bool deliverDirectDamage = true;
-            if (requiresPreHitMovement)
+            if (evaluation.Pull?.RequiresPull == true)
             {
                 arrival ??= world.CreateArrivalProjection(plan);
+                bool canAttemptFollowUp = false;
                 foreach (var phase in PullAttackCalculator.ExecuteSteps(evaluation.Pull, plan, world, ledger, arrival,
-                    (canDeliver, movement) => { deliverDirectDamage = canDeliver; pullMovement = movement; }))
+                    (canDeliver, movement) => { canAttemptFollowUp = canDeliver; pullMovement = movement; }))
                     yield return phase;
-                if (deliverDirectDamage)
-                    foreach (var phase in PullAttackCalculator.RebuildDeliverySteps(plan, world, arrival, evaluation.Pull.TargetId,
-                        rebuilt => plan = rebuilt))
-                        yield return phase;
+                if (canAttemptFollowUp && !arrival.Terminal)
+                {
+                    using var observation = arrival.BeginCurrentInput();
+                    while (!observation.IsComplete)
+                    {
+                        observation.Step();
+                        yield return "ContinuationObservation";
+                    }
+                    if (!arrival.Terminal)
+                    {
+                        var current = observation.Result;
+                        actor = world.Characters[originalActor.EntityId];
+                        AttackElevation currentElevation = null;
+                        foreach (var phase in AttackElevation.BuildSteps(arrival.Environment, current.EnvironmentBindings,
+                            value => currentElevation = value)) yield return phase;
+                        AttackSelectionEvaluation continuation = null;
+                        foreach (var phase in CombatAttackQueries.ContinuationSelectionSteps(current, actor, profile,
+                            evaluation.Pull.TargetId, arrival.Environment, walls, currentElevation,
+                            value => continuation = value)) yield return phase;
+                        world.BlockedContacts.AddRange(continuation.BlockedContacts);
+                        attackStarted = continuation.FailureReason == AttackFailureReason.None && !arrival.Terminal;
+                        if (attackStarted)
+                        {
+                            TraitAttackNotifications.Apply(current, world, traitScope);
+                            yield return "AttackNotifications";
+                            using var deliveryObservation = arrival.BeginCurrentInput();
+                            while (!deliveryObservation.IsComplete)
+                            {
+                                deliveryObservation.Step();
+                                yield return "ContinuationDeliveryObservation";
+                            }
+                            foreach (var phase in PrepareDeliverySteps(plan, world, deliveryObservation.Result,
+                                continuation.Selection, currentElevation, rebuilt => plan = rebuilt)) yield return phase;
+                            actor = world.Characters[originalActor.EntityId];
+                        }
+                    }
+                }
                 yield return "Pull";
             }
-            // 당김과 공통 공격력 정산 뒤, 실제 발사부터 피해 결과를 기록합니다.
+            AttackSweepSnapshot sweepMovement = null;
+            if (evaluation.Sweep != null)
+            {
+                arrival ??= world.CreateArrivalProjection(plan);
+                foreach (var phase in DeadHandAttackCalculator.ExecuteSteps(evaluation.Sweep, plan, world, ledger, arrival,
+                    value => sweepMovement = value)) yield return phase;
+                attackStarted = !sweepMovement.Interrupted;
+                if (attackStarted)
+                {
+                    using var observation = arrival.BeginCurrentInput();
+                    while (!observation.IsComplete)
+                    {
+                        observation.Step();
+                        yield return "SweepDeliveryObservation";
+                    }
+                    TraitAttackNotifications.Apply(observation.Result, world, traitScope);
+                    yield return "AttackNotifications";
+                    using var deliveryObservation = arrival.BeginCurrentInput();
+                    while (!deliveryObservation.IsComplete)
+                    {
+                        deliveryObservation.Step();
+                        yield return "SweepDeliveryObservation";
+                    }
+                    var selection = DeadHandAttackCalculator.AfterMovement(evaluation.Selection, world);
+                    foreach (var phase in PrepareDeliverySteps(plan, world, deliveryObservation.Result, selection, elevation,
+                        rebuilt => plan = rebuilt, sweepMovement)) yield return phase;
+                    actor = world.Characters[originalActor.EntityId];
+                }
+            }
+            // 사전 이동과 공통 공격력 정산 뒤, 실제 발사부터 피해 결과를 기록합니다.
             int attackEventIndex = world.Events.Count;
 
             var deliveredVictims = new HashSet<EntityId>();
@@ -196,16 +264,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 행동 사용 정산은 명령이 소유하고, 실행기는 기존 단계 경계에서 한 번 호출한다.
             Action settleActionUse = reaction ? null : () =>
             {
-                (traits, categories) = SettleActionUse(plan, world);
+                if (attackStarted) (traits, categories) = ApplyAttackSucceededEffects(plan, world);
+                SettleActionUse(plan, world);
             };
             foreach (var phase in AttackDeliveryExecutor.ExecuteSteps(plan, world, ledger, deliveredVictims,
-                value => arrival = value, arrival, settleActionUse, deliverDirectDamage))
+                value => arrival = value, arrival, settleActionUse, attackStarted))
                 yield return phase;
 
-            CombatDebuffApplication.CompleteAttack(input, originalActor, deliveredVictims, world.Characters, world.Events,
-                new CombatDamageOrigin(plan.Actor.Anchor, plan.Actor.EntityId, plan.AttackGroup));
-            yield return "CompleteDebuff";
-            if (!reaction) ApplyAttackCompletedItem(plan, world, arrival);
+            if (attackStarted && !reaction) ApplyAttackCompletedItem(plan, world, arrival);
             yield return "CompleteItem";
 
             var settlement = reaction
@@ -236,7 +302,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             AttackResult result;
             AttackPreview preview;
             using (var resultWork = AttackResultFactory.BeginCreate(plan, world, ledger, settlement,
-                traitRows.ToArray(), categoryRows.ToArray(), reaction, pullMovement))
+                traitRows.ToArray(), categoryRows.ToArray(), reaction, pullMovement, sweepMovement))
             {
                 while (!resultWork.IsComplete)
                 {
@@ -246,8 +312,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 result = resultWork.Result;
                 preview = resultWork.Preview;
             }
-            if (reaction) world.Events.Insert(attackEventIndex, new CombatRoarEvent(actor.EntityId, result, result.AffectedCells.ToArray()));
-            else world.Events.Insert(attackEventIndex, new CombatAttackEvent(result));
+            CombatEvent occurrence = reaction
+                ? new CombatRoarEvent(actor.EntityId, result, result.AffectedCells.ToArray())
+                : new CombatAttackEvent(result);
+            world.Events.Insert(attackEventIndex, occurrence);
+            ledger.BindHealthClaims(world.Damage, occurrence, result);
             yield return "AttackEvent";
             using var finalization = arrival.BeginComplete(reaction ? null : result);
             while (!finalization.IsComplete)
@@ -255,7 +324,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 finalization.Step();
                 yield return finalization.Phase;
             }
+            preview = preview.WithThornBombConsequences(world.ThornBombs.Explosions, finalization.Result.FinalState.ThornBombs,
+                world.Characters, finalization.Result.Events);
             completed(finalization.Result, preview, evaluation.EmptyAreaCells);
+        }
+
+        /// <summary>시작이 확정된 공격의 전달을 한 곳에서 준비하고 최초 명령의 기대값·정산 계약은 유지합니다.</summary>
+        private static IEnumerable<string> PrepareDeliverySteps(CommandAttackPlan originalPlan, CommandAttackProjection world,
+            CombatCommandInput currentInput, ResolvedAttackSelection selection, AttackElevation elevation,
+            Action<CommandAttackPlan> completed, AttackSweepSnapshot sweep = null)
+        {
+            var actor = world.Characters[originalPlan.Actor.EntityId];
+            int damage = CommonAttackDamage(currentInput, actor, originalPlan.Profile, originalPlan.DamageKind, world.Events, originalPlan.TraitScope);
+            yield return "DeliveryCommonDamage";
+            ResolvedAttackDelivery delivery = null;
+            foreach (var phase in CombatAttackDelivery.ResolveSteps(currentInput, originalPlan.TraitScope.ForDamage(actor),
+                originalPlan.Profile, selection, damage, originalPlan.Walls, elevation, value => delivery = value)) yield return phase;
+            foreach (var contact in delivery.BlockedContacts)
+            {
+                world.BlockedContacts.Add(contact);
+                yield return "BlockedContact";
+            }
+            completed(new CommandAttackPlan(originalPlan.Input, originalPlan.Rules, originalPlan.Profile,
+                originalPlan.OriginalActor, actor, currentInput.State.Environment, originalPlan.Walls, selection, delivery,
+                originalPlan.Engine, CombatCommandEffects.Capture(actor, originalPlan.Profile), originalPlan.Pipeline,
+                damage, originalPlan.Direction, originalPlan.PublicPreview, originalPlan.DamageKind,
+                originalPlan.AttackGroup, originalPlan.Cause, originalPlan.Aim, originalPlan.RequestedCells, originalPlan.TraitScope,
+                originalPlan.PreviewObserver, originalPlan.CapturedEnemyIds,
+                damageInput: sweep == null ? originalPlan.DamageInput : currentInput, sweep: sweep,
+                completeConsequences: originalPlan.CompleteConsequences));
+            yield return "AttackDeliveryPrepared";
         }
 
         private static void ApplyAttackCompletedItem(CommandAttackPlan plan, CommandAttackProjection world, MovementProjection arrival)
@@ -278,7 +376,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>실행과 AI 목표 판정이 같은 관통 제한을 사용한다. AP·피해 적용·도착 효과는 계산하지 않는다.</summary>
         internal static int CommonAttackDamage(CombatCommandInput input, CharacterCombatFacts actor,
-            CombatAttackProfile profile, List<CombatEvent> events = null, AttackTraitScope traitScope = null)
+            CombatAttackProfile profile, CombatDamageKind damageKind, List<CombatEvent> events = null, AttackTraitScope traitScope = null)
         {
             using var sample = CoreProfiling.Sample(CoreProfileSection.AttackCommonDamage);
             actor = traitScope?.ForDamage(actor) ?? actor;
@@ -287,11 +385,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int damage = engine.EvaluateAttackDamage(bindings, new AttackDamageEffectContext(
                 new SoulEffectCalculator(input.Artifacts).EvaluateAttackPower(actor,
                     actor.OwnedId.HasValue ? input.SoulCounts[actor.OwnedId.Value] : 0, input.Characters, events))).EffectiveDamage;
-            return CombatDebuffCalculator.EvaluateAttackPower(damage, actor.Debuffs);
+            damage = CombatDebuffCalculator.EvaluateAttackPower(damage, actor.Debuffs);
+            var sweep = engine.EvaluateAttackSweep(bindings, new AttackSweepEffectContext(damageKind)).Contribution;
+            return sweep.HasValue ? CategoryMatchupDamageCalculator.Apply(damage, sweep.Value.DamagePercent, 100) : damage;
         }
 
-        /// <summary>S10: 공격 성공 효과를 적용하고 일반 행동을 한 번 사용한다. 행동 사용 증거는 도착 투영의 최종 전이에서 게시한다.</summary>
-        private static (TraitActivationSnapshot[] Traits, CategoryActivationSnapshot[] Categories) SettleActionUse(
+        /// <summary>실제로 시작한 공격만 성공 효과를 적용합니다. 행동 사용 정산과 분리합니다.</summary>
+        private static (TraitActivationSnapshot[] Traits, CategoryActivationSnapshot[] Categories) ApplyAttackSucceededEffects(
             CommandAttackPlan plan, CommandAttackProjection world)
         {
             var engine = plan.Engine;
@@ -303,9 +403,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatCommandEffects.AppendActivations(success, traitActivations, categoryActivations);
             CombatCommandEvents.Effects(world.Events, success);
             var current = world.Characters[actorId];
-            world.Characters[actorId] = CombatCommandCalculator.Copy(current, current.Health, stats)
-                .With(actionUse: UnitActionUse.Attacked);
+            world.Characters[actorId] = CombatCommandCalculator.Copy(current, current.Health, stats);
             return (traitActivations.ToArray(), categoryActivations.ToArray());
+        }
+
+        /// <summary>공격을 생략한 이동 전용 결과도 일반 행동은 한 번 사용하며, 증거는 기존 최종 전이에서 게시합니다.</summary>
+        private static void SettleActionUse(CommandAttackPlan plan, CommandAttackProjection world)
+        {
+            var actorId = plan.Actor.EntityId;
+            world.Characters[actorId] = world.Characters[actorId].With(actionUse: UnitActionUse.Attacked);
         }
     }
 }

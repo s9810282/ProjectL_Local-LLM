@@ -22,10 +22,10 @@ MonoBehaviour:
   - StageSelect
   - UI
   loadSampleData: 1
-  lastScanTime: 2026-11-10 15:45:37
+  lastScanTime: 2026-11-16 23:58:22
   lastScannedFolder: C:/Users/Hyeon2-400/Project_L/Assets/Audio/FMODplus/ProjectL/Build/Desktop
   lastBankFileCount: 8
-  lastEventCount: 66
+  lastEventCount: 67
   lastBusCount: 11
   buses:
   - path: bus:/
@@ -363,20 +363,6 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters: []
-  - path: event:/PostFX/SFX/StageDeploy
-    folderPath: PostFX/SFX
-    eventName: StageDeploy
-    displayName: StageDeploy
-    sourceBankPath: bank:/PostFX
-    guidString: '{0fe60e5a-8fd2-47b0-a85c-eb8c41309300}'
-    isOneShot: 1
-    isSnapshot: 0
-    is3D: 0
-    hasSustainPoint: 0
-    lengthMs: 2678
-    minDistance: 1
-    maxDistance: 20
-    parameters: []
   - path: event:/PostFX/SFX/Terrain/FallStone
     folderPath: PostFX/SFX/Terrain
     eventName: FallStone
@@ -416,6 +402,20 @@ MonoBehaviour:
     is3D: 0
     hasSustainPoint: 0
     lengthMs: 6757
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/PostFX/SFX/Terrain/StageDeploy
+    folderPath: PostFX/SFX/Terrain
+    eventName: StageDeploy
+    displayName: StageDeploy
+    sourceBankPath: bank:/PostFX
+    guidString: '{0fe60e5a-8fd2-47b0-a85c-eb8c41309300}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 2678
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -485,7 +485,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 2146
+    lengthMs: 1840
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -638,7 +638,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 4746
+    lengthMs: 2596
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -652,7 +652,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 1728
+    lengthMs: 978
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -666,7 +666,7 @@ MonoBehaviour:
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 2613
+    lengthMs: 1500
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -1006,8 +1006,22 @@ MonoBehaviour:
       - Heavy
       - Cannon
       - Enemy
-  - path: event:/UI/CardShuffle
+  - path: event:/UI/Click
     folderPath: UI
+    eventName: Click
+    displayName: Click
+    sourceBankPath: bank:/UI
+    guidString: '{00398ca5-04ca-42df-8808-dc189076138d}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/Combat/CardShuffle
+    folderPath: UI/Combat
     eventName: CardShuffle
     displayName: CardShuffle
     sourceBankPath: bank:/UI
@@ -1020,8 +1034,8 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters: []
-  - path: event:/UI/ChangeTurn
-    folderPath: UI
+  - path: event:/UI/Combat/ChangeTurn
+    folderPath: UI/Combat
     eventName: ChangeTurn
     displayName: ChangeTurn
     sourceBankPath: bank:/UI
@@ -1047,12 +1061,40 @@ MonoBehaviour:
       labels:
       - Player
       - Enemy
-  - path: event:/UI/Click
-    folderPath: UI
-    eventName: Click
-    displayName: Click
+  - path: event:/UI/Combat/Reward
+    folderPath: UI/Combat
+    eventName: Reward
+    displayName: Reward
     sourceBankPath: bank:/UI
-    guidString: '{00398ca5-04ca-42df-8808-dc189076138d}'
+    guidString: '{13b3f167-90d5-4460-a177-13b035d4fcf6}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 1102
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/Combat/StageDefeat
+    folderPath: UI/Combat
+    eventName: StageDefeat
+    displayName: StageDefeat
+    sourceBankPath: bank:/UI
+    guidString: '{b543755b-c14b-4c35-a4db-585f575f23b9}'
+    isOneShot: 1
+    isSnapshot: 0
+    is3D: 0
+    hasSustainPoint: 0
+    lengthMs: 0
+    minDistance: 1
+    maxDistance: 20
+    parameters: []
+  - path: event:/UI/Combat/StageWin
+    folderPath: UI/Combat
+    eventName: StageWin
+    displayName: StageWin
+    sourceBankPath: bank:/UI
+    guidString: '{0a236600-f397-4ab9-9273-e85fcf559597}'
     isOneShot: 1
     isSnapshot: 0
     is3D: 0
@@ -1116,17 +1158,17 @@ MonoBehaviour:
     minDistance: 1
     maxDistance: 20
     parameters: []
-  - path: event:/UI/Reward
+  - path: event:/UI/MapDeploy
     folderPath: UI
-    eventName: Reward
-    displayName: Reward
-    sourceBankPath: bank:/UI
-    guidString: '{13b3f167-90d5-4460-a177-13b035d4fcf6}'
+    eventName: MapDeploy
+    displayName: MapDeploy
+    sourceBankPath: bank:/StageSelect
+    guidString: '{147315bc-c315-491c-a4bf-a670ed871aea}'
     isOneShot: 1
     isSnapshot: 0
     is3D: 0
     hasSustainPoint: 0
-    lengthMs: 1102
+    lengthMs: 2449
     minDistance: 1
     maxDistance: 20
     parameters: []
@@ -1169,34 +1211,6 @@ MonoBehaviour:
     is3D: 0
     hasSustainPoint: 0
     lengthMs: 1761
-    minDistance: 1
-    maxDistance: 20
-    parameters: []
-  - path: event:/UI/StageDefeat
-    folderPath: UI
-    eventName: StageDefeat
-    displayName: StageDefeat
-    sourceBankPath: bank:/UI
-    guidString: '{b543755b-c14b-4c35-a4db-585f575f23b9}'
-    isOneShot: 1
-    isSnapshot: 0
-    is3D: 0
-    hasSustainPoint: 0
-    lengthMs: 0
-    minDistance: 1
-    maxDistance: 20
-    parameters: []
-  - path: event:/UI/StageWin
-    folderPath: UI
-    eventName: StageWin
-    displayName: StageWin
-    sourceBankPath: bank:/UI
-    guidString: '{0a236600-f397-4ab9-9273-e85fcf559597}'
-    isOneShot: 1
-    isSnapshot: 0
-    is3D: 0
-    hasSustainPoint: 0
-    lengthMs: 0
     minDistance: 1
     maxDistance: 20
     parameters: []

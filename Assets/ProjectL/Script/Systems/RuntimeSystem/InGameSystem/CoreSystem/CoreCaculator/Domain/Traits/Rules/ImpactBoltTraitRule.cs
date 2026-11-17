@@ -16,13 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         /// </summary>
         internal static bool TryResolveStep(CharacterCombatFacts target, CellCoord center, out CellCoord step)
         {
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            step = default;
-            if (target.Health.IsDead || target.Area != CharacterRuntimeArea.Field || target.OccupiedCells.Contains(center))
-                return false;
-
-            step = ForcedDisplacementGeometry.ResolveBranchStep(center, target.Anchor.Value);
-            return true;
+            return ImpactCenterGeometry.TryResolveStep(target, center, out step);
         }
     }
 }

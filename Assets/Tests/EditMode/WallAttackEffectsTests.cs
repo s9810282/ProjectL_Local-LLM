@@ -38,7 +38,7 @@ namespace ProjectL.Tests.Core
         [TestCase(true)]
         public void Propagation_UsesImpactAndExactLongSegment_IgnoreNeverGrantsWallOccupancy(bool ignore)
         {
-            var input = ThornInput(ignore, false);
+            var input = AttackInput(ignore);
             var walls = WallGeometryBuilder.Build(8, 8, input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking);
             var far = new CellCoord(7, 3);
             var selection = new AttackCellSelection(Center, new[] { Center }, new[] { WallCell, far, new CellCoord(4, 4) });
@@ -51,9 +51,9 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void RejectedInitialThornAttack_HasEvidenceAndNoEffects()
+        public void RejectedInitialAttack_HasEvidenceAndNoEffects()
         {
-            var input = WallMovementTests.WithWalls(ThornInput(false, false), Wall(71, new CellCoord(2, 3)));
+            var input = WallMovementTests.WithWalls(AttackInput(false), Wall(71, new CellCoord(2, 3)));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Accepted, Is.False);
             Assert.That(result.Reason, Is.EqualTo(AttackFailureReason.BlockedByWall.ToString()));
@@ -65,18 +65,18 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void PersistentThorn_RemainsEnvironmentalOnEntryBehindWall()
+        public void Hazard_RemainsEnvironmentalOnEntryBehindWall()
         {
             var input = MovementTestData.SafeRoute(new CellCoord(6, 2),new CellCoord(6, 3));
             input = WallMovementTests.WithWalls(input, Wall(71, WallCell));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(6, 3), 5, 9) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(8,8,s.Phase,                s.Structures,s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking), (new CellCoord(6, 3), 9)));
+            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(91));
             Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(new CellCoord(6, 3)));
             Assert.That(result.BlockedContacts, Is.Empty);
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
         }
 
         [TestCase(false)]
@@ -111,7 +111,7 @@ namespace ProjectL.Tests.Core
         [Test]
         public void Composition_PreservesOrdinaryAndReactionEvidenceAtPublishedBoundaries()
         {
-            var input = ThornInput(false, false);
+            var input = AttackInput(false);
             input = CombatCommandTestData.With(input, profiles: input.Profiles.Select((p, i) => i == 0
                 ? new CombatAttackProfile(p.Definition, new TargetingMethodSpec(TargetingShape.RadialSquare,
                     TargetingChoiceMode.Single, TargetingSplash.Radial, 70)) : p).ToArray());
@@ -129,7 +129,7 @@ namespace ProjectL.Tests.Core
         [Test]
         public void FundingRemoval_PreservesSpatialEvidence()
         {
-            var input = ThornInput(false, false);
+            var input = AttackInput(false);
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.Radial, 70);
             input = CombatCommandTestData.With(input, state: input.State.With(), profiles: input.Profiles.Select((p, i) => i == 0
                     ? new CombatAttackProfile(p.Definition, method) : p).ToArray());
@@ -141,22 +141,17 @@ namespace ProjectL.Tests.Core
             AssertContact(CombatCommandCalculator.Preview(input, Rules).BlockedContacts.Single(), AttackOcclusionPhase.Propagation, Center, WallCell);
         }
 
-        private static CombatCommandInput ThornInput(bool ignore, bool oldField)
+        private static CombatCommandInput AttackInput(bool ignore)
         {
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0);
             var input = CombatCommandTestData.Input(method);
-            var actor = CombatCommandTestData.With(input.Characters[0], traits: new TraitStatusSnapshot[] { new ThornFieldTraitStatusSnapshot(7, 5) });
             var profiles = input.Profiles.ToArray();
-            var spec = CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Main, new ThornFieldTraitSpec(7, 5));
+            var spec = CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Main);
             profiles[0] = new CombatAttackProfile(new UnitSpec(spec.Key, spec.Role, 1, 1, new[] { CellCoord.Zero }, spec.MaxHealth,
                 spec.MoveMethod, 4, spec.CategoryKey, spec.AttackPower, spec.PhysicalDefense, spec.Priority, spec.Traits.ToArray(), spec.OwnerEligibility,
                 new AttackOcclusionSpec(AttackWallDelivery.RequireClear, ignore ? AttackWallPropagation.IgnoreWalls : AttackWallPropagation.FromImpact)), method);
-            input = CombatCommandTestData.With(input, input.Characters.Where(c => c.EntityId != new EntityId(4))
-                .Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray(), profiles: profiles);
-            input = WallMovementTests.WithWalls(input, Wall(71, WallCell));
-            if (!oldField) return input;
-            var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(WallCell, 3, 11) },s.Turn,                s.Environment,s.EnvironmentProgress,s.WallBlocking));
+            input = CombatCommandTestData.With(input, input.Characters.Where(c => c.EntityId != new EntityId(4)).ToArray(), profiles: profiles);
+            return WallMovementTests.WithWalls(input, Wall(71, WallCell));
         }
 
         private static int FinalHealth(CombatCommandTransition result, CombatCommandInput input, int id) =>

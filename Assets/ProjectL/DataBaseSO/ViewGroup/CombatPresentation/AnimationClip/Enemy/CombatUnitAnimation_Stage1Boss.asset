@@ -12,8 +12,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Stage1Boss
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 2dfb2a1683b5b664cb73081f257b24db, type: 2}
+  attack:
+    main:
+      body: {fileID: 7400000, guid: 6833abb8c7f81cb4aa21dbed98f4f1db, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
+  hit:
+    main:
+      body: {fileID: 7400000, guid: da554922e4483124a8e48ba13789fd6c, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackClip: {fileID: 7400000, guid: 6833abb8c7f81cb4aa21dbed98f4f1db, type: 2}
+  attackSpeed: 1
   attackCompanionClips: []
   hitDelay: 0
-  hitClip: {fileID: 0}
+  shots: []
+  hitClip: {fileID: 7400000, guid: da554922e4483124a8e48ba13789fd6c, type: 2}
   hitCompanionClips: []

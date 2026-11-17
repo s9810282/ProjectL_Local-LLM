@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         internal static CombatCommandInput Intent(CombatCommandInput i, CombatCommandKind kind, AttackAim aim = default,
             CellCoord cell = default, MovementPath path = null, MovementPreviewContext movementContext = null) =>
-            i.WithIntent(kind, aim, cell, path ?? i.Path, movementContext ?? i.MovementContext);
+            i.WithIntent(kind, aim, cell, path ?? i.Path, movementContext ?? i.MovementContext, sweepSide: null);
         internal static CombatCommandInput Project(CombatCommandTransition t)
         {
             CombatCommandInput result = null;
@@ -54,10 +54,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     t.RewardChange?.FinalGold ?? i.GoldBalance, t.RewardChange?.FinalFame ?? i.FameBalance));
         }
         internal static CombatCommandTransition WithEvents(CombatCommandTransition transition, IReadOnlyList<CombatEvent> events) =>
-            new(transition.Input, transition.Accepted, transition.Reason, transition.Characters, transition.Field,
+            new(transition.HealthExecutions, transition.HealthClaims, transition.Input, transition.Accepted, transition.Reason, transition.Characters, transition.Field,
                 transition.FinalState, transition.Outcome, transition.Attack, transition.ConsumedSoulIds, transition.Completion,
                 transition.Movement, events, transition.PathMovement, transition.EnvironmentBindings, transition.BlockedContacts,
-                transition.InventoryChange, transition.RewardChange, transition.RewardSettlement, transition.ActionUseSettlement, transition.UndoMovement, transition.MovementEffectUses, transition.DamageExecutions);
+                transition.InventoryChange, transition.RewardChange, transition.RewardSettlement, transition.ActionUseSettlement,
+                transition.UndoMovement, transition.MovementEffectUses, transition.PlayerSkill);
 
         internal static CombatCommandTransition Merge(CombatCommandInput original, IReadOnlyList<CombatCommandTransition> steps)
         {
@@ -79,7 +80,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 original.Owned.Select(o => (Expected: o, Final: final.Owned.Single(f => f.Id == o.Id)))
                     .Where(p => !p.Expected.SameValues(p.Final))
                     .Select(p => new OwnedCharacterChange(p.Expected, p.Final)).ToArray());
-            return new CombatCommandTransition(original, true, "", changes, new SoulFieldChange(original.Souls, final.Souls), final.State,
+            return new CombatCommandTransition(steps.SelectMany(s => s.HealthExecutions), steps.SelectMany(s => s.HealthClaims),
+                original, true, "", changes, new SoulFieldChange(original.Souls, final.Souls), final.State,
                 steps.Last().Outcome, steps.Select(s => s.Attack).LastOrDefault(a => a.HasValue),
                 steps.SelectMany(s => s.ConsumedSoulIds).Distinct().ToArray(), movement: steps.Select(s => s.Movement).LastOrDefault(m => m.HasValue),
                 events: steps.SelectMany(s => s.Events).ToArray(), pathMovement: steps.Select(s => s.PathMovement).LastOrDefault(p => p != null),
@@ -94,7 +96,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 rewardSettlement: MergeRewards(original, steps, final),
                 actionUseSettlement: MergeActionUse(steps), undoMovement: steps.Select(s => s.UndoMovement).SingleOrDefault(u => u != null),
                 movementEffectUses: steps.SelectMany(s => s.MovementEffectUses).ToArray(),
-                damageExecutions: steps.SelectMany(s => s.DamageExecutions).ToArray());
+                playerSkill: steps.Select(s => s.PlayerSkill).SingleOrDefault(skill => skill != null));
         }
 
         private static ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.UnitActionUseSettlementSnapshot

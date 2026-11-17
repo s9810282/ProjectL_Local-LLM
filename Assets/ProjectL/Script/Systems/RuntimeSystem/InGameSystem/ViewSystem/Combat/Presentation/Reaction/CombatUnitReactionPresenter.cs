@@ -11,7 +11,10 @@ using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Reaction
 {
-    /// <summary>한 대상의 피격·사망 자세, 외부 Tick, 모델 유지권과 완료/취소 수명입니다.</summary>
+    /// <summary>
+    /// 한 대상의 피격·사망 자세, Tick, 모델 유지권과 완료/취소 수명입니다. 반응 조각(<c>CombatReactionMotionPiece</c>)이 하나씩 갖고 Tick·취소합니다
+    /// (피격 구조 정리 설계 HC1 — 옛 반응 부품 목록이 쓰던 놓기 <c>Release</c>·판 번호 읽기는 쓰는 곳이 없어 걷음).
+    /// </summary>
     internal sealed class CombatUnitReactionPresenter
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -34,11 +37,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private Action _unavailable;
         private bool _ticking;
         private bool _cleaning;
-        private bool _released;
         private int _version;
 
         internal bool IsPlaying => _pose != null;
-        internal int Version => _version;
 
         internal void BeginHit(CombatUnitReactionPresentationData settings, ICombatUnitPose pose,
             CombatCharacterEvent damage, FieldGridMapper mapper, Action completed, Action unavailable)
@@ -90,7 +91,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private void ValidateStart(CombatUnitReactionPresentationData settings, ICombatUnitPose pose,
             Action completed, Action unavailable)
         {
-            if (_released || IsPlaying || _cleaning)
+            if (IsPlaying || _cleaning)
                 throw new InvalidOperationException("[CombatUnitReactionPresenter] 이전 반응을 정리한 활성 표시가 필요합니다.");
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (pose == null) throw new ArgumentNullException(nameof(pose));
@@ -165,7 +166,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 #endif
                 Action completed = _completed;
                 ClosePose(keepDeathDissolve: _death);
-                if (version == _version && !_released) completed();
+                if (version == _version) completed();
             }
             catch (Exception error)
             {
@@ -198,13 +199,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
             ++_version;
             ClosePose(keepDeathDissolve: false);
-        }
-
-        internal void Release()
-        {
-            if (_released) return;
-            _released = true;
-            Cancel();
         }
 
         private void ClosePose(bool keepDeathDissolve)

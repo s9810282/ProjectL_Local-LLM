@@ -380,7 +380,7 @@ namespace ProjectL.Tests.Core
             var definitions = railX < 0 ? Array.Empty<StageGimmickSpec>() : new StageGimmickSpec[] { new RailwayGimmickSpec(2, 3) };
             var rails = railX < 0 ? Array.Empty<CellCoord>() : Enumerable.Range(0, height).Select(y => new CellCoord(railX, y)).ToArray();
             var state = new CombatCommandState(width, height, CombatFlowPhase.Automatic, Array.Empty<StructureCombatFacts>(),
-                Array.Empty<ThornFieldCellSnapshot>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                     controllerTurnSequence: 2, completedPlayerTurnCount: 1, completedControllerTurnCount: 1));
             state = StageGimmickComposition.Initialize(state, definitions);
             var owned = new[] { new OwnedCharacterRecord(main.OwnedId.Value, main.CharacterKey, main.OwnershipRole.Value) };

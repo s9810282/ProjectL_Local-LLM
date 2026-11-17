@@ -52,7 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
         void Install(in CombatDisplayValues values);
 
         /// <summary>
-        /// 결과 처리 뒤 최종 사실로 동적 표시를 다시 맞춥니다: 칸 표면 높이·국면 배경음·유닛·구조물·오브젝트·지형·특성 흔적·기믹·가시·HUD·턴 표시·가방·정보창·선택/목표 강조.
+        /// 결과 처리 뒤 최종 사실로 동적 표시를 다시 맞춥니다: 칸 표면 높이·국면 배경음·유닛·구조물·오브젝트·지형·특성 흔적·기믹·가시 폭탄 부착물·HUD·턴 표시·가방·정보창·선택/목표 강조.
         /// 정적 필드 구성(<see cref="Install"/>)은 하지 않습니다. 남은 기차·유닛 연출이 있으면 예외입니다.
         /// </summary>
         void Refresh(in CombatDisplayValues values);

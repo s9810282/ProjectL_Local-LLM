@@ -10,6 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 {
     /// <summary>
     /// 큐가 내는 창구 묶음입니다(범용 연출 구조 설계 G6). 넘기지 않은 창구의 큐는 항목을 넣지 않습니다(사실 사건·낙석·특성 발동 큐는 소리 창구 없이 만듦 — 그 소리는 사건 소리 표가 냄).
+    /// 유닛 소리(공격·피격·사망)는 큐가 아니라 그 유닛 외형의 소리 줄이라 이 묶음이 줄을 들고 옵니다(유닛 소리 설계 US2, 계획 TP-8).
     /// 공격 조립(클립 근접·클립 원거리·코드 모션)은 공격 시작이 <see cref="ForAttack"/> 하나로 만든 묶음을 받습니다(평가 C4-08 2단계, 작은 묶음 설계 SB1).
     /// 원거리 클립의 탄별 시점은 창구가 아니라 조립 하나의 시점 사실이라 기준 시점 표(<see cref="CombatCueAnchors.ProjectileTimings"/>)에 둡니다.
     /// </summary>
@@ -17,20 +18,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         /// <param name="effects">이펙트 창구입니다. 없으면 이펙트 큐를 넣지 않습니다.</param>
         /// <param name="camera">맵 카메라 창구입니다. 없거나 흔들림을 낼 수 없으면(수신기 없음) 흔들림 큐를 넣지 않습니다.</param>
-        /// <param name="sound">소리 창구입니다. 없으면 소리 큐(시점·목록·투사체)를 넣지 않습니다.</param>
-        /// <param name="soundEvent">소리 시점 큐에서 소리 표가 무엇을 낼지 정할 사건입니다. 없으면 소리 시점 큐를 넣지 않습니다.</param>
+        /// <param name="sound">소리 창구입니다. 없으면 소리 항목(유닛 소리 줄·투사체)을 넣지 않습니다.</param>
+        /// <param name="unitSounds">낼 유닛 소리 줄입니다(<see cref="CombatEventAudio.UnitSoundsOf"/>·<see cref="CombatEventAudio.HitSoundsOf"/>). 없으면(null) 유닛 소리 항목을 넣지 않습니다.</param>
         /// <param name="flashUnit">플래시할 유닛(피격 주체)입니다. 플래시가 없는 칸이면 비어 있습니다.</param>
         /// <param name="canFlash">그 유닛 표시가 플래시 외형 층을 쓸 수 있는지입니다(<c>CombatUnitPresentationWindow.CanFlash</c>).</param>
         /// <param name="projectileSounds">투사체 소리입니다(원거리 공격 칸만). 없으면 투사체 소리를 넣지 않습니다.</param>
         /// <param name="actionGroup">행동 끝 큐의 발동 묶음입니다(특성 발동 큐만). 없으면 행동 끝 이펙트는 결과 끝에 거둡니다(이펙트 끝 규칙 계획 TP-E4).</param>
-        internal CombatCueSinks(CombatEffectWindow effects, CombatCameraWindow camera, CombatEventAudio sound, CombatEvent soundEvent,
+        internal CombatCueSinks(CombatEffectWindow effects, CombatCameraWindow camera, CombatEventAudio sound, CombatUnitSoundSet unitSounds,
             EntityId flashUnit = default, bool canFlash = false, CombatProjectileSounds projectileSounds = null, CombatEffectActionGroup actionGroup = null)
         {
             ActionGroup = actionGroup;
             Effects = effects;
             Camera = camera;
             Sound = sound;
-            SoundEvent = soundEvent;
+            UnitSounds = unitSounds;
             FlashUnit = flashUnit;
             CanFlash = canFlash;
             ProjectileSounds = projectileSounds;
@@ -41,20 +42,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// </summary>
         /// <param name="effects">이펙트 창구입니다.</param>
         /// <param name="camera">맵 카메라 창구입니다. 흔들림을 낼 수 없으면 흔들림 큐를 넣지 않습니다.</param>
-        /// <param name="sound">소리 창구입니다. 공격 큐는 소리를 내므로 없으면 예외입니다(옛 공격 조립 입구 셋의 검사를 옮김, 설계 P1).</param>
-        /// <param name="soundEvent">소리 시점 큐가 소리 표에 넘길 사건입니다(공격 모양의 출처 사건).</param>
+        /// <param name="sound">소리 창구입니다. 공격은 유닛 소리 줄·투사체 소리를 내므로 없으면 예외입니다(옛 공격 조립 입구 셋의 검사를 옮김, 설계 P1).</param>
+        /// <param name="unitSounds">공격자의 공격 소리 줄입니다(공격 모양의 출처 사건으로 고르고 그 공격 표시 종류에 맞춘 것, 유닛 소리 계획 TP-4·TP-7). 없으면 null입니다.</param>
         /// <param name="projectileSounds">투사체 소리입니다. 근접 클립은 넣지 않으므로 null입니다.</param>
         internal static CombatCueSinks ForAttack(CombatEffectWindow effects, CombatCameraWindow camera, CombatEventAudio sound,
-            CombatEvent soundEvent, CombatProjectileSounds projectileSounds)
+            CombatUnitSoundSet unitSounds, CombatProjectileSounds projectileSounds)
         {
             if (sound == null) throw new ArgumentNullException(nameof(sound));
-            return new CombatCueSinks(effects: effects, camera: camera, sound: sound, soundEvent: soundEvent, projectileSounds: projectileSounds);
+            return new CombatCueSinks(effects: effects, camera: camera, sound: sound, unitSounds: unitSounds, projectileSounds: projectileSounds);
         }
 
         internal CombatEffectWindow Effects { get; }
         internal CombatCameraWindow Camera { get; }
         internal CombatEventAudio Sound { get; }
-        internal CombatEvent SoundEvent { get; }
+
+        /// <summary>낼 유닛 소리 줄입니다. 없으면 null입니다.</summary>
+        internal CombatUnitSoundSet UnitSounds { get; }
         internal EntityId FlashUnit { get; }
         internal bool CanFlash { get; }
         internal CombatProjectileSounds ProjectileSounds { get; }
@@ -67,8 +70,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </summary>
     /// <remarks>
     /// 붙이는 순서는 소리 → 플래시 → 흔들림 → 이펙트(각 목록 순서)입니다. 옛 조립의 같은 순간 항목 순서(사망: 반응 → 소리 → 흔들림 → 이펙트)와 같습니다.
-    /// 소리 안에서는 소리 시점(사건 소리) → 프리셋 소리 목록(피격) → 투사체 소리(비행·착탄)입니다(투사체·피격 소리 계획 Pb.4).
-    /// 기다리는 큐는 플래시뿐입니다(설계 G2). 접촉 시점 이펙트는 조립 항목이 아니라 공격 재생의 접촉 입구가 냅니다(계획 P5·Gd.7).
+    /// 소리 안에서는 유닛 소리 줄(공격·피격·사망, 유닛 소리 설계 US1) → 투사체 소리(비행·착탄)입니다(투사체·피격 소리 계획 Pb.4).
+    /// 기다리는 큐는 플래시뿐입니다(설계 G2). 접촉(Every) 이펙트는 조립 항목이 아니라 공격 재생의 접촉 입구가 냅니다(계획 P5·Gd.7).
     /// </remarks>
     internal static class CombatCueComposer
     {
@@ -81,32 +84,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (sinks == null) throw new ArgumentNullException(nameof(sinks));
 
             CombatPieceStart start;
-            // 소리 시점은 무엇을 낼지 정하지 않고 언제 낼지만 정합니다. 낼지는 소리 표·프리셋이 정합니다(계획 P15).
-            if (sinks.Sound != null && sinks.SoundEvent != null)
+            if (sinks.Sound != null && sinks.UnitSounds != null)
             {
-                // 사건 소리는 조각이 시작하는 순간의 보인 사실로 고릅니다(소리 표).
-                CombatEventAudio eventSound = sinks.Sound;
-                CombatEvent soundEvent = sinks.SoundEvent;
-                for (int i = 0; i < cues.SoundTimings.Count; i++)
+                // 유닛 소리 줄은 무엇(칸·번호)과 언제(시점·지연)를 함께 듭니다(유닛 소리 설계 US1). 단서는 조각이 시작하는 순간의 보인 사실로 정합니다(사망은 아직 반영 전일 때만).
+                CombatEventAudio unitSound = sinks.Sound;
+                CombatUnitSoundSet set = sinks.UnitSounds;
+                for (int i = 0; i < set.Rows.Count; i++)
                 {
-                    CombatSoundTimingCue timing = cues.SoundTimings[i];
-                    if (anchors.TryStart(timing.Anchor, timing.Delay, out start))
-                        composition.Add(new CombatEventSoundPiece(eventSound, () => eventSound.CueOf(soundEvent)), start);
+                    CombatUnitSoundCue row = set.Rows[i];
+                    // 효과음 칸이 연결 대기(피격)면 항목을 넣지 않습니다(옛 피격 소리 목록과 같음).
+                    if (CombatEventSounds.UnitSound(set.Slot, row.Sound).Kind == CombatSoundCueKind.None)
+                        continue;
+                    if (anchors.TryStart(row.Anchor, row.ContactFilter, row.Delay, out start))
+                        composition.Add(new CombatEventSoundPiece(unitSound, () => unitSound.CueOf(set, row)), start);
                 }
             }
             if (sinks.Sound != null)
-            {
-                // 프리셋 소리 목록(피격 칸)은 항목이 무엇을 낼지 직접 듭니다(결정 Q-PS2·Q-PS3). 자리는 지금 소리 위치에 쓰지 않습니다(계획 P3).
-                for (int i = 0; i < cues.PresetSounds.Count; i++)
-                {
-                    CombatPresetSoundCue sound = cues.PresetSounds[i];
-                    AddSound(composition, anchors, sinks.Sound, CombatEventSounds.UnitHit(sound.Preset), sound.Anchor, sound.Delay);
-                }
                 CombatProjectileCueComposer.Add(composition, anchors, sinks.Sound, sinks.ProjectileSounds);
-            }
 
             // 플래시는 시간이 0이면 없고, 표시가 외형 층을 쓸 수 있을 때만 그 층을 빌려 완료를 기다립니다(결정 Q-B5 A·Q-B7 A).
-            if (cues.Flash != null && cues.Flash.IsOn && sinks.CanFlash && anchors.TryStart(cues.Flash.Anchor, cues.Flash.Delay, out start))
+            if (cues.Flash != null && cues.Flash.IsOn && sinks.CanFlash && anchors.TryStart(cues.Flash.Anchor, CombatContactFilter.Every, cues.Flash.Delay, out start))
             {
                 composition.Lease(sinks.FlashUnit, CombatPieceChannel.Flash);
                 composition.Add(new CombatFlashPiece(sinks.FlashUnit, cues.Flash.Look, CombatFlashPulses.Single(cues.Flash.Seconds)), start, waits: true);
@@ -117,7 +114,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             for (int i = 0; i < cues.Shakes.Count; i++)
             {
                 CombatShakeCue shake = cues.Shakes[i];
-                if (!shake.IsOn || !canShake || !anchors.TryStart(shake.Anchor, shake.Delay, out start))
+                if (!shake.IsOn || !canShake || !anchors.TryStart(shake.Anchor, shake.ContactFilter, shake.Delay, out start))
                     continue;
                 composition.Add(new CombatCameraShakePiece(sinks.Camera,
                     CombatCameraMotionSettings.Shake(shake.Strength, shake.Seconds, shake.Shape)), start);
@@ -128,22 +125,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             for (int i = 0; i < cues.Effects.Count; i++)
             {
                 CombatEffectCue effect = cues.Effects[i];
-                if (!anchors.TryStart(effect.Anchor, effect.Delay, out start))
+                if (!anchors.TryStart(effect.Anchor, effect.ContactFilter, effect.Delay, out start))
                     continue;
                 // 자리를 찾지 못했으면 0개, 여럿(특성 발동의 대상·칸)이면 자리마다 하나입니다(특성 발동 연출 설계 TA4).
                 int count = points.CountOf(effect);
                 for (int p = 0; p < count; p++)
                     composition.Add(points.CreatePiece(sinks.Effects, effect, p, sinks.ActionGroup), start);
             }
-        }
-
-        // 소리 표가 고른 단서를 그 시점에 냅니다. 소리 없음(프리셋 없음·슬롯 연결 대기, 계획 P9)이면 항목을 넣지 않습니다.
-        private static void AddSound(CombatComposition composition, CombatCueAnchors anchors, CombatEventAudio sound, CombatSoundCue cue,
-            CombatCueAnchor anchor, float delay)
-        {
-            if (cue.Kind == CombatSoundCueKind.None || !anchors.TryStart(anchor, delay, out CombatPieceStart start))
-                return;
-            composition.Add(new CombatEventSoundPiece(sound, () => cue), start);
         }
     }
 }

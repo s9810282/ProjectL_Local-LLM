@@ -97,11 +97,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 
         public void AttackModeRequested() => _receiver?.AttackModeRequested();
 
+        public void CycleUnitCategoryRequested() => _receiver?.CycleUnitCategoryRequested();
+
         public void RequestReturn() => _receiver?.RequestReturn();
+
+        public void SkillRequested() => _receiver?.SkillRequested();
 
         public void CameraPanChanged(float x, float y) => _receiver?.CameraPanChanged(x, y);
 
         public void CameraZoomScrolled(float delta) => _receiver?.CameraZoomScrolled(delta);
+
+        public void CameraRotateChanged(float value) => _receiver?.CameraRotateChanged(value);
+
+        public void CameraRotateDragChanged(bool held) => _receiver?.CameraRotateDragChanged(held);
 
         public void ExportServices(ISystemWriteSink sink)
         {

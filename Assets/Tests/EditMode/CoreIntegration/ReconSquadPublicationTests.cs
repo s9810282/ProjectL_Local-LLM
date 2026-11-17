@@ -14,12 +14,12 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class ReconSquadPublicationTests
     {
-        [TestCase(1, 10)]
-        [TestCase(2, 15)]
-        [TestCase(3, 20)]
-        public void GrantAndUndo_PublishFullSourceFactsOnce_WithUnrelatedRecipientHealthPreserved(int rank, int percent)
+        [TestCase(10)]
+        [TestCase(15)]
+        [TestCase(20)]
+        public void GrantAndUndo_PublishFullSourceFactsOnce_WithUnrelatedRecipientHealthPreserved(int percent)
         {
-            using var battle = Create(rank: rank);
+            using var battle = Create(increasePercent: percent);
             var old = battle.Buffers.CharacterReadSink.Characters.Single(c => c.CharacterKey == EntityKey.Unit_Demon);
             var before = battle.CaptureGameplay();
             var request = battle.PreviewMove(battle.Actor, new CellCoord(0, 1), new CellCoord(0, 2));
@@ -47,12 +47,12 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(battle.CaptureStores(), Is.EqualTo(once));
         }
 
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(3)]
-        public void ShieldOnlyAlliedHit_CommitsOriginalMoveAndAdvancesQueryRevision(int rank)
+        [TestCase(10)]
+        [TestCase(15)]
+        [TestCase(20)]
+        public void ShieldOnlyAlliedHit_CommitsOriginalMoveAndAdvancesQueryRevision(int percent)
         {
-            using var battle = Create(shield: true, rank: rank);
+            using var battle = Create(shield: true, increasePercent: percent);
             battle.Move(battle.Actor, new CellCoord(0, 2));
             var attack = Attack(battle);
             Assert.That(attack.Accepted, Is.True, attack.Reason);
@@ -140,9 +140,9 @@ namespace ProjectL.Tests.CoreIntegration
             battle.Publication().Attack(battle.Character(EntityKey.Unit_DynamiteHammer), battle.Character(EntityKey.Unit_Demon).Anchor.Value),
             Array.Empty<IMovementTileRule>());
 
-        private static ConfiguredMovementBattle Create(bool shield = false, int? rank = null)
+        private static ConfiguredMovementBattle Create(bool shield = false, int increasePercent = 10)
         {
-            var trait = rank.HasValue ? RankedCombatTestData.Spec(TraitKey.ReconSquad, rank.Value) : new ReconSquadTraitSpec();
+            var trait = new ReconSquadTraitSpec(increasePercent);
             var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new HuntersMarkBattleSource(trait));
             if (shield)
             {

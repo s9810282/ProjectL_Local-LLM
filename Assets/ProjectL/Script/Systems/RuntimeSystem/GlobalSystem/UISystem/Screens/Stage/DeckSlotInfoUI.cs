@@ -13,13 +13,19 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     [DisallowMultipleComponent]
     public sealed class DeckSlotInfoUI : UIBase, IUIInputReceiver
     {
+        private const int CloseSlot = 0;
+        private const int PreviousSlot = 1;
+        private const int NextSlot = 2;
+
         [SerializeField] private Button closeButton;
         [SerializeField] private Button changeButton;
+        [SerializeField] private Button leftButton;
+        [SerializeField] private Button rightButton;
         [SerializeField] private DeckSlotInfoStats stats = new();
         [SerializeField] private DeckSlotInfoExperience experience = new();
         [SerializeField] private DeckSlotInfoAbilities abilities = new();
         [SerializeField] private DeckSlotInfoRanges ranges = new();
-        private IDeckEditInteractionReceiver _input;
+        private IDeckSlotInfoReceiver _input;
         private bool _prepared;
         private bool _opened;
         private GameObject _previousSelection;
@@ -36,6 +42,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 !closeButton.targetGraphic.raycastTarget ||
                 !closeButton.targetGraphic.transform.IsChildOf(closeButton.transform))
                 throw DeckSlotInfoReferences.Error(transform, "closeButton은 독립적인 버튼이며 내부의 Raycast Target Graphic이 필요합니다.");
+            ValidateNavigationButton(leftButton, nameof(leftButton));
+            ValidateNavigationButton(rightButton, nameof(rightButton));
+            if (leftButton == rightButton)
+                throw DeckSlotInfoReferences.Error(transform, "leftButton과 rightButton은 각각 별도의 버튼이어야 합니다.");
             if (stats == null || experience == null || abilities == null || ranges == null)
                 throw DeckSlotInfoReferences.Error(transform, "stats·experience·abilities·ranges 표시 위젯이 필요합니다.");
             stats.Validate(transform);
@@ -44,7 +54,15 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             ranges.Validate(transform);
         }
 
-        internal void BindInput(IDeckEditInteractionReceiver input)
+        private void ValidateNavigationButton(Button button, string fieldName)
+        {
+            DeckSlotInfoReferences.RequireChild(button, transform, fieldName);
+            if (button == closeButton || button == changeButton || button.targetGraphic == null ||
+                !button.targetGraphic.raycastTarget || !button.targetGraphic.transform.IsChildOf(button.transform))
+                throw DeckSlotInfoReferences.Error(transform, $"{fieldName}은 독립적인 버튼이며 내부의 Raycast Target Graphic이 필요합니다.");
+        }
+
+        internal void BindInput(IDeckSlotInfoReceiver input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             Prepare();
@@ -84,7 +102,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             experience.RenderPending();
             // Phase 2B에서 편성 상태별 문구·교체/닫기 입력을 연결합니다.
             changeButton.gameObject.SetActive(false);
-            UIInputBinding.Attach(closeButton, this, 0);
+            UIInputBinding.Attach(closeButton, this, CloseSlot);
+            UIInputBinding.Attach(leftButton, this, PreviousSlot);
+            UIInputBinding.Attach(rightButton, this, NextSlot);
             abilities.BindInput();
             _prepared = true;
         }
@@ -92,7 +112,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         void IUIInputReceiver.Click(int slot)
         {
             // 바인딩 전 대기와 숨겨진 화면의 입력은 정상적으로 무시합니다.
-            if (slot == 0 && isActiveAndEnabled && _opened && _input != null) _input.CloseSlotInfo();
+            if (!isActiveAndEnabled || !_opened || _input == null) return;
+            switch (slot)
+            {
+                case CloseSlot: _input.CloseSlotInfo(); break;
+                case PreviousSlot: _input.MoveSlotInfo(-1); break;
+                case NextSlot: _input.MoveSlotInfo(1); break;
+            }
         }
         void IUIInputReceiver.HoverEnter(int slot) { }
         void IUIInputReceiver.HoverExit(int slot) { }

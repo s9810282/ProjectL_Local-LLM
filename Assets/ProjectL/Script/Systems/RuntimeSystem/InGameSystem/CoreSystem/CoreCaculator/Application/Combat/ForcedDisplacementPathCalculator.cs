@@ -1,4 +1,6 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
@@ -19,6 +21,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal IReadOnlyList<CellCoord> Steps { get; }
         internal ForcedDisplacementStop Stop { get; }
 
+        internal AttackKnockbackSnapshot ToKnockback(EntityId id, AttackKnockbackTargetKind kind, CellCoord start,
+            CellCoord step, AttackKnockbackCollision collision = null)
+        {
+            var stop = Stop switch
+            {
+                ForcedDisplacementStop.Completed => AttackKnockbackStop.Completed,
+                ForcedDisplacementStop.Blocked => AttackKnockbackStop.Blocked,
+                ForcedDisplacementStop.Interrupted => AttackKnockbackStop.Interrupted,
+                _ => throw new InvalidOperationException("알 수 없는 강제 이동 멈춤 이유입니다: " + Stop),
+            };
+            return new AttackKnockbackSnapshot(id, kind, start, step, RequestedDistance, Steps, stop, collision);
+        }
+
         internal ForcedDisplacementPath(int requestedDistance, IReadOnlyList<CellCoord> steps, ForcedDisplacementStop stop)
         {
             RequestedDistance = requestedDistance;
@@ -29,7 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
     /// <summary>
     /// 공격 넉백·타일 강제 이동이 함께 쓰는 거리 N 경로 진행이다(D6). 한 칸씩 들어가며 첫 막힌 칸 직전에서 멈춘다.
-    /// 칸 검사 정책과 칸별 효과(지형·가시·오브젝트·피해)는 호출자의 기존 방식을 유지하도록 위임받는다(G8-6).
+    /// 칸 검사 정책과 칸별 효과(지형·오브젝트·피해)는 호출자의 기존 방식을 유지하도록 위임받는다(G8-6).
     /// 일반 Move를 N번 호출하지 않으며 AP·이동량을 쓰지 않는다.
     /// </summary>
     internal static class ForcedDisplacementPathCalculator

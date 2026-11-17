@@ -4,6 +4,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public enum CombatDamageCause
     {
         NumericDamage = 1,
-        InstantDefeat = 2
+        InstantDefeat = 2,
+        PillarCrush = 3
     }
 }

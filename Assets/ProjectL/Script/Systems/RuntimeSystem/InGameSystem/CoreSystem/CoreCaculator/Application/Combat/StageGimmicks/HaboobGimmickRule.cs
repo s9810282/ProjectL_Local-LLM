@@ -66,7 +66,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         public StageGimmickKey Key => StageGimmickKey.Haboob;
 
-        internal static HaboobGimmickState Prepare(CombatCommandState state, HaboobGimmickSpec spec, StageGimmickId id, ref uint random) =>
+        public bool RunsAt(StageGimmickBoundaryPhase phase) => phase == StageGimmickBoundaryPhase.Scheduled;
+
+        public StageGimmickState Initialize(CombatCommandState initialState, StageGimmickSpec definition,
+            StageGimmickId id, ref uint randomState)
+        {
+            var spec = definition as HaboobGimmickSpec ?? throw new InvalidOperationException("하부브 설정 형식이 다릅니다.");
+            return Prepare(initialState, spec, id, ref randomState);
+        }
+
+        private static HaboobGimmickState Prepare(CombatCommandState state, HaboobGimmickSpec spec, StageGimmickId id, ref uint random) =>
             Placed(spec, id, state.Turn.CompletedControllerTurnCount, spec.InitialAnchor.HasValue ?
                 FixedCells(state, spec, spec.InitialAnchor.Value) : SelectCells(state, spec, null, ref random));
 

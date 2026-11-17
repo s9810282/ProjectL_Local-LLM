@@ -113,7 +113,7 @@ namespace ProjectL.Tests.CoreIntegration
                 new[] { CellCoord.Zero, CellCoord.Right }, 100, false, 0);
             using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config,
                 new PullBattleSource(new PullTraitSpec(1), target: new CellCoord(7, 5))
-                { Obstacle = new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 7) });
+                { Obstacle = new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 3, 7) });
             var before = battle.Buffers.CombatStateReadSink.Current.CommandState.Structures.Single(t => t.Definition.Key == definition.Key);
             int sequence = battle.Buffers.CombatStateReadSink.LatestResultSequence;
             battle.Buffers.CombatViewWriteSink.Submit(battle.Attack(battle.Actor, cell));
@@ -122,7 +122,7 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(result.Accepted, Is.EqualTo(distance == 1));
             var after = battle.Buffers.CombatStateReadSink.Current.CommandState.Structures.Single(t => t.EntityId == before.EntityId);
             Assert.That(after.OccupiedCells, Is.EqualTo(before.OccupiedCells));
-            Assert.That(after.Health.CurrentHealth, Is.EqualTo(distance == 1 ? 95 : 100));
+            Assert.That(after.ObstacleDurability.RemainingHits, Is.EqualTo(distance == 1 ? 2 : 3));
             Assert.That(result.Events.OfType<CombatPullEvent>(), Is.Empty);
             Assert.That(battle.Buffers.CombatStateReadSink.LatestResultSequence, Is.EqualTo(sequence + 1));
             var once = new CoreIntegrationSnapshot(battle.Buffers);

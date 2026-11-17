@@ -193,14 +193,13 @@ namespace ProjectL.Tests.Core
             var moved = CombatCommandCalculator.Calculate(MovementTestData.Route(input, origin, new CellCoord(1, 3)),
                 Array.Empty<IMovementTileRule>());
             input = CombatCommandComposition.Intent(CombatCommandComposition.Project(moved), CombatCommandKind.Attack, input.Aim);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(1, 3), 5, 5)));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(input.State, (new CellCoord(1, 3), 5)));
             // 이동한 유닛도 공격 미리보기를 끝까지 계산한다(설계 2026-10-27 이동 후 공격).
             // 체력 1인 공격자가 가시밭 위에 서 있어도 이미 정산된 이동 위험을 다시 적용하지 않으므로 공격할 수 있다.
             var preview = CombatCommandCalculator.Preview(input, System.Array.Empty<IMovementTileRule>());
             Assert.That(preview.CanAttack, Is.True);
             Assert.That(preview.FailureReason, Is.EqualTo(AttackFailureReason.None));
-            Assert.That(input.State.ThornFields.Count, Is.EqualTo(1));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(input.State).Count, Is.EqualTo(1));
             Assert.That(input.Characters[0].Health.CurrentHealth, Is.EqualTo(1));
         }
 

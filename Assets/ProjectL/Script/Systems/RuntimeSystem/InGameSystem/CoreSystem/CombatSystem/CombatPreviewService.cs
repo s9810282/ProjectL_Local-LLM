@@ -6,6 +6,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Combat;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.ServiceKeys.Runtime;
@@ -58,6 +59,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 return false;
 
             using var sample = CoreProfilerMarkers.Preview.Auto();
+            bool platformRequest = request.Data.Kind == CombatViewPreviewKind.PlatformForecast;
             var kind = request.Data.Kind switch
             {
                 CombatViewPreviewKind.MainCharacterPlacement => CombatCommandKind.PlaceMainCharacter,
@@ -65,38 +67,68 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 CombatViewPreviewKind.Move or CombatViewPreviewKind.MoveRange => CombatCommandKind.Move,
                 CombatViewPreviewKind.Attack or CombatViewPreviewKind.AttackRange or CombatViewPreviewKind.UnitAttackRange
                     or CombatViewPreviewKind.RoarForecast => CombatCommandKind.Attack,
-                CombatViewPreviewKind.ActionAvailability => CombatCommandKind.Attack,
+                CombatViewPreviewKind.ActionAvailability or CombatViewPreviewKind.ActionAvailabilities => CombatCommandKind.Attack,
+                CombatViewPreviewKind.PlatformForecast => CombatCommandKind.StartControllerTurn,
+                CombatViewPreviewKind.SkillAvailability or CombatViewPreviewKind.SkillSelection or CombatViewPreviewKind.SkillForecast
+                    => CombatCommandKind.UsePlayerSkill,
                 _ => throw new ArgumentOutOfRangeException(nameof(request))
             };
             var input = _assembler.Assemble(new CombatActionRequest(
-                request.Number, kind, request.Data.EntityId, request.Data.Aim,
+                platformRequest ? 0 : request.Number, kind, request.Data.EntityId, request.Data.Aim,
                 request.Data.Cell, request.Data.Rotation, path: request.Data.Path,
+                processingKind: platformRequest ? CombatProcessingKind.Advance : CombatProcessingKind.Command,
                 expectedBattleInstanceId: _combat.BattleInstanceId,
-                expectedControllerTurnSequence: _combat.Current.CommandState.Turn.ControllerTurnSequence));
+                expectedControllerTurnSequence: _combat.Current.CommandState.Turn.ControllerTurnSequence,
+                sweepSide: request.Data.SweepSide, playerSkill: request.Data.PlayerSkill));
             using var kindSample = CoreProfilerMarkers.PreviewOf(request.Data.Kind).Auto();
             var result = request.Data.Kind switch
             {
                 CombatViewPreviewKind.AttackRange => CombatPreviewResult.ForAttackRange(request.Number, CombatCommandCalculator.GetAttackRange(input)),
                 CombatViewPreviewKind.Attack => CombatPreviewResult.ForAttack(request.Number, CombatCommandCalculator.Preview(input, _movementRules)),
-                CombatViewPreviewKind.MoveRange => CombatPreviewResult.ForMoveRange(request.Number, CombatMovementCalculator.Range(input)),
+                CombatViewPreviewKind.MoveRange => CombatPreviewResult.ForMoveRange(request.Number,
+                    CombatMovementCalculator.Range(input).WithSourceRevision(revision)),
                 CombatViewPreviewKind.Move => CombatPreviewResult.ForMove(request.Number, CombatMovementCalculator.Preview(input, _movementRules),
                     MovementContextCalculator.Capture(input, Owner.Player, _movementRules)),
                 CombatViewPreviewKind.ActionAvailability => CombatPreviewResult.ForActionAvailability(request.Number,
                     CombatCommandCalculator.GetActionAvailability(input).WithSourceRevision(revision)),
-                // 기본 갈래가 배치 계산이므로 새 종류는 여기에 명시한다(빠뜨리면 예외 없이 배치 미리보기가 돈다).
+                CombatViewPreviewKind.ActionAvailabilities => CombatPreviewResult.ForActionAvailabilities(request.Number,
+                    WithRevision(CombatCommandCalculator.GetActionAvailabilities(input), revision)),
                 CombatViewPreviewKind.UnitAttackRange => CombatPreviewResult.ForUnitAttackRange(request.Number,
                     CombatCommandCalculator.GetUnitAttackRange(input)),
                 CombatViewPreviewKind.RoarForecast => CombatPreviewResult.ForRoarForecast(request.Number,
                     CombatCommandCalculator.GetRoarForecast(input, _movementRules)),
-                _ => CombatPreviewResult.ForPlacement(request.Number, CombatPlacementCalculator.Preview(input))
+                CombatViewPreviewKind.PlatformForecast => CombatPreviewResult.ForPlatformForecast(request.Number,
+                    PlatformForecastCalculator.Forecast(input, revision, _movementRules)),
+                CombatViewPreviewKind.SkillAvailability => CombatPreviewResult.ForSkillAvailability(request.Number,
+                    PlayerSkillQueries.Availability(input, input.PlayerSkillSource.Value)),
+                CombatViewPreviewKind.SkillSelection => CombatPreviewResult.ForSkillSelection(request.Number,
+                    PlayerSkillQueries.Selection(input, input.PlayerSkillSource.Value)),
+                CombatViewPreviewKind.SkillForecast => CombatPreviewResult.ForSkillForecast(request.Number,
+                    PlayerSkillQueries.Forecast(input, _movementRules, input.PlayerSkillSource.Value)),
+                CombatViewPreviewKind.MainCharacterPlacement or CombatViewPreviewKind.UnitPlacement =>
+                    CombatPreviewResult.ForPlacement(request.Number, CombatPlacementCalculator.Preview(input)),
+                _ => throw new ArgumentOutOfRangeException(nameof(request))
             };
-            // 계산 중 요청이 바뀌었거나 전투가 정리·교체됐으면 오래된 응답을 게시하지 않는다.
+            // 게시 직전에 요청과 전투를 대조하고, 출처 검증 대상은 리비전과 진영 턴도 확인한다.
             if (!_combat.HasBattle || _combat.BattleInstanceId != input.BattleInstanceId ||
                 !_view.HasPreview || _view.Preview.Number != request.Number ||
-                request.Data.Kind == CombatViewPreviewKind.ActionAvailability && revision != _combat.QueryRevision) return false;
+                (request.Data.Kind is CombatViewPreviewKind.MoveRange or CombatViewPreviewKind.ActionAvailability
+                    or CombatViewPreviewKind.ActionAvailabilities ||
+                    kind == CombatCommandKind.UsePlayerSkill || platformRequest) &&
+                (revision != _combat.QueryRevision || input.State.Turn.ControllerTurnSequence !=
+                    _combat.Current.CommandState.Turn.ControllerTurnSequence)) return false;
             using (CoreProfilerMarkers.PublishPreview.Auto())
                 _battle.PublishPreview(result);
             return true;
+        }
+
+        // 묶음 답의 항목마다 계산에 쓴 원본 판을 붙인다(단일 답의 WithSourceRevision과 같은 규칙).
+        private static CombatActionAvailability[] WithRevision(IReadOnlyList<CombatActionAvailability> availabilities, long revision)
+        {
+            var stamped = new CombatActionAvailability[availabilities.Count];
+            for (int i = 0; i < stamped.Length; i++)
+                stamped[i] = availabilities[i].WithSourceRevision(revision);
+            return stamped;
         }
     }
 }

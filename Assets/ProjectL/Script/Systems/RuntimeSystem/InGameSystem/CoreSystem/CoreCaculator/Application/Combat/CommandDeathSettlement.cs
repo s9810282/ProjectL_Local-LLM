@@ -74,11 +74,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>도착한 보유 캐릭터의 영혼 수집을 정산한다. 영혼을 소모했으면 true다.</summary>
         internal bool CollectOnArrival(CombatCommandInput current, Dictionary<EntityId, CharacterCombatFacts> characters,
-            CharacterCombatFacts actor, SoulArrivalKind kind, List<CombatEvent> events)
+            CharacterCombatFacts actor, SoulArrivalKind kind, List<CombatEvent> events, List<CombatHealthExecution> executions)
         {
             var field = SoulField;
             int consumedBefore = ConsumedSouls.Count;
-            CombatCommandCalculator.Collect(current, Souls, characters, Counts, actor, kind, ref field, ConsumedSouls, events);
+            CombatCommandCalculator.Collect(current, Souls, characters, Counts, actor, kind, ref field, ConsumedSouls, events, executions);
             SoulField = field;
             return ConsumedSouls.Count != consumedBefore;
         }

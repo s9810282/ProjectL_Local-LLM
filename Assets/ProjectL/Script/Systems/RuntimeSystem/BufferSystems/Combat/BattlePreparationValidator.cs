@@ -26,10 +26,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
             var linked = new HashSet<CharacterInstanceId>();
             long maximumId = 0;
             CombatPreparation combat = preparation.Combat;
+            CellEnvironmentQuery.ValidateInitialEnvironment(combat.BoardWidth, combat.BoardHeight, combat.Environment);
             combat.EnvironmentBindings.ValidateInitialReferences(preparation.CommandState.Environment,
                 preparation.Structures);
             CellEnvironmentQuery.ValidateInitialPlacement(combat.BoardWidth, combat.BoardHeight, combat.Environment,
-                preparation.Structures, preparation.Characters, combat.EnvironmentBindings, combat.WallBlocking, combat.RailCells);
+                preparation.Structures, preparation.Characters, combat.EnvironmentBindings, combat.WallBlocking, combat.RailCells,
+                preparation.CommandState.Gimmicks);
             foreach (CharacterCombatFacts character in preparation.Characters)
             {
                 AddId(character.EntityId);

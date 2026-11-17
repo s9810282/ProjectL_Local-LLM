@@ -35,6 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>공개 이동에서 토네이도를 발동한 경우에만 비교하는 환경 난수 기대값이다.</summary>
         public uint? EnvironmentRandomState { get; }
         public IReadOnlyList<TornadoAreaFact> VisibleTornadoAreas { get; }
+        internal IReadOnlyList<CellCoord> GimmickBlockingCells { get; }
         public IReadOnlyList<ObstacleContentProfile> ObstacleContents { get; }
         public CharacterCombatFacts Mover { get; }
         public CharacterCombatFacts PositionSwapPassenger { get; }
@@ -46,7 +47,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyList<(EntityId Id, Owner Owner, IReadOnlyList<CellCoord> Cells)> Occupancy { get; }
         public IReadOnlyList<CharacterCombatFacts> EffectTargets { get; }
         public IReadOnlyList<StructureCombatFacts> EffectStructures { get; }
-        public IReadOnlyList<ThornFieldCellSnapshot> Thorns { get; }
         public IReadOnlyList<SoulFieldFacts> Souls { get; }
         public IReadOnlyList<OwnedCharacterRecord> Collectors { get; }
         public IReadOnlyDictionary<CharacterInstanceId, int> SoulCounts { get; }
@@ -60,12 +60,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             MovementEnvironmentFacts visibleEnvironment = null, CombatCommandState admission = null,
             IReadOnlyList<(EntityId Id, Owner Owner, IReadOnlyList<CellCoord> Cells)> occupancy = null,
             IReadOnlyList<CharacterCombatFacts> effectTargets = null, IReadOnlyList<StructureCombatFacts> effectStructures = null,
-            IReadOnlyList<ThornFieldCellSnapshot> thorns = null, IReadOnlyList<SoulFieldFacts> souls = null,
+            IReadOnlyList<SoulFieldFacts> souls = null,
             IReadOnlyList<OwnedCharacterRecord> collectors = null, IReadOnlyDictionary<CharacterInstanceId, int> soulCounts = null,
             MainCharacterPersistentState main = null, IReadOnlyList<UnitSpec> definitions = null,
             IReadOnlyList<(EffectOriginKey Origin, int Attack, int MaxHealth, int Heal, int Duration)> artifactInputs = null,
             EnvironmentSemanticBindings environmentBindings = null, IReadOnlyList<ObstacleContentProfile> obstacleContents = null, IReadOnlyList<CombatAttackProfile> ownedProfiles = null,
-            uint? environmentRandomState = null, CharacterCombatFacts positionSwapPassenger = null, IReadOnlyList<Commands.StageGimmicks.StageGimmickSpec> gimmickDefinitions = null)
+            uint? environmentRandomState = null, CharacterCombatFacts positionSwapPassenger = null, IReadOnlyList<Commands.StageGimmicks.StageGimmickSpec> gimmickDefinitions = null,
+            IReadOnlyList<CellCoord> gimmickBlockingCells = null)
         {
             if (battleInstanceId < 1) throw new ArgumentOutOfRangeException(nameof(battleInstanceId));
             if (observer != Owner.Player && observer != Owner.Enemy)
@@ -98,6 +99,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             VisibleEnvironment = (visibleEnvironment ?? MovementEnvironmentFacts.Empty).VisibleTo(observer);
             EnvironmentRandomState = environmentRandomState;
             VisibleTornadoAreas = admission == null || gimmickDefinitions == null ? Array.Empty<TornadoAreaFact>() : TornadoAreaFact.Read(admission, gimmickDefinitions, observer);
+            GimmickBlockingCells = gimmickBlockingCells == null || gimmickBlockingCells.Count == 0
+                ? Array.Empty<CellCoord>() : Array.AsReadOnly(gimmickBlockingCells.ToArray());
             ObstacleContents = Array.AsReadOnly((obstacleContents ?? Array.Empty<ObstacleContentProfile>()).ToArray());
             // 비용·방어·밀치기 계산이 읽은 공개 지형만 분류 정보로 남긴다.
             var terrainIds = VisibleEnvironment.Tiles.Where(t => environmentRandomState.HasValue || t is StaticTerrainFact)
@@ -116,7 +119,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 .Select(o => (o.Id, o.Owner, (IReadOnlyList<CellCoord>)Array.AsReadOnly(o.Cells.ToArray()))).ToArray());
             EffectTargets = Array.AsReadOnly((effectTargets ?? Array.Empty<CharacterCombatFacts>()).ToArray());
             EffectStructures = Array.AsReadOnly((effectStructures ?? Array.Empty<StructureCombatFacts>()).ToArray());
-            Thorns = Array.AsReadOnly((thorns ?? Array.Empty<ThornFieldCellSnapshot>()).ToArray());
             Souls = Array.AsReadOnly((souls ?? Array.Empty<SoulFieldFacts>()).ToArray());
             Collectors = Array.AsReadOnly((collectors ?? Array.Empty<OwnedCharacterRecord>()).ToArray());
             SoulCounts = new System.Collections.ObjectModel.ReadOnlyDictionary<CharacterInstanceId, int>(

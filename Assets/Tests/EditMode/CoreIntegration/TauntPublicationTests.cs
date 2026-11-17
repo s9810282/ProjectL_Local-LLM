@@ -15,12 +15,14 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class TauntPublicationTests
     {
-        [TestCase(false, 1, 1)]
-        [TestCase(false, 2, 9)]
-        [TestCase(true, 2, 9)]
-        public void AutomaticAttack_HitsTaunterAndStalePublicationIsAtomic(bool stale, int rank, int expectedDamage)
+        [TestCase(false, 1, 0, 1)]
+        [TestCase(false, 10, 10, 9)]
+        [TestCase(true, 10, 10, 9)]
+        public void AutomaticAttack_HitsTaunterAndStalePublicationIsAtomic(bool stale, int enemyAttack,
+            int damageReductionPercent, int expectedDamage)
         {
-            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new TauntSource(rank));
+            using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config,
+                new TauntSource(enemyAttack, new TauntTraitSpec(2, damageReductionPercent)));
             var owner = battle.Actor;
             var main = battle.Main;
             battle.Submit(battle.EndPlayerTurn());
@@ -53,17 +55,22 @@ namespace ProjectL.Tests.CoreIntegration
 
         private sealed class TauntSource : IBattleInitializationSource
         {
-            private readonly int _rank;
+            private readonly int _enemyAttack;
+            private readonly TauntTraitSpec _trait;
 
-            internal TauntSource(int rank) => _rank = rank;
+            internal TauntSource(int enemyAttack, TauntTraitSpec trait)
+            {
+                _enemyAttack = enemyAttack;
+                _trait = trait;
+            }
 
             public BattleInitialization Read(IDataBaseQueryContext database, int chapterKey, StageKey stageKey)
             {
                 var basis = new ConfiguredMovementBattle.EncounterSource(new CellCoord(0, 3)).Read(database, chapterKey, stageKey);
                 var units = basis.Units.Select(s => new UnitSpec(s.Key, s.Role, s.FootprintWidth, s.FootprintHeight, s.FootprintLocalCells.ToArray(),
                     s.MaxHealth, s.MoveMethod, s.Key == EntityKey.Unit_Demon ? 8 : s.AttackRange, s.CategoryKey,
-                    s.Key == EntityKey.Unit_Demon ? (_rank == 1 ? 1 : 10) : s.AttackPower, s.PhysicalDefense, s.Priority,
-                    s.Key == EntityKey.Unit_Cowboy ? new[] { RankedCombatTestData.Spec(TraitKey.Taunt, _rank) } : s.Traits.ToArray(),
+                    s.Key == EntityKey.Unit_Demon ? _enemyAttack : s.AttackPower, s.PhysicalDefense, s.Priority,
+                    s.Key == EntityKey.Unit_Cowboy ? new[] { _trait } : s.Traits.ToArray(),
                     s.OwnerEligibility, s.Occlusion, s.Behavior, s.KillReward)).ToArray();
                 return new BattleInitialization(basis.Stage, basis.MainAnchor, basis.MainRotation, units, basis.Structures, basis.Categories,
                     basis.AttackProfiles.Select(p => new CombatAttackProfile(units.Single(u => u.Key == p.Definition.Key), p.Method, p.OwnedId)).ToArray());

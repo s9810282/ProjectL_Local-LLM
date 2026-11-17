@@ -20,11 +20,11 @@ namespace ProjectL.Tests.Core
         {
             var item = new CombatItemEvent(1, new EntityId(1), new EntityId(1), ItemEventStage.AfterDamage,
                 ItemEventReason.Activated, 5, 1, null, CombatDamageKind.EnvironmentDamage, ItemActivationKind.Healing);
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] { item }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] { item }));
             var actor = CombatCommandTestData.Input(empty: true).Characters[0];
             var events = new CombatEvent[] { item, new CombatCharacterEvent(CombatEventKind.HealthChanged,
                 actor.WithHealth(new HealthStateSnapshot(95, 100)), actor) };
-            Assert.That(CombatChangeEvidenceReader.ReadAll(events)[0].AffectedEntityIds, Is.EqualTo(new[] { actor.EntityId }));
+            Assert.That(CombatChangeEvidenceReader.ReadEventShapes(events)[0].AffectedEntityIds, Is.EqualTo(new[] { actor.EntityId }));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace ProjectL.Tests.Core
         {
             var item = new CombatItemEvent(1, new EntityId(1), new EntityId(2), ItemEventStage.AfterDamage,
                 ItemEventReason.Activated, 0, 1, null, CombatDamageKind.OrdinaryAttack, ItemActivationKind.TemporaryEffect);
-            Assert.That(CombatChangeEvidenceReader.ReadAll(new[] { item })[0].AffectedEntityIds,
+            Assert.That(CombatChangeEvidenceReader.ReadEventShapes(new[] { item })[0].AffectedEntityIds,
                 Is.EquivalentTo(new[] { new EntityId(1), new EntityId(2) }));
         }
 
@@ -43,7 +43,7 @@ namespace ProjectL.Tests.Core
             var occurrence = new CombatEffectsEvent(new[] { new TraitActivationSnapshot(actor.EntityId, actor.EntityId,
                 TraitKey.Acceleration, TraitActivationKind.AttackGranted, 2) }, Array.Empty<CategoryActivationSnapshot>());
             var unrelated = new CombatTraitStateEvent(actor, actor.With(stats: actor.Stats.With(moveRange: 4)));
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { occurrence, unrelated }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { occurrence, unrelated }));
         }
 
         [Test]
@@ -64,10 +64,10 @@ namespace ProjectL.Tests.Core
                 traitActivations: new[] { interception }, attackGroup: 1);
             var before = CombatCommandTestData.Character(3, EntityKey.Unit_Akimbo, new CellCoord(5, 4), Owner.Player);
             var health = new CombatCharacterEvent(CombatEventKind.HealthChanged, before, before.WithHealth(new HealthStateSnapshot(80, 100)), new[] { origin });
-            var evidence = CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { new CombatAttackEvent(attack), health });
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { new CombatAttackEvent(attack), health });
             Assert.That(evidence.SelectMany(e => e.AffectedEntityIds).Distinct(), Is.EquivalentTo(new[] { attacker, guardian }));
             Assert.That(evidence.SelectMany(e => e.ChangedSourceCells), Is.Empty);
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { new CombatAttackEvent(attack) }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { new CombatAttackEvent(attack) }));
         }
 
         [Test]
@@ -82,8 +82,8 @@ namespace ProjectL.Tests.Core
             var before = CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(4, 4), Owner.Enemy);
             var events = new CombatEvent[] { new CombatEffectsEvent(new[] { occurrence }, Array.Empty<CategoryActivationSnapshot>()),
                 new CombatCharacterEvent(CombatEventKind.HealthChanged, before, before.WithHealth(new HealthStateSnapshot(80, 100)), new[] { origin }) };
-            Assert.That(CombatChangeEvidenceReader.ReadAll(events)[0].AffectedEntityIds, Is.EqualTo(new[] { new EntityId(2) }));
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] { events[0] }));
+            Assert.That(CombatChangeEvidenceReader.ReadEventShapes(events)[0].AffectedEntityIds, Is.EqualTo(new[] { new EntityId(2) }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] { events[0] }));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace ProjectL.Tests.Core
         {
             var result = CombatMovementCalculator.Calculate(MovementTestData.SafeRoute(new CellCoord(1, 1), new CellCoord(2, 1)), Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
-            var evidence = CombatChangeEvidenceReader.ReadAll(result.Events);
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(result.Events);
             Assert.That(evidence, Is.Not.Empty);
             Assert.That(evidence.All(e => e.Kind == CombatChangeEvidenceKind.OrdinaryMove), Is.True);
             Assert.That(evidence.SelectMany(e => e.AffectedEntityIds).Distinct(), Is.EqualTo(new[] { new EntityId(1) }));
@@ -102,7 +102,7 @@ namespace ProjectL.Tests.Core
         public void WrapperCompanionFactsCoverEffects()
         {
             var result = NativeAttack();
-            var evidence = CombatChangeEvidenceReader.ReadAll(result.Events);
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(result.Events);
             Assert.That(evidence.SelectMany(e => e.AffectedEntityIds).Distinct(), Is.EquivalentTo(new[] {
                 new EntityId(1), new EntityId(2), new EntityId(3), new EntityId(4) }));
             Assert.That(evidence.SelectMany(e => e.ChangedSourceCells), Is.Empty);
@@ -113,13 +113,13 @@ namespace ProjectL.Tests.Core
         {
             var events = NativeAttack().Events;
             var removed = events.OfType<CombatCharacterEvent>().First(e => e.Kind == CombatEventKind.HealthChanged);
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(events.Where(e => !ReferenceEquals(e, removed)).ToArray()));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(events.Where(e => !ReferenceEquals(e, removed)).ToArray()));
         }
 
         [Test]
         public void WrapperAreaIsNotChangedSourceScope()
         {
-            var evidence = CombatChangeEvidenceReader.ReadAll(new CombatEvent[] {
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] {
                 new CombatRoarEvent(new EntityId(8), null, new[] { new CellCoord(1, 1), new CellCoord(2, 1) }) });
             Assert.That(evidence.Single().AffectedEntityIds, Is.EqualTo(new[] { new EntityId(8) }));
             Assert.That(evidence.Single().ChangedSourceCells, Is.Empty);
@@ -130,7 +130,7 @@ namespace ProjectL.Tests.Core
         {
             var actor = CombatCommandTestData.Input(empty: true).Characters[0];
             var hurt = actor.WithHealth(new HealthStateSnapshot(90, 100));
-            var evidence = CombatChangeEvidenceReader.ReadAll(new CombatEvent[] {
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] {
                 new CombatCharacterEvent(CombatEventKind.HealthChanged, actor, hurt),
                 new CombatCharacterEvent(CombatEventKind.HealthChanged, hurt, actor) });
             Assert.That(evidence.Count, Is.EqualTo(2));
@@ -142,7 +142,7 @@ namespace ProjectL.Tests.Core
         {
             var first = new DestinationTileModifierFact(1, new CellCoord(1, 1), true, new[] { Owner.Player }, 2, 0);
             var second = new DestinationTileModifierFact(1, new CellCoord(2, 1), true, new[] { Owner.Player }, 2, 0);
-            var evidence = CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { new CombatMovementSourceEvent(first, second) });
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { new CombatMovementSourceEvent(first, second) });
             Assert.That(evidence.Single().ChangedSourceCells, Is.EquivalentTo(new[] { new CellCoord(1, 1), new CellCoord(2, 1) }));
             Assert.That(evidence.Single().AffectedEntityIds, Is.Empty);
         }
@@ -152,8 +152,8 @@ namespace ProjectL.Tests.Core
         {
             var source = new MineSourceFact(1, new CellCoord(2, 1), 1, 5, true, new[] { Owner.Player });
             var activation = new CombatObjectActivationEvent(source, new EntityId(1));
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] { activation }));
-            var facts = CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { activation, new CombatMovementSourceEvent(source, source.WithActive(false)) });
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] { activation }));
+            var facts = CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { activation, new CombatMovementSourceEvent(source, source.WithActive(false)) });
             Assert.That(facts[0].AffectedEntityIds, Is.EqualTo(new[] { new EntityId(1) }));
             Assert.That(facts[0].ChangedSourceCells, Is.EqualTo(new[] { new CellCoord(2, 1) }));
         }
@@ -188,9 +188,9 @@ namespace ProjectL.Tests.Core
         [Test]
         public void UnsupportedOrMalformedEvidenceCannotPublish()
         {
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { null }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { null }));
             var reserved = new TraitActivationSnapshot(new EntityId(1), null, TraitKey.Acceleration, TraitActivationKind.FocusReset, 0);
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new CombatEvent[] {
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] {
                 new CombatEffectsEvent(new[] { reserved }, Array.Empty<CategoryActivationSnapshot>()) }));
         }
 

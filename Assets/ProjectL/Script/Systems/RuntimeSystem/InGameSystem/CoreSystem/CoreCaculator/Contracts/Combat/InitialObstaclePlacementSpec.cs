@@ -11,18 +11,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public ObstacleContentKind Kind { get; }
         public CellCoord Anchor { get; }
         public Rotation4 Rotation { get; }
+        public int RequiredHits { get; }
         public int ExplosionDamage { get; }
         public int HitAttackBonus { get; }
         public int DestructionAttackBonus { get; }
+        public int FallLength { get; }
         public InitialObstaclePlacementSpec(StructureSpec definition, ObstacleContentKind kind, CellCoord anchor,
-            Rotation4 rotation, int explosionDamage, int? hitAttackBonus = null, int? destructionAttackBonus = null)
+            Rotation4 rotation, int requiredHits, int explosionDamage, int? hitAttackBonus = null, int? destructionAttackBonus = null,
+            int fallLength = 3)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
             if (definition.Key != ObstacleContentProfile.KeyFor(kind)) throw new ArgumentException("장애물 종류와 정의 키가 다릅니다.");
             if (!Enum.IsDefined(typeof(Rotation4), rotation)) throw new ArgumentOutOfRangeException(nameof(rotation));
-            if (explosionDamage < 0 || kind == ObstacleContentKind.Supplies && explosionDamage != 0)
+            if (requiredHits < 1) throw new ArgumentOutOfRangeException(nameof(requiredHits));
+            if (explosionDamage < 0 || kind != ObstacleContentKind.PowderBarrel && explosionDamage != 0)
                 throw new ArgumentOutOfRangeException(nameof(explosionDamage));
+            if (fallLength < 1) throw new ArgumentOutOfRangeException(nameof(fallLength));
             Kind = kind; Anchor = anchor; Rotation = rotation; ExplosionDamage = explosionDamage;
+            RequiredHits = requiredHits;
+            FallLength = fallLength;
             ObstacleContentProfile.ValidateRewards(kind, hitAttackBonus, destructionAttackBonus);
             HitAttackBonus = hitAttackBonus ?? 0; DestructionAttackBonus = destructionAttackBonus ?? 0;
         }

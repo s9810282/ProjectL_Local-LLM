@@ -19,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
         void BeginMovementPlanning(EntityId actor, EntityKey key, Rotation4 rotation);
         /// <summary>연속 커서 위치의 null은 일시 숨김입니다. valid의 null은 견적 대기 중립색입니다.</summary>
         void UpdateMovementPointer(Vector2? screenPosition, bool? valid, bool frozen = false);
+        bool TryShowMovementStop(CellCoord cell);
         void EndMovementPlanning();
 
         /// <summary>Q로 경로를 지정하는 중인지입니다(시작 칸 대기 포함, 확정·취소·이탈 때 false). 값이 바뀔 때만 부릅니다.</summary>

@@ -77,7 +77,7 @@ Space 누름
 
 ### 2.1 이동 되돌리기 — 기존 Undo 버튼·R (2026-10-31)
 
-`Combat/Return` 액션과 기본 `<Keyboard>/r`, `KeyBindingAction.Return`, 행동 패널 ReturnSlot 2를 그대로 사용한다. 키 설정·재바인딩 저장값은 바꾸지 않는다. 기존 `returnButton`은 필수 참조이며 씬 연결은 사용자가 관리한다. 버튼은 전투 패널과 함께 보이고, 현재 선택 아군의 Core 응답이 준비되어 되돌릴 수 있을 때만 활성화한다.
+`Combat/Return` 액션, `KeyBindingAction.Return`, 행동 패널 ReturnSlot 2를 그대로 사용한다. 기본 키는 2026-11-16부터 `<Keyboard>/q`다(R은 플레이어 액티브 스킬 `Combat/Skill`, [전투 스킬 View 설계](../specs/2026-11-16-combat-player-skill-view-design.md) Q-SK1·SK6). 스테이지 키 설정 정의가 4줄 → 5줄(`KeyBindingAction.Skill`)이 되어, 예전에 저장한 키 설정은 줄 수가 맞지 않아 기본값으로 돌아간다(경고 한 번). 기존 `returnButton`은 필수 참조이며 씬 연결은 사용자가 관리한다. 버튼은 전투 패널과 함께 보이고, 현재 선택 아군의 Core 응답이 준비되어 되돌릴 수 있을 때만 활성화한다.
 
 버튼·키 → 기존 수신 창구 → Router.Return → `CombatMovementUndoInput` → `CombatCommandGate.SubmitPending` → `UndoMove` 순서다. 조회의 `SourceRevision`과 Buffer `QueryRevision`, 전투·턴·선택·요청 번호가 맞는 응답만 사용한다. Unknown/Pending·미선택·전경 입력(공격 조준/경로 작성 등)·명령 대기·재생·모달·튜토리얼 제한·종료/정지는 제출하지 않는다. 최신성 검사와 pending 원본을 별도로 복제하지 않는다.
 
@@ -182,7 +182,8 @@ uGUI Button은 Unity EventSystem → `UIInputBinding` → `IUIInputReceiver.Clic
 | `Cancel()` | 취소 키(우클릭) | 진행 중인 제스처 정리 |
 | `EnterCombatRequested()` | 배치 Layer의 버튼 | 기존 전투 시작 요청 경로로 전달 |
 | `EndTurnRequested()`, `AttackModeRequested()` | 전투 Layer의 버튼 | 명령 기록 또는 모드 전환 |
-| `RequestReturn()` | 전투 Undo 버튼·기존 R | 현재 선택의 최신 가용성 응답으로 UndoMove 제출(§2.1) |
+| `RequestReturn()` | 전투 Undo 버튼·Q(2026-11-16 전 R) | 현재 선택의 최신 가용성 응답으로 UndoMove 제출(§2.1) |
+| `SkillRequested()` | 전투 R(행동 패널 스킬 버튼은 SK-e) | 플레이어 액티브 스킬 모드 진입·끝(Router `Skill`, SK-a에서는 아무 일도 하지 않음) |
 | `CameraPanChanged(x, y)` | 배치·전투: 카메라 이동 키 방향이 바뀔 때(모두 떼면 (0, 0)) | 마지막 값을 기억했다가 매 프레임 이동(§13) |
 | `CameraZoomScrolled(delta)` | 배치·전투: 휠을 굴릴 때마다(위 = 양수) | 부호만 세어 줌 칸으로(§13) |
 
@@ -330,14 +331,16 @@ Configure는 런타임에 한 번이다. 모든 화면의 Controller·Layer·키
 |---|---|---|
 | 이동 | `Pan` — Value Vector2 | WASD 2D 묶음 + 화살표 2D 묶음 |
 | 줌 | `Zoom` — **PassThrough** Axis | `<Mouse>/scroll/y` |
+| 회전(2026-11-14) | `Rotate` — Value Axis | 1D 묶음 `ZC`: negative `<Keyboard>/z`, positive `<Keyboard>/c` |
+| 끌기 회전(2026-11-15) | `RotateDrag` — Button | `<Mouse>/middleButton`(끈 양은 전투 맵의 `PointerMoved` 좌표 차이) |
 | 화면 가장자리 이동 | (액션 없음) | 전투 맵의 `PointerMoved` 마지막 좌표 |
 
 흐름:
 
 ```text
-CombatCameraInputController → 슬롯 → CombatInputReceiver(CameraPanChanged·CameraZoomScrolled)
+CombatCameraInputController → 슬롯 → CombatInputReceiver(CameraPanChanged·CameraZoomScrolled·CameraRotateChanged·CameraRotateDragChanged)
   → 입력 분배 CombatSceneInputDriver.Route(카메라 요청은 선택·가용성·버튼 갈래 없이) → CombatSceneInput.Route → CombatCameraInput(상태 저장)
-조정자 Tick 끝 → 입력 분배 TickEnd → CombatSceneInput.TickCamera(facts, characters) → CombatInputPolicy.CanMoveCamera → ICombatCameraControl(CombatCameraView).Zoom·Pan
+조정자 Tick 끝 → 입력 분배 TickEnd → CombatSceneInput.TickCamera(facts, deltaTime, characters) → CombatInputPolicy.CanMoveCamera → ICombatCameraControl(CombatCameraView).Zoom·Pan·Rotate·RotateDrag
   → 시점이 바뀌었으면(그 Tick·다음 Tick·줌 렌즈가 옮겨 가는 동안) 마지막 포인터로 CombatInputRouter.RefreshPointer(2026-11-04 평가 C10-01)
 ```
 
@@ -347,5 +350,7 @@ CombatCameraInputController → 슬롯 → CombatInputReceiver(CameraPanChanged�
 - **확인창이 열려 있어도 수신 창구가 카메라 요청을 통과시킨다(계획 P5).** 입력은 상태만 저장하고 움직일지는 Tick의 정책이 정하므로, 확인창 동안 뗀 키가 버려져 닫힌 뒤 계속 움직이는 일이 없다.
 - 움직여도 되는지: `CombatInputPolicy.CanMoveCamera` = 입력 연결·전투 그림·종료(결과 화면) 아님·확인창 닫힘·실제 Layer가 배치/전투. 명령 대기·재생 중·적 턴은 막지 않는다. 막힌 동안의 휠은 버리고 누른 키 방향은 남긴다.
 - 휠은 값의 크기를 보지 않고 한 번 = 한 칸, 위 = 줌인이다(P1). 연출 줌(포효·기차) 중에는 창구가 거절해 버린다(Q-CC6 A).
+- 회전(2026-11-14, [회전 설계](../specs/2026-11-14-combat-camera-rotation-design.md) CR5)은 이동처럼 키 값을 상태로 저장한다(떼면 Canceled로 0이 옴). 요청 열거 값 `CameraRotate`는 기존 번호가 바뀌지 않게 맨 끝이고, `IsCameraRequest`에 들어 있어 확인창 통과·정책은 이동·줌과 같다. 연출 줌 중에도 돈다. 빠르기는 공용 설정 `rotateSpeed`, 키 재설정 목록에는 넣지 않았다.
+- 가운데 버튼 끌기 회전(2026-11-15, 회전 설계 CR8)은 누름·뗌만 액션으로 받고, 끈 양은 누르는 동안의 포인터 가로 이동으로 센다(델타 액션 없음). Tick이 쌓인 양을 화면 너비 비율로 `RotateDrag`에 넘긴다. 끄는 동안 가장자리 이동·커서 칸 스냅은 하지 않고(스냅은 Router `Route`의 `cameraDragging`), 막힌 동안 쌓인 양·기준점은 버린다. 누른 뒤 첫 포인터 이동은 기준만 잡는다. 요청 `CameraRotateDrag`는 맨 끝이고 `IsCameraRequest`에 들어 있다. 우클릭(취소)은 그대로다 — 우클릭은 누르는 순간 취소라 끌기에 쓰지 않는다.
 - 가장자리 이동은 포인터가 창 안·가장자리 띠(두께 × 화면 짧은 변) 안·UI 위가 아닐 때만이다(Q-CC5 A). 창 포커스를 잃으면 키·휠·마지막 포인터를 모두 잊는다.
 - 이동 속도·제한·줌 범위는 스테이지마다 View DB `StageViewPropData.cameraSettings`(`CombatCameraSettings_Default`)이고, 처음 보기 크기는 맵 프리팹 카메라 렌즈값이다. 키 재설정 목록(`StageInputKeyBindings`)에는 넣지 않았다(Q-CC7 A).

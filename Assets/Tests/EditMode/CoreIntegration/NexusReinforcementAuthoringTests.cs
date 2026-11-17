@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.Common;
@@ -29,6 +31,8 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class NexusReinforcementAuthoringTests
     {
+        private const string SpawnIntervalPath = "nexusReinforcements.spawnIntervalTurns";
+
         private static readonly OwnedCharacterRecord Main =
             new(new CharacterInstanceId(1), EntityKey.Unit_Akimbo, CharacterOwnershipRole.Main);
 
@@ -55,6 +59,48 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(authored.Stage.InitialEnemyPlacements.ToArray().Select(p => (p.UnitKey, p.Anchor, p.Rotation, p.Level)),
                 Is.EqualTo(before.Stage.InitialEnemyPlacements.ToArray().Select(p => (p.UnitKey, p.Anchor, p.Rotation, p.Level))));
             Assert.That(prepared.Characters.Single(c => c.Owner == Owner.Enemy).Experience.EnemyLevel, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Authoring_CapturesIntervalInPreparedBattle()
+        {
+            using var assets = new StageAssets();
+            var database = new CoreIntegrationTestData(ConfiguredMovementBattle.Config);
+            assets.ConfigurePool(true, assets.PoolUnit, 3);
+            assets.SetInterval(2);
+            var first = Prepare(Read(database, assets.Read()));
+
+            assets.SetInterval(3);
+            var second = Prepare(Read(database, assets.Read()));
+
+            Assert.That(first.Combat.NexusReinforcements.SpawnIntervalTurns, Is.EqualTo(2));
+            Assert.That(second.Combat.NexusReinforcements.SpawnIntervalTurns, Is.EqualTo(3));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void DisabledAuthoring_IgnoresInvalidInterval(int interval)
+        {
+            using var assets = new StageAssets();
+            assets.ConfigurePool(false, null, 0);
+            assets.SetInterval(interval);
+
+            Assert.That(assets.Read().NexusReinforcements, Is.Null);
+        }
+
+        [Test]
+        public void LegacySerializedStage_UsesIntervalOne()
+        {
+            var spec = ReadReimportedStage(null);
+            Assert.That(spec.SpawnIntervalTurns, Is.EqualTo(1));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void EnabledSerializedStage_RejectsInvalidInterval(int interval)
+        {
+            var error = Assert.Throws<ArgumentOutOfRangeException>(() => ReadReimportedStage(interval));
+            Assert.That(error.ParamName, Is.EqualTo("spawnIntervalTurns"));
         }
 
         [Test]
@@ -164,6 +210,51 @@ namespace ProjectL.Tests.CoreIntegration
                 Assert.That(error.Message, Does.Contain(reason));
         }
 
+        private static NexusReinforcementSpec ReadReimportedStage(int? interval)
+        {
+            string path = $"Assets/NexusReinforcementInterval_{Guid.NewGuid():N}.asset";
+            var stage = ScriptableObject.CreateInstance<CombatStageData>();
+            try
+            {
+                using (var serialized = new SerializedObject(stage))
+                {
+                    serialized.FindProperty("nexusReinforcements.enabled").boolValue = true;
+                    if (interval.HasValue)
+                        serialized.FindProperty(SpawnIntervalPath).intValue = interval.Value;
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
+                }
+
+                AssetDatabase.CreateAsset(stage, path);
+                AssetDatabase.SaveAssetIfDirty(stage);
+                string yaml = File.ReadAllText(path);
+                Assert.That(yaml, Does.Match(@"(?m)^  nexusReinforcements:\r?\n    enabled: 1\r?$"));
+                Resources.UnloadAsset(stage);
+
+                if (interval.HasValue)
+                {
+                    Assert.That(yaml, Does.Match($@"(?m)^    spawnIntervalTurns: {interval.Value}\r?$"));
+                }
+                else
+                {
+                    // 테스트가 저장한 SO에서 새 필드만 빼고 다시 읽어 기존 직렬화 형식을 재현합니다.
+                    yaml = Regex.Replace(yaml, @"(?m)^    spawnIntervalTurns: -?\d+\r?\n", "");
+                    Assert.That(yaml, Does.Not.Contain("spawnIntervalTurns:"));
+                    File.WriteAllText(path, yaml);
+                }
+
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                var loaded = AssetDatabase.LoadAssetAtPath<CombatStageData>(path);
+                Assert.That(loaded, Is.Not.Null);
+                return ((CombatStageDetail)loaded.GetData()).NexusReinforcements;
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(path);
+                if (stage != null)
+                    Object.DestroyImmediate(stage);
+            }
+        }
+
         private static BattleInitialization Read(CoreIntegrationTestData database, CombatStageDetail detail,
             IReadOnlyList<OwnedCharacterRecord> owned = null)
         {
@@ -223,6 +314,13 @@ namespace ProjectL.Tests.CoreIntegration
             }
 
             internal CombatStageDetail Read() => (CombatStageDetail)_stage.GetData();
+
+            internal void SetInterval(int interval)
+            {
+                using var serialized = new SerializedObject(_stage);
+                serialized.FindProperty(SpawnIntervalPath).intValue = interval;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
 
             internal EnemyLoadoutDataSO UseInitialLoadout()
             {

@@ -24,9 +24,9 @@ namespace ProjectL.Tests.Core
         [TestCase(CategoryKey.Main)]
         [TestCase(CategoryKey.Rider)]
         [TestCase(CategoryKey.Heavy)]
-        public void ThornField_ActorInsideApplicationRingIsExcluded(CategoryKey category)
+        public void Attack_ActorIsExcluded(CategoryKey category)
         {
-            var input = ThornInput(category, TargetingSplash.None);
+            var input = AttackInput(category, TargetingSplash.None);
             var center = new CellCoord(2, 3);
             var characters = input.Characters.Select(c => c.EntityId == new EntityId(2)
                 ? CombatCommandTestData.With(c, position: center) : c).ToArray();
@@ -36,13 +36,12 @@ namespace ProjectL.Tests.Core
             Assert.That(Final(result, input.ActorId).Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(DamageEvents(result, input.ActorId), Is.Empty);
             Assert.That(result.Attack.Value.Hits.ToArray().Select(h => h.TargetId), Has.No.Member(input.ActorId));
-            Assert.That(result.FinalState.ThornFields.Select(f => f.Cell), Has.No.Member(input.Characters[0].Anchor.Value));
         }
 
         [Test]
-        public void ThornField_DirectlyKilledOccupantDoesNotReceiveImmediateDamage()
+        public void Splash_KilledTargetReceivesOneDamageEvent()
         {
-            var input = ThornInput(CategoryKey.Main, TargetingSplash.Radial);
+            var input = AttackInput(CategoryKey.Main, TargetingSplash.Radial);
             var id = new EntityId(4);
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == id
                 ? CombatCommandTestData.With(c, hp: 10) : c).ToArray());
@@ -54,35 +53,19 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ThornField_AlliedStructureStillPreventsFieldCreation()
+        public void Attack_AlliedStructureIsExcluded()
         {
-            var input = ThornInput(CategoryKey.Main, TargetingSplash.Radial);
+            var input = AttackInput(CategoryKey.Main, TargetingSplash.Radial);
             var cell = new CellCoord(4, 4);
             var structure = new StructureCombatFacts(new EntityId(20), new StructureSpec(EntityKey.Structure_Headquarters,
                 1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100),
                 cell, Rotation4.R0, new[] { cell }, Owner.Player);
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,new[] { structure },s.ThornFields,s.Turn));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,new[] { structure },s.Turn));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(100));
-            Assert.That(result.FinalState.ThornFields.Select(f => f.Cell), Has.No.Member(cell));
             Assert.That(result.Attack.Value.Hits.ToArray().Select(h => h.TargetId), Has.No.Member(structure.EntityId));
-        }
-
-        [Test]
-        public void PersistentThornField_MovementStillCausesEnvironmentalDamage()
-        {
-            var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
-            var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 5, 5) },s.Turn));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
-            Assert.That(result.Accepted, Is.True, result.Reason);
-            Assert.That(Final(result, input.ActorId).Health.CurrentHealth, Is.EqualTo(95));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
-            var origin = DamageEvents(result, input.ActorId).Single().DamageOrigins.Single();
-            Assert.That(origin.PhysicalCell, Is.EqualTo(CellCoord.Right));
-            Assert.That(origin.CreditedCharacterId, Is.Null);
         }
 
         [TestCase(CategoryKey.Main)]
@@ -90,8 +73,8 @@ namespace ProjectL.Tests.Core
         [TestCase(CategoryKey.Heavy)]
         public void AttackableObstacle_ExplosionCanDamageAllyAsIndependentEnvironment(CategoryKey category)
         {
-            var input = ThornInput(category, TargetingSplash.None);
-            var barrel = ObstacleReactionTests.Barrel(51, Center, 10, 7);
+            var input = AttackInput(category, TargetingSplash.None);
+            var barrel = ObstacleReactionTests.Barrel(51, Center, 1, 7);
             input = ObstacleReactionTests.Copy(input, characters: input.Characters.Where(c => c.EntityId != new EntityId(2)).ToArray(),
                 structures: new[] { barrel.Structure }, profiles: new[] { barrel.Profile });
             var range = CombatCommandCalculator.GetAttackRange(input);
@@ -117,24 +100,23 @@ namespace ProjectL.Tests.Core
         private static CharacterCombatFacts Final(CombatCommandTransition result, EntityId id) =>
             CombatCommandComposition.Project(result).Characters.Single(c => c.EntityId == id);
 
-        private static CombatCommandInput ThornInput(CategoryKey category, TargetingSplash splash, Owner owner = Owner.Player)
+        private static CombatCommandInput AttackInput(CategoryKey category, TargetingSplash splash, Owner owner = Owner.Player)
         {
             var method = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, splash,
                 splash == TargetingSplash.None ? 0 : 70);
             var source = CombatCommandTestData.Input(method, empty: true);
             var snapshot = CategorySnapshot.CreateStateless(category);
             var actor = CombatCommandTestData.With(CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(1, 3), owner, 20),
-                traits: new TraitStatusSnapshot[] { new ThornFieldTraitStatusSnapshot(5, 5) }, category: snapshot);
+                category: snapshot);
             var hostile = owner == Owner.Player ? Owner.Enemy : Owner.Player;
             var characters = new[] { actor, source.Characters[1],
                 CombatCommandTestData.Character(2, EntityKey.Unit_Demon, Center, hostile),
                 CombatCommandTestData.Character(3, EntityKey.Unit_Demon, AllyCell, owner),
                 CombatCommandTestData.Character(4, EntityKey.Unit_Demon, new CellCoord(3, 4), hostile) };
             var profiles = source.Profiles.ToArray();
-            profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20, category,
-                new ThornFieldTraitSpec(5, 5)), method);
+            profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, 20, category), method);
             var s = source.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,                owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,                s.Structures,s.ThornFields,s.Turn);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,                owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,                s.Structures,s.Turn);
             return new CombatCommandInput(owner == Owner.Player ? 1 : 0, CombatCommandKind.Attack, actor.EntityId, source.Aim,
                 state, characters, profiles, source.Main,
                 characters.Where(c => c.OwnedId.HasValue).Select(c => new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray(),

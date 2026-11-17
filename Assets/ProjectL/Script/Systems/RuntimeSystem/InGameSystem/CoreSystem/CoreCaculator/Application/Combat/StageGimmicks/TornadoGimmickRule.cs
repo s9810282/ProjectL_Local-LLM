@@ -59,6 +59,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         public StageGimmickKey Key => StageGimmickKey.Tornado;
+
+        public bool RunsAt(StageGimmickBoundaryPhase phase) => phase == StageGimmickBoundaryPhase.Scheduled;
+
+        public StageGimmickState Initialize(CombatCommandState initialState, StageGimmickSpec definition,
+            StageGimmickId id, ref uint randomState)
+        {
+            var spec = definition as TornadoGimmickSpec ?? throw new InvalidOperationException("토네이도 설정 형식이 다릅니다.");
+            return TornadoGimmickPreparationCalculator.Prepare(spec, id, initialState.BoardWidth, initialState.BoardHeight,
+                ref randomState, initialState.Turn.CompletedControllerTurnCount);
+        }
+
         private readonly IReadOnlyList<IMovementTileRule> _rules;
         internal TornadoGimmickRule(IReadOnlyList<IMovementTileRule> rules)
         {
@@ -84,7 +95,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (end.CompletedControllerTurnCount != before.NextBoundaryCount)
                 throw new InvalidOperationException("토네이도의 예정 경계를 건너뛸 수 없습니다.");
             input.State.Gimmicks.ValidateDefinitions(input.Battle.GimmickDefinitions, input.State.BoardWidth, input.State.BoardHeight);
-            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), new List<CombatEvent>());
+            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), new List<CombatEvent>(), rules: _rules);
             if (projection.Terminal) return null;
             projection.TornadoResolution = new TornadoContactResolution();
             var advances = new List<TornadoMemberAdvance>();

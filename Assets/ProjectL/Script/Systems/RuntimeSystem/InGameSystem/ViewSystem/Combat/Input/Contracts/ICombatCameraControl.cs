@@ -23,5 +23,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
 
         /// <summary>보기 크기를 휠 칸 수만큼 바꿉니다. 양수 = 줌인입니다(카메라 조작 계획 P1). 바꿨으면 true입니다.</summary>
         bool Zoom(int steps);
+
+        /// <summary>
+        /// 입력 횟수만큼 90도씩 목표를 더하고 매 프레임 설정 속도로 회전합니다. −1 = 카메라가 화면 가운데 바닥 점 둘레로 왼쪽으로(Z), +1 = 오른쪽으로(C)입니다.
+        /// 내려다보는 각은 바꾸지 않습니다. 실제로 돌았으면 true입니다.
+        /// </summary>
+        bool Rotate(int steps, float deltaTime);
+
+        /// <summary>
+        /// 가운데 버튼 끌기 회전을 더합니다(카메라 회전 설계 CR8). <paramref name="screenWidths"/>는 이번 프레임에 끈 가로 거리를 화면 너비로 나눈 값이고
+        /// 오른쪽 = 양수입니다. 각으로 바꾸는 값은 구현이 정합니다. 실제로 돌았으면 true입니다.
+        /// </summary>
+        bool RotateDrag(float screenWidths);
     }
 }

@@ -166,9 +166,11 @@ namespace ProjectL.Tests.CoreIntegration
             var config = new CategoryConfigData(3, 4, 3, 2, 0, defaultTraits: assigned
                 ? new Dictionary<CategoryKey, TraitKey> { [CategoryKey.Rider] = TraitKey.Knockback } : null);
             var database = new CoreIntegrationTestData(config);
-            var tables = (IHasTraitGrowthTables)DataBaseAssetTests.ProductionInGame();
-            database.CategoryTraitProgressions = tables.CategoryTraitProgressions;
-            database.TraitGrowthDefinitions = tables.TraitGrowthDefinitions;
+            var tables = new TraitGrowthTestRuntime.GrowthTables(CategoryKey.Rider, false);
+            tables.ReplaceCategory(new CategoryTraitProgressionData(CategoryKey.Rider,
+                Array.Empty<TraitGrowthStepSpec>(), Array.Empty<TraitKey>()));
+            database.CategoryTraitProgressions = tables;
+            database.TraitGrowthDefinitions = tables;
             var target = new CellCoord(0, 3);
             database.SetStage(new StageRootData(1101, 1, StageMapRole.Regular,
                 new CombatStageDetail(42, "field", 1, 0, 1, new[] { new EntityPlacement(EntityKey.Unit_Demon, target, Rotation4.R180) },

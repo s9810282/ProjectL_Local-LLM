@@ -56,7 +56,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (delivered.AppliesDamage) ordinal++;
                 if (!delivered.AppliesDamage || delivered.Cause != CombatDamageCause.NumericDamage ||
                     !world.Characters.TryGetValue(delivered.TargetId, out var victim) || victim.Health.IsDead || victim.Area != CharacterRuntimeArea.Field) continue;
-                int raw = CombatDamageCalculator.ScaleByTargetDistance(plan.Engine, plan.Bindings, plan.DamageActor, victim.EntityId,
+                int raw = CombatDamageCalculator.ScaleByTargetDistance(plan, plan.DamageActor, victim.EntityId,
                     victim, world.Structures.Values.ToArray(), delivered.BaseDamage);
                 hits.Add(new Hit(i, victim.EntityId, raw, delivered.Role, delivered.AppliedPercent, delivered.ImpactOrigin, currentOrdinal));
             }
@@ -133,7 +133,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var selected = new Dictionary<int, EntityId>();
             bool available = false;
             if (input.State.Turn.ControllerPhase == CombatControllerPhase.Enemy &&
-                (kind == CombatDamageKind.OrdinaryAttack || kind == CombatDamageKind.ExtraAttack || kind == CombatDamageKind.ReactionAttack))
+                CombatDamageKinds.IsAttack(kind))
             {
                 foreach (var character in characters.Values)
                 {
@@ -324,7 +324,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CommandAttackPlan directPlan, Action<CombatDamageOutcome> completed, SacrificeHitUpgrade? sacrificeUpgrade = null)
         {
             var facts = damage.Characters;
-            int raw = directPlan == null ? hit.Raw : CombatDamageCalculator.ScaleByTargetDistance(directPlan.Engine, directPlan.Bindings,
+            int raw = directPlan == null ? hit.Raw : CombatDamageCalculator.ScaleByTargetDistance(directPlan,
                 actor, hit.Target, facts[hit.Target], directPlan.Selection.EligibleStructures.ToArray(),
                 CombatAttackDelivery.CurrentBaseDamage(directPlan, actor, hit.Index));
             yield return "SacrificeRawDamage";

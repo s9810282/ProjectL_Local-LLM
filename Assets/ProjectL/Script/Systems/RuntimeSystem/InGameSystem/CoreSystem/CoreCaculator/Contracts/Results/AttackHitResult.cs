@@ -15,6 +15,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>정산 전에 적용된 비율이며 실제 HP 손실에 다시 적용하지 않는다.</summary>
         public int AppliedSplashPercent { get; }
         public int DamageDealt { get; }
+        /// <summary>장애물 피격의 전후 체력 값은 생존 여부만 나타낸다.</summary>
+        public bool IsObstacle { get; }
         /// <summary>피격 정산 도중 피해 적용 경계(아이템)가 적용한 회복이며 실제 피해와 분리한다. 공격 결과 고정 시점까지의 값이다.</summary>
         public int HealthRecovery { get; }
         /// <summary>위치 보정 제거에 따른 HP 상한 감소이며 공격 피해에는 포함하지 않는다.</summary>
@@ -30,9 +32,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
             AttackTargetRole role, int appliedSplashPercent, int healthNormalizationLoss, int healthRecovery,
-            IReadOnlyList<AttackHitContactSnapshot> contacts, bool targetReconstructed = false)
+            IReadOnlyList<AttackHitContactSnapshot> contacts, bool targetReconstructed = false, bool isObstacle = false)
             : this(targetId, targetHealthBefore, targetHealthAfter, role, appliedSplashPercent, healthNormalizationLoss, healthRecovery,
-                targetReconstructed)
+                targetReconstructed, isObstacle)
         {
             Contacts = AttackHitContactSnapshot.Copy(contacts);
             var pairs = Contacts.Select(c => (c.Role, c.AppliedSplashPercent)).Distinct().ToArray();
@@ -43,7 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public AttackHitResult(EntityId targetId, int targetHealthBefore, int targetHealthAfter,
             AttackTargetRole role = AttackTargetRole.None, int appliedSplashPercent = 100, int healthNormalizationLoss = 0,
-            int healthRecovery = 0, bool targetReconstructed = false)
+            int healthRecovery = 0, bool targetReconstructed = false, bool isObstacle = false)
         {
             if (Enum.IsDefined(typeof(AttackTargetRole), role) == false)
                 throw new ArgumentOutOfRangeException(nameof(role));
@@ -71,7 +73,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(healthNormalizationLoss));
             HealthNormalizationLoss = healthNormalizationLoss;
             HealthRecovery = healthRecovery;
-            DamageDealt = checked(targetHealthBefore - targetHealthAfter - healthNormalizationLoss + healthRecovery);
+            if (isObstacle && (targetHealthBefore > 1 || targetHealthAfter > 1 || healthNormalizationLoss != 0 ||
+                healthRecovery != 0 || targetReconstructed))
+                throw new ArgumentException("장애물 공격 결과에는 생존 여부만 기록합니다.", nameof(isObstacle));
+            IsObstacle = isObstacle;
+            DamageDealt = isObstacle ? 0 : checked(targetHealthBefore - targetHealthAfter - healthNormalizationLoss + healthRecovery);
             TargetHealthBefore = targetHealthBefore;
             TargetHealthAfter = targetHealthAfter;
             TargetKilled = TargetHealthAfter == 0;

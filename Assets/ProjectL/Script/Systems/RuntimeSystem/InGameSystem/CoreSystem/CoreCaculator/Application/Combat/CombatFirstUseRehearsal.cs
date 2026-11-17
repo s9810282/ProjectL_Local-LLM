@@ -142,11 +142,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return _attackers.Count > 0 ? Stage.PlayerQueries : Stage.Done;
         }
 
-        // S4. 첫 아군으로 행동 가능 여부·유닛 공격 범위·이동 범위를 조회합니다.
+        // S4. 첫 아군으로 행동 가능 여부(단일·묶음)·유닛 공격 범위·이동 범위를 조회합니다.
         private Stage PlayerQueries()
         {
             CombatCommandInput attack = Act(Base(CombatProcessingKind.Command), CombatCommandKind.Attack, _attackers[0]);
             _ = CombatCommandCalculator.GetActionAvailability(attack);
+            _ = CombatCommandCalculator.GetActionAvailabilities(attack);
             _ = CombatCommandCalculator.GetUnitAttackRange(attack);
             _ = CombatMovementCalculator.Range(Act(Base(CombatProcessingKind.Command), CombatCommandKind.Move, _attackers[0]));
             return Stage.AttackPreviews;

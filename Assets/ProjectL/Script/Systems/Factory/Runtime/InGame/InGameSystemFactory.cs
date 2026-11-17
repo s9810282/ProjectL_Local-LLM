@@ -30,6 +30,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
         /// (대체 생성은 시험용 입구만, 전투 개선 설계 §7.2 E3).
         /// </summary>
         /// <param name="deckEditAvailability">LifeCycle이 만든 덱 편집 창(C1). InGame은 등록하지 않고 참조로만 Core에 넘깁니다.</param>
+        /// <param name="autoStartTutorial">튜토리얼 자동 시작 여부입니다. View에만 전달합니다.</param>
         public static InGameSystemComposition CreateComposition(
             IBattleInitializationSource battleSource,
             RuntimeFaultBoundary faultBoundary,
@@ -37,12 +38,14 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             , bool includeDevelopmentTools = false
 #endif
+            , bool autoStartTutorial = true
             )
             => Compose(battleSource, null, faultBoundary, deckEditAvailability
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 , includeDevelopmentTools
 #endif
                 , usePreparedEnemyAdvance: true
+                , autoStartTutorial: autoStartTutorial
                 );
 
         internal static IExportSystemServices CreateWithBattleSource(IBattleInitializationSource battleSource)
@@ -65,6 +68,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
             , bool includeDevelopmentTools = false
 #endif
             , bool usePreparedEnemyAdvance = false
+            , bool autoStartTutorial = true
             )
         {
             RuntimeFaultBoundary faults = faultBoundary ?? throw new ArgumentNullException(nameof(faultBoundary));
@@ -80,6 +84,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 , includeDevelopmentTools
 #endif
+                , autoStartTutorial: autoStartTutorial
                 );
             view.Group.ExportServices(builder);
 

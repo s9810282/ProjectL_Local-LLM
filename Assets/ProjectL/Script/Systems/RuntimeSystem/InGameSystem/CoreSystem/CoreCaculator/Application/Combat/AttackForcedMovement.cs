@@ -17,20 +17,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     internal static class AttackForcedMovement
     {
         internal static bool CanEnterUnit(CombatCommandInput input, MovementEnvironmentFacts environment,
-            IEnumerable<CharacterCombatFacts> characters, IEnumerable<StructureCombatFacts> structures,
-            EntityId id, CellCoord from, CellCoord to) =>
-            FindBlocker(input, environment, characters, structures, id, from, to).IsNone;
+            EnvironmentSemanticBindings bindings, IEnumerable<CharacterCombatFacts> characters,
+            IEnumerable<StructureCombatFacts> structures, EntityId id, CellCoord from, CellCoord to,
+            IReadOnlyCollection<CellCoord> transientReservations = null) =>
+            FindBlocker(input, environment, bindings, characters, structures, id, from, to, transientReservations).IsNone;
 
         /// <summary>
         /// 유닛 강제 이동이 <paramref name="to"/>에 들어가지 못하는 이유를 돌려준다. 강제 이동 진입 규칙의 유일한 원본이다.
         /// 맵 밖·벽 지형·낮은 칸에서 고지대로 가는 턱은 벽, 살아 있는 필드 캐릭터·구조물은 그 개체다. 다칸 대상도 앵커 칸만 본다.
+        /// <paramref name="environment"/>와 <paramref name="bindings"/>는 같은 시점의 짝이어야 한다. 같은 공격 안에서 새로 생긴
+        /// 지형(기둥 잔해 벽 등)은 새 ID라 현재 바인딩에만 있으므로, 실행 중에는 도착 투영의 현재 환경과 바인딩을 함께 넘긴다.
         /// </summary>
         internal static ForcedMovementBlocker FindBlocker(CombatCommandInput input, MovementEnvironmentFacts environment,
-            IEnumerable<CharacterCombatFacts> characters, IEnumerable<StructureCombatFacts> structures,
-            EntityId id, CellCoord from, CellCoord to)
+            EnvironmentSemanticBindings bindings, IEnumerable<CharacterCombatFacts> characters,
+            IEnumerable<StructureCombatFacts> structures, EntityId id, CellCoord from, CellCoord to,
+            IReadOnlyCollection<CellCoord> transientReservations = null)
         {
-            if (!input.State.IsInside(to) || !EnvironmentTerrainRules.CanKnockback(environment, input.EnvironmentBindings, from, to))
+            if (bindings == null) throw new ArgumentNullException(nameof(bindings));
+            if (!input.State.IsInside(to) || !EnvironmentTerrainRules.CanKnockback(environment, bindings, from, to))
                 return ForcedMovementBlocker.Wall;
+            // 기믹 점유는 앵커뿐 아니라 이동할 전체 모양을 검사한다. 기존 지형 판정 범위는 유지한다.
+            if (GimmickOccupancyRules.Blocks(input.State.Gimmicks, to, transientReservations)) return ForcedMovementBlocker.Wall;
+            var mover = characters.FirstOrDefault(c => c.EntityId == id);
+            if (mover?.Anchor is CellCoord anchor)
+            {
+                var offset = to - anchor;
+                foreach (var occupied in mover.OccupiedCells)
+                    if (GimmickOccupancyRules.Blocks(input.State.Gimmicks, occupied + offset, transientReservations))
+                        return ForcedMovementBlocker.Wall;
+            }
             var character = characters.Where(c => c.EntityId != id && c.Area == CharacterRuntimeArea.Field &&
                 !c.Health.IsDead && c.OccupiedCells.Contains(to)).OrderBy(c => c.EntityId).FirstOrDefault();
             if (character != null) return ForcedMovementBlocker.Character(character.EntityId);
@@ -45,95 +60,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bool deferLastObjects, bool publishMovedEvents, Action<ForcedDisplacementPath> completed,
             CombatMovementCause movementCause = null)
         {
-            var input = plan.Input;
-            var projected = world.Characters;
-            var victim = projected[id];
-            var footprint = Footprint(CombatCommandCalculator.RequiredProfile(input, victim).Definition);
-            var rotation = victim.Rotation.Value;
-            bool departed = false;
-            movementCause ??= new CombatMovementCause(CombatMovementAgency.Forced);
-            yield return "AttackForcedPathSetup";
-
-            using var path = ForcedDisplacementPathCalculator.ExecuteSteps(victim.Anchor.Value, step, distance,
-                CanEnter, Enter, completed).GetEnumerator();
-            while (true)
+            var request = new ForcedMovementRequest(id, step, distance,
+                movementCause ?? new CombatMovementCause(CombatMovementAgency.Forced), deferLastObjects, publishMovedEvents);
+            foreach (var phase in ForcedMovementExecution.ExecuteSteps(arrival, request, plan.Rules, result =>
             {
-                bool progressed;
-                using (CoreProfiling.Sample(CoreProfileSection.AttackForcedPathStep)) progressed = path.MoveNext();
-                if (!progressed) yield break;
-                yield return path.Current;
-            }
-
-            IEnumerable<string> CanEnter(CellCoord from, CellCoord to, Action<bool> admitted)
-            {
-                // 앞선 이동을 반영한 현재 점유로 다음 칸을 검사한다.
-                admitted(CanEnterUnit(input, arrival.Environment, projected.Values, world.Structures.Values, id, from, to));
-                yield return "AttackForcedAdmission";
-            }
-
-            IEnumerable<string> Enter(CellCoord from, CellCoord to, bool last, Action<bool> continued)
-            {
-                var current = projected[id];
-                if (!departed)
-                {
-                    var normalized = PositionTileModifierCalculator.Replace(current, PositionTileModifier.None);
-                    PositionTileModifierCalculator.RecordNormalization(world.Events, current, normalized);
-                    ledger.AddNormalizationLoss(id, current.Health.CurrentHealth - normalized.Health.CurrentHealth);
-                    current = normalized;
-                    departed = true;
-                }
-                var relocated = CombatCommandCalculator.Copy(current, current.Health, current.Stats, to);
-                if (publishMovedEvents) world.Events.Add(new CombatCharacterEvent(CombatEventKind.Moved, current, relocated,
-                    null, null, CombatDamageCause.NumericDamage, movementCause));
-                projected[id] = relocated;
-                yield return "AttackForcedRelocation";
-                // 지나가는 칸마다 낙사·약한 지반·가시를 즉시 정산한다(G8-1).
-                if (arrival.ResolveForcedTerrainEntry(id, to)) yield break;
-                var consumedFields = new List<ThornFieldCellSnapshot>();
-                CombatCommandCalculator.ConsumeFields(world.ThornFields,
-                    MovementPathCalculator.ResolvePathCells(from, to, footprint, rotation), consumedFields);
-                if (consumedFields.Count > 0) RoarHitCounter.Record(projected, id, world.HitCause, input.State.InCombat);
-                var origins = consumedFields.Select(f => new CombatDamageOrigin(f.Cell, null, world.AttackGroups.Next())).ToArray();
-                int thornDamage = 0;
-                var heldAbsorptions = new List<(CombatDamageOrigin Origin, int Input)>();
-                yield return "AttackForcedThornContact";
-                for (int j = 0; j < consumedFields.Count; j++)
-                {
-                    int numeric = CombatDamageCalculator.Environment(input, consumedFields[j].ThornDamage, origins[j], to, arrival.Environment).FinalDamage;
-                    int remaining = CombatDamageCalculator.ApplyHeldDefense(world.AttackGroups, projected, id, numeric, origins[j], world.Events);
-                    if (remaining == 0) heldAbsorptions.Add((origins[j], numeric));
-                    thornDamage = checked(thornDamage + remaining);
-                    yield return "AttackForcedThornDamage";
-                }
-                if (origins.Length > 0)
-                {
-                    foreach (var phase in world.Damage.ApplySteps(id, CombatDamageKind.EnvironmentDamage, origins[0],
-                        thornDamage, value => thornDamage = value.RemainingDamage, origins, resolvedHeldAbsorptions: heldAbsorptions))
-                        yield return phase;
-                    ThornFieldApplicationCalculator.ApplyContactStatuses(arrival, id, consumedFields);
-                    yield return "AttackForcedThornStatuses";
-                }
-                ledger.AddDamage(id, thornDamage);
-                if (projected[id].Health.IsDead)
-                {
-                    world.DeathAnchors[id] = to;
-                    yield break;
-                }
-                bool thrown = false;
-                foreach (var phase in TornadoCalculator.ResolveGroupedEntrySteps(arrival, id, to, plan.Rules, value => thrown = value))
-                    yield return phase;
-                if (thrown || arrival.Terminal || projected[id].Health.IsDead || projected[id].Anchor != to) yield break;
-                // 요청 거리가 남으면 오브젝트 효과가 다음 칸의 점유 검사에 먼저 반영된다(G8-2a).
-                if (!last || !deferLastObjects)
-                {
-                    foreach (var phase in MovementEnvironmentCalculator.ResolveObjectsAtSteps(arrival, id, to, plan.Rules)) yield return phase;
-                    if (projected[id].Health.IsDead || arrival.Terminal) yield break;
-                }
-                continued(true);
-                yield return "AttackForcedEntryComplete";
-            }
+                ledger.AddNormalizationLoss(id, result.NormalizationHealthLoss);
+                completed(result.Path);
+            })) yield return phase;
         }
-
-        private static TileFootprint Footprint(UnitSpec spec) => new(spec.FootprintWidth, spec.FootprintHeight, spec.FootprintLocalCells.ToArray());
     }
 }

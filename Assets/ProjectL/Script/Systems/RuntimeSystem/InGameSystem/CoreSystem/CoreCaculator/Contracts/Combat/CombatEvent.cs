@@ -5,6 +5,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.StageGimmicks;
@@ -17,7 +18,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         EffectsActivated, ArtifactActivated, SoulsCollected, SoulFieldSettled, CombatEntered,
         // 폐기된 밤 종료 사건의 번호 15는 재사용하지 않습니다(밤 삭제 설계 2026-11-10).
         GimmickActivated = 16, StageEnded, HealthNormalized,
-        MovementSourceChanged, ThornConsumed, ObstacleReacted, HeldEnvironmentChanged, ObjectActivated, ObjectCreated,
+        MovementSourceChanged,
+        // 폐기된 가시밭 소모 사건의 번호 20은 재사용하지 않습니다.
+        ObstacleReacted = 21, HeldEnvironmentChanged, ObjectActivated, ObjectCreated,
         Relocated, TornadoActivated, Fell,
         /// <summary>전투 중 새 개체 생성이다. 다음 밤 복귀는 기존 Placed를 쓰므로 생성과 구분된다.</summary>
         Summoned,
@@ -43,7 +46,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         TornadoMemberAdvanced = 47,
         Reinforced = 48,
         /// <summary>치명 피해를 재구성으로 버텼다. 맞기 전 사실 → 재구성 사실(체력 최대·재구성 중)이며, 그 맞음에는 체력·사망 사건이 없다.</summary>
-        Reconstructed = 49
+        Reconstructed = 49,
+        Swept = 50,
+        PlayerSkillAttacked = 51,
+        ObstacleDurabilityChanged = 52,
+        PillarFell = 53,
+        PillarTerrainChanged = 54,
+        PlatformPrelude = 55,
+        PlatformMotionResolved = 56,
+        PlatformStepped = 57,
+        EnvironmentRandomSelected = 58,
+        MeteorAdvanced = 59,
+        MeteorImpact = 60,
+        LavaChainAdvanced = 61,
+        LavaChainContact = 62,
+        ThornBombAttached = 63,
+        ThornBombDetonated = 64,
+        ThornBombDiscarded = 65
+    }
+
+    /// <summary>스킬의 일차 공격 발생입니다. 후속 체력·강제 이동 사건과 같은 결과 인스턴스를 공유합니다.</summary>
+    public sealed class CombatPlayerSkillAttackEvent : CombatEvent
+    {
+        public PlayerSkillAttackResult Attack { get; }
+
+        public CombatPlayerSkillAttackEvent(PlayerSkillAttackResult attack) : base(CombatEventKind.PlayerSkillAttacked)
+        {
+            Attack = attack ?? throw new ArgumentNullException(nameof(attack));
+        }
     }
 
     /// <summary>
@@ -143,7 +173,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Expected = expected;
             if (kind == CombatEventKind.Relocated ? !tornadoSourceId.HasValue || tornadoSourceId.Value < 1 : tornadoSourceId.HasValue)
                 throw new ArgumentException("Tornado 이동 사건에는 원인 원본 식별자가 필요합니다.");
-            if (!Enum.IsDefined(typeof(CombatDamageCause), damageCause) || damageCause == CombatDamageCause.InstantDefeat &&
+            if (!Enum.IsDefined(typeof(CombatDamageCause), damageCause) || damageCause != CombatDamageCause.NumericDamage &&
                 (kind != CombatEventKind.Died || expected.Health.IsDead || !final.Health.IsDead))
                 throw new ArgumentException("직접 처치 원인은 새 사망 사건에만 사용할 수 있습니다.", nameof(damageCause));
             DamageCause = damageCause;
@@ -233,14 +263,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public ObstacleReactionKind Reaction { get; }
         public CombatDamageOrigin Origin { get; }
         public long AttackGroup { get; }
+        public bool SuppressSupplyRewards { get; }
         public CombatObstacleReactionEvent(EntityId obstacleId, ObstacleContentKind contentKind,
-            ObstacleReactionKind reaction, CombatDamageOrigin origin, long attackGroup) : base(CombatEventKind.ObstacleReacted)
+            ObstacleReactionKind reaction, CombatDamageOrigin origin, long attackGroup, bool suppressSupplyRewards = false) : base(CombatEventKind.ObstacleReacted)
         {
             if (obstacleId.IsEmpty || !Enum.IsDefined(typeof(ObstacleContentKind), contentKind) ||
                 reaction == ObstacleReactionKind.None || !Enum.IsDefined(typeof(ObstacleReactionKind), reaction) || attackGroup < 0)
                 throw new ArgumentException("유효한 장애물 반응 사실이 필요합니다.");
             ObstacleId = obstacleId; ContentKind = contentKind; Reaction = reaction;
             Origin = origin ?? throw new ArgumentNullException(nameof(origin)); AttackGroup = attackGroup;
+            SuppressSupplyRewards = suppressSupplyRewards;
         }
     }
 
@@ -282,12 +314,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentException("이동 원본 결과는 흔적 생성 또는 동일 원본의 유효한 후속 값이어야 합니다.");
             Expected = expected;
         }
-    }
-
-    public sealed class CombatThornConsumedEvent : CombatEvent
-    {
-        public ThornFieldCellSnapshot Source { get; }
-        public CombatThornConsumedEvent(ThornFieldCellSnapshot source) : base(CombatEventKind.ThornConsumed) { Source = source; }
     }
 
     public sealed class CombatAttackEvent : CombatEvent

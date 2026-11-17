@@ -128,8 +128,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// <summary>조준점과 클립의 첫 발사·마지막 발사·끝 시각입니다.</summary>
     internal readonly struct CombatWeaponAim
     {
-        internal CombatWeaponAim(Vector3 point, float firstShot, float lastShot, float endTime)
+        internal CombatWeaponAim(Vector3 point, float firstShot, float lastShot, float endTime, int muzzlePoint = 0)
         {
+            if (muzzlePoint < 0) throw new System.ArgumentOutOfRangeException(nameof(muzzlePoint), muzzlePoint, "발사 지점 번호는 0 이상이어야 합니다.");
+            MuzzlePoint = muzzlePoint;
             Point = point;
             FirstShot = firstShot;
             LastShot = lastShot;
@@ -140,5 +142,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal float FirstShot { get; }
         internal float LastShot { get; }
         internal float EndTime { get; }
+
+        /// <summary>조준 리그가 기준으로 삼는 발사 지점(이벤트 지점 번호, 가장 먼저 쏘는 줄의 지점)입니다.</summary>
+        internal int MuzzlePoint { get; }
     }
 }

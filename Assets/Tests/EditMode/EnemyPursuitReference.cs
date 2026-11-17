@@ -104,7 +104,7 @@ namespace ProjectL.Tests.Core
             var walls = WallGeometryBuilder.Build(projected.State.BoardWidth, projected.State.BoardHeight,
                 projected.State.Environment, projected.EnvironmentBindings, projected.State.WallBlocking);
             var elevation = AttackElevation.From(environment, projected.EnvironmentBindings);
-            int commonDamage = CombatAttackCalculator.CommonAttackDamage(projected, moved, profile);
+            int commonDamage = CombatAttackCalculator.CommonAttackDamage(projected, moved, profile, CombatDamageKind.OrdinaryAttack);
             foreach (var aim in range.AttackAims.Span)
             {
                 if (CombatAttackQueries.DeliversTo(projected, moved, profile, aim, targetId, commonDamage, environment, walls, elevation)) return true;

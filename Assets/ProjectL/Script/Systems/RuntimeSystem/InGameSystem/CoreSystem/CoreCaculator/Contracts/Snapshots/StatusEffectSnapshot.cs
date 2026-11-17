@@ -187,7 +187,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         public ActionRestrictionEffectSnapshot(StatusEffectKey key, IReadOnlyList<StatusEffectSourceSnapshot> sources) : base(key, sources)
         {
-            if (key != StatusEffectKey.Disarm && key != StatusEffectKey.Bind) throw new ArgumentOutOfRangeException(nameof(key));
+            if (!ActionRestrictionStatus.Supports(key)) throw new ArgumentOutOfRangeException(nameof(key));
         }
     }
 }

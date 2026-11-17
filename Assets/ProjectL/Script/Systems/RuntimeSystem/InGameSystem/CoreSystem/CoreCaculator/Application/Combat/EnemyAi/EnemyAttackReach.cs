@@ -16,7 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>
     /// 탐색 한 번 동안 "그 칸에 서면 대상에 피해를 주는 조준이 있나"를 판정한다(적 추적 성능 설계 D1~D3).
     /// 결과는 공격 범위 전체를 조회해 조준마다 전달을 확인하던 판정과 같다(설계 §4). 대상에 닿을 수 있는 조준 후보가 없는 칸은
-    /// 투영 입력을 만들지 않고 끝난다. 칸과 무관한 값(프로필·공격자 조건·벽·고저)은 처음 필요할 때 한 번만 만든다.
+    /// 피해량·지정 준비를 만들지 않고 끝난다. 칸과 무관한 값(프로필·공격자 조건·벽·고저)은 처음 필요할 때 한 번만 만든다.
     /// </summary>
     internal sealed class EnemyAttackReach
     {
@@ -39,6 +39,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal EnemyAttackReach(CombatCommandInput input, CharacterCombatFacts actor, EntityId targetId, MovementEnvironmentFacts environment,
             EnemyDecisionContext.ObservedGeometry geometry = null, Relocations relocations = null)
         {
+            relocations?.RequireScope(input, actor, environment, geometry);
             _input = input;
             _actor = actor;
             _targetId = targetId;
@@ -48,11 +49,43 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _relocations = relocations;
         }
 
-        /// <summary>한 행위자에서 대상과 무관한 칸별 값(옮긴 행위자, 그 자리 투영 입력)이다. 대상 판정끼리만 나눈다.</summary>
+        /// <summary>하나의 교전 탐색에서 같은 행위자의 대상과 무관한 칸별 값을 나눈다.</summary>
         internal sealed class Relocations
         {
+            private readonly CombatCommandInput _input;
+            private readonly CharacterCombatFacts _actor;
+            private readonly EnemyDecisionContext.ObservedGeometry _geometry;
+            private readonly int _deliveryCapacity;
+
             internal readonly Dictionary<CellCoord, CharacterCombatFacts> Moved = new Dictionary<CellCoord, CharacterCombatFacts>();
             internal readonly Dictionary<CellCoord, CombatCommandInput> Projected = new Dictionary<CellCoord, CombatCommandInput>();
+            internal readonly Dictionary<CellCoord, (int damage, CombatAttackQueries.SelectionPreparation selection)> Prerequisites =
+                new Dictionary<CellCoord, (int, CombatAttackQueries.SelectionPreparation)>();
+            internal readonly Dictionary<(CellCoord cell, AttackAim aim), ResolvedAttackDelivery> Deliveries =
+                new Dictionary<(CellCoord, AttackAim), ResolvedAttackDelivery>();
+
+            internal Relocations(CombatCommandInput input, CharacterCombatFacts actor, EnemyDecisionContext.ObservedGeometry geometry,
+                int deliveryCapacity = 256)
+            {
+                _input = input ?? throw new ArgumentNullException(nameof(input));
+                _actor = actor ?? throw new ArgumentNullException(nameof(actor));
+                _geometry = geometry ?? throw new ArgumentNullException(nameof(geometry));
+                _deliveryCapacity = deliveryCapacity >= 0 ? deliveryCapacity : throw new ArgumentOutOfRangeException(nameof(deliveryCapacity));
+            }
+
+            /// <summary>반복자가 끝난 전달만 저장한다. 용량이 차면 새 키는 저장하지 않고 기존 값을 유지한다.</summary>
+            internal void StoreDelivery(CellCoord cell, AttackAim aim, ResolvedAttackDelivery delivery)
+            {
+                if (Deliveries.Count < _deliveryCapacity) Deliveries.TryAdd((cell, aim), delivery);
+            }
+
+            internal void RequireScope(CombatCommandInput input, CharacterCombatFacts actor, MovementEnvironmentFacts environment,
+                EnemyDecisionContext.ObservedGeometry geometry)
+            {
+                if (!ReferenceEquals(_input, input) || !ReferenceEquals(_actor, actor) || !ReferenceEquals(_geometry, geometry) ||
+                    !ReferenceEquals(_geometry.Environment, environment))
+                    throw new InvalidOperationException("교전 탐색의 입력·행위자·관측 기하·환경이 다릅니다.");
+            }
         }
 
         internal IEnumerable<int> TargetSteps()
@@ -115,8 +148,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             if (!_attackerAllowed) { completed(false); yield break; }
 
-            // 대상에 닿을 후보가 있을 때만 행위자를 옮긴 입력을 만든다.
+            // 실제 조준 후보가 있는 칸에서만 피해량·지정 준비를 만든다.
             int? commonDamage = null;
+            CombatAttackQueries.SelectionPreparation preparation = null;
             using var aims = CombatAttackQueries.EnumerateAimsThatCanHit(_input, moved, _profile, _targetCells, _environment);
             while (aims.MoveNext())
             {
@@ -129,8 +163,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 if (!commonDamage.HasValue)
                 {
-                    commonDamage = CombatAttackCalculator.CommonAttackDamage(projected, moved, _profile);
-                    yield return "PursuitCommonDamage";
+                    if (_relocations != null && _relocations.Prerequisites.TryGetValue(cell, out var saved))
+                    {
+                        commonDamage = saved.damage;
+                        preparation = saved.selection;
+                    }
+                    else
+                    {
+                        commonDamage = CombatAttackCalculator.CommonAttackDamage(projected, moved, _profile, CombatDamageKind.OrdinaryAttack);
+                        yield return "PursuitCommonDamage";
+                    }
                 }
                 if (_walls == null)
                     foreach (var phase in WallGeometryBuilder.BuildSteps(_input.State.BoardWidth, _input.State.BoardHeight,
@@ -139,9 +181,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (_elevation == null)
                     foreach (var phase in AttackElevation.BuildSteps(_environment, _input.EnvironmentBindings, value => _elevation = value))
                         yield return phase;
+                if (_relocations != null && preparation == null)
+                {
+                    preparation = CombatAttackQueries.PrepareSelection(projected, moved, _profile, _environment);
+                    _relocations.Prerequisites[cell] = (commonDamage.Value, preparation);
+                    yield return "PursuitSelectionPreparation";
+                }
+                ResolvedAttackDelivery delivery = null;
+                if (_relocations == null || !_relocations.Deliveries.TryGetValue((cell, aim), out delivery))
+                {
+                    foreach (var phase in CombatAttackQueries.DeliverySteps(projected, moved, _profile, aim,
+                        commonDamage.Value, _environment, _walls, _elevation, value => delivery = value, preparation)) yield return phase;
+                    // 콜백이 값을 넘겨도 마지막 yield 뒤에 취소될 수 있으므로 완전히 끝난 뒤에만 게시한다.
+                    _relocations?.StoreDelivery(cell, aim, delivery);
+                }
                 bool delivers = false;
-                foreach (var phase in CombatAttackQueries.DeliveryCheckSteps(projected, moved, _profile, aim, _targetId,
-                    commonDamage.Value, _environment, _walls, _elevation, value => delivers = value)) yield return phase;
+                foreach (var phase in CombatAttackQueries.DeliveryHitsTargetSteps(delivery, _targetId, value => delivers = value))
+                    yield return phase;
                 if (delivers) { completed(true); yield break; }
             }
             completed(false);
@@ -182,7 +238,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 characters[i] = unit.EntityId == _actor.EntityId ? moved : unit;
             }
             return _input.WithWorld(_input.State, characters, _input.Main, _input.SoulCounts, _input.Souls,
-                _input.EnvironmentBindings).WithIntent(CombatCommandKind.Attack, default, default, null, null);
+                _input.EnvironmentBindings).WithIntent(CombatCommandKind.Attack, default, default, null, null, sweepSide: null);
         }
     }
 }

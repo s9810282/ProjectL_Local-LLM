@@ -59,6 +59,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             DustScreenTraitSpec t => new(t.TraitKey, 0, exemptsAlliedAttackRangePenalty: t.ExemptsAlliedAttackRangePenalty),
             SacrificeTraitSpec t => new(t.TraitKey, t.ShieldOnActivation, preventsLethalSacrificeDamage: t.PreventsLethalSacrificeDamage),
             BleedingTraitSpec t => new(t.TraitKey, t.DamagePerStack),
+            DeadHandTraitSpec t => new(t.TraitKey, t.DamagePercent),
             _ => throw new ArgumentException("등급 수치가 정의되지 않은 특성입니다.", nameof(normal))
         };
 
@@ -90,6 +91,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                     t.OpposingTurnEndsToExpire, ExemptsAlliedAttackRangePenalty),
                 SacrificeTraitSpec t => new SacrificeTraitSpec(t.RadiusCells, t.MaxTriggersPerEnemyTurn, PreventsLethalSacrificeDamage, Amount),
                 BleedingTraitSpec => new BleedingTraitSpec(Amount),
+                DeadHandTraitSpec => new DeadHandTraitSpec(Amount),
                 _ => throw new ArgumentException("등급 수치가 정의되지 않은 특성입니다.", nameof(source))
             };
         }

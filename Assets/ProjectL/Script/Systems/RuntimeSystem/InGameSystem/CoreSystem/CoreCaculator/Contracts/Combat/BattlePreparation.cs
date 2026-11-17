@@ -3,6 +3,8 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
@@ -135,7 +137,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public BattlePreparation(IReadOnlyList<CharacterCombatFacts> characters,
             CombatPreparation combat, IReadOnlyList<StructureCombatFacts> structures = null,
             long? nextEntityId = null, CombatCommandState commandState = null, BattleObjective objective = null,
-            EnvironmentProgressFacts environmentProgress = null, RunDeckSnapshot membership = null, long rosterRevision = 0)
+            EnvironmentProgressFacts environmentProgress = null, RunDeckSnapshot membership = null, long rosterRevision = 0,
+            PlayerSkillBattleState playerSkill = null)
         {
             if (characters == null)
                 throw new ArgumentNullException(nameof(characters));
@@ -173,11 +176,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (commandState != null && environmentProgress != null && !commandState.EnvironmentProgress.SameValues(environmentProgress))
                 throw new ArgumentException("전투 준비의 초기 환경 진행값과 명령 상태의 진행값이 다릅니다.", nameof(commandState));
             var reinforcements = InitialReinforcements(combat, Structures);
-            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth,combat.BoardHeight,                combat.InitialPhase,Structures,                Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
-                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray()),combat.Environment,                environmentProgress: environmentProgress,wallBlocking: combat.WallBlocking,objective: objective,allocation: allocation,itemRandomState: unchecked((uint)combat.TimelineSeed),
-                reinforcements: reinforcements);
-            var expected = new CombatCommandState(combat.BoardWidth,combat.BoardHeight,combat.InitialPhase,Structures,CommandState.ThornFields,                CommandState.Turn,combat.Environment,CommandState.EnvironmentProgress,combat.WallBlocking,objective,allocation,CommandState.ItemRandomState,gimmicks: CommandState.Gimmicks,
-                reinforcements: reinforcements);
+            playerSkill ??= commandState?.PlayerSkill;
+            if (playerSkill != null &&
+                (playerSkill.LastUsedControllerTurnSequence != 0 || playerSkill.RemainingUses != playerSkill.Definition.StageUseLimit ||
+                 (membership != null && membership.MainId != playerSkill.MainInstanceId) ||
+                 !copy.Any(c => c.EntityId == playerSkill.ActorId && c.OwnedId == playerSkill.MainInstanceId &&
+                     c.Owner == Owner.Player && c.OwnershipRole == CharacterOwnershipRole.Main &&
+                     c.CharacterKey == playerSkill.Definition.MainCharacterKey)))
+                throw new ArgumentException("초기 스킬 상태는 준비한 메인과 최대 사용량에 일치해야 합니다.", nameof(playerSkill));
+            CommandState = commandState ?? new CombatCommandState(combat.BoardWidth, combat.BoardHeight, combat.InitialPhase, Structures,
+                new CombatTurnFacts(StagePhase.Deployment, enemyOrigins: copy.Where(c => c.Owner == Owner.Enemy && c.Area == CharacterRuntimeArea.Field)
+                    .Select(c => new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray()),
+                combat.Environment, environmentProgress: environmentProgress, wallBlocking: combat.WallBlocking,
+                objective: objective, allocation: allocation, itemRandomState: unchecked((uint)combat.TimelineSeed),
+                reinforcements: reinforcements, playerSkill: playerSkill);
+            var expected = new CombatCommandState(combat.BoardWidth, combat.BoardHeight, combat.InitialPhase, Structures,
+                CommandState.Turn, combat.Environment, CommandState.EnvironmentProgress, combat.WallBlocking,
+                objective, allocation, CommandState.ItemRandomState, gimmicks: CommandState.Gimmicks,
+                reinforcements: reinforcements, playerSkill: playerSkill, thornBombs: ThornBombStateSet.Empty);
             if (!expected.SameValues(CommandState))
                 throw new ArgumentException("전투 준비와 명령 조회값이 다릅니다.", nameof(commandState));
         }

@@ -233,8 +233,7 @@ namespace ProjectL.Tests.Core
                     : Array.Empty<StructureCombatFacts>();
                 var environment = _maze ? EnemyMovementPathTests.Maze() : null;
                 var state = new CombatCommandState(Size, Size, CombatFlowPhase.Automatic,
-                    structures, Array.Empty<ThornFieldCellSnapshot>(),
-                    new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                    structures, new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                         controllerTurnSequence: 2, completedPlayerTurnCount: 1), environment);
                 var profiles = source.Profiles.Select(p => p.Definition.Key == enemy.CharacterKey
                     ? new CombatAttackProfile(CombatCommandTestData.Spec(enemy.CharacterKey, 10, _category, specs.ToArray()), _method)

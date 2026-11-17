@@ -90,14 +90,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         public void AttackModeRequested() => Receive(CombatInputRouter.Request.AttackMode, 0f, 0f);
 
+        public void CycleUnitCategoryRequested() => Receive(CombatInputRouter.Request.CycleUnitCategory, 0f, 0f);
+
         /// <summary>공격 버튼의 입구입니다(행동 버튼 설계 A2). 키 입력 계약(<see cref="IStageInputReceiver"/>)에는 없습니다.</summary>
         internal void AttackToggleRequested() => Receive(CombatInputRouter.Request.AttackToggle, 0f, 0f);
 
         public void RequestReturn() => Receive(CombatInputRouter.Request.Return, 0f, 0f);
 
+        public void SkillRequested() => Receive(CombatInputRouter.Request.Skill, 0f, 0f);
+
         public void CameraPanChanged(float x, float y) => Receive(CombatInputRouter.Request.CameraPan, x, y);
 
         public void CameraZoomScrolled(float delta) => Receive(CombatInputRouter.Request.CameraZoom, delta, 0f);
+
+        public void CameraRotateChanged(float value) => Receive(CombatInputRouter.Request.CameraRotate, value, 0f);
+
+        public void CameraRotateDragChanged(bool held) => Receive(CombatInputRouter.Request.CameraRotateDrag, held ? 1f : 0f, 0f);
 
         /// <summary>
         /// 모든 외부 입력의 입구입니다. 정지 뒤나 연결 해제 뒤 늦게 도착한 입력은 무시합니다.

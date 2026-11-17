@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     internal static class CombatProjectileCueComposer
     {
         // 호출 조립이 인자와 시점을 검사합니다. 소리가 없는 프리셋은 시점 조회도 하지 않습니다.
-        // 탄별 시점은 기준 시점 표에서 읽습니다(원거리 클립만 넣음, 없으면 코드 모션의 Cue·Hit).
+        // 탄별 시점은 기준 시점 표에서 읽습니다(원거리 클립만 넣음, 없으면 코드 모션의 Event1·첫 실제 피격).
         internal static void Add(CombatComposition composition, CombatCueAnchors anchors, CombatEventAudio sound,
             CombatProjectileSounds settings)
         {
@@ -39,7 +39,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (cue.Kind == CombatSoundCueKind.None) return;
             if (timings == null)
             {
-                if (anchors.TryStart(flight ? CombatCueAnchor.Cue : CombatCueAnchor.Hit, delay, out CombatPieceStart start))
+                if (anchors.TryStart(flight ? CombatCueAnchor.Event1 : CombatCueAnchor.Contact, flight ? CombatContactFilter.Every : CombatContactFilter.FirstHit, delay, out CombatPieceStart start))
                     composition.Add(new CombatEventSoundPiece(sound, () => cue), start);
                 return;
             }

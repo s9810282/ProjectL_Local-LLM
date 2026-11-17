@@ -147,27 +147,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
         /// <summary>같은 표시를 갱신하거나 교체합니다. 외형 조회 함수는 기존 Table에 연결하며 null은 외형 미지정입니다.</summary>
         internal void Show(IReadOnlyList<StageProgressData> nodes, StageMapViewData mapData,
-            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent)
+            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent, GameObject markerPrefab)
         {
-            Show(nodes, mapData, findVisual, parent, 0);
+            Show(nodes, mapData, findVisual, parent, markerPrefab, 0);
         }
 
         /// <summary>맵 키를 지정하지 않는 표시 호출입니다. 같은 표시의 완료 상태와 현재 위치를 다시 적용합니다.</summary>
         internal void Show(IReadOnlyList<StageProgressData> nodes, StageMapViewData mapData,
-            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent, int currentNodeId)
+            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent, GameObject markerPrefab,
+            int currentNodeId)
         {
-            Show(0, nodes, mapData, findVisual, parent, currentNodeId);
+            Show(0, nodes, mapData, findVisual, parent, markerPrefab, currentNodeId);
         }
 
         /// <summary>동일 맵·구조·표시 구성이면 인스턴스를 보존하며, 다른 표시에서는 소유 자원을 교체합니다.</summary>
         internal void Show(int mapKey, IReadOnlyList<StageProgressData> nodes, StageMapViewData mapData,
-            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent, int currentNodeId,
+            Func<StageProgressData, StageNodeVisualData> findVisual, Transform parent, GameObject markerPrefab,
+            int currentNodeId,
             List<StageNodeDropTarget> dropTargets = null)
         {
             if (nodes == null) throw new ArgumentNullException(nameof(nodes));
             if (mapData == null) throw new ArgumentNullException(nameof(mapData));
             if (findVisual == null) throw new ArgumentNullException(nameof(findVisual));
             if (parent == null) throw new ArgumentNullException(nameof(parent));
+            if (markerPrefab == null) throw new ArgumentNullException(nameof(markerPrefab));
             StageMarkerPlacement.ValidateMapRoot(parent);
             if (!float.IsFinite(mapData.NodeScale) || Mathf.Abs(mapData.NodeScale - 1f) > 0.001f)
                 throw new InvalidOperationException("[StageMapViewDisplay] 건물 앞 이동은 NodeScale 1만 지원합니다.");
@@ -177,7 +180,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
                 // 수락된 표시의 구조 교체는 호출자가 이동/lease를 먼저 무효화해야 합니다.
                 // 아래 일반 표시 실패의 Clear보다 먼저 진단해 소유 순서를 보존합니다.
                 long movingGeneration = _generation;
-                var movingIdentity = new DisplayIdentity(mapKey, nodes, mapData, parent);
+                var movingIdentity = new DisplayIdentity(mapKey, nodes, mapData, parent, markerPrefab);
                 foreach (StageProgressData node in nodes)
                 {
                     if (!node.IsStart) movingIdentity.SetVisual(node.NodeId, findVisual(node));
@@ -206,7 +209,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             bool dropPrepared = false;
             try
             {
-                var identity = new DisplayIdentity(mapKey, nodes, mapData, parent);
+                var identity = new DisplayIdentity(mapKey, nodes, mapData, parent, markerPrefab);
                 var visuals = new Dictionary<int, StageNodeVisualData>();
                 if (_identity != null && _identity.Matches(identity, false))
                 {
@@ -253,7 +256,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
                 if (_generation != generation) return;
                 _links.Show(nodes, mapData, _nodes, parent, _colors);
                 if (_generation != generation) return;
-                _markerPrefab = mapData.CurrentMarkerPrefab;
+                _markerPrefab = markerPrefab;
                 _markerOffset = mapData.MarkerOffset;
                 _markerYaw = mapData.MarkerYaw;
                 _markerScale = mapData.MarkerScale;
@@ -393,16 +396,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             // 맵 표시 설정은 DB가 만든 불변 Data이고 System이 한 번 받아 연결마다 같은 참조를 넘깁니다.
             // 칸을 하나씩 베껴 비교하지 않고 참조로 비교합니다. 설정이 바뀌면 DB를 다시 만들어 참조가 바뀝니다(평가 N-16).
             private readonly StageMapViewData _data;
+            private readonly GameObject _markerPrefab;
             private readonly Dictionary<int, NodeIdentity> _nodes = new();
 
             internal DisplayIdentity(int mapKey, IReadOnlyList<StageProgressData> nodes, StageMapViewData data,
-                Transform parent)
+                Transform parent, GameObject markerPrefab)
             {
                 _mapKey = mapKey;
                 _parent = parent;
                 _parentRotation = parent.rotation;
                 _parentScale = parent.lossyScale;
                 _data = data;
+                _markerPrefab = markerPrefab;
 
                 foreach (StageProgressData node in nodes)
                 {
@@ -420,7 +425,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 
             internal bool Matches(DisplayIdentity other, bool compareVisuals)
             {
-                if (_mapKey != other._mapKey || _parent != other._parent ||
+                if (_mapKey != other._mapKey || _parent != other._parent || _markerPrefab != other._markerPrefab ||
                     !_parentRotation.Equals(other._parentRotation) || !_parentScale.Equals(other._parentScale) ||
                     !ReferenceEquals(_data, other._data) || _nodes.Count != other._nodes.Count)
                     return false;

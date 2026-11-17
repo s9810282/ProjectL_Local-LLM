@@ -51,9 +51,8 @@ namespace ProjectL.Tests.Core
         {
             var input = TerrainInput(MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0)),
                 High(11, new CellCoord(2, 0)));
-            input = CombatCommandTestData.With(input, state: input.State.With(thornFields:
-                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 100) }));
-            var moved = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(input.State, (CellCoord.Right, 100)));
+            var moved = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(moved.Accepted, Is.True, moved.Reason);
             Assert.That(moved.PathMovement.EnteredCells, Is.EqualTo(new[] { CellCoord.Right }));
             Assert.That(moved.PathMovement.StopReason, Is.EqualTo(MovementStopReason.Dead));

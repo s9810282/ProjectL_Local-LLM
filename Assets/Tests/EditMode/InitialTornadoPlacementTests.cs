@@ -166,7 +166,7 @@ namespace ProjectL.Tests.Core
 
         private static InitialObstaclePlacementSpec Barrel(CellCoord cell) =>
             new(new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 1, new[] { CellCoord.Zero }, 10, false, 0),
-                ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 7);
+                ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 2, 7);
 
         private static StageConfig Stage(int seed,
             InitialEnemyPlacementSpec[] enemies = null, InitialEnemyStructurePlacementSpec[] structures = null) =>

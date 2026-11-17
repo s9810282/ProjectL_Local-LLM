@@ -19,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private EnemyThreatField _threat;
         internal EnemyDecisionDiagnostics Diagnostics { get; }
         private ObservedGeometry _geometry;
+        private (MovementEnvironmentFacts source, Owner observer, MovementEnvironmentFacts projection) _assessmentVisibility;
         private SortedDictionary<(int kind, int id), HostileTarget> _targets;
         private bool _indexed;
 
@@ -126,6 +127,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 _geometry = new ObservedGeometry(visible, walls, elevation);
             }
             completed(_geometry);
+        }
+
+        /// <summary>후보 평가에서 양쪽 공개를 보존한 마지막 완료 투영을 같은 원본과 관찰자에 재사용한다.</summary>
+        internal IEnumerable<int> AssessmentVisibilitySteps(MovementEnvironmentFacts source, Owner observer,
+            Action<MovementEnvironmentFacts> completed)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var cached = _assessmentVisibility;
+            if (ReferenceEquals(cached.source, source) && cached.observer == observer)
+            {
+                yield return 0;
+                completed(cached.projection);
+                yield break;
+            }
+
+            MovementEnvironmentFacts projection = null;
+            foreach (var _ in source.VisibleSteps(observer, value => projection = value, preservePublic: true))
+                yield return 0;
+            // 하위 콜백 뒤에도 열거가 남아 있으므로 정상 완료 뒤에만 교체한다.
+            _assessmentVisibility = (source, observer, projection);
+            completed(projection);
         }
 
         internal IEnumerable<int> TargetSteps(Action<IReadOnlyDictionary<(int kind, int id), HostileTarget>> completed)

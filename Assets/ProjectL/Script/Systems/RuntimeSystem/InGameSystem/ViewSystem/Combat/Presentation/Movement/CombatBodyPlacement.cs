@@ -6,7 +6,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 {
     /// <summary>
     /// 월드에 놓인 상자를 접촉 몸(필드 로컬 XZ 외접 사각형, <see cref="CombatBody"/>)으로 바꿉니다(히트 타이밍 설계 H4).
-    /// 유닛·오브젝트·가시 몸이 같은 변환을 씁니다. 회전한 상자는 외접 사각형이며 90도 단위 회전이면 정확합니다.
+    /// 유닛·오브젝트 몸이 같은 변환을 씁니다. 회전한 상자는 외접 사각형이며 90도 단위 회전이면 정확합니다.
     /// </summary>
     internal static class CombatBodyPlacement
     {

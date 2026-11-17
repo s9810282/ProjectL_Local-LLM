@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProjectL.Framework.DataBase;
 using ProjectL.Tool.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -9,6 +10,7 @@ using Object = UnityEngine.Object;
 using CellCoord = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord;
 using ChapterStageKind = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.StageMap.ChapterStageKind;
 using DeploymentZonePolicy = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Placement.DeploymentZonePolicy;
+using MovingPlatformSpec = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.MovingPlatformSpec;
 using ObstacleContentKind = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.ObstacleContentKind;
 using TornadoGeometry = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.TornadoGeometry;
 using ObstacleContentProfile = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.ObstacleContentProfile;
@@ -35,6 +37,7 @@ namespace ProjectL.Tool.Editor
         private const string EconomyTableType = "StageEconomyDataTableSO", LoadoutTableType = "EnemyLoadoutDataTableSO";
         private const string FieldId = "fieldId", RosterKey = "rosterKey", EconomyKey = "economyKey", LoadoutKey = "loadoutKey", Reserve = "reserveCapacity";
         private const string AttackRange = "attackRange", TargetingMethod = "targetingMethod", Shape = "shape", Splash = "splash";
+        private const string TargetingWidth = "width";
         private const string UnitRoleField = "role", UnitOwnerField = "ownerEligibility";
         private const string FieldViewType = "StageFieldViewDataSO";
         private const string FieldViewMode = "stageFieldViewData.fieldDisplayMode", FieldViewSpacing = "stageFieldViewData.outlineCellSpacing";
@@ -58,6 +61,7 @@ namespace ProjectL.Tool.Editor
         private const string MainAnchor = "mainCharacterAnchor", MainRotation = "mainCharacterRotation", Headquarters = "headquarters";
         private const string HeadquartersAnchor = "enemyHeadquartersAnchor", HeadquartersRotation = "enemyHeadquartersRotation";
         private const string Environment = "environment", Terrains = "terrainPlacements", Obstacles = "obstaclePlacements", Objects = "objectPlacements";
+        private const string Platforms = "movingPlatforms";
         private const string CornerCut = "cornerCutTicks", RailwayEnabled = "railwayEnabled", Railway = "railway", RailCells = "railCells";
         private const string RailFirst = "firstActivationAfterControllerTurns", RailRepeat = "repeatIntervalControllerTurns";
         private const string Rockfall = "rockfall", RockfallEnabled = "enabled", RockfallCooldown = "cooldownControllerTurns", RockfallWarning = "warningControllerTurns";
@@ -315,12 +319,13 @@ namespace ProjectL.Tool.Editor
             values.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        // "배치 비우고 만들기"로 만든 새 전투 데이터에서만 숨김 호환 배치를 비웁니다.
-        internal static void ClearLegacyPlacements(Object combat)
+        // "배치 비우고 만들기"는 레이아웃 외부에서 저작한 배치도 비웁니다.
+        internal static void ClearPlacementsOutsideLayout(Object combat)
         {
             var values = new SerializedObject(combat);
             Require(values, LegacyWalls).arraySize = 0;
             Require(values, LegacyTerrains).arraySize = 0;
+            Require(Require(values, Environment), Platforms).arraySize = 0;
             values.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -403,7 +408,18 @@ namespace ProjectL.Tool.Editor
             var targets = document.Placements(grid).Where(p => p.Layer == CombatStageSoLayer.Unit ||
                 p.Layer == CombatStageSoLayer.Structure || p.Layer == CombatStageSoLayer.Headquarters)
                 .Select(p => (Label: CombatStageSoDocument.LayerName(p.Layer) + " " + NameOf(document.DefinitionOf(p.Item)), Cells: p.Cells, Target: CombatStageSoIssueTarget.Of(document, p.Item)));
-            return CombatStageSoPlacementChecks.Check(targets, walls, cliffs);
+            var supported = new HashSet<Vector2Int>();
+            if (document.platformSourceIds.Count > 0)
+            {
+                // 형상 변환과 초기 바닥 검증은 SO의 기존 GetData 경계가 맡습니다.
+                var data = ((DatabaseItem)combat).GetData();
+                var platforms = data.GetType().GetProperty("MovingPlatforms")?.GetValue(data) as IReadOnlyList<MovingPlatformSpec>
+                    ?? throw new InvalidOperationException("스테이지 데이터에 플랫폼 정의 목록이 없습니다.");
+                foreach (var platform in platforms)
+                    foreach (var cell in platform.FootprintAt(platform.InitialAnchor))
+                        supported.Add(new Vector2Int(cell.X, cell.Y));
+            }
+            return CombatStageSoPlacementChecks.Check(targets, walls, cliffs, supported);
         }
 
         // 지형 종류 이름은 직렬화된 원본에서 읽습니다. 정의가 빈 배치는 토네이도가 아닌 것으로 답하고, SO 검사가 빈 정의를 알립니다.
@@ -593,16 +609,17 @@ namespace ProjectL.Tool.Editor
 
         // 공격 범위 미리보기용 값입니다(추가 설계 AD2). 지정 방식 SO가 없으면 false입니다.
         // 모양·스플래시는 Core 함수에 그대로 넘기므로 열거의 실제 값(intValue)을 냅니다.
-        internal static bool ReadAttack(Object unit, out int range, out int shape, out int splash)
+        internal static bool ReadAttack(Object unit, out int range, out int shape, out int splash, out int width)
         {
             var values = new SerializedObject(unit);
             range = Require(values, AttackRange).intValue;
-            shape = splash = 0;
+            shape = splash = width = 0;
             Object method = Require(values, TargetingMethod).objectReferenceValue;
             if (method == null) return false;
             var methodValues = new SerializedObject(method);
             shape = Require(methodValues, Shape).intValue;
             splash = Require(methodValues, Splash).intValue;
+            width = Require(methodValues, TargetingWidth).intValue;
             return true;
         }
 
@@ -805,6 +822,8 @@ namespace ProjectL.Tool.Editor
             document.terrains = Elements(Require(environment, Terrains)).Select(e => ReadMarker(e, true, names)).ToList();
             document.obstacles = Elements(Require(environment, Obstacles)).Select(e => ReadPiece(e, Definition, names)).ToList();
             document.objects = Elements(Require(environment, Objects)).Select(e => ReadMarker(e, false, names)).ToList();
+            document.platformSourceIds = Elements(Require(environment, Platforms))
+                .Select(element => Require(element, SourceId).longValue).ToList();
             document.railwayEnabled = Require(combat, RailwayEnabled).boolValue;
             SerializedProperty railway = Require(combat, Railway);
             document.railCells = Elements(Require(railway, RailCells)).Select(ReadCell).ToList();

@@ -36,8 +36,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
         /// <summary>전투 단계: 공격 대상 선택으로 전환을 요청했습니다.</summary>
         void AttackModeRequested();
 
-        /// <summary>전투 단계: 체크포인트 복귀를 요청했습니다.</summary>
+        /// <summary>전투 단계: 다음 병종의 아군 유닛 선택을 요청했습니다.</summary>
+        void CycleUnitCategoryRequested();
+
+        /// <summary>전투 단계: 이동 되돌리기를 요청했습니다(옛 체크포인트 복귀 이름을 그대로 씀).</summary>
         void RequestReturn();
+
+        /// <summary>전투 단계: 플레이어 액티브 스킬 모드 진입 또는 끝을 요청했습니다(스킬 View 설계 SK6).</summary>
+        void SkillRequested();
 
         /// <summary>
         /// 배치·전투 단계: 카메라 이동 키의 방향이 바뀌었습니다(x = 오른쪽, y = 위, 각 −1~1). 모두 떼면 (0, 0)이 옵니다(카메라 조작 설계 CC2).
@@ -47,5 +53,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
 
         /// <summary>배치·전투 단계: 마우스 휠을 굴렸습니다. 위로 굴리면 양수입니다. 값의 크기는 기기마다 다르므로 부호만 봅니다(카메라 조작 계획 P1).</summary>
         void CameraZoomScrolled(float delta);
+
+        /// <summary>
+        /// 배치·전투 단계: 카메라 회전 키의 값이 바뀌었습니다(−1 = Z, +1 = C, 떼거나 둘 다 누르면 0, 카메라 회전 설계 CR5).
+        /// 누르고 있는 동안 반복해서 오지 않으므로 받는 View가 마지막 값을 기억합니다.
+        /// </summary>
+        void CameraRotateChanged(float value);
+
+        /// <summary>
+        /// 배치·전투 단계: 가운데 버튼을 눌렀거나(true) 뗐습니다(false, 카메라 회전 설계 CR8). 누르는 동안 끈 양은 포인터 위치로 받는 View가 셉니다.
+        /// </summary>
+        void CameraRotateDragChanged(bool held);
     }
 }

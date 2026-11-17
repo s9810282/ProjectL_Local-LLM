@@ -53,7 +53,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         }
 
         /// <summary>걸음 하나를 그 유닛의 레인에서 시작합니다. <paramref name="completed"/>는 걸음 사건 완료 통지입니다(동시 처리 설계 C6).</summary>
-        internal void BeginStep(CombatCharacterEvent step, Action completed)
+        /// <param name="leadHold">걸음 전에 더 기다릴 초입니다(공격 동작 앞당김, 클립 칸 다시 짜기 11-17 사용자 결정 A). 적 행동 간격에 더해집니다.</param>
+        internal void BeginStep(CombatCharacterEvent step, Action completed, float leadHold = 0f)
         {
             if (_positionSwap?.TrySuppressStep(step) == true)
             {
@@ -75,8 +76,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 스스로 하는 이동은 새 행동이라 앞 행동의 재생 강조를 지운다. 넉백 같은 밀림은 앞 포효의 결과라 유지한다.
             if (CombatMovementKinds.IsSelfDriven(kind))
                 _highlight.Clear();
-            // 걸음 전 간격은 자발적 경로의 첫 걸음(행동 시작)에만 생깁니다. 그동안 다른 레인은 진행하지 않습니다(행동 경계라 함께 돌 레인이 없음).
-            float gap = _pacing.BeforeStep(step);
+            // 걸음 전 간격은 자발적 경로의 첫 걸음(행동 시작)과 공격 동작 앞당김의 첫 선행 걸음에만 생깁니다. 그동안 다른 레인은 진행하지 않습니다(함께 돌 레인이 없을 때만 붙잡음).
+            float gap = _pacing.BeforeStep(step) + Math.Max(0f, leadHold);
             if (gap > 0f) _waitSlot.StartGap(gap);
             _motion.BeginStep(step, kind, gap == 0f, _mapper(), completed);
         }

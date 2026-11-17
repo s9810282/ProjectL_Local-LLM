@@ -12,8 +12,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
     {
         private static readonly CellCoord[] CardinalOffsets =
             { new CellCoord(-1, 0), new CellCoord(1, 0), new CellCoord(0, -1), new CellCoord(0, 1) };
-        private static readonly CellCoord[] DiagonalOffsets =
-            { new CellCoord(1, -1), new CellCoord(1, 1) };
 
         public static WallGeometry Build(int width, int height, MovementEnvironmentFacts environment,
             EnvironmentSemanticBindings bindings, WallBlockingSpec settings)
@@ -114,16 +112,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                     yield return "WallGeometryIndex";
                 }
             }
-            foreach (var wall in walls.Values)
-            {
-                foreach (var offset in DiagonalOffsets)
-                {
-                    var neighbor = new CellCoord(checked(wall.Cell.X + offset.X), checked(wall.Cell.Y + offset.Y));
-                    if (byCell.TryGetValue(neighbor, out var other) && runByCell[wall.Cell] != runByCell[neighbor])
-                        throw InvalidContent("서로 다른 벽 연결 성분은 대각선으로 접할 수 없습니다.", new[] { wall, other });
-                }
-                yield return "WallGeometryDiagonal";
-            }
+            // 대각선으로만 닿는 잔해는 별도 연결 성분으로 유지하고 각 성분의 기존 차단 형상을 쓴다.
             completed(new WallGeometry(runs, runByCell));
             yield return "WallGeometryComplete";
         }

@@ -29,7 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>
         /// 대상이 맞는 순간입니다(Gate 해제와 같은 순간, 카메라 연출 조각 설계 K4). 정면 공격 조각(<see cref="CombatFacingAttackPiece"/>), 코드 모션 조각(<see cref="CombatCodeMotionPiece"/>, 코드 모션 공격),
         /// 해제 조각(<see cref="CombatReleasePiece"/>, 근접 클립 공격), 접촉 집계(<see cref="CombatVolleyReleasePiece"/>, 원거리 클립 공격)가 냅니다.
-        /// 내는 조각은 <b>대상을 해제한 뒤</b> 냅니다(<see cref="CombatHitMoment.ReleaseThenSignal"/>). 해제가 연 피격 사건과
+        /// 내는 조각은 <b>대상을 해제한 뒤</b> 냅니다(원거리는 첫 해제 뒤, 규칙 <see cref="CombatContactRelease"/>). 해제가 연 피격 사건과
         /// 이 신호로 시작한 항목(카메라 흔들림 등)이 같은 순간에 보이게 하는 규칙이고, 이 문서가 원본입니다(클립 계획 §0.6 CK4).
         /// 클립의 이벤트 타이밍(<see cref="ClipEvent"/>)과는 다른 사실입니다(클립 설계 §8 E1). 피격 선딜레이가 0보다 크면 이벤트 타이밍보다 늦습니다.
         /// </summary>

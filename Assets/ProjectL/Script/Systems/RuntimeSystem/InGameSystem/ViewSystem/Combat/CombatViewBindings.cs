@@ -11,6 +11,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Tutorial;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat;
 using ProjectL.Systems.ServiceKeys.Runtime;
@@ -18,7 +19,7 @@ using ProjectL.Systems.ServiceKeys.Runtime;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
 {
     /// <summary>
-    /// 전투 View 조정자(<see cref="CombatViewSystem"/>)가 서비스를 받을 때(PostBind) 꺼내는 서비스 열여덟의 묶음입니다(조정자 나누기 설계 CS5).
+    /// 전투 View 조정자(<see cref="CombatViewSystem"/>)가 서비스를 받을 때(PostBind) 꺼내는 서비스 묶음입니다(조정자 나누기 설계 CS5).
     /// 조회는 <see cref="From"/> 한 곳이 하고, 조정자는 이 값 하나를 받아 검사·파생 객체 생성을 합니다.
     /// </summary>
     /// <remarks>
@@ -50,7 +51,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             ITutorialStateBufferReadSink tutorialState,
             ITutorialRequestBufferWriteSink tutorialRequests,
             ILodingSystemService loading,
-            IRunDeckReadSink runDeck)
+            IRunDeckReadSink runDeck,
+            IRunDeckService deck)
         {
             State = state;
             Results = results;
@@ -70,6 +72,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             TutorialRequests = tutorialRequests;
             Loading = loading;
             RunDeck = runDeck;
+            Deck = deck;
         }
 
         /// <summary>전투 상태 읽기입니다.</summary>
@@ -126,6 +129,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         /// <summary>확정 RunDeck 읽기입니다. 선택 유닛 준비 대상 읽기가 씁니다.</summary>
         internal IRunDeckReadSink RunDeck { get; }
 
+        /// <summary>전투에서도 보유 개체별 특성 등급이 담긴 덱 스냅샷을 조회합니다.</summary>
+        internal IRunDeckService Deck { get; }
+
         /// <summary>
         /// 서비스 저장소에서 전투 View가 쓰는 서비스를 꺼냅니다. 꺼내는 순서는 옮기기 전 조정자의 인자 평가 순서와 같습니다
         /// (표시 서비스 묶음 → 텍스트 표시 → 재고 → Tutorial 둘 → 로딩 상태 → 확정 덱). 없으면 안 되는 넷은 문구 있는 예외를 던집니다.
@@ -158,7 +164,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
                 buffers.TutorialStateReadSink ?? throw new InvalidOperationException("[CombatViewSystem] Tutorial 상태 읽기 Sink가 필요합니다."),
                 buffers.TutorialRequestWriteSink ?? throw new InvalidOperationException("[CombatViewSystem] Tutorial 요청 쓰기 Sink가 필요합니다."),
                 global.LodingServiceCommand.LodingService ?? throw new InvalidOperationException("[CombatViewSystem] 로딩 완료 상태 서비스가 필요합니다."),
-                buffers.RunDeckReadSink ?? throw new InvalidOperationException("[CombatViewSystem] 확정 RunDeck 읽기가 필요합니다."));
+                buffers.RunDeckReadSink ?? throw new InvalidOperationException("[CombatViewSystem] 확정 RunDeck 읽기가 필요합니다."),
+                inGame.CoreGroup.Deck);
         }
     }
 }

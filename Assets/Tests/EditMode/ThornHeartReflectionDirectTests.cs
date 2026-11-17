@@ -139,7 +139,7 @@ namespace ProjectL.Tests.Core
             Assert.That(selection.FailureReason, Is.EqualTo(AttackFailureReason.None));
             var engine = new CombatEffectEngine();
             var bindings = CombatCommandEffects.Capture(actor, profile);
-            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack);
             var delivery = CombatAttackDelivery.Resolve(input, actor, profile, selection.Selection, damage, walls, AttackElevation.From(environment, input.EnvironmentBindings));
             var plan = new CommandAttackPlan(input,Array.Empty<IMovementTileRule>(),profile,actor,actor,environment,walls,                selection.Selection,delivery,engine,bindings,                new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())),damage,Rotation4.R0,false);
             return (plan, new CommandAttackProjection(input, environment, selection.BlockedContacts), new CommandAttackLedger(), new HashSet<EntityId>());
@@ -176,7 +176,7 @@ namespace ProjectL.Tests.Core
             var profiles = baseline.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, actor.Stats.AttackPower,
                 CategoryKey.Main, specs.ToArray()), method);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,Array.Empty<StructureCombatFacts>(),turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1));
             return new CombatCommandInput(0, CombatCommandKind.Attack, actor.EntityId, AttackAim.ForCell(new CellCoord(4, 3)),
                 state, characters, profiles, baseline.Main,
                 characters.Where(c => c.OwnedId.HasValue).Select(c => new OwnedCharacterRecord(c.OwnedId.Value,

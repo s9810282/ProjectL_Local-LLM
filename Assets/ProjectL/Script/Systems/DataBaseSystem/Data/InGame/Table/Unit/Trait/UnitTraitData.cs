@@ -60,31 +60,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
         }
     }
 
-    /// <summary>가시밭을 남기는 특성입니다.</summary>
-    public sealed class ThornFieldTraitData : UnitTraitData
+    public sealed class DeadHandTraitData : UnitTraitData
     {
-        public override TraitKey TraitKey => TraitKey.ThornField;
-        public int ThornDamage { get; }
-        public int LifetimeUnitTurns { get; }
+        public override TraitKey TraitKey => TraitKey.DeadHand;
+        public int DamagePercent { get; }
 
-        public int DefenseReductionPercent { get; }
-        public UnitTurnTickPhase TickPhase { get; }
-
-        public ThornFieldTraitData(int thornDamage, int lifetimeUnitTurns,
-            int defenseReductionPercent = 0, UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended)
+        public DeadHandTraitData(int damagePercent)
         {
-            ThornDamage = thornDamage;
-            DefenseReductionPercent = defenseReductionPercent;
-            TickPhase = tickPhase;
-            LifetimeUnitTurns = lifetimeUnitTurns;
+            DamagePercent = damagePercent;
         }
 
         public override void Validate()
         {
-            if (ThornDamage < 1 || LifetimeUnitTurns < 1 || DefenseReductionPercent < 0 || DefenseReductionPercent > 100 ||
-                !System.Enum.IsDefined(typeof(UnitTurnTickPhase), TickPhase))
-                throw new InvalidOperationException(
-                    "[ThornFieldTraitData] 피해와 수명은 양수, 방어력 감소율은 0~100, 턴 시계는 유효한 값이어야 합니다.");
+            if (DamagePercent < 0)
+                throw new InvalidOperationException("죽음의 손 피해 비율은 음수일 수 없습니다.");
         }
     }
 

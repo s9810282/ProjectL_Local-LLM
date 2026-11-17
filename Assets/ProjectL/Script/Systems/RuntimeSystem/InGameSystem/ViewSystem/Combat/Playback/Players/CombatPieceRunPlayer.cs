@@ -10,7 +10,6 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Fiel
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Ordering;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Movement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Players
@@ -22,7 +21,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <remarks>
     /// <para>
     /// 행동 실행은 하나뿐이고 옛 능력 재생기의 규칙을 이어받아 막습니다(겹침 프로필이고 출처가 겹침을 허용할 때만 통과, 설계 B14 O3·O5).
-    /// 유닛 실행은 주체마다 하나이고 반응 재생기와 같은 주체 기준 규칙(<see cref="CombatSubjectBlocking"/>)으로 막습니다(O9·O14).
+    /// 유닛 실행은 주체마다 하나이고 걸음 재생기와 같은 주체 기준 규칙(<see cref="CombatSubjectBlocking"/>)으로 막습니다(O9·O14).
+    /// 피격·사망 반응도 유닛 실행 안의 반응 조각이라 여기서 막고 진행합니다(옛 반응 재생기를 대신함, 피격 구조 정리 설계 HC1).
     /// 곁들임 실행(사실 사건의 순간 큐)은 여럿이 함께 진행하고 아무것도 막지 않습니다. 막기 판정은 행동·유닛 실행만 세고,
     /// 재생 끝 판정(<see cref="IsComplete"/>·<see cref="BlocksFinalFacts"/>)만 모든 실행을 셉니다(이펙트 창구 확장 설계 EC6).
     /// </para>
@@ -115,6 +115,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             ICombatSourceLifetime lifetime, bool deferred, Action<CombatPieceRun> unavailable, out CombatPieceRun run)
         {
             if (composition == null) throw new ArgumentNullException(nameof(composition));
+            // 끊긴 실행은 완료를 알리지 않으므로, 끊길 수 있는 실행은 기다리는 사건이 없을 때만 시작합니다(통과 규칙 Cuttable).
+            if (composition.SubjectPass?.Cuttable == true && completed != null)
+                throw new ArgumentException("[CombatPieceRunPlayer] 끊길 수 있는 실행은 사건 완료 통지 없이 시작합니다.", nameof(completed));
             if (_unavailable)
                 throw new InvalidOperationException("[CombatPieceRunPlayer] 표시가 사라진 실행이 있어 새 실행을 시작할 수 없습니다.");
             if (composition.Scope == CombatPieceScope.Action && _actionRun != null)
@@ -155,25 +158,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 행동 실행(포효·소환) 중에는 막습니다. 포효가 히트로 사건 완료를 알린 뒤(겹침 허용 프로필)에만 Gate 규칙으로 허용된 사건이 겹칩니다(설계 §6 Q1).
             if (_actionRun != null && !(query.AllowsOverlap && _overlap.AllowsOverlap))
                 return CombatStartBlock.PieceBusy;
-            // 밀림과 함께 가는 피격(넉백 피격 연출, 임시)은 그 유닛의 밀림 걸음과, 그 사이에 끼는 그 유닛의 사실·특성 발동 사건을 막지 않습니다.
-            // 맞는 순간 함께 밀리기 시작합니다(같은 유닛 사건은 차례로 재생돼, 끼인 사건이 막히면 밀림 걸음도 그 뒤로 밀립니다 — 2026-11-11 진단 로그).
-            if (PassesPushAlongsideHit(query.Item))
+            // 그 사건 주체의 유닛 실행이 통과 규칙을 들고 있고 그 규칙이 이 사건을 통과시키면 막지 않습니다(피격 구조 정리 설계 HC3).
+            // 밀림과 함께 가는 피격·연발 앞 탄의 접촉 피격이 그렇고, 어떤 사건을 통과시키는지는 규칙(CombatComposition.SubjectPass)이 정합니다.
+            if (SubjectPassOf(query.Item)?.Passes(query.Item) == true)
                 return CombatStartBlock.None;
             return CombatSubjectBlocking.Blocks(query, this) ? CombatStartBlock.PieceSubject : CombatStartBlock.None;
         }
 
-        // 그 사건의 주체가 밀림과 함께 가는 피격 실행(CombatComposition.AllowsSubjectPush)을 가진 유닛이고, 그 실행과 겹쳐도 되는 사건인지입니다.
-        // 겹쳐도 되는 것: 밀림 걸음, 캐릭터 사건이 아닌 사건(특성 발동·상태 등 — 그 유닛의 자세·유닛 실행을 새로 열지 않음).
-        // 기다리는 것: 그 유닛의 다른 캐릭터 사건(피격·사망·재배치 — 반응·유닛 실행을 열어 이 실행과 다툼), 행동 사건, 공격 출처를 여는 사건.
-        // 그 유닛의 유닛 실행은 이것 하나뿐입니다(유닛 실행은 주체마다 하나). 행동 실행 막기는 위에서 이미 봤습니다.
-        private bool PassesPushAlongsideHit(CombatEvent item)
+        /// <summary>
+        /// 그 사건이 주체의 유닛 실행을 끊는 사건이면(통과 규칙의 <see cref="ICombatRunSubjectPass.IsCutBy"/>) 그 실행을 지금 끊습니다.
+        /// 조각을 멈추고 대여(클립·플래시 등)를 되돌리며 완료는 알리지 않습니다. 끊을 실행이 없으면 아무 일도 하지 않습니다.
+        /// 그 사건(또는 같은 사건으로 내는 다음 탄의 접촉 피격)을 시작하기 바로 전에, 자세·클립을 빌리기 전에 부릅니다.
+        /// </summary>
+        internal void CutRunFor(CombatEvent item)
         {
-            if (item == null || CombatEventTypeTable.IsActionStart(item) || CombatEventTypeTable.OpensAttackSource(item) ||
-                !CombatEventTypeTable.TryGetSubject(item, out EntityId subject) ||
-                FindUnitRun(subject)?.Composition.AllowsSubjectPush != true)
-                return false;
-            return item is not CombatCharacterEvent character ||
-                character.Kind == CombatEventKind.Moved && !CombatMovementKinds.IsSelfDriven(CombatMovementKinds.Of(character));
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            if (!CombatEventTypeTable.TryGetSubject(item, out EntityId subject)) return;
+            CombatPieceRun run = FindUnitRun(subject);
+            if (run != null && run.Composition.SubjectPass?.IsCutBy(item) == true)
+                run.Cancel();
+        }
+
+        // 그 사건 주체의 유닛 실행이 들고 있는 통과 규칙입니다. 실행이 없거나 주체가 없거나 규칙이 없으면 null입니다.
+        // 실행이 없을 때(재생 중 대부분의 사건)는 사건 형식 표를 읽지 않고 바로 돌아갑니다(묶음 끝 검토 ⑨).
+        // 그 유닛의 유닛 실행은 하나뿐이라(주체마다 하나) 통과시켜도 그 유닛의 다른 연출을 건너뛰지 않습니다. 행동 실행 막기는 FindBlock이 먼저 봅니다.
+        private ICombatRunSubjectPass SubjectPassOf(CombatEvent item)
+        {
+            if (_runs.Count == 0 || item == null) return null;
+            return CombatEventTypeTable.TryGetSubject(item, out EntityId subject) ? FindUnitRun(subject)?.Composition.SubjectPass : null;
         }
 
         /// <summary>프레임 번호를 올립니다. 이 프레임에 신호로 바뀐 항목은 이 프레임 시간을 받지 않습니다(설계 BP2 규칙 2, B14 O4).</summary>
@@ -185,8 +197,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 throw new InvalidOperationException("[CombatPieceRunPlayer] 연출 중 빌린 표시(유닛 표시 또는 맵 카메라)가 사라졌습니다.");
             if (_runs.Count == 0)
                 return true;
-            // Tick 전에 행동 실행이 있었는지로 정합니다(옛 능력 재생기와 같음). 히트 전에는 행동 실행만 진행하고,
-            // 히트 뒤에는 피해 반응·넉백 걸음도 같은 프레임에 진행합니다(설계 §6 Q1, B14 O3·O5). 필드 행동은 멈추지 않습니다.
+            // Tick 전에 행동 실행이 있었는지로 정합니다(옛 능력 재생기와 같음). 히트 전에는 이 재생기의 실행(행동·유닛)만 진행하고 뒤 재생기(걸음 등)는 멈추며,
+            // 히트 뒤에는 넉백 걸음도 같은 프레임에 진행합니다(설계 §6 Q1, B14 O3·O5). 필드 행동은 멈추지 않습니다.
             bool pausesOthers = _actionRun != null && _actionRun.Composition.PausesOtherPlayers;
             _tickSnapshot.AddRange(_runs);
             try

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Categories;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat
 {
@@ -13,6 +14,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         public TraitGrowthCatalog TraitGrowth { get; }
         public IReadOnlyList<ItemDefinition> ItemDefinitions { get; }
+        public PlayerSkillDefinition PlayerSkill { get; }
         public StageConfig Stage { get; }
         public CellCoord MainAnchor { get; }
         public Rotation4 MainRotation { get; }
@@ -44,7 +46,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             BattleObjectiveKind objectiveKind = BattleObjectiveKind.EnemyHeadquartersDestroyed,
             IReadOnlyList<ItemDefinition> itemDefinitions = null, LevelProgressionSpec progression = default,
             IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null, StageClearRewardSpec clearRewards = null, TraitGrowthCatalog traitGrowth = null,
-            NexusReinforcementSpec nexusReinforcements = null)
+            NexusReinforcementSpec nexusReinforcements = null, PlayerSkillDefinition playerSkill = null)
         {
             TraitGrowth = traitGrowth ?? TraitGrowthCatalog.Disabled;
             ItemDefinitions = Copy(itemDefinitions ?? Array.Empty<ItemDefinition>());
@@ -52,6 +54,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Progression = progression;
             ClearRewards = clearRewards;
             NexusReinforcements = nexusReinforcements;
+            PlayerSkill = playerSkill;
             Stage = stage ?? throw new ArgumentNullException(nameof(stage));
             if (objectiveKind == BattleObjectiveKind.None || Enum.IsDefined(typeof(BattleObjectiveKind), objectiveKind) == false)
                 throw new ArgumentOutOfRangeException(nameof(objectiveKind));
@@ -79,7 +82,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (attackProfiles == null)
                 throw new ArgumentNullException(nameof(attackProfiles));
-            return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, attackProfiles, Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions, Progression, InitialRandomTornadoPlacements, ClearRewards, TraitGrowth, NexusReinforcements);
+            return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, attackProfiles, Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions, Progression, InitialRandomTornadoPlacements, ClearRewards, TraitGrowth, NexusReinforcements, PlayerSkill);
         }
 
         public BattleInitialization WithTraitGrowth(TraitGrowthCatalog traitGrowth)
@@ -88,7 +91,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(traitGrowth));
             return new BattleInitialization(Stage, MainAnchor, MainRotation, Units, Structures, Categories, AttackProfiles,
                 Environment, EnvironmentBindings, ObstaclePlacements, WallBlocking, ObjectiveKind, ItemDefinitions,
-                Progression, InitialRandomTornadoPlacements, ClearRewards, traitGrowth, NexusReinforcements);
+                Progression, InitialRandomTornadoPlacements, ClearRewards, traitGrowth, NexusReinforcements, PlayerSkill);
         }
 
         private static IReadOnlyList<T> Copy<T>(IReadOnlyList<T> source) where T : class

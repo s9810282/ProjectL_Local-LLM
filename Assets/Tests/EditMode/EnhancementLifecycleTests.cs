@@ -20,10 +20,7 @@ namespace ProjectL.Tests.Core
             var seed = TornadoEnvironmentTests.Input(completed: 0, sources: Array.Empty<MovementTileFact>());
             var actor = CombatDebuffApplication.WithDebuffs(seed.Characters[0], new CharacterDebuffState(
                 new IntimidationDebuffState(20), defenseReduction: new DefenseReductionDebuffState(30, ends)));
-            var input = CombatCommandTestData.With(seed, new[] { actor, seed.Characters[1] }).WithActor(actor.EntityId);
-            return CombatCommandTestData.With(input, state: input.State.With(thornFields: new[] {
-                new ThornFieldCellSnapshot(CellCoord.Zero, 5, 7, 30, UnitTurnTickPhase.Started),
-                new ThornFieldCellSnapshot(CellCoord.Right, 5, 5) }));
+            return CombatCommandTestData.With(seed, new[] { actor, seed.Characters[1] }).WithActor(actor.EntityId);
         }
 
         [TestCase(1)]
@@ -34,7 +31,6 @@ namespace ProjectL.Tests.Core
             var result = CombatTurnCalculator.EndPlayerTurn(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.Characters.Characters, Is.Empty);
-            Assert.That(result.FinalState.ThornFields, Is.EqualTo(input.State.ThornFields));
             Assert.That(input.Characters[0].Debuffs.DefenseReduction.RemainingOwnTurnEnds, Is.EqualTo(ends));
         }
 
@@ -46,17 +42,16 @@ namespace ProjectL.Tests.Core
             var result = CombatTurnCalculator.BeginControllerTurn(start, Array.Empty<IMovementTileRule>());
             var final = CombatCommandComposition.Project(result);
             Assert.That(final.Characters[0].Debuffs.SameValues(input.Characters[0].Debuffs), Is.True);
-            Assert.That(final.State.ThornFields, Is.EqualTo(input.State.ThornFields));
             Assert.That(final.Characters[0].ActionUse, Is.EqualTo(UnitActionUse.Available));
         }
 
         [Test]
-        public void PreviewAndRejectedCommand_DoNotConsumeStatusOrFieldClock()
+        public void PreviewAndRejectedCommand_DoNotConsumeStatus()
         {
             var input = Turn(2);
             var invalid = CombatCommandComposition.Intent(input, CombatCommandKind.Attack, AttackAim.ForCell(new CellCoord(99, 99)));
-            CombatCommandCalculator.Preview(invalid, CombatTraitTestFixtures.ThornRules);
-            var rejected = CombatCommandCalculator.Calculate(invalid, CombatTraitTestFixtures.ThornRules);
+            CombatCommandCalculator.Preview(invalid, Array.Empty<IMovementTileRule>());
+            var rejected = CombatCommandCalculator.Calculate(invalid, Array.Empty<IMovementTileRule>());
             Assert.That(rejected.Accepted, Is.False);
             Assert.That(rejected.FinalState.SameValues(input.State), Is.True);
             Assert.That(input.Characters[0].Debuffs.DefenseReduction.RemainingOwnTurnEnds, Is.EqualTo(2));

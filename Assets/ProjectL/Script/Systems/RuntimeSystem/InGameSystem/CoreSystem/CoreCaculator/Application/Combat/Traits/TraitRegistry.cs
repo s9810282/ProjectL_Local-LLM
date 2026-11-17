@@ -167,19 +167,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     (PiercingFalloffTraitDefinition)definition,
                     falloffRule));
 
-            var thornFieldRule = new ThornFieldTraitRule();
-            TraitRegistration thornFieldRegistration = new TraitRegistration(
-                TraitKey.ThornField,
-                typeof(ThornFieldTraitSpec),
-                typeof(ThornFieldTraitDefinition),
-                typeof(ThornFieldRuntimeState),
-                new ThornFieldTraitDefinitionFactory(),
-                new ThornFieldRuntimeStateFactory(),
-                thornFieldRule,
-                definition => new ThornFieldEffectRule(
-                    (ThornFieldTraitDefinition)definition,
-                    thornFieldRule));
-
             var knockbackRule = new KnockbackTraitRule();
             TraitRegistration knockbackRegistration = new TraitRegistration(
                 TraitKey.Knockback,
@@ -367,7 +354,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     new HunterTraitRule(), definition => new HunterEffectRule((HunterTraitDefinition)definition, new HunterTraitRule())),
                 focusRegistration,
                 piercingFalloffRegistration,
-                thornFieldRegistration,
                 knockbackRegistration,
                 distanceDamageScaleRegistration,
                 killChainAttackRegistration,
@@ -381,6 +367,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new TraitRegistration(TraitKey.CrashImpact, typeof(CrashImpactTraitSpec), typeof(CrashImpactTraitDefinition),
                     typeof(CrashImpactRuntimeState), new CrashImpactTraitDefinitionFactory(), new CrashImpactRuntimeStateFactory(),
                     new CrashImpactTraitRule(), definition => new CrashImpactEffectRule((CrashImpactTraitDefinition)definition, new CrashImpactTraitRule())),
+                new TraitRegistration(TraitKey.DeadHand, typeof(DeadHandTraitSpec), typeof(DeadHandTraitDefinition),
+                    typeof(DeadHandRuntimeState), new DeadHandTraitDefinitionFactory(), new DeadHandRuntimeStateFactory(),
+                    new DeadHandTraitRule(), definition => new DeadHandEffectRule((DeadHandTraitDefinition)definition)),
+                new TraitRegistration(TraitKey.ThornBomb, typeof(ThornBombTraitSpec), typeof(ThornBombTraitDefinition),
+                    typeof(ThornBombRuntimeState), new ThornBombTraitDefinitionFactory(), new ThornBombRuntimeStateFactory(),
+                    new ThornBombRules(), definition => new ThornBombEffectRule((ThornBombTraitDefinition)definition)),
                 new TraitRegistration(TraitKey.Pull, typeof(PullTraitSpec), typeof(PullTraitDefinition),
                     typeof(PullRuntimeState), new PullTraitDefinitionFactory(), new PullRuntimeStateFactory(),
                     new PullTraitRule(), definition => new PullEffectRule((PullTraitDefinition)definition, new PullTraitRule())),

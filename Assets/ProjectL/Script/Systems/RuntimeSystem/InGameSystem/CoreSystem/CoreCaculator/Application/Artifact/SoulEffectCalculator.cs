@@ -24,7 +24,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>경로 투영의 최종 생존 도착, 정산된 자발적 도착 또는 강제 도착에서만 호출한다.</summary>
-        public SoulActionChanges Collect(SoulCollectorInput input, SoulFieldSnapshot field, bool movementSucceeded)
+        public SoulActionChanges Collect(SoulCollectorInput input, SoulFieldSnapshot field, bool movementSucceeded) =>
+            Collect(input, field, movementSucceeded, null);
+
+        internal SoulActionChanges Collect(SoulCollectorInput input, SoulFieldSnapshot field, bool movementSucceeded,
+            List<HealthStateSnapshot> healthAfterEachSoul)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (field == null) throw new ArgumentNullException(nameof(field));
@@ -48,6 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 (health, count) = SoulGrowthMath.Collect(health, count, input.BaseMaxHealth,
                     character.TemporaryMaxHealthBonus, soul.HealAmount, character.PositionModifier.MaxHealthBonus);
                 consumed.Add(soul.Id);
+                healthAfterEachSoul?.Add(health);
             }
             if (consumed.Count == 0)
                 return ArtifactActionProjection.ProjectCollection(input, character, count,

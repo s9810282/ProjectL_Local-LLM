@@ -22,5 +22,17 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
         void SetModel(LobbyDeckDisplayModel model);
         void ShowDetails(LobbyDeckCardContent card);
         void BindInput(IUIInputReceiver receiver);
+
+        /// <summary>
+        /// 다음 Run 메인으로 고른 목록 칸을 표시합니다. 지금 목록의 그 칸만 켜고 나머지는 끕니다. -1이면 모두 끕니다.
+        /// 무엇이 골라졌는지는 화면이 판단하지 않고 칸 번호만 받습니다.
+        /// </summary>
+        void ShowSelected(int slot);
+
+        /// <summary>
+        /// "다음 Run 메인으로 선택" 버튼을 누를 수 있는지 받습니다. 화면은 이 값과 자기 입력 수신 상태가 둘 다 참일 때만 버튼을 켭니다.
+        /// 목록을 바꾸거나 수신자를 바꾸거나 닫으면 화면이 이 값을 거짓으로 되돌리므로, 부르는 쪽이 다시 판정해 넘깁니다.
+        /// </summary>
+        void SetSelectEnabled(bool enabled);
     }
 }

@@ -114,9 +114,20 @@ namespace ProjectL.Tests.Core
             Assert.Throws<NotSupportedException>(() => ((IList<WallRun>)geometry.Runs)[0] = null);
         }
 
+        [Test]
+        public void DiagonalContactBuildsSeparateBlockingComponents()
+        {
+            var geometry = Build(new[] { Wall(100, new CellCoord(2, 2)), Wall(101, new CellCoord(3, 3)) });
+            Assert.That(geometry.Runs.Count, Is.EqualTo(2));
+            Assert.That(geometry.Occupies(new CellCoord(2, 2)), Is.True);
+            Assert.That(geometry.Occupies(new CellCoord(3, 3)), Is.True);
+            Assert.That(geometry.Occupies(new CellCoord(2, 3)), Is.False);
+            Assert.That(Blocks(new CellCoord(2, 1), new CellCoord(2, 3), geometry.Runs[0]), Is.True);
+            Assert.That(Blocks(new CellCoord(3, 2), new CellCoord(3, 4), geometry.Runs[1]), Is.True);
+        }
+
         private static IEnumerable InvalidTopologies()
         {
-            yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(3, 3) }).SetName("DiagonalContact");
             yield return new TestCaseData(new[] { new CellCoord(2, 2), new CellCoord(2, 2) }).SetName("DuplicateWallCell");
         }
 

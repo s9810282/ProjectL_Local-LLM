@@ -17,16 +17,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private readonly EntityId _attacker;
         private readonly int _point;
-        private readonly Func<Vector3, Action, Action, ICombatShot> _fire;
-        private readonly Action _contact;
+        private readonly Func<Vector3, Action<EntityId, bool>, Action, ICombatShot> _fire;
+        private readonly Action<EntityId, bool> _contact;
         private ICombatShot _shot;
         private bool _closed;
+        private bool _contactSignaled;
 
         /// <param name="attacker">클립 채널을 빌린 공격자입니다. 조립이 그 채널을 적어야 합니다.</param>
-        /// <param name="fire">발사 입구입니다. 인자는 (발사 지점, 맞음 콜백, 도착 콜백)입니다(<see cref="CombatAttackPlayback.FireShot"/>).</param>
+        /// <param name="fire">발사 입구입니다. 인자는 (발사 지점, 접촉 콜백(대상, 이 탄의 마지막 접촉인지), 도착 콜백)입니다(<see cref="CombatAttackPlayback.FireShot"/>).</param>
         /// <param name="point">발사 지점 번호입니다. 기존 기본 총구는 0입니다.</param>
-        /// <param name="contact">이 발사의 접촉을 집계하는 입구입니다.</param>
-        internal CombatFirePiece(EntityId attacker, int point, Func<Vector3, Action, Action, ICombatShot> fire, Action contact)
+        /// <param name="contact">이 발사의 접촉을 집계하는 입구입니다. 관통 탄은 조우마다 부릅니다(관통·죽음의 손 View 설계 §3.1).</param>
+        internal CombatFirePiece(EntityId attacker, int point, Func<Vector3, Action<EntityId, bool>, Action, ICombatShot> fire,
+            Action<EntityId, bool> contact)
         {
             if (attacker.IsEmpty)
                 throw new ArgumentException("쏠 공격자가 비어 있습니다.", nameof(attacker));
@@ -42,15 +44,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         public void Begin(CombatPieceContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-            if (!context.Clip(_attacker).TryGetMuzzle(_point, out Vector3 from))
+            if (!context.Clip(_attacker).TryGetEventPoint(_point, out Vector3 from, out _))
                 throw new InvalidOperationException(
                     $"[CombatFirePiece] 발사 지점이 없습니다(외형 표 검사가 막아야 함): {_attacker}, 지점 {_point}");
             Action contact = context.SignalCallback(CombatPieceSignal.Contact);
             Action end = context.EndCallback();
-            ICombatShot shot = _fire(from, () =>
+            ICombatShot shot = _fire(from, (target, final) =>
             {
                 if (_closed) return;
-                _contact();
+                _contact(target, final);
+                // 물리 Contact 신호(탄별 착탄 소리 시점 등)는 이 탄의 첫 접촉에 한 번입니다.
+                if (_contactSignaled) return;
+                _contactSignaled = true;
                 contact();
             }, () =>
             {

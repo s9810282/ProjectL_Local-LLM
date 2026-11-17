@@ -58,8 +58,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby.Deck
         void IPopupViewController.Show()
         {
             if (_disposed || !_host.IsCurrent) return;
-            // 운영 후보 계약 전에는 View가 후보를 만들어 내지 않습니다.
-            _presenter.SetModel(new LobbyDeckDisplayModel(Array.Empty<LobbyDeckCardContent>()));
+            // Core가 정한 메인 후보와 지금 선택(로비 세션에 남은 값)을 보입니다(로비 메인 선택 설계 LM3).
+            _presenter.ShowCandidates();
             if (_disposed || !_host.IsCurrent) return;
             _presenter.SetInputEnabled(true);
         }

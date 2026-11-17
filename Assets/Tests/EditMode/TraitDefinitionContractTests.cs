@@ -163,7 +163,7 @@ namespace ProjectL.Tests.Core
         {
             Assert.That((int)TraitKey.HuntersMark, Is.EqualTo(190));
             Assert.That(DeferredCombatFeatures.IsTraitAvailable(TraitKey.HuntersMark), Is.True);
-            foreach (var key in new[] { TraitKey.Focus, TraitKey.ThornField, TraitKey.Necromancy })
+            foreach (var key in new[] { TraitKey.Focus, TraitKey.Necromancy })
                 Assert.That(DeferredCombatFeatures.GetTraitUnavailableReason(key), Is.EqualTo("DeferredUnitTurnTiming"));
         }
     }

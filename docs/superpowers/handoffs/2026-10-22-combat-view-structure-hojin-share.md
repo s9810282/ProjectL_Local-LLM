@@ -345,7 +345,7 @@ Play From Boot에 새 개발 모드(`DevBattleStage.PlacedStage`)를 더하면�
 여쭐 것(평가 중간 문제, 답에 따라 다음 단계를 정합니다)
 
 - **C5-01 아침 자동 전환:** `CombatPhaseTransitionPresenter.TryBegin`을 주석 처리한 커밋이 호진님 `b9c4f3b4`("밤 전환 안되게 테스트로 수정", 10-29)입니다. 되살릴 계획이 있으신지요? 되살리지 않으면 재생 조정·Factory에 남은 경로(약 45줄, 늘 false인 판정 셋)를 걷겠습니다. 파일을 만든 민형님께도 같이 여쭙니다.
-- **C1-42 곡사 공통 수명:** 곡사 애니메이션(`CombatMortarAnimation`, 천명님 파일)만 공통 기반 `CombatAttackMotion`(호진님 파일) 밖에서 수명을 따로 돌립니다. 기반에 훅 둘(`BeginResources` 가상 함수, `CancelUnavailable`)을 더하고 곡사를 그 위로 올려도 될지 합의를 부탁드립니다(약 130줄, 구조 단계에서 함).
+- **C1-42 곡사 공통 수명 — (2026-11-12 정정: 이 질문은 필요 없게 됐습니다.** 곡사·기반 두 파일 모두 용근 줄입니다(GitHub 파일 이력 `37188bd5`·`dad08ef1`, 얕은 clone의 blame 경계 커밋을 잘못 읽음). 곡사를 기반 위로 올리는 일은 11-12 SM-b로 끝냈습니다([계획](../plans/2026-11-12-combat-view-sound-preset-mortar-lifecycle-plan.md) §10.3).**) 옛 질문: 곡사 애니메이션(`CombatMortarAnimation`, 천명님 파일)만 공통 기반 `CombatAttackMotion`(호진님 파일) 밖에서 수명을 따로 돌립니다. 기반에 훅 둘(`BeginResources` 가상 함수, `CancelUnavailable`)을 더하고 곡사를 그 위로 올려도 될지 합의를 부탁드립니다(약 130줄, 구조 단계에서 함).
 - **C2-04 클립 이벤트 표:** `CombatClipEventCursor`·`CombatClipPlayback`·`CombatClipPiece`의 Event2·Event3 하드코딩을 이벤트 종류 표 하나로 모으려 합니다(약 50줄, 구조 단계). 줄 대부분이 호진님 줄이라 미리 알립니다. 바꾼 뒤 변경 정리를 넘기겠습니다. **(11-05 정정: 이 질문은 필요 없게 됐습니다.** 얕은 clone의 blame이 경계 커밋을 호진님으로 보였을 뿐이고, GitHub 파일 이력으로 보니 세 파일은 용근 `e0ee626d`(10-19 클립 시스템)가 만든 줄이었습니다. [작은 묶음 셋](../plans/2026-11-05-combat-view-small-bundles-plan.md)(SB2)에서 번호 표 둘로 바꿨고 호진님 줄은 바뀌지 않았습니다.)
 
 ## 18. 2026-11-05 전투 View 조정자 나누기 — 행동 버튼 표면·배치 확인창 (미전달)
@@ -382,3 +382,29 @@ Play From Boot에 새 개발 모드(`DevBattleStage.PlacedStage`)를 더하면�
 - 선택 표시(`88377dec`의 `RefreshInspectionSelection` 주석, `ClearSelection`의 `SetSelectedEntity(EntityId.Empty)` 되살림)
   - 새 `Selection/CombatSelectionDisplay.cs`의 `RefreshInspectionSelection`(85)·`Clear`(95)로 옮겼습니다. 식과 차례는 같습니다. 정보창 Presenter의 선택 바뀜 알림은 이제 `selectionDisplay.RefreshInspectionSelection`에 묶습니다(`CombatSceneDisplayFactory.cs` 218).
 - 그대로인 줄: `root.UnitInfo.Configure(…, tables.UnitStatuses)`(`8339e308`), `AttackTargetingInteraction`의 `_modeGeneration`(`32654528`)·`_rejectionRequestNumber`(`f40962f1`).
+
+## 21. 2026-11-12 전투 View 새 SSOT 셋 — 유닛 모델 부분 판정을 한 곳으로 (미전달)
+
+[새 SSOT 계획](../plans/2026-11-11-combat-view-new-ssot-plan.md) SN-a(설계 [new-ssot-design](../specs/2026-11-11-combat-view-new-ssot-design.md) SN1, 재평가 C1-N01)에서 호진님 줄(`62f8f2c9`)을 옮겼습니다. 컴파일 미확인, 새 시험 없음, 시험 변경 없음.
+
+- `FieldUnitView.cs`의 `IsUnitModelPart`(TMP·Canvas·`UnitModelBoundsExclusion` 아래가 아님)를 지우고, 같은 식을 새 정적 규칙 `Display/Unit/UnitModelParts.Is(Renderer)` 하나로 옮겼습니다. 외형 층 수집(381)·몸 경계 측정(499)이 이 규칙을 부릅니다. 식·차례는 그대로입니다.
+- 같은 판정 사본이 있던 Cartoon 대체(민형님)·상태 모습(우리)·배치 고스트(우리)도 이제 이 규칙을 부릅니다. 판정을 바꿀 때 고칠 곳은 `UnitModelParts.cs` 하나입니다.
+- `UnitModelBoundsExclusion.cs` 요약의 "판정은 `FieldUnitView`의 모델 일부 판정 한 곳" 문장을 "모델 부분 규칙 `UnitModelParts.Is` 한 곳"으로 고쳤습니다. 표지 이름은 그대로입니다(계획 TP-1).
+- 화면 차이(설계 §5): 커서가 붙은 아군의 랙돌 사망 때 커서 재질이 더는 바뀌지 않고, 상태 모습(재구성 잔해)이 커서를 숨기지 않습니다. 몸 경계·외형 층은 같습니다.
+
+## 22. 2026-11-17 플레이어 액티브 스킬 — 키 정의 줄·행동 버튼 튜토리얼 갈래·스킬 외형 표 (미전달)
+
+기록: [플레이어 스킬 View 계획](../plans/2026-11-16-combat-player-skill-view-plan.md) §6.1 표·§6.2~§6.6, 설계 [player-skill-view-design](../specs/2026-11-16-combat-player-skill-view-design.md) SK4~SK6. 컴파일 미확인, 새 시험 없음, 시험 변경 없음. 사용자 Unity 확인(Ua~Ue) 문제 없음(11-17).
+
+- **`StageInput/StageInputKeyBindings.cs:18`:** 전투 그룹(0)에 `KeyBindingAction.Skill` 정의 한 줄. 되돌리기(이제 기본 Q)·턴 종료 등과 같은 그룹이라 키 설정에서 스킬 키(R)와 겹치게 바꾸면 막힙니다. 키 설정 화면에도 "스킬" 줄이 생겼습니다(11-17, 현강님 공유 §31 덧붙임).
+- **`Combat/Input/ActionButtons/CombatActionButtons.cs`:** 스킬 버튼 값 `CombatSkillButton`을 담는 칸 `Skill`.
+  - 튜토리얼 갈래(:65): 설명 중에는 스킬 버튼을 보이되 누를 수 없게(`skill.Locked()`).
+  - 같음(:90)·해시(:95)에 `Skill` 칸.
+  - 전투 갈래: 새 진입은 튜토리얼 허용표(`AllowsTutorialPreview(…, SkillAvailability)`)도 봅니다. 튜토리얼 제한이 걸린 동안 허용표에 `SkillAvailability`가 없으면 버튼을 누를 수 없고 R도 막힙니다(`CombatInputPolicy`, Router `RejectTutorialSkillMode`). 제한이 없을 때만 Core 답대로입니다. 튜토리얼에서 스킬을 가르치려면 그 단계 허용표에 그 종류를 넣어야 합니다.
+- **스킬 외형 표 넣는 법(View DB `PlayerSkillVisual`, 새 표):**
+  - 에셋 `DataBaseSO/ViewGroup/PlayerSkillVisual/`(표 + 줄 `PlayerSkillVisual_PowderBlossom`·`_MagicBullet`), `ViewGroup.asset` 끝 한 줄.
+  - 줄 칸: Core 스킬 키(스킬 하나에 줄 하나), 이름·아이콘(필수)·설명, 공격 연출 SO(필수 — 투사체를 날리는 스킬은 직선 투사체 묶음, 범위 폭발 스킬은 투사체 없는 묶음), 범위 폭발 칸 큐(비워도 됨, 지금 비움), 강화마다 이름·설명·공격 연출 덮어쓰기.
+  - 전투 조립 때 Core가 아는 스킬 키마다 줄이 있는지 검사합니다(없으면 진입 때 예외, `CombatDisplayTables`).
+  - 이 표는 공격형(Attack Type) 스킬만 받습니다(11-17 사용자 — 지금 스킬은 모두 공격형, 설계 §9). 공격이 아닌 스킬이 생기면 그때 종류 칸·처리기 갈래를 설계합니다.
+  - 지금 값은 임시입니다: 화약꽃 = `CombatAttack_Melee`·아이콘 `KillChainAttack.png`, 마탄 = `CombatAttack_Linear`·아이콘 `PiercingFalloff.png`(둘 다 특성 아이콘을 빌림). 설명에 Core 수치는 넣지 않았습니다(한 사실 두 곳 방지).
+- **옆에 더하기만 한 줄:** `ViewDataBase.cs`(:34·:64·:93)·`ViewDataBaseFactory.cs`(:84)·`Combat/CombatDisplayTables.cs`(생성 인자·`RequirePlayerSkillRows`), 사건 형식 표 `Combat/Playback/Ordering/CombatEventTypeTable.cs` 처리기 칸 `PlayerSkill`(맨 끝)·사건 51 줄. 호진님 처리기 칸(토네이도·낙석·하붑) 무변경.

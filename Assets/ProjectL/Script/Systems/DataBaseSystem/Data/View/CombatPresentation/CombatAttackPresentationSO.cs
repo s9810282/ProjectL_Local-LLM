@@ -20,9 +20,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         [SerializeField] private CombatCodeMotionSO codeMotion;
 
         [Header("큐")]
-        [Tooltip("공격 칸의 연출 큐입니다(이펙트·흔들림·소리 시점). 착탄·몸 접촉 이펙트는 이펙트 큐의 시점·자리를 Contact로 둡니다(원거리만, 지연 0). "
-            + "Cue2·Cue3는 해당 이벤트가 있는 원거리 공격 클립만 씁니다. "
-            + "이펙트 지점(ActorEffectPoint)·발사 지점(ActorMuzzle)은 공격 클립의 Actor Point 번호(기본 0)를 고릅니다. 이벤트 번호와 별개입니다.")]
+        [Tooltip("공격 칸의 연출 큐입니다(이펙트·흔들림). 공격 소리는 여러 유닛이 같이 쓰는 이 묶음이 아니라 유닛 외형의 \"전투 소리\" 줄입니다. 착탄·몸 접촉 이펙트는 이펙트 큐의 시점 Contact·Every·자리 Contact로 둡니다(지연 0, 근접은 맞은 대상 몸). "
+            + "Event1~3은 공격 본 단계 몸 클립에 그 표식(ClipEvent~ClipEvent3)이 있는 유닛만 씁니다(코드 모션은 Event1만). 공격당 한 번은 Contact·FirstHit입니다. "
+            + "이벤트 지점(ActorEventPoint)은 이벤트 컴포넌트 Event Points의 번호(Event Point, 기본 0)와 회전(지점·행위자)을 고릅니다. 클립 이벤트 번호와 별개입니다.")]
         [SerializeField] private CombatAttackCueInput cues = new();
 
         // 옛 칸(kind·투사체 값·발사 반동·곡사·근접 값)은 부품 SO로 옮겼다(범용 연출 구조 계획 Gb.3·Gb.8). 에셋 YAML의 옛 키는 Unity가 다시 저장할 때 지운다.

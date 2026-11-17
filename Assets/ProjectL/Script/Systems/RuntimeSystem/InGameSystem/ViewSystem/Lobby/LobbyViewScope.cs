@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.LobbyVisual.Item;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.LobbyInput;
 using UnityEngine;
 
@@ -29,25 +30,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
         private readonly LobbyDepartureFlow _departure;
         // 부품에 넘기는 연결 확인입니다. 한 번만 만들어 Tick마다 대리자를 새로 만들지 않습니다.
         private readonly Func<bool> _canWork;
+        private readonly Func<EntityKey> _readMainPortrait;
+        private IDisposable _portraitBinding;
         private bool _started;
         private bool _readyForTick;
         // 시설 팝업이 열려 있는지입니다. 팝업 수명이 알려 주는 값이라 여기 한 곳에만 둡니다.
         private bool _popupBlocked;
 
         /// <param name="output">화면을 그리는 출력 카메라입니다. 씬 소유가 아니며 연결 때 받은 것을 씁니다(카메라 이전 설계 L1).</param>
+        /// <param name="selection">이 연결(로비 세션)의 다음 Run 메인 선택입니다. 출발 흐름이 읽고, 덱 팝업이 고칩니다.</param>
         internal LobbyViewScope(LobbySceneRoot root, Camera output, LobbyViewServices services, LobbyViewPopups popups,
-            RuntimeFaultBoundary faults)
+            LobbyMainSelection selection, RuntimeFaultBoundary faults)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
+            if (selection == null) throw new ArgumentNullException(nameof(selection));
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _popups = popups ?? throw new ArgumentNullException(nameof(popups));
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
             // 화면 연결 검사는 System이 이전 연결을 떼기 전에 LobbyCanvasView.ValidateComposition으로 합니다.
             _lobbyTexts = root.UI.LobbyTexts;
             _canWork = () => CanWork;
-            _scene = new LobbyViewScene(root, output, services.Scene);
+            _readMainPortrait = () => selection.Selected;
+            _scene = new LobbyViewScene(root, output, services.Scene, selection);
             _input = new LobbyViewInput(services.Input, () => IsCurrent, _faults);
-            _departure = new LobbyDepartureFlow(services.Departure, services.Text, _canWork);
+            _departure = new LobbyDepartureFlow(services.Departure, services.Text, selection, _canWork);
+            // 덱 팝업은 Start 안에서 만들어지므로, 그 전에 잠김 판정(출발 흐름)을 선택에 한 번 연결합니다(로비 메인 선택 설계 LM2).
+            selection.BindDepartureHold(_departure);
+            selection.BindModelDisplay(_scene);
         }
 
         internal bool IsDisposed { get; private set; }
@@ -67,6 +76,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             // 앞 연결이 시설 팝업 중에 끝났으면 로비 화면 글자가 꺼진 채 남으므로 연결마다 다시 켭니다.
             _lobbyTexts.SetActive(true);
             if (!_scene.Start(requireRunning, _canWork, () => IsCurrent)) return false;
+            _portraitBinding = _services.BindMainPortrait(_readMainPortrait);
+            if (!CanWork)
+            {
+                ReleaseMainPortrait();
+                return false;
+            }
             var session = new PopupInputSession(new ViewAttachmentInputLayers(_services.Layers, () => IsCurrent),
                 LobbyInputLayers.Lobby, () => CanWork && !_departure.IsHolding);
             if (!_popups.Create(this, session, _scene.Output, _scene.Root.WorldRoot, _canWork)) return false;
@@ -110,6 +125,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             IsDisposed = true;
             _readyForTick = false;
             List<Exception> errors = null;
+            CleanupErrors.Try(ReleaseMainPortrait, ref errors);
             // 공유 출력(배경 카메라·아티팩트 출력)은 다른 정리 콜백이 새 연결을 게시하기 전에 먼저 되돌립니다.
             // 나머지는 시작의 역순입니다. 정리 중 입력은 판정(끝난 연결)이 막습니다.
             CleanupErrors.Try(_scene.RestoreOutput, ref errors);
@@ -119,6 +135,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             CleanupErrors.Try(_input.Dispose, ref errors);
             CleanupErrors.Try(_scene.Dispose, ref errors);
             CleanupErrors.ThrowIfAny(errors, "[Lobby] 씬 연결 정리 중 실패했습니다.");
+        }
+
+        private void ReleaseMainPortrait()
+        {
+            IDisposable binding = _portraitBinding;
+            _portraitBinding = null;
+            binding?.Dispose();
         }
 
         // 입력 판정 둘은 쓰는 순간 원본(팝업 알림·출발 요청·입력 Layer)을 읽고 막힘 사본을 두지 않습니다(설계 §12.2 B4).

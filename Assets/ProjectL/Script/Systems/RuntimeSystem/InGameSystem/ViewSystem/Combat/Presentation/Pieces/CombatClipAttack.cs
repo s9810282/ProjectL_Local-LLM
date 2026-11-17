@@ -21,13 +21,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <list type="number">
     /// <item>0 방향 — 공격자를 목표 쪽으로 돌림(<see cref="CombatFaceTargetPiece"/>, 실행 시작).</item>
     /// <item>클립 — 공격 클립 재생(<see cref="CombatClipPiece"/>, 실행 시작). 시작·존재하는 번호별 이벤트 신호를 냅니다.</item>
-    /// <item>근접 = 첫 이벤트 + 피격 선딜레이에 해제 → Hit(<see cref="CombatReleasePiece"/>).
-    /// 원거리 = 집계 준비 뒤 클립, 이벤트별 포구 발사, 모든 접촉 뒤 해제 → Hit → 집계 끝(<see cref="CombatClipRangedAttack"/>).</item>
+    /// <item>근접 = 이벤트 줄마다 맞는 순간(이벤트 + 줄 지연). 한 줄이면 해제 → Hit(<see cref="CombatReleasePiece"/>), 여럿이면 접촉 집계 + 줄마다 접촉(<see cref="CombatStrikePiece"/>).
+    /// 원거리 = 집계 준비 뒤 클립, 이벤트 줄마다 발사 지점에서 발사, 모든 접촉 뒤 해제 → Hit → 집계 끝(<see cref="CombatClipRangedAttack"/>).</item>
     /// </list>
     /// <para>
-    /// 그 뒤 공격 칸의 큐(소리 시점·흔들림·이펙트)를 기준 시점 표로 붙입니다: Cue = 첫 클립 이벤트, 원거리 Cue2·3 = 해당 선택 이벤트,
-    /// 맞음 = 해제/집계의 <see cref="CombatPieceSignal.Hit"/>,
-    /// 끝 = 클립 끝. 옛 "소리 = 이벤트 타이밍 + 소리 선딜레이"·"이펙트 = 이벤트 타이밍 + 이펙트 선딜레이, 이펙트 지점"은 공격 큐의 소리 시점 Cue·이펙트 큐(Cue·ActorEffectPoint)입니다.
+    /// 그 뒤 공격 칸의 큐(흔들림·이펙트)와 공격 소리 줄을 기준 시점 표로 붙입니다: Event1~3 = 본 단계 몸 클립에 표식이 있는 클립 이벤트(11-17 사용자, 설계 CS3의 등록 조건을 대신함),
+    /// 접촉의 FirstHit = 해제/집계의 <see cref="CombatPieceSignal.Hit"/>(옛 맞음, 설계 CS10),
+    /// 끝 = 클립 끝. 이펙트 자리 이벤트 지점은 큐의 번호·회전(ActorEventPoint)입니다.
     /// 사건 완료는 첫 해제(Gate), 전체 종료는 실행 끝(클립 끝 이벤트, 원거리는 투사체 도착까지, 큐 지연이 그보다 길면 그 큐까지)입니다.
     /// 포효가 나중에 이 항목 묶음을 쓸 수 있게 공개 범위는 <c>internal static</c>입니다.
     /// </para>
@@ -38,7 +38,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </remarks>
     internal static class CombatClipAttack
     {
-        /// <summary>근접 클립 공격 조립입니다. 항목 2는 해제 조각(이벤트 타이밍 + 피격 선딜레이)입니다.</summary>
+        /// <summary>
+        /// 근접 클립 공격 조립입니다. 이벤트 줄마다 맞는 순간(그 이벤트 + 줄 지연)입니다(클립 칸 다시 짜기 설계 CS2, 결정 Q-A3 A).
+        /// 줄이 하나면 지금처럼 해제 조각 하나(<see cref="CombatReleasePiece"/>)이고, 여럿이면 연발과 같은 접촉 집계(<see cref="CombatVolleyReleasePiece"/>)에
+        /// 줄마다 접촉 하나(<see cref="CombatStrikePiece"/>)를 넣어 앞 줄은 앞 접촉 피격·숫자 나눔, 마지막 줄이 해제입니다(계획 TP-9).
+        /// </summary>
+        /// <param name="contactImpact">맞는 순간마다 낼 접촉 이펙트(Contact·Every, 대상 몸 자리)입니다. 없으면 null입니다.</param>
+        /// <param name="contactFeedback">줄이 여럿일 때 접촉 순번마다 낼 표시(숫자·앞 접촉 피격)입니다. 없으면 null입니다.</param>
         /// <param name="cues">공격 칸 큐입니다(공격 표시 값의 <c>Cues</c>).</param>
         /// <param name="facing">빌린 자세(지금 위치·방향)에서 공격자가 볼 방향입니다(<see cref="CombatAttackFacing.For"/>).</param>
         /// <param name="release">출처의 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>).</param>
@@ -47,7 +53,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="lead">공격 조립의 앞 항목입니다(대신 맞는 수호자 나가기·돌아오기, 유닛 행동 계획 TP-14). 없으면 조립이 지금과 같습니다.</param>
         internal static CombatComposition ComposeMelee(CombatAttackShape shape, CombatClipAttackData clip, CombatEventCues cues,
             Func<ICombatUnitPose, Quaternion> facing, Action release, CombatCueSinks sinks, Pose? actorBody, CombatAttackLead lead,
-            Func<bool> canRelease = null)
+            Func<bool> canRelease = null, Action contactImpact = null, Action<int> contactFeedback = null)
         {
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (clip == null) throw new ArgumentNullException(nameof(clip));
@@ -56,9 +62,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (release == null) throw new ArgumentNullException(nameof(release));
             if (sinks == null) throw new ArgumentNullException(nameof(sinks));
             CombatComposition composition = BeginClip(shape, facing, lead, out CombatPieceStart start);
-            int played = composition.Add(new CombatClipPiece(shape.AttackerId, clip.Clip, playbackSpeed: clip.AttackSpeed), start);
-            int hit = composition.Add(new CombatReleasePiece(release, canRelease), CombatPieceStart.After(played, CombatPieceSignal.ClipEvent, clip.HitDelay));
-            AddCues(composition, shape, cues, AnchorsOf(start, played, hit), sinks, actorBody);
+            IReadOnlyList<CombatClipEventEntry> strikes = clip.Events;
+            int hit;
+            int played;
+            if (strikes.Count == 1)
+            {
+                played = composition.Add(new CombatClipPiece(shape.AttackerId, clip.Motion), start);
+                Action strike = contactImpact == null ? release : () =>
+                {
+                    contactImpact();
+                    release();
+                };
+                hit = composition.Add(new CombatReleasePiece(strike, canRelease), StrikeStart(played, strikes[0]));
+            }
+            else
+            {
+                // 같은 시작 조건의 항목은 목록 순서대로 시작합니다. 집계를 클립보다 먼저 두어 0초 이벤트의 접촉도 집계 준비 뒤에 옵니다(원거리와 같음).
+                var contacts = new CombatVolleyReleasePiece(strikes.Count, null, release, canRelease, contactFeedback);
+                hit = composition.Add(contacts, start);
+                played = composition.Add(new CombatClipPiece(shape.AttackerId, clip.Motion), start);
+                for (int i = 0; i < strikes.Count; i++)
+                    composition.Add(new CombatStrikePiece(contacts.ContactCallback(i), contactImpact), StrikeStart(played, strikes[i]));
+            }
+            CombatCueAnchors anchors = AnchorsOf(clip, start, played, hit).SetClipEvents(clip.Motion, played);
+            AddCues(composition, shape, cues, anchors, sinks, actorBody);
             lead?.AfterHit(composition, hit);
             return composition;
         }
@@ -68,14 +95,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// </summary>
         /// <param name="cues">공격 칸 큐입니다(공격 표시 값의 <c>Cues</c>). 접촉(Contact) 이펙트는 조립 항목이 아니라 발사의 맞음에서 공격 재생이 냅니다.</param>
         /// <param name="facing">빌린 자세(지금 위치·방향)에서 공격자가 볼 방향입니다(<see cref="CombatAttackFacing.For"/>).</param>
-        /// <param name="fire">발사 입구입니다. 인자는 (발사 지점, 맞음 콜백, 도착 콜백)입니다(<see cref="CombatAttackPlayback.FireShot"/>).</param>
-        /// <param name="release">출처의 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>).</param>
+        /// <param name="fire">발사 입구입니다. 인자는 (발사 지점, 접촉 콜백(대상, 이 탄의 마지막 접촉인지), 도착 콜백)입니다(<see cref="CombatAttackPlayback.FireShot"/>).</param>
+        /// <param name="releaseTarget">대상 하나를 해제하는 입구입니다(<see cref="ICombatSourceLifetime.Release"/>). 마지막 탄의 접촉마다 부릅니다(관통·죽음의 손 View 설계 D6).</param>
+        /// <param name="release">출처의 남은 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>). 마지막 탄의 마지막 접촉에서 부릅니다.</param>
         /// <param name="sinks">공격 창구 묶음입니다(<see cref="CombatCueSinks.ForAttack"/>). 투사체 소리는 각 탄의 발사·접촉에 지연을 더해 붙습니다.</param>
         /// <param name="actorBody">행위자 몸 자리입니다(큐 자리 <c>ActorBody</c>). 없으면 그 자리의 이펙트를 넣지 않습니다.</param>
         /// <param name="lead">공격 조립의 앞 항목입니다(대신 맞는 수호자 나가기·돌아오기, 유닛 행동 계획 TP-14). 없으면 조립이 지금과 같습니다.</param>
         internal static CombatComposition ComposeRanged(CombatAttackShape shape, CombatClipAttackData clip, CombatEventCues cues,
-            Func<ICombatUnitPose, Quaternion> facing, Func<Vector3, Action, Action, ICombatShot> fire, Action release, CombatCueSinks sinks,
-            Pose? actorBody, CombatAttackLead lead, Vector3? launchAimPoint = null, Func<bool> canRelease = null, Action<int> contactFeedback = null)
+            Func<ICombatUnitPose, Quaternion> facing, Func<Vector3, Action<EntityId, bool>, Action, ICombatShot> fire, Action<EntityId> releaseTarget,
+            Action release, CombatCueSinks sinks, Pose? actorBody, CombatAttackLead lead, Vector3? launchAimPoint = null,
+            Func<bool> canRelease = null, Action<int> contactFeedback = null)
         {
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (clip == null) throw new ArgumentNullException(nameof(clip));
@@ -85,10 +114,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (release == null) throw new ArgumentNullException(nameof(release));
             if (sinks == null) throw new ArgumentNullException(nameof(sinks));
             CombatComposition composition = BeginClip(shape, facing, lead, out CombatPieceStart start);
-            CombatClipRangedAttack.Add(composition, shape.AttackerId, clip, start, fire, release, launchAimPoint, out int played, out int hit,
-                out IReadOnlyList<CombatProjectileCueTiming> projectileTimings, canRelease, contactFeedback);
-            CombatCueAnchors anchors = AnchorsOf(start, played, hit).SetProjectileTimings(projectileTimings);
-            CombatClipRangedAttack.ConnectEventCues(anchors, clip.Clip, played);
+            CombatClipRangedAttack.Add(composition, shape.AttackerId, clip, start, fire, releaseTarget, release, launchAimPoint, out int played,
+                out int hit, out IReadOnlyList<CombatProjectileCueTiming> projectileTimings, canRelease, contactFeedback);
+            CombatCueAnchors anchors = AnchorsOf(clip, start, played, hit).SetProjectileTimings(projectileTimings).SetClipEvents(clip.Motion, played);
             AddCues(composition, shape, cues, anchors, sinks, actorBody);
             lead?.AfterHit(composition, hit);
             return composition;
@@ -108,15 +136,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             return composition;
         }
 
-        // 공통 기준 순간 = 첫 클립 이벤트, 맞음 = 해제/집계의 Hit, 끝 = 클립 끝입니다.
-        private static CombatCueAnchors AnchorsOf(CombatPieceStart start, int played, int hit) =>
+        // 첫 실제 피격(Contact·FirstHit) = 해제/집계의 Hit 신호, 끝 = 클립 끝입니다. 클립 이벤트(Event1~3)는 표식이 있는 번호만 부르는 쪽이 잇습니다(SetClipEvents).
+        // 시작(Start)은 본 단계의 ClipStart입니다(클립 칸 다시 짜기 설계 P7). 앞 단계가 없으면 본 단계가 항목 시작에 바로 꽂혀 지금처럼 항목 시작을 씁니다.
+        private static CombatCueAnchors AnchorsOf(CombatClipAttackData clip, CombatPieceStart start, int played, int hit) =>
             new CombatCueAnchors()
-                .StartAt(start)
-                .Set(CombatCueAnchor.Cue, played, CombatPieceSignal.ClipEvent)
-                .Set(CombatCueAnchor.Hit, hit, CombatPieceSignal.Hit)
+                .StartAt(clip.Motion.Pre != null ? CombatPieceStart.After(played, CombatPieceSignal.ClipStart) : start)
+                .SetFirstHit(hit, CombatPieceSignal.Hit)
                 .Set(CombatCueAnchor.End, played, CombatPieceSignal.End);
 
-        // 행위자 지점은 빌린 클립 채널에서 읽습니다. 원거리 조립만 선택 이벤트·탄별 소리 시점을 기준 시점 표에 더합니다.
+        // 근접 이벤트 줄 하나의 맞는 순간 = 그 이벤트 신호 + 줄 지연입니다(설계 CS2).
+        private static CombatPieceStart StrikeStart(int played, CombatClipEventEntry entry) =>
+            CombatPieceStart.After(played, CombatClipEventSignals.SignalOf(entry.EventId), entry.Delay);
+
+        // 이벤트 지점은 빌린 클립 채널에서 읽습니다. 원거리 조립만 탄별 소리 시점을 기준 시점 표에 더합니다.
         private static void AddCues(CombatComposition composition, CombatAttackShape shape, CombatEventCues cues, CombatCueAnchors anchors,
             CombatCueSinks sinks, Pose? actorBody)
         {

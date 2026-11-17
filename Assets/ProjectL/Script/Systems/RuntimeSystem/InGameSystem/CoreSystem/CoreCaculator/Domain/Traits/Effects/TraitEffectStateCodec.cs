@@ -25,9 +25,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (state is PiercingFalloffRuntimeState)
                 return new PiercingFalloffEffectStateSnapshot();
 
-            if (state is ThornFieldRuntimeState)
-                return new ThornFieldEffectStateSnapshot();
-
             if (state is KnockbackRuntimeState)
                 return new KnockbackEffectStateSnapshot();
 
@@ -50,8 +47,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (state is ImpactBoltRuntimeState)
                 return new ImpactBoltEffectStateSnapshot();
 
+            if (state is ThornBombRuntimeState)
+                return StatelessEffectStateSnapshot.Instance;
+
             if (state is CrashImpactRuntimeState)
                 return new CrashImpactEffectStateSnapshot();
+
+            if (state is DeadHandRuntimeState) return new DeadHandEffectStateSnapshot();
 
             if (state is PullRuntimeState)
                 return new PullEffectStateSnapshot();
@@ -90,9 +92,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (snapshot is PiercingFalloffEffectStateSnapshot)
                 return new PiercingFalloffRuntimeState();
 
-            if (snapshot is ThornFieldEffectStateSnapshot)
-                return new ThornFieldRuntimeState();
-
             if (snapshot is KnockbackEffectStateSnapshot)
                 return new KnockbackRuntimeState();
 
@@ -117,6 +116,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             if (snapshot is CrashImpactEffectStateSnapshot)
                 return new CrashImpactRuntimeState();
+
+            if (snapshot is DeadHandEffectStateSnapshot) return new DeadHandRuntimeState();
 
             if (snapshot is PullEffectStateSnapshot)
                 return new PullRuntimeState();

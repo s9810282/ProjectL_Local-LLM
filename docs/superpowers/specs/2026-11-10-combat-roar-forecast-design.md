@@ -59,6 +59,7 @@
 
 - 층 표 `FieldHighlightLayers`에 한 줄을 더한다. 평소에도 그리고, 칸 채움 + 테두리다.
 - 색은 `FieldView` 씬 값 `roarForecastColor` 하나다. 기본값은 경고용 진한 주황으로 두고, 씬에서 조정한다.
+  - **대신함(2026-11-14):** 이 색은 View DB `StageFieldViewData`의 필드 색 묶음(`Colors`)으로 옮겼다([필드 색 DB 설계](2026-11-14-combat-field-colors-db-design.md) FC1). 기본값은 옮기기 전 씬 값(보라)이다.
 - 그리는 순서는 공격 관련 층(공격 범위·영향 칸·넉백 도착)보다 아래에 둔다. 공격 조준이 이 위에 보이게 하려는 것이다.
 
 ### RF5 밀림 미리보기 — 같은 캔버스를 공유

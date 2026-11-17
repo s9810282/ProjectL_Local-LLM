@@ -15,15 +15,17 @@ MonoBehaviour:
   kind: 4
   visualMode: 1
   displayName: "\uC57D\uD55C \uC9C0\uBC18"
-  description: "\uCE90\uB9AD\uD130\uAC00 \uCD1D {붕괴횟수}\uD68C \uBC1F\uC73C\uBA74, <color=#FF6262>\uBD95\uAD34\uD558\uC5EC
-    \uB0AD\uB5A0\uB7EC\uC9C0\uB85C \uBCC0\uD569\uB2C8\uB2E4.</color> \uC57D\uD55C
-    \uC9C0\uBC18\uC5D0 \uC704\uCE58\uD55C \uCE90\uB9AD\uD130\uB294 <color=#FF6262>\uC989\uC0AC</color>\uD569\uB2C8\uB2E4.\n\n{\uB0A8\uC740\uD69F\uC218}\uD68C
+  description: "\uCE90\uB9AD\uD130\uAC00 \uCD1D {\uBD95\uAD34\uD69F\uC218}\uD68C
+    \uBC1F\uC73C\uBA74, <color=#FF6262>\uBD95\uAD34\uD558\uC5EC \uB0AD\uB5A0\uB7EC\uC9C0\uB85C
+    \uBCC0\uD569\uB2C8\uB2E4.</color> \uC57D\uD55C \uC9C0\uBC18\uC5D0 \uC704\uCE58\uD55C
+    \uCE90\uB9AD\uD130\uB294 <color=#FF6262>\uC989\uC0AC</color>\uD569\uB2C8\uB2E4.\n\n{\uB0A8\uC740\uD69F\uC218}\uD68C
     \uB354 \uBC1F\uC73C\uBA74 \uBB34\uB108\uC9D1\uB2C8\uB2E4."
   icon: {fileID: 0}
   prefab: {fileID: 1099562140810332499, guid: c2795de48348bf64f851930def274c36, type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   localScale: {x: 1, y: 1, z: 1}
-  surfaceHeight: 0
+  surfaceHeight: -0.2
+  weakGroundDropPerEntry: 0.1
   tornadoPresentation: {fileID: 0}
   oneSidePrefab: {fileID: 0}
   twoSidePrefab: {fileID: 0}

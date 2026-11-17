@@ -11,6 +11,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         ReactionAttack = 3,
         ReflectedDamage = 4,
         EnvironmentDamage = 5,
-        DamageOverTime = 6
+        DamageOverTime = 6,
+        PlayerSkillAttack = 7,
+        TraitExplosion = 8
+    }
+
+    /// <summary>대상 피해 계산·접촉 효과가 공유하는 공격 피해 계열입니다. 개별 효과의 추가 자격 조건은 각 규칙이 유지합니다.</summary>
+    public static class CombatDamageKinds
+    {
+        public static bool IsAttack(CombatDamageKind kind) => kind is CombatDamageKind.OrdinaryAttack or
+            CombatDamageKind.ExtraAttack or CombatDamageKind.ReactionAttack or CombatDamageKind.PlayerSkillAttack;
     }
 }

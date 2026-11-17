@@ -85,7 +85,7 @@ namespace ProjectL.Tests.Core
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             projected[changed.EntityId] = changed;
             return CombatCommandCalculator.Finish(input, projected, input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, input.State.ThornFields.ToDictionary(f => f.Cell), input.State.Structures.ToArray(),
+                input.Souls, input.State.Structures.ToArray(),
                 new List<long>(), new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, proposedState: state);
         }
     }

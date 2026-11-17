@@ -109,7 +109,7 @@ namespace ProjectL.Tests.Core
 
         [TestCase(0)]
         [TestCase(-1)]
-        [TestCase(6)]
+        [TestCase(7)]
         [TestCase(8)]
         public void Method_RejectsNoneUnknownAndLegacyShapeNumbers(int shape)
         {

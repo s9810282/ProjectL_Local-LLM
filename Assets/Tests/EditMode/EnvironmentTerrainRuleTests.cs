@@ -133,7 +133,7 @@ namespace ProjectL.Tests.Core
             MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,environment);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,environment);
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state,
                 input.Characters, input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls,
                 input.Artifacts, input.TargetCell, input.Rotation, input.Battle, input.ProcessingKind,

@@ -84,7 +84,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             presentation.Validate();
             root.ValidateReferences();
             // 카메라 공급원은 배경과 무관한 씬 바인딩입니다. 부분 조립 실패도 같은 Session을 반환합니다.
-            CombatCameraSession cameraSession = CombatCameraFactory.Create(root.SceneCamera, services.CameraCatalog, services.CameraEffects);
+            CombatCameraSession cameraSession = CombatCameraFactory.Create(root.SceneCamera, services.CameraCatalog, services.CameraEffects,
+                CombatCameraFactory.GroundHeightOf(root.Field));
             CombatCameraWindow camera = cameraSession.Window;
             CombatSceneEventPresenter events = null;
             UnitHUDLayer unitHudLayer = null;
@@ -136,9 +137,6 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                     id => units.TrackSurfacePresence(id, field.Mapper), position => field.Mapper.OnSurface(position));
                 ghost.Configure(tables.Units, fieldConfig, colors);
 
-                // 연출 시간 값(이동 step 포함)은 위 설정 검사가 이미 거절했으므로 가시밭 소유 GameObject를 먼저 만들어
-                // 같은 표시를 사건 Presenter·재생·Display가 공유합니다(구조 개선 SV1·E17). 프리팹은 DB 표가 필수로 검사합니다(View 3라운드 W12-5).
-                var thorns = new FieldThornPresenter(tables.ThornField.Prefab, field.CellsRoot);
                 // 특성 흔적 지형(땅 다지기·먼지 연막) 표시입니다. 외형은 특성 외형 표의 흔적 칸입니다(특성 시스템 View 설계 TS7).
                 var trails = new FieldTrailPresenter(field.CellsRoot, tables.Traits);
                 // 움직이는 토네이도 표시입니다(토네이도 View 설계 TN3). 외형은 지형 외형 표의 Tornado 줄입니다.
@@ -149,9 +147,9 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 // 하붑 구름 표시입니다(하붑 View 계획 HP-17). 칸마다 연기 이펙트를 같은 창구로 냅니다.
                 var haboob = new FieldHaboobPresenter(tables.Haboob, effects);
                 // 필드 표시 창구입니다(View 3라운드 W9-3). 특성 미리보기와 같은 함수로 만듭니다(평가 C4-02).
-                CombatFieldEventPorts fieldPorts = CreateFieldPorts(field, thorns, objects, terrain, trails, tornado, rockfall, haboob);
+                CombatFieldEventPorts fieldPorts = CreateFieldPorts(field, objects, terrain, trails, tornado, rockfall, haboob);
                 CombatEventPlaybackComposition eventComposition = CombatEventPlaybackFactory.Create(field, units, eventValues,
-                    audio, tables.SoundPresets, tables.CueSources, camera, effects, fieldPorts, railway, thorns,
+                    audio, tables.SoundPresets, tables.CueSources, camera, effects, fieldPorts, railway,
                     root.WorldCamera != null ? root.WorldCamera : Camera.main, presentation, turnDisplay.ShowEnemyTurnStart);
                 events = eventComposition.Events;
                 selection.Bind(events.InspectionFacts);
@@ -175,7 +173,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                     new CombatDeploymentPresentation(services.UI, root.TurnDisplay, root.DeckCards, audio), deferredDisplay);
                 // 바닥 타일 높이 표(backdrop?.TileSurface)는 씬 로드 때 배경이 맞춤 뒤 만든 것입니다(타일 높이 설계 TH2). 타일 방식이 아니면 null이고 필드 표시가 바탕을 0으로 둡니다(계획 P10).
                 var fieldDisplay = new CombatFieldDisplay(field: field, config: fieldConfig, colors: colors, areaOutlines: areaOutlines,
-                    meshes: meshes, tileSurface: backdrop?.TileSurface, objects: objects, terrain: terrain, railway: railway, thorns: thorns,
+                    meshes: meshes, tileSurface: backdrop?.TileSurface, objects: objects, terrain: terrain, railway: railway,
                     trails: trails, tornado: tornado, rockfall: rockfall, haboob: haboob, deferredDisplay: deferredDisplay);
                 var selectionDisplay = new CombatSelectionDisplay(selection, inspection, unitHudLayer, field, units, events.InspectionFacts,
                     snapshot, pointer, lifetime);
@@ -222,16 +220,14 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
 
         /// <summary>
         /// 사건 Presenter가 필드 표시에 닿는 창구를 만듭니다(View 3라운드 W9-3). 운영 표시와 특성 미리보기가 이 함수 하나로 만들어
-        /// 두 조립이 어긋나지 않습니다(평가 C4-02, 결정 Q-N2 A). 걸음 접촉 원본의 몸(이동 접촉 설계 M2)은 가시·오브젝트 표시가 변환 함수로 줍니다.
+        /// 두 조립이 어긋나지 않습니다. 걸음 중 접촉할 오브젝트의 몸 크기는 오브젝트 표시에서 받습니다.
         /// </summary>
-        internal static CombatFieldEventPorts CreateFieldPorts(FieldView field, FieldThornPresenter thorns, FieldObjectPresenter objects,
+        internal static CombatFieldEventPorts CreateFieldPorts(FieldView field, FieldObjectPresenter objects,
             FieldTerrainPresenter terrain, FieldTrailPresenter trails, FieldTornadoPresenter tornado, FieldRockfallPresenter rockfall,
             FieldHaboobPresenter haboob)
         {
             if (field == null)
                 throw new ArgumentNullException(nameof(field));
-            if (thorns == null)
-                throw new ArgumentNullException(nameof(thorns));
             if (objects == null)
                 throw new ArgumentNullException(nameof(objects));
             if (terrain == null)
@@ -245,11 +241,9 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             if (haboob == null)
                 throw new ArgumentNullException(nameof(haboob));
 
-            // 같은 형식의 인자(몸 조회 둘, 숨김 둘)가 이어져 있어 이름으로 넘깁니다(구조 원칙 평가 R5).
+            // 각 필드 표시의 콜백은 매개변수 이름으로 연결합니다.
             return new CombatFieldEventPorts(
-                consumeThorn: thorns.Consume,
                 presentHighlight: cells => field.SetLayerCells(FieldHighlightLayer.PresentationHighlight, cells),
-                thornBody: thorns.BodyOf,
                 objectBody: objects.BodyOf,
                 // 발동한 오브젝트는 사건 시점에 숨깁니다(이동 접촉 설계 M6). 결과 끝 Refresh가 최종 사실로 다시 맞춥니다.
                 hideObject: objects.HideActivated,

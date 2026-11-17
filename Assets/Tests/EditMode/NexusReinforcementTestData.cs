@@ -14,20 +14,21 @@ namespace ProjectL.Tests.Core
     internal static class NexusReinforcementTestData
     {
         internal static NexusReinforcementSpec Pool(int a = 3, int b = 2, int batch = 2, int padding = 2,
-            int limit = NexusReinforcementSpec.DefaultFieldEnemyLimit) =>
+            int limit = NexusReinforcementSpec.DefaultFieldEnemyLimit, int interval = 1) =>
             new(new[] { (EntityKey.Unit_Demon, a), (EntityKey.Unit_Cowboy, b) }.Where(row => row.Item2 > 0)
-                .Select(row => new NexusReinforcementEntry(row.Item1, row.Item2)).ToArray(), 3, batch, padding, limit);
+                .Select(row => new NexusReinforcementEntry(row.Item1, row.Item2)).ToArray(), 3, batch, padding, limit, interval);
 
         internal static CombatCommandInput Input(NexusReinforcementSpec spec, int living = 0,
             CombatControllerPhase phase = CombatControllerPhase.Enemy, uint random = 17,
-            CellCoord[] blocked = null, bool presence = false)
+            CellCoord[] blocked = null, bool presence = false, long enemyTurn = 1)
         {
             var seed = CombatCommandTestData.Input(empty: true);
             var nexus = CellEnvironmentTestData.Structure(30, cells: new[] { new CellCoord(4, 5) });
             var enemies = Enumerable.Range(0, living).Select(x => CombatCommandTestData.Character(x + 40,
                 EntityKey.Unit_Demon, new CellCoord(x, 0), Owner.Enemy)).ToArray();
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: phase,
-                controllerTurnSequence: 2, enemyOrigins: enemies.Select(c =>
+                completedPlayerTurnCount: enemyTurn, completedControllerTurnCount: 2 * enemyTurn - 1,
+                controllerTurnSequence: 2 * enemyTurn, enemyOrigins: enemies.Select(c =>
                     new CombatEnemyOrigin(c.EntityId, c.Anchor.Value, c.Rotation.Value)).ToArray());
             var state = seed.State.With(phase: phase == CombatControllerPhase.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,
                 structures: new[] { nexus }, turn: turn, allocation: new CombatAllocationFacts(100, 23), itemRandomState: 31,

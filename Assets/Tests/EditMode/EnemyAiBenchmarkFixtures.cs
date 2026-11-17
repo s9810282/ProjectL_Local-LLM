@@ -21,7 +21,14 @@ namespace ProjectL.Tests.Core
     {
         internal static readonly string[] Ids = { "N5", "N6", "N8", "W8", "U8", "A8", "T8", "R8", "X8", "H8", "G16" };
         internal static readonly int[] Seeds = { 1, 7, 19, 41, 97 };
-        internal static readonly IMovementTileRule[] Rules = { new ThornMovementTileRule(), new MineMovementTileRule() };
+        internal static readonly IMovementTileRule[] Rules = { new EnvironmentDamageTests.DamageRule(), new MineMovementTileRule() };
+
+        internal static bool FullRegressionEnabled =>
+            Environment.GetEnvironmentVariable("PROJECTL_ENEMY_AI_FULL_REGRESSION") == "1";
+
+        // 기본 회귀는 일반 교전, 벽, 조준 방식, 철도·낙석의 대표 시드를 확인한다.
+        internal static bool IsRepresentative(string fixtureId, int seed) =>
+            seed == 1 && fixtureId is "N5" or "W8" or "A8" or "R8";
 
         internal static int EnemyCount(string fixtureId) => fixtureId switch
         {
@@ -122,8 +129,7 @@ namespace ProjectL.Tests.Core
 
             var environment = new MovementEnvironmentFacts(tiles);
             var state = new CombatCommandState(size, size, CombatFlowPhase.Automatic,
-                Array.Empty<StructureCombatFacts>(), Array.Empty<ThornFieldCellSnapshot>(),
-                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                Array.Empty<StructureCombatFacts>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                     controllerTurnSequence: 2, completedPlayerTurnCount: 1, completedControllerTurnCount: 1),
                 environment, EnvironmentProgressFacts.Initial(environment, (uint)seed),
                 itemRandomState: (uint)seed);

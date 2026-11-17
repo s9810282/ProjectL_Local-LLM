@@ -6,7 +6,10 @@ using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.ShopView;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.StageView;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
@@ -14,6 +17,8 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Entry;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Completion;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
@@ -83,10 +88,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             IUISystemService ui = global.UIServiceCommand;
             // 공용 안내도 Global Context로 받습니다(로비 출발 거절과 같은 경로).
             var notice = new StageMapViewNotice(global.UITextPresentation);
+            IRunDeckReadSink runDeck = buffers.RunDeckReadSink;
+            ICharacterBufferReadSink characters = buffers.CharacterReadSink;
+            Func<EntityKey, UnitVisualData> unitVisuals = view.UnitVisualTableQuery.GetUnitVisual;
+            // Run 덱은 맵을 그릴 때 읽습니다. 전체 Context나 나중에 비우는 _view는 캡처하지 않습니다.
+            Func<GameObject> readMainModel = () =>
+                MainModelPrefab.Require(MainModelPrefab.FindRunMain(runDeck, characters), unitVisuals);
             var scene = new StageMapViewSceneServices(mapData, view.StageNodeVisualTableQuery,
                 view.StageMapBackgroundTableQuery, global.RenderServiceCommand.CoreGroup.ColorSystemServices,
                 global.RenderServiceCommand.ViewGroup.SelectOutlineSystemServices,
-                global.RenderServiceCommand.CoreGroup.CameraGroup.CameraCatalogSystem);
+                global.RenderServiceCommand.CoreGroup.CameraGroup.CameraCatalogSystem, readMainModel);
             var clearHistory = new StageNodeClearHistory(buffers.RunProgressReadSink);
             var completion = new StageMapViewCompletionServices(clearHistory,
                 new StageNodeBreakEffects(global.RenderServiceCommand.CoreGroup.EffectSystemServices),

@@ -9,7 +9,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// </summary>
     internal sealed class CombatTileCollapseSettings
     {
-        internal CombatTileCollapseSettings(float shakeSeconds, float shakeStrength, float shakeFrequency, float sinkSeconds, float sinkDepth)
+        private CombatTileCollapseSettings(float shakeSeconds, float shakeStrength, float shakeFrequency, float sinkSeconds, float sinkDepth, float entryScale)
         {
             CombatPresentationSettingsData.ValidateSeconds(shakeSeconds, nameof(shakeSeconds));
             CombatPresentationSettingsData.ValidateTileCollapseAmount(shakeStrength, nameof(shakeStrength));
@@ -21,6 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             ShakeFrequency = shakeFrequency;
             SinkSeconds = sinkSeconds;
             SinkDepth = sinkDepth;
+            EntryScale = entryScale;
         }
 
         /// <summary>View DB 설정 표의 값으로 만듭니다.</summary>
@@ -28,8 +29,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             return new CombatTileCollapseSettings(settings.TileCollapseShakeSeconds, settings.TileCollapseShakeStrength,
-                settings.TileCollapseShakeFrequency, settings.TileCollapseSinkSeconds, settings.TileCollapseSinkDepth);
+                settings.TileCollapseShakeFrequency, settings.TileCollapseSinkSeconds, settings.TileCollapseSinkDepth, settings.WeakGroundEntryScale);
         }
+
+        private float EntryScale { get; }
+
+        /// <summary>밟은 지반의 실제 하강 거리와 진입 배율로 이번 연출 값을 만듭니다.</summary>
+        internal CombatTileCollapseSettings ForEntry(float descent) =>
+            new(ShakeSeconds * EntryScale, ShakeStrength * EntryScale, ShakeFrequency, SinkSeconds * EntryScale, descent, EntryScale);
 
         /// <summary>떨리는 시간입니다(초). 이 동안 다음 사건 시작을 막습니다.</summary>
         internal float ShakeSeconds { get; }

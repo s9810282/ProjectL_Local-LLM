@@ -65,7 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
             data.Validate();
-            return new TargetingMethodSpec(data.Shape, data.ChoiceMode, data.Splash, data.SplashPercent, data.ChoiceAngle);
+            return new TargetingMethodSpec(data.Shape, data.ChoiceMode, data.Splash, data.SplashPercent, data.ChoiceAngle, data.Width);
         }
 
         /// <summary>병과 설정으로 Core 병과 명세 전체(필수 4종 + Boss)와 각 병과의 레벨당 상승치를 만든다.</summary>

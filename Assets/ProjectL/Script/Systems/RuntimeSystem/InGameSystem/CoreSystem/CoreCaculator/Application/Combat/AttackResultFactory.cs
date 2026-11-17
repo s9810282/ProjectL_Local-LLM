@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Diagnostics;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 
@@ -19,16 +22,39 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return new AttackOutcomeSnapshot(new[] { new AttackHitResult(recipient, before, after, AttackTargetRole.Designated,
                 100, 0, recovery, new[] { contact }) }, reaction == null ? Array.Empty<TraitActivationSnapshot>() : new[] { reaction });
         }
-        internal static void AttachChild(System.Collections.Generic.List<Contracts.Combat.CombatEvent> events,
+        internal static Contracts.Combat.CombatEffectsEvent AttachChild(System.Collections.Generic.List<Contracts.Combat.CombatEvent> events,
             Contracts.Combat.CombatEffectsEvent start, AttackOutcomeSnapshot outcome)
         {
             int index = events.IndexOf(start);
             if (index < 0) throw new InvalidOperationException("추가 공격 시작 사건이 없습니다.");
-            events[index] = new Contracts.Combat.CombatEffectsEvent(new[] { start.Traits.Single().WithChildAttack(outcome) }, start.Categories);
+            var occurrence = new Contracts.Combat.CombatEffectsEvent(new[] { start.Traits.Single().WithChildAttack(outcome) }, start.Categories);
+            events[index] = occurrence;
+            return occurrence;
         }
 
         internal static AttackHitResult[] CreateHits(CommandAttackLedger ledger) =>
             ledger.HitIds.OrderBy(id => id).Select(id => CreateHit(ledger, id)).ToArray();
+
+        /// <summary>같은 피격 장부를 스킬 사건으로 봉인합니다. 일반 행동 정산이나 반응 공격 예외를 만들지 않습니다.</summary>
+        internal static PlayerSkillAttackResult CreatePlayerSkill(CommandAttackPlan plan, CommandAttackLedger ledger,
+            int attackOrdinal, IReadOnlyList<TraitActivationSnapshot> traits = null,
+            IReadOnlyList<CategoryActivationSnapshot> categories = null, IReadOnlyList<CellCoord> projectilePath = null,
+            IReadOnlyDictionary<int, CellCoord> incomingDirections = null, IReadOnlyDictionary<int, CellCoord> impactCells = null)
+        {
+            if (plan == null) throw new ArgumentNullException(nameof(plan));
+            if (ledger == null) throw new ArgumentNullException(nameof(ledger));
+            var hits = CreateHits(ledger);
+            var breakdowns = hits.ToDictionary(hit => hit.TargetId, hit =>
+            {
+                var value = ledger.Breakdown(hit.TargetId);
+                return new PlayerSkillDamageBreakdown(value.DamageBeforeMatchup, value.MatchupNumerator, value.MatchupDenominator,
+                    value.DamageAfterMatchup, value.DamageAfterPhysicalDefense, value.IncomingReduction, value.FinalDamage);
+            });
+            return new PlayerSkillAttackResult(plan.Actor.EntityId, attackOrdinal, plan.AttackGroup,
+                projectilePath ?? plan.Delivery.AffectedCells, hits, ledger.Knockbacks,
+                (traits ?? Array.Empty<TraitActivationSnapshot>()).Concat(ledger.Reactions).ToArray(), categories,
+                projectilePath, incomingDirections, breakdowns, impactCells);
+        }
 
         private static AttackHitResult CreateHit(CommandAttackLedger ledger, Contracts.Ids.EntityId id)
         {
@@ -37,14 +63,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var role = pairs.Length == 1 ? pairs[0].Role : AttackTargetRole.None;
             int percent = pairs.Length == 1 ? pairs[0].AppliedSplashPercent : 100;
             return new AttackHitResult(id, ledger.Before(id), ledger.HitHealth(id).CurrentHealth, role, percent,
-                ledger.NormalizationLoss(id), ledger.Recovery(id), contacts, ledger.Reconstructed(id));
+                ledger.NormalizationLoss(id), ledger.Recovery(id), contacts, ledger.Reconstructed(id), ledger.IsObstacle(id));
         }
 
         internal static AttackResult Create(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
             UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
-            out AttackPreview preview, bool reaction = false, AttackPullSnapshot pull = null)
+            out AttackPreview preview, bool reaction = false, AttackPullSnapshot pull = null, AttackSweepSnapshot sweep = null)
         {
-            using var work = BeginCreate(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull);
+            using var work = BeginCreate(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull, sweep);
             while (!work.IsComplete) work.Step();
             preview = work.Preview;
             return work.Result;
@@ -52,8 +78,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal static ResultWork BeginCreate(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
             UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
-            bool reaction = false, AttackPullSnapshot pull = null) =>
-            new ResultWork(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull);
+            bool reaction = false, AttackPullSnapshot pull = null, AttackSweepSnapshot sweep = null) =>
+            new ResultWork(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull, sweep);
 
         /// <summary>대상별 결과를 순서대로 조립하고 공격 결과와 미리보기를 함께 봉인한다.</summary>
         internal sealed class ResultWork : IDisposable
@@ -100,12 +126,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             internal ResultWork(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
                 UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
-                bool reaction, AttackPullSnapshot pull)
+                bool reaction, AttackPullSnapshot pull, AttackSweepSnapshot sweep)
             {
                 if (plan == null) throw new ArgumentNullException(nameof(plan));
                 if (world == null) throw new ArgumentNullException(nameof(world));
                 if (ledger == null) throw new ArgumentNullException(nameof(ledger));
-                _steps = Build(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull).GetEnumerator();
+                _steps = Build(plan, world, ledger, cost, traitActivations, categoryActivations, reaction, pull, sweep).GetEnumerator();
             }
 
             internal void Step()
@@ -136,7 +162,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             private IEnumerable<int> Build(CommandAttackPlan plan, CommandAttackProjection world, CommandAttackLedger ledger,
                 UnitActionUseSettlementSnapshot cost, TraitActivationSnapshot[] traitActivations, CategoryActivationSnapshot[] categoryActivations,
-                bool reaction, AttackPullSnapshot pull)
+                bool reaction, AttackPullSnapshot pull, AttackSweepSnapshot sweep)
             {
                 var input = plan.Input;
                 var structures = plan.Selection.EligibleStructures.ToArray();
@@ -157,7 +183,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     plan.Delivery.AffectedCells.ToArray(), results.ToArray(), plan.RequestedCells,
                     traitActivations: traitActivations.Concat(ledger.Reactions).ToArray(), categoryActivations: categoryActivations,
                     blockedContacts: world.BlockedContacts, piercingShot: plan.Delivery.PiercingShot, attackGroup: plan.AttackGroup,
-                    reaction: reaction, pull: pull, knockbacks: ledger.Knockbacks);
+                    reaction: reaction, pull: pull, knockbacks: ledger.Knockbacks, sweep: sweep);
                 yield return 0;
                 var targetPreviews = new List<AttackTargetPreview>();
                 foreach (var hit in results)
@@ -174,7 +200,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 var movementTargets = new SortedSet<Contracts.Ids.EntityId>();
                 foreach (var id in ledger.PreHitTargets.Concat(ledger.Knockbacks.Select(k => k.TargetId)).Concat(ledger.CollisionVictims)
-                    .Concat(pull == null ? Array.Empty<Contracts.Ids.EntityId>() : new[] { pull.TargetId }))
+                    .Concat(pull == null ? Array.Empty<Contracts.Ids.EntityId>() : new[] { pull.TargetId })
+                    .Concat(sweep?.CapturedTargetIds ?? Array.Empty<Contracts.Ids.EntityId>()))
                 {
                     movementTargets.Add(id);
                     yield return 0;
@@ -197,7 +224,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 var actor = world.Characters[plan.Actor.EntityId];
                 // 실제 반응 공격(포효)은 미리보기 값이 필요 없다. 공개 미리보기로 돌린 반응(포효 예고)만 만든다(포효 예고 계획 TP-3).
-                _preview = reaction && !plan.PublicPreview ? default : AttackPreview.FromFacts(result, targetPreviews.ToArray(), actor.Stats.TraitStatuses.ToArray(), actor.Stats.Category);
+                if (!reaction || plan.PublicPreview)
+                {
+                    var pillarFalls = plan.PublicPreview
+                        ? world.Events.OfType<CombatPillarFallEvent>().Select(fall => new PillarFallPreview(fall, world.Events)).ToArray()
+                        : null;
+                    _preview = AttackPreview.FromFacts(result, targetPreviews.ToArray(), actor.Stats.TraitStatuses.ToArray(),
+                        actor.Stats.Category, pillarFalls);
+                }
                 _result = result;
                 yield return 0;
             }

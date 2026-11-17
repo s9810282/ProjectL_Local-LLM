@@ -190,13 +190,14 @@ namespace ProjectL.Tests.CoreIntegration
             var constructor = typeof(OwnedCharacterRecord).GetConstructors().Single();
             Assert.That(constructor.GetParameters().Any(p => p.Name == "hunterAttackBonus"), Is.True);
             return (OwnedCharacterRecord)constructor.Invoke(new object[] { original.Id, original.CharacterKey, original.Role,
-                original.Level, original.Experience, original.Growth, hunter, original.SpecializationCategory });
+                original.Level, original.Experience, original.Growth, hunter, original.SpecializationCategory, original.PlayerSkillUpgrade });
         }
 
         private static CombatCommandTransition Replace(CombatCommandTransition t, CombatCommandInput input = null,
             CharacterChanges characters = null, CombatCommandState state = null) =>
             new(input ?? t.Input, t.Accepted, t.Reason, characters ?? t.Characters, t.Field, state ?? t.FinalState,
                 t.Outcome, t.Attack, t.ConsumedSoulIds, t.Completion, t.Movement, t.Events, t.PathMovement,
-                t.EnvironmentBindings, t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement);
+                t.EnvironmentBindings, t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement,
+                t.UndoMovement, t.MovementEffectUses, t.HealthExecutions, t.HealthClaims);
     }
 }

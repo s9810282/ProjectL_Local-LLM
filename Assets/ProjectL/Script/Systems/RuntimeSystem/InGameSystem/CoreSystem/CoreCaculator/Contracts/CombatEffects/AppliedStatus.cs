@@ -108,13 +108,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public ActionRestrictionStatus(StatusEffectKey key, EffectOriginKey origin, int remainingAffectedSideTurnEnds) : base(key, origin)
         {
-            if (key != StatusEffectKey.Disarm && key != StatusEffectKey.Bind) throw new ArgumentOutOfRangeException(nameof(key));
+            if (!Supports(key)) throw new ArgumentOutOfRangeException(nameof(key));
             if (remainingAffectedSideTurnEnds < 1) throw new ArgumentOutOfRangeException(nameof(remainingAffectedSideTurnEnds));
             RemainingAffectedSideTurnEnds = remainingAffectedSideTurnEnds;
         }
 
         public override bool SameValues(AppliedStatus other) => other is ActionRestrictionStatus status &&
             Key == status.Key && Origin == status.Origin && RemainingAffectedSideTurnEnds == status.RemainingAffectedSideTurnEnds;
+
+        public static bool Supports(StatusEffectKey key) => key is StatusEffectKey.Disarm or StatusEffectKey.Bind or StatusEffectKey.Stun;
     }
 
     public sealed class DefenseDecreaseStatus : AppliedStatus

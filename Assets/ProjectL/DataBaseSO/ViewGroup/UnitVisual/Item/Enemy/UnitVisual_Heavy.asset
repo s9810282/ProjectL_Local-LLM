@@ -23,7 +23,6 @@ MonoBehaviour:
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
     animationPresentation: {fileID: 11400000, guid: 90e11029070028041892ead13bbbb4f3, type: 2}
     unitSoundPreset: 3
-    attackSoundSlotIndex: 10
     obstacleHitCues:
       effects: []
       shakes: []
@@ -33,3 +32,14 @@ MonoBehaviour:
     obstacleDestroyedCues:
       effects: []
       shakes: []
+    attackSounds:
+    - sound: 10
+      anchor: 2
+      contactFilter: 1
+      delay: 0
+    hitSounds: []
+    deathSounds:
+    - sound: 5
+      anchor: 1
+      contactFilter: 1
+      delay: 0

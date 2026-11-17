@@ -57,8 +57,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         if (actual == 0) continue;
                         damage.Characters[source.EntityId] = after;
                         damage.RecordRecovery(source.EntityId, actual);
-                        Activation(damage, source.EntityId, source.EntityId, TraitKey.CallOfBlood, TraitActivationKind.HealthRecovered, actual, origin);
-                        CombatCommandEvents.Health(damage.Events, before, after);
+                        var occurrence = Activation(damage, source.EntityId, source.EntityId, TraitKey.CallOfBlood,
+                            TraitActivationKind.HealthRecovered, actual, origin);
+                        var evidence = CombatCommandEvents.Health(damage.Events, before, after);
+                        var healthSource = new CombatHealthSource(CombatHealthOperationKind.EffectRecovery, binding.Origin, contextEvent: occurrence);
+                        var step = CombatHealthRecording.Add(damage.HealthExecutions, source.EntityId, before.Health, after.Health,
+                            healthSource, evidence, recovery: actual);
+                        damage.HealthClaims.Add(new CombatHealthClaim(CombatHealthClaimKind.TraitRecovery, occurrence, 0, -1,
+                            source.EntityId, new[] { step }));
                     }
                     else if (binding.Rule is MoraleBoostEffectRule morale)
                     {
@@ -79,9 +85,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
         }
 
-        private static void Activation(CombatDamageApplication damage, Contracts.Ids.EntityId source,
-            Contracts.Ids.EntityId target, TraitKey key, TraitActivationKind kind, int amount, CombatDamageOrigin origin) =>
-            damage.Events.Add(new CombatEffectsEvent(new[] { new TraitActivationSnapshot(source, target, key, kind, amount, resultOrigin: origin) },
-                Array.Empty<CategoryActivationSnapshot>()));
+        private static CombatEffectsEvent Activation(CombatDamageApplication damage, Contracts.Ids.EntityId source,
+            Contracts.Ids.EntityId target, TraitKey key, TraitActivationKind kind, int amount, CombatDamageOrigin origin)
+        {
+            var occurrence = new CombatEffectsEvent(new[] { new TraitActivationSnapshot(source, target, key, kind, amount, resultOrigin: origin) },
+                Array.Empty<CategoryActivationSnapshot>());
+            damage.Events.Add(occurrence);
+            return occurrence;
+        }
     }
 }

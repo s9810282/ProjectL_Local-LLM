@@ -121,7 +121,7 @@ namespace ProjectL.Tests.Core
                 c.With(debuffs: new CharacterDebuffState(huntersMark: Mark))).ToArray());
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                 controllerTurnSequence: 1, completedPlayerTurnCount: playerTurns);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                seed.State.Structures,seed.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                seed.State.Structures,turn);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, seed.ActorId, seed.Aim,
                 state, seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(4, 1, 8, 8, Array.Empty<CharacterInstanceId>(), 0),

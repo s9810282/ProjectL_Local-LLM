@@ -72,17 +72,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             }
             // 전경 입력 소유자(Drag·공격 모드·경로 지정)가 포인터를 쓰는 동안은 기존 선택을 유지합니다. 그 판정은 묶음 입구 하나이고(평가 C2-02·C8-01),
             // 그 밖의 선택 자격은 Policy 한 곳에서 판단합니다.
+            bool consumed = false;
+            if (request == CombatInputRouter.Request.SelectPressed)
+                connection.Input.BeginSelectPress();
             if (request == CombatInputRouter.Request.SelectPressed
                 && connection.Input.CanInspectOnPress
                 && _guard.IsLive(connection)
                 && CombatInputPolicy.CanSelectUnit(_facts.Read(includeUnhandledCommand: true)))
             {
-                connection.Inspection.InspectUnit(screenX, screenY);
+                if (connection.Inspection.TryPickInspection(screenX, screenY, out var cell, out var occupant))
+                {
+                    consumed = connection.Input.TryPressDestination(cell, !occupant.IsEmpty);
+                    if (!_guard.IsLive(connection) || !_guard.IsInputReady)
+                        return;
+                    if (!consumed)
+                        connection.Inspection.InspectUnit(occupant);
+                }
                 // 정보창의 외부 UI 콜백 뒤에는 지난 입력을 새 연결에 보내지 않습니다.
                 if (!_guard.IsLive(connection) || !_guard.IsInputReady)
                     return;
             }
-            SyncAvailability(connection);
+            if (request == CombatInputRouter.Request.SelectReleased && _guard.IsLive(connection)
+                && connection.Input.OwnsDestinationRelease)
+            {
+                bool picked = connection.Inspection.TryPickInspection(screenX, screenY, out var cell, out var occupant);
+                connection.Input.ReleaseDestination(picked && occupant.IsEmpty ? cell : null);
+                if (!_guard.IsLive(connection)) return;
+                consumed = true;
+            }
+            if (request != CombatInputRouter.Request.CycleUnitCategory)
+                SyncAvailability(connection);
             // Abort 뒤 Unbind가 보내는 정리 신호는 기존 소유자에게 끝까지 전달합니다(R2). 그래서 이 갈래는 연결만 봅니다.
             bool cleanupRequest = request == CombatInputRouter.Request.FocusLost || request == CombatInputRouter.Request.SelectCanceled;
             if (!_guard.IsConnected(connection) || (!_guard.IsLive(connection) && !cleanupRequest))
@@ -91,7 +110,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             // 턴 종료는 확인창 입구를 먼저 지난다. 확인이 필요 없으면 입구가 지금과 같은 Router 경로로 바로 넘긴다.
             if (request == CombatInputRouter.Request.EndTurn)
                 connection.Input.RequestEndTurn();
-            else
+            else if (request == CombatInputRouter.Request.CycleUnitCategory)
+            {
+                if (!TryCycleUnitCategory(connection))
+                    return;
+            }
+            else if (!consumed)
                 connection.Input.Route(request, screenX, screenY, _characters.Characters);
             if (!_guard.IsLive(connection))
                 return;
@@ -105,6 +129,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 return;
             if (request != CombatInputRouter.Request.PointerMoved)
                 SyncActionButtons(connection);
+        }
+
+        private bool TryCycleUnitCategory(CombatViewConnection connection)
+        {
+            CombatInputFacts facts = _facts.Read(includeUnhandledCommand: true);
+            if (!CombatInputPolicy.CanCycleUnitCategory(facts))
+                return false;
+
+            var nextActor = CombatCharacterQueries.FindNextPlayerByCategory(_characters.Characters, facts.SelectedActorId);
+            if (nextActor.IsEmpty)
+                return false;
+
+            connection.Input.PrepareActorSwitch();
+            // 조준·경로 표시 정리 콜백이 씬 연결을 바꿀 수 있습니다.
+            if (!_guard.IsLive(connection) || !_guard.IsInputReady)
+                return false;
+
+            return connection.Inspection.TrySelectActor(nextActor);
         }
 
         /// <summary>
@@ -143,11 +185,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             CombatInputFacts facts = _facts.Read(includeUnhandledCommand: true);
             int answered = _state.AnsweredPreviewNumber;
             var latest = _state.TryGetLatestPreview(out var preview) ? preview : null;
-            // 포효 예고는 결과마다 한 번만 묻고, 유닛 수만큼 묻는 HUD 조회보다 먼저 슬롯을 씁니다(포효 예고 계획 TP-11).
+            // 포효 예고(결과마다 임박한 보스마다 한 번)가 HUD 묶음 조회(판마다 한 번, 새 SSOT 설계 SN2)보다 먼저 슬롯을 씁니다(포효 예고 계획 TP-11).
             connection.Input.SyncRoarForecast(facts, _characters.Characters, answered, latest);
             // 선택·호버·경로 미리보기가 슬롯을 먼저 사용한 뒤에 HUD 조회를 진행합니다.
             if (_guard.IsLive(connection) && connection.Input != null)
-                connection.Input.SyncHudActionAvailability(facts, _characters.Characters, answered, latest);
+                connection.Input.SyncHudActionAvailability(facts, answered, latest);
         }
 
         /// <summary>선택 아군의 가용성 조회 수명만 맞춥니다. 조회가 사실을 다시 읽지 않도록 현재 사실을 값으로 넘깁니다.</summary>
@@ -187,7 +229,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             CombatInputFacts facts = _facts.Read(includeUnhandledCommand: true);
             // 세 표면이 같은 막힘 판단 하나를 쓴다(View 단계 설계 W2). 맞춤은 입력 표면이 한다(View 2라운드 W6-2).
             CombatActionButtonState buttons = connection.Input.ReadActionButtons(facts);
-            connection.Surfaces.Sync(facts, buttons.CanEnterAttack, buttons.IsAttackActive, buttons.CanUseReturn, buttons.Availability);
+            connection.Surfaces.Sync(facts, buttons.CanEnterAttack, buttons.IsAttackActive, buttons.CanUseReturn, buttons.Availability, buttons.Skill);
         }
 
         /// <summary>덱·가방 UI 입구의 수신 조건입니다. 막힘 판단은 Policy 한 곳이고, 입력이 준비됐을 때만 사실을 읽습니다.</summary>

@@ -95,10 +95,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public MovementEffectId Movement { get; }
         public EffectOriginKey Origin { get; }
         public EntityId RecipientId { get; }
-        private protected MovementEffectReceipt(MovementEffectId movement, EffectOriginKey origin, EntityId recipientId)
+        private protected MovementEffectReceipt(MovementEffectId movement, EffectOriginKey origin, EntityId recipientId,
+            EffectOwnerKind sourceKind = EffectOwnerKind.Trait)
         {
-            if (!movement.IsValid || !origin.IsValid || origin.Kind != EffectOwnerKind.Trait || origin.OwnerInstanceId < 1 || recipientId.IsEmpty)
-                throw new ArgumentException("이동 역산에는 유효한 이동·특성 출처·수신자가 필요합니다.");
+            if (!movement.IsValid || !origin.IsValid || origin.Kind != sourceKind || origin.OwnerInstanceId < 1 || recipientId.IsEmpty)
+                throw new ArgumentException("이동 역산에는 유효한 이동·출처·수신자가 필요합니다.");
             Movement = movement;
             Origin = origin;
             RecipientId = recipientId;
@@ -127,6 +128,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                         s.Origin.Value.OwnerInstanceId == Origin.OwnerInstanceId && s.Origin.Value.DefinitionKey == Origin.DefinitionKey)
                     .All(s => s.SameValues(exposure.ExpectedStatus)),
                 MovementTrailReceipt => true,
+                MovementFireReceipt fire => fire.ExpectedStatus.SameValues(current.StatusEffects.Entries.OfType<FireStatus>().SingleOrDefault()),
                 _ => false
             };
         }
@@ -137,6 +139,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (Origin.OwnerInstanceId != Movement.ActorId.Value || Origin.DefinitionKey != (int)key)
                 throw new ArgumentException("이동 효과의 출처는 해당 이동 행위자의 특성이어야 합니다.");
         }
+    }
+
+    /// <summary>
+    /// 이동의 기믹 도착 효과가 바꾼 화상 하나다(예: 운석 불길 진입). 어떤 기믹의 도착 효과인지는
+    /// 그 기믹의 도착 규칙이 판단해 만들며, 영수증은 기믹 출처와 화상 부여분만 보장한다.
+    /// </summary>
+    public sealed class MovementFireReceipt : MovementEffectReceipt
+    {
+        public FireStatus PreviousStatus { get; }
+        public FireStatus ExpectedStatus { get; }
+
+        internal MovementFireReceipt(MovementEffectId movement, EntityId recipientId, FireStatus previousStatus, FireStatus expectedStatus)
+            : base(movement, (expectedStatus ?? throw new ArgumentNullException(nameof(expectedStatus))).Origin.Value,
+                recipientId, EffectOwnerKind.StageGimmick)
+        {
+            if (previousStatus != null && (previousStatus.SameValues(expectedStatus) ||
+                    previousStatus.RemainingAffectedSideStarts > expectedStatus.RemainingAffectedSideStarts))
+                throw new ArgumentException("화상 역산에는 이동으로 달라진 기믹 도착 효과의 부여분이 필요합니다.");
+            PreviousStatus = previousStatus;
+            ExpectedStatus = expectedStatus;
+        }
+
+        public override bool SameValues(MovementEffectReceipt other) => other is MovementFireReceipt fire &&
+            SameContribution(fire) && ExpectedStatus.SameValues(fire.ExpectedStatus) &&
+            (PreviousStatus == null ? fire.PreviousStatus == null : PreviousStatus.SameValues(fire.PreviousStatus));
     }
 
     public sealed class MovementExposureReceipt : MovementEffectReceipt
@@ -292,27 +319,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             PreviousDefenseBonus == ((MovementShieldReceipt)other).PreviousDefenseBonus && ExpectedDefenseBonus == ((MovementShieldReceipt)other).ExpectedDefenseBonus &&
             (PreviousStatus == null ? ((MovementShieldReceipt)other).PreviousStatus == null : PreviousStatus.SameValues(((MovementShieldReceipt)other).PreviousStatus)) &&
             (ExpectedStatus == null ? ((MovementShieldReceipt)other).ExpectedStatus == null : ExpectedStatus.SameValues(((MovementShieldReceipt)other).ExpectedStatus));
-    }
-
-    /// <summary>피해 적용 경계가 확정한 사건과 사용 목록입니다. 0 입력의 빈 목록도 보존하여 전체 누락과 구분합니다.</summary>
-    public sealed class MovementDamageExecution
-    {
-        public IReadOnlyList<CombatEvent> Evidence { get; }
-        public IReadOnlyList<MovementEffectUse> Uses { get; }
-        internal MovementDamageExecution(IReadOnlyList<CombatEvent> evidence, IReadOnlyList<MovementEffectUse> uses)
-        {
-            Evidence = Array.AsReadOnly(evidence.ToArray());
-            Uses = Array.AsReadOnly(uses.ToArray());
-            if (Evidence.Count == 0 || Evidence.Any(e => e == null) || Uses.Any(u => u == null || !Evidence.Contains(u.Execution)))
-                throw new ArgumentException("피해 실행은 자신의 사건과 불변 사용 근거를 함께 가져야 합니다.");
-        }
-        internal static IReadOnlyList<MovementEffectUse> Collect(IReadOnlyList<MovementDamageExecution> executions)
-        {
-            var result = new List<MovementEffectUse>();
-            foreach (var use in executions.SelectMany(e => e.Uses))
-                if (!result.Any(use.SameValues)) result.Add(use);
-            return result.AsReadOnly();
-        }
     }
 
 }

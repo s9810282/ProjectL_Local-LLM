@@ -1,5 +1,7 @@
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using System;
+using ProjectL.Framework.SystemBase;
+using ProjectL.Systems.ServiceKeys.Runtime;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.ActionButtons;
@@ -37,6 +39,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private const int AttackSlot = 0;
         private const int EndTurnSlot = 1;
         private const int ReturnSlot = 2;
+        private const int SkillSlot = 3;
 
         [Tooltip("공격 모드에 들어가는 버튼입니다. 공격 모드 중에 누르면 모드를 끝냅니다.")]
         [SerializeField] private Button attackButton;
@@ -58,10 +61,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [SerializeField] private Button returnButton;
         [Tooltip("공격 모드 동안 켜는 강조 오브젝트입니다. 비워 두면 강조하지 않습니다.")]
         [SerializeField] private GameObject attackActiveIndicator;
+        [Tooltip("플레이어 액티브 스킬 버튼입니다(R 키와 같은 입구, 전투 스킬 View 설계 SK4). 메인에 스킬이 묶여 있을 때만 보입니다. "
+            + "비워 두면 스킬은 R 키로만 씁니다(프리팹 연결 전 임시, 계획 TP-15).")]
+        [SerializeField] private Button skillButton;
+        [Tooltip("스킬 아이콘을 보일 Image입니다(스킬 외형 표의 아이콘). 비워 두면 아이콘을 바꾸지 않습니다.")]
+        [SerializeField] private Image skillIcon;
+        [Tooltip("남은 사용 횟수(남은/한도)를 보일 글자입니다. 비워 두면 보이지 않습니다.")]
+        [SerializeField] private TMP_Text skillUsesText;
+        [Tooltip("스킬 모드 동안 켜는 강조 오브젝트입니다. 비워 두면 강조하지 않습니다.")]
+        [SerializeField] private GameObject skillActiveIndicator;
 
         private Action _attack;
         private Action _endTurn;
         private Action _return;
+        private Action _skill;
+        // 스킬 버튼 호버 설명입니다(결정 Q-SK5 A, UnitInfo 특성 칸과 같은 공용 Hover 패널).
+        private IUITextPresentation _hoverText;
+        private bool _skillHovered;
+        private bool _skillHoverShown;
+        private uint _skillHoverVersion;
+        private bool _missingSkillButtonWarned;
         private bool _isInputAttached;
         private bool _hasShown;
         private CombatActionButtons _shown;
@@ -78,7 +97,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         protected override void OnUIOpened() => InvalidateShownValues();
 
-        protected override void OnUIHidden() => InvalidateShownValues();
+        protected override void OnUIHidden()
+        {
+            InvalidateShownValues();
+            _skillHovered = false;
+            HideSkillHover();
+        }
 
         private void InvalidateShownValues()
         {
@@ -86,17 +110,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>
-        /// 공격·턴 종료·되돌리기 입력을 연결합니다. 모두 null이면 해제만 합니다.
+        /// 공격·턴 종료·되돌리기·스킬 입력을 연결합니다. 모두 null이면 해제만 합니다.
         /// 버튼과 이 패널의 입력 연결(<see cref="UIInputBinding"/>)은 처음 연결할 때 한 번만 만듭니다.
         /// </summary>
-        internal void Bind(Action attack, Action endTurn, Action returnToCheckpoint)
+        internal void Bind(Action attack, Action endTurn, Action returnToCheckpoint, Action skill)
         {
-            bool releasing = attack == null && endTurn == null && returnToCheckpoint == null;
-            if (!releasing && (attack == null || endTurn == null || returnToCheckpoint == null))
-                throw new ArgumentException("[CombatActionPanel] 세 입구는 함께 연결하거나 함께 해제해야 합니다.");
+            bool releasing = attack == null && endTurn == null && returnToCheckpoint == null && skill == null;
+            if (!releasing && (attack == null || endTurn == null || returnToCheckpoint == null || skill == null))
+                throw new ArgumentException("[CombatActionPanel] 네 입구(공격·턴 종료·되돌리기·스킬)는 함께 연결하거나 함께 해제해야 합니다.");
             _attack = null;
             _endTurn = null;
             _return = null;
+            _skill = null;
 
             if (releasing)
                 return;
@@ -105,6 +130,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _attack = attack;
             _endTurn = endTurn;
             _return = returnToCheckpoint;
+            _skill = skill;
+        }
+
+        public override void BindUIService(ISystemServiceStoreReader resolver)
+        {
+            base.BindUIService(resolver);
+            // 스킬 버튼 설명은 공용 Hover 패널에 띄웁니다. UnitInfo 특성 칸과 같이 Global Context를 거쳐 받습니다.
+            _hoverText = resolver.GetService(SystemGroupsService.Global).UITextPresentation;
         }
 
         void IUIInputReceiver.Click(int slot)
@@ -124,6 +157,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 case ReturnSlot:
                     _return?.Invoke();
                     break;
+                case SkillSlot:
+                    _skill?.Invoke();
+                    break;
             }
         }
 
@@ -133,6 +169,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             using var profileUIActionPanelHoverEnterSample = _profileUIActionPanelHoverEnter.Auto();
 #endif
 
+            if (slot != SkillSlot)
+                return;
+            _skillHovered = true;
+            ShowSkillHover();
         }
 
         void IUIInputReceiver.HoverExit(int slot)
@@ -141,6 +181,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             using var profileUIActionPanelHoverExitSample = _profileUIActionPanelHoverExit.Auto();
 #endif
 
+            if (slot != SkillSlot)
+                return;
+            _skillHovered = false;
+            HideSkillHover();
         }
 
         /// <summary>버튼 보임·누름 가능·공격 이미지·텍스트·강조를 적용합니다. 직전 값과 같으면 다시 쓰지 않습니다.</summary>
@@ -179,9 +223,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (attackActiveIndicator.activeSelf != indicate)
                     attackActiveIndicator.SetActive(indicate);
             }
-
             _shown = buttons;
             _hasShown = true;
+            ApplySkill(buttons);
         }
 
         /// <summary>행동 버튼 표시와 입력에 필요한 참조를 검사합니다.</summary>
@@ -210,6 +254,74 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return null;
         }
 
+        // 스킬 버튼: 보임 = 패널이 보이고 메인에 스킬이 묶임, 누름 = 가용성 답(또는 스킬 모드 끄기), 아이콘·남은 횟수·켜짐 표시(전투 스킬 View 설계 SK4).
+        private void ApplySkill(in CombatActionButtons buttons)
+        {
+            CombatSkillButton skill = buttons.Skill;
+            bool visible = buttons.Visible && skill.HasSkill;
+            if (skillButton == null)
+            {
+                if (visible && !_missingSkillButtonWarned)
+                {
+                    _missingSkillButtonWarned = true;
+                    Debug.LogWarning($"[CombatActionPanel] '{name}'에 {nameof(skillButton)}이 연결되지 않아 스킬 버튼을 보이지 않습니다. 스킬은 R 키로 쓸 수 있습니다.");
+                }
+                return;
+            }
+            Apply(skillButton, visible, skill.CanUse);
+            if (skillIcon != null && skill.Icon != null && skillIcon.sprite != skill.Icon)
+                skillIcon.sprite = skill.Icon;
+            if (skillUsesText != null)
+            {
+                string uses = visible ? $"{skill.RemainingUses}/{skill.StageUseLimit}" : string.Empty;
+                if (skillUsesText.text != uses)
+                    skillUsesText.text = uses;
+            }
+            if (skillActiveIndicator != null)
+            {
+                bool indicate = visible && skill.IsActive;
+                if (skillActiveIndicator.activeSelf != indicate)
+                    skillActiveIndicator.SetActive(indicate);
+            }
+            if (!visible)
+                HideSkillHover();
+            else if (_skillHovered)
+                ShowSkillHover();
+        }
+
+        private void ShowSkillHover()
+        {
+            CombatSkillButton skill = _shown.Skill;
+            if (_hoverText == null || skillButton == null || !_hasShown || !_shown.Visible || !skill.HasSkill)
+                return;
+            string body = $"{skill.Description}\n남은 횟수 {skill.RemainingUses}/{skill.StageUseLimit}";
+            _hoverText.ShowHover(skill.DisplayName ?? string.Empty, body);
+            _skillHoverShown = true;
+            _skillHoverVersion = _hoverText.HoverHideVersion;
+            _hoverText.MoveHover(SkillHoverPoint());
+        }
+
+        private void HideSkillHover()
+        {
+            if (!_skillHoverShown)
+                return;
+            _skillHoverShown = false;
+            // 밖에서 이미 닫혔으면 지금 열린 패널은 다른 사용처의 것일 수 있어 닫지 않습니다(UnitInfo 특성 칸과 같은 규칙).
+            if (_hoverText != null && _hoverText.HoverHideVersion == _skillHoverVersion)
+                _hoverText.UnHover();
+        }
+
+        // 스킬 버튼 오른쪽 위 모서리의 화면 좌표입니다. 화면 밖 보정은 Hover 패널이 맡습니다.
+        private Vector2 SkillHoverPoint()
+        {
+            var area = (RectTransform)skillButton.transform;
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Canvas root = canvas != null ? canvas.rootCanvas : null;
+            Camera camera = root == null || root.renderMode == RenderMode.ScreenSpaceOverlay ? null : root.worldCamera;
+            Rect rect = area.rect;
+            return RectTransformUtility.WorldToScreenPoint(camera, area.TransformPoint(new Vector3(rect.xMax, rect.yMax, 0f)));
+        }
+
         private static void Apply(Button button, bool visible, bool interactable)
         {
             if (button.gameObject.activeSelf != visible)
@@ -227,6 +339,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             UIInputBinding.Attach(endTurnButton, this, EndTurnSlot);
             if (returnButton != null)
                 UIInputBinding.Attach(returnButton, this, ReturnSlot);
+            if (skillButton != null)
+                UIInputBinding.Attach(skillButton, this, SkillSlot);
             _isInputAttached = true;
         }
     }

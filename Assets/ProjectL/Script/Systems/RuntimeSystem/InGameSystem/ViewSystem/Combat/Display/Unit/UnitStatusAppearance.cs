@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
-using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -101,12 +100,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (_originals[i] != null) _originals[i].enabled = _originalEnabled[i];
         }
 
-        // 원래 모델 렌더러는 처음 숨기기 전, 잔해를 만들기 전에 잡습니다. 체력 글자(TMP)·Canvas 아래는 모델이 아니라 뺍니다(외형 층과 같은 규칙).
+        // 원래 모델 렌더러는 처음 숨기기 전, 잔해를 만들기 전에 잡습니다. 모델 부분 규칙(UnitModelParts.Is) 밖인 체력 글자·HUD·커서는 뺍니다.
         private Renderer[] CaptureOriginals()
         {
             var models = new List<Renderer>();
             foreach (Renderer renderer in _root.GetComponentsInChildren<Renderer>(true))
-                if (renderer.GetComponentInParent<TMP_Text>(true) == null && renderer.GetComponentInParent<Canvas>(true) == null)
+                if (UnitModelParts.Is(renderer))
                     models.Add(renderer);
             return models.ToArray();
         }

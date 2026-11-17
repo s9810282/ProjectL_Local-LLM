@@ -193,21 +193,61 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
                 throw new System.InvalidOperationException("현재 미리보기 요청과 응답 번호가 다릅니다.");
             if (preview.RequestNumber <= _combatRead.AnsweredPreviewNumber) return;
             var request = _combatViewRead.Preview.Data;
+            var platformForecast = preview.PlatformForecast;
+            bool platformRequest = request.Kind == CombatViewPreviewKind.PlatformForecast;
+            if (platformRequest != (platformForecast != null) || platformForecast != null &&
+                !platformForecast.Source.Matches(_combatRead.BattleInstanceId, _combatRead.QueryRevision,
+                    _combatRead.Current.CommandState))
+                throw new System.InvalidOperationException("플랫폼 예측의 종류·전투·턴·원본 버전이 현재 요청과 다릅니다.");
+            var skillSource = preview.SkillAvailability?.Source ?? preview.SkillSelection?.Source ?? preview.SkillForecast?.Source;
+            bool skillRequest = request.Kind is CombatViewPreviewKind.SkillAvailability or CombatViewPreviewKind.SkillSelection or CombatViewPreviewKind.SkillForecast;
+            if (skillRequest || skillSource.HasValue)
+            {
+                bool sameArm = request.Kind switch
+                {
+                    CombatViewPreviewKind.SkillAvailability => preview.SkillAvailability != null,
+                    CombatViewPreviewKind.SkillSelection => preview.SkillSelection != null,
+                    CombatViewPreviewKind.SkillForecast => preview.SkillForecast != null,
+                    _ => false
+                };
+                if (!sameArm || !skillSource.HasValue || request.PlayerSkill == null ||
+                    skillSource.Value.BattleInstanceId != _combatRead.BattleInstanceId ||
+                    skillSource.Value.ControllerTurnSequence != _combatRead.Current.CommandState.Turn.ControllerTurnSequence ||
+                    skillSource.Value.QueryRevision != _combatRead.QueryRevision || skillSource.Value.ActorId != request.EntityId ||
+                    preview.SkillSelection != null && !preview.SkillSelection.SelectedPoints.SequenceEqual(request.PlayerSkill.Points) ||
+                    preview.SkillForecast != null && !preview.SkillForecast.SelectedPoints.SequenceEqual(request.PlayerSkill.Points))
+                    throw new System.InvalidOperationException("스킬 조회의 종류·선택·전투·턴·행위자·원본 버전이 현재 요청과 다릅니다.");
+            }
             var availability = preview.ActionAvailability;
             if (request.Kind == CombatViewPreviewKind.ActionAvailability || availability != null)
             {
                 if (request.Kind != CombatViewPreviewKind.ActionAvailability || availability == null ||
-                    availability.SourceRevision == 0 || availability.SourceRevision != _combatRead.QueryRevision ||
-                    availability.BattleInstanceId != _combatRead.BattleInstanceId || availability.ActorId != request.EntityId ||
-                    availability.ControllerTurnSequence != _combatRead.Current.CommandState.Turn.ControllerTurnSequence)
+                    !IsCurrentAvailability(availability) || availability.ActorId != request.EntityId)
                     throw new System.InvalidOperationException("행동 조회의 전투·턴·개체·원본 버전이 현재 요청과 다릅니다.");
+            }
+            // 묶음 답은 요청에 개체가 없으므로 항목마다 원본 판·전투·턴만 봅니다(새 SSOT 설계 SN2).
+            var availabilities = preview.ActionAvailabilities;
+            if (request.Kind == CombatViewPreviewKind.ActionAvailabilities || availabilities != null)
+            {
+                bool valid = request.Kind == CombatViewPreviewKind.ActionAvailabilities && availabilities != null;
+                for (int i = 0; valid && i < availabilities.Count; i++)
+                    valid = availabilities[i] != null && !availabilities[i].ActorId.IsEmpty && IsCurrentAvailability(availabilities[i]);
+                if (!valid)
+                    throw new System.InvalidOperationException("행동 조회 묶음의 전투·턴·원본 버전이 현재 요청과 다릅니다.");
             }
             _combatStore.InstallPreview(preview);
         }
 
+        // 행동 가능 답이 지금 전투·턴·조회 원본 판에서 계산됐는지입니다. 단일 답과 묶음 답이 함께 씁니다.
+        private bool IsCurrentAvailability(CombatActionAvailability availability) =>
+            availability.SourceRevision != 0 && availability.SourceRevision == _combatRead.QueryRevision &&
+            availability.BattleInstanceId == _combatRead.BattleInstanceId &&
+            availability.ControllerTurnSequence == _combatRead.Current.CommandState.Turn.ControllerTurnSequence;
+
         public void Apply(CombatCommandTransition transition)
         {
             if (transition == null) throw new System.ArgumentNullException(nameof(transition));
+            transition.Input.RequireAuthoritativeCalculation();
             if (transition.Input.ProcessingKind == CombatProcessingKind.Command &&
                 transition.Input.Number <= _combatRead.HandledCommandNumber) return;
             _characterStore.ValidateCommandInput(transition.Input, _combatRead.Current?.Membership);

@@ -142,6 +142,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 && !facts.IsPresenting && !facts.HasUnhandledCommand;
         }
 
+        /// <summary>플레이어 전투 턴의 안정된 선택 구간에만 조작 유닛을 순환합니다.</summary>
+        internal static bool CanCycleUnitCategory(in CombatInputFacts facts) =>
+            facts.StagePhase == StagePhase.Combat && facts.Phase == CombatFlowPhase.PlayerInput && CanSelectUnit(facts);
+
         /// <summary>선택 가용성을 조회할 수 있는 안정 상태입니다. 실행 허가나 비용 판정은 하지 않습니다.</summary>
         internal static bool CanQueryActionAvailability(in CombatInputFacts facts) =>
             CanQueryInStableState(facts, CombatViewPreviewKind.ActionAvailability);
@@ -153,7 +157,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         internal static bool CanQueryRoarForecast(in CombatInputFacts facts) =>
             CanQueryInStableState(facts, CombatViewPreviewKind.RoarForecast);
 
-        // 사용자 조작 없이 내는 배경 조회가 물어도 되는 안정 상태입니다. 행동 가능 여부와 포효 예고가 같이 씁니다.
+        /// <summary>플레이어 스킬 가용성을 배경으로 물어도 되는지입니다(전투 스킬 View 설계 SK4). 행동 가능 여부 조회와 같은 안정 상태입니다.</summary>
+        internal static bool CanQuerySkillAvailability(in CombatInputFacts facts) =>
+            CanQueryInStableState(facts, CombatViewPreviewKind.SkillAvailability);
+
+        // 사용자 조작 없이 내는 배경 조회가 물어도 되는 안정 상태입니다. 행동 가능 여부·포효 예고·스킬 가용성이 같이 씁니다.
         private static bool CanQueryInStableState(in CombatInputFacts facts, CombatViewPreviewKind kind) =>
             facts.IsInputAvailable && !IsInputBlocked(facts) && !facts.IsPresenting && !facts.HasUnhandledCommand
                 && CanPreview(facts, facts.HasPendingCommand, kind);
@@ -302,6 +310,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 case CombatViewCommandKind.Attack:
                 case CombatViewCommandKind.UndoMove:
                 case CombatViewCommandKind.EndPlayerTurn:
+                // 플레이어 액티브 스킬은 전투 국면 명령이다(Core 인계 §2, 스킬 View 설계 SK1).
+                case CombatViewCommandKind.UsePlayerSkill:
                     return StagePhase.Combat;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, "단계가 없는 명령 종류입니다.");
@@ -321,10 +331,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                     return StagePhase.Deployment;
                 case CombatViewPreviewKind.MoveRange:
                 case CombatViewPreviewKind.ActionAvailability:
+                case CombatViewPreviewKind.ActionAvailabilities:
                 case CombatViewPreviewKind.Move:
                 case CombatViewPreviewKind.AttackRange:
                 case CombatViewPreviewKind.Attack:
                 case CombatViewPreviewKind.RoarForecast:
+                // 스킬 가용성·점 선택·예보는 전투 국면 조회다(스킬 View 설계 SK1).
+                case CombatViewPreviewKind.SkillAvailability:
+                case CombatViewPreviewKind.SkillSelection:
+                case CombatViewPreviewKind.SkillForecast:
                     return StagePhase.Combat;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, "단계가 없는 미리보기 종류입니다.");

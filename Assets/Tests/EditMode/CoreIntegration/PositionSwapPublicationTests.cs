@@ -112,7 +112,7 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         private static ConfiguredMovementBattle Create() => new(ConfiguredMovementBattle.Config,
-            new HuntersMarkBattleSource(RankedCombatTestData.Spec(TraitKey.PositionSwap, 2)));
+            new HuntersMarkBattleSource(new PositionSwapTraitSpec(10)));
 
         private static void Swap(ConfiguredMovementBattle battle) => battle.Submit(battle.PreviewMove(battle.Actor,
             new CellCoord(0, 1), new CellCoord(1, 1), new CellCoord(2, 1), new CellCoord(2, 0)));

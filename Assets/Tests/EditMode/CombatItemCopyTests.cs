@@ -66,7 +66,7 @@ namespace ProjectL.Tests.Core
         public void StateCopies_PreserveIndependentItemRandomStateAndCompareIt()
         {
             var s = CombatCommandTestData.Input().State;
-            var seeded = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,itemRandomState: 123);
+            var seeded = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,itemRandomState: 123);
             Assert.That(seeded.SameValues(s), Is.False);
             var changed = CombatTurnCalculator.State(seeded, seeded.Turn, seeded.Phase);
             Assert.That(changed.ItemRandomState, Is.EqualTo(123));

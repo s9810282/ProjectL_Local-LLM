@@ -6,9 +6,11 @@ using UnityEngine.UI;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Framework.SystemBase;
+using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Currency;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
@@ -20,7 +22,6 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         private struct CategoryVisual
         {
             public CategoryKey Category;
-            public Sprite Portrait;
             public Sprite Synergy;
         }
 
@@ -48,15 +49,18 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         private bool _lastHasMaxHealth;
         private bool _hasCategory;
         private CategoryKey _lastCategory;
-        private Sprite _defaultPortrait;
+        private MainCharacterPortrait _mainPortrait;
 
         public override UIId ID => UIId.MainCharactor;
 
         /// <summary>설명 강조에 사용하는 기존 HP 아이콘·수치 영역입니다. 얼굴·골드는 포함하지 않습니다.</summary>
         internal Transform HealthBarTransform => RequireHealthBarRoot().transform;
 
-        // 프리팹의 초상화를 기본값으로 보관하고 카테고리별 이미지가 없을 때 사용한다.
-        private void Awake() => _defaultPortrait = portrait != null ? portrait.sprite : null;
+        private MainCharacterPortrait Portrait => _mainPortrait ??= new MainCharacterPortrait(portrait);
+
+        internal IDisposable BindLobbyMainPortrait(Func<EntityKey> readMain) => Portrait.BindLobby(readMain);
+
+        internal void SetLobbyPortrait(bool lobby) => Portrait.SetLobbyMode(lobby);
 
         public override void BindUISystemService(IUISystemService service)
         {
@@ -70,6 +74,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             var buffer = resolver.GetService(BufferSystemKey.Buffer);
             _characters = buffer.CharacterReadSink;
             _currency = buffer.CurrencyReadSink;
+            Portrait.BindRun(buffer.RunDeckReadSink, _characters);
             _ownedStats = new OwnedCharacterStatsReader(_characters, buffer.CombatStateReadSink,
                 buffer.CharacterStatsReadSink, buffer.RunDeckReadSink, _faults, buffer.CharacterStatsRequestSink);
             _hasHealth = false;
@@ -80,6 +85,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
             // InitData와 PostBindService의 순서는 고정되지 않는다. 표시 조회는 Open/갱신에서 한다.
+            var visuals = (query as IHasViewQuery)?.ViewQuery?.UnitVisualTableQuery
+                ?? throw new InvalidOperationException("[MainCharactorUI] 초상화에는 UnitVisual View DB가 필요합니다.");
+            Portrait.BindVisuals(visuals);
         }
 
         public override void Hide()
@@ -115,6 +123,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
         private void Refresh()
         {
+            RefreshPortrait();
             RefreshCharacter();
             RefreshGold();
         }
@@ -126,6 +135,21 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         {
             _ownedStats?.Clear();
             _hasHealth = false;
+        }
+
+        private void RefreshPortrait()
+        {
+            if (_faults?.IsFaulted == true) return;
+            try
+            {
+                Portrait.Refresh();
+            }
+            catch (Exception error)
+            {
+                _mainPortrait?.Clear();
+                _faults?.Report(error);
+                if (_faults?.IsFaulted != true) throw;
+            }
         }
 
         private void RefreshGold()
@@ -174,16 +198,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
 
             if (!_hasCategory || _lastCategory != category)
             {
-                Sprite portraitSprite = null;
                 Sprite synergySprite = null;
                 foreach (var visual in categoryVisuals)
                 {
                     if (category == CategoryKey.None || visual.Category != category) continue;
-                    portraitSprite = visual.Portrait;
                     synergySprite = visual.Synergy;
                     break;
                 }
-                SetImage(portrait, portraitSprite != null ? portraitSprite : _defaultPortrait);
                 SetImage(synergy, synergySprite);
                 _lastCategory = category;
                 _hasCategory = true;

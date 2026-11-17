@@ -144,15 +144,17 @@ namespace ProjectL.Tests.Core
         public void Catalog_ReservesStableUniqueKeysAndSeparatesClassification()
         {
             var keys = (StatusEffectKey[])Enum.GetValues(typeof(StatusEffectKey));
-            Assert.That(keys.Select(k => (int)k), Is.EqualTo(Enumerable.Range(0, 20)));
+            Assert.That(keys.Select(k => (int)k), Is.EqualTo(Enumerable.Range(0, 21)));
             Assert.That((int)StatusEffectKey.AttackIncrease, Is.EqualTo(1));
             Assert.That((int)StatusEffectKey.WeaknessExposure, Is.EqualTo(13));
+            Assert.That((int)StatusEffectKey.Stun, Is.EqualTo(20));
             foreach (var key in keys.Where(k => k != StatusEffectKey.None))
             {
                 bool debuff = key == StatusEffectKey.AttackDecrease || key == StatusEffectKey.DefenseDecrease ||
                     key == StatusEffectKey.AttackRangeDecrease || key == StatusEffectKey.Disarm ||
                     key == StatusEffectKey.Bind || key == StatusEffectKey.WeaknessExposure || key == StatusEffectKey.Taunted ||
-                    key == StatusEffectKey.Fire || key == StatusEffectKey.Bleeding || key == StatusEffectKey.MovementRangeDecrease;
+                    key == StatusEffectKey.Fire || key == StatusEffectKey.Bleeding ||
+                    key == StatusEffectKey.MovementRangeDecrease || key == StatusEffectKey.Stun;
                 Assert.That(StatusEffectCatalog.ClassificationOf(key), Is.EqualTo(debuff ? StatusEffectClassification.Debuff : StatusEffectClassification.Buff));
             }
             Assert.Throws<ArgumentOutOfRangeException>(() => StatusEffectCatalog.ClassificationOf(StatusEffectKey.None));

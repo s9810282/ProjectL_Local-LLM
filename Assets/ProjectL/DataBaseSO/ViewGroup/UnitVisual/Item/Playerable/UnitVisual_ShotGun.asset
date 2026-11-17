@@ -19,11 +19,10 @@ MonoBehaviour:
     description: 
     timelineIcon: {fileID: -587765014, guid: 4968304eb643eed4c965f0ca7b90a9fb, type: 3}
     infoIcon: {fileID: 21300000, guid: 4385a161ee59ce5419d00991c96434d4, type: 3}
-    attackPresentation: {fileID: 11400000, guid: 652cad1147994bb09bbc7a43998668a1, type: 2}
+    attackPresentation: {fileID: 11400000, guid: 1212e0a4deaef2d4995a0f8295085e30, type: 2}
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
     animationPresentation: {fileID: 11400000, guid: 5c1b14b521813204ab407ed530cf8c25, type: 2}
     unitSoundPreset: 3
-    attackSoundSlotIndex: 6
     obstacleHitCues:
       effects: []
       shakes: []
@@ -33,3 +32,14 @@ MonoBehaviour:
     obstacleDestroyedCues:
       effects: []
       shakes: []
+    attackSounds:
+    - sound: 6
+      anchor: 2
+      contactFilter: 1
+      delay: 0
+    hitSounds: []
+    deathSounds:
+    - sound: 3
+      anchor: 1
+      contactFilter: 1
+      delay: 0

@@ -37,7 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Recove
             }
 
             StageOfferTextData text = _texts.GetForStage(snapshot.Context.StageKey.Value);
-            _model.Reset(text.EventName, text.EventDescription, text.FormatGold(snapshot.Gold), true, snapshot.CanComplete, text.ExitButtonText);
+            _model.Reset(text.EventName, string.Empty, text.FormatGold(snapshot.Gold), true, snapshot.CanComplete, text.ExitButtonText);
             _optionIds.Clear();
 
             for (int i = 0; i < snapshot.Options.Count; i++)

@@ -1,6 +1,5 @@
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
-using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -20,7 +19,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CombatTurnFacts CombatTurn { get; }
         public StageOutcomeSnapshot Outcome { get; }
         public EntityId MainCharacterId { get; }
-        public ReadOnlyMemory<ThornFieldCellSnapshot> ThornFields { get; }
         public ReadOnlyMemory<ArtifactActivationSnapshot> ArtifactActivations { get; }
 
         public StageSnapshot(
@@ -31,22 +29,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ReserveSlotSnapshot[] reserveSlots,
             CombatTurnFacts combatTurnSnapshot,
             StageOutcomeSnapshot outcome,
-            EntityId mainCharacterId = default)
-            : this(mapWidth, mapHeight, currentPhase, entities, reserveSlots, combatTurnSnapshot,
-                outcome, mainCharacterId, Array.Empty<ThornFieldCellSnapshot>())
-        {
-        }
-
-        public StageSnapshot(
-            int mapWidth,
-            int mapHeight,
-            StagePhase currentPhase,
-            EntitySnapshot[] entities,
-            ReserveSlotSnapshot[] reserveSlots,
-            CombatTurnFacts combatTurnSnapshot,
-            StageOutcomeSnapshot outcome,
-            EntityId mainCharacterId,
-            ThornFieldCellSnapshot[] thornFields,
+            EntityId mainCharacterId = default,
             ArtifactActivationSnapshot[] artifactActivations = null)
         {
             if (mapWidth <= 0)
@@ -59,8 +42,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentNullException(nameof(entities));
             if (reserveSlots == null)
                 throw new ArgumentNullException(nameof(reserveSlots));
-            if (thornFields == null)
-                throw new ArgumentNullException(nameof(thornFields));
 
             EntitySnapshot[] copiedEntities = new EntitySnapshot[entities.Length];
             Array.Copy(entities, copiedEntities, entities.Length);
@@ -68,45 +49,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ReserveSlotSnapshot[] copiedSlots = new ReserveSlotSnapshot[reserveSlots.Length];
             Array.Copy(reserveSlots, copiedSlots, reserveSlots.Length);
 
-            var copiedThornFields =
-                (ThornFieldCellSnapshot[])thornFields.Clone();
             var copiedArtifactActivations = artifactActivations == null
                 ? Array.Empty<ArtifactActivationSnapshot>()
                 : (ArtifactActivationSnapshot[])artifactActivations.Clone();
-            var occupiedThornCells = new HashSet<CellCoord>();
-            for (int i = 0; i < copiedThornFields.Length; i++)
-            {
-                ThornFieldCellSnapshot thornField = copiedThornFields[i];
-                if (thornField.Cell.X < 0 || thornField.Cell.X >= mapWidth ||
-                    thornField.Cell.Y < 0 || thornField.Cell.Y >= mapHeight)
-                {
-                    throw new ArgumentOutOfRangeException(
-                        nameof(thornFields),
-                        "ThornField cell must be inside the Stage map.");
-                }
-                if (thornField.RemainingUnitTurns < 1 || thornField.ThornDamage < 1)
-                    throw new ArgumentException(
-                        "ThornField snapshot values must be positive.",
-                        nameof(thornFields));
-                if (occupiedThornCells.Add(thornField.Cell) == false)
-                    throw new ArgumentException(
-                        "ThornField snapshot cells must be unique.",
-                        nameof(thornFields));
-            }
-            Array.Sort(copiedThornFields, (left, right) =>
-            {
-                int yComparison = left.Cell.Y.CompareTo(right.Cell.Y);
-                return yComparison != 0
-                    ? yComparison
-                    : left.Cell.X.CompareTo(right.Cell.X);
-            });
 
             MapWidth = mapWidth;
             MapHeight = mapHeight;
             CurrentPhase = currentPhase;
             Entities = copiedEntities;
             ReserveSlots = copiedSlots;
-            ThornFields = copiedThornFields;
             ArtifactActivations = copiedArtifactActivations;
             CombatTurn = combatTurnSnapshot;
             Outcome = outcome;

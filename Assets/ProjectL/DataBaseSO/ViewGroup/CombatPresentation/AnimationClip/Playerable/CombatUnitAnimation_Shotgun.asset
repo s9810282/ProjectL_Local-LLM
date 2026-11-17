@@ -12,9 +12,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Shotgun
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 69978da6f6693e84a8d7fd31f1edb1ad, type: 2}
+  attack:
+    main:
+      body: {fileID: 7400000, guid: 1366d84bc83ded044861e3a4aeb4eab6, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
+  hit:
+    main:
+      body: {fileID: 7400000, guid: 01d9f63793b836b489a629e6c7db6af9, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackClip: {fileID: 7400000, guid: 1366d84bc83ded044861e3a4aeb4eab6, type: 2}
+  attackSpeed: 1
   attackCompanionClips: []
   hitDelay: 0
   shots: []
-  hitClip: {fileID: 0}
+  hitClip: {fileID: 7400000, guid: 01d9f63793b836b489a629e6c7db6af9, type: 2}
   hitCompanionClips: []

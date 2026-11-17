@@ -4,9 +4,9 @@ using ProjectL.Systems.DataBaseSystem.Data.View.Table.Haboob.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Railway.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Rockfall.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item;
-using ProjectL.Systems.DataBaseSystem.Data.View.Table.ThornField.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Support;
@@ -26,7 +26,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         internal CombatDisplayTables(
             StageFieldViewData field,
             RailwayVisualData railway,
-            ThornFieldVisualData thornField,
             RockfallVisualData rockfall,
             HaboobVisualData haboob,
             IUnitVisualTableQuery units,
@@ -38,11 +37,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             CombatPresentationSettingsData presentationSettings,
             IConsumableItemVisualTableQuery items,
             ICategoryVisualTableQuery categories,
-            IUnitStatusVisualTableQuery statuses)
+            IUnitStatusVisualTableQuery statuses,
+            IPlayerSkillVisualTableQuery playerSkills)
         {
             Field = field ?? throw new ArgumentNullException(nameof(field));
             Railway = railway ?? throw new ArgumentNullException(nameof(railway));
-            ThornField = thornField ?? throw new ArgumentNullException(nameof(thornField));
             Rockfall = rockfall ?? throw new ArgumentNullException(nameof(rockfall));
             Haboob = haboob ?? throw new ArgumentNullException(nameof(haboob));
             Units =units ?? throw new ArgumentNullException(nameof(units));
@@ -63,7 +62,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
             SoundPresets = new CombatSoundPresets(Units, Objects, Items, PresentationSettings);
             // 사건 순간의 연출 큐도 같은 외형 표·설정 표에서 읽는다. 소리 프리셋과는 다른 값이라 따로 둔다(이펙트 창구 확장 설계 §7.4).
             // 특성 발동 큐는 특성 외형 표의 발동 연출 줄에서 읽는다(특성 발동 연출 설계 TA2).
-            CueSources = new CombatCueSources(Units, Objects, Items, Traits, PresentationSettings, statuses);
+            // 플레이어 액티브 스킬 외형(아이콘·이름·설명·공격 연출)이다. 스킬 종류를 아는 곳은 이 표뿐이다(전투 스킬 View 설계 SK5).
+            PlayerSkills = playerSkills ?? throw new ArgumentNullException(nameof(playerSkills));
+            RequirePlayerSkillRows(PlayerSkills);
+            // 사건 51 처리기는 이 묶음으로 스킬 외형을 받는다(사건 재생 Factory·Presenter 생성 줄 무변경, 전투 스킬 View 계획 TP-14).
+            CueSources = new CombatCueSources(Units, Objects, Items, Traits, PresentationSettings, statuses, PlayerSkills);
+        }
+
+        // Core 스킬 키마다 외형 줄이 있는지 전투 조립 때 봅니다. 빠지면 스킬을 쓸 때가 아니라 전투 진입 때 멈춥니다(상태 외형 표와 같은 방식, SK-a 검토 L7).
+        private static void RequirePlayerSkillRows(IPlayerSkillVisualTableQuery skills)
+        {
+            foreach (PlayerSkillKey key in (PlayerSkillKey[])Enum.GetValues(typeof(PlayerSkillKey)))
+            {
+                if (key != PlayerSkillKey.None && !skills.TryGet(key, PlayerSkillUpgradeKey.None, out _))
+                    throw new InvalidOperationException($"[CombatDisplayTables] 플레이어 스킬 외형 줄이 없습니다: {key}. PlayerSkillVisual 표에 줄을 더하세요.");
+            }
         }
 
         /// <summary>필드 외형 설정(칸 프리팹·표시 모드·유닛 크기 등)입니다.</summary>
@@ -71,9 +84,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
 
         /// <summary>레일·열차 외형 설정입니다.</summary>
         internal RailwayVisualData Railway { get; }
-
-        /// <summary>가시밭 칸 외형 설정입니다. 가시밭 칸 외형의 원본은 이 표 한 곳입니다(구조 리팩토링 설계 D12).</summary>
-        internal ThornFieldVisualData ThornField { get; }
 
         /// <summary>낙석 표현 설정입니다(돌·느낌표 프리팹, 낙하 값, 큐, 소리, 호버 설명).</summary>
         internal RockfallVisualData Rockfall { get; }
@@ -110,6 +120,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         /// <summary>유닛에 걸린 상태(버프·디버프)를 HUD 상태 칸으로 바꾸는 줄 표입니다. 원본은 상태 외형 표(View DB)입니다(특성 발동 연출 설계 TA9).</summary>
         internal CombatUnitStatuses UnitStatuses { get; }
 
+        /// <summary>플레이어 액티브 스킬의 외형입니다. 키는 Core 스킬·강화 키입니다(전투 스킬 View 설계 SK5).</summary>
+        internal IPlayerSkillVisualTableQuery PlayerSkills { get; }
+
         /// <summary>View DB에서 전투 표시에 필요한 표를 모읍니다. 하나라도 없으면 DB 구성 오류로 던집니다.</summary>
         internal static CombatDisplayTables From(IViewQuery query)
         {
@@ -121,8 +134,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
                     ?? throw new InvalidOperationException("[CombatDisplayTables] StageFieldView 설정이 없습니다."),
                 query.RailwayVisualTableQuery.Config
                     ?? throw new InvalidOperationException("[CombatDisplayTables] RailwayVisual 설정이 없습니다."),
-                query.ThornFieldVisualTableQuery.Config
-                    ?? throw new InvalidOperationException("[CombatDisplayTables] ThornFieldVisual 설정이 없습니다."),
                 query.RockfallVisualTableQuery.Config
                     ?? throw new InvalidOperationException("[CombatDisplayTables] RockfallVisual 설정이 없습니다."),
                 query.HaboobVisualTableQuery.Config
@@ -146,7 +157,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
                 query.CategoryVisualTableQuery
                     ?? throw new InvalidOperationException("[CombatDisplayTables] CategoryVisual 표가 없습니다."),
                 query.UnitStatusVisualTableQuery
-                    ?? throw new InvalidOperationException("[CombatDisplayTables] UnitStatusVisual 표가 없습니다."));
+                    ?? throw new InvalidOperationException("[CombatDisplayTables] UnitStatusVisual 표가 없습니다."),
+                query.PlayerSkillVisualTableQuery
+                    ?? throw new InvalidOperationException("[CombatDisplayTables] PlayerSkillVisual 표가 없습니다."));
         }
     }
 }

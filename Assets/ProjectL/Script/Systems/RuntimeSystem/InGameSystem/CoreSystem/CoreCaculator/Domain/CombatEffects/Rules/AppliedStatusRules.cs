@@ -127,7 +127,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public static bool IsRestricted(StatusEffectSet current, StatusEffectKey key)
         {
             if (current == null) throw new ArgumentNullException(nameof(current));
-            if (key != StatusEffectKey.Disarm && key != StatusEffectKey.Bind) throw new ArgumentOutOfRangeException(nameof(key));
+            if (!ActionRestrictionStatus.Supports(key)) throw new ArgumentOutOfRangeException(nameof(key));
             return current.Entries.Any(s => s is ActionRestrictionStatus && s.Key == key);
         }
 

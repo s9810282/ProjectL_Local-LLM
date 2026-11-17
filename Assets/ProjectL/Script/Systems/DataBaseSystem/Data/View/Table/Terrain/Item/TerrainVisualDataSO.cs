@@ -49,6 +49,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
     /// <summary>지형 종류의 표현 데이터입니다. 규칙 설정과 배치 좌표는 포함하지 않습니다.</summary>
     internal sealed class TerrainVisualData : IData
     {
+        internal const float DefaultWeakGroundDropPerEntry = 0.1f;
         public TerrainContentKind Kind { get; }
         public TerrainVisualMode VisualMode { get; }
         public string DisplayName { get; }
@@ -60,13 +61,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
         public TornadoPresentationSettingsData TornadoPresentation { get; }
 
         /// <summary>
-        /// 칸 표면 높이(필드 로컬 단위)입니다. 블록·유닛·걸음이 이 값 하나를 읽습니다(고지대 View 설계 Q-HG1). 뜻은 방식마다 다릅니다(타일 교체 설계 TR1).
+        /// 표시 방식에 따른 칸 표면 높이입니다.
         /// <list type="bullet">
-        /// <item><see cref="TerrainVisualMode.OnTile"/>: 바탕(바닥 타일 윗면) 위로 올리는 높이, 0 이상. 0이면 바탕 그대로입니다.</item>
+        /// <item><see cref="TerrainVisualMode.OnTile"/>: 제작 칸 기준으로 바탕 위에 올리는 높이(0 이상)입니다. 높이 표에 기록할 때 칸 배율을 곱합니다.</item>
         /// <item><see cref="TerrainVisualMode.ReplaceTile"/>: 그 칸의 새 바탕 높이(바뀐 타일의 윗면, 필드 바닥면 기준), 음수 가능.</item>
         /// </list>
         /// </summary>
         public float SurfaceHeight { get; }
+        public float WeakGroundDropPerEntry { get; }
 
         // 이웃 모양별 프리팹입니다. 모양을 쓰지 않는 종류는 None입니다. 바깥은 UsesEdgeShapes·ShapePrefab으로만 읽습니다.
         private TerrainEdgeShapePrefabs EdgeShapes { get; }
@@ -76,7 +78,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
 
         internal TerrainVisualData(TerrainContentKind kind, TerrainVisualMode visualMode, string displayName, string description, Sprite icon,
             GameObject prefab, Vector3 localOffset, Vector3 localScale, float surfaceHeight = 0f, TerrainEdgeShapePrefabs edgeShapes = null,
-            TornadoPresentationSettingsData tornadoPresentation = null)
+            TornadoPresentationSettingsData tornadoPresentation = null, float weakGroundDropPerEntry = DefaultWeakGroundDropPerEntry)
         {
             if (kind == TerrainContentKind.None || !System.Enum.IsDefined(typeof(TerrainContentKind), kind))
             {
@@ -134,6 +136,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
             LocalOffset = localOffset;
             LocalScale = localScale;
             SurfaceHeight = surfaceHeight;
+            if (!float.IsFinite(weakGroundDropPerEntry) || weakGroundDropPerEntry < 0f)
+                throw new InvalidOperationException("약한 지반의 1회 하강량은 유한한 0 이상이어야 합니다.");
+            WeakGroundDropPerEntry = weakGroundDropPerEntry;
             EdgeShapes = edgeShapes;
             TornadoPresentation = tornadoPresentation;
         }
@@ -159,11 +164,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
         [SerializeField] private Sprite icon;
         [Tooltip("이 종류의 프리팹입니다. 이웃 모양을 쓰면 Center(드러난 변 없음)이자 빈 모양 칸의 대체입니다.")]
         [SerializeField] private GameObject prefab;
-        [Tooltip("표현 위치 보정입니다. 스테이지 배치 좌표가 아닙니다. 타일 위(OnTile)와 타일이 없는 칸은 칸 자리 기준·필드 축, 바닥 교체(ReplaceTile)의 타일 칸은 끈 타일 자리 기준·타일 루트 축입니다(크기 보정도 같음).")]
+        [Tooltip("OnTile은 한 칸 = 2 기준의 필드 축 위치 보정입니다. ReplaceTile은 타일이 있으면 타일 루트 축, 없으면 필드 축의 로컬 보정입니다.")]
         [SerializeField] private Vector3 localOffset;
+        [Tooltip("프리팹 루트에 곱하는 XYZ 배율입니다. OnTile은 한 칸 = 2 기준이며 칸 간격을 따릅니다. ReplaceTile은 배치 부모의 배율을 따릅니다.")]
         [SerializeField] private Vector3 localScale = Vector3.one;
-        [Tooltip("필드 로컬 단위입니다. OnTile: 바탕(바닥 타일 윗면) 위로 올리는 블록 높이, 0 이상(0이면 바탕 그대로). ReplaceTile: 바뀐 타일의 윗면 높이, 필드 바닥면 기준이고 음수 가능(낭떠러지는 구멍 바닥).")]
+        [Tooltip("OnTile은 한 칸 = 2 기준으로 바탕 위에 올리는 블록 높이(0 이상)입니다. ReplaceTile은 필드 바닥면 기준의 새 윗면 높이로, 필드 로컬 단위이며 음수도 허용합니다.")]
         [SerializeField] private float surfaceHeight;
+        [Tooltip("약한 지반 교체 타일을 한 번 밟을 때 내려가는 필드 로컬 높이입니다. 0이면 내려가지 않습니다.")]
+        [Min(0f), SerializeField] private float weakGroundDropPerEntry = TerrainVisualData.DefaultWeakGroundDropPerEntry;
         [Tooltip("토네이도에만 연결하는 전용 연출 설정입니다.")]
         [SerializeField] private TornadoPresentationSettingsSO tornadoPresentation;
 
@@ -187,7 +195,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Terrain.Item
                 throw new InvalidOperationException("토네이도 연출 설정은 다른 지형에 연결할 수 없습니다.");
             return new TerrainVisualData(kind, visualMode, displayName, description, icon, prefab, localOffset, localScale, surfaceHeight,
                 new TerrainEdgeShapePrefabs(oneSidePrefab, twoSidePrefab, twoSideOppositePrefab, threeSidePrefab, fourSidePrefab),
-                tornadoPresentation != null ? tornadoPresentation.GetData() : null);
+                tornadoPresentation != null ? tornadoPresentation.GetData() : null, weakGroundDropPerEntry);
         }
     }
 }

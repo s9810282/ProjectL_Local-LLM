@@ -58,7 +58,7 @@ namespace ProjectL.Tests.Core
             var input = CombatCommandTestData.Input();
             var state = input.State;
             input = CombatCommandTestData.With(input, state: new CombatCommandState(state.BoardWidth, state.BoardHeight,
-                state.Phase, state.Structures, state.ThornFields, state.Turn, state.Environment,
+                state.Phase, state.Structures, state.Turn, state.Environment,
                 state.EnvironmentProgress, state.WallBlocking, BattleObjective.DesignatedBoss(new EntityId(2)), state.Allocation));
             input = WithStatus(WithStatus(input, 2, Both(), 1), 3, Both(), 1);
             var result = Start(input, Owner.Enemy);
@@ -152,7 +152,7 @@ namespace ProjectL.Tests.Core
                 phase: CombatControllerPhase.StartingEnemy);
             var s = input.State;
             input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth, s.BoardHeight,
-                s.Phase, s.Structures, s.ThornFields, s.Turn, s.Environment, s.EnvironmentProgress,
+                s.Phase, s.Structures, s.Turn, s.Environment, s.EnvironmentProgress,
                 s.WallBlocking, BattleObjective.DesignatedBoss(new EntityId(40)), s.Allocation, s.ItemRandomState,
                 s.Rewards, s.TraitTurn, reinforcements: s.Reinforcements));
             var result = CombatTurnCalculator.BeginControllerTurn(WithStatus(input, 40, Both(), 1), Array.Empty<IMovementTileRule>());

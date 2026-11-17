@@ -52,9 +52,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             using var sample = CoreProfiling.Sample(CoreProfileSection.MovementUndoReconcile);
             var input = resolved.Input;
             var final = CombatCommandComposition.Project(resolved);
-            var evidence = CombatChangeEvidenceReader.ReadAll(resolved.Events);
-            ValidateDamageExecutionCompleteness(resolved);
-            var numericUses = MovementDamageExecution.Collect(resolved.DamageExecutions);
+            var evidence = CombatChangeEvidenceReader.ReadAll(resolved);
+            var numericUses = CombatHealthExecution.CollectMovementUses(resolved.HealthExecutions);
             ValidateNumericUses(resolved, numericUses);
             var stream = resolved.Events.ToArray();
             var uses = CaptureParticipantUses(resolved).Concat(CaptureTrailActionUses(resolved)).Concat(numericUses)
@@ -100,6 +99,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     CombatCharacterEvent moved when moved.Kind == CombatEventKind.Moved &&
                         moved.MovementCause?.Agency != CombatMovementAgency.Forced && moved.Expected.Anchor != moved.Final.Anchor => moved.Final.EntityId,
                     CombatAttackEvent attack when attack.Attack.Succeeded => attack.Attack.AttackerId,
+                    CombatPlayerSkillAttackEvent skill => skill.Attack.ActorId,
                     CombatRoarEvent roar when roar.Attack.HasValue && roar.Attack.Value.Succeeded => roar.BossId,
                     _ => EntityId.Empty
                 };
@@ -215,12 +215,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bool departed = false;
             foreach (var execution in transition.Events)
             {
-                if (!departed && input.Kind == CombatCommandKind.Move && execution is CombatCharacterEvent step &&
-                    step.Kind == CombatEventKind.Moved && step.Final.EntityId == input.ActorId && step.MovementCause?.Agency != CombatMovementAgency.Forced)
+                // 자동 진행 합성 뒤에도 같은 출발 근거를 얻도록 요청 종류·행위자 대신 실제 이동 사건을 읽습니다.
+                if (!departed && execution is CombatCharacterEvent step &&
+                    step.Kind == CombatEventKind.Moved && step.MovementCause?.Agency != CombatMovementAgency.Forced)
                 {
                     departed = true;
-                    var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
-                    foreach (var trail in GroundCompactionTraitRule.SourcesAt(actor.Anchor.Value, input.State.Environment))
+                    var actor = step.Expected;
+                    foreach (var trail in GroundCompactionTraitRule.SourcesAt(actor.Anchor.Value,
+                        new MovementEnvironmentFacts(environment.Values.ToArray())))
                         yield return new MovementEffectUse(TrailMovement(input, trail.Id), trail.Origin, actor.EntityId,
                             MovementEffectUseKind.GroundDeparture, execution, sourceId: trail.Id);
                 }
@@ -252,26 +254,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static bool SameOrigin(CombatDamageOrigin a, CombatDamageOrigin b) => a != null && b != null &&
             a.AttackGroup == b.AttackGroup && a.CreditedCharacterId == b.CreditedCharacterId && a.PhysicalCell == b.PhysicalCell;
 
-        private static void ValidateDamageExecutionCompleteness(CombatCommandTransition transition)
-        {
-            if (!transition.Input.State.MovementUndo.Checkpoints.Any(c => c.Effects.Count != 0)) return;
-            foreach (var fact in transition.Events)
-            {
-                bool numeric = fact switch
-                {
-                    CombatCharacterEvent c => c.DamageCause == CombatDamageCause.NumericDamage && c.DamageOrigins.Count > 0 &&
-                        c.Expected.Health.CurrentHealth > c.Final.Health.CurrentHealth,
-                    CombatHeldEnvironmentEvent h => h.Origin != null && h.Expected.BadgeAvailable && !h.Final.BadgeAvailable,
-                    CombatItemEvent i => i.Stage == ItemEventStage.BeforeDamage && i.DamageKind.HasValue,
-                    CombatTraitStateEvent t => t.Origin != null && t.Expected.StatusEffects.Entries.OfType<ShieldStatus>().Any(old =>
-                        t.Final.StatusEffects.Entries.OfType<ShieldStatus>().Any(next => next.Origin == old.Origin && next.RemainingBudget < old.RemainingBudget)),
-                    _ => false
-                };
-                if (numeric && !transition.DamageExecutions.Any(e => e.Evidence.Contains(fact)))
-                    throw new InvalidOperationException("수치 피해 사건에 대응하는 확정 실행 근거 전체가 누락되었습니다.");
-            }
-        }
-
         private static void ValidateNumericUses(CombatCommandTransition transition, IReadOnlyList<MovementEffectUse> uses)
         {
             var characters = transition.Input.Characters.ToDictionary(c => c.EntityId);
@@ -300,7 +282,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     {
                         // 끌어오기 같은 선행 이동의 중간 위치는 Core 피해 실행 근거가 포착한 실제 수신 사실을 사용합니다.
                         var selected = DustScreenTraitRule.DefenseSourcesAt(use.ConsumerBefore, new MovementEnvironmentFacts(environment.Values.ToArray()));
-                        if (use.DamageKind is not (CombatDamageKind.OrdinaryAttack or CombatDamageKind.ExtraAttack or CombatDamageKind.ReactionAttack) ||
+                        if (!CombatDamageKinds.IsAttack(use.DamageKind.Value) ||
                             !MatchesDamage(execution, use.DamageOrigin, use.ConsumerId) || !use.SourceId.HasValue ||
                             !selected.Any(t => t.Id == use.SourceId.Value && t.Origin == use.Source.Value) ||
                             use.Movement != TrailMovement(transition.Input, use.SourceId.Value) ||

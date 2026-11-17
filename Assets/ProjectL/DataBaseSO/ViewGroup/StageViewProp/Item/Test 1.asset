@@ -15,7 +15,7 @@ MonoBehaviour:
   stageViewPropData:
     stageKey: 10002
     mode: 2
-    gameObject: {fileID: 2906094625784416193, guid: b950fa512e991684c86a79423eb49367, type: 3}
+    gameObject: {fileID: 5551345780989927588, guid: 799b8592268449a4582cfb0c792488b2, type: 3}
     map: {fileID: 0}
     positionOffset: {x: 0, y: 0, z: 0}
     rotationOffset: {x: 0, y: 180, z: 0}

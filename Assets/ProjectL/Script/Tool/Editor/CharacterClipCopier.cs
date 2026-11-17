@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +7,7 @@ namespace ProjectL.Tool.Editor
     /// <summary>
     /// 캐릭터 FBX의 테이크를 <c>.anim</c>으로 복사하고, 클립마다 전투 클립 이벤트 셋(시작·이벤트 타이밍·끝)을 찍습니다(2026-10-29).
     /// 기본 시각은 시작 = 0초, 이벤트 타이밍 = 길이의 절반, 끝 = 길이입니다. 시각은 애니메이션 창에서 조정합니다.
-    /// 원본 FBX와 출력 폴더는 메뉴 하나에 한 줄씩입니다.
+    /// 캐릭터별 출력·부속 곡선 정리·Animator 조립은 CharacterAnimationSetup이 담당합니다.
     /// </summary>
     /// <remarks>
     /// 이벤트 함수 이름의 원본은 <c>CombatAnimationEvents</c>(Systems)입니다. 이 어셈블리는 Systems를 참조하지 않아 이름을 문자열로 적었고,
@@ -27,43 +25,13 @@ namespace ProjectL.Tool.Editor
 
         [MenuItem(MenuRoot + "EnemyCannon")]
         private static void RunEnemyCannon()
-            => Run("Assets/ProjectL/Resources/Characters/New/Enemy/EnemyCannon.fbx",
-                "Assets/ProjectL/Prefabs/Characters/New/Enemy", "AnimationClips");
+            => CharacterAnimationSetup.CopyCharacterAndBind("Enemy/EnemyCannon");
 
         [MenuItem(MenuRoot + "ShotGun")]
         private static void RunShotGun()
-            => Run("Assets/ProjectL/Resources/Characters/New/Playerable/ShotGun.fbx",
-                "Assets/ProjectL/Prefabs/Characters/New/Playerable", "AniamtionsClips");
+            => CharacterAnimationSetup.CopyCharacterAndBind("Playerable/ShotGun");
 
-        private static void Run(string sourcePath, string outputParent, string outputName)
-        {
-            var sources = new List<AnimationClip>();
-            foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(sourcePath))
-            {
-                if (asset is AnimationClip clip && !clip.name.StartsWith("__preview__", StringComparison.Ordinal))
-                    sources.Add(clip);
-            }
-            if (sources.Count == 0)
-                throw new InvalidOperationException($"[CharacterClipCopier] 클립이 없습니다: {sourcePath}");
-
-            string outputFolder = outputParent + "/" + outputName;
-            if (!AssetDatabase.IsValidFolder(outputFolder))
-                AssetDatabase.CreateFolder(outputParent, outputName);
-
-            var report = new StringBuilder();
-            foreach (AnimationClip source in sources)
-            {
-                AnimationClip copy = Copy(source, outputFolder, out bool keptEvents);
-                AnimationEvent[] events = AnimationUtility.GetAnimationEvents(copy);
-                report.AppendLine($"  {source.name} → {AssetDatabase.GetAssetPath(copy)} (길이 {copy.length:0.###}초, "
-                    + $"{(keptEvents ? "기존 이벤트 유지" : "이벤트 새로 찍음")}: {Describe(events)})");
-            }
-
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[CharacterClipCopier] {sourcePath}의 클립 {sources.Count}개를 복사했습니다.\n{report}");
-        }
-
-        private static AnimationClip Copy(AnimationClip source, string outputFolder, out bool keptEvents)
+        internal static AnimationClip Copy(AnimationClip source, string outputFolder, out bool keptEvents, bool addDefaultEvents = true)
         {
             string path = $"{outputFolder}/{source.name.Replace('|', '_')}.anim";
             AnimationClip copy = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
@@ -89,7 +57,8 @@ namespace ProjectL.Tool.Editor
             copy.EnsureQuaternionContinuity();
 
             keptEvents = existingEvents.Length > 0;
-            AnimationUtility.SetAnimationEvents(copy, keptEvents ? existingEvents : DefaultEvents(copy.length));
+            AnimationUtility.SetAnimationEvents(copy, keptEvents ? existingEvents
+                : addDefaultEvents ? DefaultEvents(copy.length) : Array.Empty<AnimationEvent>());
 
             if (created)
                 AssetDatabase.CreateAsset(copy, path);
@@ -109,16 +78,5 @@ namespace ProjectL.Tool.Editor
             };
         }
 
-        private static string Describe(AnimationEvent[] events)
-        {
-            var text = new StringBuilder();
-            foreach (AnimationEvent item in events)
-            {
-                if (text.Length > 0)
-                    text.Append(", ");
-                text.Append($"{item.functionName} {item.time:0.###}");
-            }
-            return text.ToString();
-        }
     }
 }

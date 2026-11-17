@@ -30,8 +30,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private static readonly Unity.Profiling.ProfilerMarker _profileInteractionMoveCancel = new("Combat.Action.Interaction.Move.Cancel");
 #endif
 
-        private readonly ICombatViewBufferWriteSink _input;
-        private readonly ICombatViewBufferReadSink _requests;
+        private readonly CombatMovementQuote _quote;
         private readonly ICombatStateBufferReadSink _combat;
         private readonly float _innerCellInset;
         private readonly ICombatActionRejectionSink _rejections;
@@ -41,20 +40,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private bool _attached;
         private bool _frozen;
         private bool _previewDeferred;
-        private long _lifetime;
         private long _battle;
-        private long _requestLifetime;
-        private int _requestNumber;
-        private int _submittedNumber;
-        private long _requestRevision = -1;
-        private MovementPath _requestPath;
-        private MovementPreviewContext _context;
+        private bool _submitted;
         private MovementPath _retainedPath;
         private MovementPath _retainedAgainst;
         private readonly List<CellCoord> _prefixCells = new List<CellCoord>();
         private bool _resumeAdjacent;
         private bool _requiresEndpointReentry;
+        private bool _awaitingBoardReentry;
+        private Vector2? _boardReentryPoint;
         private CellCoord? _rejectedCell;
+        // 새 칸을 이어 그린 초안만 최단 경로로 복구한다. 되짚기·경로 교체는 다른 revision이다.
+        private long _extendedRevision;
 
         // 경로 편집은 이 입력 소유자가 담당하며 표시 측은 Snapshot과 상태를 읽는다.
         private MovementDraft Draft { get; } = new MovementDraft();
@@ -68,7 +65,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal long DraftRevision => Draft.Revision;
 
-        internal bool PointerValid => Draft.PointerValid;
+        // 범위를 기다리는 재진입 칸은 중립으로 표시한다. Release의 이동 자격은 Confirm이 별도로 검사한다.
+        internal bool PointerValidForDisplay => Draft.PointerValid || (_previewDeferred && _boardReentryPoint.HasValue);
 
         internal bool IsActive => Draft.IsActive;
 
@@ -76,19 +74,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
         internal CombatPreviewResult Preview { get; private set; }
 
-        internal bool IsAwaitingPreview => _frozen && _submittedNumber == 0;
+        internal bool IsAwaitingPreview => _frozen && !_submitted;
 
-        internal bool IsSubmitted => _submittedNumber != 0;
+        internal bool IsSubmitted => _submitted;
 
-        // 재진입 조건을 충족하지 않은 포인터는 숨긴다. Core가 거절한 후보는 무효색으로 남긴다.
-        internal bool CanShowPointer => CandidateCell.HasValue &&
-            (Draft.PointerValid || _rejectedCell == CandidateCell);
+        internal bool CanShowPointer => !CandidateCell.HasValue || PointerValidForDisplay || _rejectedCell == CandidateCell;
 
-        internal CombatMovementInteraction(ICombatViewBufferWriteSink input, ICombatViewBufferReadSink requests,
+        internal CombatMovementInteraction(CombatMovementQuote quote,
             ICombatStateBufferReadSink combat, float innerCellInset, ICombatActionRejectionSink rejections)
         {
-            _input = input ?? throw new ArgumentNullException(nameof(input));
-            _requests = requests ?? throw new ArgumentNullException(nameof(requests));
+            _quote = quote ?? throw new ArgumentNullException(nameof(quote));
             _combat = combat ?? throw new ArgumentNullException(nameof(combat));
             if (float.IsNaN(innerCellInset) || innerCellInset < 0 || innerCellInset >= .5f)
                 throw new ArgumentOutOfRangeException(nameof(innerCellInset));
@@ -100,13 +95,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         internal void Attach()
         {
             Cancel();
-            _lifetime++;
             _attached = true;
         }
 
         internal void Detach()
         {
-            _lifetime++;
             _attached = false;
             Cancel();
         }
@@ -129,11 +122,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (!_attached || !_combat.HasBattle || IsAwaitingPreview || !allowed ||
                 !MovementDraft.CanStartAt(origin, start) || actor.IsEmpty ||
                 (start != origin && !MovementPointerSampler.IsInside(pointerGrid, _innerCellInset)) ||
-                (_submittedNumber != 0 && _combat.HandledCommandNumber < _submittedNumber))
+                _quote.HasUnhandled)
                 return false;
 
             Cancel();
-            _submittedNumber = 0;
+            _submitted = false;
             _previewDeferred = deferPreview;
             _battle = _combat.BattleInstanceId;
             Draft.Begin(actor, origin);
@@ -150,7 +143,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             return true;
         }
 
-        internal void PointerMoved(Vector2? grid, bool overCancelArea, bool allowed)
+        internal void PointerMoved(Vector2? grid, bool overCancelArea, bool allowed, in MovementRangeResult range)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             using var profileInteractionMoveDragSample = _profileInteractionMoveDrag.Auto();
@@ -161,6 +154,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
             if (!grid.HasValue || overCancelArea)
             {
+                if (!grid.HasValue && !_awaitingBoardReentry)
+                {
+                    _awaitingBoardReentry = true;
+                    _quote.Clear();
+                    Preview = null;
+                    ValidatedRevision = -1;
+                }
+                _boardReentryPoint = null;
                 CandidateCell = null;
                 _requiresEndpointReentry = true;
                 SuspendSampling();
@@ -170,6 +171,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             var point = grid.Value;
             var cell = MovementPointerSampler.CellAt(point);
             CandidateCell = cell;
+            if (_awaitingBoardReentry)
+            {
+                _boardReentryPoint = MovementPointerSampler.IsInside(point, _innerCellInset) ? point : (Vector2?)null;
+                TryResumeOnBoard(range);
+                return;
+            }
             if (!_lastPointer.HasValue)
             {
                 if ((_resumeAdjacent && _rejectedCell == cell) ||
@@ -202,7 +209,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             int acceptCount = inside ? _unaccepted.Count : Math.Max(0, _unaccepted.Count - 1);
             for (int i = 0; i < acceptCount; i++)
             {
-                if (Draft.Accept(_unaccepted[i]) == DraftEditResult.Rejected)
+                var edit = Draft.Accept(_unaccepted[i]);
+                if (edit == DraftEditResult.Added)
+                    _extendedRevision = Draft.Revision;
+                if (edit == DraftEditResult.Rejected)
                 {
                     SuspendSampling();
                     RequestPreview();
@@ -221,48 +231,85 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             RequestPreview();
         }
 
-        internal void OnPreview(CombatPreviewResult result, bool allowed)
+        // 보드 밖 구간은 샘플링하지 않고, 돌아온 칸에서 승인된 범위의 경로로 새로 이어갑니다.
+        private bool TryResumeOnBoard(in MovementRangeResult range)
         {
-            if (!EnsureLive(allowed) || IsSubmitted || result == null || !result.Move.HasValue ||
-                result.RequestNumber != _requestNumber || _requestLifetime != _lifetime ||
-                _requestRevision != Draft.Revision || !OwnsLatestRequest())
-                return;
+            if (!_boardReentryPoint.HasValue)
+                return false;
+
+            var point = _boardReentryPoint.Value;
+            var cell = MovementPointerSampler.CellAt(point);
+            if (cell == Draft.Snapshot().Origin)
+                Draft.ResumeAt(cell, false);
+            else if (range.Succeeded && range.TryGetRoute(cell, out var shortest))
+                AdoptRangeRoute(shortest);
+            else
+                return false;
+
+            _awaitingBoardReentry = false;
+            _boardReentryPoint = null;
+            _requiresEndpointReentry = false;
+            _lastPointer = point;
+            RequestPreview();
+            return true;
+        }
+
+        // 범위가 제공한 경로를 즉시 표시하고 실행 승인은 새 Move 견적으로 받습니다.
+        private void AdoptRangeRoute(MovementPath shortest)
+        {
+            Draft.ReplacePath(shortest);
+            _retainedPath = shortest;
+            _retainedAgainst = shortest;
+            _rejectedCell = null;
+        }
+
+        // 이번 초안에 응답을 적용했을 때만 true다. Release 뒤에는 같은 응답으로도 확정을 마칠 수 있다.
+        internal bool TryApplyPreview(CombatPreviewResult result, bool allowed, in MovementRangeResult range)
+        {
+            if (!EnsureLive(allowed) || IsSubmitted || !_quote.Matches(result, Draft.Revision))
+                return false;
+            if (!_frozen && ReferenceEquals(Preview, result))
+                return false;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.Move).Auto();
 #endif
             var move = result.Move.Value;
+            bool approved = _quote.Accept(result);
             if (!move.CanMove)
             {
-                // 정규화 단계의 점유 거절은 유효 접두 길이를 주지 않으므로 거절 위치를 추측하지 않는다.
-                // 편집 후보는 남겨 다음 칸까지의 전체 경로를 다시 묻고, 강조는 기존 확인 경로만 유지한다.
-                if (!_frozen && move.FailureReason == MovementFailureReason.DestinationOccupied)
+                if (move.FailureReason == MovementFailureReason.DestinationOccupied ||
+                    move.FailureReason == MovementFailureReason.MoveRangeExceeded)
                 {
-                    if (ReferenceEquals(Preview, result))
-                        return;
+                    // 도약 등으로 통과할 수 있는 칸은 착지 목록에 없을 수 있다. 수동 경로 전체가 거절된 뒤에만 복구한다.
+                    // Release가 먼저 와도 교체 경로의 새 견적을 기다린다.
+                    if (Draft.PointerValid && _extendedRevision == Draft.Revision &&
+                        range.TryGetRoute(Draft.Endpoint, out var shortest) && !_quote.HasSamePath(shortest))
+                    {
+                        AdoptRangeRoute(shortest);
+                        RequestPreview();
+                        return true;
+                    }
 
-                    ValidatedRevision = Draft.Revision;
-                    Preview = result;
-                    _context = null;
-                    _rejectedCell = _requestPath.Endpoint;
-                    // 같은 초안은 다시 게시하지 않도록 요청 소유를 유지한다. 놓은 뒤 같은 거절을
-                    // 받으면 위 편집 분기를 건너뛰고 기존 확정 거절 처리로 지정을 끝낸다.
-                    return;
+                    if (!_frozen)
+                    {
+                        ValidatedRevision = Draft.Revision;
+                        Preview = result;
+                        _rejectedCell = _quote.Path.Endpoint;
+                        return true;
+                    }
                 }
 
                 bool wasConfirming = _frozen;
-                ClearOwnedPreview();
-                int validSteps = Math.Min(move.ValidStepCount, _requestPath.StepCount);
-                _rejectedCell = validSteps < _requestPath.StepCount ? _requestPath.Cells[validSteps + 1] : CandidateCell;
+                int validSteps = Math.Min(move.ValidStepCount, _quote.Path.StepCount);
+                _rejectedCell = validSteps < _quote.Path.StepCount ? _quote.Path.Cells[validSteps + 1] : CandidateCell;
                 CandidateCell = _rejectedCell;
                 Draft.RetainPrefix(validSteps);
                 _retainedPath = Draft.Snapshot();
                 _retainedAgainst = _retainedPath;
                 ValidatedRevision = Draft.Revision;
                 Preview = result;
-                _context = null;
-                _requestNumber = 0;
-                _requestPath = null;
+                _quote.Clear();
                 _lastPointer = null;
                 _unaccepted.Clear();
                 // 불가 후보를 실행하지 않고 끝점에 인접한 다른 후보를 곧바로 받을 수 있다.
@@ -270,27 +317,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                 _frozen = false;
                 if (wasConfirming)
                     _rejections.MovementRejected(move.FailureReason);
-                return;
+                return true;
             }
 
-            var context = result.MovementContext;
-            if (context == null || !context.HasExpectedFacts || context.BattleInstanceId != _battle ||
-                context.ActorId != Draft.Actor || context.Observer != Owner.Player || context.IntentKind != CombatCommandKind.Move ||
-                !SamePath(context.Path, _requestPath) || move.ValidStepCount != _requestPath.StepCount ||
-                move.PathMovement == null || !SamePath(move.PathMovement.RequestedPath, _requestPath))
+            if (!approved)
             {
                 Cancel();
-                return;
+                return true;
             }
 
             ValidatedRevision = Draft.Revision;
             Preview = result;
-            _context = context;
             _rejectedCell = null;
-            _retainedPath = _requestPath;
-            _retainedAgainst = _requestPath;
+            _retainedPath = _quote.Path;
+            _retainedAgainst = _quote.Path;
             if (_frozen)
-                SubmitFrozen();
+                _submitted = _quote.TrySubmit();
+            return true;
         }
 
         internal void Confirm(CellCoord? cell, bool overCancelArea, bool allowed)
@@ -302,6 +345,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (!EnsureLive(allowed) || IsSubmitted || _frozen)
                 return;
 
+            if (_awaitingBoardReentry)
+            {
+                // 범위가 아직 도착하지 않았으면 재진입 후 실제로 놓은 칸만 확정 대상으로 보존합니다.
+                _frozen = _previewDeferred && !overCancelArea && _boardReentryPoint.HasValue &&
+                    cell == MovementPointerSampler.CellAt(_boardReentryPoint.Value);
+                return;
+            }
+
             if (overCancelArea || !cell.HasValue || !Draft.PointerValid || _unaccepted.Count > 0 ||
                 Draft.StepCount == 0 || cell.Value != Draft.Endpoint)
             {
@@ -312,8 +363,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
 
             _frozen = true;
             RequestPreview();
-            if (_context != null && ValidatedRevision == Draft.Revision && OwnsLatestRequest())
-                SubmitFrozen();
+            if (ValidatedRevision == Draft.Revision && _quote.IsApproved)
+                _submitted = _quote.TrySubmit();
         }
 
         internal void Cancel()
@@ -322,14 +373,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             using var profileInteractionMoveCancelSample = _profileInteractionMoveCancel.Auto();
 #endif
 
-            ClearOwnedPreview();
+            _quote.Clear();
             Draft.Cancel();
             _lastPointer = null;
             _unaccepted.Clear();
-            _requestNumber = 0;
-            _requestRevision = -1;
-            _requestPath = null;
-            _context = null;
             Preview = null;
             ValidatedRevision = -1;
             _frozen = false;
@@ -340,6 +387,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _rejectedCell = null;
             _resumeAdjacent = false;
             _requiresEndpointReentry = false;
+            _awaitingBoardReentry = false;
+            _boardReentryPoint = null;
             _prefixCells.Clear();
             // 이미 제출한 명령은 취소하거나 연출 완료로 간주하지 않는다.
         }
@@ -373,38 +422,37 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             TrimRetainedPath();
             if (!Draft.IsActive || Draft.StepCount == 0)
             {
-                ClearOwnedPreview();
-                _requestNumber = 0;
-                _context = null;
+                _quote.Clear();
                 Preview = null;
                 ValidatedRevision = -1;
                 return;
             }
 
-            if (_previewDeferred || (_requestNumber != 0 && _requestRevision == Draft.Revision && OwnsLatestRequest()))
+            if (_previewDeferred || _quote.IsCurrent(Draft.Revision))
                 return;
 
-            _context = null;
             Preview = null;
-            _requestPath = Draft.Snapshot();
-            _requestRevision = Draft.Revision;
-            _requestLifetime = _lifetime;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _requestNumber = CombatInputProfiler.SetPreview(_input, CombatViewPreviewData.Move(Draft.Actor, _requestPath));
-#else
-            _requestNumber = _input.SetPreview(CombatViewPreviewData.Move(Draft.Actor, _requestPath));
-#endif
+            _quote.Request(Draft.Actor, Draft.Snapshot(), Draft.Revision);
         }
 
         // 범위 응답을 받은 뒤 최신 초안(확정 대기 중이면 동결된 초안) 하나만 게시한다.
-        internal void ResumePreview(bool allowed)
+        internal void ResumePreview(bool allowed, in MovementRangeResult range)
         {
             if (!_previewDeferred)
                 return;
 
             _previewDeferred = false;
-            if (EnsureLive(allowed) && !IsSubmitted)
-                RequestPreview();
+            if (!EnsureLive(allowed) || IsSubmitted)
+                return;
+
+            if (_awaitingBoardReentry)
+            {
+                if (!TryResumeOnBoard(range) && _frozen)
+                    Cancel();
+                return;
+            }
+
+            RequestPreview();
         }
 
         // 되돌리기/분기에서 이전에 확인한 경로와 공통인 부분만 표시한다.
@@ -430,43 +478,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             for (int i = 0; i < count; i++)
                 _prefixCells.Add(candidate.Cells[i]);
             _retainedPath = count == candidate.Cells.Count ? candidate : new MovementPath(_prefixCells);
-        }
-
-        private bool OwnsLatestRequest() =>
-            _requestNumber != 0
-            && _requests.HasPreview
-            && _requests.Preview.Number == _requestNumber
-            && _requests.Preview.Data.Kind == CombatViewPreviewKind.Move
-            && _requests.Preview.Data.EntityId == Draft.Actor
-            && SamePath(_requests.Preview.Data.Path, _requestPath);
-
-        // 자기 요청이 슬롯에 있을 때만 비웁니다(판단은 Buffer의 번호 있는 비우기, View 2라운드 W5-4).
-        private void ClearOwnedPreview() => _input.ClearPreview(_requestNumber);
-
-        private void SubmitFrozen()
-        {
-            var command = CombatViewCommandData.Move(Draft.Actor, _requestPath, _context);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _submittedNumber = CombatInputProfiler.Submit(_input, command);
-#else
-            _submittedNumber = _input.Submit(command);
-#endif
-            ClearOwnedPreview();
-        }
-
-        // 경로 Drag 중 매 프레임 불려 열거자 없이 칸을 차례로 비교합니다(GC 끊김 설계 GH4). 뜻은 SequenceEqual과 같습니다.
-        private static bool SamePath(MovementPath a, MovementPath b)
-        {
-            if (a == null || b == null)
-                return false;
-            IReadOnlyList<CellCoord> left = a.Cells;
-            IReadOnlyList<CellCoord> right = b.Cells;
-            if (left.Count != right.Count)
-                return false;
-            for (int i = 0; i < left.Count; i++)
-                if (!left[i].Equals(right[i]))
-                    return false;
-            return true;
         }
     }
 }

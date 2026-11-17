@@ -113,6 +113,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
                 case StageOfferLineKind.TrainingDetails: // {0} 효과·수치 변화 글, {1} 특성 기본 설명
                     return 2;
                 case StageOfferLineKind.ItemDetails: // {0} 설명
+                case StageOfferLineKind.UnitLevel: // {0} 고용할 유닛의 레벨
+                case StageOfferLineKind.UnitOwnedCount: // {0} 같은 유닛의 보유 수
                 case StageOfferLineKind.RecoveryProjected: // {0} 예상 회복량
                 case StageOfferLineKind.RecoveryMaxHealthProjected: // {0} 예상 최대 체력 증가량
                 case StageOfferLineKind.TrainingUnitLevel: // {0} 레벨

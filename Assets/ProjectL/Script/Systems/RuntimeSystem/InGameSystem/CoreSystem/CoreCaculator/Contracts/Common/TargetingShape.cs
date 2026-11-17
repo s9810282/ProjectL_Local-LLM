@@ -8,5 +8,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         EightDirectionLine = 3,
         Fan = 4,
         RadialSquare = 5,
+        ForwardRectangle = 6,
     }
 }

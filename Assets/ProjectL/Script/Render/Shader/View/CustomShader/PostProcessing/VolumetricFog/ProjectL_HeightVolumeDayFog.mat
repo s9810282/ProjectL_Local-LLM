@@ -25,7 +25,7 @@ Material:
     m_TexEnvs:
     - _HeightMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 3, y: 3}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
@@ -33,7 +33,7 @@ Material:
     - _CenterMaskSoftness: 0.35
     - _Density: 12
     - _DepthBias: 0.1
-    - _EdgeFade: 0.079
+    - _EdgeFade: 0.091
     - _HeightOffset: 0.277
     - _HeightScale: 0.89
     - _HeightSoftness: 0.06
@@ -43,7 +43,7 @@ Material:
     - _StepCount: 64
     m_Colors:
     - _CenterMaskCenter: {r: 0.5, g: 0.5, b: 0, a: 0}
-    - _FogColor: {r: 1, g: 0.34285712, b: 0, a: 1}
-    - _FogTopColor: {r: 0.8509804, g: 0.41575193, b: 0.23572153, a: 0}
+    - _FogColor: {r: 0.74213827, g: 0.27853665, b: 0.18436757, a: 1}
+    - _FogTopColor: {r: 0.7924528, g: 0.24670693, b: 0.30268073, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

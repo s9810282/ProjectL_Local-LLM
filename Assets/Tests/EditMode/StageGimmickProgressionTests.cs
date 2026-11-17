@@ -149,6 +149,10 @@ namespace ProjectL.Tests.Core
             }
 
             public StageGimmickKey Key => StageGimmickKey.Haboob;
+            public bool RunsAt(StageGimmickBoundaryPhase phase) => phase == StageGimmickBoundaryPhase.Scheduled;
+            public StageGimmickState Initialize(CombatCommandState initialState, StageGimmickSpec definition,
+                StageGimmickId id, ref uint randomState) => throw new NotSupportedException();
+
             internal CombatCommandInput Input { get; private set; }
             internal StageGimmickId Id { get; private set; }
             internal StageGimmickBoundary? Boundary { get; private set; }

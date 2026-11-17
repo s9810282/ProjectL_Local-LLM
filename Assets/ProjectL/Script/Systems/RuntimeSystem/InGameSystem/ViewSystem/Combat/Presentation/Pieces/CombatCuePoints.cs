@@ -190,7 +190,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (cue == null) throw new ArgumentNullException(nameof(cue));
             return cue.Point switch
             {
-                CombatCuePoint.ActorEffectPoint or CombatCuePoint.ActorMuzzle => 1,
+                CombatCuePoint.ActorEventPoint => 1,
                 CombatCuePoint.ActorBody => _actorBody.HasValue ? 1 : 0,
                 CombatCuePoint.SubjectBody => SubjectBodiesOf(cue).Count,
                 CombatCuePoint.EventCell => Cells.Count,
@@ -210,8 +210,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentOutOfRangeException(nameof(index), index, $"이펙트 자리 수({count}) 밖입니다.");
             return cue.Point switch
             {
-                CombatCuePoint.ActorEffectPoint => CombatEffectPiece.AtClipPoint(_actor, effects, cue),
-                CombatCuePoint.ActorMuzzle => CombatEffectPiece.AtClipMuzzle(_actor, effects, cue),
+                CombatCuePoint.ActorEventPoint => CombatEffectPiece.AtEventPoint(_actor, effects, cue),
                 CombatCuePoint.ActorBody => AtSurface(effects, cue, _actor, _actorBody.Value, group),
                 CombatCuePoint.SubjectBody => AtSurface(effects, cue, SubjectBodiesOf(cue)[index].Unit, SubjectBodiesOf(cue)[index].Pose, group),
                 CombatCuePoint.SelectedCell => At(effects, cue, EntityId.Empty, _selectedCell.Value, group),

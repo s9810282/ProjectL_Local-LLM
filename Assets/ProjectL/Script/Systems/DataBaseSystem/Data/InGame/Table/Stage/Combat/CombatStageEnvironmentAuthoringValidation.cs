@@ -23,7 +23,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             // 최초 무작위 토네이도는 칸이 없으므로 공간 검증에서 빼고 ID만 예약한다.
             var environment = StageEnvironmentAdapter.Read(width, height, stage.TerrainPresencePlacements,
                 stage.StaticTerrainPlacements, stage.ObjectPlacements, stage.TornadoPlacements, stage.WallCells,
-                stage.InitialRandomTornadoPlacements.Select(p => p.SourceId).ToArray());
+                stage.InitialRandomTornadoPlacements.Select(p => p.SourceId).ToArray(), stage.MovingPlatforms);
             var obstacles = new StructureCombatFacts[stage.ObstaclePlacements.Count];
             for (int i = 0; i < obstacles.Length; i++)
             {
@@ -50,7 +50,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
 
                 // 검증 안에서만 쓰는 임시 ID이며 운영 개체 ID를 SO에 기록하지 않습니다.
                 obstacles[i] = new StructureCombatFacts(new EntityId(i + 1), definition,
-                    new HealthStateSnapshot(definition.MaxHealth, definition.MaxHealth),
+                    new ObstacleDurabilitySnapshot(placement.RequiredHits, placement.RequiredHits),
                     placement.Anchor, placement.Rotation, occupied, Owner.Neutral);
             }
 

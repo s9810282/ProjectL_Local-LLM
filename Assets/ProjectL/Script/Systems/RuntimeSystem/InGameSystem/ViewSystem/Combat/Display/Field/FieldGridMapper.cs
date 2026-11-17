@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Movement;
+using ProjectL.Tool.Runtime;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field
@@ -15,6 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly Transform _fieldRoot;
         private readonly float _cellWidth;
         private readonly float _cellLength;
+        private float? _terrainCellScale;
         // 격자 −X·−Z 모서리(필드 (0,0) 칸의 좌하단)의 필드 로컬 자리입니다.
         private readonly Vector3 _corner;
 
@@ -73,6 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal float TotalWidth { get; }
 
         internal float TotalLength { get; }
+
+        /// <summary>타일 위 지형이 사용하는 제작 규격 대비 칸 배율입니다. 같은 격자에서는 한 번만 구합니다.</summary>
+        internal float TerrainCellScale =>
+            _terrainCellScale ??= CombatMapAuthoringMetrics.CellScale(_cellWidth, _cellLength, nameof(FieldGridMapper));
 
         /// <summary>기울어진 필드에서도 같은 표시 평면의 월드 위 방향입니다.</summary>
         internal Vector3 WorldUp => _fieldRoot.up;

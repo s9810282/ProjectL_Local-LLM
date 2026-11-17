@@ -150,9 +150,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 !abilityScroll.content.TryGetComponent(out ContentSizeFitter fitter) || !fitter.enabled ||
                 fitter.horizontalFit != ContentSizeFitter.FitMode.PreferredSize)
                 throw ConfigurationError("abilityScroll에는 가로 스크롤·뷰포트 마스크·가로 자동 배치가 필요합니다.");
-            unitAbilities.Validate(this, nameof(unitAbilities));
+            unitAbilities.Validate(this, nameof(unitAbilities), requireLevel: true);
             categoryAbilities.Validate(this, nameof(categoryAbilities), allowIndependentPlacement: true);
-            growthAbilities.Validate(this, nameof(growthAbilities));
+            growthAbilities.Validate(this, nameof(growthAbilities), requireLevel: true);
             if (unitAbilities.Root == categoryAbilities.Root || unitAbilities.Root == growthAbilities.Root ||
                 categoryAbilities.Root == growthAbilities.Root)
                 throw ConfigurationError("유닛·병종·추가 특성은 서로 다른 영역에 연결해야 합니다.");
@@ -524,7 +524,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             internal RectTransform Root => root;
 
-            internal void Validate(CombatUnitInfoView owner, string field, bool allowIndependentPlacement = false)
+            internal void Validate(CombatUnitInfoView owner, string field, bool allowIndependentPlacement = false,
+                bool requireLevel = false)
             {
                 if (root == null || !owner.IsChild(root))
                     throw owner.ConfigurationError($"{field}.root는 UnitInfo 내부에 연결해야 합니다.");
@@ -540,7 +541,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                         ? $"{field}.root는 스크롤 콘텐츠의 직계 자식이거나 스크롤과 분리된 UnitInfo 내부 영역이어야 합니다."
                         : $"{field}.root는 스크롤 콘텐츠의 직계 자식이어야 합니다.");
 
-                template.Validate(root, field + ".template");
+                template.Validate(root, field + ".template", requireLevel: requireLevel);
                 Transform button = template.Button.transform;
                 if (!(button is RectTransform))
                     throw owner.ConfigurationError($"{field}.template 버튼에는 RectTransform이 필요합니다.");

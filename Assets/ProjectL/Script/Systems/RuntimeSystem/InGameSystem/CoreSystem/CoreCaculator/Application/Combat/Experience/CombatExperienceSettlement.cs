@@ -58,6 +58,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var changes = new List<OwnedCharacterChange>();
             var rows = new List<CharacterRewardReceipt>();
             MainCharacterPersistentState main = null;
+            CombatCharacterEvent growthEvidence = null;
+            CombatExperienceEvent growthOccurrence = null;
             var participants = rewards.ClearParticipantIds.ToHashSet();
             if (participants.Any(id => !input.Owned.Any(o => o.Id == id) ||
                 projected.Values.Count(c => c.OwnedId == id && c.Owner == Owner.Player) != 1))
@@ -80,14 +82,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var change = new OwnedCharacterChange(record, final);
                     changes.Add(change);
                     var growth = Array.Empty<MainGrowthKind>();
+                    CombatCharacterEvent evidence = null;
                     if (record.Role == CharacterOwnershipRole.Main && gain.LevelsGained > 0)
                     {
                         growth = GrowMain(input, projected, facts, record, final.Level, spec, out main);
                         // 최대 체력이 바뀌면 기존 체력 사건으로도 알린다(View가 이미 다루는 사건).
-                        CombatCommandEvents.Health(events, facts, projected[facts.EntityId]);
+                        evidence = CombatCommandEvents.Health(events, facts, projected[facts.EntityId]);
                     }
-                    events.Add(CombatExperienceEvent.Applied(facts.EntityId, change, amount,
-                        gain.LevelsGained, growth));
+                    var occurrence = CombatExperienceEvent.Applied(facts.EntityId, change, amount, gain.LevelsGained, growth);
+                    events.Add(occurrence);
+                    if (evidence != null)
+                    {
+                        growthEvidence = evidence;
+                        growthOccurrence = occurrence;
+                    }
                 }
                 rows.Add(new CharacterRewardReceipt(record.Id, record.CharacterKey, killXp, participantXp,
                     record.Level, record.Experience, ExperienceRules.Progress(record, spec).Required,
@@ -97,7 +105,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             var roles = input.Owned.ToDictionary(o => o.Id, o => o.Role);
             return new ExperienceSettlement(changes, main, rows.OrderBy(c =>
-                roles[c.CharacterId] == CharacterOwnershipRole.Main ? 0 : 1).ThenBy(c => c.CharacterId).ToArray());
+                roles[c.CharacterId] == CharacterOwnershipRole.Main ? 0 : 1).ThenBy(c => c.CharacterId).ToArray(),
+                growthEvidence, growthOccurrence);
         }
 
         /// <summary>
@@ -141,13 +150,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>메인 랜덤 성장이 있었으면 성장한 지속 상태, 없으면 null이다.</summary>
         internal MainCharacterPersistentState GrownMain { get; }
         internal IReadOnlyList<CharacterRewardReceipt> Characters { get; }
+        internal CombatCharacterEvent GrowthEvidence { get; }
+        internal CombatExperienceEvent GrowthOccurrence { get; }
 
         internal ExperienceSettlement(IReadOnlyList<OwnedCharacterChange> owned, MainCharacterPersistentState grownMain,
-            IReadOnlyList<CharacterRewardReceipt> characters)
+            IReadOnlyList<CharacterRewardReceipt> characters, CombatCharacterEvent growthEvidence = null,
+            CombatExperienceEvent growthOccurrence = null)
         {
             Owned = owned ?? throw new ArgumentNullException(nameof(owned));
             GrownMain = grownMain;
             Characters = Array.AsReadOnly((characters ?? throw new ArgumentNullException(nameof(characters))).ToArray());
+            GrowthEvidence = growthEvidence;
+            GrowthOccurrence = growthOccurrence;
         }
     }
 }

@@ -4,6 +4,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
 {
@@ -29,9 +30,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 CombatCommandEvents.TraitState(settlement.Events, character, progressed);
                 settlement.RecordRecovery(character.EntityId, actual);
                 if (actual == 0) continue;
-                CombatCommandEvents.Trait(settlement.Events, character.EntityId, TraitKey.Regeneration,
+                var occurrence = CombatCommandEvents.Trait(settlement.Events, character.EntityId, TraitKey.Regeneration,
                     TraitActivationKind.HealthRecovered, actual, new[] { character.EntityId });
-                CombatCommandEvents.Health(settlement.Events, progressed, final);
+                var evidence = CombatCommandEvents.Health(settlement.Events, progressed, final);
+                var source = new CombatHealthSource(CombatHealthOperationKind.EffectRecovery,
+                    TraitEffectOrigin.Create(character.EntityId, TraitKey.Regeneration), contextEvent: occurrence);
+                var step = CombatHealthRecording.Add(settlement.HealthExecutions, character.EntityId, progressed.Health, final.Health,
+                    source, evidence, recovery: actual);
+                settlement.HealthClaims.Add(new CombatHealthClaim(CombatHealthClaimKind.TraitRecovery, occurrence, 0, -1,
+                    character.EntityId, new[] { step }));
             }
         }
 

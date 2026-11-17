@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4f852c48c584293aa827b480a30bf9e, type: 3}
+  m_Name: PlayerSkillVisual_MagicBullet
+  m_EditorClassIdentifier: 
+  playerSkillVisualData:
+    skillKey: 2
+    displayName: "마탄"
+    icon: {fileID: 21300000, guid: 5e0eabc3eed1b42408bac0bae8afdd07, type: 3}
+    description: "탄이 고른 점에서 꺾여 날아가며 맞는 대상을 관통해 피해를 줍니다."
+    attackPresentation: {fileID: 11400000, guid: 652cad1147994bb09bbc7a43998668a1, type: 2}
+    areaCellCues:
+      effects: []
+      shakes: []
+    upgrades:
+    - upgradeKey: 3
+      displayName: "마탄: 왜곡"
+      description: "탄이 두 번 꺾입니다."
+      attackPresentation: {fileID: 0}
+    - upgradeKey: 4
+      displayName: "마탄: 심판"
+      description: "처음 맞은 대상 하나에게 큰 피해를 주고(물리 방어 무시) 밀어냅니다."
+      attackPresentation: {fileID: 0}

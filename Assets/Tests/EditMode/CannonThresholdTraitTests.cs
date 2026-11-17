@@ -249,7 +249,7 @@ namespace ProjectL.Tests.Core
             int other = protectedId.Value == 2 ? 3 : 2;
             Assert.That(TraitCombatFixtures.Final(result, protectedId.Value).Health.IsDead, Is.False);
             Assert.That(TraitCombatFixtures.Final(result, other).Health.IsDead, Is.True);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         private static CombatDamageCause Cause(object hit)

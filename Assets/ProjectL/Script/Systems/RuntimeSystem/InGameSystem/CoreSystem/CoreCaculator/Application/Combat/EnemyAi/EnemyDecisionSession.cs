@@ -178,7 +178,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     bool mandatory = !candidates.RequiredTauntSource.IsEmpty;
                     var origin = actor.Anchor.Value;
                     var holdArrival = hazards.Evaluate(actor, Array.Empty<CellCoord>(), origin);
-                    bool holdLethal = EnemyActionCandidates.IsCertainLethal(actor.Health.CurrentHealth, holdArrival, false, 0);
+                    bool holdLethal = EnemyActionCandidates.IsCertainLethal(actor.Health.CurrentHealth, holdArrival, false);
                     var hold = PositionFacts(actor, new EnemyScoreFacts(CombatAssessmentGap.HiddenEnvironment), null, hazards, threat, 0, 0, 0, default,
                         EnemyActionCandidates.NextTurnStrike(field, actor, origin, targets, hazards));
                     var holdRank = EnemyUtilityScorer.Rank(hold, world.Weights);
@@ -349,7 +349,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var endpoint = facts.Endpoint ?? action.Path?.Endpoint ?? actor.Anchor.Value;
             var scoreFacts = PositionFacts(actor, facts, action.Path, world.Hazards, world.Threat, moving ? candidates.Progress(action) : 0,
                 followup, entryLoss, entryGaps, EnemyActionCandidates.NextTurnStrike(field, actor, endpoint, world.Targets, world.Hazards));
-            var (lethal, lethalRank) = CandidateLethality(facts, actor, endpoint, world.Hazards, collapseLanding, entryLoss);
+            var (lethal, lethalRank) = CandidateLethality(facts, actor, endpoint, world.Hazards, collapseLanding);
             completed(new Option(action, EnemyUtilityScorer.Rank(scoreFacts, world.Weights), scoreFacts, lethal, lethalRank));
         }
 
@@ -383,19 +383,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>
         /// 후보 하나의 확실한 치명 판정과 순위다(계획 R-3 치명 위험 규칙). 판정 자체는 <see cref="EnemyActionCandidates.IsCertainLethal"/> 하나다.
         /// 이번 행동으로 적 승리가 확정되면 이후 경계가 오지 않으므로 거르지 않는다(규칙 4-2). 행동 뒤 이미 죽었으면 치명이다.
-        /// 정밀 평가는 경로 피해를 이미 체력에 반영했으므로 통과 피해는 간이 평가에서만 더한다.
+        /// 간이 평가의 진입 손실은 붕괴 착지 때만 0이 아니고 그때는 붕괴 착지가 먼저 치명을 정하므로, 진입 손실은 판정에 넣지 않는다(가시 폭탄 Phase 4 D7).
         /// </summary>
         internal static (bool lethal, (bool terminal, int possible, int known, int bind) rank) CandidateLethality(EnemyScoreFacts facts,
-            CharacterCombatFacts actor, CellCoord endpoint, StageHazardForecast hazards, bool collapseLanding, long entryLoss)
+            CharacterCombatFacts actor, CellCoord endpoint, StageHazardForecast hazards, bool collapseLanding)
         {
             if (facts.GuaranteedTerminal && facts.ProjectedOutcome == StageOutcome.Defeat) return (false, (false, 0, 0, 0));
             var positioned = facts.PostActionActor ?? actor;
             if (positioned.Health.IsDead) return (true, (true, int.MaxValue, int.MaxValue, 0));
             int health = positioned.Health.CurrentHealth;
-            long transit = facts.IsPrecise ? 0 : entryLoss;
             var arrival = hazards.Evaluate(positioned, Array.Empty<CellCoord>(), endpoint);
-            return (EnemyActionCandidates.IsCertainLethal(health, arrival, collapseLanding, transit),
-                EnemyActionCandidates.LethalRank(health, arrival, collapseLanding, transit));
+            return (EnemyActionCandidates.IsCertainLethal(health, arrival, collapseLanding),
+                EnemyActionCandidates.LethalRank(health, arrival, collapseLanding));
         }
 
         internal readonly struct Option

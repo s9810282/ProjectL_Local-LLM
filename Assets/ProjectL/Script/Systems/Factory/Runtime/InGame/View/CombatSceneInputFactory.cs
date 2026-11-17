@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Hud;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
@@ -79,10 +80,12 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             var hudActionAvailability = new CombatHudActionAvailability(sources.InputRead, sources.InputWrite, display.SetUnitActionAvailability);
             // 포효 예고 조회는 HUD 조회와 같은 배경 조회 꼴이고, 바닥 범위는 표시 묶음의 계약으로 그립니다(포효 예고 계획 TP-11·TP-16).
             var roarForecast = new CombatRoarForecastTracker(sources.InputRead, sources.InputWrite, feedback.RoarForecast);
+            // 스킬 버튼의 배경 가용성 조회는 행동 가능 여부 조회와 같은 꼴이고, 아이콘·이름은 스킬 외형 표에서 읽습니다(전투 스킬 View 설계 SK4).
+            var skillAvailability = new CombatPlayerSkillAvailabilityTracker(sources.InputRead, sources.InputWrite, sources.State, sources.Tables.PlayerSkills);
             (CombatInteraction interaction, CombatActionNotice notices) = CreateSceneInteraction(
                 feedback, sources.State, sources.Characters, sources.InputRead, sources.InputWrite, gate, sources.ReadPathFacts,
                 new CombatInputSounds(sources.Audio, sources.Tables.SoundPresets), sources.ItemStock, sources.Text, actionAvailability,
-                sources.ReportBlockedInput);
+                sources.ReportBlockedInput, sources.Tables.PlayerSkills);
             // Router는 조정자의 사실 공급자를 받는다. UI 위의 Select를 공격으로 쓰지 않는다(행동 버튼 설계 B5).
             var movementUndo = new CombatMovementUndoInput(actionAvailability, gate, sources.ReadInputFacts, () => interaction.IsInputOwnerActive);
             var router = new CombatInputRouter(interaction, gate, sources.ReadInputFacts, CreateCursorSnap(feedback), feedback.Occlusion,
@@ -103,7 +106,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             var camera = new CombatCameraInput(display.CameraControl, feedback.Occlusion,
                 () => new UnityEngine.Vector2(UnityEngine.Screen.width, UnityEngine.Screen.height));
             return new CombatSceneInput(gate, interaction, router, deckPlacement, itemInput, environmentHover, notices, deployment,
-                endTurn, actionAvailability, hudActionAvailability, camera, movementUndo, roarForecast);
+                endTurn, actionAvailability, hudActionAvailability, camera, movementUndo, roarForecast, skillAvailability);
         }
 
         /// <summary>
@@ -116,6 +119,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
         /// <param name="itemStock">가방 아이템 드래그가 읽는 아이템 키별 재고 수입니다(가방 설계 P4). 표시 값 읽기가 Buffer에서 읽습니다.</param>
         /// <param name="actionAvailability">씬 입력이 소유하는 가용성 조회입니다. 필수입니다(평가 C5-02).</param>
         /// <param name="reportBlockedInput">실제 금지 이동 시도가 끝났을 때 기존 튜토리얼 안내를 요청합니다.</param>
+        /// <param name="playerSkills">플레이어 액티브 스킬 외형 표입니다. 스킬 모드가 공격 연출(선 높이)을 찾습니다(전투 스킬 View 설계 SK5).</param>
         private static (CombatInteraction Interaction, CombatActionNotice Notices) CreateSceneInteraction(
             CombatInputFeedback feedback,
             ICombatStateBufferReadSink state,
@@ -127,7 +131,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             CombatInputSounds sounds,
             Func<int, int> itemStock,
             IUITextPresentation text,
-            CombatActionAvailabilityTracker actionAvailability, Action reportBlockedInput)
+            CombatActionAvailabilityTracker actionAvailability, Action reportBlockedInput, IPlayerSkillVisualTableQuery playerSkills)
         {
             if (feedback == null)
                 throw new ArgumentNullException(nameof(feedback));
@@ -149,6 +153,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 throw new ArgumentNullException(nameof(actionAvailability));
             if (reportBlockedInput == null)
                 throw new ArgumentNullException(nameof(reportBlockedInput));
+            if (playerSkills == null)
+                throw new ArgumentNullException(nameof(playerSkills));
             // 경로 입력을 만들기 전에 확인한다(경로 생성자가 이동 상호작용을 연결한다).
             if (gate == null)
                 throw new ArgumentNullException(nameof(gate));
@@ -169,7 +175,10 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             var attack = new AttackTargetingInteraction(inputWrite, inputRead, feedback.Picker, feedback.AttackRange, feedback.HoverCell, gate,
                 feedback.Knockback, feedback.AttackModeTargets, sounds,
                 rejections: notices, trajectory: feedback.Trajectory, actionAvailability: actionAvailability);
-            return (new CombatInteraction(placement, attack, path, new CombatAttackDragGesture(feedback.Mapping), item, rangeHover), notices);
+            // 플레이어 액티브 스킬 모드는 스킬 외형 표(공격 연출·선 높이)와 거절 안내를 받는다(전투 스킬 View 설계 SK1·SK2).
+            var skill = new CombatPlayerSkillInteraction(inputWrite, inputRead, state, feedback.Picker, feedback.PlayerSkill, feedback.HoverCell,
+                gate, notices, playerSkills, sounds);
+            return (new CombatInteraction(placement, attack, path, new CombatAttackDragGesture(feedback.Mapping), item, rangeHover, skill), notices);
         }
 
         /// <summary>배치 Drag·경로 지정·공격 모드 중 칸이 바뀔 때만 OS 커서를 칸 중심으로 옮기는 스냅을 만듭니다(커서 그리드 스냅 설계). 연결 입력 묶음을 만드는 <see cref="CreateSceneInput"/>이 부릅니다.</summary>

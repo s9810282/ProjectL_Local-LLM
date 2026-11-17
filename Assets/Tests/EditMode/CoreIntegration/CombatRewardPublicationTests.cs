@@ -224,12 +224,14 @@ namespace ProjectL.Tests.CoreIntegration
         private static CombatCommandTransition WithReward(CombatCommandTransition t, CombatRewardChange reward) =>
             new(t.Input, t.Accepted, t.Reason, t.Characters, t.Field, t.FinalState, t.Outcome, t.Attack,
                 t.ConsumedSoulIds, t.Completion, t.Movement, t.Events, t.PathMovement, t.EnvironmentBindings,
-                t.BlockedContacts, t.InventoryChange, reward, t.RewardSettlement, t.ActionUseSettlement);
+                t.BlockedContacts, t.InventoryChange, reward, t.RewardSettlement, t.ActionUseSettlement,
+                t.UndoMovement, t.MovementEffectUses, t.HealthExecutions, t.HealthClaims);
 
         private static CombatCommandTransition WithCharacters(CombatCommandTransition t, CharacterChanges characters) =>
             new(t.Input, t.Accepted, t.Reason, characters, t.Field, t.FinalState, t.Outcome, t.Attack,
                 t.ConsumedSoulIds, t.Completion, t.Movement, t.Events, t.PathMovement, t.EnvironmentBindings,
-                t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement);
+                t.BlockedContacts, t.InventoryChange, t.RewardChange, t.RewardSettlement, t.ActionUseSettlement,
+                t.UndoMovement, t.MovementEffectUses, t.HealthExecutions, t.HealthClaims);
 
         private sealed class RewardSource : IBattleInitializationSource
         {

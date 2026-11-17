@@ -179,6 +179,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
     }
 
     [Serializable]
+    internal sealed class DeadHandRankAuthoring : TraitRankAuthoring
+    {
+        [SerializeField, Min(0)] private int damagePercent = 100;
+
+        internal override TraitRankValues ToValues() => new TraitRankValues(TraitKey.DeadHand, damagePercent);
+    }
+
+    [Serializable]
     internal sealed class BleedingRankAuthoring : TraitRankAuthoring
     {
         [SerializeField, Min(1)] private int damagePerStack;

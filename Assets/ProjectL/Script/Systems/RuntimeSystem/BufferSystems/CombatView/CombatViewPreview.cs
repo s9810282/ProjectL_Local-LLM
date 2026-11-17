@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -21,17 +23,36 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         public Rotation4 Rotation { get; }
         /// <summary>공격 미리보기의 조준입니다.</summary>
         public AttackAim Aim { get; }
+        public AttackSweepSide? SweepSide { get; }
         public MovementPath Path { get; }
+        public PlayerSkillRequest PlayerSkill { get; }
 
         private CombatViewPreviewData(CombatViewPreviewKind kind, EntityId entityId,
-            CellCoord cell, Rotation4 rotation, AttackAim aim, MovementPath path = null)
+            CellCoord cell, Rotation4 rotation, AttackAim aim, MovementPath path = null,
+            AttackSweepSide? sweepSide = null, PlayerSkillRequest playerSkill = null)
         {
             Kind = kind;
             EntityId = entityId;
             Cell = cell;
             Rotation = rotation;
             Aim = aim;
+            AttackSweepSideValidation.Validate(sweepSide);
+            SweepSide = sweepSide;
             Path = path;
+            PlayerSkill = playerSkill;
+        }
+
+        public static CombatViewPreviewData ForPlayerSkillAvailability(EntityId actorId) =>
+            SkillQuery(CombatViewPreviewKind.SkillAvailability, actorId, Array.Empty<CellCoord>());
+        public static CombatViewPreviewData ForPlayerSkillSelection(EntityId actorId, IReadOnlyList<CellCoord> selectedPoints) =>
+            SkillQuery(CombatViewPreviewKind.SkillSelection, actorId, selectedPoints);
+        public static CombatViewPreviewData ForPlayerSkillForecast(EntityId actorId, IReadOnlyList<CellCoord> completePoints) =>
+            SkillQuery(CombatViewPreviewKind.SkillForecast, actorId, completePoints);
+
+        private static CombatViewPreviewData SkillQuery(CombatViewPreviewKind kind, EntityId actorId, IReadOnlyList<CellCoord> points)
+        {
+            CombatViewInputGuard.RequireEntity(actorId, nameof(actorId));
+            return new CombatViewPreviewData(kind, actorId, default, default, default, playerSkill: new PlayerSkillRequest(points));
         }
 
         public static CombatViewPreviewData MainCharacterPlacement(CellCoord cell, Rotation4 rotation)
@@ -70,6 +91,15 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
             return new CombatViewPreviewData(CombatViewPreviewKind.ActionAvailability, unit, default, default, default);
         }
 
+        /// <summary>
+        /// 자격 아군 모두의 행동 가능 여부 묶음 요청입니다(새 SSOT 설계 SN2). 누구를 물을지는 Core가 정하므로 행위자는 Empty입니다.
+        /// </summary>
+        public static CombatViewPreviewData ActionAvailabilities() =>
+            new CombatViewPreviewData(CombatViewPreviewKind.ActionAvailabilities, EntityId.Empty, default, default, default);
+
+        public static CombatViewPreviewData PlatformForecast() =>
+            new CombatViewPreviewData(CombatViewPreviewKind.PlatformForecast, EntityId.Empty, default, default, default);
+
         public static CombatViewPreviewData AttackRange(EntityId attacker)
         {
             CombatViewInputGuard.RequireEntity(attacker, nameof(attacker));
@@ -77,12 +107,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
                 attacker, default, default, default);
         }
 
-        public static CombatViewPreviewData Attack(EntityId attacker, AttackAim aim)
+        public static CombatViewPreviewData Attack(EntityId attacker, AttackAim aim, AttackSweepSide? sweepSide = null)
         {
             CombatViewInputGuard.RequireEntity(attacker, nameof(attacker));
             CombatViewInputGuard.RequireAim(aim);
             return new CombatViewPreviewData(CombatViewPreviewKind.Attack,
-                attacker, default, default, aim);
+                attacker, default, default, aim, sweepSide: sweepSide);
         }
 
         public static CombatViewPreviewData UnitAttackRange(EntityId unit)

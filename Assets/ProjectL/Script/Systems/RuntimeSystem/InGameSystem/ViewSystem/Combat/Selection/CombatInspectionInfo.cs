@@ -4,6 +4,7 @@ using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
@@ -79,24 +80,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
             _statuses = statuses ?? throw new ArgumentNullException(nameof(statuses));
         }
         internal CombatInspectionInfo Map(CombatInspectionFacts facts, IReadOnlyList<OwnedCharacterRecord> owned,
-            TraitSettingsSet settings)
+            TraitSettingsSet settings, IReadOnlyList<OwnedCharacterStatsSnapshot> ownedStats)
         {
             var visual = _units.GetUnitVisual(facts.Key);
             return new CombatInspectionInfo(facts, visual.DisplayName, visual.Description, visual.InfoIcon,
-                facts.Character != null ? Character(facts, owned, settings) : null);
+                facts.Character != null ? Character(facts, owned, settings, ownedStats) : null);
         }
         private CharacterInfoSection Character(CombatInspectionFacts facts, IReadOnlyList<OwnedCharacterRecord> owned,
-            TraitSettingsSet settings)
+            TraitSettingsSet settings, IReadOnlyList<OwnedCharacterStatsSnapshot> ownedStats)
         {
             var character = facts.Character;
             int? level = character.Experience.EnemyLevel;
-            if (character.OwnedId.HasValue)
+            IReadOnlyDictionary<TraitKey, int> traitRanks = null;
+            if (character.OwnedId is CharacterInstanceId ownedId)
+            {
                 foreach (OwnedCharacterRecord item in owned)
-                    if (item.Id == character.OwnedId.Value) { level = item.Level; break; }
+                    if (item.Id == ownedId) { level = item.Level; break; }
+                foreach (OwnedCharacterStatsSnapshot item in ownedStats)
+                {
+                    if (item.OwnedId != ownedId) continue;
+                    traitRanks = item.TraitRanks;
+                    break;
+                }
+            }
             var statuses = new List<UnitHUDStatus>();
             _statuses.AddTo(character, statuses);
             return new CharacterInfoSection(level, _categories.GetCategoryVisual(character.Stats.Category.Key).WhiteIcon,
-                UnitCardTraitContent.Create(_traits, character.Stats.TraitStatuses.Span, settings), statuses.AsReadOnly(),
+                UnitCardTraitContent.Create(_traits, character.Stats.TraitStatuses.Span, settings, traitRanks), statuses.AsReadOnly(),
                 CombatEffectiveStatsCalculator.AttackPower(character), CombatEffectiveStatsCalculator.PhysicalDefense(character),
                 character.Stats.Category.Key.ToString().ToUpperInvariant());
         }

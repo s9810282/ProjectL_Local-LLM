@@ -116,10 +116,13 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         [SerializeField] private ObstaclePlacementInput[] obstaclePlacements = Array.Empty<ObstaclePlacementInput>();
         [Tooltip("같은 칸의 Object 진입 순서는 이 배열 순서로 결정됩니다. Source Id의 크기로 정렬하지 않습니다.")]
         [SerializeField] private ObjectPlacementInput[] objectPlacements = Array.Empty<ObjectPlacementInput>();
+        [Tooltip("플랫폼 Source Id는 지형·Object·토네이도와 같은 범위에서 유일해야 합니다.")]
+        [SerializeField] private MovingPlatformAuthoring[] movingPlatforms = Array.Empty<MovingPlatformAuthoring>();
 
         public (StaticTerrainPlacementData[] Static, TerrainPresencePlacementData[] Presence,
             TornadoSourceFact[] Tornadoes, InitialObstaclePlacementSpec[] Obstacles,
-            InitialObjectPlacementSpec[] Objects, InitialRandomTornadoPlacementSpec[] RandomTornadoes, TornadoGimmickSpec Tornado)
+            InitialObjectPlacementSpec[] Objects, InitialRandomTornadoPlacementSpec[] RandomTornadoes, TornadoGimmickSpec Tornado,
+            MovingPlatformSpec[] Platforms)
             ToData(IReadOnlyList<StaticTerrainPlacementData> legacyTerrain)
         {
             var statics = new List<StaticTerrainPlacementData>(legacyTerrain);
@@ -144,8 +147,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 objects[i] = objectPlacements[i].ToData(i);
             }
 
+            var platforms = new MovingPlatformSpec[movingPlatforms?.Length ?? 0];
+            for (int i = 0; i < platforms.Length; i++)
+                platforms[i] = (movingPlatforms[i] ?? throw new InvalidOperationException($"Moving Platforms[{i}]에 입력이 없습니다.")).ToSpec();
+
             return (statics.ToArray(), presence.ToArray(), tornadoes.ToArray(), obstacles, objects, randomTornadoes.ToArray(),
-                tornadoMembers.Count == 0 ? null : new TornadoGimmickSpec(tornadoMembers));
+                tornadoMembers.Count == 0 ? null : new TornadoGimmickSpec(tornadoMembers), platforms);
         }
     }
 }

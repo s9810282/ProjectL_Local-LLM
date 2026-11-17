@@ -18,6 +18,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
@@ -26,7 +27,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
     internal static class BattleDefinitionAdapter
     {
         internal static BattleInitialization Read(IDataBaseQueryContext database, int mapKey, int stageKey,
-            IReadOnlyList<OwnedCharacterRecord> owned, IReadOnlyList<ItemDefinition> itemDefinitions = null)
+            IReadOnlyList<OwnedCharacterRecord> owned, IReadOnlyList<ItemDefinition> itemDefinitions = null,
+            PlayerSkillDefinition playerSkill = null)
         {
             if (mapKey < 1 || stageKey < 1)
                 throw new InvalidOperationException("G7: 현재 챕터와 스테이지 선택이 필요합니다.");
@@ -92,7 +94,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             var environment = StageEnvironmentAdapter.Read(field.ColumnCount, field.RowCount,
                 combat.TerrainPresencePlacements, combat.StaticTerrainPlacements, combat.ObjectPlacements,
                 tornadoPlacements: combat.Tornado == null ? combat.TornadoPlacements : Array.Empty<TornadoSourceFact>(), wallCells: combat.WallCells,
-                reservedSourceIds: combat.Tornado?.Members.Select(p => p.SourceId).ToArray() ?? combat.InitialRandomTornadoPlacements.Select(p => p.SourceId).ToArray());
+                reservedSourceIds: combat.Tornado?.Members.Select(p => p.SourceId).ToArray() ?? combat.InitialRandomTornadoPlacements.Select(p => p.SourceId).ToArray(),
+                movingPlatforms: combat.MovingPlatforms);
             var obstacles = StageEnvironmentAdapter.ReadObstacles(combat.ObstaclePlacements);
             var railway = combat.Railway;
             var gimmicks = new List<StageGimmickSpec>();
@@ -106,6 +109,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 rockfall.BindAffectedSideTurns, rockfall.FootprintOffsets));
             // 아군 배치 구역의 대체 규칙 원본: 스테이지 칸 목록이 있으면 그 칸, 비었으면 필드의 아군 줄 수(아래부터)다.
             if (combat.Tornado != null) gimmicks.Add(combat.Tornado);
+            var chain = combat.LavaChain;
+            if (chain != null) gimmicks.Add(new LavaChainGimmickSpec(chain.InitialHeadCell, chain.CycleControllerTurns,
+                chain.WarningLeadControllerTurns, chain.PushDistance));
+            var meteor = combat.Meteor;
+            if (meteor != null) gimmicks.Add(new MeteorGimmickSpec(meteor.CycleControllerTurns, meteor.WarningLeadControllerTurns,
+                meteor.MinimumMeteorCount, meteor.MaximumMeteorCount, meteor.FootprintSideLength,
+                meteor.MaximumHealthDamagePercent, meteor.FireAffectedSideStarts, meteor.FlameControllerTurns));
             var playerZone = combat.PlayerDeploymentCells.Count > 0
                 ? PlayerDeploymentZone.Of(combat.PlayerDeploymentCells)
                 : PlayerDeploymentZone.Rows(field.PlayerDeploymentDepth);
@@ -136,7 +146,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 environment: environment.Environment, environmentBindings: environment.Bindings,
                 obstaclePlacements: obstacles, wallBlocking: combat.WallBlocking, objectiveKind: combat.ObjectiveKind, itemDefinitions: itemDefinitions,
                 progression: category.LevelProgression, initialRandomTornadoPlacements: combat.Tornado == null ? combat.InitialRandomTornadoPlacements : null,
-                clearRewards: economy.ClearRewards, traitGrowth: catalog, nexusReinforcements: combat.NexusReinforcements);
+                clearRewards: economy.ClearRewards, traitGrowth: catalog, nexusReinforcements: combat.NexusReinforcements,
+                playerSkill: playerSkill);
         }
 
         /// <summary>

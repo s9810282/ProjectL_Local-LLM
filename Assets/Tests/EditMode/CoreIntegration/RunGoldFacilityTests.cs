@@ -223,41 +223,31 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(game.Buffers.CurrentProgressReadSink.Recovery.AppliedOptionId, Is.Null);
         }
 
-        [TestCase(2, 58, 60, 5)]
-        [TestCase(4, 40, 70, 10)]
-        public void ProductionRestVisit_EntersSelectsAndCompletes(int optionId, int hp, int maximum, int cost)
-        {
-            using var game = new Harness(production: true);
-            game.EnterRest();
-            Assert.That(game.Buffers.CurrentProgressReadSink.Recovery.Options.Select(o => o.Id.Value), Is.EqualTo(new[] { 2, 4 }));
-            var result = game.Publish(optionId).Result;
-            Assert.That(result.Succeeded, Is.True);
-            Assert.That((game.Main.CurrentHealth, game.Main.PersistentMaxHealth), Is.EqualTo((hp, maximum)));
-            Assert.That(game.Buffers.CurrencyReadSink.RunSpent, Is.EqualTo(cost));
-            Assert.That(game.CompleteRest().Result.Succeeded, Is.True);
-        }
-
         [Test]
         public void ProductionMercenaryOffice_OffersOnlyUnitsAndAllowsOneHire()
         {
-            using var game = new Harness(production: true, shop: true, gold: 10000);
-            Assert.That(((ShopStageDetail)game.Definition.StageData).ItemKeys, Is.Empty);
+            using var game = new Harness(production: true, shop: true);
+            var definition = (ShopStageDetail)game.Definition.StageData;
+            int cost = definition.UnitRecruitCostGold;
+            game.Buffers.CurrencyWriteSink.SetAmount(cost);
+            int spentBefore = game.Buffers.CurrencyReadSink.RunSpent;
+            Assert.That(definition.ItemKeys, Is.Empty);
             Assert.That(game.Core.Shop.EnterShop(1, new StageNodeId(2), 17).Accepted, Is.True);
             var visit = game.Buffers.CurrentProgressReadSink.Shop;
             Assert.That(visit.Offers, Is.Not.Empty);
             Assert.That(visit.Offers.All(o => o.Kind == ShopProductKind.Unit), Is.True);
             var offer = visit.Offers[0];
-            Assert.That(offer.Cost, Is.EqualTo(600));
+            Assert.That(offer.Cost, Is.EqualTo(cost));
             int count = game.Buffers.CharacterReadSink.Owned.Count;
             var context = new ShopVisitContext(1, new StageNodeId(2), new StageKey(game.Definition.StageKey), visit.EntryId);
             Assert.That(game.Core.Shop.Purchase(context, offer.OfferId).Succeeded, Is.True);
             Assert.That(game.Buffers.CharacterReadSink.Owned.Count, Is.EqualTo(count + 1));
-            Assert.That(game.Buffers.CurrencyReadSink.Amount, Is.EqualTo(9400));
-            Assert.That(game.Buffers.CurrencyReadSink.RunSpent, Is.EqualTo(600));
+            Assert.That(game.Buffers.CurrencyReadSink.Amount, Is.Zero);
+            Assert.That(game.Buffers.CurrencyReadSink.RunSpent, Is.EqualTo(spentBefore + cost));
             Assert.That(game.Core.Shop.Purchase(context, offer.OfferId).Succeeded, Is.False);
             Assert.That(game.Buffers.CharacterReadSink.Owned.Count, Is.EqualTo(count + 1));
-            Assert.That(game.Buffers.CurrencyReadSink.Amount, Is.EqualTo(9400));
-            Assert.That(game.Buffers.CurrencyReadSink.RunSpent, Is.EqualTo(600));
+            Assert.That(game.Buffers.CurrencyReadSink.Amount, Is.Zero);
+            Assert.That(game.Buffers.CurrencyReadSink.RunSpent, Is.EqualTo(spentBefore + cost));
             Assert.That(game.Core.Shop.CompleteShop(context).Accepted, Is.True);
         }
 

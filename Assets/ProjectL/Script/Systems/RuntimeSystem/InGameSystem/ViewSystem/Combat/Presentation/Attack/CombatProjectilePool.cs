@@ -52,6 +52,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             internal float Elapsed;
             internal Action Completed;
             internal Action<float> Advanced;
+            // 꺾인 직선 경로(스킬 사건 51)입니다. null이면 From → To 한 구간(곡사 포함)입니다(전투 스킬 View 설계 SK3, 계획 TP-13).
+            internal Vector3[] Path;
+            internal float[] PathLengths;
+            internal int PathCount;
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -127,6 +131,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             float duration = distance / speed;
             if (!IsFinite(duration)) throw new ArgumentOutOfRangeException(nameof(speed));
             return Start(from, to, duration, 0f, up.normalized, Vector3.zero, completed, advanced, easing);
+        }
+
+        /// <summary>
+        /// 꺾인 직선 경로 한 발입니다(전투 스킬 View 설계 SK3, 계획 TP-13). 경로 진행률(전체 길이 비율 0~1)을 <paramref name="advanced"/>로 알리고,
+        /// 방향은 지금 구간을 향합니다. 비행 시간 = 전체 길이 ÷ 평균 속도입니다. 한 구간 발사(<see cref="FireLinear(Vector3, Vector3, float, Vector3, Action{float}, Action, CombatProjectileEasing)"/>)는 그대로 둡니다.
+        /// </summary>
+        /// <param name="points">경로 점(월드)입니다. 둘 이상이고 이 풀이 복사해 둡니다.</param>
+        internal CombatProjectileLease FirePath(IReadOnlyList<Vector3> points, float speed, Vector3 up,
+            Action<float> advanced, Action completed, CombatProjectileEasing easing = default)
+        {
+            if (points == null) throw new ArgumentNullException(nameof(points));
+            if (points.Count < 2) throw new ArgumentException("[CombatProjectilePool] 꺾인 경로는 점이 둘 이상이어야 합니다.", nameof(points));
+            ValidatePositive(speed, nameof(speed));
+            ValidateVector(up, nameof(up));
+            if (!(up.magnitude > 0f) || !IsFinite(up.magnitude)) throw new ArgumentOutOfRangeException(nameof(up));
+            var path = new Vector3[points.Count];
+            for (int i = 0; i < path.Length; i++)
+            {
+                ValidateVector(points[i], nameof(points));
+                path[i] = points[i];
+            }
+            var lengths = new float[path.Length];
+            float distance = CombatShotPath.FillPathLengths(path, path.Length, lengths);
+            float duration = distance / speed;
+            if (!IsFinite(duration)) throw new ArgumentOutOfRangeException(nameof(speed));
+            return Start(path[0], path[path.Length - 1], duration, 0f, up.normalized, Vector3.zero, completed, advanced, easing,
+                path: path, pathLengths: lengths);
         }
 
         /// <summary>높이는 월드 길이이며, 곡사 변위는 정규화한 필드 법선 방향으로 적용합니다.</summary>
@@ -274,7 +305,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         private CombatProjectileLease Start(Vector3 from, Vector3 to, float duration, float height,
             Vector3 up, Vector3 spin, Action completed, Action<float> advanced = null, CombatProjectileEasing easing = default,
-            CombatArcRotationMode rotationMode = CombatArcRotationMode.Spin)
+            CombatArcRotationMode rotationMode = CombatArcRotationMode.Spin, Vector3[] path = null, float[] pathLengths = null)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             var profile = ProfilingProfile;
@@ -284,7 +315,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             EnsureCanStart();
             if (completed == null)
                 throw new ArgumentNullException(nameof(completed));
-            Vector3 direction = rotationMode == CombatArcRotationMode.FollowPath
+            Vector3 direction = path != null ? CombatShotPath.PathTangent(path, pathLengths, path.Length, 0f)
+                : rotationMode == CombatArcRotationMode.FollowPath
                 ? CombatShotPath.ArcTangent(from, to, up, height, 0f) : to - from;
             Quaternion rotation = FaceAlong(direction, up, _prefabRotation);
             Instance instance = Rent();
@@ -307,7 +339,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 Height = height,
                 Easing = easing,
                 Completed = completed,
-                Advanced = advanced
+                Advanced = advanced,
+                Path = path,
+                PathLengths = pathLengths,
+                PathCount = path?.Length ?? 0
             };
             _active.Add(lease, flight);
             try
@@ -346,12 +381,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             // Spin은 시간으로 회전하고 FollowPath는 같은 경로 진행률의 접선을 향합니다. 끝(t = 1)에서 진행률은 정확히 1입니다.
             float progress = flight.Easing.Evaluate(t);
             // 곡선 식 원본은 발사 기하 한 곳입니다(궤적 미리보기와 공유, 공격 궤적 설계 TJ3). 직선은 높이 0입니다.
-            Vector3 position = CombatShotPath.ArcPoint(flight.From, flight.To, flight.Up, flight.Height, progress);
+            Vector3 position = flight.Path != null
+                ? CombatShotPath.PathPoint(flight.Path, flight.PathLengths, flight.PathCount, progress)
+                : CombatShotPath.ArcPoint(flight.From, flight.To, flight.Up, flight.Height, progress);
             if (!IsFinite(position.x) || !IsFinite(position.y) || !IsFinite(position.z))
                 throw new InvalidOperationException("[CombatProjectilePool] 발사체 표시 위치가 유한하지 않습니다.");
             Transform transform = flight.Instance.Object.transform;
             Quaternion rotation;
-            if (flight.RotationMode == CombatArcRotationMode.FollowPath)
+            // 꺾인 경로는 지금 구간을 향합니다(꺾이는 점에서 방향이 바뀜).
+            if (flight.Path != null)
+                rotation = FaceAlong(CombatShotPath.PathTangent(flight.Path, flight.PathLengths, flight.PathCount, progress), flight.Up, transform.rotation);
+            else if (flight.RotationMode == CombatArcRotationMode.FollowPath)
             {
                 Vector3 tangent = CombatShotPath.ArcTangent(flight.From, flight.To, flight.Up, flight.Height, progress);
                 rotation = FaceAlong(tangent, flight.Up, transform.rotation);

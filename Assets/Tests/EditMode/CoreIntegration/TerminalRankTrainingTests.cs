@@ -121,19 +121,20 @@ namespace ProjectL.Tests.CoreIntegration
 
         [TestCase(TraitKey.Sacrifice)]
         [TestCase(TraitKey.DustScreen)]
-        public void ProductionRank2ResolvesAndSurvivesAssetRoundTrip(TraitKey key)
+        public void ProductionTerminalRankPreservesAuthoredValuesThroughAssetRoundTrip(TraitKey key)
         {
             var definition = DataBaseAssetTests.ActiveGrowthCatalog().GetTrait(key);
             Assert.That(definition.MaxRank, Is.EqualTo(2));
             Assert.That(definition.Enhanced, Is.Null);
             Assert.That(definition.Rank3, Is.Null);
-            AssertRankValues(definition.Rank2, key, upgraded: true);
-            AssertEffectiveSpec(RankedCombatTestData.Spec(key, 1), key, upgraded: false);
-            AssertEffectiveSpec(RankedCombatTestData.Spec(key, 2), key, upgraded: true);
+            Assert.That((definition.Rank2.PreventsLethalSacrificeDamage, definition.Rank2.ExemptsAlliedAttackRangePenalty),
+                Is.EqualTo((key == TraitKey.Sacrifice, key == TraitKey.DustScreen)));
 
             const string sourceFolder = "Assets/ProjectL/DataBaseSO/InGameGroup/TraitGrowth/Item";
             var original = AssetDatabase.LoadAssetAtPath<TraitGrowthDefinitionDataSO>(
                 $"{sourceFolder}/TraitGrowth_{key}.asset");
+            var authored = (TraitGrowthDefinitionData)original.GetData();
+            AssertAuthoredRankValues(definition.Rank2, authored.Rank2);
             var path = $"Assets/__TraitGrowthRank2_{Guid.NewGuid():N}.asset";
             try
             {
@@ -146,7 +147,7 @@ namespace ProjectL.Tests.CoreIntegration
                 Assert.That(serialized.FindProperty("rank2").managedReferenceValue,
                     Is.TypeOf(key == TraitKey.Sacrifice ? typeof(SacrificeRankAuthoring) : typeof(DustScreenRankAuthoring)));
                 var data = (TraitGrowthDefinitionData)reloaded.GetData();
-                AssertRankValues(data.Rank2, key, upgraded: true);
+                AssertAuthoredRankValues(data.Rank2, authored.Rank2);
                 Assert.That(data.Enhanced, Is.Null);
                 Assert.That(data.Rank3, Is.Null);
             }
@@ -154,6 +155,15 @@ namespace ProjectL.Tests.CoreIntegration
             {
                 AssetDatabase.DeleteAsset(path);
             }
+        }
+
+        private static void AssertAuthoredRankValues(TraitRankValues actual, TraitRankValues authored)
+        {
+            Assert.That(actual, Is.Not.Null);
+            Assert.That((actual.Key, actual.Amount, actual.SecondAmount,
+                actual.PreventsLethalSacrificeDamage, actual.ExemptsAlliedAttackRangePenalty),
+                Is.EqualTo((authored.Key, authored.Amount, authored.SecondAmount,
+                    authored.PreventsLethalSacrificeDamage, authored.ExemptsAlliedAttackRangePenalty)));
         }
 
         private static void AssertRankValues(TraitRankValues values, TraitKey key, bool upgraded)

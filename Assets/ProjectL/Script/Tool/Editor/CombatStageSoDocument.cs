@@ -48,6 +48,8 @@ namespace ProjectL.Tool.Editor
         // 숨김 호환 필드는 편집하지 않고 경고와 sourceId 계산에만 씁니다(설계 SM10, 계획 P7).
         public int legacyWallCount;
         public List<long> legacyTerrainSourceIds = new List<long>();
+        // 플랫폼은 일반 Inspector가 작성한다. 레이아웃 작업본은 그 ID 범위만 예약한다.
+        public List<long> platformSourceIds = new List<long>();
         // 이 스테이지만 쓰는 공유 SO(필드·로스터·경제·적 로드아웃)의 저장 안 한 값입니다. 스테이지를 저장할 때 검사 뒤 씁니다(설계 SM7, 계획 P4).
         public List<CombatStageSoSharedEdit> sharedEdits = new List<CombatStageSoSharedEdit>();
 
@@ -174,7 +176,7 @@ namespace ProjectL.Tool.Editor
         // 지형과 오브젝트의 sourceId는 같은 번호 공간이고 숨김 호환 지형도 포함합니다(계획 P7).
         public long NextSourceId() =>
             terrains.Select(marker => marker.sourceId).Concat(objects.Select(marker => marker.sourceId))
-                .Concat(legacyTerrainSourceIds).DefaultIfEmpty(0).Max() + 1;
+                .Concat(legacyTerrainSourceIds).Concat(platformSourceIds ?? Enumerable.Empty<long>()).DefaultIfEmpty(0).Max() + 1;
 
         // "배치 비우고 만들기"용입니다. 메인 캐릭터·본부 자리와 참조·스테이지 값은 틀 그대로 둡니다(계획 P2).
         // 아군 배치 구역 칸도 비워 필드 줄 수로 시작합니다(설계 P-AZ5).
@@ -186,6 +188,7 @@ namespace ProjectL.Tool.Editor
             playerDeploymentCells.Clear();
             view.terrainRotations.Clear(); view.objectRotations.Clear();
             legacyWallCount = 0; legacyTerrainSourceIds.Clear();
+            platformSourceIds?.Clear();
         }
 
         // 아군 구역 칸을 칠하거나(erase 거짓) 지웁니다(설계 §11 AZ4). 칸 목록은 집합으로 다루고(계획 P-AZT1), 판 밖 칸은 건너뜁니다(P-AZ4).

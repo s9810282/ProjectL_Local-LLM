@@ -133,14 +133,13 @@ namespace ProjectL.Tests.Core
         [TestCase(false, 30, 9, 9, 91)]
         [TestCase(true, 0, 39, 13, 61)]
         [TestCase(true, 30, 9, 9, 91)]
-        public void SecondaryDamage_UsesReceivingOutcomeForPreviewAndLiveHealth(bool forcedField, int shield,
-            int expectedDamage, int secondaryDamage, int health)
+        public void SecondaryDamage_UsesReceivingOutcomeForPreviewAndLiveHealth(bool forcedArrival, int shield,
+            int totalDamage, int secondaryDamage, int health)
         {
-            var input = forcedField ? CliffFallTests.Knockback() : CombatCommandTestData.Input(
+            var input = forcedArrival ? CliffFallTests.Knockback() : CombatCommandTestData.Input(
                 new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.Radial, 100));
-            if (forcedField)
-                input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                    new ThornFieldCellSnapshot(new CellCoord(5, 3), 3, 10)));
+            if (forcedArrival)
+                input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(5, 3), 10)));
             else
             {
                 var barrel = ObstacleReactionTests.Barrel(51, new CellCoord(4, 4), 1, 10);
@@ -148,15 +147,25 @@ namespace ProjectL.Tests.Core
             }
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId.Value == 2
                 ? Shield(HuntersMarkAttackTests.Expose(c), shield) : c).ToArray());
-            var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>(), out var projected);
-            var result = HuntersMarkAttackTests.Run(input);
+            var preview = CombatCommandCalculator.Preview(input, EnvironmentDamageTests.DamageRules, out var projected);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
             Assert.That(preview.CanAttack, Is.True);
             var target = preview.Targets.ToArray().Single(t => t.TargetId.Value == 2);
             Assert.That(TraitCombatFixtures.Final(projected, 2).Health.CurrentHealth, Is.EqualTo(health));
             Assert.That(TraitCombatFixtures.Final(result, 2).Health.CurrentHealth, Is.EqualTo(health));
-            Assert.That(target.ExpectedDamage, Is.EqualTo(expectedDamage));
-            Assert.That(target.SecondaryDamage, Is.EqualTo(secondaryDamage));
-            Assert.That(target.TargetHealthAfter, Is.EqualTo(health));
+            if (forcedArrival)
+            {
+                // 최종 강제 도착은 공격의 피격 체력을 확정한 뒤 정산된다.
+                Assert.That(target.ExpectedDamage, Is.EqualTo(totalDamage - secondaryDamage));
+                Assert.That(target.SecondaryDamage, Is.Zero);
+                Assert.That(target.TargetHealthAfter - health, Is.EqualTo(secondaryDamage));
+            }
+            else
+            {
+                Assert.That(target.ExpectedDamage, Is.EqualTo(totalDamage));
+                Assert.That(target.SecondaryDamage, Is.EqualTo(secondaryDamage));
+                Assert.That(target.TargetHealthAfter, Is.EqualTo(health));
+            }
             Assert.That(input.Characters.Single(c => c.EntityId.Value == 2).Health.CurrentHealth, Is.EqualTo(100));
         }
 

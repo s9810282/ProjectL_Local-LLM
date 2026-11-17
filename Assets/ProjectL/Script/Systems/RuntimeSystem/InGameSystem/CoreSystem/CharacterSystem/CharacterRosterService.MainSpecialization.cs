@@ -36,9 +36,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             catch (InvalidOperationException) { return Failure(source.Matches(_buffers) ? MainSpecializationFailureReason.InvalidDefinition : MainSpecializationFailureReason.SourceChanged); }
             try
             {
-                TraitGrowthCatalogValidator.ValidateSpecialization(definitions.Catalog, definitions.Profile, selected);
-                _ = new CombatAttackProfile(OwnedUnitSpecResolver.Resolve(definitions.Profile.Definition,
-                    decision.Change.Final, definitions.Catalog), definitions.Profile.Method);
+                TraitGrowthCatalogValidator.ValidateSpecialization(definitions.Catalog, definitions.Profile, selected, definitions.PlayerSkill);
+                var finalDefinition = OwnedUnitSpecResolver.Resolve(definitions.Profile.Definition, decision.Change.Final, definitions.Catalog);
+                _ = new CombatAttackProfile(finalDefinition, definitions.Profile.Method);
+                definitions.PlayerSkill?.ValidateTraits(finalDefinition.Traits.ToArray().Select(t => t.TraitKey));
             }
             catch (ArgumentNullException) { throw; }
             catch (ArgumentException) { return Failure(source.Matches(_buffers) ? MainSpecializationFailureReason.InvalidDefinition : MainSpecializationFailureReason.SourceChanged); }
@@ -86,7 +87,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             var profile = ReadProfile(owned);
             PlayerMainDefinitionPolicy.Validate(profile.Definition.Key, profile.Definition.Role,
                 profile.Definition.CategoryKey, profile.Definition.OwnerEligibility);
-            return new MainSpecializationDefinitionSnapshot(profile, ReadCatalog(), config, units);
+            return new MainSpecializationDefinitionSnapshot(profile, ReadCatalog(), config, units, ReadPlayerSkillDefinition(owned));
         }
 
         private bool MainSpecializationSourceMatches(MainSpecializationOperationPreparation prepared)

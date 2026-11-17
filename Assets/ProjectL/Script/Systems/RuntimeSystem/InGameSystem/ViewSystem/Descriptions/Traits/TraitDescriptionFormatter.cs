@@ -26,20 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Descriptions.Tr
                 return new DescriptionTemplate<TraitSpec>(context, Normalize(visual.Description)).Format(source);
             }
 
-            string description = binding.Prepare(context, Normalize(visual.Description)).Format(source);
-            // 강화 여부를 추측하지 않고 공개된 방어 감소량에 따라 SO의 추가 문장만 선택합니다.
-            if (visual.Key == TraitKey.ThornField)
-            {
-                var additional = binding.Prepare($"TraitVisual.{visual.Key}.DefenseReductionDescription",
-                    Normalize(visual.DefenseReductionDescription));
-                if (source is ThornFieldTraitSpec thorn && thorn.DefenseReductionPercent > 0)
-                {
-                    if (string.IsNullOrWhiteSpace(visual.DefenseReductionDescription))
-                        throw new InvalidOperationException($"[TraitVisual.{visual.Key}.DefenseReductionDescription] 방어 감소 설명이 비었습니다.");
-                    description += "\n" + additional.Format(source);
-                }
-            }
-            return description;
+            return binding.Prepare(context, Normalize(visual.Description)).Format(source);
         }
 
         private static string Normalize(string text) => (text ?? string.Empty).Replace("\\n", "\n");

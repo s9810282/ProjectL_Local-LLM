@@ -19,11 +19,13 @@ using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Economy;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Recovery;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth;
+using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.PlayerSkill;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable;
@@ -57,6 +59,14 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
             var unitTable = new UnitTable(dataBaseGroup.GetDataBase<UnitDataTableSO>());
             ValidateTargetingReferences(unitTable, targetingMethodTable);
             unitTable.ExportServices(builder);
+            var playerSkillSource = data.GetAllData().OfType<PlayerActiveSkillDataTableSO>().SingleOrDefault();
+            PlayerActiveSkillTable playerSkills = null;
+            if (playerSkillSource != null)
+            {
+                playerSkills = new PlayerActiveSkillTable(playerSkillSource);
+                playerSkills.ValidateOwners(unitTable);
+                playerSkills.ExportServices(builder);
+            }
 
             var structureTable = new StructureTable(dataBaseGroup.GetDataBase<StructureDataTableSO>());
             structureTable.ExportServices(builder);
@@ -90,16 +100,17 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
             // 콘텐츠 등록 전에는 선택 기능을 제공하지 않는다. 강화 진입은 누락을 명시적으로 거부한다.
             var enhancementSource = data.GetAllData().OfType<EnhancementDataTableSO>().SingleOrDefault();
             if (enhancementSource != null) new EnhancementTable(enhancementSource).ExportServices(builder);
-            bool hasTraitGrowth = RegisterTraitGrowth(data, builder, unitTable, targetingMethodTable, categoryConfigTable.Config.DefaultTraits);
+            bool hasTraitGrowth = RegisterTraitGrowth(data, builder, unitTable, targetingMethodTable, categoryConfigTable.Config.DefaultTraits, playerSkills);
             // 적 AI 조정은 선택 테이블이다. 없으면 Core 결정 설정의 기본값을 쓴다.
             var enemyAiTuningSource = data.GetAllData().OfType<EnemyAiTuningDataTableSO>().SingleOrDefault();
             if (enemyAiTuningSource != null) new EnemyAiTuningTable(enemyAiTuningSource).ExportServices(builder);
             return new InGameDataBase(builder.BuildSystemReader(), enhancementSource != null, hasTraitGrowth,
-                enemyAiTuningSource != null);
+                enemyAiTuningSource != null, playerSkillSource != null);
         }
 
         private static bool RegisterTraitGrowth(InGameGroup data, ISystemWriteSink builder,
-            IUnitTableQuery units, ITargetingMethodTableQuery methods, IReadOnlyDictionary<CategoryKey, TraitKey> defaults)
+            IUnitTableQuery units, ITargetingMethodTableQuery methods, IReadOnlyDictionary<CategoryKey, TraitKey> defaults,
+            IPlayerActiveSkillTableQuery playerSkills)
         {
             var categorySource = data.GetAllData().OfType<CategoryTraitProgressionDataTableSO>().SingleOrDefault();
             var definitionSource = data.GetAllData().OfType<TraitGrowthDefinitionDataTableSO>().SingleOrDefault();
@@ -110,6 +121,7 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
             var definitions = new TraitGrowthDefinitionTable(definitionSource);
             var catalog = TraitGrowthDefinitionAdapter.Build(categories, definitions, defaults);
             var profiles = new List<CombatAttackProfile>();
+            var skills = new List<PlayerSkillDefinition>();
             foreach (var row in units.GetAllUnits())
             {
                 bool hasGrowth = row.OwnerEligibility != UnitOwnerEligibility.EnemyOnly &&
@@ -122,13 +134,15 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
                 try
                 {
                     profiles.Add(new CombatAttackProfile(UnitSpecAdapter.ReadUnit(row), UnitSpecAdapter.ReadMethod(method)));
+                    if (playerSkills != null && playerSkills.TryGetPlayerSkillForMain(row.Key, out var skill))
+                        skills.Add(skill.Definition);
                 }
                 catch (ArgumentException exception)
                 {
                     throw new InvalidOperationException($"성장 유닛의 공격 프로필이 올바르지 않습니다: {row.Key}.", exception);
                 }
             }
-            TraitGrowthCatalogValidator.Validate(catalog, profiles);
+            TraitGrowthCatalogValidator.Validate(catalog, profiles, skills);
             categories.ExportServices(builder);
             definitions.ExportServices(builder);
             return true;

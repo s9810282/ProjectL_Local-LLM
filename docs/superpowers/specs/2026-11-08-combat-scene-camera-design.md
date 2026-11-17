@@ -54,6 +54,7 @@
 - Core, FieldCamera, Architecture, MapAssembler, Render 카탈로그·효과 시스템·패키지 소스 수정.
 - 원본 맵 프리팹의 카메라 삭제, 맵 작업실 카메라 도구 재구성, Missing Script 에셋 삭제.
 - 낮/밤 자동 화면 전환 재활성화, 새 회전 조작, 연속 휠 보간 정책 개선, 맵별 구도 override 기능.
+  - **대신함(2026-11-14):** "새 회전 조작"은 [카메라 회전 설계](2026-11-14-combat-camera-rotation-design.md)(Z·C, 위 축만, 화면 가운데 바닥 점 중심)가 맡는다. 이 설계의 Session·Window·자세 adapter 계약은 그대로 쓴다.
 - 카메라 배치에 맞춘 HUD·전투 규칙·입력 정책 변경.
 
 ## 2. 현재 코드에서 확인한 사실

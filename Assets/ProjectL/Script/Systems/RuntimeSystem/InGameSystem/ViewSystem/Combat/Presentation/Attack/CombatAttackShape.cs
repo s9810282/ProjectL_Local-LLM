@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Pieces;
@@ -29,9 +30,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="primaryTargetId">주 대상입니다. 직선 투사체의 몸 접촉 진행률에 씁니다. 없으면 비어 있습니다.</param>
         /// <param name="completion">출처 사건 완료를 언제 알리는지입니다(히트 타이밍 설계 H3 정책 표).</param>
         /// <param name="reactions">그 공격 안 반응(가로채기가 있는 발동 사실)입니다(유닛 행동 설계 AA6, 계획 TP-25). 없으면 빈 목록입니다.</param>
+        /// <param name="piercingShot">Core 관통 기록입니다(관통·죽음의 손 View 설계 §3.1). 관통이 아니면 null입니다.</param>
         private CombatAttackShape(CombatEvent source, EntityId attackerId, Rotation4 direction, CellCoord? deliveryCell,
             ReadOnlyMemory<CellCoord> affectedCells, EntityId primaryTargetId, CombatHitCompletion completion,
-            IReadOnlyList<TraitActivationSnapshot> reactions)
+            IReadOnlyList<TraitActivationSnapshot> reactions, PiercingShotDelivery piercingShot,
+            IReadOnlyList<CellCoord> skillPath = null, IReadOnlyList<CombatShotRouteContact> skillContacts = null)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             if (attackerId.IsEmpty)
@@ -46,6 +49,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Completion = completion;
             Reactions = reactions ?? throw new ArgumentNullException(nameof(reactions));
             ContactTargetId = ContactTargetOf(primaryTargetId, reactions);
+            PiercingShot = piercingShot;
+            SkillPath = skillPath;
+            SkillContacts = skillContacts ?? Array.Empty<CombatShotRouteContact>();
         }
 
         /// <summary>출처 사건입니다.</summary>
@@ -81,13 +87,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// </summary>
         internal EntityId ContactTargetId { get; }
 
+        /// <summary>
+        /// Core 관통 기록입니다(조우 대상·순서·칸, 끝 칸, 멈춘 이유). 관통 탄은 조우마다 그 대상을 해제하고 끝 칸에서 사라집니다
+        /// (관통·죽음의 손 View 설계 §3.1, <see cref="CombatProjectileContacts"/>). 관통이 아니거나 추가 공격이면 null입니다.
+        /// </summary>
+        internal PiercingShotDelivery PiercingShot { get; }
+
+        /// <summary>
+        /// 플레이어 스킬 사건 51의 실제 투사체 경로 칸입니다(시전자 칸 제외, 전투 스킬 View 설계 SK3). 경로가 있으면 꺾인 직선 비행이고, 없거나 스킬이 아니면 null입니다.
+        /// 재생 길(경로 비행·영역)은 이 값의 유무가 정합니다(설계 P5).
+        /// </summary>
+        internal IReadOnlyList<CellCoord> SkillPath { get; }
+
+        /// <summary>스킬 사건 51의 대상별 접촉 칸입니다(접촉 순번 순, <c>Hits[].Contacts[].DeliveryIndex</c> → <c>ImpactCells</c>). 경로가 없으면 비어 있습니다.</summary>
+        internal IReadOnlyList<CombatShotRouteContact> SkillContacts { get; }
+
         /// <summary>공격 사건의 모양입니다. 타격 칸 규칙(끌어오기면 도착 칸)은 <see cref="CombatAttackTarget"/>의 <c>DeliveryCell</c> 한 곳입니다.</summary>
         internal static CombatAttackShape Of(CombatAttackEvent attack)
         {
             if (attack == null) throw new ArgumentNullException(nameof(attack));
             AttackResult result = attack.Attack;
             return new CombatAttackShape(attack, result.AttackerId, result.AttackDirection, CombatAttackTarget.DeliveryCell(result),
-                result.AffectedCells, result.PrimaryTargetId, CombatHitCompletion.FirstRelease, InterceptionsOf(result.TraitActivations.Span));
+                result.AffectedCells, result.PrimaryTargetId, CombatHitCompletion.FirstRelease, InterceptionsOf(result.TraitActivations.Span),
+                result.PiercingShot);
         }
 
         /// <summary>
@@ -110,7 +132,47 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             for (int i = 0; i < cells.Length; i++)
                 cells[i] = trait.TargetCells[i];
             return new CombatAttackShape(start, trait.SourceUnitId, trait.AttackDirection.Value, trait.TargetCell, cells,
-                trait.TargetId ?? EntityId.Empty, CombatHitCompletion.FirstRelease, InterceptionsOf(trait.ChildAttack.Reactions));
+                trait.TargetId ?? EntityId.Empty, CombatHitCompletion.FirstRelease, InterceptionsOf(trait.ChildAttack.Reactions),
+                piercingShot: null);
+        }
+
+        /// <summary>
+        /// 플레이어 스킬 사건 51의 모양입니다(전투 스킬 View 설계 SK3). 공격자 = 시전자, 영향 칸 = <c>AffectedCells</c>, 주 대상 없음, 완료 = 첫 유효 해제.
+        /// 투사체 경로가 있으면 타격 칸은 첫 경로 칸(시전자가 그쪽을 봄)이고 경로·대상별 접촉 칸을 싣습니다. 경로가 없으면(범위 폭발) 타격 칸 없이 시전자 방향입니다.
+        /// </summary>
+        /// <param name="casterRotation">시전자의 보인 방향입니다. 경로가 없을 때 공격 방향으로 씁니다.</param>
+        internal static CombatAttackShape ForPlayerSkill(CombatPlayerSkillAttackEvent skill, Rotation4 casterRotation)
+        {
+            if (skill == null) throw new ArgumentNullException(nameof(skill));
+            PlayerSkillAttackResult attack = skill.Attack;
+            var cells = new CellCoord[attack.AffectedCells.Count];
+            for (int i = 0; i < cells.Length; i++)
+                cells[i] = attack.AffectedCells[i];
+            if (attack.ProjectilePath.Count == 0)
+                return new CombatAttackShape(skill, attack.ActorId, casterRotation, null, cells, EntityId.Empty, CombatHitCompletion.FirstRelease,
+                    Array.Empty<TraitActivationSnapshot>(), piercingShot: null);
+
+            // 접촉 순번 순으로 (실제 수신자, 접촉 칸)을 모읍니다. 접촉 칸은 늘 경로 안입니다(Core 생성자 검사).
+            var ordered = new List<(int Delivery, CombatShotRouteContact Contact)>();
+            for (int h = 0; h < attack.Hits.Count; h++)
+            {
+                AttackHitResult hit = attack.Hits[h];
+                for (int c = 0; c < hit.Contacts.Count; c++)
+                {
+                    int delivery = hit.Contacts[c].DeliveryIndex;
+                    if (attack.ImpactCells.TryGetValue(delivery, out CellCoord cell))
+                        ordered.Add((delivery, new CombatShotRouteContact(hit.TargetId, cell)));
+                }
+            }
+            ordered.Sort((left, right) => left.Delivery.CompareTo(right.Delivery));
+            var contacts = new CombatShotRouteContact[ordered.Count];
+            for (int i = 0; i < contacts.Length; i++)
+                contacts[i] = ordered[i].Contact;
+            var path = new CellCoord[attack.ProjectilePath.Count];
+            for (int i = 0; i < path.Length; i++)
+                path[i] = attack.ProjectilePath[i];
+            return new CombatAttackShape(skill, attack.ActorId, casterRotation, path[0], cells, EntityId.Empty, CombatHitCompletion.FirstRelease,
+                Array.Empty<TraitActivationSnapshot>(), piercingShot: null, skillPath: path, skillContacts: contacts);
         }
 
         /// <summary>

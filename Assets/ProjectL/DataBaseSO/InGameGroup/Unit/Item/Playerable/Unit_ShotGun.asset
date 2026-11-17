@@ -35,6 +35,7 @@ MonoBehaviour:
   priority: 30
   traits:
   - rid: 6249925418060611679
+  - rid: 5555178760920105037
   references:
     version: 2
     RefIds:
@@ -43,3 +44,6 @@ MonoBehaviour:
       data:
         bonusDamagePercent: 30
         durationAffectedSideTurnEnds: 1
+    - rid: 5555178760920105037
+      type: {class: SteadfastWillTraitAuthoring, ns: ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait, asm: ProjectL.Systems}
+      data:

@@ -20,6 +20,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
         TrainingTraitPrompt = 14,
         RecoveryMaxHealthProjected = 15,
         TrainingEffectEnabled = 16,
-        TrainingEffectDisabled = 17
+        TrainingEffectDisabled = 17,
+        UnitLevel = 18,
+        UnitOwnedCount = 19
     }
 }

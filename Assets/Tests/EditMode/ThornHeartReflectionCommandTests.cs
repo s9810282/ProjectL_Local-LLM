@@ -58,11 +58,6 @@ namespace ProjectL.Tests.Core
         {
             var traits = new List<TraitSpec> { new KnockbackTraitSpec(1), new IntimidationTraitSpec(20) };
             var statuses = new List<TraitStatusSnapshot> { new KnockbackTraitStatusSnapshot(1), new IntimidationTraitStatusSnapshot(20) };
-            if (!piercing)
-            {
-                traits.Add(new ThornFieldTraitSpec(5, 5));
-                statuses.Add(new ThornFieldTraitStatusSnapshot(5, 5));
-            }
             var input = ThornHeartTestData.Input(hp: 2, splash: !piercing, piercing: piercing,
                 traits: traits.ToArray(), statuses: statuses.ToArray());
             var result = Run(input);
@@ -70,7 +65,6 @@ namespace ProjectL.Tests.Core
             Assert.That(actor.Area, Is.EqualTo(CharacterRuntimeArea.Excluded));
             Assert.That(actor.Anchor, Is.Null);
             Assert.That(actor.ActionUse, Is.EqualTo(UnitActionUse.Attacked));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
             Assert.That(result.Events.Where(e => e.Kind == CombatEventKind.Moved), Is.Empty);
             Assert.That(ThornHeartTestData.Final(result, 2).Anchor, Is.EqualTo(new CellCoord(4, 3)));
             Assert.That(ThornHeartTestData.Final(result, 3).Anchor, Is.EqualTo(new CellCoord(5, 3)));
@@ -97,15 +91,14 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void SurvivingAttacker_ContinuesKnockbackWithoutDeferredThornCreation()
+        public void SurvivingAttacker_ContinuesKnockback()
         {
-            var input = ThornHeartTestData.Input(traits: new TraitSpec[] { new KnockbackTraitSpec(1), new ThornFieldTraitSpec(5, 5) },
-                statuses: new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(1), new ThornFieldTraitStatusSnapshot(5, 5) });
+            var input = ThornHeartTestData.Input(traits: new TraitSpec[] { new KnockbackTraitSpec(1) },
+                statuses: new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(1) });
             input = ThornHeartTestData.Replace(input, 3, c => CombatCommandTestData.With(c, position: new CellCoord(7, 0)));
             var result = Run(input);
             Assert.That(ThornHeartTestData.Final(result, 1).Health.CurrentHealth, Is.EqualTo(7));
             Assert.That(ThornHeartTestData.Final(result, 2).Anchor, Is.EqualTo(new CellCoord(5, 3)));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
             Assert.That(Reflections(result).Count(), Is.EqualTo(1));
         }
 
@@ -161,17 +154,16 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ReactionForcedArrivalThorns_DoNotReflect()
+        public void ReactionForcedArrivalHazard_DoNotReflect()
         {
             var input = ThornHeartTestData.Input(traits: new TraitSpec[] { new KnockbackTraitSpec(1) },
                 statuses: new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(1) });
             input = ThornHeartTestData.Replace(input, 3, c => CombatCommandTestData.With(c, position: new CellCoord(7, 0)));
             var state = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,state.Phase,                state.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 5) },turn: state.Turn));
-            var result = CombatAttackCalculator.Reaction(input, NoRules, input.Characters[0], input.Aim);
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(new CombatCommandState(8,8,state.Phase,                state.Structures,turn: state.Turn), (new CellCoord(5, 3), 5)));
+            var result = CombatAttackCalculator.Reaction(input, EnvironmentDamageTests.DamageRules, input.Characters[0], input.Aim);
             Assert.That(result, Is.Not.Null);
             Assert.That(ThornHeartTestData.Final(result, 2).Health.CurrentHealth, Is.EqualTo(75));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
             Assert.That(Reflections(result), Is.Empty);
             Assert.That(ThornHeartTestData.Final(result, 1).Health.CurrentHealth, Is.EqualTo(10));
         }
@@ -230,7 +222,7 @@ namespace ProjectL.Tests.Core
             var s = input.State;
             input = CombatCommandTestData.With(input,
                 main: new MainCharacterPersistentState(1, 100, 1),
-                state: new CombatCommandState(8,8,s.Phase,s.Structures,s.ThornFields,                    objective: BattleObjective.DesignatedBoss(input.ActorId),turn: s.Turn));
+                state: new CombatCommandState(8,8,s.Phase,s.Structures,objective: BattleObjective.DesignatedBoss(input.ActorId),turn: s.Turn));
             var result = Run(input);
             Assert.That(ThornHeartTestData.Final(result, 1).Health.IsDead, Is.True);
             Assert.That(ThornHeartTestData.Final(result, 10).Health.IsDead, Is.True);

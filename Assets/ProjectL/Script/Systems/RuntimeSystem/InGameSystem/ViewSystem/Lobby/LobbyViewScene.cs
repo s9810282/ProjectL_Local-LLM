@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.LobbyVisual.Item;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Common;
 using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
@@ -10,18 +12,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
     /// 연결 한 번의 씬 표시 부품입니다. 시설 방·배경 출력 맞춤·판·캐릭터 표시를 갖습니다.
     /// 입력에는 필요한 값만 <see cref="InputTargets"/>로 넘깁니다(로비 리팩토링 2차 설계 N-73).
     /// </summary>
-    internal sealed class LobbyViewScene
+    internal sealed class LobbyViewScene : ILobbyMainModelDisplay
     {
         private readonly LobbySceneServices _services;
+        private readonly ILobbyMainSelectionReader _selection;
         private IDisposable _backgroundBinding;
         private LobbyVisualSet _visuals;
         private LobbyCharacterVisual _character;
 
-        internal LobbyViewScene(LobbySceneRoot root, Camera output, LobbySceneServices services)
+        internal LobbyViewScene(LobbySceneRoot root, Camera output, LobbySceneServices services,
+            ILobbyMainSelectionReader selection)
         {
             Root = root != null ? root : throw new ArgumentNullException(nameof(root));
             Output = output != null ? output : throw new ArgumentNullException(nameof(output));
             _services = services ?? throw new ArgumentNullException(nameof(services));
+            _selection = selection ?? throw new ArgumentNullException(nameof(selection));
         }
 
         internal LobbySceneRoot Root { get; }
@@ -64,8 +69,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             _backgroundBinding = backgroundBinding;
 
             var board = new LobbyBoard(_services.Board, Root.WorldRoot);
-            LobbyCharacterVisual character = LobbyCharacterVisual.Create(Root.WorldRoot, _services.Models.CharacterPrefab,
-                _services.CharacterPresentation);
+            LobbyCharacterVisual character = LobbyCharacterVisual.Create(Root.WorldRoot, _services.CharacterPresentation);
+            try
+            {
+                character.ShowModel(MainModelPrefab.Require(_selection.Selected, _services.UnitVisuals));
+                requireRunning();
+            }
+            catch
+            {
+                // 아직 씬에 인계하지 않은 최초 모델의 소유권은 이 호출이 정리합니다.
+                character.Dispose();
+                throw;
+            }
             if (!canWork())
             {
                 character.Dispose();
@@ -78,6 +93,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             if (!canWork()) return false;
             InputTargets = new LobbyInputTargets(character.MovementRoot, board, visuals.Facilities, Output);
             return true;
+        }
+
+        /// <summary>시작 전에는 Start가 선택을 읽고, 정리 후에는 표시할 캐릭터가 없으므로 알림을 무시합니다.</summary>
+        public void ShowMain(EntityKey key)
+        {
+            LobbyCharacterVisual character = _character;
+            if (character == null) return;
+            character.ShowModel(MainModelPrefab.Require(key, _services.UnitVisuals));
         }
 
         /// <summary>배경 출력 카메라를 원래대로 돌리고 캐릭터를 숨깁니다. 다른 정리 콜백이 새 연결을 게시하기 전에 부릅니다.</summary>

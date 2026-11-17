@@ -10,6 +10,7 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.LoadingSystem;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.Base;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby;
+using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.RunStart;
 using Cinemachine;
 using UnityEngine;
 
@@ -64,7 +65,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             IViewQuery view = _view
                 ?? throw new InvalidOperationException("[Lobby] InitData 뒤에 서비스를 받아야 합니다.");
             var global = resolver.GetService(SystemGroupsService.Global);
-            var input = resolver.GetService(SystemGroupsService.InGame).ViewGroup.Input;
+            var inGame = resolver.GetService(SystemGroupsService.InGame);
+            var input = inGame.ViewGroup.Input;
+            // 메인 후보 조회만 대리자로 넘기고 시작 명령(IRunStartService 전체)은 넘기지 않습니다. 부르는 시점은 씬 연결이라
+            // 다른 시스템의 바인딩 순서에 기대지 않습니다. 로드아웃 키는 새 Run Job과 같은 상수 하나입니다(로비 메인 선택 설계 LM2).
+            var runStart = inGame.CoreGroup.RunStart;
             var cameraGroup = global.RenderServiceCommand.CoreGroup.CameraGroup;
             IBufferQuery buffers = resolver.GetService(BufferSystemKey.Buffer);
             var lifeCycles = resolver.GetService(SystemGroupsService.LifeCycle);
@@ -91,7 +96,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
                 delay: global.UtilityServiceCommand.delayService,
                 outputs: cameraGroup.UnityCameraCatalogSystem,
                 audio: global.AudioServiceCommand,
-                progress: lifeCycles.LobbyProgress);
+                progress: lifeCycles.LobbyProgress,
+                readMainOptions: () => runStart.ReadMainOptions(RunStartJob.DefaultLoadoutKey),
+                unitVisuals: view.UnitVisualTableQuery.GetUnitVisual,
+                bindMainPortrait: global.GlobalUIPresentation.BindLobbyMainPortrait);
             _loading = global.LodingServiceCommand.LodingRegisterService;
             _view = null;
         }
@@ -159,18 +167,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             // 새 참조가 올바른지 먼저 확인하여 기존 연결을 불완전한 저작값으로 교체하지 않습니다.
             // 팝업 루트 찾기도 각 팝업 Factory가 이전 연결을 떼기 전에 합니다(로비 리팩토링 2차 설계 M-14).
             root.Validate();
-            LobbyViewPopups popups = _sceneFactory.FindPopups(root, Services, _faults);
-            Attach(root, popups, ReadOutputCamera());
+            // 다음 Run 메인 선택은 연결(= 로비 세션)마다 새로 만들어 기본 메인부터 시작합니다. 후보 조회·외형 확인 실패도
+            // 이전 연결을 떼기 전에 멈추게, 팝업 찾기보다 먼저 만듭니다(로비 메인 선택 설계 LM1·LM2).
+            var selection = new LobbyMainSelection(Services.ReadMainOptions(), RunStartJob.DefaultLoadoutKey);
+            LobbyViewPopups popups = _sceneFactory.FindPopups(root, Services, selection, _faults);
+            Attach(root, popups, selection, ReadOutputCamera());
         }
 
-        private void Attach(LobbySceneRoot root, LobbyViewPopups popups, Camera output)
+        private void Attach(LobbySceneRoot root, LobbyViewPopups popups, LobbyMainSelection selection, Camera output)
         {
             LobbyViewScope previous = _lastPublishedScope;
             Detach();
             RequireRunning();
             // 이전 폐기 중 게시됐다가 다시 해제된 새 연결도 외곽 Attach보다 우선합니다.
             if (!ReferenceEquals(_lastPublishedScope, previous)) return;
-            LobbyViewScope scope = _sceneFactory.Create(root, output, Services, popups, _faults);
+            LobbyViewScope scope = _sceneFactory.Create(root, output, Services, popups, selection, _faults);
             previous?.Supersede();
             _scope = scope;
             _lastPublishedScope = scope;

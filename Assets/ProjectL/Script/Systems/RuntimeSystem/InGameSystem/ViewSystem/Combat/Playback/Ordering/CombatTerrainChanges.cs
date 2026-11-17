@@ -25,10 +25,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             return false;
         }
 
-        /// <summary>정적 지형 원본의 종류가 그대로인 사건(진입 기록)인지입니다. 칸 외형은 같고, 바로 앞 이동의 기록입니다.</summary>
+        /// <summary>정적 지형 원본의 종류가 그대로인 사건(바로 앞 이동의 진입 기록)인지입니다.</summary>
         internal static bool IsSameKindEntry(CombatEvent e) =>
             e is CombatMovementSourceEvent change && change.Expected is StaticTerrainFact before &&
             change.Final is StaticTerrainFact after && before.Kind == after.Kind;
+
+        /// <summary>마지막 진입을 포함하여 약한 지반의 진입 수가 증가한 사건입니다.</summary>
+        internal static bool TryGetWeakGroundEntry(CombatMovementSourceEvent change, out StaticTerrainFact before, out StaticTerrainFact after)
+        {
+            before = change.Expected as StaticTerrainFact;
+            after = change.Final as StaticTerrainFact;
+            return before is { Kind: StaticTerrainKind.WeakGround } && after is { Kind: StaticTerrainKind.WeakGround } &&
+                after.EntryCount > before.EntryCount;
+        }
+
+        /// <summary>걸음 도착 뒤 단계 하강을 재생할 진입입니다. 마지막 진입은 붕괴 연출이 맡습니다.</summary>
+        internal static bool TryGetWeakGroundDescent(CombatMovementSourceEvent change, out StaticTerrainFact before, out StaticTerrainFact after) =>
+            TryGetWeakGroundEntry(change, out before, out after) && !after.PendingCollapse;
 
         /// <summary>약한 지반이 무너져 낭떠러지가 된 사건이면 그 칸을 줍니다. 붕괴 소리·큐는 이 갈래에만 냅니다(다른 종류 바뀜에는 내지 않음).</summary>
         internal static bool IsWeakGroundCollapse(CombatEvent e, out CellCoord cell)

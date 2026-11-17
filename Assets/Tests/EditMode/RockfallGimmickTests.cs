@@ -27,7 +27,7 @@ namespace ProjectL.Tests.Core
                 Assert.That(facts.NextBoundaryCount, Is.EqualTo(count + 2));
                 if (count % 4 == 0) Assert.That(result.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(rng));
                 else Assert.That(facts.WarnedCells.Count, Is.InRange(3, 5));
-                Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+                Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
                 input = CombatCommandComposition.Project(result);
             }
         }

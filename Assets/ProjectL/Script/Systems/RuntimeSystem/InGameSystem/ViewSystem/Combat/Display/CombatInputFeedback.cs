@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
         /// <param name="pointer">집기·매핑·UI 가림·커서 장치의 주인입니다.</param>
         /// <param name="placement">배치 Drag 고스트·원본 숨김의 주인입니다.</param>
         /// <param name="field">호버 칸·기믹 범위·본부 범위의 주인입니다.</param>
-        /// <param name="attack">공격 범위·호버 범위·궤적·넉백 미리보기·포효 예고의 주인입니다.</param>
+        /// <param name="attack">공격 범위·호버 범위·궤적·넉백 미리보기·포효 예고·플레이어 스킬 표시의 주인입니다.</param>
         /// <param name="events">공격 모드 대상 이펙트의 주인입니다.</param>
         /// <param name="movement">이동 초안·범위·편집의 주인입니다.</param>
         /// <param name="hud">가방 끌기 그림을 가방에 넘기는 HUD 표면입니다.</param>
@@ -50,6 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
             Knockback = attack;
             // 포효 예고는 넉백 미리보기를 공격 조준과 나눠 쓰므로 그 주인이 맡습니다(포효 예고 계획 TP-19).
             RoarForecast = attack;
+            // 플레이어 스킬 표시는 영향 칸·궤적·넉백·예상 체력의 주인이 맡습니다(전투 스킬 View 계획 TP-3).
+            PlayerSkill = attack;
             AttackModeTargets = events;
             Movement = movement;
             ItemDrag = hud;
@@ -99,6 +101,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
 
         /// <summary>포효 예고의 바닥 범위·넉백 미리보기입니다(포효 예고 설계 RF4·RF5).</summary>
         internal ICombatRoarForecastFeedback RoarForecast { get; }
+
+        /// <summary>플레이어 액티브 스킬 모드의 후보·점·선·예보 그림입니다(전투 스킬 View 설계 SK2).</summary>
+        internal ICombatPlayerSkillFeedback PlayerSkill { get; }
 
         /// <summary>끄는 아이템 그림입니다.</summary>
         internal ICombatItemDragFeedback ItemDrag { get; }

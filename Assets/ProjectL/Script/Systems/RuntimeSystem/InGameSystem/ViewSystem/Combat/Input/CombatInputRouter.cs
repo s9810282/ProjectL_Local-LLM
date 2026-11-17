@@ -45,7 +45,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             /// <summary>카메라 이동 키 방향(x·y)입니다. 이 Router가 아니라 카메라 입력이 받습니다(<see cref="IsCameraRequest"/>).</summary>
             CameraPan,
             /// <summary>휠 값(x)입니다. 이 Router가 아니라 카메라 입력이 받습니다(<see cref="IsCameraRequest"/>).</summary>
-            CameraZoom
+            CameraZoom,
+            /// <summary>
+            /// 회전 키 값(x, −1 = Z·+1 = C)입니다. 이 Router가 아니라 카메라 입력이 받습니다(<see cref="IsCameraRequest"/>, 카메라 회전 설계 CR5).
+            /// 기존 값의 번호가 바뀌지 않게 맨 끝에 둡니다(회전 계획 TP-10).
+            /// </summary>
+            CameraRotate,
+            /// <summary>
+            /// 가운데 버튼 끌기 회전의 누름(x = 1)·뗌(x = 0)입니다. 이 Router가 아니라 카메라 입력이 받습니다(<see cref="IsCameraRequest"/>, 카메라 회전 설계 CR8).
+            /// 기존 값의 번호가 바뀌지 않게 맨 끝에 둡니다.
+            /// </summary>
+            CameraRotateDrag,
+            /// <summary>병종 순환은 유닛 선택을 소유한 씬 입력 분배에서 처리합니다.</summary>
+            CycleUnitCategory,
+            /// <summary>
+            /// 플레이어 액티브 스킬 모드 진입·끝입니다(R 키·행동 패널 스킬 버튼, 스킬 View 설계 SK1·SK6). 키와 버튼이 같은 입구 하나입니다.
+            /// 기존 값의 번호가 바뀌지 않게 맨 끝에 둡니다.
+            /// </summary>
+            Skill
         }
 
         /// <summary>
@@ -53,7 +70,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// 연결 입력 묶음(카메라 입력으로 보냄)이 함께 씁니다. 카메라 입력은 <see cref="Route"/>로 오지 않습니다.
         /// </summary>
         internal static bool IsCameraRequest(Request request) =>
-            request == Request.CameraPan || request == Request.CameraZoom;
+            request == Request.CameraPan || request == Request.CameraZoom || request == Request.CameraRotate
+            || request == Request.CameraRotateDrag;
 
         /// <summary>포인터 입력을 받을 소유자입니다.</summary>
         internal enum PointerTarget
@@ -63,7 +81,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             Attack = 2,
             Path = 3,
             /// <summary>배치 Layer에서 가방 아이템을 끄는 중입니다(가방 설계 P4).</summary>
-            Item = 4
+            Item = 4,
+            /// <summary>전투 Layer에서 플레이어 액티브 스킬 모드입니다(전투 스킬 View 설계 SK1).</summary>
+            Skill = 5
         }
 
         private readonly CombatInteraction _interaction;
@@ -95,25 +115,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>
         /// 포인터 입력 대상의 유일한 판정식입니다. 실제 Layer를 먼저 보고, 배치는 아이템을 끄는 중이면 Item 아니면 Placement,
-        /// 전투는 공격 모드면 Attack 아니면 Path입니다(모드가 없어도 전투 포인터는 경로 입력). 그 밖의 Layer는 None입니다.
+        /// 전투는 스킬 모드면 Skill, 공격 모드면 Attack, 아니면 Path입니다(모드가 없어도 전투 포인터는 경로 입력, 두 모드는 전경이 배타). 그 밖의 Layer는 None입니다.
         /// </summary>
         /// <remarks>
-        /// 실시간 상태(공격 모드·아이템 드래그)를 넘기는 곳은 입력 기능 묶음의 <see cref="CombatInteraction.ResolvePointerTarget"/> 하나입니다(평가 C4-13).
+        /// 실시간 상태(공격 모드·아이템 드래그·스킬 모드)를 넘기는 곳은 입력 기능 묶음의 <see cref="CombatInteraction.ResolvePointerTarget"/> 하나입니다(평가 C4-13).
         /// Router와 묶음의 감시 단계는 그것을 부르고, 사실만 받는 곳(경로 입력·환경 호버)은 입력 사실 읽기가 같은 함수로 채운
-        /// <see cref="CombatInputFacts.PointerTarget"/>을 읽습니다. 연결 입력이 없을 때만 사실 읽기가 이 판정식에 둘 다 거짓을 넘깁니다.
+        /// <see cref="CombatInputFacts.PointerTarget"/>을 읽습니다. 연결 입력이 없을 때만 사실 읽기가 이 판정식에 셋 다 거짓을 넘깁니다.
         /// 아이템 인자에 기본값을 두지 않습니다(View 2라운드 W5-2).
         /// </remarks>
-        internal static PointerTarget ResolvePointerTarget(InputLayer layer, bool attackActive, bool itemDragActive)
+        internal static PointerTarget ResolvePointerTarget(InputLayer layer, bool attackActive, bool itemDragActive, bool skillActive)
         {
             if (layer == StageInputLayers.Deployment)
                 return itemDragActive ? PointerTarget.Item : PointerTarget.Placement;
             if (layer == StageInputLayers.Combat)
-                return attackActive ? PointerTarget.Attack : PointerTarget.Path;
+                return skillActive ? PointerTarget.Skill : attackActive ? PointerTarget.Attack : PointerTarget.Path;
 
             return PointerTarget.None;
         }
 
-        internal void Route(Request request, float screenX, float screenY, IReadOnlyList<CharacterData> characters)
+        /// <summary>입력 하나를 나눕니다. 카메라 요청(<see cref="IsCameraRequest"/>)은 오지 않습니다.</summary>
+        /// <param name="cameraDragging">
+        /// 가운데 버튼 끌기 회전 중인지입니다(카메라 회전 설계 CR8 검토 M2). 참이면 포인터 이동에도 커서 스냅을 하지 않습니다. 스냅이 옮긴 커서가
+        /// 다음 포인터 이동으로 와서 끈 양에 섞이고 커서도 튀기 때문입니다. 원본은 카메라 입력의 끄는 상태이고, 연결 입력 묶음이 넘깁니다.
+        /// </param>
+        internal void Route(Request request, float screenX, float screenY, IReadOnlyList<CharacterData> characters,
+            bool cameraDragging = false)
         {
             switch (request)
             {
@@ -127,6 +153,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                     return;
                 case Request.Cancel:
                 {
+                    // 스킬 모드의 우클릭은 마지막 점 빼기(점이 없으면 모드 끝)이고 경로는 건드리지 않는다(전투 스킬 View 설계 SK1).
+                    if (_interaction.IsSkillActive)
+                    {
+                        _interaction.SkillBack(_readFacts(false), characters);
+                        return;
+                    }
                     // 가방 아이템을 끄는 중이면 그것만 끝낸다(회수로 가지 않음, 가방 설계 P4).
                     if (_interaction.IsItemDragActive)
                     {
@@ -147,6 +179,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 case Request.Return:
                     if (!RejectTutorialCommand(CombatViewCommandKind.UndoMove, includeUnhandledCommand: true))
                         _movementUndo.Request();
+                    return;
+                case Request.Skill:
+                    // R·스킬 버튼: 스킬 모드면 끝내고, 아니면 최신 사실로 진입을 시도한다(전투 스킬 View 설계 SK1·SK6).
+                    // 경로 취소는 들어갈 수 있을 때만 한다 — 메인을 고르지 않은 R(흔한 진입 실패)이 다른 유닛의 경로 초안을 지우지 않게(계획 §6.6, 묶음 끝 검토 L1).
+                    if (_interaction.IsSkillActive)
+                    {
+                        _interaction.CancelSkill(characters);
+                        return;
+                    }
+                    if (RejectTutorialSkillMode())
+                        return;
+                    if (_interaction.CanEnterSkill(_readFacts(false)))
+                        _interaction.LeaveMoveMode();
+                    _interaction.SkillModeRequested(_readFacts(false));
                     return;
                 case Request.EnterCombat:
                     if (RejectTutorialCommand(CombatViewCommandKind.EnterCombat))
@@ -186,8 +232,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 case Request.SelectReleased:
                     RoutePointer(request, screenX, screenY, characters);
                     // 소유자가 이 위치로 경로 샘플링·호버를 먼저 처리한 뒤, 스냅 모드면 칸이 바뀐 경우에만 커서를 칸 중심으로 옮긴다.
+                    // 가운데 버튼 끌기 회전 중에는 옮기지 않는다(스냅 안 함 = 기억한 칸도 비움 → 뗀 뒤 첫 이동에서 다시 스냅).
                     if (request == Request.PointerMoved)
-                        _cursorSnap.PointerMoved(_interaction.IsCursorSnapMode, screenX, screenY);
+                        _cursorSnap.PointerMoved(_interaction.IsCursorSnapMode && !cameraDragging, screenX, screenY);
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(request), request, null);
@@ -232,6 +279,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             return true;
         }
 
+        // 튜토리얼 허용표에는 스킬 조회가 없어 제한 중에는 스킬 모드가 막힌다(전투 스킬 View 설계 P9).
+        private bool RejectTutorialSkillMode()
+        {
+            if (CombatInputPolicy.AllowsTutorialPreview(_readFacts(false), CombatViewPreviewKind.SkillAvailability))
+                return false;
+
+            _reportBlockedInput();
+            return true;
+        }
+
         private void EnterAttackMode()
         {
             // E: 경로를 취소한 뒤 최신 사실로 공격 모드 진입을 시도한다.
@@ -268,7 +325,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             }
             if (_interaction.TryHandleAttackDragPointer(request, screenX, screenY, blockedByUi))
                 return;
-            if ((target == PointerTarget.Attack || target == PointerTarget.Placement || target == PointerTarget.Item)
+            if ((target == PointerTarget.Attack || target == PointerTarget.Placement || target == PointerTarget.Item || target == PointerTarget.Skill)
                 && request != Request.PointerMoved && blockedByUi)
                 return;
 

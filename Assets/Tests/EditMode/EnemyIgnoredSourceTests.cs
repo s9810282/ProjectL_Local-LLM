@@ -30,9 +30,11 @@ namespace ProjectL.Tests.Core
         [Test]
         public void OneArtifactDoesNotChangeEnemyDecisions()
         {
+            bool fullRegression = EnemyAiBenchmarkFixtures.FullRegressionEnabled;
             foreach (string fixture in EnemyAiBenchmarkFixtures.Ids)
             foreach (int seed in EnemyAiBenchmarkFixtures.Seeds)
             {
+                if (!fullRegression && !EnemyAiBenchmarkFixtures.IsRepresentative(fixture, seed)) continue;
                 var input = EnemyAiBenchmarkFixtures.Build(fixture, seed);
                 var withArtifact = WithArtifact(input);
                 Assert.That(FirstDecision(withArtifact), Is.EqualTo(FirstDecision(input)), $"{fixture}/{seed} 첫 결정");
@@ -169,7 +171,7 @@ namespace ProjectL.Tests.Core
 
         internal static StructureCombatFacts Barrel(int id, CellCoord cell) =>
             new StructureCombatFacts(new EntityId(id), new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 1,
-                new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100), cell, Rotation4.R0, new[] { cell }, Owner.Neutral);
+                new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(3, 3), cell, Rotation4.R0, new[] { cell }, Owner.Neutral);
 
         /// <summary>화약통 구조물·장애물 분류·내용 프로필을 서로 맞게 넣는다(실제 입력 검사가 셋의 일치를 요구한다).</summary>
         internal static CombatCommandInput WithBarrels(CombatCommandInput input, params StructureCombatFacts[] barrels)

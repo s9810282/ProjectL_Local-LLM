@@ -35,17 +35,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>공격자와 대상 사이 체비셰프 거리의 배율을 대상 피해에 적용한다. 반올림은 상성 배율과 같은 half-up이다.</summary>
-        internal static int ScaleByTargetDistance(CombatEffectEngine engine, EffectRuleBinding[] bindings,
+        internal static int ScaleByTargetDistance(CommandAttackPlan plan,
             CharacterCombatFacts actor, EntityId targetId, CharacterCombatFacts victim, StructureCombatFacts[] structures, int damage)
-            => ScaleByTargetDistanceDetailed(engine, bindings, actor, targetId, victim, structures, damage).Damage;
+            => ScaleByTargetDistanceDetailed(plan, actor, targetId, victim, structures, damage).Damage;
 
         internal static (int Damage, IReadOnlyList<TraitActivationSnapshot> Traits) ScaleByTargetDistanceDetailed(
-            CombatEffectEngine engine, EffectRuleBinding[] bindings, CharacterCombatFacts actor, EntityId targetId,
+            CommandAttackPlan plan, CharacterCombatFacts actor, EntityId targetId,
             CharacterCombatFacts victim, StructureCombatFacts[] structures, int damage)
         {
             var cells = victim?.OccupiedCells ?? structures.Single(s => s.EntityId == targetId).OccupiedCells;
             int distance = Distance(actor, cells);
-            var scale = engine.EvaluateTargetDistanceDamage(bindings, new TargetDistanceDamageEffectContext(distance));
+            var swept = plan.Sweep?.Targets.FirstOrDefault(target => target.TargetId == targetId);
+            int? originalDistance = swept == null ? null : CellDistance(plan.OriginalActor.Anchor.Value, swept.StartAnchor);
+            var scale = plan.Engine.EvaluateTargetDistanceDamage(plan.Bindings, new TargetDistanceDamageEffectContext(distance, originalDistance));
             var traits = new List<TraitActivationSnapshot>();
             int numerator = 1, denominator = 1, prior = damage;
             foreach (var contribution in scale.Contributions)
@@ -61,7 +63,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal static int Distance(CharacterCombatFacts actor, IReadOnlyList<CellCoord> cells) =>
-            cells.Min(c => checked((int)Math.Max(Math.Abs((long)c.X - actor.Anchor.Value.X), Math.Abs((long)c.Y - actor.Anchor.Value.Y))));
+            cells.Min(c => CellDistance(actor.Anchor.Value, c));
+
+        private static int CellDistance(CellCoord origin, CellCoord cell) =>
+            checked((int)Math.Max(Math.Abs((long)cell.X - origin.X), Math.Abs((long)cell.Y - origin.Y)));
 
         internal static TargetDamageBreakdown Attack(CombatCommandInput input, CombatEffectEngine engine,
             TargetDamagePipeline pipeline, CharacterCombatFacts actor, CharacterCombatFacts victim, int damage,
@@ -69,7 +74,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             MovementEnvironmentFacts environment = null,
             int? targetDistance = null, int actualRecipientIndex = 0, IReadOnlyList<CharacterCombatFacts> currentCharacters = null,
             CombatDamageKind damageKind = CombatDamageKind.OrdinaryAttack, AttackTraitScope traitScope = null, HealthStateSnapshot? targetHealth = null,
-            IReadOnlyList<TraitActivationSnapshot> deliveredContributions = null)
+            IReadOnlyList<TraitActivationSnapshot> deliveredContributions = null, bool bypassPhysicalDefense = false)
         {
             // 방어 단계는 캐릭터 대상의 실효 방어력(아이템 감소 반영)을 쓴다. 구조물 대상은 0이다.
             var target = engine.EvaluateTargetDamage(CombatCommandEffects.Capture(actor,
@@ -79,7 +84,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     targetDistance ?? (victim == null ? 0 : Distance(actor, victim.OccupiedCells)), actualRecipientIndex, victim?.Health ?? targetHealth, traitScope?.CapturedEnemyCount));
             var contributions = new List<TraitActivationSnapshot>(deliveredContributions ?? Array.Empty<TraitActivationSnapshot>());
             int effectiveDefense = victim == null ? 0 : CombatEffectiveStatsCalculator.PhysicalDefense(input, victim, currentCharacters ?? input.Characters);
-            int defense = target.BypassPhysicalDefense ? 0 : effectiveDefense;
+            int defense = bypassPhysicalDefense || target.BypassPhysicalDefense ? 0 : effectiveDefense;
             var result = pipeline.Calculate(damage, role, percent, actor.Stats.Category.Key, victim?.Stats.Category.Key, defense);
             if (target.BypassPhysicalDefense && effectiveDefense > 0 && result.DamageBeforeMatchup > 0)
             {

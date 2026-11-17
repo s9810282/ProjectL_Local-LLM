@@ -57,6 +57,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>사건 클립 대여를 시작합니다. 이전 대여가 남았거나 꺼진 표시면 예외입니다. 표시가 꺼지거나 다시 대여되면 취소되고 <paramref name="cancelled"/>를 부릅니다.</summary>
         ICombatUnitClip BeginClip(Action cancelled);
 
+        /// <summary>대여가 채널에 넘긴 뒤 단계 꼬리가 있으면 끊습니다(클립 칸 다시 짜기 설계 P8, 연출 취소). 없으면 아무 일도 하지 않습니다.</summary>
+        void CutClipTail();
+
         /// <summary>서는 자리 대여가 남아 있는지입니다(유닛 행동 설계 AA2).</summary>
         bool HasStand { get; }
 

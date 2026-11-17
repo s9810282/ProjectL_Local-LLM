@@ -5,10 +5,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat
 {
-    public enum ObstacleContentKind { PowderBarrel = 1, Supplies }
+    public enum ObstacleContentKind { PowderBarrel = 1, Supplies, Pillar }
     public enum ObstacleReactionKind { None, Hit, Destroyed }
 
-    /// <summary>장애물 정의를 기존 구조물 ID에 연결한다. 체력과 점유 위치는 구조물 사실만 소유한다.</summary>
+    /// <summary>장애물 정의를 기존 구조물 ID에 연결한다. 내구도와 점유 위치는 구조물 사실만 소유한다.</summary>
     public sealed class ObstacleContentProfile
     {
         public EntityId EntityId { get; }
@@ -16,26 +16,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int ExplosionDamage { get; }
         public int HitAttackBonus { get; }
         public int DestructionAttackBonus { get; }
+        public int FallLength { get; }
         public ObstacleContentProfile(EntityId entityId, ObstacleContentKind kind, int explosionDamage,
-            int? hitAttackBonus = null, int? destructionAttackBonus = null)
+            int? hitAttackBonus = null, int? destructionAttackBonus = null, int fallLength = 3)
         {
             if (entityId.IsEmpty) throw new ArgumentException("장애물 ID가 필요합니다.", nameof(entityId));
             if (!Enum.IsDefined(typeof(ObstacleContentKind), kind)) throw new ArgumentOutOfRangeException(nameof(kind));
-            if (explosionDamage < 0 || kind == ObstacleContentKind.Supplies && explosionDamage != 0)
+            if (explosionDamage < 0 || kind != ObstacleContentKind.PowderBarrel && explosionDamage != 0)
                 throw new ArgumentOutOfRangeException(nameof(explosionDamage));
+            if (fallLength < 1) throw new ArgumentOutOfRangeException(nameof(fallLength));
             EntityId = entityId; Kind = kind; ExplosionDamage = explosionDamage;
             ValidateRewards(kind, hitAttackBonus, destructionAttackBonus);
             HitAttackBonus = hitAttackBonus ?? 0; DestructionAttackBonus = destructionAttackBonus ?? 0;
+            FallLength = kind == ObstacleContentKind.Pillar ? fallLength : 0;
         }
         internal static void ValidateRewards(ObstacleContentKind kind, int? hit, int? destruction)
         {
             if (hit < 0 || destruction < 0 || kind == ObstacleContentKind.Supplies && (!hit.HasValue || !destruction.HasValue) ||
-                kind == ObstacleContentKind.PowderBarrel && (hit.GetValueOrDefault() != 0 || destruction.GetValueOrDefault() != 0))
+                kind != ObstacleContentKind.Supplies && (hit.GetValueOrDefault() != 0 || destruction.GetValueOrDefault() != 0))
                 throw new ArgumentException("보급품은 명시적인 비음수 보상 두 값이 필요하고 화약통은 보상이 없습니다.");
         }
         public bool SameValues(ObstacleContentProfile other) => other != null && EntityId == other.EntityId &&
             Kind == other.Kind && ExplosionDamage == other.ExplosionDamage && HitAttackBonus == other.HitAttackBonus &&
-            DestructionAttackBonus == other.DestructionAttackBonus;
+            DestructionAttackBonus == other.DestructionAttackBonus && FallLength == other.FallLength;
         public static bool SameValues(IReadOnlyList<ObstacleContentProfile> a, IReadOnlyList<ObstacleContentProfile> b) =>
             a.Count == b.Count && a.OrderBy(p => p.EntityId).Zip(b.OrderBy(p => p.EntityId), (x, y) => x.SameValues(y)).All(v => v);
         public static void Validate(IReadOnlyList<ObstacleContentProfile> profiles, EnvironmentSemanticBindings bindings,
@@ -47,7 +50,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             foreach (var profile in profiles)
             {
                 var structure = structures.SingleOrDefault(s => s.EntityId == profile.EntityId);
-                if (structure == null || structure.Definition.Key != KeyFor(profile.Kind))
+                if (structure == null || structure.Definition.Key != KeyFor(profile.Kind) || structure.ObstacleDurability == null)
                     throw new ArgumentException("장애물 프로필은 일치하는 기존 구조물에 연결되어야 합니다.");
             }
             if (structures.Any(s => IsNativeObstacleKey(s.Definition.Key) &&
@@ -55,11 +58,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentException("지원되는 장애물 정의는 실행 프로필 없이 게시할 수 없습니다.");
         }
         public static bool IsNativeObstacleKey(EntityKey key) =>
-            key == EntityKey.Structure_PowderBarrel || key == EntityKey.Structure_Supplies;
+            key == EntityKey.Structure_PowderBarrel || key == EntityKey.Structure_Supplies || key == EntityKey.Structure_Pillar;
 
         public static EntityKey KeyFor(ObstacleContentKind kind) => kind switch {
             ObstacleContentKind.PowderBarrel => EntityKey.Structure_PowderBarrel,
             ObstacleContentKind.Supplies => EntityKey.Structure_Supplies,
+            ObstacleContentKind.Pillar => EntityKey.Structure_Pillar,
             _ => throw new ArgumentOutOfRangeException(nameof(kind)) };
     }
 }

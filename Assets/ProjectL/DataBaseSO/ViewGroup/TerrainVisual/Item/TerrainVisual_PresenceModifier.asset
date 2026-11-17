@@ -19,4 +19,4 @@ MonoBehaviour:
   icon: {fileID: 0}
   prefab: {fileID: 100000, guid: 0d238857352043bcb457a8c55039c3b9, type: 3}
   localOffset: {x: 0, y: 0, z: 0}
-  localScale: {x: 1, y: 1, z: 1}
+  localScale: {x: 1.3333334, y: 1.3333334, z: 1.3333334}

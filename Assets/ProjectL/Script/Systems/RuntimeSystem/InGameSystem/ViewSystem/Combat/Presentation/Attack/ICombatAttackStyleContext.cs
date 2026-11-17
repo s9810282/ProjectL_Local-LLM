@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -28,9 +29,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         ICombatShot FireArc(GameObject prefab, Vector3 from, Vector3 to, float duration, float height, Vector3 up, Vector3 spin,
             CombatProjectileEasing easing, Action hit, Action arrived, int version, CombatArcRotationMode rotationMode);
 
-        /// <summary>출처 발사 직선 한 발입니다(<see cref="CombatProjectileFlights.FireLinear"/>). 완급 곡선은 공격 표시 값이 줍니다.</summary>
-        ICombatShot FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up, float hitAt,
-            CombatProjectileEasing easing, Action hit, Action arrived, int version);
+        /// <summary>
+        /// 출처 발사 직선 한 발입니다(<see cref="CombatProjectileFlights.FireLinear"/>). 경로 위 접촉 순간(진행률 오름차순)마다 그 콜백을 부릅니다.
+        /// 완급 곡선은 공격 표시 값이 줍니다.
+        /// </summary>
+        ICombatShot FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up,
+            CombatProjectileEasing easing, IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version);
+
+        /// <summary>출처 발사 꺾인 직선 한 발입니다(<see cref="CombatProjectileFlights.FirePath"/>, 전투 스킬 View 설계 SK3).</summary>
+        ICombatShot FirePath(GameObject prefab, IReadOnlyList<Vector3> points, float speed, Vector3 up,
+            CombatProjectileEasing easing, IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version);
 
         /// <summary>
         /// 코드 모션 애니메이션 수명을 시작합니다. 정상으로 끝나면 세대가 같을 때 <paramref name="ended"/>를 부릅니다.
@@ -44,8 +52,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>발사 때 접촉 자리가 정해지는 출처 발사의 맞음입니다.</summary>
         Action ImpactThen(CombatAttackPresentationData settings, Action hit, CombatProjectileContact contact);
 
-        /// <summary>직선 투사체가 주 대상 몸에 처음 닿는 진행률입니다(설계 H6).</summary>
-        float LinearContactProgress(CombatAttackShape shape, Vector3 from, Vector3 to, FieldGridMapper mapper);
+        /// <summary>
+        /// 직선 탄 하나의 접촉 목록입니다(설계 H6, 관통·죽음의 손 View 설계 §3.1). 진행률 오름차순이고 늘 하나 이상입니다(규칙 원본 <see cref="CombatProjectileContacts.Collect"/>).
+        /// <paramref name="shape"/>가 null이면(정면 공격 모션) 대상 없는 끝 하나입니다.
+        /// </summary>
+        IReadOnlyList<CombatShotContact> CollectContacts(CombatAttackShape shape, Vector3 from, Vector3 to, FieldGridMapper mapper);
 
         /// <summary>공격 중 유닛·무기 표시가 사라졌습니다. 자원을 먼저 정리하고 다음 Tick에서 오류로 알립니다.</summary>
         void CancelUnavailable();

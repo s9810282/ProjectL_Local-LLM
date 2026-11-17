@@ -33,8 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly float _dotFill;
         private readonly float _flowSpeed;
         private readonly GameObject _markerPrefab;
-        private readonly Color _color;
-        private readonly Color _blockedColor;
+        private readonly FieldHighlightPalette _palette;
         private readonly IMeshSystemService _meshes;
         private readonly IColorSystemService _colors;
         private readonly Dictionary<int, Vector3[]> _points = new();
@@ -44,12 +43,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private GameObject _marker;
         private IMeshRenderHandle _mesh;
         private IColorHandle _colorHandle;
-        private bool? _shownBlocked;
+        // 마지막에 ColorSystem에 넣은 색과 그때의 막힘 여부입니다. 색이 다를 때만 다시 넣고(계획 TP-4),
+        // 막힘 여부는 에디터 값 바뀜 때 지금 색을 다시 넣는 데 씁니다(필드 색 DB 설계 FC3).
+        private Color? _shownColor;
+        private bool? _lastBlocked;
 
         /// <param name="config">궤적 값(재질·폭·점 간격·채움·흐름 속도·막힘 표지)의 원본입니다. 재질이 있어야 합니다.</param>
-        /// <param name="color">가능 궤적 색입니다(필드 씬 값).</param>
-        /// <param name="blockedColor">막힌 궤적 색입니다(필드 씬 값).</param>
-        internal FieldTrajectoryLine(Transform parent, StageFieldViewData config, Color color, Color blockedColor,
+        /// <param name="palette">궤적 색(가능·막힘)을 그릴 때 읽는 필드 색입니다(필드 색 DB 설계 FC2).</param>
+        internal FieldTrajectoryLine(Transform parent, StageFieldViewData config, FieldHighlightPalette palette,
             IMeshSystemService meshes, IColorSystemService colors)
         {
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
@@ -63,8 +64,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _dotFill = config.TrajectoryDotFill;
             _flowSpeed = config.TrajectoryFlowSpeed;
             _markerPrefab = config.TrajectoryBlockedMarker;
-            _color = color;
-            _blockedColor = blockedColor;
+            _palette = palette ?? throw new ArgumentNullException(nameof(palette));
             _meshes = meshes ?? throw new ArgumentNullException(nameof(meshes));
             _colors = colors ?? throw new ArgumentNullException(nameof(colors));
         }
@@ -93,7 +93,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             renderer.enabled = false;
             _gameObject = gameObject;
             _renderer = renderer;
-            _shownBlocked = null;
+            _shownColor = null;
+            _lastBlocked = null;
 
             try
             {
@@ -153,11 +154,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             FieldTrajectorySegments.Resample(localPath, count, length, segments, points);
             _mesh.Update(new MultiLineCreateData(Name, points, _thickness, segments / length, Color.white));
 
-            if (_shownBlocked != blocked)
-            {
-                _colorHandle.SetOverrideData(0, MaterialBaseTypeKey.MainColor, blocked ? _blockedColor : _color);
-                _shownBlocked = blocked;
-            }
+            ApplyColor(blocked);
             _renderer.enabled = true;
 
             if (_marker != null)
@@ -166,6 +163,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     _marker.transform.localPosition = points[segments];
                 _marker.SetActive(blocked);
             }
+        }
+
+        /// <summary>
+        /// 보이는 궤적에 지금 필드 색을 다시 넣습니다(필드 색 DB 설계 FC3, 에디터 값 바뀜 때). 숨겨져 있으면 다음 <see cref="Show"/>가 넣습니다.
+        /// </summary>
+        internal void ReapplyColor()
+        {
+            if (IsShown && _lastBlocked.HasValue)
+                ApplyColor(_lastBlocked.Value);
+        }
+
+        // 막힘 여부의 지금 색을 넣습니다. 지난번과 같은 색이면 ColorSystem을 부르지 않습니다.
+        private void ApplyColor(bool blocked)
+        {
+            _lastBlocked = blocked;
+            Color color = blocked ? _palette.TrajectoryBlocked : _palette.Trajectory;
+            if (_shownColor == color)
+                return;
+            _colorHandle.SetOverrideData(0, MaterialBaseTypeKey.MainColor, color);
+            _shownColor = color;
         }
 
         /// <summary>궤적과 표지를 숨깁니다. 구성 전이어도 안전합니다.</summary>
@@ -190,7 +207,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _gameObject = null;
             _renderer = null;
             _marker = null;
-            _shownBlocked = null;
+            _shownColor = null;
+            _lastBlocked = null;
 
             List<Exception> errors = null;
             try

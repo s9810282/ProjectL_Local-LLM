@@ -28,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         private readonly CombatMovementRangeRequest _request = new CombatMovementRangeRequest();
         private long _generation;
         private bool _shown;
+        private MovementRangeResult _shownRange;
         // 보이는 범위가 어느 사실(전투·행위자·시작 칸·결과 번호)의 응답인지입니다. _shown일 때만 뜻이 있습니다.
         private CombatMovementRangeFacts _shownFacts;
         // 성공한 빈 범위의 근거는 표시 수명과 분리한다. 턴 종료 직전 LeaveMoveMode가 표시를 지워도 유지한다.
@@ -86,13 +87,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         }
 
         /// <summary>
-        /// 이 사실에 대한 자기 응답이면 한 번 소비하고 자기 슬롯을 비운 뒤 보입니다. 소비했으면 true입니다.
+        /// 자기 응답을 한 번 소비하고 슬롯을 비웁니다. 출처가 바뀐 자기 응답은 Stale로 돌려줍니다.
         /// 보임 상태를 먼저 켜고 표시를 부르므로, 표시가 던지면(예외는 그대로 전파) 뒤의 <see cref="Clear"/>가 표시를 지웁니다.
         /// </summary>
-        internal bool TryShowAnswer(CombatPreviewResult preview, in CombatMovementRangeFacts facts)
+        internal MovementRangeAnswer ShowAnswer(CombatPreviewResult preview, in CombatMovementRangeFacts facts)
         {
-            if (!_request.TryConsume(_generation, facts, _input.HasPreview, _input.Preview, preview, out MovementRangeResult range))
-                return false;
+            var answer = _request.Consume(_generation, facts, _input.HasPreview, _input.Preview, preview, out var range);
+            if (answer == MovementRangeAnswer.Unrelated)
+                return answer;
+            _write.ClearPreview(preview.RequestNumber);
+            if (answer == MovementRangeAnswer.Stale)
+                return answer;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             using var profilePreview = CombatInputProfiler.Apply(CombatViewPreviewKind.MoveRange).Auto();
@@ -100,12 +105,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _hasAcceptedEmptyRange = range.Succeeded && range.Destinations.Length == 0;
             _acceptedEmptyRangeFacts = facts;
 
-            // 소비 직전 대조한 자기 슬롯만 비운다. 소비가 요청 번호를 이미 지웠으므로, 같은 번호임을 확인한 응답의 번호로 비운다.
-            _write.ClearPreview(preview.RequestNumber);
             _shown = true;
             _shownFacts = facts;
+            _shownRange = range;
             _display.ShowMovementRange(range);
-            return true;
+            return answer;
         }
 
         /// <summary>기다리는 요청만 내려놓습니다. 슬롯과 보이는 범위는 건드리지 않습니다(곧 슬롯을 남이 가져갈 때).</summary>
@@ -138,6 +142,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             _generation = 0;
             _shown = false;
             _shownFacts = default;
+            _shownRange = default;
             CleanupErrors.RunAll("[CombatMovementRangeTracker] 이동 범위 정리 중 실패했습니다.",
                 () => _write.ClearPreview(number),
                 () =>
@@ -145,6 +150,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
                     if (shown)
                         _display.ClearMovementRange();
                 });
+        }
+
+        internal bool TryGetShown(in CombatMovementRangeFacts facts, out MovementRangeResult range)
+        {
+            bool current = _shown && _shownFacts.Matches(facts);
+            range = current ? _shownRange : default;
+            return current;
         }
 
         private bool OwnsSlot => _request.OwnsPreview(_input.HasPreview, _input.Preview);

@@ -108,14 +108,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (actor == null || candidate.Kind == EnemyDecisionKind.EndEnemyPhase) yield break;
                 MovementEnvironmentFacts visible = null;
                 _phase = "Visibility";
-                foreach (var _ in input.State.Environment.VisibleSteps(actor.Owner, value => visible = value, preservePublic: true)) yield return 0;
+                foreach (var _ in context.AssessmentVisibilitySteps(input.State.Environment, actor.Owner, value => visible = value))
+                    yield return 0;
                 var publicInput = input.WithWorld(input.State.With(environment: visible), input.Characters,
                     input.Main, input.SoulCounts, input.Souls, input.EnvironmentBindings).WithActor(candidate.ActorId);
                 publicInput = candidate.Kind == EnemyDecisionKind.Attack
-                    ? publicInput.WithIntent(CombatCommandKind.Attack, candidate.Aim, default, null, null)
-                    : publicInput.WithIntent(CombatCommandKind.Move, default, candidate.Path.Endpoint, candidate.Path, null);
+                    ? publicInput.WithIntent(CombatCommandKind.Attack, candidate.Aim, default, null, null, sweepSide: null)
+                    : publicInput.WithIntent(CombatCommandKind.Move, default, candidate.Path.Endpoint, candidate.Path, null, sweepSide: null);
                 yield return 0;
-                // 이 공격의 강제 이동(넉백·당기기)이 닿을 수 있는 칸이다. 강제 이동이 없으면 null이다.
+                // 이 공격의 강제 이동이 닿을 수 있는 칸이다. 강제 이동이 없으면 null이다.
                 HashSet<CellCoord> forcedReach = null;
                 var forcedMovers = new List<CharacterCombatFacts>();
                 AttackSelectionEvaluation selection = null;
@@ -135,7 +136,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         yield return 0;
                     }
                     int knockback = KnockbackDistance(bindings);
-                    if (selection.Pull?.RequiresPull == true || knockback > 0)
+                    if (selection.Pull?.RequiresPull == true || selection.Sweep != null || knockback > 0)
                     {
                         forcedReach = new HashSet<CellCoord>();
                         foreach (var _ in ForcedReachSteps(publicInput, selection, knockback, forcedReach, forcedMovers)) yield return 0;
@@ -154,6 +155,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 _admitted = true;
                 yield return 0;
                 bool unboundedHarm = false;
+                bool pillarCollateral = false;
                 bool moveProjectionBlocked = false;
                 _phase = "EffectCoverage";
                 foreach (var gap in CombatCommandEffects.AssessmentCoverageSteps(publicInput, () => unboundedHarm = true,
@@ -168,14 +170,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     // 이동은 구조물 칸에 들어가지 못해 장애물을 건드리지 않는다. 공격만 맞히는 장애물을 본다.
                     _phase = "ObstacleCoverage";
                     foreach (var _ in ObstacleExposureSteps(publicInput, actor, selection, forcedReach, exposed,
-                        () => gaps |= CombatAssessmentGap.UnsupportedEffect)) yield return 0;
+                        () => gaps |= CombatAssessmentGap.UnsupportedEffect,
+                        MarkPillarCollateral)) yield return 0;
                 }
                 var routeGaps = CombatAssessmentGap.None;
                 _phase = "EnvironmentCoverage";
                 if (candidate.Kind == EnemyDecisionKind.Move)
                 {
                     foreach (var gap in MovementEnvironmentCalculator.RouteAssessmentCoverageSteps(publicInput, actor, rules,
-                        exposed, () => unboundedHarm = true))
+                        exposed, () => unboundedHarm = true, MarkPillarCollateral))
                     {
                         routeGaps |= gap;
                         gaps |= gap;
@@ -186,13 +189,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     // 강제 이동이 닿는 칸의 도착 원본만 본다(경로 검사와 같은 규칙). 한정할 수 없는 도착이 그 안에 있을 때만 보수적 상한을 남긴다.
                     foreach (var gap in MovementEnvironmentCalculator.ForcedEntryAssessmentCoverageSteps(publicInput, forcedMovers,
-                        forcedReach, rules, exposed, () => unboundedHarm = true))
+                        forcedReach, rules, exposed, () => unboundedHarm = true, MarkPillarCollateral))
                     {
                         gaps |= gap;
                         yield return 0;
                     }
                 }
                 _routeGaps = routeGaps;
+                void MarkPillarCollateral()
+                {
+                    pillarCollateral = true;
+                    unboundedHarm = true;
+                    gaps |= CombatAssessmentGap.UnsupportedEffect;
+                }
+
                 long possibleHarm = 0;
                 _phase = "PossibleHarm";
                 if (unboundedHarm || exposed.Count != 0)
@@ -204,10 +214,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                             possibleHarm = checked(possibleHarm + Loss(unit.Health.CurrentHealth, unit.Health.MaxHealth));
                         yield return 0;
                     }
-                    if (exposed.Count != 0)
+                    if (pillarCollateral || exposed.Count != 0)
                         foreach (var structure in publicInput.State.Structures)
                         {
-                            if (structure.Owner == actor.Owner && exposed.Contains(structure.EntityId))
+                            if (structure.ObstacleDurability == null && structure.Owner == actor.Owner && !structure.IsDestroyed &&
+                                (pillarCollateral || exposed.Contains(structure.EntityId)))
                                 possibleHarm = checked(possibleHarm + Loss(structure.Health.CurrentHealth, structure.Health.MaxHealth));
                             yield return 0;
                         }
@@ -310,7 +321,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 { finalStructures.Add(structure.EntityId, structure); yield return 0; }
                 foreach (var before in publicInput.State.Structures)
                 {
-                    if (before.Owner == Owner.Neutral) { yield return 0; continue; }
+                    if (before.ObstacleDurability != null || before.Owner == Owner.Neutral) { yield return 0; continue; }
                     int hp = finalStructures.TryGetValue(before.EntityId, out var after) ? after.Health.CurrentHealth : 0;
                     long loss = Loss(Math.Max(0, before.Health.CurrentHealth - hp), before.Health.MaxHealth);
                     if (before.Owner == actor.Owner) alliedLoss = checked(alliedLoss + loss);
@@ -341,19 +352,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             /// 폭발 칸은 실제 반응과 같은 원본(<see cref="CombatHazardAreas.PowderBarrelCells"/>)이다.
             /// </summary>
             private static IEnumerable<int> ObstacleExposureSteps(CombatCommandInput input, CharacterCombatFacts actor,
-                AttackSelectionEvaluation selection, ISet<CellCoord> forcedReach, HashSet<EntityId> exposed, Action touched)
+                AttackSelectionEvaluation selection, ISet<CellCoord> forcedReach, HashSet<EntityId> exposed,
+                Action touched, Action pillarReachable)
             {
                 var barrelIds = new HashSet<EntityId>();
+                var pillarIds = new HashSet<EntityId>();
                 foreach (var profile in input.ObstacleContents)
                 {
                     if (profile.Kind == ObstacleContentKind.PowderBarrel) barrelIds.Add(profile.EntityId);
+                    if (profile.Kind == ObstacleContentKind.Pillar) pillarIds.Add(profile.EntityId);
                     yield return 0;
                 }
-                if (barrelIds.Count == 0) yield break;
+                if (barrelIds.Count == 0 && pillarIds.Count == 0) yield break;
                 var barrels = new List<StructureCombatFacts>();
+                var pillars = new List<StructureCombatFacts>();
                 foreach (var structure in input.State.Structures)
                 {
-                    if (barrelIds.Contains(structure.EntityId) && !structure.Health.IsDead) barrels.Add(structure);
+                    if (!structure.IsDestroyed)
+                    {
+                        if (barrelIds.Contains(structure.EntityId)) barrels.Add(structure);
+                        if (pillarIds.Contains(structure.EntityId)) pillars.Add(structure);
+                    }
                     yield return 0;
                 }
                 var hit = new HashSet<EntityId>();
@@ -363,6 +382,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         hit.Add(target.Key);
                         yield return 0;
                     }
+                foreach (var pillar in pillars)
+                {
+                    // 낙하·연쇄 방향을 간이 점수에서는 재계산하지 않는다. 노출되면 아군 피해 상한을 유지한다.
+                    if (hit.Contains(pillar.EntityId) || forcedReach != null && pillar.OccupiedCells.Any(forcedReach.Contains))
+                        MarkPillar();
+                    yield return 0;
+                }
                 var queue = new Queue<StructureCombatFacts>();
                 var reached = new HashSet<EntityId>();
                 foreach (var barrel in barrels)
@@ -387,6 +413,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         yield return 0;
                     }
                 }
+                foreach (var pillar in pillars)
+                {
+                    if (pillar.OccupiedCells.Any(blast.Contains)) MarkPillar();
+                    yield return 0;
+                }
                 foreach (var unit in input.Characters)
                 {
                     if (unit.Owner == actor.Owner && unit.Area == CharacterRuntimeArea.Field && !unit.Health.IsDead &&
@@ -399,6 +430,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         exposed.Add(structure.EntityId);
                     yield return 0;
                 }
+
+                void MarkPillar()
+                {
+                    touched();
+                    pillarReachable();
+                }
             }
 
             // 실제 공격과 같은 평가기로 넉백 거리를 구한다(AttackKnockbackCalculator: 기여 중 가장 먼 거리). 넉백이 없으면 0이다.
@@ -409,7 +446,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             /// <summary>
-            /// 강제 이동이 닿을 수 있는 칸과 밀리거나 끌려갈 수 있는 유닛이다. 당기기는 계산된 경로(대상 발자국 포함)이고,
+            /// 강제 이동이 닿을 수 있는 칸과 이동할 수 있는 유닛이다. 당기기는 계산된 경로(대상 발자국 포함)이고,
+            /// 쓸기는 포착한 대상에서 행의 목적지까지 보드 안의 칸이다.
             /// 넉백은 맞는 대상의 칸에서 넉백 거리 안(체비셰프)이다. 넉백 방향은 다시 계산하지 않고 거리로 넉넉히 잡는다
             /// (방향 규칙은 실제 공격 계산 한 곳에 둔다). 실제 충돌·도착 결과는 정밀 미리보기가 센다.
             /// </summary>
@@ -430,6 +468,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         yield return 0;
                     }
                 }
+                if (selection.Sweep != null)
+                    foreach (var _ in DeadHandAttackCalculator.PotentialEntrySteps(input, selection.Sweep, reach, movers))
+                        yield return 0;
                 if (knockback <= 0 || selection.Selection == null) yield break;
                 foreach (var target in selection.Selection.Targets)
                 {

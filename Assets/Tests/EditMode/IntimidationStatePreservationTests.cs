@@ -113,7 +113,7 @@ namespace ProjectL.Tests.Core
         {
             var seed = MarkAll(CombatCommandTestData.Input());
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: completedPlayerTurns);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                seed.State.Structures,seed.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                seed.State.Structures,turn);
             var battle = new CombatBattleFacts(4, 1, 8, 8, Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, seed.ActorId, seed.Aim,
                 state, seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts, battle: battle, processingKind: CombatProcessingKind.Advance,
@@ -144,7 +144,7 @@ namespace ProjectL.Tests.Core
             var dying = seed.Characters.Single(c => c.EntityId.Value == (mainDies ? 10 : 2));
             projected[dying.EntityId] = CombatCommandCalculator.Hurt(dying, 100);
             var result = CombatCommandCalculator.Finish(seed, projected, seed.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                seed.Souls, seed.State.ThornFields.ToDictionary(f => f.Cell), seed.State.Structures.ToArray(),
+                seed.Souls, seed.State.Structures.ToArray(),
                 new System.Collections.Generic.List<long>(), new System.Collections.Generic.Dictionary<EntityId, CellCoord>(),
                 new SoulEffectCalculator(seed.Artifacts), null, events: new System.Collections.Generic.List<CombatEvent>
                 { new CombatCharacterEvent(CombatEventKind.Died, dying, projected[dying.EntityId]) });
@@ -186,7 +186,7 @@ namespace ProjectL.Tests.Core
             var projected = seed.Characters.ToDictionary(c => c.EntityId);
             projected[seed.ActorId] = CombatCommandCalculator.Hurt(projected[seed.ActorId], 100);
             var result = CombatCommandCalculator.Finish(seed, projected, seed.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                seed.Souls, seed.State.ThornFields.ToDictionary(f => f.Cell), seed.State.Structures.ToArray(),
+                seed.Souls, seed.State.Structures.ToArray(),
                 new System.Collections.Generic.List<long>(), new System.Collections.Generic.Dictionary<EntityId, CellCoord>(),
                 new SoulEffectCalculator(seed.Artifacts), null);
             var after = CombatCommandComposition.Project(result);

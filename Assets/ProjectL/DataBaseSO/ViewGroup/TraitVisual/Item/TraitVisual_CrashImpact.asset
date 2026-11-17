@@ -45,9 +45,11 @@ MonoBehaviour:
         effects:
         - effect: 19
           anchor: 1
+          contactFilter: 1
           delay: 0
           point: 4
-          actorPoint: 0
+          eventPoint: 0
+          eventPointRotation: 0
           stayInPlace: 0
           positionOffset: {x: 0, y: 0, z: 0}
           riderYOffset: 0
@@ -59,6 +61,7 @@ MonoBehaviour:
           seconds: 0.6
           shape: 3
           anchor: 1
+          contactFilter: 1
           delay: 0
       attackPresentation: {fileID: 0}
       unitActions: []

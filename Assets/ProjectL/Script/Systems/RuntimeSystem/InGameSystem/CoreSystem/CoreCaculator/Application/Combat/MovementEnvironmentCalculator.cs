@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Tiles;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -20,11 +20,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 공격의 강제 이동(넉백·당기기)이 닿을 수 있는 칸(<paramref name="reach"/>)의 공개 도착 원본만 검사한다(적 AI 평가).
         /// 경로 검사와 같은 규칙이다: 지뢰는 폭발 칸의 개체를 노출로 기록하고, 그 밖의 도착 콜백은 대상을 한정할 수 없어 상한을 남긴다.
         /// 밀려난 대상이 토네이도에 닿으면 착지 칸을 모르므로 판 전체의 도착 원본을 본다. 닿을 수 없는 칸의 원본은 이 공격과 무관하다.
-        /// 강제 이동 자체(충돌·낙사·가시)는 정밀 미리보기가 실제 공격 계산으로 센다.
+        /// 강제 이동 자체(충돌·낙사)는 정밀 미리보기가 실제 공격 계산으로 센다.
         /// </summary>
         internal static IEnumerable<CombatAssessmentGap> ForcedEntryAssessmentCoverageSteps(CombatCommandInput input,
             IReadOnlyList<CharacterCombatFacts> movers, ISet<CellCoord> reach, IReadOnlyList<IMovementTileRule> rules,
-            ISet<EntityId> exposed, Action markUnbounded)
+            ISet<EntityId> exposed, Action markUnbounded, Action markPillarCollateral = null)
         {
             bool randomLanding = false;
             foreach (var mover in movers)
@@ -49,12 +49,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 else markUnbounded();
                 yield return gap;
             }
-            foreach (var gap in BlastExposureSteps(input, blastCells, exposed)) yield return gap;
+            foreach (var gap in BlastExposureSteps(input, blastCells, exposed, markPillarCollateral ?? markUnbounded)) yield return gap;
         }
 
         /// <summary>경로에서 닿는 공개 도착 원본과 영향을 받을 수 있는 개체를 기록한다.</summary>
         internal static IEnumerable<CombatAssessmentGap> RouteAssessmentCoverageSteps(CombatCommandInput input,
-            CharacterCombatFacts actor, IReadOnlyList<IMovementTileRule> rules, ISet<EntityId> exposed, Action markUnbounded)
+            CharacterCombatFacts actor, IReadOnlyList<IMovementTileRule> rules, ISet<EntityId> exposed,
+            Action markUnbounded, Action markPillarCollateral = null)
         {
             var path = input.Path;
             var entries = new HashSet<CellCoord>();
@@ -126,7 +127,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (blastCells.Count == 0) yield break;
             if (entries.Overlaps(blastCells)) exposed.Add(actor.EntityId);
             if (passenger != null && blastCells.Contains(path.Origin)) exposed.Add(passenger.EntityId);
-            foreach (var gap in BlastExposureSteps(input, blastCells, exposed)) yield return gap;
+            foreach (var gap in BlastExposureSteps(input, blastCells, exposed, markPillarCollateral ?? markUnbounded)) yield return gap;
         }
 
         private static void AddMineBlast(CombatCommandInput input, MineSourceFact mine, ISet<CellCoord> blastCells)
@@ -137,7 +138,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         // 지뢰 폭발 칸 안의 살아 있는 유닛·구조물을 노출로 기록한다(경로·강제 이동 검사가 함께 쓴다).
         private static IEnumerable<CombatAssessmentGap> BlastExposureSteps(CombatCommandInput input, ISet<CellCoord> blastCells,
-            ISet<EntityId> exposed)
+            ISet<EntityId> exposed, Action markPillarCollateral)
         {
             if (blastCells.Count == 0) yield break;
             foreach (var unit in input.Characters)
@@ -146,21 +147,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     exposed.Add(unit.EntityId);
                 yield return CombatAssessmentGap.None;
             }
+            bool livePillar = false;
+            bool barrelContact = false;
             foreach (var structure in input.State.Structures)
             {
-                if (!structure.Health.IsDead && structure.OccupiedCells.Any(blastCells.Contains))
-                    exposed.Add(structure.EntityId);
+                if (!structure.IsDestroyed)
+                {
+                    var kind = structure.Definition.Key;
+                    livePillar |= kind == EntityKey.Structure_Pillar;
+                    if (structure.OccupiedCells.Any(blastCells.Contains))
+                    {
+                        exposed.Add(structure.EntityId);
+                        if (kind == EntityKey.Structure_Pillar) markPillarCollateral();
+                        barrelContact |= kind == EntityKey.Structure_PowderBarrel;
+                    }
+                }
                 yield return CombatAssessmentGap.None;
             }
+            // 지뢰가 화약통을 터뜨리면 뒤따른 폭발이 기둥에 닿을 수 있다.
+            if (livePillar && barrelContact) markPillarCollateral();
         }
 
         private static CombatAssessmentGap TileAssessmentGap(MovementTileFact tile)
         {
-            if (!tile.Active || tile is StaticTerrainFact || tile is DestinationTileModifierFact)
+            if (!tile.Active)
                 return CombatAssessmentGap.None;
-            return tile is TornadoSourceFact
-                ? CombatAssessmentGap.RandomOutcome | CombatAssessmentGap.UnknownPosition
-                : CombatAssessmentGap.UnsupportedEffect;
+            // 토네이도는 일반 진입 규칙 대신 전용 계산기가 접촉을 처리한다.
+            if (tile is TornadoSourceFact)
+                return CombatAssessmentGap.RandomOutcome | CombatAssessmentGap.UnknownPosition;
+            return tile.TriggersArrivalRule ? CombatAssessmentGap.UnsupportedEffect : CombatAssessmentGap.None;
         }
 
         internal static void ResolveObjectsAt(MovementProjection projection, EntityId arriver, CellCoord cell,
@@ -209,20 +224,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 if (effects.FinalSource.Active)
                     throw new InvalidOperationException("발동한 Object는 선택된 원본만 비활성화해야 합니다.");
-                projection.Events.Add(new CombatObjectActivationEvent(tile, arriver));
+                var activation = new CombatObjectActivationEvent(tile, arriver);
+                projection.Events.Add(activation);
                 foreach (var held in effects.HeldChanges) projection.ChangeHeld(held);
                 projection.ChangeSource(tile, effects);
                 var origin = effects.Damage.Count == 0 ? null : new CombatDamageOrigin(cell, null, projection.NextAttackGroup());
                 foreach (var damage in effects.Damage)
-                    foreach (var phase in projection.ChangeHealthSteps(damage, false, origin)) yield return phase;
+                    foreach (var phase in projection.ChangeHealthSteps(damage, false, origin, activation, tile)) yield return phase;
                 foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
                 foreach (var method in effects.MovementMethods) projection.ChangeMethod(method);
                 projection.ResolveDeathBoundary();
                 yield return "MovementObjectDeaths";
                 if (projection.Character(arriver).Health.IsDead || projection.Terminal) yield break;
                 foreach (var heal in effects.Healing)
-                    foreach (var phase in projection.ChangeHealthSteps(heal, true)) yield return phase;
+                    foreach (var phase in projection.ChangeHealthSteps(heal, true, contextEvent: activation, environmentSource: tile)) yield return phase;
             }
+            var arrived = projection.Character(arriver);
+            if (arrived.Anchor == cell) StageGimmickComposition.ApplyEntry(projection, arriver);
         }
 
         internal static void RequireRules(IReadOnlyList<IMovementTileRule> rules)
@@ -234,20 +252,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal static void ResolveEntry(MovementProjection projection, CellCoord enteredCell, IReadOnlyList<IMovementTileRule> rules,
-            EntityId? mover = null, bool consumeThorn = true, bool skipMines = false)
+            EntityId? mover = null, bool skipMines = false)
         {
-            foreach (var _ in ResolveEntrySteps(projection, enteredCell, rules, mover, consumeThorn, skipMines)) { }
+            foreach (var _ in ResolveEntrySteps(projection, enteredCell, rules, mover, skipMines)) { }
         }
 
         internal static IEnumerable<string> ResolveEntrySteps(MovementProjection projection, CellCoord enteredCell,
-            IReadOnlyList<IMovementTileRule> rules, EntityId? mover = null, bool consumeThorn = true, bool skipMines = false)
+            IReadOnlyList<IMovementTileRule> rules, EntityId? mover = null, bool skipMines = false)
         {
             var arriver = mover ?? projection.Input.ActorId;
             bool Interrupted() => projection.Character(arriver).Health.IsDead || projection.Terminal ||
                 projection.Character(arriver).Area != CharacterRuntimeArea.Field || projection.Character(arriver).Anchor != enteredCell;
-            if (Interrupted()) yield break;
-            if (consumeThorn)
-                foreach (var phase in ResolveThornContactSteps(projection, arriver, enteredCell, rules)) yield return phase;
             if (Interrupted()) yield break;
             bool thrown = false;
             foreach (var phase in TornadoCalculator.ResolveGroupedEntrySteps(projection, arriver, enteredCell, rules, value => thrown = value))
@@ -296,7 +311,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var origin = effects.Damage.Count == 0 ? null : new CombatDamageOrigin(tile.Cell, null, projection.NextAttackGroup());
                     yield return "MovementTileEffects";
                     foreach (var damage in effects.Damage)
-                        foreach (var child in projection.ChangeHealthSteps(damage, false, origin)) yield return child;
+                        foreach (var child in projection.ChangeHealthSteps(damage, false, origin, environmentSource: tile)) yield return child;
                     foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
                     foreach (var method in effects.MovementMethods) projection.ChangeMethod(method);
                     projection.ResolveDeathBoundary();
@@ -308,31 +323,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         if (Interrupted()) yield break;
                     }
                     foreach (var heal in effects.Healing)
-                        foreach (var child in projection.ChangeHealthSteps(heal, true)) yield return child;
+                        foreach (var child in projection.ChangeHealthSteps(heal, true, environmentSource: tile)) yield return child;
                 }
             }
         }
-
-        /// <summary>이동 원인과 무관하게 현재 대상과 턴 소유자로 가시 접촉을 적용한다.</summary>
-        private static IEnumerable<string> ResolveThornContactSteps(MovementProjection projection, EntityId mover, CellCoord cell,
-            IReadOnlyList<IMovementTileRule> rules)
-        {
-            if (!projection.HasThorn(cell)) yield break;
-            var effects = RequiredThorn(rules).EvaluateThorn(
-                projection.StepInput(cell, MovementEffectPhase.Hazard, mover: mover), projection.Thorn(cell));
-            projection.ConsumeThorn(cell);
-            var origin = new CombatDamageOrigin(cell, null, projection.NextAttackGroup());
-            yield return "MovementThornEffects";
-            foreach (var damage in effects.Damage)
-                foreach (var phase in projection.ChangeHealthSteps(damage, false, origin)) yield return phase;
-            foreach (var debuff in effects.DebuffChanges) projection.ChangeDebuffs(debuff);
-            projection.ResolveDeathBoundary();
-            yield return "MovementThornDeaths";
-        }
-
-        private static ThornMovementTileRule RequiredThorn(IReadOnlyList<IMovementTileRule> rules) =>
-            rules.OfType<ThornMovementTileRule>().SingleOrDefault() ??
-            throw new NotSupportedException("가시밭 진입 규칙이 구성되지 않았습니다.");
 
         private static IEnumerable<string> ResolveForcedMovementSteps(MovementProjection projection, MovementForcedMoveRequest request,
             IReadOnlyList<IMovementTileRule> rules)
@@ -350,7 +344,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var input = observation.Result;
             // 강제 이동 면역은 원인과 관계없이 이동만 막는다(G9).
             if (UnitBehaviorRules.IsForcedMovementImmune(input, before, projection.ProfileReads)) yield break;
-            foreach (var phase in ResolveForcedStepsSteps(projection, input, request.TargetId,
+            foreach (var phase in ResolveForcedStepsSteps(projection, request.TargetId,
                 ImpactPatternCalculator.GetForwardStep(request.Direction), request.Distance,
                 request.Cause == MovementDisplacementCause.Knockback, null, rules, null))
                 yield return phase;
@@ -358,23 +352,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// 이동 투영 위 한 칸 캐릭터를 <paramref name="step"/>(8방향 한 칸) 쪽으로 최대 <paramref name="distance"/>칸 강제 이동합니다.
-        /// 칸마다 낙사·약한 지반·가시·토네이도·오브젝트를 즉시 정산하고, 끊기지 않았으면 마지막 칸에서 강제 도착을 처리합니다.
+        /// 칸마다 낙사·약한 지반·토네이도·오브젝트를 즉시 정산하고, 끊기지 않았으면 마지막 칸에서 강제 도착을 처리합니다.
         /// 면역 판정과 여러 칸 유닛 처리는 호출자가 합니다. 타일 효과 강제 이동과 재구성 부활 넉백이 이 입구 하나를 씁니다.
         /// </summary>
         /// <param name="knockbackTerrain">참이면 넉백 지형 규칙(높은 지대 등)으로 진입을 검사합니다(G8-6).</param>
         /// <param name="movementCause">이동 사건에 남길 원인입니다. 비우면 원인 특성 없는 강제 이동입니다.</param>
-        internal static IEnumerable<string> ResolveForcedStepsSteps(MovementProjection projection, CombatCommandInput input,
+        internal static IEnumerable<string> ResolveForcedStepsSteps(MovementProjection projection,
             EntityId targetId, CellCoord step, int distance, bool knockbackTerrain, CombatMovementCause movementCause,
             IReadOnlyList<IMovementTileRule> rules, Action<ForcedDisplacementPath> finished)
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection));
-            if (input == null) throw new ArgumentNullException(nameof(input));
             var before = projection.Character(targetId);
             if (before.OccupiedCells.Count != 1) throw new NotSupportedException("다중 셀 강제 이동은 연결되지 않았습니다.");
-            var profile = CombatCommandCalculator.RequiredProfile(input, before, projection.ProfileReads);
-            var footprint = new TileFootprint(profile.Definition.FootprintWidth, profile.Definition.FootprintHeight,
-                profile.Definition.FootprintLocalCells.ToArray());
-            var rotation = before.Rotation.Value;
             bool departed = false;
             // 거리 N을 한 칸씩 진행한다. 칸 검사는 기존 조합(넉백 원인일 때만 높은 지대 규칙)을 그대로 쓴다(G8-6).
             ForcedDisplacementPath path = null;
@@ -402,6 +391,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     if (!EnvironmentTerrainRules.CanKnockback(current.State.Environment, current.EnvironmentBindings, from, to)) yield break;
                 }
                 completed(current.State.IsInside(to) &&
+                    !GimmickOccupancyRules.Blocks(current.State.Gimmicks, to, projection.GimmickReservations) &&
                     !EnvironmentTerrainRules.IsWallOccupied(current.State.Environment, current.EnvironmentBindings, to) &&
                     !current.Characters.Any(c => c.EntityId != before.EntityId && !c.Health.IsDead && c.OccupiedCells.Contains(to)) &&
                     !current.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(to)));
@@ -416,18 +406,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     // 위치 보정은 출발할 때 한 번만 해제한다.
                     moving = PositionTileModifierCalculator.Replace(prior, PositionTileModifier.None);
-                    PositionTileModifierCalculator.RecordNormalization(projection.Events, prior, moving);
+                    PositionTileModifierCalculator.RecordNormalization(projection.Events, prior, moving, projection.Damage.HealthExecutions);
                     departed = true;
                 }
                 var after = CombatMovementCalculator.MoveTo(moving, to);
                 projection.RecordForcedMove(prior, after, movementCause: movementCause);
                 if (projection.ResolveForcedTerrainEntry(before.EntityId, to)) yield break;
                 yield return "TileForcedEntry";
-                foreach (var cell in MovementPathCalculator.ResolvePathCells(from, to, footprint, rotation))
-                {
-                    foreach (var phase in ResolveThornContactSteps(projection, before.EntityId, cell, rules)) yield return phase;
-                    if (projection.Terminal || projection.Character(before.EntityId).Health.IsDead) yield break;
-                }
                 // 지나가는 칸과 마지막 칸 모두 오브젝트를 즉시 처리한다(G8-2 B). 타일 강제 이동은 원래 즉시 처리 경로다.
                 if (!projection.Terminal)
                 {

@@ -32,6 +32,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Descriptions.Tr
                     DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("날아가는거리", value => value.DistanceCells),
                     DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("벽피해율", value => value.WallDamagePercent),
                     DescriptionToken<TraitSpec>.From<CrashImpactTraitSpec>("유닛피해율", value => value.UnitDamagePercent)),
+                // 피해 계수는 현재 등급의 값입니다(관통·죽음의 손 View 설계 §3.9).
+                [TraitKey.DeadHand] = new(
+                    DescriptionToken<TraitSpec>.From<DeadHandTraitSpec>("피해계수", value => value.DamagePercent)),
                 [TraitKey.Disarm] = new(
                     DescriptionToken<TraitSpec>.From<DisarmTraitSpec>("지속횟수", value => value.DurationAffectedSideTurnEnds)),
                 [TraitKey.DustScreen] = new(
@@ -101,10 +104,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Descriptions.Tr
                 [TraitKey.Taunt] = new(
                     DescriptionToken<TraitSpec>.From<TauntTraitSpec>("반경", value => value.RadiusCells),
                     DescriptionToken<TraitSpec>.From<TauntTraitSpec>("피해감소율", value => value.DamageReductionPercent)),
-                [TraitKey.ThornField] = new(
-                    DescriptionToken<TraitSpec>.From<ThornFieldTraitSpec>("피해량", value => value.ThornDamage),
-                    DescriptionToken<TraitSpec>.From<ThornFieldTraitSpec>("지속턴수", value => value.LifetimeUnitTurns),
-                    DescriptionToken<TraitSpec>.From<ThornFieldTraitSpec>("방어력감소율", value => value.DefenseReductionPercent)),
+                [TraitKey.ThornBomb] = new(
+                    DescriptionToken<TraitSpec>.From<ThornBombTraitSpec>("피해율", value => value.DamagePercent)),
                 [TraitKey.TrackingShot] = new(
                     DescriptionToken<TraitSpec>.From<TrackingShotTraitSpec>("대상체력기준율", value => value.TargetHealthThresholdPercent),
                     DescriptionToken<TraitSpec>.From<TrackingShotTraitSpec>("피해증가율", value => value.ExtraDamagePercent)),

@@ -54,8 +54,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
         /// </summary>
         /// <param name="facts">턴 종료 판단까지 읽은 사실입니다(선행 미처리 명령 포함, Router의 EndTurn과 같은 사실).</param>
         /// <param name="availability">선택 유닛의 Core 가용성 응답입니다. 응답 전이면 null입니다.</param>
+        /// <param name="skill">스킬 버튼 값입니다(전투 스킬 View 설계 SK4).</param>
         internal void Sync(in CombatInputFacts facts, bool canEnterAttack, bool isAttackActive, bool canUseReturn,
-            CombatActionAvailability availability)
+            CombatActionAvailability availability, CombatSkillButton skill)
         {
             bool blocked = CombatInputPolicy.IsInputBlocked(facts);
             // 루트를 묶기 전·푼 뒤에는 건너뜁니다(_root). 루트 안의 세 칸은 Root.ValidateReferences가 보장합니다.
@@ -64,7 +65,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
             _root?.UnitInfo.SetActionAvailability(blocked ? null : availability,
                 CombatInputPolicy.AllowsTutorialCommand(facts, CombatViewCommandKind.Move),
                 CombatInputPolicy.AllowsTutorialCommand(facts, CombatViewCommandKind.Attack));
-            _actions.SetActionsAvailable(CombatActionButtons.Read(facts, canEnterAttack, isAttackActive, canUseReturn));
+            _actions.SetActionsAvailable(CombatActionButtons.Read(facts, canEnterAttack, isAttackActive, canUseReturn, skill));
         }
 
         /// <summary>행동 버튼을 모두 숨기고 BattleChanger·가방도 막힌 상태로 둡니다. 정지·입력 닫힘이 부릅니다.</summary>

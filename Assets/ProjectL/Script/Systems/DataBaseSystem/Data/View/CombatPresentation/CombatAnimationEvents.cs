@@ -12,21 +12,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     /// <para>이벤트 함수 이름의 원본은 이 클래스 하나입니다. 다른 곳은 <c>nameof</c>로만 씁니다.</para>
     /// <para>
     /// DataBaseSystem의 첫 MonoBehaviour입니다(평가 G5). 프리팹에 붙는 작업 입력(이름표·자리 표시 — 이벤트 함수, 전투 재생이 맡을 Animator,
-    /// 원거리 발사 지점, 이펙트 지점)과 그 규칙 함수(<see cref="FindIn"/>)만 둡니다.
+    /// 이벤트 지점 목록)과 그 규칙 함수(<see cref="FindIn"/>)만 둡니다.
     /// 런타임 상태·<c>Update</c>·서비스 참조는 두지 않습니다(잘못 불렸을 때 한 번만 알리는 표시는 예외).
     /// </para>
     /// </remarks>
     [DisallowMultipleComponent, RequireComponent(typeof(Animator))]
     internal sealed class CombatAnimationEvents : MonoBehaviour
     {
-        [Tooltip("원거리(직선·곡사) 공격 클립의 발사 지점입니다(포구 뼈나 빈 GameObject). 근접만 쓰는 유닛은 비워 둡니다. 필요한지는 외형 표 검사(CombatUnitAnimationRules)가 정합니다.")]
-        [SerializeField] private Transform muzzle;
-
-        [Tooltip("공격 클립의 이벤트 타이밍에 이펙트를 낼 지점입니다(무기 끝·총구 등, 위치와 회전을 씀). 공격 칸에 이펙트를 고른 유닛은 반드시 지정합니다(외형 표 검사). 원거리 유닛은 발사 지점과 같은 Transform이어도 됩니다.")]
-        [SerializeField] private Transform effectPoint;
-
-        [Tooltip("필요할 때만 추가하는 공격 지점입니다. 첫 원소는 지점 1이며 기존 muzzle/effectPoint는 지점 0으로 유지합니다.")]
-        [SerializeField] private CombatAttackPoint[] additionalAttackPoints = Array.Empty<CombatAttackPoint>();
+        [Tooltip("이벤트 지점 목록입니다(클립 칸 다시 짜기 설계 CS4). 번호 = 목록 칸입니다. 원거리 클립의 이벤트 줄이 발사 지점으로, 공격 이펙트 큐의 ActorEventPoint가 이펙트 자리로 번호를 고릅니다. "
+            + "한 타이밍에 지점 둘(발사 하나, 이펙트 하나)을 각각 쓸 수 있습니다. 쓰는 번호의 칸은 비면 안 되고 이 프리팹 안 Transform이어야 합니다(외형 표 검사).")]
+        [SerializeField] private Transform[] eventPoints = Array.Empty<Transform>();
 
         private bool _reportedCall;
 
@@ -48,14 +43,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// <summary>같은 GameObject의 Animator입니다. 전투 재생은 이 Animator만 맡습니다.</summary>
         internal Animator Animator => GetComponent<Animator>();
 
-        /// <summary>원거리 공격 클립의 발사 지점입니다(클립 설계 5차 AC13). 없으면 null입니다(근접만 쓰는 유닛).</summary>
-        internal Transform Muzzle => muzzle;
-
-        /// <summary>공격 클립의 이벤트 타이밍 이펙트를 낼 지점입니다(이펙트 설계 EF4). 없으면 null입니다(공격 칸에 이펙트가 없는 유닛).</summary>
-        internal Transform EffectPoint => effectPoint;
-
-        /// <summary>입력 목록을 복사해 연결 동안 사용할 지점 정의를 만듭니다. 배열/번호 해석은 이 값에 감춥니다.</summary>
-        internal CombatAttackPoints CaptureAttackPoints() => new(muzzle, effectPoint, additionalAttackPoints);
+        /// <summary>입력 목록을 복사해 연결 동안 사용할 이벤트 지점을 만듭니다. 배열/번호 해석은 이 값에 감춥니다.</summary>
+        internal CombatEventPoints CaptureEventPoints() => new(eventPoints);
 
         /// <summary>
         /// <paramref name="root"/> 아래(비활성 포함)에서 이 컴포넌트를 찾습니다. 없으면 null입니다.

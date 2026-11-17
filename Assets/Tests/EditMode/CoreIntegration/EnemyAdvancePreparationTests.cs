@@ -445,7 +445,7 @@ namespace ProjectL.Tests.CoreIntegration
                 Source = new EnemyDecisionSourceStampTests.SourceFixture(hiddenTerrain, startEnemy, pendingRoar);
                 var publication = Source.Battle.Publication();
                 Service = new CombatAdvanceService(Source.Assembler, publication.Publisher,
-                    CombatMovementRules.Validated(new IMovementTileRule[] { new ThornMovementTileRule(),
+                    CombatMovementRules.Validated(new IMovementTileRule[] {
                         new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule() }),
                     () => Frame, () => Timestamp += TickStep, timestampFrequency, usePreparation: true);
                 Service.PostBindService(Source.Reader);

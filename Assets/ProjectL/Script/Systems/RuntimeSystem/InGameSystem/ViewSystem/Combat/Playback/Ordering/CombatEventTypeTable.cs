@@ -52,6 +52,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         Haboob,
         /// <summary>적 본부 증원의 생성 시점 사실을 보입니다.</summary>
         Reinforcement,
+        /// <summary>플레이어 액티브 스킬 사건 51입니다. 사건 모양이 경로 비행·범위를 정합니다(전투 스킬 View 설계 SK3). </summary>
+        PlayerSkill,
+        ThornBomb,
     }
 
     /// <summary>적 연출 간격의 종류입니다(형식 표의 열). 간격 값과 상태 기계는 <c>CombatEnemyPresentationPacing</c>이 맡습니다.</summary>
@@ -103,6 +106,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 actor: e => e.Attack.AttackerId,
                 attackSource: e => CombatAttackSource.Of(e.Attack.AttackerId, e.Attack),
                 pacing: e => e.Attack.Succeeded ? CombatEventPacing.Attack : CombatEventPacing.None),
+            // 플레이어 액티브 스킬 사건 51은 폭발·투사체 하나마다 그 결과 앞에 옵니다(Core 인계 §6). 공격처럼 행동 시작이고 출처를 엽니다.
+            // 피해 근원 열쇠는 (공격 그룹, 시전자)라 뒤따르는 피해·사망·넉백이 이 출처에 맺힙니다(전투 스킬 View 설계 SK3). 관통 기록은 없습니다(경로·접촉 칸은 모양이 읽음).
+            Row<CombatPlayerSkillAttackEvent>(CombatEventHandlerSlot.PlayerSkill, isActionStart: true,
+                actor: e => e.Attack.ActorId,
+                attackSource: e => new CombatAttackSource(e.Attack.ActorId, e.Attack.AttackGroup, null),
+                pacing: _ => CombatEventPacing.Attack),
             Row<CombatRoarEvent>(CombatEventHandlerSlot.Roar, isActionStart: true,
                 actor: e => e.BossId,
                 // 대상 없는 포효는 출처가 아닙니다.
@@ -151,7 +160,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 moment: e => CombatTerrainChanges.IsWeakGroundCollapse(e, out CellCoord cell)
                     ? CombatEventMoment.AtCell(CombatMomentKind.WeakGroundCollapse, cell)
                     : (CombatEventMoment?)null),
-            Row<CombatThornConsumedEvent>(CombatEventHandlerSlot.Facts),
+            Row<CombatThornBombAttachedEvent>(CombatEventHandlerSlot.ThornBomb),
+            // 폭발 머리 사건은 앞 묶음을 기다립니다. 뒤의 피격·강제 이동은 이 폭발의 그룹에 연결합니다.
+            Row<CombatThornBombDetonatedEvent>(CombatEventHandlerSlot.ThornBomb,
+                attackSource: e => new CombatAttackSource(e.Bomb.SourceId, e.AttackGroup, null),
+                opensAttackSource: _ => true),
+            // 낙사로 터지지 않고 사라진 폭탄입니다. 그 유닛의 추락 연출 뒤에 부착물을 거두고, 다른 유닛의 동시 넉백은 끊지 않습니다.
+            Row<CombatThornBombDiscardedEvent>(CombatEventHandlerSlot.ThornBomb,
+                subject: e => e.Bomb.TargetId),
             // 장애물 칸은 피해 근원의 물리 칸(= 장애물 앵커)입니다. 비면 칸 없는 순간이라 소리만 납니다.
             Row<CombatObstacleReactionEvent>(CombatEventHandlerSlot.Facts,
                 subject: e => e.ObstacleId,
@@ -268,7 +284,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <summary>
         /// 처리기가 공격 연출(과 그 출처 Gate)을 새로 열 수 있는 사건인지입니다(특성 발동 연출 결정 Q-TD1 A). 지금은 추가 공격 시작 발동 사건입니다(특성 시스템 View 계획 Tb.3).
         /// 출처와 행동 실행은 하나씩이라 공격 Gate가 이 사건을 이전 출처의 전체 종료까지 기다리게 하고, 주체 막기도 행동 사건처럼 모든 유닛 연출을 기다리게 합니다
-        /// (행동 실행이 히트 전인 동안 걸음·반응이 멈추므로, 묶음 끝 검토 M1). 새 행동 시작(<see cref="IsActionStart"/>)과 달리
+        /// (행동 실행이 히트 전인 동안 걸음(넉백 등)이 멈추므로, 묶음 끝 검토 M1). 새 행동 시작(<see cref="IsActionStart"/>)과 달리
         /// 강조 끄기·동시 묶음·이동 경로·간격은 바꾸지 않습니다. View 연출 줄이 없어도 Core 사실만 보고 답합니다.
         /// </summary>
         internal static bool OpensAttackSource(CombatEvent e)

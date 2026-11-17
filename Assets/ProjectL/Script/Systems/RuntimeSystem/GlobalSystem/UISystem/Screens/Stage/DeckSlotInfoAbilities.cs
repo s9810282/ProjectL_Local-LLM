@@ -47,12 +47,12 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             if (contents == null) throw new ArgumentNullException(nameof(contents));
         }
 
-        internal void Render(UnitCardTraitContent[] contents)
+        internal void Render(UnitCardTraitContent[] contents, IReadOnlyDictionary<TraitKey, int> ownedRanks = null)
         {
             ValidateContent(contents);
             category.Render(contents);
-            unit.Render(contents, TraitOrigin.Unit);
-            growth.Render(contents, TraitOrigin.Growth);
+            unit.Render(contents, TraitOrigin.Unit, ownedRanks);
+            growth.Render(contents, TraitOrigin.Growth, ownedRanks);
 
             // 세로 레이아웃은 같은 부모 아래의 형제 순서를 따릅니다.
             if (unit.Root.GetSiblingIndex() > growth.Root.GetSiblingIndex())
@@ -137,7 +137,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 throw DeckSlotInfoReferences.Error(owner, field + ".template은 영역 내부의 세로 목록에 연결해야 합니다.");
         }
 
-        internal void Render(UnitCardTraitContent[] contents, TraitOrigin origin)
+        internal void Render(UnitCardTraitContent[] contents, TraitOrigin origin, IReadOnlyDictionary<TraitKey, int> ownedRanks)
         {
             if (_slots.Count == 0) _slots.Add(template);
             int count = 0;
@@ -145,7 +145,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             {
                 if (content.Origin != origin) continue;
                 if (count == _slots.Count) _slots.Add(template.Clone(template.Root.parent));
-                _slots[count++].Render(content, true);
+                _slots[count++].Render(content, true, ownedRanks);
             }
             for (int i = count; i < _slots.Count; i++) _slots[i].Render(default, false);
             root.gameObject.SetActive(count > 0);
@@ -160,6 +160,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         [SerializeField] private Image icon;
         [SerializeField] private TMP_Text name;
         [SerializeField] private TMP_Text description;
+        [SerializeField] private Image levelBadge;
+        [SerializeField] private TMP_Text levelText;
 
         internal RectTransform Root => root;
 
@@ -169,14 +171,22 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             DeckSlotInfoReferences.RequireChild(icon, root, field + ".icon");
             DeckSlotInfoReferences.RequireChild(name, root, field + ".name");
             DeckSlotInfoReferences.RequireChild(description, root, field + ".description");
-            if (name == description) throw DeckSlotInfoReferences.Error(owner, field + ": 이름·설명은 별도 텍스트여야 합니다.");
+            DeckSlotInfoReferences.RequireChild(levelBadge, icon.transform, field + ".levelBadge");
+            DeckSlotInfoReferences.RequireChild(levelText, levelBadge.transform, field + ".levelText");
+            if (name == description || name == levelText || description == levelText)
+                throw DeckSlotInfoReferences.Error(owner, field + ": 이름·설명·등급은 별도 텍스트여야 합니다.");
+            if (levelBadge.raycastTarget || levelText.raycastTarget)
+                throw DeckSlotInfoReferences.Error(owner, field + ".levelBadge·levelText의 Raycast Target은 꺼야 합니다.");
         }
 
-        internal void Render(UnitCardTraitContent content, bool visible)
+        internal void Render(UnitCardTraitContent content, bool visible, IReadOnlyDictionary<TraitKey, int> ownedRanks = null)
         {
             icon.sprite = visible ? content.Icon : null;
             name.text = visible ? content.Name : string.Empty;
             description.text = visible ? content.Description : string.Empty;
+            string label = visible ? content.FormatLevel(ownedRanks) : string.Empty;
+            levelText.text = label;
+            levelBadge.gameObject.SetActive(label.Length > 0);
             root.gameObject.SetActive(visible);
         }
 
@@ -192,7 +202,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 root = clone,
                 icon = MapTransform(icon.transform, root, clone).GetComponent<Image>(),
                 name = MapTransform(name.transform, root, clone).GetComponent<TMP_Text>(),
-                description = MapTransform(description.transform, root, clone).GetComponent<TMP_Text>()
+                description = MapTransform(description.transform, root, clone).GetComponent<TMP_Text>(),
+                levelBadge = MapTransform(levelBadge.transform, root, clone).GetComponent<Image>(),
+                levelText = MapTransform(levelText.transform, root, clone).GetComponent<TMP_Text>()
             };
         }
 

@@ -8,6 +8,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
     /// 전투 필드 표시와 배치 고스트 설정입니다. 표시 모드에 따라 칸 간격의 출처가 다릅니다.
     /// CellPrefab: 프리팹 크기 × cellOffsetSize + cellPaddingX/Y. GridOutline: outlineCellSpacing.
     /// 카메라 설정은 다른 작업자가 맡습니다.
+    /// 필드 색은 <see cref="Colors"/> 한 묶음이고, 에디터에서 이 SO를 고치면 <c>EditorChanged</c> 신호가 나가 전투 중인 필드가 바로 다시 그립니다
+    /// (필드 색 DB 설계 FC1·FC3).
     /// </summary>
     [Serializable]
     internal sealed class StageFieldViewData : IData
@@ -71,7 +73,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
         [SerializeField, Range(MinCellOutlineScale, MaxCellOutlineScale)] private float cellOutlineScale = 1f;
         [Tooltip("겹치지 않은 칸 테두리의 바깥으로 튀어나온 모서리 반지름입니다(크기 짧은 반변 대비 비율). Merged는 덩어리(칸 크기)의 볼록 모서리만 둥글고 안으로 꺾인 모서리는 늘 직각이며, 맨 아래 채우기는 늘 네모입니다. EachCell은 칸(칸 × cellOutlineScale)마다 네 모서리가 둥글고 맨 아래 채우기도 같은 모양입니다(칸 크기 1에서 0보다 크면 칸마다 고리라 맞닿은 곧은 변이 두 번 겹쳐 진하게 보일 수 있음). 0이면 모두 직각, 1이면 한 칸짜리가 원(정사각 칸)입니다. 겹친 칸 안쪽 판의 테두리는 overlapCornerRadius를 씁니다. 바꾼 값은 다음 Combat 진입부터 적용됩니다.")]
         [SerializeField, Range(MinCornerRadiusRatio, MaxCornerRadiusRatio)] private float outlineCornerRadius;
-        [Tooltip("행동 중 배치 구역·이동/공격 범위·공격 영향·호버 칸을 반투명하게 채우는 머티리얼(ProjectL/Combat/CellFill 셰이더)입니다. 비워 두면 채우지 않습니다. 채우기 알파는 강조 색 알파 × FieldView fillAlpha입니다.")]
+        [Tooltip("행동 중 배치 구역·이동/공격 범위·공격 영향·호버 칸을 반투명하게 채우는 머티리얼(ProjectL/Combat/CellFill 셰이더)입니다. 비워 두면 채우지 않습니다. 채우기 알파는 강조 색 알파 × 아래 Colors 묶음의 fillAlpha입니다.")]
         [SerializeField] private Material highlightFillMaterial;
         [Tooltip("한 칸에 채우기가 겹치면 위 채우기를 한 단계마다 이 비율로 줄여 안쪽에 그립니다(아래부터 k번째 = 기본 칸 크기 × 비율^k, 기본 방식이 EachCell이면 cellOutlineScale도 곱함). 겹친 강조는 overlapCellOutlineStyle이 Merged면 같은 층끼리 한 덩어리로 이어지고 바깥 둘레만 그만큼 안쪽으로 들어가며, EachCell이면 칸마다 따로 줄어듭니다. 0.95에 가까우면 안쪽으로 드는 거리가 테두리 두께보다 작아 칸 테두리와 겹친 칸 테두리 띠가 겹칠 수 있습니다. 범위는 슬라이더와 같습니다. 바꾼 값은 다음 Combat 진입부터 적용됩니다.")]
         [SerializeField, Range(MinOverlapInsetScale, MaxOverlapInsetScale)] private float overlapInsetScale = 0.7f;
@@ -79,7 +81,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
         [SerializeField, Range(MinCornerRadiusRatio, MaxCornerRadiusRatio)] private float overlapCornerRadius = 0.35f;
 
         [Header("Movement Path (GridOutline 이동 경로 띠·화살촉)")]
-        [Tooltip("이동 Drag 때 칸 중심을 잇는 경로 띠의 두께(월드 길이)입니다. 띠·화살촉 색은 Combat 씬 FieldView의 이동 초안 색입니다.")]
+        [Tooltip("이동 Drag 때 칸 중심을 잇는 경로 띠의 두께(월드 길이)입니다. 띠·화살촉 색은 아래 Colors 묶음의 이동 예정 경로 색(movementDraftColor)입니다.")]
         [SerializeField, Min(0f)] private float movementPathThickness = 0.06f;
         [Tooltip("필드 평면 위로 이동 경로 띠와 화살촉을 띄우는 높이입니다. 칸 테두리 높이(outlineYOffset) 이상이어야 합니다. 그 위에 모든 칸 테두리보다 한 단계 더 올려 반투명 채우기·테두리가 경로 위에 덧칠되지 않게 하고, 지형(고지대) 칸에서는 그 높이를 더합니다.")]
         [SerializeField, Min(0f)] private float movementPathYOffset = 0.02f;
@@ -129,6 +131,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
         [Header("Movement Planning")]
         [SerializeField, Range(0.01f, 1f)] private float movementOriginalOpacity = 0.65f;
         [SerializeField] private Color neutralGhostTint = new(0.8f, 0.8f, 0.8f, 0.5f);
+        [Header("Colors (필드 색, 필드 색 DB 설계 FC1)")]
+        [Tooltip("칸 강조·궤적·넉백/끌어오기 화살표 색입니다. 에디터에서 고치면 전투 중인 필드에 바로 반영되고, 플레이 중에 고친 값도 이 에셋에 남습니다.")]
+        [SerializeField] private FieldColorsData colors = new();
 
         public FieldDisplayMode DisplayMode => fieldDisplayMode;
         /// <summary>CellPrefab 모드에서만 쓰며, GridOutline 모드에서는 null일 수 있습니다.</summary>
@@ -220,6 +225,41 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
         public float FieldUnitScale => fieldUnitScale;
         public float MovementOriginalOpacity => movementOriginalOpacity;
         public Color NeutralGhostTint => neutralGhostTint;
+        /// <summary>필드 색 묶음입니다(필드 색 DB 설계 FC1). 필드는 이 묶음을 들고 그릴 때 읽습니다.</summary>
+        public FieldColorsData Colors => colors;
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// 에디터에서 이 설정의 SO 값이 바뀌었다는 신호입니다(필드 색 DB 설계 FC3). 인자는 SO가 지금 든 설정 객체입니다.
+        /// SO 로드·도메인 리로드 때도 날 수 있어, 받는 쪽은 구성 전이면 무시합니다(계획 TP-7). 빌드에는 없습니다.
+        /// </summary>
+        internal static event Action<StageFieldViewData> EditorChanged;
+
+        // 이 설정을 든 SO입니다(저장 안 함). Unity가 인스펙터 수정 때 안쪽 객체를 새로 만들어 끼워도
+        // 같은 SO에서 온 신호인지 가릴 수 있게 SO가 내줄 때·신호를 낼 때 적습니다(묶음 끝 검토 L2).
+        [NonSerialized] private StageFieldViewDataSO _editorOwner;
+
+        internal void BindEditorOwner(StageFieldViewDataSO owner) => _editorOwner = owner;
+
+        internal void NotifyEditorChanged(StageFieldViewDataSO owner)
+        {
+            _editorOwner = owner;
+            EditorChanged?.Invoke(this);
+        }
+
+        /// <summary>
+        /// 두 설정이 같은 SO에서 왔는지입니다(묶음 끝 검토 L2). 같은 객체면 참이고, 다른 객체면 둘 다 같은 SO가 적어 둔 것일 때만 참입니다.
+        /// SO를 거치지 않고 만든 설정(SO가 적지 않음)은 같은 객체일 때만 참입니다.
+        /// </summary>
+        internal bool IsSameEditorSource(StageFieldViewData other)
+        {
+            if (other == null)
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return _editorOwner != null && _editorOwner == other._editorOwner;
+        }
+#endif
 
         internal void Validate()
         {
@@ -245,6 +285,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
                 throw new InvalidOperationException("[StageFieldViewData] Scale values must be positive.");
             ValidateTrajectory();
             ValidateKnockbackPreview();
+            if (colors == null)
+                throw new InvalidOperationException("[StageFieldViewData] 필드 색 묶음(colors)이 필요합니다.");
+            colors.Validate();
         }
 
         /// <summary>공격 궤적 값 조건의 원본입니다. 표시 모드와 상관없이 검사합니다(공격 궤적 설계 TJ8).</summary>
@@ -384,6 +427,20 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageField.Item
     {
         [SerializeField] private StageFieldViewData stageFieldViewData = new();
 
-        public override IData GetData() => stageFieldViewData;
+        public override IData GetData()
+        {
+#if UNITY_EDITOR
+            // 받는 쪽이 신호의 출처를 이 SO로 가릴 수 있게 적어 둡니다(묶음 끝 검토 L2). 빌드에는 없습니다.
+            stageFieldViewData?.BindEditorOwner(this);
+#endif
+            return stageFieldViewData;
+        }
+
+#if UNITY_EDITOR
+        // 인스펙터에서 값이 바뀌면 전투 중인 필드에 알립니다(필드 색 DB 설계 FC3). 지금 든 설정 객체를 넘겨,
+        // Unity가 안쪽 객체를 새로 만들어 끼웠어도 받는 쪽이 새 객체를 가리키게 합니다. 이 SO를 출처로 적어,
+        // 받는 쪽이 자기를 구성한 SO의 신호만 받게 합니다(묶음 끝 검토 L2).
+        private void OnValidate() => stageFieldViewData?.NotifyEditorChanged(this);
+#endif
     }
 }

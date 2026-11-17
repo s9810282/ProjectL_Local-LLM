@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project L · 스테이지 기믹 시뮬레이션</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #f4f2ec;
+    --panel: #fffefa;
+    --ink: #202a27;
+    --muted: #59665f;
+    --line: #dcded3;
+    --green: #164c40;
+    --board: #1d2c29;
+    font: 16px/1.55 "Inter", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    word-break: keep-all;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:disabled { cursor: default; }
+  button:focus-visible, summary:focus-visible { outline: 3px solid #ce7345; outline-offset: 3px; }
+  [hidden] { display: none !important; }
+  h1, h2, p { margin: 0; }
+  .page { max-width: 1140px; margin: auto; padding: 36px 24px 30px; }
+  .masthead { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .source { color: var(--green); font-size: .83rem; font-weight: 750; }
+  h1 { margin: 5px 0 7px; font-size: clamp(1.8rem, 4vw, 2.75rem); letter-spacing: -.065em; line-height: 1.18; }
+  .masthead p:last-child, .description, .help, footer { color: var(--muted); }
+  .scenarios { display: flex; flex-wrap: wrap; gap: 7px; margin: 18px 0; }
+  .scenarios button, .secondary, .primary, .demo-action {
+    min-height: 41px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 13px; background: var(--panel);
+    font-size: .9rem; font-weight: 720;
+  }
+  .scenarios button:hover, .secondary:hover, .demo-action:hover { border-color: var(--green); }
+  .scenarios button[aria-pressed="true"], .primary { background: var(--green); border-color: var(--green); color: white; }
+  .primary:hover:enabled { background: #216354; }
+  .primary:disabled, .demo-action:disabled { color: #5d6c64; background: #e8eee9; border-color: #cbd8cf; }
+  .turnbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 16px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel);
+  }
+  .turn-state { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 11px; }
+  .turn-state strong { font-size: 1.1rem; }
+  .turn-state span { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .88rem; }
+  .turn-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .panel-head { padding: 15px 17px; }
+  h2 { font-size: 1.1rem; letter-spacing: -.026em; }
+  .description { margin-top: 4px; font-size: .89rem; }
+  .field { padding: 10px 13px 13px 8px; background: var(--board); color: #d9e8df; }
+  .axes { display: grid; grid-template-columns: 1.5rem repeat(9, 1fr); grid-template-rows: 1.35rem auto; }
+  .axis { text-align: center; color: #b1c8bc; font-size: .72rem; font-weight: 750; }
+  .rows { display: grid; grid-template-rows: repeat(9, 1fr); }
+  .rows .axis { align-self: center; }
+  #board {
+    grid-column: 2 / -1; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr));
+    grid-template-rows: repeat(9, minmax(0, 1fr)); gap: 3px; aspect-ratio: 1;
+  }
+  .tile {
+    padding: 0; position: relative; isolation: isolate; display: grid; place-items: center;
+    border: 1px solid #496158; border-radius: 4px; background: #344942; color: #e8f7ed; min-width: 0; min-height: 0;
+  }
+  .tile:hover { border-color: #e8f7ed; }
+  .tile:focus-visible { z-index: 2; outline-offset: 1px; }
+  .tile.smog { background: #515c35; border-color: #75804a; }
+  .tile.flame { background: #674132; border-color: #a96a48; }
+  .tile.altar { background: #4e4166; border-color: #8e7cb0; }
+  .tile.stair { background: #474450; border-color: #69616f; }
+  .tile.circle { background: #394f68; border-color: #7398bd; }
+  .tile.heat { background: #6f422d; border-color: #dd8c55; }
+  .tile.wall { background: repeating-linear-gradient(135deg, #172722 0 5px, #2b3c33 5px 10px); }
+  .tile.pillar { background: #2a322e; border-color: #657268; }
+  .tile.lava { background: #502c24; border-color: #b46242; }
+  .tile.spent { filter: saturate(.57); }
+  .tile.meteor-warning { box-shadow: inset 0 0 0 2px #f1bc6a; }
+  .tile.eruption-warning { outline: 1px dashed #ff9f94; outline-offset: -4px; }
+  .tile.chain-preview { border-bottom: 2px dotted #a6d8e4; }
+  .tile.chain-path { background-image: linear-gradient(135deg, #697d76, #435a52); }
+  .tile.impact { border-bottom: 3px solid #ffbb87; }
+  .terrain-mark { position: absolute; font-size: clamp(.66rem, 1.8vw, 1.1rem); color: #f0d9b7; }
+  .tile.has-unit .terrain-mark { left: 3px; bottom: 0; font-size: .67rem; }
+  .tile .warn { position: absolute; top: 1px; right: 2px; color: #ffe3ad; font-size: clamp(.57rem, 1vw, .72rem); font-weight: 780; }
+  .piece {
+    position: relative; border-radius: 41%; line-height: 1; display: grid; place-items: center; font-weight: 800;
+    width: 65%; max-width: 37px; aspect-ratio: 1; color: #12221e; background: #a6e2cb; border: 1px solid #182822;
+    box-shadow: 0 2px 3px #121d1980; font-size: clamp(.55rem, 1.6vw, .84rem);
+  }
+  .piece.enemy { background: #f2ad88; color: #3a251b; border-radius: 25%; }
+  .piece.head { background: #cce7f0; border-radius: 18%; }
+  .piece.selected { outline: 2px solid #e6fcf2; outline-offset: 2px; }
+  .piece.rebuilding { outline: 2px dashed #ffd499; outline-offset: 1px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 11px 16px 0; color: var(--muted); font-size: .78rem; }
+  .key { display: inline-flex; align-items: center; gap: 5px; }
+  .key i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #576e60; }
+  .key .player { background: #a6e2cb; }
+  .key .enemy { background: #f2ad88; }
+  .key .smog { background: #79884f; }
+  .key .meteor { border: 2px solid #ad6a1f; }
+  .key .flame { background: #a96949; }
+  .key .eruption { border: 2px dashed #b75f55; }
+  .key .lava { background: #a75335; }
+  .key .chain { background: #cce7f0; }
+  .key .altar { background: #9d84c1; }
+  .key .circle { background: #91afd3; }
+  .help { padding: 8px 16px 13px; font-size: .81rem; min-height: 2.6rem; }
+  .side { display: grid; gap: 13px; }
+  .demo-action { background: #f9efe5; border-color: #e6c9b2; color: #7c381d; margin-top: 9px; }
+  .events { padding: 0 16px 13px; }
+  .event-list, .actor-list, .rule-list { margin: 0; padding: 0; list-style: none; }
+  .event-list { display: grid; gap: 7px; }
+  .event-list li { display: grid; grid-template-columns: 3.25rem 1fr; align-items: baseline; gap: 7px; font-size: .86rem; }
+  .event-list li b { background: #e9eee7; color: #315349; border-radius: 4px; text-align: center; font-size: .74rem; padding: 2px; }
+  .event-list li[data-kind="피해"] b, .event-list li[data-kind="처형"] b { background: #f6e4d9; color: #853a20; }
+  .event-list li[data-kind="예고"] b, .event-list li[data-kind="선택"] b { background: #f5ebd3; color: #714f1d; }
+  details { border-top: 1px solid var(--line); }
+  summary { cursor: pointer; font-weight: 720; padding: 9px 16px; font-size: .85rem; }
+  .history { max-height: 16rem; overflow: auto; padding: 0 16px 14px; }
+  .history h3 { margin: 10px 0 5px; font-size: .82rem; color: var(--muted); }
+  .actor-list { display: grid; gap: 9px; padding: 0 16px 14px; }
+  .actor { border-top: 1px solid var(--line); padding-top: 7px; }
+  .actor-title, .actor-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+  .actor-title { justify-content: space-between; }
+  .actor-title b { font-size: .92rem; }
+  .actor-title span, .actor-facts { color: var(--muted); font-size: .79rem; font-variant-numeric: tabular-nums; }
+  .hp { height: 5px; display: block; margin: 6px 0 5px; background: #e5eae2; border-radius: 3px; overflow: hidden; }
+  .hp i { height: 100%; display: block; background: #37806b; }
+  .actor.enemy .hp i { background: #b56242; }
+  .choice { border-color: #c28648; background: #fff8ea; }
+  .rewards { display: grid; gap: 7px; padding: 0 16px 15px; }
+  .rewards button { text-align: left; padding: 8px 11px; border: 1px solid #d8ba96; border-radius: 7px; background: #fffdf8; }
+  .rewards button:hover { border-color: #9a5b30; background: #fff2d8; }
+  .rewards button span { display: block; color: var(--muted); font-size: .78rem; }
+  .rule-list { padding: 0 16px 13px; color: var(--muted); font-size: .86rem; }
+  .rule-list li + li { margin-top: 6px; }
+  footer { padding: 14px 0 0; font-size: .8rem; }
+  @media (max-width: 790px) { .layout { grid-template-columns: 1fr; } .page { max-width: 620px; } }
+  @media (max-width: 480px) {
+    .page { padding: 22px 12px; }
+    .turnbar, .panel-head { padding: 11px 12px; }
+    .turn-actions .primary { min-width: 135px; }
+    .scenarios { gap: 5px; }
+    .scenarios button { padding-inline: 9px; font-size: .82rem; }
+    #board { gap: 2px; }
+    .tile.has-unit .terrain-mark { font-size: .55rem; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="masthead">
+    <p class="source">Project L · 2026.11.17 승인 플랜</p>
+    <h1>스테이지 기믹 시뮬레이션</h1>
+    <p>예제를 고르고 턴 종료를 눌러 예고, 발동, 만료를 확인하세요.</p>
+  </header>
+  <nav id="scenarios" class="scenarios" aria-label="기믹 예제"></nav>
+  <div class="turnbar">
+    <div class="turn-state"><strong id="turn-side"></strong><span id="turn-count"></span></div>
+    <div class="turn-actions">
+      <button type="button" class="secondary" id="reset">다시 시작</button>
+      <button type="button" class="primary" id="next">턴 종료</button>
+    </div>
+  </div>
+  <div class="layout">
+    <section class="panel" aria-labelledby="scenario-name">
+      <div class="panel-head"><h2 id="scenario-name"></h2><p class="description" id="setup"></p></div>
+      <div class="field">
+        <div class="axes">
+          <span></span><div id="columns" style="display:contents" aria-hidden="true"></div>
+          <div class="rows" id="rows" aria-hidden="true"></div>
+          <div id="board" role="group" aria-label="9×9 시연 전장"></div>
+        </div>
+      </div>
+      <div id="legend" class="legend" aria-label="전장 범례"></div>
+      <p class="help" id="board-help" aria-live="polite"></p>
+      <details><summary>이 예제의 판정 기준</summary><ul id="rules" class="rule-list"></ul></details>
+    </section>
+    <div class="side">
+      <section id="choice" class="panel choice" aria-labelledby="choice-title" hidden>
+        <div class="panel-head"><h2 id="choice-title">등가교환 보상 선택</h2><p class="description" id="choice-cost"></p></div>
+        <div class="rewards" id="rewards"></div>
+      </section>
+      <section class="panel" aria-labelledby="event-title">
+        <div class="panel-head">
+          <h2 id="event-title">처리 순서</h2><p class="description" id="event-step"></p>
+          <button type="button" class="demo-action" id="sample-action" hidden></button>
+        </div>
+        <div class="events" id="events" aria-live="polite"></div>
+        <details id="history-panel" hidden><summary>앞선 턴 기록</summary><div class="history" id="history"></div></details>
+      </section>
+      <section class="panel" aria-labelledby="actors-title">
+        <div class="panel-head"><h2 id="actors-title">캐릭터 상태</h2></div>
+        <ul class="actor-list" id="actors"></ul>
+      </section>
+    </div>
+  </div>
+  <footer>시연용 배치와 일부 첫 예고를 고정했습니다. 피해·재구성 예시는 플랜의 판정을 확인하는 데 필요한 범위만 재현합니다.</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+
+  const size = 9;
+  const columns = 'ABCDEFGHI';
+  const cells = Array.from({ length: size * size }, (_, i) => i);
+  const sideNames = { player: '플레이어', enemy: '적' };
+  const statNames = { max: '최대 체력', atk: '공격력', def: '방어력' };
+  const statMarks = { max: '체', atk: '공', def: '방' };
+  const exchangeValues = { max: 5, atk: 3, def: 3 };
+  const directions = [
+    { x: 0, y: -1, arrow: '↑' }, { x: 1, y: -1, arrow: '↗' },
+    { x: 1, y: 0, arrow: '→' }, { x: 1, y: 1, arrow: '↘' },
+    { x: 0, y: 1, arrow: '↓' }, { x: -1, y: 1, arrow: '↙' },
+    { x: -1, y: 0, arrow: '←' }, { x: -1, y: -1, arrow: '↖' }
+  ];
+  const cardinal = directions.filter((_, i) => i % 2 === 0);
+  const diagonals = directions.filter((_, i) => i % 2 !== 0);
+
+  function cellAt(x, y) {
+    return x >= 0 && x < size && y >= 0 && y < size ? y * size + x : -1;
+  }
+  const row = cell => Math.floor(cell / size);
+  const step = (cell, dir) => cellAt(cell % size + dir.x, row(cell) + dir.y);
+  const coord = cell => columns[cell % size] + (row(cell) + 1);
+  const byCoord = label => cellAt(columns.indexOf(label[0]), Number(label.slice(1)) - 1);
+  const cross = center => cardinal.map(dir => step(center, dir));
+  const square = center => [center, ...directions.map(dir => step(center, dir))];
+  const percent = (value, rate) => Math.floor(value * rate / 100);
+
+  const demos = {
+    together: {
+      name: '동시 발동', kinds: ['smog', 'meteor', 'eruption', 'chain'], begins: 9,
+      setup: '9회 종료 상태에서 시작합니다. 10회·11회 예고를 지나 12회에 기존 장판 만료, 운석, 분출, 사슬 순서를 보세요.',
+      band: 1, nextBand: 2, head: 'A4', heading: '→', meteors: ['D4', 'G6'], vent: 'D4',
+      oldFlame: 'G7', oldVent: 'B8',
+      units: [
+        { name: '메인', side: 'player', point: 'D4', shield: 20, shieldSource: '분출 9' },
+        { name: '정찰병', point: 'G5', stacks: 1 }
+      ],
+      rules: [
+        '턴 종료마다 1회로 셉니다. 플레이어 턴 종료와 적 턴 종료를 각각 한 번으로 기록합니다.',
+        '만료 → 기존 기믹 → 스모그 이동 → 운석 → 분출 → 사슬 → 스모그 중첩·불길 → 기존 턴 종료 효과 → 제단 → 등가교환 제안 → 새 예고 순서입니다.',
+        '장판은 생긴 순간에는 지속 시간을 깎지 않습니다. 사슬 머리와 새 고정 기둥은 이동·배치·착지와 사슬 진행을 막습니다. 공격은 이 칸을 통과하며 머리와 기둥은 조준 대상에서 제외됩니다.',
+        '12회에 새 분출 보호막은 운석 피해가 끝난 뒤 생깁니다. 새 기둥은 사슬을 막고, 운석 뒤에 쌓인 3번째 스모그 중첩은 그 운석 피해에 적용되지 않습니다.',
+        '한 번의 발동을 정산해 전투 종료가 확정되면 뒤의 판정을 건너뜁니다.'
+      ]
+    },
+    smog: {
+      name: '화산 스모그', kinds: ['smog'], band: 3, nextBand: 4,
+      setup: '메인을 스모그 안에 두고 5회까지 진행하면 3중첩이 됩니다. ‘8 피해 받기’로 실제 체력과 처형을 확인할 수 있습니다.',
+      units: [{ name: '메인', side: 'player', point: 'D5', hp: 24 }, { name: '정찰병', point: 'G6' }],
+      rules: [
+        '전투 시작부터 가로 3줄을 덮습니다. 기본 5회마다 다른 유효한 위치로 옮기며 후보가 하나면 유지합니다.',
+        '스모그를 먼저 옮긴 뒤 턴을 마친 진영의 생존자에게만 중첩을 줍니다. 중첩은 최대 3이며 밖으로 나가도 전투 동안 유지됩니다.',
+        '3중첩이면 공격·반사·환경·지속 피해가 2배입니다. 기존 피해 증가 뒤에 곱하고 방어 아이템과 보호막을 처리합니다.',
+        '스모그 안에서 실제 체력이 줄어 최대 체력의 10% 미만이 되면 회복보다 먼저 처형합니다. 최대 체력 100에서 10은 생존, 9는 처형입니다.',
+        '보호막 소모, 단순 진입, 직접 체력 지불, 최대 체력 변경만으로는 처형하지 않습니다. 같은 타격의 사망·재구성은 한 번만 판정합니다.'
+      ]
+    },
+    meteor: {
+      name: '운석', kinds: ['meteor'], meteors: ['D4', 'G7'],
+      setup: '2회에 범위가 예고되고 4회에 떨어집니다. 메인을 범위에 두면 보호막이 운석 피해를 막아도 화상이 남는 것을 볼 수 있습니다.',
+      units: [{ name: '메인', side: 'player', point: 'D4', shield: 60 }, { name: '정찰병', point: 'G7' }],
+      rules: [
+        '기본 3×3 범위 2~4곳 전체를 예고합니다. 같은 회차 범위끼리는 겹치지 않으며, 캐릭터가 서 있어도 후보가 됩니다.',
+        '예고 전에 자리가 부족하면 개수를 줄이고 최소 2곳도 없으면 발동을 건너뜁니다. 예고 뒤 막힌 범위만 취소하고 예고한 나머지 위치에 떨어집니다.',
+        '한 운석은 캐릭터당 최대 체력의 60% 환경 피해를 한 번 줍니다. 보호막이 전부 흡수해도 생존자는 화상에 걸립니다.',
+        '같은 범위에 불길이 기본 4회 남습니다. 진입 또는 자기 진영 턴 종료 때 화상을 갱신합니다. 겹친 불길은 지속 시간을 따로 세며 한 번의 진입·종료에는 화상도 한 번만 적용됩니다.',
+        '화상 기본 피해는 2이며 걸린 쪽의 턴 시작마다 한 번씩 기본 3회입니다. 다시 걸리면 남은 횟수와 새 횟수 중 큰 값을 씁니다.'
+      ]
+    },
+    eruption: {
+      name: '용암 분출', kinds: ['eruption'], vent: 'E5',
+      setup: '1회에 십자를 예고하고 3회에 분출합니다. 메인을 E5에서 빼고 다시 넣어 보호막을 확인하거나 ‘공격 적중 예시’를 눌러 보세요.',
+      units: [
+        { name: '메인', side: 'player', point: 'E5' },
+        { name: '정찰병', point: 'E4', shield: 50 }, { name: '경비병', point: 'D5' }
+      ],
+      rules: [
+        '예고는 중심과 기둥 네 칸 전체에 표시합니다. 하나라도 발동 시점에 무효면 해당 십자는 통째로 취소합니다.',
+        '처음 기둥 자리에 있던 캐릭터에게만 최대 체력의 30% 피해를 한 번씩 주고, 생존자만 들어갈 수 있는 빈 칸으로 옮깁니다. 옮길 곳이 없으면 재구성으로도 살 수 없는 압사입니다.',
+        '중심 위 캐릭터의 일반·추가·반응·플레이어 스킬 공격에 화상이 붙습니다. 적중한 대상이 살아 있다면 보호막 흡수 여부와 관계없이 적용합니다.',
+        '중심을 나가면 공격 화상 효과가 끝납니다. 보호막은 최대 체력의 20%를 분출 한 번당 캐릭터별로 한 번 주며, 떠났다 돌아와도 충전하지 않습니다.',
+        '중심과 기둥은 기본 3회 뒤 만료됩니다. 장판 밖에 남아 있던 해당 분출의 보호막도 같은 시점에 제거합니다. 다른 분출의 보호막은 출처별로 따로 받을 수 있습니다.',
+        '이동을 취소할 수 있는 경우 그 이동으로 받은 화상·보호막과 보호막 지급 기록도 함께 되돌립니다.'
+      ]
+    },
+    chain: {
+      name: '용암 사슬', kinds: ['chain'], head: 'B5', heading: '→', walls: ['E4'],
+      setup: '2회에 방향을 예고하고 3회에 움직입니다. 정찰병의 첫 착지 칸은 막혀 있고 경비병은 밀치기 면역과 재구성을 갖고 있습니다.',
+      units: [
+        { name: '메인', side: 'player', point: 'B7' },
+        { name: '정찰병', point: 'E5' }, { name: '경비병', point: 'H5', immune: true, reconstruct: true }
+      ],
+      rules: [
+        '여덟 방향 중 전진 가능한 방향을 한 번 뽑아 발동 1회 전에 예고합니다. 새 장애물 앞에서 멈추며 첫 칸부터 막히면 제자리에 있습니다.',
+        '진행과 직각인 두 칸 중 맵 경계가 가까운 쪽을 먼저 시도합니다. 거리가 같으면 왼쪽이 먼저이고, 막히면 반대쪽을 봅니다.',
+        '양쪽 둘 다 불가하거나 밀치기 면역이면 즉사 판정입니다. 재구성으로 제자리에 생존하면 머리는 그 앞에서 멈춥니다.',
+        '전진 한 칸당 동일 캐릭터는 한 번만 접촉합니다. 늘어난 사슬과 진행 중인 머리 칸은 착지할 수 없습니다. 감을 때 추가 타격 없이 마지막 머리만 남습니다.'
+      ]
+    },
+    altar: {
+      name: '악마의 제단', kinds: ['altar'], altar: 'E5',
+      setup: '메인이 제단 중앙에서 시작합니다. 그대로 턴을 끝내거나 다른 칸으로 옮긴 뒤 턴을 끝내 보세요.',
+      units: [{ name: '메인', side: 'player', point: 'E5', max: 30, hp: 28, atk: 8, def: 4 }, { name: '정찰병', point: 'C4' }],
+      rules: [
+        '플레이어 턴 종료 처리를 마친 뒤 살아서 중심에 남은 보유 메인·서브만 발동합니다.',
+        '성장과 이전 제단·계약 변화를 포함한 기본 최대 체력·공격력·방어력의 합을 그대로 두고 같은 확률로 재분배합니다. 영혼·장비·특성·위치 보너스는 제외합니다. 최저치는 기본 1·0·0입니다.',
+        '최대 체력이 늘어도 회복하지 않습니다. 줄어든 최대치보다 현재 체력이 높으면 새 최대치로 낮춥니다.',
+        '제단은 한 번만 쓰며 계단과 대각선 기둥은 남습니다. 바뀐 기본 수치는 이번 런에 지속되고 이후 레벨 성장도 이어집니다.'
+      ]
+    },
+    contract: {
+      name: '등가교환 계약', kinds: ['contract'], circles: { D4: 'max', F5: 'atk', H6: 'def' },
+      setup: '턴을 끝내면 메인과 서브의 제안이 차례로 뜹니다. H6의 서브는 방어력 2라 비용 3을 낼 수 없습니다.',
+      units: [
+        { name: '메인', side: 'player', point: 'D4', max: 30, hp: 28, atk: 7, def: 3 },
+        { name: '서브 A', side: 'player', point: 'F5', max: 25, atk: 6, def: 2 },
+        { name: '서브 B', side: 'player', point: 'H6', max: 25, atk: 6, def: 2 }, { name: '정찰병', point: 'D7' }
+      ],
+      rules: [
+        '턴 종료 효과 뒤 마법진에 살아서 남은 플레이어 보유 캐릭터만 제안을 받습니다. 비용은 기본 수치로 내며 최대 체력은 1, 공격력·방어력은 0 이상 남아야 합니다.',
+        '최대 체력 5, 공격력 3 또는 방어력 3 중 마법진에 적힌 비용을 내고 나머지 두 수치 중 하나를 받습니다.',
+        '유효한 선택 한 번에 비용, 보상, 현재 체력 보정, 마법진 소모가 함께 확정됩니다. 비용을 못 내거나 같은 선택을 다시 입력하면 추가 차감이 없습니다.',
+        '마법진 배치 순으로 보상을 한 건씩 고릅니다. 거절·자동 선택 없이 대기하며 마지막 선택 뒤에만 다음 진영 턴이 시작됩니다. 종료 효과는 반복하지 않습니다.',
+        '선택을 기다리는 동안 이미 시작한 결과 연출은 마칠 수 있습니다. 전투를 포기하면 남은 제안도 닫힙니다.',
+        '마법진은 스테이지마다 한 번 쓸 수 있습니다. 바뀐 기본 수치는 이번 런 동안 유지되며 기존 최대 체력 보정과 이후 성장 규칙을 따릅니다.'
+      ]
+    }
+  };
+
+  const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(el => [el.id, el]));
+  let state;
+  const enabled = kind => state.demo.kinds.includes(kind);
+  const living = () => state.units.filter(unit => unit.hp > 0);
+  const forSide = side => living().filter(unit => unit.side === side);
+  const otherSide = side => side === 'player' ? 'enemy' : 'player';
+  const occupant = cell => living().find(unit => unit.cell === cell);
+  const shieldLeft = unit => unit.shields.reduce((total, item) => total + item.left, 0);
+  const inSmog = cell => enabled('smog') && row(cell) >= state.band && row(cell) < state.band + 3;
+
+  function makeZone(center, born) {
+    return {
+      center, pillars: cross(center), source: '분출 ' + born, expiry: born + 3, granted: new Set()
+    };
+  }
+
+  function reset(id) {
+    const demo = demos[id];
+    const ends = demo.begins ?? 0;
+    state = {
+      id, demo, ends, side: ends % 2 ? 'enemy' : 'player', finished: false, random: 361 + ends,
+      band: demo.band, nextBand: demo.nextBand, head: demo.head ? byCoord(demo.head) : -1,
+      draws: { meteors: demo.meteors, vent: demo.vent, heading: demo.heading },
+      walls: new Set((demo.walls ?? []).map(byCoord)), warnedMeteors: [], warnedVent: -1,
+      heading: null, trail: [], impact: [],
+      flames: demo.oldFlame ? [{ tiles: square(byCoord(demo.oldFlame)), source: '운석 8', expiry: 12 }] : [],
+      vents: demo.oldVent ? [makeZone(byCoord(demo.oldVent), 9)] : [],
+      altar: demo.altar ? { cell: byCoord(demo.altar), used: false } : null,
+      circles: Object.entries(demo.circles ?? {}).map(([point, stat]) => ({ cell: byCoord(point), stat, used: false })),
+      units: demo.units.map((config, id) => ({
+        ...config, id, side: config.side ?? 'enemy', cell: byCoord(config.point),
+        max: config.max ?? 100, hp: config.hp ?? config.max ?? 100,
+        atk: config.atk ?? 8, def: config.def ?? 3, stacks: config.stacks ?? 0,
+        fire: null, rebuilding: 0,
+        shields: config.shield ? [{ source: config.shieldSource ?? '예시 보호막', left: config.shield }] : []
+      })),
+      selected: 0, cursor: byCoord(demo.units[0].point), offers: [], logs: [], help: ''
+    };
+    for (const zone of state.vents) {
+      for (const unit of state.units) {
+        if (unit.shields.some(item => item.source === zone.source)) zone.granted.add(unit.id);
+      }
+    }
+    beginLog(ends ? ends + '회 종료 직후' : '전투 시작');
+    log('시작', ends ? '기존 불길과 분출은 12번째 종료에 만료됩니다.' : '초기 배치를 불러왔습니다.');
+    if (enabled('smog')) log('범위', smogRows() + '행에 스모그가 깔려 있습니다.');
+    render();
+  }
+
+  function randomItem(items) {
+    if (!items.length) return undefined;
+    state.random = (Math.imul(1664525, state.random) + 1013904223) >>> 0;
+    return items[Math.floor(state.random / 4294967296 * items.length)];
+  }
+
+  function draw(name) {
+    const result = state.draws[name];
+    delete state.draws[name];
+    return result;
+  }
+
+  function beginLog(title) {
+    state.logs.unshift({ title, items: [] });
+    if (state.logs.length > 18) state.logs.pop();
+  }
+  function log(kind, message) {
+    state.logs[0].items.push({ kind, message });
+  }
+
+  function altarPillars() {
+    return state.altar ? diagonals.map(dir => step(state.altar.cell, dir)) : [];
+  }
+
+  function blocked(cell) {
+    return cell < 0 || state.walls.has(cell) || cell === state.head || altarPillars().includes(cell)
+      || state.vents.some(zone => zone.pillars.includes(cell));
+  }
+
+  const validFootprint = tiles => tiles.every(cell => !blocked(cell));
+  const smogRows = () => (state.band + 1) + '–' + (state.band + 3);
+
+  function relocateSmog() {
+    const candidates = Array.from({ length: size - 2 }, (_, i) => i).filter(i => i !== state.band);
+    state.band = state.nextBand ?? randomItem(candidates) ?? state.band;
+    state.nextBand = undefined;
+    log('이동', '스모그가 ' + smogRows() + '행으로 옮겨갑니다.');
+  }
+
+  function defeat(unit, reason, allowReconstruction) {
+    if (allowReconstruction && unit.reconstruct) {
+      unit.reconstruct = false;
+      unit.rebuilding = 2;
+      unit.hp = unit.max;
+      log('재구성', reason + ' · ' + unit.name + '이(가) ' + coord(unit.cell) + '에서 생존합니다.');
+      return;
+    }
+    unit.hp = 0;
+    log('처형', unit.name + ' · ' + reason);
+  }
+
+  function damage(unit, amount, source) {
+    if (!unit.hp) return;
+    const incoming = unit.stacks >= 3 ? amount * 2 : amount;
+    let loss = incoming;
+    for (const shield of unit.shields) {
+      const absorbed = Math.min(shield.left, loss);
+      shield.left -= absorbed;
+      loss -= absorbed;
+    }
+    const actual = Math.min(unit.hp, loss);
+    unit.hp -= actual;
+    const amountText = incoming !== amount ? ' · 스모그 ' + amount + ' → ' + incoming : '';
+    const absorbedText = incoming > loss ? ' · 보호막 ' + (incoming - loss) + ' 흡수' : '';
+    log('피해', unit.name + ' · ' + source + ' 체력 −' + actual + amountText + absorbedText);
+    if (unit.hp === 0) {
+      defeat(unit, source + '로 쓰러짐', true);
+    } else if (actual > 0 && inSmog(unit.cell) && unit.hp * 100 < unit.max * 10) {
+      defeat(unit, '스모그 안에서 실제 피해 후 체력이 10% 미만', true);
+    }
+  }
+
+  function fire(unit, source, duration = 3) {
+    if (!unit.hp) return;
+    const before = unit.fire?.left ?? 0;
+    if (before > duration) return;
+    unit.fire = { left: duration, source };
+    if (before !== duration) log('화상', unit.name + ' · ' + source + ' · 자기 진영 턴 시작 ' + duration + '회');
+  }
+
+  function refreshFlame(unit, onEntry) {
+    const flame = state.flames.findLast(area => area.tiles.includes(unit.cell));
+    if (flame) fire(unit, (onEntry ? '불길 진입' : '불길 안에서 턴 종료') + ' · ' + flame.source);
+  }
+
+  function grantCenter(unit, zone) {
+    if (zone.granted.has(unit.id)) return;
+    zone.granted.add(unit.id);
+    const left = percent(unit.max, 20);
+    unit.shields.push({ source: zone.source, left });
+    log('보호막', unit.name + ' · ' + zone.source + ' 보호막 +' + left + ' · ' + zone.expiry + '회에 만료');
+  }
+
+  function enter(unit, cell) {
+    unit.cell = cell;
+    refreshFlame(unit, true);
+    const center = state.vents.find(zone => zone.center === cell);
+    if (center) grantCenter(unit, center);
+  }
+
+  function expireAreas() {
+    for (const flame of state.flames.filter(area => area.expiry === state.ends)) {
+      log('만료', flame.source + '의 불길이 사라집니다.');
+    }
+    state.flames = state.flames.filter(area => area.expiry > state.ends);
+    for (const zone of state.vents.filter(area => area.expiry === state.ends)) {
+      let removed = 0;
+      for (const unit of state.units) {
+        removed += unit.shields.find(shield => shield.source === zone.source)?.left ?? 0;
+        unit.shields = unit.shields.filter(shield => shield.source !== zone.source);
+      }
+      log('만료', zone.source + '의 중심·기둥이 사라집니다.' + (removed ? ' 남은 보호막 ' + removed + '도 제거됩니다.' : ''));
+    }
+    state.vents = state.vents.filter(zone => zone.expiry > state.ends);
+  }
+
+  function findMeteorLayout(candidates, count) {
+    if (count === 0) return [];
+    for (let i = 0; i <= candidates.length - count; i++) {
+      const first = candidates[i];
+      const remaining = candidates.slice(i + 1).filter(candidate => !candidate.tiles.some(cell => first.tiles.includes(cell)));
+      const layout = findMeteorLayout(remaining, count - 1);
+      if (layout) return [first, ...layout];
+    }
+    return null;
+  }
+
+  function warnMeteors() {
+    const preferred = draw('meteors')?.map(byCoord) ?? [];
+    const targetCount = preferred.length || randomItem([2, 3, 4]);
+    const available = cells.map(center => ({ center, tiles: square(center) })).filter(item => validFootprint(item.tiles));
+    const ordered = [];
+    for (const center of preferred) {
+      const index = available.findIndex(item => item.center === center);
+      if (index >= 0) ordered.push(...available.splice(index, 1));
+    }
+    while (available.length) {
+      ordered.push(...available.splice(randomItem(cells.slice(0, available.length)), 1));
+    }
+    state.warnedMeteors = [];
+    for (let count = targetCount; count >= 2; count--) {
+      const layout = findMeteorLayout(ordered, count);
+      if (layout) {
+        state.warnedMeteors = layout;
+        break;
+      }
+    }
+    if (state.warnedMeteors.length) {
+      const centers = state.warnedMeteors.map(impact => coord(impact.center)).join(', ');
+      log('예고', (state.ends + 2) + '회에 운석 ' + state.warnedMeteors.length + '곳 · 중심 ' + centers + ' · 표시된 3×3 전체에 낙하');
+    } else {
+      log('취소', '유효한 운석 범위가 2곳 미만이라 이번 회차를 건너뜁니다.');
+    }
+  }
+
+  function activateMeteors() {
+    const warnings = state.warnedMeteors;
+    state.warnedMeteors = [];
+    for (const { center, tiles } of warnings) {
+      if (!validFootprint(tiles)) {
+        log('취소', coord(center) + ' 운석 범위가 막혀 예고된 그 범위만 취소합니다.');
+        continue;
+      }
+      const source = '운석 ' + state.ends;
+      const expiry = state.ends + 4;
+      log('발동', coord(center) + '에 운석이 떨어집니다. 불길은 ' + expiry + '회 종료에 만료됩니다.');
+      for (const unit of living().filter(actor => tiles.includes(actor.cell))) {
+        damage(unit, percent(unit.max, 60), '운석');
+        fire(unit, source);
+      }
+      state.flames.push({ tiles, source, expiry });
+      state.impact.push(...tiles);
+    }
+  }
+
+  function warnVent() {
+    const preferred = draw('vent');
+    const available = cells.filter(cell => validFootprint([cell, ...cross(cell)]));
+    const sample = preferred ? byCoord(preferred) : -1;
+    state.warnedVent = available.includes(sample) ? sample : (randomItem(available) ?? -1);
+    if (state.warnedVent >= 0) {
+      log('예고', (state.ends + 2) + '회에 ' + coord(state.warnedVent) + ' 중심과 상하좌우 네 칸에서 분출합니다.');
+    } else {
+      log('취소', '분출에 필요한 유효한 십자 범위가 없습니다.');
+    }
+  }
+
+  function activateVent() {
+    const center = state.warnedVent;
+    state.warnedVent = -1;
+    if (center < 0) return;
+    const zone = makeZone(center, state.ends);
+    if (!validFootprint([center, ...zone.pillars])) {
+      log('취소', coord(center) + ' 분출 범위가 막혀 십자 전체를 취소합니다.');
+      return;
+    }
+    const victims = living().filter(unit => zone.pillars.includes(unit.cell));
+    state.vents.push(zone);
+    state.impact.push(...zone.pillars);
+    log('발동', coord(center) + '에 분출합니다. 네 기둥과 중심은 ' + zone.expiry + '회에 만료됩니다.');
+    const centerUnit = occupant(center);
+    if (centerUnit) grantCenter(centerUnit, zone);
+    for (const unit of victims) {
+      const from = unit.cell;
+      damage(unit, percent(unit.max, 30), '분출 기둥');
+      if (!unit.hp) continue;
+      const to = randomItem(cells.filter(cell => !blocked(cell) && !occupant(cell)));
+      if (to === undefined) {
+        defeat(unit, '설 수 있는 빈 칸이 없어 압사', false);
+      } else {
+        log('이동', unit.name + ' · ' + coord(from) + ' → ' + coord(to) + '로 재배치');
+        enter(unit, to);
+      }
+    }
+  }
+
+  function warnChain() {
+    const preferred = draw('heading');
+    const available = directions.filter(dir => !blocked(step(state.head, dir)));
+    state.heading = available.find(dir => dir.arrow === preferred) ?? randomItem(available);
+    log('예고', state.heading
+      ? (state.ends + 1) + '회에 ' + coord(state.head) + '에서 ' + state.heading.arrow + ' 방향으로 전진합니다.'
+      : '갈 수 있는 방향이 없어 이번 회차는 제자리에 머뭅니다.');
+  }
+
+  function chainPath(direction) {
+    if (!direction) return [];
+    const result = [];
+    for (let cell = step(state.head, direction); !blocked(cell); cell = step(cell, direction)) result.push(cell);
+    return result;
+  }
+
+  function distanceToEdge(cell, dir) {
+    let distance = 0;
+    for (let next = step(cell, dir); next >= 0; next = step(next, dir)) distance++;
+    return distance;
+  }
+
+  function pushAside(unit, direction, reserved) {
+    const left = { x: direction.y, y: -direction.x };
+    const right = { x: -left.x, y: -left.y };
+    const origin = unit.cell;
+    const order = distanceToEdge(origin, left) <= distanceToEdge(origin, right) ? [left, right] : [right, left];
+    const choices = order.map(dir => step(origin, dir));
+    const landing = unit.immune ? -1 : (choices.find(cell =>
+      !blocked(cell) && !reserved.has(cell) && !occupant(cell)) ?? -1);
+    if (landing < 0) {
+      defeat(unit, unit.immune ? '밀치기 면역으로 사슬 즉사 판정' : '양쪽에 설 곳이 없어 사슬 즉사 판정', true);
+      return !unit.hp;
+    }
+    if (landing !== choices[0]) {
+      const first = choices[0] >= 0 ? coord(choices[0]) + '이(가) 막혀' : '첫 방향이 맵 밖이라';
+      log('충돌', unit.name + ' · ' + first + ' 반대편을 확인합니다.');
+    }
+    log('이동', unit.name + ' · ' + coord(origin) + ' → ' + coord(landing) + '로 옆 밀치기');
+    enter(unit, landing);
+    return true;
+  }
+
+  function activateChain() {
+    const direction = state.heading;
+    state.heading = null;
+    const origin = state.head;
+    const path = chainPath(direction);
+    if (!path.length) {
+      log('정지', '사슬은 ' + coord(origin) + '에 머뭅니다. 예고 방향을 다시 뽑지 않습니다.');
+      return;
+    }
+    log('발동', coord(origin) + '에서 예고한 ' + direction.arrow + ' 방향으로 사슬이 늘어납니다.');
+    const reserved = new Set([origin]);
+    for (const cell of path) {
+      reserved.add(cell);
+      const unit = occupant(cell);
+      if (unit && !pushAside(unit, direction, reserved)) {
+        log('정지', '생존한 ' + unit.name + ' 앞 ' + coord(state.head) + '에서 멈춥니다.');
+        break;
+      }
+      state.head = cell;
+      state.trail.push(cell);
+    }
+    const next = step(state.head, direction);
+    if (next >= 0 && blocked(next)) log('정지', coord(next) + ' 장애물 앞 ' + coord(state.head) + '에서 멈춥니다.');
+    log('회수', '추가 타격 없이 ' + coord(state.head) + ' 머리 칸으로 감깁니다.');
+  }
+
+  function applyEndPosition(side) {
+    for (const unit of forSide(side)) {
+      if (inSmog(unit.cell) && unit.stacks < 3) {
+        unit.stacks++;
+        log('중첩', unit.name + ' · 스모그 ' + unit.stacks + '/3' + (unit.stacks === 3 ? ' · 받는 피해 2배' : ''));
+      }
+      refreshFlame(unit, false);
+    }
+  }
+
+  function applyStats(unit, stats) {
+    Object.assign(unit, stats);
+    unit.hp = Math.min(unit.hp, unit.max);
+  }
+
+  function useAltar() {
+    const altar = state.altar;
+    if (!altar || altar.used) return;
+    const unit = occupant(altar.cell);
+    if (!unit || unit.side !== 'player') return;
+    const total = unit.max + unit.atk + unit.def;
+    const candidates = [];
+    for (let max = 1; max <= total; max++) {
+      for (let atk = 0; atk <= total - max; atk++) candidates.push({ max, atk, def: total - max - atk });
+    }
+    const previous = [unit.max, unit.atk, unit.def].join(' / ');
+    const hp = unit.hp;
+    applyStats(unit, randomItem(candidates));
+    altar.used = true;
+    log('발동', unit.name + ' · 최대 체력 / 공격 / 방어 ' + previous + ' → ' +
+      [unit.max, unit.atk, unit.def].join(' / ') + ' · 합계 ' + total);
+    if (hp !== unit.hp) log('보정', '현재 체력 ' + hp + ' → ' + unit.hp + ' · 피격 판정 없이 새 최대치로 조정');
+  }
+
+  function canPay(unit, stat) {
+    return unit[stat] - exchangeValues[stat] >= (stat === 'max' ? 1 : 0);
+  }
+
+  function findOffers() {
+    for (const circle of state.circles.filter(item => !item.used)) {
+      const unit = occupant(circle.cell);
+      if (!unit || unit.side !== 'player') continue;
+      if (!canPay(unit, circle.stat)) {
+        log('비용', unit.name + ' · ' + statNames[circle.stat] + '이(가) 부족해 ' + coord(circle.cell) + ' 마법진을 남깁니다.');
+        continue;
+      }
+      state.offers.push({ circle, unit, key: state.ends + ':' + circle.cell + ':' + unit.id });
+    }
+    if (state.offers.length) {
+      log('선택', '등가교환 ' + state.offers.length + '건을 모두 고를 때까지 다음 진영 턴을 기다립니다.');
+    }
+  }
+
+  function exchangePreview(offer, reward) {
+    const { unit, circle } = offer;
+    const stats = { max: unit.max, atk: unit.atk, def: unit.def };
+    stats[circle.stat] -= exchangeValues[circle.stat];
+    stats[reward] += exchangeValues[reward];
+    return stats;
+  }
+
+  function choose(key, reward) {
+    const offer = state.offers[0];
+    if (!offer || offer.key !== key || state.finished || !Object.hasOwn(exchangeValues, reward)) return;
+    const { unit, circle } = offer;
+    if (reward === circle.stat || circle.used || unit.cell !== circle.cell || !unit.hp || !canPay(unit, circle.stat)) return;
+    const hp = unit.hp;
+    applyStats(unit, exchangePreview(offer, reward));
+    circle.used = true;
+    state.offers.shift();
+    log('선택', unit.name + ' · ' + statNames[circle.stat] + ' −' + exchangeValues[circle.stat] + ', '
+      + statNames[reward] + ' +' + exchangeValues[reward] + ' · 마법진 사용 완료');
+    if (hp !== unit.hp) log('보정', '현재 체력 ' + hp + ' → ' + unit.hp);
+    if (!state.offers.length) startNextTurn();
+    render();
+    (ui.rewards.querySelector('button') ?? ui.next).focus();
+  }
+
+  function stopIfFinished() {
+    if (state.units[0].hp && forSide('enemy').length) return false;
+    if (!state.finished) log('종료', (state.units[0].hp ? '예시의 모든 적이 쓰러졌습니다.' : '메인이 쓰러졌습니다.') + ' 남은 턴 처리를 마칩니다.');
+    state.finished = true;
+    return true;
+  }
+
+  function startNextTurn() {
+    state.side = otherSide(state.side);
+    log('시작', sideNames[state.side] + ' 턴을 시작합니다.');
+    for (const unit of forSide(state.side)) {
+      if (unit.rebuilding && --unit.rebuilding === 0) log('재구성', unit.name + '의 재구성이 끝납니다.');
+      if (!unit.fire) continue;
+      damage(unit, 2, '화상');
+      unit.fire.left--;
+      if (!unit.fire.left) unit.fire = null;
+    }
+    stopIfFinished();
+  }
+
+  function prepareWarnings() {
+    if (enabled('meteor') && state.ends % 4 === 2) warnMeteors();
+    if (enabled('eruption') && state.ends % 3 === 1) warnVent();
+    if (enabled('chain') && state.ends % 3 === 2) warnChain();
+  }
+
+  function advance() {
+    if (state.finished || state.offers.length) return;
+    state.ends++;
+    state.help = '';
+    state.trail = [];
+    state.impact = [];
+    beginLog(state.ends + '회 · ' + sideNames[state.side] + ' 턴 종료');
+    expireAreas();
+    if (enabled('smog') && state.ends % 5 === 0) relocateSmog();
+    if (enabled('meteor') && state.ends % 4 === 0) activateMeteors();
+    if (stopIfFinished()) return render();
+    if (enabled('eruption') && state.ends % 3 === 0) activateVent();
+    if (stopIfFinished()) return render();
+    if (enabled('chain') && state.ends % 3 === 0) activateChain();
+    if (stopIfFinished()) return render();
+    applyEndPosition(state.side);
+    if (state.side === 'player') {
+      useAltar();
+      findOffers();
+    }
+    prepareWarnings();
+    if (!state.offers.length) startNextTurn();
+    render();
+    if (state.offers.length) ui.rewards.querySelector('button').focus();
+  }
+
+  function canMove() {
+    return !state.finished && !state.offers.length && state.side === 'player';
+  }
+
+  function moveOnBoard(cell) {
+    state.cursor = cell;
+    if (!canMove()) return render();
+    const unit = occupant(cell);
+    if (unit?.side === 'player') {
+      state.selected = unit.id;
+      state.help = '';
+    } else if (unit || blocked(cell)) {
+      state.help = coord(cell) + '에는 이미 ' + (unit ? unit.name + '이(가)' : '장애물이') + ' 있어 위치를 옮길 수 없습니다.';
+    } else {
+      const selected = state.units[state.selected];
+      if (!selected.hp) return render();
+      const from = selected.cell;
+      const leftCenter = state.vents.some(area => area.center === from);
+      const returning = state.vents.find(area => area.center === cell)?.granted.has(selected.id);
+      log('이동', selected.name + ' · ' + coord(from) + ' → ' + coord(cell) + '로 시연 위치 조정');
+      enter(selected, cell);
+      if (leftCenter) log('효과', selected.name + ' · 중심을 벗어나 공격 화상 효과가 끝납니다.');
+      if (returning) log('효과', selected.name + ' · 중심 위에서 공격에 화상을 부여합니다. 같은 분출 보호막은 충전되지 않습니다.');
+      state.help = '';
+    }
+    render();
+  }
+
+  function sampleAction() {
+    if (state.finished || state.offers.length) return;
+    if (state.id === 'smog') {
+      damage(state.units[0], 8, '예시 타격');
+    } else if (state.id === 'eruption' && canMove()) {
+      const attacker = state.units[state.selected];
+      const target = forSide('enemy')[0];
+      if (!attacker.hp || !target) return;
+      const zone = state.vents.find(area => area.center === attacker.cell);
+      log('공격', attacker.name + '의 예시 공격 · ' + (zone ? '분출 중심의 화상 적용' : '중심 밖에서 공격'));
+      damage(target, 8, '예시 공격');
+      if (zone) fire(target, zone.source + ' 중심 공격');
+    }
+    stopIfFinished();
+    render();
+  }
+
+  const legendEntries = {
+    smog: [['smog', '스모그']],
+    meteor: [['meteor', '운석 예고'], ['flame', '불길']],
+    eruption: [['eruption', '분출 예고'], ['lava', '분출 중심·기둥']],
+    chain: [['chain', '사슬 머리·경로']],
+    altar: [['altar', '제단·계단·기둥']],
+    contract: [['circle', '등가교환 마법진']]
+  };
+
+  function tileMarkup(cell, marks, unit, warning) {
+    const tag = marks.findLast(mark => mark[2])?.[2] ?? '';
+    const classNames = marks.map(([name]) => name);
+    const isHead = cell === state.head;
+    const inFocus = cell === state.cursor;
+    const text = unit ? (unit.side === 'enemy' ? '적' : (unit.id === 0 ? '메' : '부')) : (state.heading?.arrow ?? '◆');
+    const piece = unit || isHead
+      ? '<span class="piece ' + (isHead ? 'head' : unit.side) +
+        (unit?.id === state.selected ? ' selected' : '') + (unit?.rebuilding ? ' rebuilding' : '') + '">' + text + '</span>'
+      : '';
+    const label = [coord(cell), ...marks.map(([, text]) => text), isHead ? '사슬 머리' : '',
+      unit?.name ?? '', unit?.id === state.selected ? '선택됨' : ''].filter(Boolean).join(' · ');
+    return '<button type="button" data-cell="' + cell + '" class="tile ' + classNames.join(' ') +
+      (unit ? ' has-unit' : '') + '" tabindex="' + (inFocus ? '0' : '-1') + '" aria-label="' + label + '" title="' + label + '">' +
+      (tag && !isHead ? '<span class="terrain-mark" aria-hidden="true">' + tag + '</span>' : '') + piece +
+      (warning ? '<span class="warn" aria-hidden="true">' + warning + '</span>' : '') + '</button>';
+  }
+
+  function renderBoard() {
+    const restoreFocus = ui.board.contains(document.activeElement);
+    const chainPreview = chainPath(state.heading);
+    const meteorWarning = state.warnedMeteors.flatMap(item => item.tiles);
+    const ventWarning = state.warnedVent < 0 ? [] : [state.warnedVent, ...cross(state.warnedVent)];
+    const stairs = state.altar ? cross(state.altar.cell) : [];
+    const pillars = altarPillars();
+    ui.board.innerHTML = cells.map(cell => {
+      const marks = [];
+      const flag = (className, name, symbol) => marks.push([className, name, symbol]);
+      if (inSmog(cell)) flag('smog', '스모그');
+      if (state.flames.some(area => area.tiles.includes(cell))) flag('flame', '불길', '≈');
+      if (state.altar?.cell === cell) {
+        flag('altar', state.altar.used ? '사용한 제단' : '제단 중심', state.altar.used ? '✓' : '제');
+        if (state.altar.used) flag('spent', '소모됨', '✓');
+      }
+      if (stairs.includes(cell)) flag('stair', '제단 계단', '≡');
+      if (pillars.includes(cell)) flag('pillar', '제단 고정 기둥', '▦');
+      const circle = state.circles.find(item => item.cell === cell);
+      if (circle) {
+        flag('circle', statNames[circle.stat] + ' 마법진', statMarks[circle.stat]);
+        if (circle.used) flag('spent', '소모된 마법진', '✓');
+      }
+      if (state.walls.has(cell)) flag('wall', '벽', '▧');
+      if (state.vents.some(area => area.center === cell)) flag('heat', '분출 중심', '⊙');
+      if (state.vents.some(area => area.pillars.includes(cell))) flag('lava', '분출 고정 기둥', '▦');
+      const warnings = [];
+      if (meteorWarning.includes(cell)) {
+        warnings.push('운');
+        flag('meteor-warning', '운석 예고');
+      }
+      if (ventWarning.includes(cell)) {
+        warnings.push(cell === state.warnedVent ? '중심' : '분');
+        flag('eruption-warning', cell === state.warnedVent ? '분출 중심 예고' : '분출 기둥 예고');
+      }
+      if (chainPreview.includes(cell)) flag('chain-preview', '사슬 예상 진행 칸');
+      if (state.trail.includes(cell)) flag('chain-path', '사슬이 지난 칸');
+      if (state.impact.includes(cell)) flag('impact', '이번 턴 발동');
+      return tileMarkup(cell, marks, occupant(cell), warnings.join('·'));
+    }).join('');
+    if (restoreFocus) ui.board.querySelector('[tabindex="0"]').focus({ preventScroll: true });
+  }
+
+  function renderActors() {
+    ui.actors.innerHTML = state.units.map(unit => {
+      const facts = ['공격 ' + unit.atk, '방어 ' + unit.def];
+      if (shieldLeft(unit)) facts.push('보호막 ' + shieldLeft(unit));
+      if (unit.stacks) facts.push('스모그 ' + unit.stacks + '/3' + (unit.stacks === 3 ? ' · 피해 2배' : ''));
+      if (unit.fire) facts.push('화상 ' + unit.fire.left + '회');
+      if (unit.immune) facts.push('밀치기 면역');
+      if (unit.reconstruct) facts.push('재구성 가능');
+      if (unit.rebuilding) facts.push('재구성 중 ' + unit.rebuilding + '회');
+      if (unit.hp && state.vents.some(area => area.center === unit.cell)) facts.push('공격 화상');
+      const location = unit.hp ? coord(unit.cell) : '쓰러짐';
+      return '<li class="actor ' + unit.side + '"><div class="actor-title"><b>' + unit.name + '</b><span>' +
+        sideNames[unit.side] + ' · ' + location + ' · 체력 ' + unit.hp + '/' + unit.max +
+        '</span></div><span class="hp" aria-hidden="true"><i style="width:' + (unit.hp * 100 / unit.max) + '%"></i></span>' +
+        '<div class="actor-facts">' + facts.map(fact => '<span>' + fact + '</span>').join('') + '</div></li>';
+    }).join('');
+  }
+
+  function displayEvents(group) {
+    return '<ol class="event-list">' + group.items.map(({ kind, message }) =>
+      '<li data-kind="' + kind + '"><b>' + kind + '</b><span>' + message + '</span></li>').join('') + '</ol>';
+  }
+
+  function renderOffers() {
+    const offer = state.offers[0];
+    ui.choice.hidden = !offer;
+    ui.rewards.replaceChildren();
+    if (!offer) return;
+    const { unit, circle, key } = offer;
+    ui['choice-cost'].textContent = unit.name + ' · ' + coord(circle.cell) + ' · ' + statNames[circle.stat] +
+      ' ' + exchangeValues[circle.stat] + ' 지불 · 남은 선택 ' + state.offers.length + '건';
+    ui.rewards.innerHTML = Object.keys(exchangeValues).filter(stat => stat !== circle.stat).map(stat => {
+      const result = exchangePreview(offer, stat);
+      return '<button type="button" data-key="' + key + '" data-reward="' + stat + '"><b>' + statNames[stat] +
+        ' +' + exchangeValues[stat] + '</b><span>최대 체력 ' + result.max + ' · 공격 ' + result.atk + ' · 방어 ' +
+        result.def + ' · 현재 체력 ' + Math.min(unit.hp, result.max) + '</span></button>';
+    }).join('');
+  }
+
+  function render() {
+    for (const button of ui.scenarios.children) button.setAttribute('aria-pressed', button.dataset.demo === state.id);
+    ui['scenario-name'].textContent = state.demo.name;
+    ui.setup.textContent = state.demo.setup;
+    ui['turn-side'].textContent = state.finished ? '예제 종료' : state.offers.length ? '보상 선택 대기' : sideNames[state.side] + ' 턴';
+    ui['turn-count'].textContent = '턴 종료 ' + state.ends + '회';
+    ui.next.disabled = state.finished || state.offers.length > 0;
+    ui.next.textContent = state.finished ? '종료됨' : state.offers.length ? '보상을 선택하세요' : sideNames[state.side] + ' 턴 종료 →';
+    ui['event-step'].textContent = state.logs[0].title;
+    ui.events.innerHTML = displayEvents(state.logs[0]);
+    ui['history-panel'].hidden = state.logs.length < 2;
+    ui.history.innerHTML = state.logs.slice(1).map(group => '<h3>' + group.title + '</h3>' + displayEvents(group)).join('');
+    ui['sample-action'].hidden = state.id !== 'smog' && state.id !== 'eruption';
+    ui['sample-action'].textContent = state.id === 'smog' ? '8 피해 받기' : '공격 적중 예시 · 피해 8';
+    ui['sample-action'].disabled = state.finished || (state.id === 'eruption' && !canMove());
+    const legend = [['player', '아군'], ['enemy', '적'], ...state.demo.kinds.flatMap(kind => legendEntries[kind])];
+    ui.legend.innerHTML = legend.map(([style, label]) => '<span class="key"><i class="' + style + '" aria-hidden="true"></i>' + label + '</span>').join('');
+    const selected = state.units[state.selected];
+    ui['board-help'].textContent = state.help || (canMove() ? '아군을 선택한 뒤 빈 칸을 누르면 시연 위치가 바뀝니다. 선택 · ' + selected.name
+      : state.finished ? '다시 시작하거나 다른 예제를 고르세요.'
+      : state.offers.length ? '보상 목록에서 하나를 골라 턴을 진행하세요.' : '적 턴을 끝내면 아군 위치를 조정할 수 있습니다.');
+    ui.rules.innerHTML = state.demo.rules.map(rule => '<li>' + rule + '</li>').join('');
+    renderBoard();
+    renderActors();
+    renderOffers();
+  }
+
+  ui.columns.innerHTML = [...columns].map(letter => '<span class="axis">' + letter + '</span>').join('');
+  ui.rows.innerHTML = Array.from({ length: size }, (_, i) => '<span class="axis">' + (i + 1) + '</span>').join('');
+  ui.scenarios.innerHTML = Object.entries(demos).map(([id, demo]) =>
+    '<button type="button" data-demo="' + id + '">' + demo.name + '</button>').join('');
+  ui.scenarios.addEventListener('click', event => {
+    const button = event.target.closest('[data-demo]');
+    if (button && button.dataset.demo !== state.id) reset(button.dataset.demo);
+  });
+  ui.reset.addEventListener('click', () => reset(state.id));
+  ui.next.addEventListener('click', advance);
+  ui['sample-action'].addEventListener('click', sampleAction);
+  ui.board.addEventListener('click', event => {
+    const button = event.target.closest('[data-cell]');
+    if (button) moveOnBoard(Number(button.dataset.cell));
+  });
+  ui.board.addEventListener('keydown', event => {
+    const keys = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
+    if (!Object.hasOwn(keys, event.key)) return;
+    event.preventDefault();
+    const cell = step(state.cursor, cardinal[keys[event.key]]);
+    if (cell < 0) return;
+    state.cursor = cell;
+    renderBoard();
+  });
+  ui.rewards.addEventListener('click', event => {
+    const button = event.target.closest('[data-reward]');
+    if (button) choose(button.dataset.key, button.dataset.reward);
+  });
+  reset('together');
+})();
+</script>
+</body>
+</html>

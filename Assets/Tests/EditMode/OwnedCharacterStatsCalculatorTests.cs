@@ -46,35 +46,19 @@ namespace ProjectL.Tests.Core
             Assert.That(query[0].Stats.MoveRange, Is.EqualTo(3));
         }
 
-
         [Test]
-        public void OwnedThornDescription_NoTraitHasNoPayload()
-        {
-            var result = Calculate(new[] { MainRecord(), Sub(SubId) }, MainState(),
-                Souls((MainId, 0), (SubId, 0)));
-
-            Assert.That(result.All(item => item.ThornFieldDescription == null), Is.True);
-        }
-
-        [Test]
-        public void OwnedThornDescription_UsesConfiguredValuesInsteadOfConstants()
+        public void OwnedTraitSettings_UseConfiguredThornBombDamagePercent()
         {
             var unit = CombatCommandTestData.Spec(EntityKey.Unit_CactusCannon, 10, CategoryKey.Cannon,
-                new ThornFieldTraitSpec(17, 9, 40, UnitTurnTickPhase.Started));
+                new ThornBombTraitSpec(37));
             var owned = new OwnedCharacterRecord(SubId, unit.Key, CharacterOwnershipRole.Sub);
 
             var result = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(unit), Categories(),
                 new[] { owned }, null, Souls((SubId, 0)), default);
 
-            var description = result.Single().ThornFieldDescription;
-            Assert.That(description, Is.Not.Null);
-            Assert.That((description.ThornDamage, description.LifetimeUnitTurns,
-                description.DefenseReductionPercent, description.TickPhase),
-                Is.EqualTo((17, 9, 40, UnitTurnTickPhase.Started)));
-            Assert.That(result.Single().Stats.TraitKeys.ToArray(), Is.EqualTo(new[] { TraitKey.ThornField }));
-            Assert.That(result.Single().TraitSettings.TryGet<ThornFieldTraitSpec>(out var thorn), Is.True);
-            Assert.That((thorn.ThornDamage, thorn.LifetimeUnitTurns, thorn.DefenseReductionPercent, thorn.TickPhase),
-                Is.EqualTo((17, 9, 40, UnitTurnTickPhase.Started)));
+            Assert.That(result.Single().Stats.TraitKeys.ToArray(), Is.EqualTo(new[] { TraitKey.ThornBomb }));
+            Assert.That(result.Single().TraitSettings.TryGet<ThornBombTraitSpec>(out var thorn), Is.True);
+            Assert.That(thorn.DamagePercent, Is.EqualTo(37));
         }
 
         [Test]
@@ -114,24 +98,10 @@ namespace ProjectL.Tests.Core
             Assert.That(item.TraitSettings.TryGet<FocusTraitSpec>(out _), Is.True);
 
             var error = Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey,
-                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, TraitSettingsSet.Empty, null));
+                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, TraitSettingsSet.Empty));
             Assert.That(error.ParamName, Is.EqualTo("traitSettings"));
             Assert.Throws<ArgumentNullException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey,
-                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, null, null));
-        }
-
-        [TestCase(true, false)]
-        [TestCase(false, true)]
-        public void OwnedThornDescription_ConstructorRejectsTraitPayloadMismatch(bool hasTrait, bool hasPayload)
-        {
-            var stats = new CharacterBaselineStatsSnapshot(10,10,5,0,MoveMethod.LiftAndPlace,                3,4,1,CategoryKey.Cannon,                hasTrait ? new[] { TraitKey.ThornField } : Array.Empty<TraitKey>());
-            var description = hasPayload ? new ThornFieldTraitStatusSnapshot(17, 9, 40, UnitTurnTickPhase.Started) : null;
-
-            var error = Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(
-                SubId, EntityKey.Unit_CactusCannon, CharacterOwnershipRole.Sub, 1, new ExperienceProgressSnapshot(false, 0, 0), 0, stats, Pattern(), hasTrait ? new TraitSettingsSet(new (TraitSpec, TraitOrigin)[] { (new ThornFieldTraitSpec(17, 9, 40, UnitTurnTickPhase.Started), TraitOrigin.Unit) }) : TraitSettingsSet.Empty,
-                description));
-
-            Assert.That(error.ParamName, Is.EqualTo("thornFieldDescription"));
+                item.Role, item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, null));
         }
 
         [Test]
@@ -329,7 +299,7 @@ namespace ProjectL.Tests.Core
         }
 
         [TestCase(TraitKey.Focus, false, "")]
-        [TestCase(TraitKey.ThornField, false, "")]
+        [TestCase(TraitKey.ThornBomb, true, "")]
         [TestCase(TraitKey.Roar, true, "")]
         [TestCase(TraitKey.Regeneration, true, "")]
         [TestCase(TraitKey.Intimidation, true, "")]
@@ -342,7 +312,7 @@ namespace ProjectL.Tests.Core
             TraitSpec trait = key switch
             {
                 TraitKey.Focus => new FocusTraitSpec(2, 3),
-                TraitKey.ThornField => new ThornFieldTraitSpec(5, 5),
+                TraitKey.ThornBomb => new ThornBombTraitSpec(50),
                 TraitKey.Roar => new RoarTraitSpec(2),
                 TraitKey.Regeneration => new RegenerationTraitSpec(3),
                 TraitKey.Intimidation => new IntimidationTraitSpec(20),
@@ -379,12 +349,12 @@ namespace ProjectL.Tests.Core
                 .Single(c => c.OwnedId == SubId);
             Assert.That(item.TraitAvailability.Select(a => a.Key), Is.EqualTo(item.Stats.TraitKeys.ToArray()));
             Assert.That(new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role, item.Level, item.Experience, item.SoulCount,
-                item.Stats, item.AttackPattern, item.TraitSettings, null).TraitAvailability, Is.Empty);
+                item.Stats, item.AttackPattern, item.TraitSettings).TraitAvailability, Is.Empty);
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role,
-                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null,
+                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings,
                 traitAvailability: new[] { new TraitAvailabilitySnapshot(TraitKey.Knockback, "", "") }));
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(item.OwnedId, item.CharacterKey, item.Role,
-                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, null, traitAvailability: new[] {
+                item.Level, item.Experience, item.SoulCount, item.Stats, item.AttackPattern, item.TraitSettings, traitAvailability: new[] {
                     item.TraitAvailability[0], item.TraitAvailability[0] }));
         }
 

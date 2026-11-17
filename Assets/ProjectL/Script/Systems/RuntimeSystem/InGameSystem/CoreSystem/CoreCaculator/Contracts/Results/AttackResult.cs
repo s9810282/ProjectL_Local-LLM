@@ -19,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public EntityId PrimaryTargetId { get; }
         public PiercingShotDelivery PiercingShot { get; }
         public AttackPullSnapshot Pull { get; }
+        public AttackSweepSnapshot Sweep { get; }
         private readonly IReadOnlyList<AttackKnockbackSnapshot> _knockbacks;
         /// <summary>이 공격의 대상별 넉백 요약입니다. 처리 순서(대상 ID 오름차순)입니다. 칸 단위 재생은 Moved 사건을 씁니다.</summary>
         public IReadOnlyList<AttackKnockbackSnapshot> Knockbacks => _knockbacks ?? Array.Empty<AttackKnockbackSnapshot>();
@@ -55,7 +56,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CategoryActivationSnapshot[] categoryActivations,
             CellCoord? targetCell, AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
             PiercingShotDelivery piercingShot = null, long attackGroup = 0, AttackPullSnapshot pull = null,
-            IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null)
+            IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null, AttackSweepSnapshot sweep = null)
         {
             TraitActivationSnapshot[] copiedTraitActivations =
                 new TraitActivationSnapshot[traitActivations.Length];
@@ -85,6 +86,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             PrimaryTargetId = primaryTargetId;
             PiercingShot = piercingShot;
             Pull = pull;
+            sweep?.ValidateActor(attackerId);
+            Sweep = sweep;
             _knockbacks = knockbacks == null || knockbacks.Count == 0 ? null : Array.AsReadOnly(knockbacks.ToArray());
             TargetCell = targetCell;
             AttackDirection = attackDirection;
@@ -109,7 +112,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             TraitActivationSnapshot[] traitActivations,
             CategoryActivationSnapshot[] categoryActivations,
             AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
-            PiercingShotDelivery piercingShot = null, long attackGroup = 0)
+            PiercingShotDelivery piercingShot = null, long attackGroup = 0, AttackSweepSnapshot sweep = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells, hits,
@@ -132,7 +135,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 true, AttackFailureReason.None, attackerId, primaryTargetId, attackDirection,
                 actionCostSettlement, (CellCoord[])affectedCells.Clone(),
                 (AttackHitResult[])hits.Clone(), currentStage, traitActivations,
-                categoryActivations, cellSelection?.PrimaryCell, cellSelection, blockedContacts, piercingShot, attackGroup);
+                categoryActivations, cellSelection?.PrimaryCell, cellSelection, blockedContacts, piercingShot, attackGroup, sweep: sweep);
         }
 
         public static AttackResult SuccessForCell(
@@ -145,7 +148,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StageSnapshot currentStage,
             TraitActivationSnapshot[] traitActivations,
             CategoryActivationSnapshot[] categoryActivations, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
-            PiercingShotDelivery piercingShot = null, long attackGroup = 0)
+            PiercingShotDelivery piercingShot = null, long attackGroup = 0, AttackSweepSnapshot sweep = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells, hits,
@@ -159,7 +162,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 true, AttackFailureReason.None, attackerId, EntityId.Empty, attackDirection,
                 actionCostSettlement, (CellCoord[])affectedCells.Clone(),
                 (AttackHitResult[])hits.Clone(), currentStage, traitActivations,
-                categoryActivations, targetCell, selection, blockedContacts, piercingShot, attackGroup);
+                categoryActivations, targetCell, selection, blockedContacts, piercingShot, attackGroup, sweep: sweep);
         }
 
         public static AttackResult Failure(
@@ -190,7 +193,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             AttackFailureReason cancellationReason = AttackFailureReason.None,
             TraitActivationSnapshot[] traitActivations = null, CategoryActivationSnapshot[] categoryActivations = null,
             IReadOnlyList<AttackBlockedContact> blockedContacts = null, PiercingShotDelivery piercingShot = null, long attackGroup = 0,
-            bool reaction = false, AttackPullSnapshot pull = null, IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null)
+            bool reaction = false, AttackPullSnapshot pull = null, IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null, AttackSweepSnapshot sweep = null)
         {
             if (reaction && cost != null && (cost.BeforeActionUse != cost.FinalActionUse))
                 throw new ArgumentException("반응 공격은 행동 사용 상태를 바꿀 수 없습니다.", nameof(cost));
@@ -214,7 +217,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             return new AttackResult(cancellationReason == AttackFailureReason.None, cancellationReason,
                 attackerId, primaryTargetId, direction, cost, (CellCoord[])affectedCells.Clone(),
                 (AttackHitResult[])hits.Clone(), null, traitActivations, categoryActivations, selection.PrimaryCell, selection, blockedContacts, piercingShot, attackGroup, pull,
-                knockbacks);
+                knockbacks, sweep);
         }
 
         /// <summary>

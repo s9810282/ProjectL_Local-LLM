@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -27,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>수락 시 빈 문자열, 거절 시 Core의 사유 코드. 표시 문구가 아니다.</summary>
         public string Reason { get; }
         public AttackResult? Attack { get; }
+        public PlayerSkillResult PlayerSkill { get; }
         public StageOutcomeSnapshot? Outcome { get; }
         public CombatCommandKind CommandKind { get; }
         public EntityId ActorId { get; }
@@ -42,7 +44,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             MovementDestination? movement = null, IReadOnlyList<CombatEvent> events = null,
             MovementPathResult pathMovement = null,
             IReadOnlyList<AttackBlockedContact> blockedContacts = null, long battleInstanceId = 0,
-            long controllerTurnSequence = 0, UnitActionUseSettlementSnapshot actionUseSettlement = null, MovementUndoResult undoMovement = null)
+            long controllerTurnSequence = 0, UnitActionUseSettlementSnapshot actionUseSettlement = null, MovementUndoResult undoMovement = null,
+            PlayerSkillResult playerSkill = null)
         {
             if (sequence <= 0)
                 throw new ArgumentOutOfRangeException(nameof(sequence));
@@ -63,6 +66,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Accepted = accepted;
             Reason = reason;
             Attack = attack;
+            PlayerSkill = playerSkill;
             Outcome = outcome;
             CommandKind = commandKind; ActorId = actorId; Movement = movement;
             if (!accepted && pathMovement != null)
@@ -71,6 +75,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ActionUseSettlement = actionUseSettlement;
             if (!accepted && actionUseSettlement != null) throw new ArgumentException("거절 결과에는 행동 정산이 없습니다.");
             Events = Array.AsReadOnly((events ?? Array.Empty<CombatEvent>()).ToArray());
+            if (accepted && commandKind == CombatCommandKind.UsePlayerSkill && playerSkill == null)
+                throw new ArgumentException("수락된 스킬 명령에는 스킬 사용 결과가 필요합니다.", nameof(playerSkill));
+            if (playerSkill != null)
+            {
+                if (!accepted || attack.HasValue || movement.HasValue || pathMovement != null || actionUseSettlement != null || undoMovement != null)
+                    throw new ArgumentException("스킬 결과는 수락된 독립 사용 정산이며 일반 행동·이동 결과와 섞을 수 없습니다.", nameof(playerSkill));
+                playerSkill.ValidateCommand(commandKind, actorId, Events);
+            }
             if (Events.Any(e => e == null) || (!accepted && Events.Count != 0))
                 throw new ArgumentException("거절 결과 또는 null 사건을 게시할 수 없습니다.");
             MovementUndoResult.Validate(accepted, commandKind, actorId, undoMovement, actionUseSettlement, Events, movement, pathMovement, attack);

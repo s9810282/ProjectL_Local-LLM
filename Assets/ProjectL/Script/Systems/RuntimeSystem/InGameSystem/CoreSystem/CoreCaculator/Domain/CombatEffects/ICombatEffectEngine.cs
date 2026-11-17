@@ -7,6 +7,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 {
     internal interface ICombatEffectEngine
     {
+        EffectAttackSweepEvaluation EvaluateAttackSweep(IReadOnlyList<EffectRuleBinding> bindings, in AttackSweepEffectContext context);
+
         bool RequiresOrderedHits(IReadOnlyList<EffectRuleBinding> bindings);
 
         EffectAttackTargetingEvaluation EvaluateAttackTargeting(IReadOnlyList<EffectRuleBinding> bindings);
@@ -29,10 +31,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         EffectTargetDistanceDamageEvaluation EvaluateTargetDistanceDamage(
             IReadOnlyList<EffectRuleBinding> bindings,
             in TargetDistanceDamageEffectContext context);
-
-        EffectThornFieldEvaluation EvaluateThornFieldApplication(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in ThornFieldApplicationEffectContext context);
 
         EffectKnockbackEvaluation EvaluateKnockback(
             IReadOnlyList<EffectRuleBinding> bindings);

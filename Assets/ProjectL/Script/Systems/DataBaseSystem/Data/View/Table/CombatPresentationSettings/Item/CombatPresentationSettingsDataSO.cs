@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cinemachine;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
@@ -8,8 +9,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
 {
     /// <summary>
     /// 전투 연출의 전역 시간·크기 값입니다(연출 조립 설계 §9 I-5, 결정 Q-R17 A). 유닛별 연출 값은 UnitVisual, 전역 값은 이 설정 하나가 원본입니다.
-    /// 수 조건의 원본은 수 규칙(<see cref="CombatPresentationValueRules"/>)이고, 이 설정의 조건 함수(Validate…)는 거기에 문구를 붙입니다. 하위 설정 묶음(보드 등장·Nexus 낙하 등)은 수 규칙을 바로 부릅니다
-    /// (카메라 흔들림 시간·모양은 예외로 카메라 효과가 원본, 카메라 연출 조각 설계 K5 결정 A). 표가 만들 때 <see cref = "Validate"/>로 거절하고, 전투 표시 조립과 재생 부품도 같은 조건 함수를 씁니다.
+    /// 수 조건의 원본은 수 규칙(<see cref="CombatPresentationValueRules"/>)이고, 이 설정의 조건 함수(Validate…)는 거기에 문구를 붙입니다. 하위 설정 묶음 셋(보드 등장·선로 낙하·Nexus 낙하)은 수 규칙을 바로 부르고,
+    /// 보드 등장의 시간 칸 둘만 이 설정의 조건 함수(<see cref="ValidateSeconds"/>)를 씁니다(카메라 흔들림 시간·모양은 예외로 카메라 효과가 원본, 카메라 연출 조각 설계 K5 결정 A). 표가 만들 때 <see cref = "Validate"/>로 거절하고, 전투 표시 조립과 재생 부품도 같은 조건 함수를 씁니다.
     /// </summary>
     [Serializable]
     internal sealed class CombatPresentationSettingsData : IData
@@ -130,6 +131,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [Tooltip("외형이 가라앉는 깊이(월드 단위)입니다. 점점 빨라집니다(추락 연출의 가라앉기와 같은 곡선).")]
         [SerializeField, Min(0f)]
         private float tileCollapseSinkDepth = 1.5f;
+        [Tooltip("약한 지반을 밟을 때 붕괴 연출의 떨림 시간·강도와 하강 시간에 곱합니다. 0이면 즉시 내려갑니다.")]
+        [SerializeField, Min(0f)]
+        private float weakGroundEntryScale = .5f;
         [Header("카메라 연출 (카메라 연출 조각 설계 K5)")]
         [Tooltip("포효 때 맵 카메라 줌 배율입니다. 기준 렌즈값에 곱하며 작을수록 확대입니다. 1이면 줌하지 않습니다. 커짐·작아짐과 같은 시간(맥박 절반)에 들어가고 돌아옵니다.")]
         [SerializeField, Min(.01f)]
@@ -163,7 +167,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [SerializeField, Min(0f)]
         private float trainZoomOutSeconds = .4f;
         [Header("전투 소리 프리셋 (View 3라운드 W9-2)")]
-        [Tooltip("적 유닛의 선택·사망 효과음 프리셋입니다. 적은 외형과 상관없이 이 값 하나를 씁니다. -1이면 소리를 내지 않습니다.")]
+        [Tooltip("적 유닛의 선택·이동 효과음 프리셋입니다. 적은 외형과 상관없이 이 값 하나를 씁니다. -1이면 소리를 내지 않습니다. 적 사망 소리는 유닛 외형의 사망 소리 줄입니다(유닛 소리 설계 US3).")]
         [SerializeField, Min(-1)]
         private int enemyUnitSoundPreset = 5;
         [Tooltip("밤(전투) 국면 배경음 프리셋입니다.")]
@@ -175,14 +179,18 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         [Tooltip("승패 표시를 확인한 뒤(맵으로 돌아가기 전) 배경음 프리셋입니다.")]
         [SerializeField, Min(0)]
         private int afterCompletionBgmPreset = 1;
-        [Tooltip("유닛·구조물(장애물)이 낭떠러지로 떨어지기 시작할 때의 효과음 프리셋입니다. 유닛의 이어지는 사망 소리는 따로 납니다. -1이면 소리를 내지 않습니다(소리 창구 2차 설계 Q-ES4).")]
+        [Tooltip("약한 지반에 들어갈 때의 효과음 프리셋입니다. 첫 원소는 남은 진입 횟수 1, 둘째는 2, … 남은 횟수가 목록보다 많으면 마지막 원소를 씁니다. " + "-1은 그 횟수에 소리를 내지 않고, 빈 목록은 진입 소리를 내지 않습니다. 무너지는 진입은 붕괴 칸이 냅니다(소리 프리셋 원본 설계 SP2).")]
         [SerializeField, Min(-1)]
-        private int fallSoundPreset = -1;
+        private List<int> weakGroundEntrySoundPresets = new() { 1, 2 };
         [Tooltip("약한 지반이 무너져 낭떠러지가 될 때의 효과음 프리셋입니다. -1이면 소리를 내지 않습니다(소리 창구 2차 설계 Q-ES5′).")]
         [SerializeField, Min(-1)]
-        private int weakGroundCollapseSoundPreset = -1;
+        private int weakGroundCollapseSoundPreset = 0;
+        [Header("전투 소리 프리셋 — -1이면 프리셋 없이 냄 (소리 프리셋 원본 설계 SP3)")]
+        [Tooltip("유닛이 낭떠러지로 떨어지기 시작할 때의 효과음 프리셋입니다. -1이면 프리셋을 지정하지 않고 냅니다(Boot Fall 칸에는 지금 프리셋이 없어 기본 소리). " + "0 이상을 쓰려면 Boot Fall 칸에 그 프리셋을 먼저 더해야 하며, 없으면 재생 때 오류입니다. 유닛의 이어지는 사망 소리는 따로 납니다.")]
+        [SerializeField, Min(-1)]
+        private int fallSoundPreset = -1;
         [Header("전투 연출 큐 (이펙트 창구 확장 설계 EC5)")]
-        [Tooltip("유닛·구조물(장애물)이 낭떠러지로 떨어지기 시작하는 순간의 이펙트·흔들림입니다. 시점은 Start(사건 순간)만, 이펙트 자리는 떨어진 칸(EventCell)만 됩니다. " + "지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다. 소리는 위 추락 프리셋이 냅니다.")]
+        [Tooltip("유닛·구조물(장애물)이 낭떠러지로 떨어지기 시작하는 순간의 이펙트·흔들림입니다. 시점은 Start(사건 순간)만, 이펙트 자리는 떨어진 칸(EventCell)만 됩니다. " + "지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다. 소리는 유닛만 위 추락 프리셋이 냅니다.")]
         [SerializeField]
         private CombatVisualCueInput fallCues = new();
         [Tooltip("약한 지반이 무너져 낭떠러지가 되는 순간의 이펙트·흔들림입니다. 시점은 Start(사건 순간)만, 이펙트 자리는 무너진 칸(EventCell)만 됩니다. " + "지연을 주어도 다음 사건은 기다리지 않지만, 기차 사건과 결과 끝은 그만큼 기다립니다. 소리는 위 붕괴 프리셋이 냅니다.")]
@@ -227,6 +235,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         public float TileCollapseSinkSeconds => tileCollapseSinkSeconds;
         /// <summary>가라앉는 깊이입니다(월드 단위).</summary>
         public float TileCollapseSinkDepth => tileCollapseSinkDepth;
+
+        public float WeakGroundEntryScale => weakGroundEntryScale;
         public float RoarZoomRatio => roarZoomRatio;
         public float RoarShakeStrength => roarShakeStrength;
         public float RoarShakeSeconds => roarShakeSeconds;
@@ -241,10 +251,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
         public int NightBgmPreset => nightBgmPreset;
         public int DayBgmPreset => dayBgmPreset;
         public int AfterCompletionBgmPreset => afterCompletionBgmPreset;
-        /// <summary>낭떠러지 추락 효과음 프리셋입니다(유닛·구조물 공용). -1이면 소리 없음입니다.</summary>
+        /// <summary>낭떠러지 추락 효과음 프리셋입니다(유닛). -1이면 프리셋을 지정하지 않고 냅니다(장애물 소리와 같은 규칙, 소리 프리셋 원본 설계 SP3).</summary>
         public int FallSoundPreset => fallSoundPreset;
         /// <summary>약한 지반 붕괴 효과음 프리셋입니다. -1이면 소리 없음입니다.</summary>
         public int WeakGroundCollapseSoundPreset => weakGroundCollapseSoundPreset;
+        /// <summary>
+        /// 약한 지반 진입 효과음 프리셋 목록의 복사본입니다(원소 i = 남은 진입 횟수 i + 1). 부를 때마다 새 배열을 만들고,
+        /// 프리셋 답(전투 소리 프리셋)이 만들어질 때 한 번 부릅니다(View 서비스가 시작할 때, 재생 시작 때 한 번). 그래서 재생 중에 이 목록을 바꾸면 다음 재생부터 반영됩니다.
+        /// 직렬화 목록은 밖에 내주지 않습니다(소리 프리셋 원본 계획 TP-2).
+        /// </summary>
+        internal int[] CopyWeakGroundEntrySoundPresets() => weakGroundEntrySoundPresets.ToArray();
         /// <summary>낭떠러지 추락 순간 큐입니다. 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(이펙트 창구 확장 계획 P6).</summary>
         internal CombatEventCues FallCues => ReadCues(fallCues, nameof(fallCues));
         /// <summary>약한 지반 붕괴 순간 큐입니다. 읽을 때마다 새 값을 만들고, 보관은 쓰는 쪽이 합니다(이펙트 창구 확장 계획 P6).</summary>
@@ -292,6 +308,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             // 2차 소리 프리셋도 맨 뒤에 둡니다(같은 까닭).
             ValidateSoundPreset(fallSoundPreset, nameof(fallSoundPreset));
             ValidateSoundPreset(weakGroundCollapseSoundPreset, nameof(weakGroundCollapseSoundPreset));
+            // 진입 목록은 그 뒤에 둡니다(같은 까닭, 소리 프리셋 원본 계획 TP-3).
+            if (weakGroundEntrySoundPresets == null) throw new InvalidOperationException("[CombatPresentationSettingsData] 약한 지반 진입 소리 프리셋 목록이 필요합니다.");
+            for (int i = 0; i < weakGroundEntrySoundPresets.Count; i++)
+                ValidateSoundPreset(weakGroundEntrySoundPresets[i], $"{nameof(weakGroundEntrySoundPresets)}[{i}]");
             // 걸음 모양 값도 맨 뒤에 둡니다(같은 까닭). 뛰기 값은 모양이 Walk여도 검사합니다(나중에 Hop으로 바꿀 때 남은 잘못된 값으로 멈추지 않게, 걸음 모양 설계 ST4).
             ValidateStepLook(voluntaryStepLook, nameof(voluntaryStepLook));
             ValidateHopHeight(hopHeight, nameof(hopHeight));
@@ -307,6 +327,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
             ValidateTileCollapseAmount(tileCollapseShakeFrequency, nameof(tileCollapseShakeFrequency));
             ValidateSeconds(tileCollapseSinkSeconds, nameof(tileCollapseSinkSeconds));
             ValidateTileCollapseAmount(tileCollapseSinkDepth, nameof(tileCollapseSinkDepth));
+            if (!CombatPresentationValueRules.IsNonNegative(weakGroundEntryScale))
+                throw new ArgumentOutOfRangeException(nameof(weakGroundEntryScale), "약한 지반의 진입 배율은 유한한 0 이상이어야 합니다.");
             // 추락 작아지기 시작 지점도 맨 뒤에 둡니다(같은 까닭).
             ValidateFallShrinkStart(fallShrinkStart, nameof(fallShrinkStart));
             // 날려 감 걸음 시간도 맨 뒤에 둡니다(같은 까닭, 작렬 View 설계 CV5).
@@ -315,7 +337,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSett
 
         private static CombatEventCues ReadCues(CombatVisualCueInput input, string name) => (input ?? throw new InvalidOperationException($"[CombatPresentationSettingsData] {name} 칸이 없습니다.")).ToCues();
         /// <summary>
-        /// 효과음 프리셋 번호 조건입니다(-1 = 소리 없음, 그 밖은 0 이상). 유닛 외형 표의 유닛·공격 프리셋(View 3라운드 W9-2)과 오브젝트·아이템 외형의 소리 프리셋(소리 창구 2차)도 이 조건을 씁니다.
+        /// 효과음 프리셋 번호 조건입니다(-1 = 프리셋 없음, 그 밖은 0 이상. -1을 받은 칸이 소리를 안 내는지, 프리셋 없이 내는지는 그 칸의 툴팁이 적습니다). 유닛 외형 표의 유닛·공격 프리셋(View 3라운드 W9-2)과 오브젝트·아이템 외형의 소리 프리셋(소리 창구 2차)도 이 조건을 씁니다.
         /// 규칙의 원본은 수 규칙 <see cref = "CombatPresentationValueRules.RequireSoundPreset"/> 하나이고, 이 함수는 그것을 부릅니다(투사체·피격 소리 묶음 끝 검토 중간 2).
         /// </summary>
         internal static void ValidateSoundPreset(int preset, string name) => CombatPresentationValueRules.RequireSoundPreset(preset, name, allowNone: true);

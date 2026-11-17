@@ -12,6 +12,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal AttackFailureReason FailureReason { get; }
         internal ResolvedAttackSelection Selection { get; }
         internal PullAttackEvaluation Pull { get; }
+        internal DeadHandAttackEvaluation Sweep { get; }
         internal IReadOnlyList<AttackBlockedContact> BlockedContacts { get; }
 
         /// <summary>
@@ -21,19 +22,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal IReadOnlyList<CellCoord> EmptyAreaCells { get; }
 
         private AttackSelectionEvaluation(AttackFailureReason failureReason, ResolvedAttackSelection selection,
-            IEnumerable<AttackBlockedContact> blockedContacts, IEnumerable<CellCoord> emptyAreaCells = null, PullAttackEvaluation pull = null)
+            IEnumerable<AttackBlockedContact> blockedContacts, IEnumerable<CellCoord> emptyAreaCells = null, PullAttackEvaluation pull = null, DeadHandAttackEvaluation sweep = null)
         {
             FailureReason = failureReason;
             Selection = selection;
             Pull = pull;
+            Sweep = sweep;
             var copy = (blockedContacts ?? Array.Empty<AttackBlockedContact>()).ToArray();
             if (copy.Any(c => c == null)) throw new ArgumentException("차단 증거에 null을 넣을 수 없습니다.", nameof(blockedContacts));
             BlockedContacts = Array.AsReadOnly(copy);
             EmptyAreaCells = Array.AsReadOnly((emptyAreaCells ?? Array.Empty<CellCoord>()).ToArray());
         }
 
-        internal static AttackSelectionEvaluation Success(ResolvedAttackSelection selection, IEnumerable<AttackBlockedContact> blockedContacts = null, PullAttackEvaluation pull = null) =>
-            new AttackSelectionEvaluation(AttackFailureReason.None, selection ?? throw new ArgumentNullException(nameof(selection)), blockedContacts, pull: pull);
+        internal static AttackSelectionEvaluation Success(ResolvedAttackSelection selection, IEnumerable<AttackBlockedContact> blockedContacts = null,
+            PullAttackEvaluation pull = null, DeadHandAttackEvaluation sweep = null) =>
+            new AttackSelectionEvaluation(AttackFailureReason.None, selection ?? throw new ArgumentNullException(nameof(selection)), blockedContacts, pull: pull, sweep: sweep);
 
         internal static AttackSelectionEvaluation Failure(AttackFailureReason reason, IEnumerable<AttackBlockedContact> blockedContacts = null,
             IEnumerable<CellCoord> emptyAreaCells = null)

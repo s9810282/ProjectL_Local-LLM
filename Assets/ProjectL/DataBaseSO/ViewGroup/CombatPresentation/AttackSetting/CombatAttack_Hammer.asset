@@ -17,10 +17,12 @@ MonoBehaviour:
   cues:
     effects:
     - effect: 18
-      anchor: 3
+      anchor: 4
+      contactFilter: 2
       delay: 0
       point: 3
-      actorPoint: 0
+      eventPoint: 0
+      eventPointRotation: 0
       stayInPlace: 0
       positionOffset: {x: 0, y: 0, z: 0.8}
       riderYOffset: 0
@@ -28,6 +30,3 @@ MonoBehaviour:
       end: 0
       endSeconds: 0
     shakes: []
-    sound:
-      anchor: 2
-      delay: 0

@@ -28,7 +28,7 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.Core
                 source = databaseSource;
             }
             var movementRules = CombatMovementRules.Validated(new IMovementTileRule[] {
-                new ThornMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule() });
+                new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule() });
 
             // 공유 협력 객체는 여기서 한 번만 만들고, 각자 자기 바인딩만 하도록 모듈로 등록한다.
             var lifetime = new BattleLifetime();

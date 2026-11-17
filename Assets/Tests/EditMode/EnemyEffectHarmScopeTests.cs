@@ -211,7 +211,7 @@ namespace ProjectL.Tests.Core
             var id = new EntityId(90);
             var obstacle = new StructureCombatFacts(id, new StructureSpec(EntityKey.Structure_PowderBarrel,
                 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
-                new HealthStateSnapshot(100, 100), cell, Rotation4.R0, new[] { cell }, Owner.Neutral);
+                new ObstacleDurabilitySnapshot(3, 3), cell, Rotation4.R0, new[] { cell }, Owner.Neutral);
             var bindings = new EnvironmentSemanticBindings(Array.Empty<long>(), Array.Empty<long>(), new[] { id });
             return input.WithWorld(input.State.With(structures: new[] { obstacle }), input.Characters,
                 input.Main, input.SoulCounts, input.Souls, bindings);

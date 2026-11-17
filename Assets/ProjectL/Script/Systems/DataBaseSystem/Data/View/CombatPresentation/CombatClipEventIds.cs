@@ -5,7 +5,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 {
     /// <summary>
     /// 클립 중간 이벤트 번호의 표입니다(평가 C2-04, 작은 묶음 설계 SB2). 번호마다 한 줄 = (번호, 애니메이션 이름표 함수 이름, 큐 시점)입니다.
-    /// 첫 줄은 기준 이벤트(<see cref="CombatClipEventId.Event"/>, 필수)이고, 나머지 줄은 선택 이벤트입니다. 표 순서가 번호 순서입니다.
+    /// 첫 줄은 기준 이벤트(<see cref="CombatClipEventId.Event1"/>, 필수)이고, 나머지 줄은 선택 이벤트입니다. 표 순서가 번호 순서입니다.
     /// DB 읽기(<see cref="CombatClipEvents.ReadTimings"/>)·시각 검사(<see cref="CombatClipTimings.FindTimeError"/>)·큐 규칙(<see cref="CombatPresentationCueRules"/>)과
     /// 전투 재생의 큐 연결이 이 표 하나를 읽습니다. 번호 → 실행 신호(View 형식)는 층 규칙상 View 쪽 표 <c>CombatClipEventSignals</c>가 맡습니다.
     /// </summary>
@@ -33,9 +33,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 
         private static readonly Row[] Rows =
         {
-            new Row(CombatClipEventId.Event, nameof(CombatAnimationEvents.ClipEvent), CombatCueAnchor.Cue),
-            new Row(CombatClipEventId.Event2, nameof(CombatAnimationEvents.ClipEvent2), CombatCueAnchor.Cue2),
-            new Row(CombatClipEventId.Event3, nameof(CombatAnimationEvents.ClipEvent3), CombatCueAnchor.Cue3),
+            new Row(CombatClipEventId.Event1, nameof(CombatAnimationEvents.ClipEvent), CombatCueAnchor.Event1),
+            new Row(CombatClipEventId.Event2, nameof(CombatAnimationEvents.ClipEvent2), CombatCueAnchor.Event2),
+            new Row(CombatClipEventId.Event3, nameof(CombatAnimationEvents.ClipEvent3), CombatCueAnchor.Event3),
         };
 
         // 명시적 정적 생성자입니다. 표를 처음 쓸 때 한 번 검사합니다(설계 P4, 계획 TP-7).
@@ -91,7 +91,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
             return false;
         }
 
-        /// <summary>그 큐 시점이 클립 이벤트 시점(기준 이벤트 Cue 또는 선택 이벤트 시점)인지입니다.</summary>
+        /// <summary>그 큐 시점이 클립 이벤트 시점(Event1~3)인지입니다.</summary>
         internal static bool IsEventAnchor(CombatCueAnchor anchor)
         {
             for (int i = 0; i < Rows.Length; i++)
@@ -108,13 +108,13 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         }
 
         // 표 규칙입니다: 줄이 있고, 첫 줄이 기준 이벤트이며, 번호가 늘어나는 순서로 겹치지 않고, 모든 번호 값에 줄이 있고,
-        // 함수 이름은 비지 않고 시작·끝 이름표가 아니며 겹치지 않고, 큐 시점은 정의된 값이며 시작·맞음·접촉·끝이 아니고 겹치지 않습니다.
+        // 함수 이름은 비지 않고 시작·끝 이름표가 아니며 겹치지 않고, 큐 시점은 정의된 값이며 시작·접촉·끝이 아니고 겹치지 않습니다.
         private static string FindTableError()
         {
             if (Rows.Length == 0)
                 return "줄이 없습니다";
-            if (Rows[0].Id != CombatClipEventId.Event)
-                return $"첫 줄은 기준 이벤트({CombatClipEventId.Event})여야 합니다: {Rows[0].Id}";
+            if (Rows[0].Id != CombatClipEventId.Event1)
+                return $"첫 줄은 기준 이벤트({CombatClipEventId.Event1})여야 합니다: {Rows[0].Id}";
             for (int i = 0; i < Rows.Length; i++)
             {
                 Row row = Rows[i];
@@ -128,8 +128,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                     return $"{row.Id}의 함수 이름이 시작·끝 이름표입니다: {row.FunctionName}";
                 if (!System.Enum.IsDefined(typeof(CombatCueAnchor), row.Anchor))
                     return $"{row.Id}의 큐 시점이 정의되지 않은 값입니다: {(int)row.Anchor}";
-                if (row.Anchor is CombatCueAnchor.Start or CombatCueAnchor.Hit or CombatCueAnchor.Contact or CombatCueAnchor.End)
-                    return $"{row.Id}의 큐 시점은 클립 이벤트 시점이어야 합니다(Start·Hit·Contact·End가 아님): {row.Anchor}";
+                if (row.Anchor is CombatCueAnchor.Start or CombatCueAnchor.Contact or CombatCueAnchor.End)
+                    return $"{row.Id}의 큐 시점은 클립 이벤트 시점이어야 합니다(Start·Contact·End가 아님): {row.Anchor}";
                 for (int j = 0; j < i; j++)
                 {
                     if (Rows[j].FunctionName == row.FunctionName)

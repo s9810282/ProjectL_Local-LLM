@@ -10,7 +10,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
     /// </summary>
     /// <remarks>
     /// 넉백은 공격 조준의 넉백 미리보기와 같은 화살표·도착 칸으로 그리고, 공격 조준이 넉백을 그리는 동안에는 그쪽이 먼저입니다(Q-RF4 A).
-    /// 언제 보일지·어느 출처를 그릴지는 구현이 정하며, 부르는 쪽은 Core 응답을 그대로 넘깁니다. 해제 뒤 호출은 무시합니다.
+    /// 언제 보일지·어느 출처를 그릴지는 구현이 정하며, 부르는 쪽은 Core 응답과 전경 입력 사실을 그대로 넘깁니다(새 SSOT 설계 SN3).
+    /// 해제 뒤 호출은 무시합니다.
     /// </remarks>
     internal interface ICombatRoarForecastFeedback
     {
@@ -22,5 +23,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
 
         /// <summary>포효 예고의 범위와 넉백을 지웁니다. 반복 호출에 안전합니다.</summary>
         void ClearRoarForecast();
+
+        /// <summary>
+        /// 전경 입력(공격 모드·이동·배치·아이템 드래그) 중인지를 넘깁니다. 전경 입력 중에는 포효 예고의 넉백을 그리지 않고 바닥 범위는 남깁니다.
+        /// 매 Tick 넘겨도 되며, 바뀜은 구현이 거릅니다.
+        /// </summary>
+        void SetForegroundInput(bool active);
     }
 }

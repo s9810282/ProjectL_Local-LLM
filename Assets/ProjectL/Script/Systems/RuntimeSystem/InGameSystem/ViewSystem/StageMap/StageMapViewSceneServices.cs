@@ -6,6 +6,7 @@ using ProjectL.Systems.RuntimeSystem.BufferSystems.Stage;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup.CameraCatalogSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.ColorSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.View.SelectOutlineSystem;
+using UnityEngine;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
 {
@@ -14,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
     {
         internal StageMapViewSceneServices(StageMapViewData mapData, IStageNodeVisualTableQuery nodeVisuals,
             IStageMapBackgroundTableQuery backgrounds, IColorSystemService colors, ISelectOutlineSystemService outlines,
-            ICameraCatalogService cameras)
+            ICameraCatalogService cameras, Func<GameObject> readMainModel)
         {
             MapData = mapData ?? throw new ArgumentNullException(nameof(mapData));
             if (nodeVisuals == null) throw new ArgumentNullException(nameof(nodeVisuals));
@@ -24,6 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
             Colors = colors ?? throw new ArgumentNullException(nameof(colors));
             Outlines = outlines ?? throw new ArgumentNullException(nameof(outlines));
             Cameras = cameras ?? throw new ArgumentNullException(nameof(cameras));
+            ReadMainModel = readMainModel ?? throw new ArgumentNullException(nameof(readMainModel));
         }
 
         internal StageMapViewData MapData { get; }
@@ -32,5 +34,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         internal IColorSystemService Colors { get; }
         internal ISelectOutlineSystemService Outlines { get; }
         internal ICameraCatalogService Cameras { get; }
+        internal Func<GameObject> ReadMainModel { get; }
     }
 }

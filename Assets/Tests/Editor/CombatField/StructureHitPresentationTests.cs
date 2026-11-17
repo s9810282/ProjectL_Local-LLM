@@ -53,7 +53,7 @@ namespace ProjectL.CombatField.Editor.Tests
         [TestCase((int)CombatCueAnchor.Start, 0f, (int)CombatCuePoint.ActorBody, false)]
         public void StructureCue_OnlyImmediateSubjectEffect(int anchor, float delay, int point, bool valid)
         {
-            var cues = new CombatEventCues(new[] { new CombatEffectCue(EffectType.Hit, (CombatCueAnchor)anchor, delay, (CombatCuePoint)point) }, null, null, null);
+            var cues = new CombatEventCues(new[] { new CombatEffectCue(EffectType.Hit, (CombatCueAnchor)anchor, delay, (CombatCuePoint)point) }, null, null);
             Assert.That(CombatPresentationCueRules.FindError(cues, CombatCueEvent.StructureHit) == null, Is.EqualTo(valid));
         }
         [TestCase(20, 1)]

@@ -96,6 +96,51 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
+        public void UnwarnedLavaChainLeavesOtherHazardsDistinguishable()
+        {
+            // 방향을 정하기 전 사슬의 다음 경고는 칸이 없다. 판 전체를 치명 가능으로 만들지 않고 공백만 남겨,
+            // 낙석 경고 칸과 안전한 칸을 계속 구분해야 한다.
+            var rockfall = new RockfallGimmickSpec();
+            var input = Input(new StageGimmickSpec[] { rockfall, new LavaChainGimmickSpec(new CellCoord(6, 0), 3, 1, 1) }, warning: true)
+                .WithActor(new EntityId(2));
+            var chain = (LavaChainGimmickState)input.State.Gimmicks.Get(new StageGimmickId(2));
+            Assert.That(chain.IsWarning, Is.False);
+            Assert.That(chain.NextBoundaryCount, Is.LessThanOrEqualTo(input.State.Turn.CompletedControllerTurnCount + 2));
+            var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
+            using var builder = new StageHazardForecast.Builder(input);
+            var forecast = Finish(builder);
+            Assert.That(forecast.Facts.Any(f => f.Key == StageGimmickKey.LavaChain && !f.Cell.HasValue), Is.True);
+
+            var safe = forecast.Evaluate(actor, Array.Empty<CellCoord>(), new CellCoord(2, 0));
+            Assert.That(safe.PossibleHpLoss, Is.Zero);
+            Assert.That(safe.KnownHpLoss, Is.Zero);
+            Assert.That(safe.Gaps & CombatAssessmentGap.FutureWarning, Is.EqualTo(CombatAssessmentGap.FutureWarning));
+            Assert.That(safe.Gaps & CombatAssessmentGap.UnknownPosition, Is.EqualTo(CombatAssessmentGap.None));
+
+            int loss = RockfallGimmickRule.HealthLoss(actor.Health.MaxHealth, rockfall);
+            Assert.That(loss, Is.GreaterThan(0));
+            var warned = forecast.Evaluate(actor, Array.Empty<CellCoord>(), new CellCoord(1, 3));
+            Assert.That(warned.KnownHpLoss, Is.EqualTo(Math.Min(loss, actor.Health.CurrentHealth)));
+        }
+
+        [Test]
+        public void WarnedLavaChainPathRemainsPossiblyLethalOnlyOnThePath()
+        {
+            var input = Input(new StageGimmickSpec[] { new LavaChainGimmickSpec(new CellCoord(6, 0), 3, 1, 1) }).WithActor(new EntityId(2));
+            input = CombatCommandTestData.With(input, state: input.State.With(gimmicks: input.State.Gimmicks.Replace(
+                new LavaChainGimmickState(new StageGimmickId(1), new CellCoord(6, 0), 5, true, new CellCoord(0, 1)))));
+            var actor = input.Characters.Single(c => c.EntityId == input.ActorId);
+            using var builder = new StageHazardForecast.Builder(input);
+            var forecast = Finish(builder);
+
+            var onPath = forecast.Evaluate(actor, Array.Empty<CellCoord>(), new CellCoord(6, 2));
+            Assert.That(onPath.PossibleHpLoss, Is.EqualTo(actor.Health.CurrentHealth));
+            Assert.That(onPath.Gaps & CombatAssessmentGap.UnknownPosition, Is.EqualTo(CombatAssessmentGap.UnknownPosition));
+            var offPath = forecast.Evaluate(actor, Array.Empty<CellCoord>(), new CellCoord(2, 0));
+            Assert.That(offPath.PossibleHpLoss, Is.Zero);
+        }
+
+        [Test]
         public void IndividualActionsDoNotAdvanceBoundary()
         {
             var input = EnemyAiBenchmarkFixtures.Build("R8", 1);

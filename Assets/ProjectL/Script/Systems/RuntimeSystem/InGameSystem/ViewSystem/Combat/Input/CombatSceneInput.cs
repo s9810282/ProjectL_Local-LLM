@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
@@ -52,6 +53,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         private readonly CombatHudActionAvailability _hudActionAvailability;
         // 포효 예고의 배경 조회입니다(포효 예고 계획 TP-11). 이 연결 입력이 소유하고 정리합니다.
         private readonly CombatRoarForecastTracker _roarForecast;
+        // 행동 패널 스킬 버튼의 배경 가용성 조회입니다(전투 스킬 View 설계 SK4).
+        private readonly CombatPlayerSkillAvailabilityTracker _skillAvailability;
         private readonly CombatMovementUndoInput _movementUndo;
         private readonly CombatInputRouter _router;
         private CombatDeckPlacementInput _deckPlacement;
@@ -66,8 +69,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             CombatDeckPlacementInput deckPlacement, CombatItemInput itemInput, CombatEnvironmentHover environmentHover,
             CombatActionNotice notices, CombatDeploymentEntry deployment, CombatEndTurnEntry endTurn,
             CombatActionAvailabilityTracker actionAvailability, CombatHudActionAvailability hudActionAvailability,
-            CombatCameraInput camera, CombatMovementUndoInput movementUndo, CombatRoarForecastTracker roarForecast)
+            CombatCameraInput camera, CombatMovementUndoInput movementUndo, CombatRoarForecastTracker roarForecast,
+            CombatPlayerSkillAvailabilityTracker skillAvailability)
         {
+            _skillAvailability = skillAvailability ?? throw new ArgumentNullException(nameof(skillAvailability));
             _roarForecast = roarForecast ?? throw new ArgumentNullException(nameof(roarForecast));
             _movementUndo = movementUndo ?? throw new ArgumentNullException(nameof(movementUndo));
             _camera = camera ?? throw new ArgumentNullException(nameof(camera));
@@ -93,6 +98,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// <summary>공격 모드인지입니다(공격 입력 소유자의 관측값). 입력 사실 읽기가 씁니다.</summary>
         internal bool IsAttackActive => _interaction.IsAttackActive;
 
+        /// <summary>플레이어 액티브 스킬 모드인지입니다(전투 스킬 View 설계 SK1).</summary>
+        internal bool IsSkillActive => _interaction.IsSkillActive;
+
         /// <summary>아이템을 끄는 중인지입니다. 입력 사실 읽기가 씁니다.</summary>
         internal bool IsItemDragActive => _interaction.IsItemDragActive;
 
@@ -111,6 +119,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// 판정 원본은 입력 기능 묶음의 <see cref="CombatInteraction.IsInputOwnerActive"/> 하나라, 전경 소유자가 늘어도 따라갑니다(평가 C2-02·C8-01).
         /// </summary>
         internal bool CanInspectOnPress => !_interaction.IsInputOwnerActive;
+
+        // 다른 모드로 전환해도 이미 소비한 누름의 떼기는 그 모드로 넘기지 않습니다.
+        private enum DestinationPress
+        {
+            None,
+            Held,
+            Released
+        }
+
+        private DestinationPress _destinationPress;
+
+        internal void BeginSelectPress() => _destinationPress = DestinationPress.None;
+
+        internal bool TryPressDestination(CellCoord? cell, bool occupied)
+        {
+            if (!_interaction.TryPressDestination(cell, occupied))
+                return false;
+            _destinationPress = DestinationPress.Held;
+            _environmentHover?.CancelSelection();
+            return true;
+        }
+
+        internal bool OwnsDestinationRelease => _destinationPress != DestinationPress.None;
+
+        internal void ReleaseDestination(CellCoord? cell)
+        {
+            if (_destinationPress != DestinationPress.Held) return;
+            _destinationPress = DestinationPress.Released;
+            _interaction.ReleaseDestination(cell);
+        }
+
+        /// <summary>새 유닛 선택 전에 기존 조준·이동 범위·경로 초안을 정리합니다.</summary>
+        internal void PrepareActorSwitch()
+        {
+            _interaction.LeaveMoveMode();
+            _interaction.CancelPresentation();
+            _environmentHover?.CancelSelection();
+        }
 
         /// <summary>배치 국면의 전투 진입을 요청합니다. 확인이 필요하면 배치 확인창을 엽니다.</summary>
         internal void RequestEnterCombat() => _deployment.Request();
@@ -147,8 +193,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// 선택 아군의 가용성 조회 수명을 맞춥니다. 전경 입력 소유자가 있는지는 입력 기능 묶음 한 곳에서 읽어 넘깁니다(평가 C2-02).
         /// 입력 분배가 입력 사실을 값으로 넘겨 조회가 사실을 다시 읽지 않습니다.
         /// </summary>
-        internal void SyncAvailability(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, int answeredPreview) =>
-            _actionAvailability.Sync(facts, characters, _interaction.IsInputOwnerActive, answeredPreview);
+        internal void SyncAvailability(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, int answeredPreview)
+        {
+            _actionAvailability.Sync(facts, characters, _interaction.HasForegroundPreview, answeredPreview);
+            // 스킬 가용성은 행동 가능 여부 다음입니다. 슬롯 규칙이 둘을 차례로 묻게 합니다(전투 스킬 View 설계 SK4).
+            _skillAvailability.Sync(facts, _interaction.HasForegroundPreview, answeredPreview);
+        }
 
         /// <summary>
         /// 포효 예고 조회를 맞춥니다(포효 예고 계획 TP-11). 전경 입력 소유자가 있는지는 입력 기능 묶음 한 곳에서 읽어 넘깁니다.
@@ -156,12 +206,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// </summary>
         internal void SyncRoarForecast(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters,
             int answeredPreview, CombatPreviewResult latest) =>
-            _roarForecast.Sync(facts, characters, _interaction.IsInputOwnerActive, answeredPreview, latest);
+            _roarForecast.Sync(facts, characters, _interaction.HasForegroundPreview, answeredPreview, latest);
 
-        /// <summary>입력용 미리보기 단계 뒤 빈 슬롯에서만 HUD 조회를 진행합니다.</summary>
-        internal void SyncHudActionAvailability(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters,
-            int answeredPreview, CombatPreviewResult latest) =>
-            _hudActionAvailability.Sync(facts, characters, _interaction.IsInputOwnerActive, answeredPreview,
+        /// <summary>입력용 미리보기 단계 뒤 빈 슬롯에서만 HUD 조회를 진행합니다. 누구를 물을지는 Core가 정해 캐릭터 목록을 넘기지 않습니다(새 SSOT 설계 SN2).</summary>
+        internal void SyncHudActionAvailability(in CombatInputFacts facts, int answeredPreview, CombatPreviewResult latest) =>
+            _hudActionAvailability.Sync(facts, _interaction.HasForegroundPreview, answeredPreview,
                 latest, _actionAvailability.Read(facts));
 
         /// <summary>
@@ -170,10 +219,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         /// </summary>
         internal CombatActionButtonState ReadActionButtons(in CombatInputFacts facts) =>
             new CombatActionButtonState(_interaction.CanEnterAttack(facts), _interaction.IsAttackActive,
-                _movementUndo.CanRequest, _actionAvailability.Read(facts));
+                _movementUndo.CanRequest, _actionAvailability.Read(facts),
+                _skillAvailability.ReadButton(facts, _interaction.IsSkillActive, _interaction.CanEnterSkill(facts)));
 
         /// <summary>새 결과/닫힘에서 가용성 조회를 지웁니다. 명령 Buffer는 건드리지 않습니다.</summary>
-        internal void ClearActionAvailability() => _actionAvailability.Clear();
+        internal void ClearActionAvailability()
+        {
+            _actionAvailability.Clear();
+            _skillAvailability.Clear();
+        }
 
         /// <summary>손패 카드 입구입니다. 정지 뒤에는 null입니다.</summary>
         internal ICombatDeckPlacementInput DeckPlacement => _deckPlacement;
@@ -199,8 +253,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 _camera?.Scrolled(screenX);
                 return;
             }
+            if (request == CombatInputRouter.Request.CameraRotate)
+            {
+                _camera?.RotateChanged(screenX);
+                return;
+            }
+            if (request == CombatInputRouter.Request.CameraRotateDrag)
+            {
+                _camera?.RotateDragChanged(screenX > 0f);
+                return;
+            }
             bool canSelectEnvironment = !_interaction.IsInputOwnerActive;
-            _router.Route(request, screenX, screenY, characters);
+            _router.Route(request, screenX, screenY, characters, _camera != null && _camera.IsRotateDragging);
             if (request == CombatInputRouter.Request.FocusLost || request == CombatInputRouter.Request.SelectCanceled)
             {
                 _environmentHover?.Clear();
@@ -239,7 +303,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>환경 설명을 지금 사실로 맞춥니다. 허용 여부는 입력 분배가 입력 사실로 정합니다. 정지 뒤에는 아무것도 하지 않습니다.</summary>
         internal void SyncEnvironmentHover(CombatStateData current, int resultSequence, bool allowed) =>
-            _environmentHover?.Refresh(current, resultSequence, allowed, !_interaction.IsInputOwnerActive);
+            _environmentHover?.Refresh(current, resultSequence, allowed, !_interaction.HasForegroundPreview);
 
         /// <summary>환경 호버가 있는지(정지 전인지)입니다. 없으면 입력 분배가 허용 사실을 읽지 않습니다.</summary>
         internal bool HasEnvironmentHover => _environmentHover != null;
@@ -288,6 +352,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
         internal void Stop(ref List<Exception> errors)
         {
             CleanupErrors.Try(_actionAvailability.Stop, ref errors);
+            CleanupErrors.Try(_skillAvailability.Stop, ref errors);
             CleanupErrors.Try(_hudActionAvailability.Clear, ref errors);
             CleanupErrors.Try(_roarForecast.Clear, ref errors);
             _notices = null;

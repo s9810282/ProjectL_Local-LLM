@@ -124,13 +124,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return candidates.ToArray();
         }
 
-        private static IEnumerable<string> LandingSteps(CombatCommandInput input, EntityId mover, List<CellCoord> candidates)
+        private static IEnumerable<string> LandingSteps(CombatCommandInput input, EntityId mover, List<CellCoord> candidates,
+            IReadOnlyCollection<CellCoord> reservations = null)
         {
             var unit = input.Characters.Single(c => c.EntityId == mover);
             var ignored = new[] { mover };
             foreach (var cell in Cells(input.State.BoardWidth, input.State.BoardHeight))
             {
-                if (cell != unit.Anchor && MovementRouteValidator.CanOccupy(input, cell, ignored)) candidates.Add(cell);
+                if (cell != unit.Anchor && (reservations == null || !reservations.Contains(cell)) &&
+                    MovementRouteValidator.CanOccupy(input, cell, ignored)) candidates.Add(cell);
                 yield return "TornadoLandingCell";
             }
         }
@@ -157,7 +159,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (UnitBehaviorRules.IsForcedMovementImmune(current, unit, projection.ProfileReads)) yield break;
             if (unit.OccupiedCells.Count != 1) throw new NotSupportedException("다중 셀 토네이도 이동에는 전체 점유 배치 지원이 필요합니다.");
             var candidates = new List<CellCoord>();
-            foreach (var phase in LandingSteps(current, target, candidates)) yield return phase;
+            foreach (var phase in LandingSteps(current, target, candidates, projection.GimmickReservations)) yield return phase;
             if (candidates.Count == 0) yield break;
             var destination = candidates[projection.ChooseRandom(candidates.Count)];
             // 실제 이동이 확정된 뒤 중첩 착지보다 먼저 표시한다.

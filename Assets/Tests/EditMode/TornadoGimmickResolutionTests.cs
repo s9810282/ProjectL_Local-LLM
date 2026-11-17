@@ -273,7 +273,7 @@ namespace ProjectL.Tests.Core
                 controllerTurnSequence: 1, completedControllerTurnCount: count);
             var environment = new MovementEnvironmentFacts(sources ?? Array.Empty<MovementTileFact>());
             var state = new CombatCommandState(width, height, CombatFlowPhase.PlayerInput,
-                source.State.Structures, source.State.ThornFields, turn, environment, gimmicks: new StageGimmickStateSet(new[] { group }));
+                source.State.Structures, turn, environment, gimmicks: new StageGimmickStateSet(new[] { group }));
             var battle = new CombatBattleFacts(4, 1, width, height, Array.Empty<CharacterInstanceId>(), 0,
                 gimmicks: new[] { spec });
             return new CombatCommandInput(1, source.Kind, source.ActorId, source.Aim, state, characters, source.Profiles, source.Main,

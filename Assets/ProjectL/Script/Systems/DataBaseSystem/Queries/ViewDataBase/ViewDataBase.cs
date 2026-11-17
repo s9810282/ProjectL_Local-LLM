@@ -24,13 +24,13 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase
         ICategoryVisualTableQuery CategoryVisualTableQuery { get; }
         IRecoveryOptionVisualTableQuery RecoveryOptionVisualTableQuery { get; }
         IRailwayVisualTableQuery RailwayVisualTableQuery { get; }
-        IThornFieldVisualTableQuery ThornFieldVisualTableQuery { get; }
         IRockfallVisualTableQuery RockfallVisualTableQuery { get; }
         IHaboobVisualTableQuery HaboobVisualTableQuery { get; }
         IInputSettingsTableQuery InputSettingsTableQuery { get; }
         ICombatPresentationSettingsTableQuery CombatPresentationSettingsTableQuery { get; }
         IConsumableItemVisualTableQuery ConsumableItemVisualTableQuery { get; }
         IUnitStatusVisualTableQuery UnitStatusVisualTableQuery { get; }
+        IPlayerSkillVisualTableQuery PlayerSkillVisualTableQuery { get; }
         IStageOfferTextTableQuery StageOfferTextTableQuery { get; }
         ITutorialDefinitionTableQuery TutorialDefinitionTableQuery { get; }
     }
@@ -51,7 +51,6 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase
         public ICategoryVisualTableQuery CategoryVisualTableQuery { get; }
         public IRecoveryOptionVisualTableQuery RecoveryOptionVisualTableQuery { get; }
         public IRailwayVisualTableQuery RailwayVisualTableQuery { get; }
-        public IThornFieldVisualTableQuery ThornFieldVisualTableQuery { get; }
         public IRockfallVisualTableQuery RockfallVisualTableQuery { get; }
         public IHaboobVisualTableQuery HaboobVisualTableQuery { get; }
         public IInputSettingsTableQuery InputSettingsTableQuery { get; }
@@ -60,6 +59,7 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase
         public ICombatPresentationSettingsTableQuery CombatPresentationSettingsTableQuery { get; }
         public IConsumableItemVisualTableQuery ConsumableItemVisualTableQuery { get; }
         public IUnitStatusVisualTableQuery UnitStatusVisualTableQuery { get; }
+        public IPlayerSkillVisualTableQuery PlayerSkillVisualTableQuery { get; }
         public IStageOfferTextTableQuery StageOfferTextTableQuery { get; }
         public ITutorialDefinitionTableQuery TutorialDefinitionTableQuery { get; }
 
@@ -79,7 +79,6 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase
             CategoryVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.CategoryVisual);
             RecoveryOptionVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.RecoveryOptionVisual);
             RailwayVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.RailwayVisual);
-            ThornFieldVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.ThornFieldVisual);
             RockfallVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.RockfallVisual);
             HaboobVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.HaboobVisual);
             InputSettingsTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.InputSettings);
@@ -88,6 +87,7 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase
             CombatPresentationSettingsTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.CombatPresentationSettings);
             ConsumableItemVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.ConsumableItemVisual);
             UnitStatusVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.UnitStatusVisual);
+            PlayerSkillVisualTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.PlayerSkillVisual);
             StageOfferTextTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.StageOfferText);
             TutorialDefinitionTableQuery = systemReader.ServiceStoreReader.GetService(ViewTableKey.TutorialDefinition);
         }

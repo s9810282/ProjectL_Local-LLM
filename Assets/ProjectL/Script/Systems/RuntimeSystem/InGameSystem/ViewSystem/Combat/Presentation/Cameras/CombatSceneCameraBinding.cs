@@ -15,6 +15,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         [Tooltip("이동·줌·줌 자세에 사용하는 공용 설정입니다.")]
         [SerializeField] private CombatCameraSettingsSO settings;
 
+#if UNITY_EDITOR
+        internal CombatCameraSettingsSO EditorSettings => settings;
+#endif
+
         internal string CameraName => virtualCamera != null ? virtualCamera.gameObject.name
             : throw ConfigurationError("virtualCamera 참조가 비어 있습니다.");
 

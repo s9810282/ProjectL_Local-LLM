@@ -29,7 +29,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly Func<int> _generation;
         private readonly Action<CharacterCombatFacts> _show;
         private readonly Action<CharacterCombatFacts> _playMovementSound;
-        private readonly Func<CellCoord, FieldGridMapper, CombatBody> _thornBody;
         private readonly Func<ObjectSourceFact, FieldGridMapper, CombatBody> _objectBody;
         private readonly CombatStepContacts _contacts = new();
         private readonly Dictionary<EntityId, CombatUnitMotionPlayback> _lanes = new();
@@ -44,13 +43,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="generation">사건 Presenter가 소유한 현재 재생 세대입니다. 취소마다 바뀝니다.</param>
         /// <param name="show">한 개체의 사실을 표시 사실에 넣고 다시 그립니다.</param>
         /// <param name="playMovementSound">스스로 이동하는 걸음의 시작 효과음입니다.</param>
-        /// <param name="thornBody">가시 칸의 접촉 몸입니다. 없으면 가시 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="objectBody">오브젝트 원본의 접촉 몸입니다. 없으면 오브젝트 묶음은 보간 끝(칸 도착)에 해제합니다.</param>
         /// <param name="leapMotion">뛰어넘기 구간 전체 시간·높이입니다. 생략하면 View 설정 기본값을 씁니다.</param>
         internal CombatUnitMotionSet(CombatUnitPresentationWindow presentation,
             Func<CharacterCombatFacts, Quaternion, FieldGridMapper, CombatBody> moverBody, CombatStepStyles styles, float turnSeconds,
             Func<int> generation, Action<CharacterCombatFacts> show, Action<CharacterCombatFacts> playMovementSound,
-            Func<CellCoord, FieldGridMapper, CombatBody> thornBody = null,
             Func<ObjectSourceFact, FieldGridMapper, CombatBody> objectBody = null, CombatLeapMotionSettings leapMotion = null)
         {
             _presentation = presentation ?? throw new ArgumentNullException(nameof(presentation));
@@ -61,7 +58,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _generation = generation ?? throw new ArgumentNullException(nameof(generation));
             _show = show ?? throw new ArgumentNullException(nameof(show));
             _playMovementSound = playMovementSound ?? throw new ArgumentNullException(nameof(playMovementSound));
-            _thornBody = thornBody;
             _objectBody = objectBody;
         }
 
@@ -146,12 +142,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>Core가 제공한 실제 끌어오기 경로를 같은 유닛의 이동 레인에서 재생합니다.</summary>
-        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed, Action started = null)
+        internal void BeginPull(AttackPullSnapshot movement, CharacterCombatFacts target, FieldGridMapper mapper, Action completed)
         {
             CombatUnitMotionPlayback lane = Lane(movement.TargetId);
             if (lane.IsActive)
                 throw new InvalidOperationException("끌어오기 전에 대상의 이전 이동이 끝나야 합니다.");
-            lane.BeginPull(movement, target, mapper, completed, started);
+            lane.BeginPull(movement, target, mapper, completed);
         }
 
         /// <summary>그 유닛의 레인에서 경로 끝 방향 복귀를 합니다. 돌 필요가 없으면 바로 완료를 알립니다.</summary>
@@ -214,7 +210,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             {
                 lane = new CombatUnitMotionPlayback(_presentation, _moverBody, _styles, _turnSeconds, _generation, _show,
                     _playMovementSound,
-                    _contacts, _thornBody, _objectBody, _leapMotion);
+                    _contacts, _objectBody, _leapMotion);
                 _lanes.Add(id, lane);
             }
             return lane;

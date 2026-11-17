@@ -6,6 +6,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
 {
@@ -14,18 +15,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
     {
         internal CombatAttackProfile Profile { get; }
         internal TraitGrowthCatalog Catalog { get; }
+        internal PlayerSkillDefinition PlayerSkill { get; }
         private readonly object[] _values;
 
         internal MainSpecializationDefinitionSnapshot(CombatAttackProfile profile, TraitGrowthCatalog catalog,
-            CategoryConfigData config, IReadOnlyList<UnitSpec> rosterDefinitions)
+            CategoryConfigData config, IReadOnlyList<UnitSpec> rosterDefinitions, PlayerSkillDefinition playerSkill = null)
         {
             Profile = profile;
             Catalog = catalog;
-            var values = new List<object>();
+            PlayerSkill = playerSkill;
+            var values = new List<object> { playerSkill != null, playerSkill?.Key, playerSkill?.MainCharacterKey, playerSkill?.StageUseLimit };
             foreach (var unit in rosterDefinitions) AddUnit(values, unit);
             AddUnit(values, profile.Definition);
             var method = profile.Method;
-            values.AddRange(new object[] { method.Shape, method.ChoiceMode, method.Splash, method.SplashPercent, method.ChoiceAngle,
+            values.AddRange(new object[] { method.Shape, method.ChoiceMode, method.Splash, method.SplashPercent, method.ChoiceAngle, method.Width,
                 config.MainMovementAllowance, config.RiderMovementAllowance, config.HeavyMovementAllowance,
                 config.CannonMovementAllowance, config.BossMovementAllowance, config.MainLevelGrowth, config.RiderLevelGrowth,
                 config.HeavyLevelGrowth, config.CannonLevelGrowth, config.BossLevelGrowth, config.LevelProgression });
@@ -45,6 +48,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             {
                 AddTrait(values, trait.Normal);
                 AddTrait(values, trait.Enhanced);
+                values.Add(trait.AllowUnchangedRankValues);
                 AddRank(values, trait.Rank2);
                 AddRank(values, trait.Rank3);
                 values.AddRange(new object[] { trait.Name, trait.Description, trait.EnhancedName, trait.EnhancedDescription });
@@ -98,7 +102,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 case GroundCompactionTraitSpec t: values.Add(t.MovementRangeBonus); values.Add(t.OpposingTurnEndsToExpire); break;
                 case HuntersMarkTraitSpec t: values.Add(t.BonusDamagePercent); values.Add(t.DurationAffectedSideTurnEnds); break;
                 case HunterTraitSpec t: values.Add(t.AttackPerTargetKill); values.Add(t.MaxRewardsPerStage); break;
+                case DeadHandTraitSpec t: values.Add(t.DamagePercent); break;
                 case ImpactBoltTraitSpec t: values.Add(t.DistanceCells); break;
+                case ThornBombTraitSpec t: values.Add(t.DamagePercent); break;
                 case CrashImpactTraitSpec t: values.Add(t.DistanceCells); values.Add(t.WallDamagePercent); values.Add(t.UnitDamagePercent); break;
                 case IntimidationTraitSpec t: values.Add(t.AttackReductionPercent); break;
                 case KillChainAttackTraitSpec t:  break;
@@ -123,7 +129,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 case StationaryFireTraitSpec t: values.Add(t.ExtraDamagePercent); break;
                 case SteadfastWillTraitSpec t:  break;
                 case TauntTraitSpec t: values.Add(t.RadiusCells); values.Add(t.DamageReductionPercent); break;
-                case ThornFieldTraitSpec t: values.Add(t.ThornDamage); values.Add(t.DefenseReductionPercent); values.Add(t.TickPhase); values.Add(t.LifetimeUnitTurns); break;
                 case TrackingShotTraitSpec t: values.Add(t.TargetHealthThresholdPercent); values.Add(t.ExtraDamagePercent); break;
                 case VanguardTraitSpec t: values.Add(t.AttackBonus); values.Add(t.DurationControllerTurnEnds); break;
                 case ReconstructionTraitSpec t: values.Add(t.Level); break;

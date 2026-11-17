@@ -84,7 +84,7 @@ namespace ProjectL.Tests.Core
             var waiting = CombatPlacementCalculator.Location(enemy, CharacterRuntimeArea.EnemyWaiting, null, null, null);
             var mine = new MineSourceFact(901, enemy.Anchor.Value, 1, 1000, true, new[] { Owner.Player, Owner.Enemy });
             var state = new CombatCommandState(8, 8, CombatFlowPhase.PlayerInput, source.State.Structures,
-                source.State.ThornFields, objective: BattleObjective.DesignatedBoss(enemy.EntityId),
+                objective: BattleObjective.DesignatedBoss(enemy.EntityId),
                 turn: new CombatTurnFacts(StagePhase.Deployment,
                     enemyOrigins: new[] { new CombatEnemyOrigin(enemy.EntityId, enemy.Anchor.Value, Rotation4.R0) }),
                 environment: new MovementEnvironmentFacts(new[] { mine }), environmentProgress: new EnvironmentProgressFacts(2, 902, 1));
@@ -105,7 +105,7 @@ namespace ProjectL.Tests.Core
             var footprint = new TileFootprint(2, 1, new[] { new CellCoord(1, 0) });
             var anchor = new CellCoord(-1, 4);
             var occupied = footprint.GetOccupiedCell(0, anchor, Rotation4.R0);
-            var board = new CombatCommandState(3,5,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
+            var board = new CombatCommandState(3,5,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>());
             Assert.That(footprint.CellCount, Is.EqualTo(1));
             Assert.That(occupied, Is.EqualTo(new CellCoord(0, 4)));
             Assert.That(board.IsInside(anchor), Is.False);

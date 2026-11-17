@@ -36,7 +36,7 @@ namespace ProjectL.Tests.Core
             Assert.That(ReconstructionTraitTests.Reconstruction(waiting).RemainingOwnTurnStarts, Is.EqualTo(1));
             Assert.That(ReconstructionTraitTests.Activations(first, TraitActivationKind.ReconstructionEnded), Is.Empty);
             Assert.That(ReconstructionTraitTests.Shield(waiting), Is.EqualTo(shield));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(first.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(first.Events));
 
             // 재구성 중에는 이동·공격 모두 막고 이유를 재구성으로 낸다.
             var blocked = All(first, firstInput);
@@ -65,7 +65,7 @@ namespace ProjectL.Tests.Core
                     effects.Traits.Any(t => t.TraitActivationKind == TraitActivationKind.ReconstructionEnded)),
                 Is.LessThan(events.FindIndex(e => e is CombatTraitStateEvent state && state.Final.EntityId == Holder &&
                     ReconstructionTraitTests.Reconstruction(state.Expected) != null && ReconstructionTraitTests.Reconstruction(state.Final) == null)));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(second.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(second.Events));
 
             var acting = All(second, secondInput);
             Assert.That(CombatActionAdmission.Actor(EnemyAction(secondInput, acting, CombatCommandKind.Move), CombatCommandKind.Move, out _),

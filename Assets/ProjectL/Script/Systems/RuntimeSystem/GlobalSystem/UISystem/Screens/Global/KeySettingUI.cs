@@ -63,8 +63,9 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         private void BindButtons()
         {
             if (_buttonsBound) return;
-            if (guide == null || keyButtons.Length != 6)
-                throw new InvalidOperationException("[KeySettingUI] 안내와 키 버튼 6개를 연결해야 합니다.");
+            // 7 = 전투 다섯(시작·턴 종료·공격·되돌리기·스킬) + 아티팩트 회전 둘. 프리팹 줄 수와 한 커밋으로 바꿉니다(전투 스킬 View 계획 TP-16).
+            if (guide == null || keyButtons.Length != 7)
+                throw new InvalidOperationException("[KeySettingUI] 안내와 키 버튼 7개를 연결해야 합니다.");
             for (int i = 0; i < keyButtons.Length; i++)
             {
                 KeyButton row = keyButtons[i];

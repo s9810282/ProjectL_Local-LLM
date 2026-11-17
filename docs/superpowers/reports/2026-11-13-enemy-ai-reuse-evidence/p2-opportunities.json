@@ -1,0 +1,1359 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "360ab06e9e626cd3aaffcf10fe5d279fbde66135",
+  "sourceFiles": [
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs",
+      "sha256": "fc122206c6de1b5e3e3c0e8dc849e2852a04f27bcfe96e590674a0f0de9d792d"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs",
+      "sha256": "1ce3c6ebd42ef9bd4b7e7bc59ceba4da702c11194c5692fda33d6c0e117a405c"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs",
+      "sha256": "3b7555734829b9e6b5e574fd6d0afa943d541f64a3214a1ec57abc16ed0dc71d"
+    }
+  ],
+  "baselines": [
+    {
+      "file": "baseline-default.json",
+      "sha256": "a04635402e16cbff4cc669ad12573fff7467e397a710bbc281f6645a49d4f7d2"
+    },
+    {
+      "file": "baseline-current-tuning.json",
+      "sha256": "f0749d18c0cbb5a0997f7b6922e7ce61c96642874b29740013233bf1525541f2"
+    }
+  ],
+  "tests": [
+    {
+      "name": "20261113-reuse-p2-focused",
+      "passed": 300,
+      "xmlSha256": "93cf83e15a49f55325b2e1fcc460835edcbb6c01d2b2ec2ffb295e9a52d61781"
+    },
+    {
+      "name": "20261113-reuse-p2-counts-2",
+      "passed": 1,
+      "xmlSha256": "f1902354df231e6310b89a4f531b411d48905e19ffb6dd35750cf31d48f5498d"
+    },
+    {
+      "name": "20261113-reuse-p2-capacity-0",
+      "passed": 51,
+      "xmlSha256": "1b5727227db782df1bfc2b91cf4d528d2e2995897e9fff8779983a52f2c9ba61"
+    },
+    {
+      "name": "20261113-reuse-p2-capacity-1",
+      "passed": 51,
+      "xmlSha256": "d6a0d04c909645555b3954c010f99b730e29d63f175dd62b1fd1477232559d49"
+    },
+    {
+      "name": "20261113-reuse-p2-final-restored",
+      "passed": 84,
+      "xmlSha256": "016f4c98db2da7aeb7960202963d6af0d22edfe6130e15ce97e979b174ac904c"
+    }
+  ],
+  "inheritedFilesPreserved": 11,
+  "runs": [
+    "Logs/EnemyAi/20261113-reuse-p2-before-1",
+    "Logs/EnemyAi/20261113-reuse-p2-before-2",
+    "Logs/EnemyAi/20261113-reuse-p2-before-3",
+    "Logs/EnemyAi/20261113-reuse-p2-after-1",
+    "Logs/EnemyAi/20261113-reuse-p2-after-2",
+    "Logs/EnemyAi/20261113-reuse-p2-after-3"
+  ],
+  "matchedIntentsAndCharges": 40,
+  "summary": [
+    {
+      "key": "50/50/50/N8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 12.5701,
+            "p95": 22.2031
+          },
+          "total": {
+            "median": 13.436499999999999,
+            "p95": 23.7974
+          },
+          "gcSamples": 1
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 13.4109,
+            "p95": 23.1346
+          },
+          "total": {
+            "median": 14.4563,
+            "p95": 25.1065
+          },
+          "gcSamples": 1
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 13.541599999999999,
+            "p95": 24.345
+          },
+          "total": {
+            "median": 14.37025,
+            "p95": 25.7095
+          },
+          "gcSamples": 1
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 13.3478,
+            "p95": 30.4319
+          },
+          "total": {
+            "median": 14.3827,
+            "p95": 32.2781
+          },
+          "gcSamples": 1
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 13.574349999999999,
+            "p95": 25.8899
+          },
+          "total": {
+            "median": 14.40435,
+            "p95": 27.309
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "50/50/50/N8",
+          "preparation": {
+            "median": 13.0009,
+            "p95": 25.1029
+          },
+          "total": {
+            "median": 13.92325,
+            "p95": 26.6281
+          },
+          "gcSamples": 2
+        }
+      ],
+      "medianChangePercent": -0.4705127918335106
+    },
+    {
+      "key": "50/50/50/A8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 28.0529,
+            "p95": 65.1812
+          },
+          "total": {
+            "median": 28.595550000000003,
+            "p95": 65.7167
+          },
+          "gcSamples": 5
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 28.85215,
+            "p95": 66.6732
+          },
+          "total": {
+            "median": 29.52495,
+            "p95": 67.2316
+          },
+          "gcSamples": 5
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 28.73345,
+            "p95": 66.8242
+          },
+          "total": {
+            "median": 29.26285,
+            "p95": 67.3882
+          },
+          "gcSamples": 5
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 27.765900000000002,
+            "p95": 48.2007
+          },
+          "total": {
+            "median": 28.34805,
+            "p95": 50.0556
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 26.460549999999998,
+            "p95": 30.4951
+          },
+          "total": {
+            "median": 27.02675,
+            "p95": 31.1482
+          },
+          "gcSamples": 0
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "50/50/50/A8",
+          "preparation": {
+            "median": 28.009050000000002,
+            "p95": 69.4732
+          },
+          "total": {
+            "median": 28.6224,
+            "p95": 70.0324
+          },
+          "gcSamples": 5
+        }
+      ],
+      "medianChangePercent": -3.367329715018552
+    },
+    {
+      "key": "50/50/50/W8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.29925,
+            "p95": 31.9565
+          },
+          "total": {
+            "median": 19.532449999999997,
+            "p95": 34.9121
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.54965,
+            "p95": 31.8904
+          },
+          "total": {
+            "median": 19.833750000000002,
+            "p95": 37.9483
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.3743,
+            "p95": 28.7907
+          },
+          "total": {
+            "median": 19.57445,
+            "p95": 33.0351
+          },
+          "gcSamples": 3
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.29945,
+            "p95": 69.1912
+          },
+          "total": {
+            "median": 19.51435,
+            "p95": 70.416
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.31915,
+            "p95": 46.5461
+          },
+          "total": {
+            "median": 19.63225,
+            "p95": 52.2602
+          },
+          "gcSamples": 4
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "50/50/50/W8",
+          "preparation": {
+            "median": 18.06845,
+            "p95": 29.1493
+          },
+          "total": {
+            "median": 19.27685,
+            "p95": 34.3656
+          },
+          "gcSamples": 3
+        }
+      ],
+      "medianChangePercent": -0.4073624573453172
+    },
+    {
+      "key": "50/50/50/U8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 30.920450000000002,
+            "p95": 62.915
+          },
+          "total": {
+            "median": 31.2459,
+            "p95": 63.2409
+          },
+          "gcSamples": 4
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 31.3193,
+            "p95": 60.4436
+          },
+          "total": {
+            "median": 31.69795,
+            "p95": 60.7847
+          },
+          "gcSamples": 4
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 31.91695,
+            "p95": 67.3324
+          },
+          "total": {
+            "median": 32.257400000000004,
+            "p95": 67.7026
+          },
+          "gcSamples": 4
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 31.4302,
+            "p95": 60.6906
+          },
+          "total": {
+            "median": 31.7833,
+            "p95": 61.0701
+          },
+          "gcSamples": 6
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 31.613799999999998,
+            "p95": 78.3807
+          },
+          "total": {
+            "median": 31.9463,
+            "p95": 78.7093
+          },
+          "gcSamples": 5
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "50/50/50/U8",
+          "preparation": {
+            "median": 31.04005,
+            "p95": 67.3792
+          },
+          "total": {
+            "median": 31.397100000000002,
+            "p95": 67.7363
+          },
+          "gcSamples": 6
+        }
+      ],
+      "medianChangePercent": 0.35409475946142077
+    },
+    {
+      "key": "20/20/200/N8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.39215,
+            "p95": 15.1569
+          },
+          "total": {
+            "median": 12.1629,
+            "p95": 16.1367
+          },
+          "gcSamples": 1
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.719850000000001,
+            "p95": 12.9451
+          },
+          "total": {
+            "median": 12.55085,
+            "p95": 13.7159
+          },
+          "gcSamples": 1
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.91995,
+            "p95": 16.5668
+          },
+          "total": {
+            "median": 12.72315,
+            "p95": 17.5612
+          },
+          "gcSamples": 1
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.9256,
+            "p95": 25.9842
+          },
+          "total": {
+            "median": 12.7142,
+            "p95": 26.7467
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.6012,
+            "p95": 16.5715
+          },
+          "total": {
+            "median": 12.3792,
+            "p95": 17.3911
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "20/20/200/N8",
+          "preparation": {
+            "median": 11.8957,
+            "p95": 14.9524
+          },
+          "total": {
+            "median": 12.649899999999999,
+            "p95": 16.0656
+          },
+          "gcSamples": 1
+        }
+      ],
+      "medianChangePercent": 1.5004458248185637
+    },
+    {
+      "key": "20/20/200/A8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 26.6769,
+            "p95": 38.9945
+          },
+          "total": {
+            "median": 27.18995,
+            "p95": 41.6024
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 27.53595,
+            "p95": 43.8357
+          },
+          "total": {
+            "median": 28.089,
+            "p95": 46.8584
+          },
+          "gcSamples": 3
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 27.43575,
+            "p95": 45.5833
+          },
+          "total": {
+            "median": 27.959899999999998,
+            "p95": 47.4999
+          },
+          "gcSamples": 4
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 26.5523,
+            "p95": 60.5556
+          },
+          "total": {
+            "median": 27.07215,
+            "p95": 61.0654
+          },
+          "gcSamples": 5
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 25.4302,
+            "p95": 26.7211
+          },
+          "total": {
+            "median": 25.93895,
+            "p95": 27.2489
+          },
+          "gcSamples": 0
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "20/20/200/A8",
+          "preparation": {
+            "median": 25.9516,
+            "p95": 27.6138
+          },
+          "total": {
+            "median": 26.518500000000003,
+            "p95": 28.2193
+          },
+          "gcSamples": 3
+        }
+      ],
+      "medianChangePercent": -5.40954776158844
+    },
+    {
+      "key": "20/20/200/W8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 17.83515,
+            "p95": 26.6168
+          },
+          "total": {
+            "median": 19.02775,
+            "p95": 28.5068
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 17.99945,
+            "p95": 26.2591
+          },
+          "total": {
+            "median": 19.27565,
+            "p95": 27.7864
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 17.819850000000002,
+            "p95": 25.4831
+          },
+          "total": {
+            "median": 19.0494,
+            "p95": 27.1812
+          },
+          "gcSamples": 3
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 17.86335,
+            "p95": 24.7808
+          },
+          "total": {
+            "median": 19.07265,
+            "p95": 26.3432
+          },
+          "gcSamples": 2
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 18.07915,
+            "p95": 40.1987
+          },
+          "total": {
+            "median": 19.2646,
+            "p95": 41.3521
+          },
+          "gcSamples": 4
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "20/20/200/W8",
+          "preparation": {
+            "median": 17.74765,
+            "p95": 32.7737
+          },
+          "total": {
+            "median": 18.99445,
+            "p95": 37.4991
+          },
+          "gcSamples": 4
+        }
+      ],
+      "medianChangePercent": 0.1581147341065403
+    },
+    {
+      "key": "20/20/200/U8",
+      "before": [
+        {
+          "phase": "before",
+          "run": 1,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 30.8517,
+            "p95": 64.1974
+          },
+          "total": {
+            "median": 31.18255,
+            "p95": 64.5321
+          },
+          "gcSamples": 6
+        },
+        {
+          "phase": "before",
+          "run": 2,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 31.33315,
+            "p95": 68.6859
+          },
+          "total": {
+            "median": 31.7218,
+            "p95": 69.0904
+          },
+          "gcSamples": 5
+        },
+        {
+          "phase": "before",
+          "run": 3,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 31.84805,
+            "p95": 66.1804
+          },
+          "total": {
+            "median": 32.2136,
+            "p95": 66.5442
+          },
+          "gcSamples": 5
+        }
+      ],
+      "after": [
+        {
+          "phase": "after",
+          "run": 1,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 31.0559,
+            "p95": 64.9387
+          },
+          "total": {
+            "median": 31.390700000000002,
+            "p95": 65.2693
+          },
+          "gcSamples": 6
+        },
+        {
+          "phase": "after",
+          "run": 2,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 31.444850000000002,
+            "p95": 104.2279
+          },
+          "total": {
+            "median": 31.7793,
+            "p95": 104.5824
+          },
+          "gcSamples": 6
+        },
+        {
+          "phase": "after",
+          "run": 3,
+          "key": "20/20/200/U8",
+          "preparation": {
+            "median": 30.76005,
+            "p95": 65.6749
+          },
+          "total": {
+            "median": 31.094450000000002,
+            "p95": 66.0048
+          },
+          "gcSamples": 5
+        }
+      ],
+      "medianChangePercent": -0.8848456028200169
+    }
+  ],
+  "countSummary": [
+    {
+      "key": "50/50/50/N8",
+      "requests": 545,
+      "builds": 545,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109
+    },
+    {
+      "key": "50/50/50/A8",
+      "requests": 2490,
+      "builds": 1920,
+      "hits": 570,
+      "nullHits": 500,
+      "fullMisses": 640,
+      "peakEntries": 256
+    },
+    {
+      "key": "50/50/50/W8",
+      "requests": 5,
+      "builds": 5,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0
+    },
+    {
+      "key": "50/50/50/U8",
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0
+    },
+    {
+      "key": "20/20/200/N8",
+      "requests": 545,
+      "builds": 545,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109
+    },
+    {
+      "key": "20/20/200/A8",
+      "requests": 2490,
+      "builds": 1920,
+      "hits": 570,
+      "nullHits": 500,
+      "fullMisses": 640,
+      "peakEntries": 256
+    },
+    {
+      "key": "20/20/200/W8",
+      "requests": 5,
+      "builds": 5,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0
+    },
+    {
+      "key": "20/20/200/U8",
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0
+    }
+  ],
+  "counts": [
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 1,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 7,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 19,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 41,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 97,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 1,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 7,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 19,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 41,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 97,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 1,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 7,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 19,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 41,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 97,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 1,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 7,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 19,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 41,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 97,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 1,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 7,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 19,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 41,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 97,
+      "requests": 109,
+      "builds": 109,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 109,
+      "intentSha256": "584ae6a9481ecb5b87f643e5c48420b79d1b17e3654e02f455eb1c173b6e72f2"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 1,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 7,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 19,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 41,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 97,
+      "requests": 498,
+      "builds": 384,
+      "hits": 114,
+      "nullHits": 100,
+      "fullMisses": 128,
+      "peakEntries": 256,
+      "intentSha256": "ada1b01c27fbdcb5a1beba8b77a2ad3c51f98b3c2966ca21e1aebec0b51d05e1"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 1,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 7,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 19,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 41,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 97,
+      "requests": 1,
+      "builds": 1,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "501ec75c1c8a661a3c64b12c3d251ccee985165dec5379101b8e5fb9e4724ddf"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 1,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 7,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 19,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 41,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 97,
+      "requests": 0,
+      "builds": 0,
+      "hits": 0,
+      "nullHits": 0,
+      "fullMisses": 0,
+      "peakEntries": 0,
+      "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392"
+    }
+  ]
+}

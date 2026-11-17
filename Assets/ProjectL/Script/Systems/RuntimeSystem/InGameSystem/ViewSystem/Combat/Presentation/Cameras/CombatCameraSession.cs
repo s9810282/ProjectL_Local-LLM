@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
+using UnityEditor;
+#endif
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts;
 using UnityEngine;
@@ -21,6 +25,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             _selection = selection ?? throw new ArgumentNullException(nameof(selection));
         }
 
+#if UNITY_EDITOR
+        private CombatCameraSettingsSO _editorSettings;
+        private int _editorRevision;
+
+        internal void WatchEditorSettings(CombatCameraSettingsSO settings)
+        {
+            _editorSettings = settings;
+            _editorRevision = settings.EditorRevision;
+        }
+
+        private void RefreshEditorSettings()
+        {
+            if (!_begun || _editorSettings == null || _editorRevision == _editorSettings.EditorRevision || !Window.CanZoom)
+                return;
+            _editorRevision = _editorSettings.EditorRevision;
+            try
+            {
+                _view.ApplyEditorSettings(_editorSettings.CreateData());
+            }
+            catch (Exception error)
+            {
+                Debug.LogWarning($"카메라 설정 갱신 실패: {error.Message}", _editorSettings);
+            }
+        }
+#endif
+
         internal CombatCameraWindow Window { get; }
         internal ICombatCameraControl Control => this;
 
@@ -39,6 +69,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 _selection.Begin();
                 _view.Begin();
                 _begun = true;
+#if UNITY_EDITOR
+                if (_editorSettings != null)
+                    EditorApplication.update += RefreshEditorSettings;
+#endif
             }
             catch (Exception error)
             {
@@ -54,12 +88,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         public bool Zoom(int steps) => _begun && _view.Zoom(steps);
 
+        public bool Rotate(int steps, float deltaTime) => _begun && _view.Rotate(steps, deltaTime);
+
+        public bool RotateDrag(float screenWidths) => _begun && _view.RotateDrag(screenWidths);
+
         /// <summary>늦은 입력을 먼저 막고 자세·렌즈·대여·Priority를 복원합니다. 반복 호출은 아무 일도 하지 않습니다.</summary>
         internal void Release()
         {
             if (_released)
                 return;
             _released = true;
+#if UNITY_EDITOR
+            EditorApplication.update -= RefreshEditorSettings;
+#endif
             _begun = false;
             CombatCameraView view = _view;
             CombatCameraSelection selection = _selection;

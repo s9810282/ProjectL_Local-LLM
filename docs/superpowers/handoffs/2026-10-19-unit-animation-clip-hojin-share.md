@@ -127,3 +127,23 @@
 - **외형 표 `Validate` 한 줄**(이 파일의 우리 줄, `e0ee626d`): 반응 값을 만들어 `CombatUnitAnimationRules.ValidateUnit`에 넘깁니다. 피격 클립이 있는데 반응 묶음이 없으면, 이펙트 지점·발사 지점 자리 큐를 쓰는데 공격 클립·그 지점이 없으면, 피격 칸 큐가 기준 순간(Cue)을 쓰는데 피격 클립이 없으면 부트에서 거절합니다. 지금 에셋은 모두 통과하도록 옮겼습니다.
 - **사건 Presenter의 캐릭터 처리기 생성 줄**(토네이도 인자 둘이 붙은 줄): 캐릭터 처리기가 카메라 연출 값을 더 받지 않아 `values.CameraMotion` 인자 하나를 뺐습니다. 토네이도 인자 둘은 그대로입니다.
 - 토네이도 날림(`TryBeginTornado`)·`TornadoPresentationSettings`는 고치지 않았습니다. 나중에 같은 형식(사건 묶음 + 큐)으로 옮길 후보로 설계에 적었습니다.
+
+## 12. 추가(2026-11-17): 클립 칸 다시 짜기·유닛 소리 — 묶음 칸 모양과 외형 표 칸 (미전달)
+
+근거는 [클립 칸 다시 짜기 설계](../specs/2026-11-17-combat-unit-clip-slot-redesign-design.md)(CS1~CS11)·[계획](../plans/2026-11-17-combat-unit-clip-slot-redesign-plan.md) §5와 [유닛 소리를 유닛마다 설계](../specs/2026-11-17-combat-unit-sound-per-unit-design.md)(US1~US7)·[계획](../plans/2026-11-17-combat-unit-sound-per-unit-plan.md) §6입니다. 컴파일·Unity 확인 문제 없음(사용자). 커밋은 사용자.
+
+**클립 묶음 SO(`CombatUnitAnimationSO`)의 칸 모양이 바뀌었습니다.**
+- 칸은 `attack`·`hit`(동작) 둘과 공격 전용 시작 기준 `motionStart`(AfterLead/WithLead)·`motionStartDelay`(WithLead만, 음수 = 그만큼 먼저 시작)입니다. 옛 `attackClip`·`hitClip`·`shots`·`hitDelay`·`attackSpeed`·시작 모드 칸은 옮기기 도구로 옮긴 뒤 지웠습니다.
+- 동작 = 앞 단계(공격만)·본 단계·뒤 단계(단계마다 몸·탑승물·부속 클립) + 이벤트 줄 목록(`events`, 번호·지점·지연) + 재생 배율 `animSpeed` + 블렌드 셋(`blendIn`·`blendBetween`·`blendOut`, 켜짐·초).
+- **`[Event1, 0, 0]`은 적지 않아도 늘 맨 앞에 있습니다**(머리말에 공격 = 임팩트 타이밍, 피격 = 피격 타이밍). 묶음 14개의 이 줄은 지웠고, 에블린 공격만 `[Event2, 2, 0]` 한 줄이 남았습니다.
+- 큐 시점 이름: `Cue` → `Event1`, `Cue2`·`Cue3` → `Event2`·`Event3`, `Hit` → `Contact` + 고르기 `FirstHit`(값은 옮겨 둠). 큐의 Event1~3은 묶음 이벤트 목록이 아니라 본 단계 몸 클립 표식이 있으면 됩니다.
+- 큐 자리 `ActorEffectPoint`·`ActorMuzzle`은 `ActorEventPoint` 하나 + 번호(`eventPoint`) + 회전(`eventPointRotation` Point/Actor)입니다.
+
+**외형 표(`UnitVisualData`) 칸이 바뀌었습니다.**
+- 맨 끝에 머리말 "전투 소리"와 목록 셋 `attackSounds`·`hitSounds`·`deathSounds`(줄 = 번호 `sound` · 시점 `anchor` · 고르기 `contactFilter` · 지연 `delay`)를 더했습니다. 공격·피격·사망 소리의 원본입니다.
+- `attackSoundSlotIndex` 칸은 지웠습니다(공격 줄의 번호로 옮김 — 현강님 칸이라 현강님께도 따로 알림).
+- `unitSoundPreset`은 아군의 선택·이동·취소(와 장애물 피해·파괴)만 씁니다. 사망은 사망 줄입니다.
+- 검사 `Validate`가 소리 줄을 `CombatUnitAnimationRules.ValidateUnit`(새 인자 `sounds`)에 넘깁니다. 그 유닛 공격 종류·클립에 맞지 않는 시점, 반응 묶음 없는 외형의 피격 줄은 Play 시작 때 멈춥니다.
+- 외형 에셋 26개에 지금 소리 그대로 줄을 옮겨 넣었습니다(대조표 유닛 소리 계획 §6.2).
+
+**공유 묶음 SO에서 소리 칸을 걷었습니다.** 공격 표시 SO의 `cues.sound`·`additionalSounds`, 반응 SO의 `hitCues.presetSounds`·`deathCues.sound`가 없어졌습니다(이펙트·흔들림·플래시는 그대로).

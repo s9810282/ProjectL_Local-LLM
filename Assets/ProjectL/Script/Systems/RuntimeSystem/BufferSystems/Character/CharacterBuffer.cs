@@ -12,6 +12,7 @@ using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 
@@ -59,6 +60,8 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
         void InstallGrowth(PreparedTraitGrowthChange prepared);
         PreparedMainSpecializationChange PrepareMainSpecialization(MainSpecializationChange change);
         void InstallMainSpecialization(PreparedMainSpecializationChange prepared);
+        PreparedPlayerSkillUpgrade PreparePlayerSkillUpgrade(OwnedCharacterRecord expected, OwnedCharacterRecord final);
+        void InstallPlayerSkillUpgrade(PreparedPlayerSkillUpgrade prepared);
         /// <summary>참가 목록은 Combat 상태가 소유한다. 이 Store는 목록을 저장하지 않고 넘겨받은 목록으로 전투 캐릭터 묶음을 검증한다.</summary>
         PreparedCharacterBattle PrepareBattle(IReadOnlyList<CharacterCombatFacts> characters, RunDeckSnapshot membership);
         void InstallBattle(PreparedCharacterBattle prepared);
@@ -226,6 +229,40 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Character
                 throw new InvalidOperationException("전투 기록 정리 후에 전직할 수 있습니다.");
             if (!_owned.TryGetValue(change.Expected.Id, out var current) || !current.SameValues(change.Expected))
                 throw new InvalidOperationException("전직 계산의 보유 원본이 변경되었습니다.");
+            int index = _ownedItems.IndexOf(current);
+            if (index < 0)
+                throw new InvalidOperationException("보유 목록과 인덱스가 일치하지 않습니다.");
+            return index;
+        }
+
+        PreparedPlayerSkillUpgrade ICharacterBufferStore.PreparePlayerSkillUpgrade(OwnedCharacterRecord expected, OwnedCharacterRecord final)
+        {
+            if (expected == null || final == null || expected.Role != CharacterOwnershipRole.Main ||
+                expected.PlayerSkillUpgrade != PlayerSkillUpgradeKey.None || final.PlayerSkillUpgrade == PlayerSkillUpgradeKey.None ||
+                !expected.WithPlayerSkillUpgrade(final.PlayerSkillUpgrade).SameValues(final))
+                throw new ArgumentException("메인의 스킬 강화만 바꿀 수 있습니다.", nameof(final));
+            int index = RequirePlayerSkillUpgradeSource(expected);
+            return new PreparedPlayerSkillUpgrade(this, expected, final, index, RosterRevision, checked(RosterRevision + 1));
+        }
+
+        void ICharacterBufferStore.InstallPlayerSkillUpgrade(PreparedPlayerSkillUpgrade prepared)
+        {
+            if (prepared.Owner != this)
+                throw new InvalidOperationException("다른 캐릭터 저장소에서 준비한 스킬 강화입니다.");
+            RequireRevision(prepared.ExpectedRevision);
+            if (RequirePlayerSkillUpgradeSource(prepared.Expected) != prepared.Index)
+                throw new InvalidOperationException("스킬 강화의 보유 목록 위치가 변경되었습니다.");
+            _ownedItems[prepared.Index] = prepared.Final;
+            _owned[prepared.Final.Id] = prepared.Final;
+            RosterRevision = prepared.Revision;
+        }
+
+        private int RequirePlayerSkillUpgradeSource(OwnedCharacterRecord expected)
+        {
+            if (_battleRecords.Count != 0)
+                throw new InvalidOperationException("전투 정리 후에 스킬을 강화할 수 있습니다.");
+            if (!_owned.TryGetValue(expected.Id, out var current) || !current.SameValues(expected))
+                throw new InvalidOperationException("스킬 강화의 보유 원본이 변경되었습니다.");
             int index = _ownedItems.IndexOf(current);
             if (index < 0)
                 throw new InvalidOperationException("보유 목록과 인덱스가 일치하지 않습니다.");

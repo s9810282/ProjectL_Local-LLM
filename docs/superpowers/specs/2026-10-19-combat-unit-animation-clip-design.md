@@ -1,5 +1,7 @@
 # 전투 유닛 애니메이션 클립·이벤트 기반 설계
 
+> **2026-11-17 대신함(일부):** 클립 묶음의 칸 모양·이벤트·지점·시작 모드는 [클립 칸 다시 짜기 설계](2026-11-17-combat-unit-clip-slot-redesign-design.md)(CS1~CS11)가 원본입니다 — 칸(공격·피격) = 동작(앞·본·뒤 단계 + 블렌드 In·Between·Out), 단계 = 몸 + 탑승물 + 부속(AC12·AC16의 부속 클립을 넓힘), 발사 목록·피격 선딜레이 → 이벤트 줄 목록(AC8), 총구·이펙트 지점 → 이벤트 지점 `eventPoints`(AC7·AC8·AC11), 큐 시점 Cue → Event1~3·Hit → Contact+FirstHit, 시작 모드 → 공통 시작 기준 AfterLead/WithLead. 채널(섞개 입력·Idle 바닥 층, AC2·AC17)·조각·재생 단위의 큰 틀은 이 문서 그대로입니다. 공격·피격·사망 **소리**는 [유닛 소리를 유닛마다](2026-11-17-combat-unit-sound-per-unit-design.md)(유닛 외형 줄)가 원본입니다.
+
 - 작성일: 2026-10-19. 상태: **설계 4차(idle 바닥 층 반영), 결정 완료(Q-AC1~Q-AC10 모두 A, §6), AC-1~AC-4 구현·Unity 확인 완료(계획 §8.5).** **5차(§10, 원거리 곡사·직선 클립 공격 AC-5) 결정 완료(Q-AC13 B·Q-AC14~Q-AC17 A, §10.5).** **7기준 구조 검사(§11): 8.3/10, Q-AC18 A·Q-AC19 A 결정, K3·K16·K17은 AC-5에 넣음(2026-10-19).** **6차(§12, 부속 클립 — 무기 테이크를 몸 클립과 같이 재생) 설계 초안: Q-AC12 A → B(2026-10-19 사용자), Q-AC20~Q-AC22 모두 A(2026-10-19), 계획 §10.** §2 범위의 "Mortar 클립 공격 하지 않음"은 5차로 바뀌었다(곡사·직선은 함, Ballista는 여전히 하지 않음).
 - Task 계획: [unit-animation-clip-plan](../plans/2026-10-19-combat-unit-animation-clip-plan.md)(AC-1~AC-4). 4차 반영은 계획 §0.5에 적는다.
 - UML: [전투 클립 연출 흐름](https://claude.ai/artifact/DysLcFNSLmR4okBskHTYdF)(4차 기준으로 고침).

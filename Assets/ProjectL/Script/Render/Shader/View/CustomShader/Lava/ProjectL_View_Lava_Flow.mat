@@ -25,15 +25,15 @@ Material:
     m_TexEnvs:
     - _EmissionMaskTexture:
         m_Texture: {fileID: 2800000, guid: 5b67a250bdd830349b3b9f73a3f89508, type: 3}
-        m_Scale: {x: 4, y: 4}
+        m_Scale: {x: 6, y: 6}
         m_Offset: {x: 0, y: 0}
     - _LavaTexture:
         m_Texture: {fileID: 2800000, guid: 5b67a250bdd830349b3b9f73a3f89508, type: 3}
-        m_Scale: {x: 4, y: 4}
+        m_Scale: {x: 6, y: 6}
         m_Offset: {x: 0, y: 0}
     - _VertexMotionTexture:
         m_Texture: {fileID: 2800000, guid: 37993c740d62873488c036b33b932ca9, type: 3}
-        m_Scale: {x: 3, y: 3}
+        m_Scale: {x: 6, y: 6}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:

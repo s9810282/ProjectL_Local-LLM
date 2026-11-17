@@ -1,0 +1,115 @@
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs
+index 37082aa0f..a118240c9 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs
+@@ -20,6 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+     /// </summary>
+     internal sealed class EnemyAttackReach
+     {
++        internal static Action<string, object, object, CellCoord, AttackAim, int> ReuseWorkProbe;
+         private readonly CombatCommandInput _input;
+         private readonly CharacterCombatFacts _actor;
+         private readonly EntityId _targetId;
+@@ -119,11 +120,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+ 
+         internal IEnumerable<string> FromSteps(CellCoord cell, Action<bool> completed)
+         {
++            object scope = (object)_relocations ?? this;
+             if (_relocations == null || !_relocations.Moved.TryGetValue(cell, out var moved))
+             {
+                 moved = MovedTo(cell);
+                 _relocations?.Moved.Add(cell, moved);
+             }
++            ReuseWorkProbe?.Invoke("position", scope, null, cell, default, _relocations?.Moved.Count ?? 0);
+             yield return "PursuitActorPlacement";
+             CombatCommandInput projected = null;
+             if (!_prepared)
+@@ -145,11 +148,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             {
+                 yield return "PursuitAimCandidate";
+                 if (!(aims.Current is AttackAim aim)) continue;
++                ReuseWorkProbe?.Invoke("aim", scope, null, cell, aim, 0);
+                 if (projected == null)
+                 {
+                     projected = ProjectAt(cell, moved);
+                     yield return "PursuitWorldCopy";
+                 }
++                ReuseWorkProbe?.Invoke("reach-input", scope, projected, cell, aim, _relocations?.Projected.Count ?? 0);
+                 if (!commonDamage.HasValue)
+                 {
+                     if (_relocations != null && _relocations.Prerequisites.TryGetValue(cell, out var saved))
+@@ -174,6 +179,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+                 {
+                     preparation = CombatAttackQueries.PrepareSelection(projected, moved, _profile, _environment);
+                     _relocations.Prerequisites[cell] = (commonDamage.Value, preparation);
++                    ReuseWorkProbe?.Invoke("prerequisites", scope, projected, cell, default, _relocations.Prerequisites.Count);
+                     yield return "PursuitSelectionPreparation";
+                 }
+                 bool delivers = false;
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs
+index a52d04456..08baaa50e 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs
+@@ -284,6 +284,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             CombatAttackProfile profile, List<CombatEvent> events = null, AttackTraitScope traitScope = null)
+         {
+             using var sample = CoreProfiling.Sample(CoreProfileSection.AttackCommonDamage);
++            EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("damage", null, input, actor.Anchor.Value, default, 0);
+             actor = traitScope?.ForDamage(actor) ?? actor;
+             var engine = new CombatEffectEngine();
+             var bindings = CombatCommandEffects.Capture(actor, profile);
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs
+index 1550bba58..8aa8a3f1d 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs
+@@ -136,7 +136,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             CharacterCombatFacts actor, CombatAttackProfile profile, MovementEnvironmentFacts environment)
+         {
+             var policy = new CombatEffectEngine().EvaluateAttackTargeting(CombatCommandEffects.Capture(actor, profile)).Policy;
+-            return (policy, SelectionRange(input, actor, profile, environment));
++            int range = SelectionRange(input, actor, profile, environment);
++            EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("selection", null, input, actor.Anchor.Value, default, 0);
++            return (policy, range);
+         }
+ 
+         internal static IEnumerable<string> SelectionSteps(CombatCommandInput input, CharacterCombatFacts actor,
+@@ -312,6 +314,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+                 }
+                 yield return "DeliveryTargetCheck";
+             }
++            EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("target-miss", null, input, actor.Anchor.Value, aim, 0);
+             completed(false);
+         }
+ 
+@@ -319,11 +322,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             CombatAttackProfile profile, AttackAim aim, int commonDamage, MovementEnvironmentFacts environment,
+             WallGeometry walls, AttackElevation elevation, Action<ResolvedAttackDelivery> completed, SelectionPreparation preparation = null)
+         {
++            EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("delivery", null, input, actor.Anchor.Value, aim, 0);
+             AttackSelectionEvaluation evaluation = null;
+             foreach (var phase in SelectionSteps(input, actor, profile, aim, environment, walls, elevation,
+                 value => evaluation = value, preparation))
+                 yield return phase;
+-            if (evaluation.FailureReason != AttackFailureReason.None) { completed(null); yield break; }
++            if (evaluation.FailureReason != AttackFailureReason.None)
++            {
++                EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("null-delivery", null, input, actor.Anchor.Value, aim, 0);
++                completed(null);
++                yield break;
++            }
++            EnemyAi.EnemyAttackReach.ReuseWorkProbe?.Invoke("resolve", null, input, actor.Anchor.Value, aim, 0);
+             foreach (var phase in CombatAttackDelivery.ResolveSteps(input, actor, profile, evaluation.Selection, commonDamage,
+                 walls, elevation, completed)) yield return phase;
+         }
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs
+index adc9156b9..7310a60e9 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs
+@@ -109,6 +109,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+                 MovementEnvironmentFacts visible = null;
+                 _phase = "Visibility";
+                 foreach (var _ in input.State.Environment.VisibleSteps(actor.Owner, value => visible = value, preservePublic: true)) yield return 0;
++                EnemyAttackReach.ReuseWorkProbe?.Invoke("visibility", context, input.State.Environment, default, default, (int)actor.Owner);
+                 var publicInput = input.WithWorld(input.State.With(environment: visible), input.Characters,
+                     input.Main, input.SoulCounts, input.Souls, input.EnvironmentBindings).WithActor(candidate.ActorId);
+                 publicInput = candidate.Kind == EnemyDecisionKind.Attack

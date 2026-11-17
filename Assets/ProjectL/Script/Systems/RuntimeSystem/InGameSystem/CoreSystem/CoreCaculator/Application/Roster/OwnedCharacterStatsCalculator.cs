@@ -105,17 +105,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 int soulCount = souls[record.Id];
                 CharacterBaselineStats baseline = CharacterBaselineStatsCalculator.ForOwned(definition, record,
                     isMain ? mains[record.Id] : null, soulCount);
-                ThornFieldTraitStatusSnapshot thornFieldDescription = null;
                 HuntersMarkTraitStatusSnapshot huntersMarkDescription = null;
                 PullTraitStatusSnapshot pullDescription = null;
                 ImpactBoltTraitStatusSnapshot impactBoltDescription = null;
                 ReconSquadTraitStatusSnapshot reconSquadDescription = null;
                 foreach (var trait in definition.TraitDefinitions.Span)
                 {
-                    if (trait is ThornFieldTraitDefinition thorn)
-                        thornFieldDescription = new ThornFieldTraitStatusSnapshot(thorn.ThornDamage,
-                            thorn.LifetimeUnitTurns, thorn.DefenseReductionPercent, thorn.TickPhase);
-                    else if (trait is HuntersMarkTraitDefinition mark)
+                    if (trait is HuntersMarkTraitDefinition mark)
                         huntersMarkDescription = new HuntersMarkTraitStatusSnapshot(mark.BonusDamagePercent, mark.DurationAffectedSideTurnEnds);
                     else if (trait is PullTraitDefinition pull)
                         pullDescription = new PullTraitStatusSnapshot(pull.ExtraRangeCells);
@@ -129,7 +125,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 // 전투 중 특성 상태와 같은 원본(DeferredCombatFeatures)으로 카드에 사용 가능 여부를 싣는다.
                 var availability = stats.TraitKeys.ToArray().Select(DeferredCombatFeatures.GetTraitAvailability).ToArray();
                 items[i] = new OwnedCharacterStatsSnapshot(record.Id, record.CharacterKey, record.Role,
-                    record.Level, ExperienceRules.Progress(record, progression), soulCount, stats, pattern, TraitSettingsSet.From(resolved, display), thornFieldDescription, huntersMarkDescription, pullDescription,
+                    record.Level, ExperienceRules.Progress(record, progression), soulCount, stats, pattern, TraitSettingsSet.From(resolved, display), huntersMarkDescription, pullDescription,
                     impactBoltDescription, availability, reconSquadDescription, ranks);
             }
 

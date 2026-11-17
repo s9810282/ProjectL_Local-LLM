@@ -77,7 +77,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<OverflowException>(() => CombatCommandCalculator.Calculate(Input(new UnitKillRewardSpec(10, 10), goldBalance: int.MaxValue), Array.Empty<IMovementTileRule>()));
             var input = Input(new UnitKillRewardSpec(10, 10));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,s.ItemRandomState,                new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), int.MaxValue)));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,s.Environment,                s.EnvironmentProgress,s.WallBlocking,s.Objective,s.Allocation,s.ItemRandomState,                new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), int.MaxValue)));
             Assert.Throws<OverflowException>(() => CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>()));
         }
 
@@ -107,7 +107,7 @@ namespace ProjectL.Tests.Core
         {
             var source = Input(new UnitKillRewardSpec(10, 10));
             var s = source.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(new EntityId(3)),s.Allocation,s.ItemRandomState,                new CombatRewardFacts(true, source.Owned.Select(o => o.Id).ToArray(), 0));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                BattleObjective.DesignatedBoss(new EntityId(3)),s.Allocation,s.ItemRandomState,                new CombatRewardFacts(true, source.Owned.Select(o => o.Id).ToArray(), 0));
             var chars = source.Characters.Select(c => c.EntityId.Value != 3 ? c : new CharacterCombatFacts(c.EntityId,
                 c.OwnedId, EntityKey.Unit_Gravekeeper, c.Owner, c.OwnershipRole, c.Area, c.Health, c.Stats,
                 c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells, c.ActionUse,
@@ -210,7 +210,7 @@ namespace ProjectL.Tests.Core
                     new UnitKillRewardSpec(20, 20)), p.Method)).ToArray());
             seed = CliffFallTests.WithEnvironment(seed, MineEnvironmentTests.Mine(cell: new CellCoord(5, 3)));
             var s = seed.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,BattleObjective.DesignatedBoss(target),s.Allocation,s.ItemRandomState,s.Rewards);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,BattleObjective.DesignatedBoss(target),s.Allocation,s.ItemRandomState,s.Rewards);
             var input = new CombatCommandInput(seed.Number, seed.Kind, seed.ActorId, seed.Aim, state, seed.Characters,
                 seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(10, 37, 0, 0, Array.Empty<CharacterInstanceId>(), 0,

@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
@@ -10,7 +11,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.MovePa
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Interaction
 {
     /// <summary>
-    /// 전투 입력 기능(배치 Drag·공격 조준·이동 경로·가방 아이템·유닛 호버 공격 범위)을 묶는 조합 객체입니다(구조 개선 VR3·SV4).
+    /// 전투 입력 기능(배치 Drag·공격 조준·이동 경로·가방 아이템·유닛 호버 공격 범위·플레이어 스킬 모드)을 묶는 조합 객체입니다(구조 개선 VR3·SV4).
     /// 포인터 대상(<see cref="CombatInputRouter.PointerTarget"/>)은 <see cref="ResolvePointerTarget"/> 한 곳이 소유자의 실시간 상태로 정합니다(평가 C4-13).
     /// <see cref="CombatInputRouter"/>가 그 대상과 함께 넘긴 포인터 입력은 그 대상을 받는 소유자에게 그대로 넘깁니다.
     /// </summary>
@@ -58,6 +59,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private readonly CombatAttackDragHandover _handover;
         // 가방 아이템 드래그입니다.
         private readonly CombatItemDragInteraction _item;
+        // 플레이어 액티브 스킬 모드입니다(전투 스킬 View 설계 SK1). 전경 소유자이고 포인터 대상은 Skill입니다.
+        private readonly CombatPlayerSkillInteraction _skill;
         // 수명 메서드가 도는 소유자 목록입니다(View 2라운드 W5-1). 순서는 생성자 한 곳이 정합니다.
         private readonly CombatInputOwner[] _owners;
         // 포인터 대상마다 그 대상을 받는 소유자입니다. 대상 하나에 소유자는 하나입니다(P10).
@@ -71,8 +74,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <param name="attackDrag">공격 Drag 몸짓입니다. 경로로 넘기는 소유자를 만들어 목록 맨 앞에 둡니다(View 2라운드 W5-5).</param>
         /// <param name="item">가방 아이템 드래그입니다(가방 설계 P4).</param>
         /// <param name="rangeHover">유닛 호버 공격 범위입니다(호버 공격 범위 설계 UR6). 배경 소유자는 이것 하나입니다.</param>
+        /// <param name="skill">플레이어 액티브 스킬 모드입니다(전투 스킬 View 설계 SK1).</param>
         internal CombatInteraction(PlacementDragInteraction placement, AttackTargetingInteraction attack, CombatPathInput path,
-            CombatAttackDragGesture attackDrag, CombatItemDragInteraction item, CombatUnitRangeHover rangeHover)
+            CombatAttackDragGesture attackDrag, CombatItemDragInteraction item, CombatUnitRangeHover rangeHover, CombatPlayerSkillInteraction skill)
         {
             _placement = placement ?? throw new ArgumentNullException(nameof(placement));
             _attack = attack ?? throw new ArgumentNullException(nameof(attack));
@@ -83,12 +87,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _item = item ?? throw new ArgumentNullException(nameof(item));
             if (rangeHover == null)
                 throw new ArgumentNullException(nameof(rangeHover));
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
             _handover = new CombatAttackDragHandover(attackDrag, path, attack);
 
-            // 목록 순서(TP-2): 넘겨받기 → 경로 → 아이템 → 배치 → 공격 → 호버.
+            // 목록 순서(TP-2): 넘겨받기 → 경로 → 아이템 → 배치 → 공격 → 스킬 → 호버.
             _owners = new[]
             {
-                _handover.InputOwner, path.InputOwner, item.InputOwner, placement.InputOwner, attack.InputOwner, rangeHover.InputOwner,
+                _handover.InputOwner, path.InputOwner, item.InputOwner, placement.InputOwner, attack.InputOwner, skill.InputOwner,
+                rangeHover.InputOwner,
             };
 
             _byTarget = new Dictionary<CombatInputRouter.PointerTarget, CombatInputOwner>();
@@ -109,13 +115,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>공격 모드인지입니다. 입력 대상 판정이 읽습니다.</summary>
         internal bool IsAttackActive => _attack.IsActive;
 
+        /// <summary>플레이어 액티브 스킬 모드인지입니다. 입력 대상 판정과 행동 버튼이 읽습니다.</summary>
+        internal bool IsSkillActive => _skill.IsActive;
+
         /// <summary>
         /// 지금 포인터 입력을 받을 대상입니다(평가 C4-13). 판정식(<see cref="CombatInputRouter.ResolvePointerTarget"/>)에 소유자의 실시간 상태
-        /// (공격 모드·아이템 드래그)를 넘기는 유일한 곳입니다. Router와 감시 단계가 부르고, 입력 사실 읽기가 같은 값을
+        /// (공격 모드·아이템 드래그·스킬 모드)를 넘기는 유일한 곳입니다. Router와 감시 단계가 부르고, 입력 사실 읽기가 같은 값을
         /// <see cref="CombatInputFacts.PointerTarget"/>에 담습니다. 모드가 있는 소유자를 더하면 여기만 고칩니다.
         /// </summary>
         internal CombatInputRouter.PointerTarget ResolvePointerTarget(InputLayer layer) =>
-            CombatInputRouter.ResolvePointerTarget(layer, IsAttackActive, IsItemDragActive);
+            CombatInputRouter.ResolvePointerTarget(layer, IsAttackActive, IsItemDragActive, IsSkillActive);
 
         /// <summary>배치 Drag 상태입니다(읽기 전용, 배치 소유자 값).</summary>
         internal DragKind Drag => _placement.IsDragging ? DragKind.Placement : IsItemDragActive ? DragKind.Item : DragKind.None;
@@ -147,13 +156,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             }
         }
 
+        /// <summary>클릭 후보의 견적도 배경 조회보다 우선합니다.</summary>
+        internal bool HasForegroundPreview => IsInputOwnerActive || (_path?.HasClickCandidate ?? false);
+
+        internal bool TryPressDestination(CellCoord? cell, bool occupied) =>
+            _path != null && _path.TryPressDestination(cell, occupied);
+
+        internal void ReleaseDestination(CellCoord? cell) => _path?.ReleaseDestination(cell);
+
         /// <summary>커서를 칸에 스냅할 모드인지입니다(커서 그리드 스냅 설계 C2). 입력 소유자가 포인터를 쓰는 동안입니다.</summary>
         internal bool IsCursorSnapMode => IsInputOwnerActive;
 
         /// <summary>호버 공격 범위가 보여도 되는 입력 대상인지입니다: 배치·경로 대상이고 다른 입력 소유자가 비활성입니다.</summary>
         private bool IsRangeHoverTarget(CombatInputRouter.PointerTarget target) =>
             (target == CombatInputRouter.PointerTarget.Placement || target == CombatInputRouter.PointerTarget.Path)
-            && !IsInputOwnerActive;
+            && !HasForegroundPreview;
 
         internal bool CanSelectDeckUnit(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, CharacterInstanceId ownedId) =>
             _placement.CanSelectDeckUnit(facts, characters, ownedId);
@@ -319,6 +336,32 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             _attack.Enter(facts, actor);
         }
 
+        /// <summary>지금 스킬 모드에 들어갈 수 있는지입니다(읽기 전용). 진입(<see cref="SkillModeRequested"/>)과 같은 판단입니다.</summary>
+        internal bool CanEnterSkill(in CombatInputFacts facts) => _skill.CanEnter(facts, out _);
+
+        /// <summary>
+        /// 스킬 모드 진입입니다(전투 스킬 View 설계 SK1). 들어갈 수 있을 때만 다른 소유자의 표현과 배경을 정리하고 스킬 모드가 가용성을 묻습니다.
+        /// 공격 모드 중이면 공격 모드가 끝나고 스킬 모드가 됩니다(전경 배타). 경로 취소는 호출자가 먼저 합니다(<see cref="LeaveMoveMode"/>).
+        /// </summary>
+        internal void SkillModeRequested(in CombatInputFacts facts)
+        {
+            _handover.Invalidate();
+            if (!_skill.CanEnter(facts, out EntityId actor))
+            {
+                _skill.NotifyEntryRejected(facts);
+                return;
+            }
+
+            BeginForeground(_skill.InputOwner);
+            _skill.Enter(facts, actor);
+        }
+
+        /// <summary>스킬 모드를 끝냅니다(R·스킬 버튼의 끄기).</summary>
+        internal void CancelSkill(IReadOnlyList<CharacterData> characters) => _skill.Cancel(characters);
+
+        /// <summary>스킬 모드의 우클릭입니다: 마지막 점을 빼고, 점이 없으면 모드를 끝냅니다(설계 SK1).</summary>
+        internal void SkillBack(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters) => _skill.Back(facts, characters);
+
         /// <summary>
         /// 전경 소유자 하나가 활성이 되기 전의 규칙 하나입니다(View 2라운드 W5-1·W5-6). 배경 소유자는 내려놓고,
         /// 다음 소유자가 아닌 전경 소유자는 표현을 정리합니다(경로는 정리할 표현이 없음 — 경로 취소는 호출자가 합니다).
@@ -376,7 +419,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private void Poll(CombatPreviewResult latestPreview, in CombatInputFacts facts, IReadOnlyList<CharacterData> characters)
         {
             Poll(latestPreview);
-            // 전경 감시 뒤의 실시간 상태(공격 모드·아이템 드래그)로 판단한다. facts의 대상은 감시 전에 읽은 사본이라 쓰지 않는다(평가 C4-13).
+            // 전경 감시 뒤의 실시간 상태(공격 모드·아이템 드래그·스킬 모드)로 판단한다. facts의 대상은 감시 전에 읽은 사본이라 쓰지 않는다(평가 C4-13).
             var target = ResolvePointerTarget(facts.CurrentLayer);
             bool canShow = IsRangeHoverTarget(target);
             for (int i = 0; i < _owners.Length; i++)
@@ -422,10 +465,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         /// <summary>
-        /// 결과를 그린 직후(후처리 <see cref="AfterResult"/> 전) 명령 결과를 알립니다. 지금은 공격 조준만 씁니다 —
-        /// 그 모드가 낸 공격이 수락됐으면 후처리에서 공격 모드를 끝냅니다(2026-10-28 사용자).
+        /// 결과를 그린 직후(후처리 <see cref="AfterResult"/> 전) 명령 결과를 알립니다. 공격 조준과 스킬 모드가 씁니다 —
+        /// 그 모드가 낸 명령이 수락됐으면 후처리에서 그 모드를 끝냅니다(공격 2026-10-28 사용자, 스킬 = 전투 스킬 View 설계 P8 — 거절이면 가용성부터 다시).
         /// </summary>
-        internal void CommandResolved(CombatResult result) => _attack.CommandResolved(result);
+        internal void CommandResolved(CombatResult result)
+        {
+            _attack.CommandResolved(result);
+            _skill.CommandResolved(result);
+        }
 
         /// <summary>
         /// 결과 후처리: 각 소유자가 현재 사실과 맞지 않게 된 Drag·모드를 정리하고,

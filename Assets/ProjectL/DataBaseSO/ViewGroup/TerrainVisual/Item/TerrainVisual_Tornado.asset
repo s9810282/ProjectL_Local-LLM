@@ -23,7 +23,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   prefab: {fileID: 6932753756421370788, guid: f6aabf25669fdcc43b7e4c51ba03cc7a, type: 3}
   localOffset: {x: 0, y: 0, z: 0}
-  localScale: {x: 1, y: 1, z: 1}
+  localScale: {x: 1.3333334, y: 1.3333334, z: 1.3333334}
   surfaceHeight: 0
   tornadoPresentation: {fileID: 11400000, guid: d468516f22213f144a0105b1144c014c, type: 2}
   oneSidePrefab: {fileID: 0}

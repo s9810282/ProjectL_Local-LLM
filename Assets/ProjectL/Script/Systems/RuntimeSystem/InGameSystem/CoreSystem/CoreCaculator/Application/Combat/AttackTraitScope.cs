@@ -49,7 +49,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>
-        /// 따로 일어나는 추가 공격(처치 연쇄)용 사본입니다. 범위 안 적 수만 그 공격의 대상으로 다시 세고,
+        /// 추가 공격이나 투사체의 현재 타격용 사본입니다. 범위 안 적 수만 해당 경계의 대상으로 다시 세고,
         /// 가속 포착값은 원래 공격 것을 그대로 씁니다. 사본은 반납(<see cref="Finish"/>)하지 않습니다.
         /// </summary>
         internal AttackTraitScope WithCapturedEnemyCount(int capturedEnemyCount)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Deck;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -19,6 +20,9 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Combat
         public int TimelineSeed { get; }
         public CombatCommandState CommandState { get; }
         public MovementEnvironmentFacts Environment => CommandState.Environment;
+        /// <summary>현재 플랫폼의 공개 원본을 읽기 전용으로 반환한다.</summary>
+        public IReadOnlyList<MovingPlatformFact> ReadPlatforms() =>
+            Array.AsReadOnly(Environment.Tiles.OfType<MovingPlatformFact>().ToArray());
         public StageGimmickStateSet Gimmicks => CommandState.Gimmicks;
         public IReadOnlyList<TornadoAreaFact> ReadTornadoAreas(Owner observer) => TornadoAreaFact.Read(CommandState, StageGimmicks, observer);
         public EnvironmentSemanticBindings EnvironmentBindings { get; }

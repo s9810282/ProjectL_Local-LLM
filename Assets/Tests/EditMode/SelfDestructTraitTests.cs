@@ -44,7 +44,7 @@ namespace ProjectL.Tests.Core
             Assert.That(blast.TargetIds, Is.EqualTo(new[] { new EntityId(1), new EntityId(3) }));
             Assert.That(blast.TargetCell, Is.EqualTo(BlastCell));
             Assert.That(blast.TargetCells.Count, Is.EqualTo(8));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace ProjectL.Tests.Core
                 Is.EqualTo(new[] { new EntityId(2), new EntityId(3) }));
             Assert.That(Final(result, input, 1).Health.CurrentHealth, Is.EqualTo(90));
             Assert.That(Final(result, input, 4).Health.CurrentHealth, Is.EqualTo(90));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace ProjectL.Tests.Core
             var basis = Input(1, neighbor: fear, extraProfile: new CombatAttackProfile(
                 CombatCommandTestData.Spec(EntityKey.Unit_Sniper, 1, CategoryKey.Main, new FearTraitSpec()), SingleNoSplash));
             var input = CombatCommandTestData.With(basis, state: new CombatCommandState(8, 8, basis.State.Phase,
-                new[] { Headquarters(new CellCoord(5, 4), 5) }, basis.State.ThornFields, turn: basis.State.Turn));
+                new[] { Headquarters(new CellCoord(5, 4), 5) }, turn: basis.State.Turn));
             var result = CombatCommandCalculator.Calculate(input, NoRules);
 
             Assert.That(result.Accepted, Is.True, result.Reason);
@@ -137,7 +137,7 @@ namespace ProjectL.Tests.Core
             var events = result.Events.ToList();
             Assert.That(events.FindIndex(e => IsActivation(e, TraitActivationKind.CorpseDisplaced)),
                 Is.LessThan(events.FindIndex(e => IsActivation(e, TraitActivationKind.SelfDestructExploded))));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -184,7 +184,7 @@ namespace ProjectL.Tests.Core
             Assert.That(blast, Is.GreaterThanOrEqualTo(0));
             Assert.That(chain, Is.Not.Empty);
             Assert.That(chain.All(i => i < blast), Is.True);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         private static CombatCommandInput Input(int level, CharacterCombatFacts neighbor = null, CharacterCombatFacts far = null,

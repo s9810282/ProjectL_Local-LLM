@@ -27,7 +27,7 @@ namespace ProjectL.Tests.Core
         public void Cactus_DeliveryUsesExplicitPolicy_InRangePreviewAndExecution(bool lobbed)
         {
             var input = Input(lobbed ? AttackOcclusionSpec.Lobbed : AttackOcclusionSpec.Default);
-            var preview = CombatCommandCalculator.Preview(input, Rules);
+            var preview = CombatCommandCalculator.Preview(input, Rules, out var projection);
             var result = CombatCommandCalculator.Calculate(input, Rules);
 
             Assert.That(CombatCommandCalculator.GetAttackRange(input).AttackAims.ToArray().Contains(input.Aim), Is.EqualTo(lobbed));
@@ -37,6 +37,7 @@ namespace ProjectL.Tests.Core
             {
                 Assert.That(preview.FailureReason, Is.EqualTo(AttackFailureReason.BlockedByWall));
                 Assert.That(result.FinalState, Is.SameAs(input.State));
+                Assert.That(projection.FinalState.ThornBombs.Bombs, Is.Empty);
                 Assert.That(result.Events, Is.Empty);
                 return;
             }
@@ -46,12 +47,15 @@ namespace ProjectL.Tests.Core
                 Assert.That(result.Characters.Characters.Single(c => c.Final.EntityId == target.TargetId).Final.Health.CurrentHealth,
                     Is.EqualTo(target.TargetHealthAfter));
             Assert.That(result.Attack.Value.AffectedCells.ToArray(), Has.No.Member(PropagationWall));
-            Assert.That(result.FinalState.ThornFields.Any(f => f.Cell == PropagationWall), Is.False);
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
             Assert.That(preview.Targets.ToArray().Single(t => t.TargetId == new EntityId(3)).SecondaryDamage, Is.Zero);
             Assert.That(result.BlockedContacts, Is.Not.Empty);
             Assert.That(result.BlockedContacts.All(c => c.Phase == AttackOcclusionPhase.Propagation && c.Origin == Impact), Is.True);
             Assert.That(preview.BlockedContacts.Select(c => c.Contact), Is.EqualTo(result.BlockedContacts.Select(c => c.Contact)));
+            var bomb = result.FinalState.ThornBombs.Bombs.Single();
+            Assert.That(bomb.TargetId, Is.EqualTo(new EntityId(2)));
+            Assert.That(result.Events.OfType<CombatThornBombAttachedEvent>().Single().Bomb.BombId, Is.EqualTo(bomb.BombId));
+            Assert.That(preview.ProjectedThornBombs.SameValues(result.FinalState.ThornBombs), Is.True);
+            Assert.That(projection.FinalState.ThornBombs.SameValues(result.FinalState.ThornBombs), Is.True);
         }
 
         [Test]
@@ -94,12 +98,12 @@ namespace ProjectL.Tests.Core
             var actor = CombatCommandTestData.With(
                 CombatCommandTestData.Character(1, EntityKey.Unit_CactusCannon, new CellCoord(1, 3), Owner.Player, 20),
                 category: CategorySnapshot.CreateStateless(CategoryKey.Cannon),
-                traits: new TraitStatusSnapshot[] { new ThornFieldTraitStatusSnapshot(7, 5) });
+                traits: new TraitStatusSnapshot[] { new ThornBombTraitStatusSnapshot(50) });
             var characters = source.Characters.Where(c => c.EntityId != new EntityId(4))
                 .Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray();
             var definition = new UnitSpec(EntityKey.Unit_CactusCannon, UnitRole.Regular, 1, 1, new[] { CellCoord.Zero },
                 100, MoveMethod.LiftAndPlace, 4, CategoryKey.Cannon, 20, 0, 100,
-                new TraitSpec[] { new ThornFieldTraitSpec(7, 5) }, UnitOwnerEligibility.PlayerOnly, policy);
+                new TraitSpec[] { new ThornBombTraitSpec(50) }, UnitOwnerEligibility.PlayerOnly, policy);
             var profiles = source.Profiles.Select((p, i) => i == 0 ? new CombatAttackProfile(definition, method) : p).ToArray();
             var input = new CombatCommandInput(source.Number, source.Kind, source.ActorId, source.Aim, source.State,
                 characters, profiles, source.Main, characters.Where(c => c.OwnedId.HasValue)

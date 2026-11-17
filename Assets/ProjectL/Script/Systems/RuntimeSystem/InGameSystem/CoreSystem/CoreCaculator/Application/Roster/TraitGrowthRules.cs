@@ -10,6 +10,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster
@@ -20,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>보유·강화 키와 병과 풀에서 후보를 얻고, 기존 공격 프로필 계약으로 결합 가능성을 검사한다.</summary>
         public static IReadOnlyList<TraitKey> EligibleTraits(CombatAttackProfile basis,
             IReadOnlyCollection<TraitKey> ownedTraits, IReadOnlyCollection<TraitKey> enhancedTraits,
-            TraitGrowthKind kind, CategoryTraitProgressionSpec progression, TraitGrowthCatalog catalog)
+            TraitGrowthKind kind, CategoryTraitProgressionSpec progression, TraitGrowthCatalog catalog, PlayerSkillDefinition playerSkill = null)
         {
             if (basis == null)
                 throw new ArgumentNullException(nameof(basis));
@@ -51,10 +52,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     definition.Enhanced ?? throw new InvalidOperationException("보유 강화형 정의가 없습니다.");
             });
             var candidates = new List<TraitKey>();
+            playerSkill?.ValidateTraits(current.Keys);
             foreach (var key in progression.Pool.OrderBy(k => k))
             {
                 var definition = catalog.GetTrait(key);
-                if (!DeferredCombatFeatures.IsTraitAvailable(key) ||
+                if (!DeferredCombatFeatures.IsTraitAvailable(key) || (playerSkill != null && !playerSkill.SupportsTrait(key)) ||
                     (kind == TraitGrowthKind.Acquire ? owned.Contains(key) :
                         !owned.Contains(key) || enhanced.Contains(key) || definition.Enhanced == null))
                     continue;
@@ -93,8 +95,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 해당 조합은 보드·환경 경계가 제공되기 전까지 성장 후보로 지원하지 않는다.
             if (traits.Any(t => t.TraitKey == TraitKey.PiercingFalloff || t.TraitKey == TraitKey.KillChainAttack))
                 return false;
-            // 기존 지정 모양은 체비셰프 사거리 안에 있고, 추가 범위의 길이는 기존 기하 제공자가 정한다.
-            long maximumDistance = unit.AttackRange;
+            // 지정과 추가 범위의 길이는 기하 계산과 같은 기준을 씁니다.
+            long maximumDistance = AppointShapeCalculator.MaximumBaseDistance(method, unit.AttackRange);
             var splash = AppointShapeCalculator.CreateSplashOffsets(method.Splash);
             if (splash.Length > 0)
                 maximumDistance += splash.Max(c => Math.Max(Math.Abs(c.X), Math.Abs(c.Y)));
@@ -113,10 +115,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         /// <summary>실제 지정 방식까지 있는 로스터 경계에서 불가능한 복원 이력을 거부한다.</summary>
-        public static void ValidateHistory(OwnedCharacterRecord owned, CombatAttackProfile basis, TraitGrowthCatalog catalog)
+        public static void ValidateHistory(OwnedCharacterRecord owned, CombatAttackProfile basis, TraitGrowthCatalog catalog,
+            PlayerSkillDefinition playerSkill = null)
         {
             if (basis == null) throw new ArgumentNullException(nameof(basis));
             var current = OwnedUnitSpecResolver.Resolve(basis.Definition, owned, catalog);
+            playerSkill?.ValidateTraits(current.Traits.ToArray().Select(t => t.TraitKey));
             try
             {
                 _ = new CombatAttackProfile(current, basis.Method);
@@ -129,7 +133,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 throw new InvalidOperationException($"성장 이력의 사거리 피해 정의가 부족합니다: Unit={current.Key}, Category={current.CategoryKey}.");
         }
 
-        public static IReadOnlyList<TraitKey> Candidates(OwnedCharacterRecord owned, CombatAttackProfile basis, TraitGrowthCatalog catalog)
+        public static IReadOnlyList<TraitKey> Candidates(OwnedCharacterRecord owned, CombatAttackProfile basis, TraitGrowthCatalog catalog,
+            PlayerSkillDefinition playerSkill = null)
         {
             if (owned == null)
                 throw new ArgumentNullException(nameof(owned));
@@ -149,7 +154,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var enhanced = owned.Growth.Selections.Select((selection, i) => new { selection, kind = steps[i].Kind })
                 .Where(s => s.kind == TraitGrowthKind.Enhance).Select(s => s.selection.TraitKey).ToArray();
             var effective = new CombatAttackProfile(current, basis.Method);
-            var candidates = EligibleTraits(effective, ranks.Keys.ToArray(), enhanced, step.Kind, progression, catalog);
+            var candidates = EligibleTraits(effective, ranks.Keys.ToArray(), enhanced, step.Kind, progression, catalog, playerSkill);
             if (step.Kind != TraitGrowthKind.Enhance)
                 return candidates;
             return candidates.Where(key =>
@@ -160,7 +165,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         public static TraitGrowthDecision PlanChoice(OwnedCharacterRecord owned, TraitGrowthChoiceRequest request,
-            TraitGrowthOffer offer, CombatAttackProfile basis, TraitGrowthCatalog catalog)
+            TraitGrowthOffer offer, CombatAttackProfile basis, TraitGrowthCatalog catalog, PlayerSkillDefinition playerSkill = null)
         {
             if (owned == null)
                 throw new ArgumentNullException(nameof(owned));
@@ -176,7 +181,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var step = NextStep(owned, EffectiveTraitProgression.Resolve(basis.Definition, owned, catalog));
             if (step == null || step.StepId != offer.StepId || step.Kind != offer.Kind)
                 return TraitGrowthDecision.Failure(TraitGrowthFailureReason.NotUnlocked);
-            if (!offer.Choices.Any(c => c.TraitKey == request.TraitKey) || !Candidates(owned, basis, catalog).Contains(request.TraitKey))
+            if (!offer.Choices.Any(c => c.TraitKey == request.TraitKey) || !Candidates(owned, basis, catalog, playerSkill).Contains(request.TraitKey))
                 return TraitGrowthDecision.Failure(TraitGrowthFailureReason.NotCandidate);
             var final = owned.WithGrowth(owned.Growth.Append(new TraitGrowthSelection(step.StepId, request.TraitKey, step.Kind)));
             return TraitGrowthDecision.Success(new TraitGrowthChange(owned, final));

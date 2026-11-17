@@ -42,6 +42,28 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
+        public void Interval_DefaultAndConfiguredValues()
+        {
+            var pool = Array.Empty<NexusReinforcementEntry>();
+            Assert.That(new NexusReinforcementSpec(pool, 1).SpawnIntervalTurns, Is.EqualTo(1));
+
+            foreach (int interval in new[] { 2, 3 })
+            {
+                var spec = new NexusReinforcementSpec(pool, 1, spawnIntervalTurns: interval);
+                Assert.That(spec.SpawnIntervalTurns, Is.EqualTo(interval));
+            }
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void Interval_RejectsNonPositiveValues(int interval)
+        {
+            var error = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new NexusReinforcementSpec(Array.Empty<NexusReinforcementEntry>(), 1, spawnIntervalTurns: interval));
+            Assert.That(error.ParamName, Is.EqualTo("spawnIntervalTurns"));
+        }
+
+        [Test]
         public void EnabledEmptyPool_IsValid()
         {
             var spec = new NexusReinforcementSpec(Array.Empty<NexusReinforcementEntry>(), 1, 4, 1);

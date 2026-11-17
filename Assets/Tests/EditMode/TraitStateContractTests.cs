@@ -106,7 +106,7 @@ namespace ProjectL.Tests.Core
         [Test]
         public void TraitTurn_CopyAndEqualityPreserveBothSides()
         {
-            var state = new CombatCommandState(4,4,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>());
+            var state = new CombatCommandState(4,4,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>());
             var factsType = ContractType("TraitTurnFacts");
             object turns = Activator.CreateInstance(factsType, 2, 3);
             var changed = (CombatCommandState)With(state, "traitTurn", turns);
@@ -199,7 +199,7 @@ namespace ProjectL.Tests.Core
             var constructor = typeof(OwnedCharacterRecord).GetConstructors().Single();
             Assert.That(constructor.GetParameters().Any(p => p.Name == "hunterAttackBonus"), Is.True);
             return (OwnedCharacterRecord)constructor.Invoke(new object[] { original.Id, original.CharacterKey, original.Role,
-                original.Level, original.Experience, original.Growth, hunter, original.SpecializationCategory });
+                original.Level, original.Experience, original.Growth, hunter, original.SpecializationCategory, original.PlayerSkillUpgrade });
         }
     }
 }

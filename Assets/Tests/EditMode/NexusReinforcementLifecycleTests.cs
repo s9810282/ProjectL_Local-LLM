@@ -34,8 +34,8 @@ namespace ProjectL.Tests.Core
         [Test]
         public void NewActor_CannotMoveOrAttackUntilNextEnemyStart()
         {
-            var basis = NexusReinforcementTestData.Input(NexusReinforcementTestData.Pool(1, 0),
-                phase: CombatControllerPhase.StartingEnemy);
+            var basis = NexusReinforcementTestData.Input(NexusReinforcementTestData.Pool(8, 0, batch: 1, interval: 2),
+                phase: CombatControllerPhase.StartingEnemy, enemyTurn: 2);
             var started = CombatTurnCalculator.BeginControllerTurn(basis, Array.Empty<IMovementTileRule>());
             var created = started.Characters.Created.Single();
             Assert.That(UnitActionUseRules.CanStartMove(created.ActionUse), Is.False);
@@ -45,8 +45,10 @@ namespace ProjectL.Tests.Core
             var statuses = new StatusEffectSet(new[] { new ActionRestrictionStatus(StatusEffectKey.Bind, origin, 2) });
             var restricted = created.WithStatusEffects(statuses);
             var updated = next.Characters.Select(c => c.EntityId == created.EntityId ? restricted : c).ToArray();
-            var retry = EnemyControllerPhaseTests.Input(next, CombatControllerPhase.StartingEnemy, characters: updated);
-            var restarted = CombatCommandComposition.Project(CombatTurnCalculator.BeginControllerTurn(retry, Array.Empty<IMovementTileRule>())).Characters
+            var retry = EnemyControllerPhaseTests.Input(next, CombatControllerPhase.StartingEnemy, characters: updated, completed: 3);
+            var waiting = CombatTurnCalculator.BeginControllerTurn(retry, Array.Empty<IMovementTileRule>());
+            Assert.That(waiting.Characters.Created, Is.Empty);
+            var restarted = CombatCommandComposition.Project(waiting).Characters
                 .Single(c => c.EntityId == created.EntityId);
             Assert.That(restarted.ActionUse, Is.EqualTo(UnitActionUse.Available));
             Assert.That(restarted.StatusEffects.Entries.Single().Key, Is.EqualTo(StatusEffectKey.Bind));

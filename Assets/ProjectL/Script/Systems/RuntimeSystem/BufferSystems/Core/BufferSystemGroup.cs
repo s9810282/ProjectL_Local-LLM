@@ -104,6 +104,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
     internal interface IBufferQuery : IServiceModule
     {
         IMainSpecializationTransaction MainSpecializationOperations { get; }
+        PlayerSkillUpgradeTransactions PlayerSkillUpgrades { get; }
         ITraitGrowthStateReadSink TraitGrowthStateReadSink
         {
             get;
@@ -374,6 +375,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
         public ITraitGrowthViewWriteSink TraitGrowthViewWriteSink { get; }
         public ITraitGrowthTransaction TraitGrowthOperations { get; }
         public IMainSpecializationTransaction MainSpecializationOperations { get; }
+        public PlayerSkillUpgradeTransactions PlayerSkillUpgrades { get; }
         public IStageCommandResultReadSink StageCommandResults { get; }
         public IStageCommandResultStore StageCommandResultStore { get; }
         private readonly BattleTransactions _battle;
@@ -518,6 +520,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.Core
                 characterStore, TraitGrowthStateReadSink, TraitGrowthResultReadSink, services.GetService(CharacterBufferKey.GrowthStore),
                 TraitGrowthViewReadSink, services.GetService(TraitGrowthViewBufferKey.Store));
             MainSpecializationOperations = new MainSpecializationTransactions(this, characterStore);
+            PlayerSkillUpgrades = new PlayerSkillUpgradeTransactions(this, characterStore);
             var guards = new BufferGuards(RunProgressReadSink, CurrentProgressReadSink, CombatStateReadSink);
             _items = new ItemInventoryTransactions(guards, itemStore);
             var completion = new BattleCompletionTransaction(guards, CombatStateReadSink, StageProgressReadSink,

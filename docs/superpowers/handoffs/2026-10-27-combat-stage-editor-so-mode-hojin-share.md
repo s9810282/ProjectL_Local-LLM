@@ -49,6 +49,12 @@
 - 적 로드아웃 `EnemyLoadoutDataSO.spawnCount`: 읽기만(참고 수·경고 ② "출현 수 > 적이 놓일 칸").
 - 지형 정의 `TerrainDefinitionDataSO.kind`: 읽기만. 열거 **이름**이 `Wall`·`Cliff`면 벽·낭떠러지로 봅니다(Core `EnvironmentTerrainRules.BlocksVoluntaryEntry`의 사본). 열거 이름이 바뀌면 도구 참고 수가 틀어집니다(게임 동작은 그대로).
 
+## 2026-11-17 지형 셀 스케일 · 미전달
+
+SO 모드 3D와 Combat은 타일 위 지형에 배경과 같은 `CombatMapAuthoringMetrics.CellScale`을 사용합니다. `CombatStageSoPreview.RebuildPlacements`에서 지형과 토네이도 몸체의 크기·위치 보정에, `CombatStageSoSpace.RaiseSurfaces`에서 지형 올림 높이에 적용합니다. 바닥 교체는 타일 유무에 따른 기존 배치와 필드 기준 바탕 높이를 사용합니다.
+
+현재 운영 GridOutline 간격 1.5에서 다섯 지형 SO의 실효 배율·보정·올림 높이가 변경 전 float 값으로 복원되는 것을 대조했습니다. Unity 전후 캡처와 재생 확인은 대기 중입니다. CellPrefab에서 SO 도구는 기존처럼 1×1로 근사합니다. [Phase 계획과 화면 비교표](../plans/2026-11-17-combat-terrain-cell-scale-plan.md)
+
 ## 4. 보고만
 
 - `Test` 스테이지(`InGameGroup/Stage/Root/Test.asset`, 키 10000, 맵 1, Regular)가 Root 표에 등록돼 있어 지금 Run 후보입니다. 의도인지 확인해 주세요. (→ 정정 2026-10-27: 지금은 틀립니다. 재령님 `ba9b05fe`에서 `Test`가 Root 표에서 빠져 Run 후보가 아닙니다. [SO 모드 계획의 남은 일](../plans/2026-10-27-combat-stage-editor-so-mode-plan-Hojin.md)(옛 병합 대응 목록 D2)에 같은 내용이 있습니다.) (→ 다시 바뀜 2026-10-29: 이 정정 줄도 지금은 틀립니다. `Test`가 다시 Root 표에 등록돼 맵 1 Regular Run 후보이고, View가 바닥 타일 방식(`PrefabWithTiles`, 17 × 17, 용근님 `954527d9`)입니다. 같은 날 강화 스테이지 `Stage_Enhancement`는 Root 표에서 빠졌고 맵 1 강화 가중치는 0, 층 수는 5입니다.)

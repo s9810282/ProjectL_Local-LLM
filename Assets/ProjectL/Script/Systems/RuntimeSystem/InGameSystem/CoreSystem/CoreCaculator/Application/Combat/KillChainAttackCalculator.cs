@@ -1,3 +1,4 @@
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.ThornBombs;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
@@ -10,6 +11,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Effects;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
 {
@@ -21,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     internal static class KillChainAttackCalculator
     {
         /// <summary>
-        /// 강제 도착 처리가 끝난 투영에서 추가 공격을 진행한다. 미리보기에서는 호출하지 않는다.
+        /// 강제 도착 처리가 끝난 투영에서 추가 공격을 진행한다. 완전 계산 여부는 호출자가 결정합니다.
         /// 시작 전과 매 타격 전에 공격자 생존·필드 존재·전투 종료·후보 유무를 확인하고, 하나라도 어긋나면 남은 횟수를 취소한다.
         /// 타격마다 발동(CombatEffectsEvent) → 보유 방어 소모 → 체력 사건 순서로 기록한다.
         /// </summary>
@@ -33,7 +35,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             IReadOnlyList<EffectRuleBinding> bindings, int damage, MovementProjection projection,
             Dictionary<EntityId, CharacterCombatFacts> projected, CommandAttackGroups attackGroups,
             Dictionary<EntityId, CellCoord> deathAnchors, CombatHitCause hitCause, ISet<EntityId> deliveredVictims,
-            CommandAttackPlan parent = null, CommandAttackProjection world = null)
+            CommandAttackPlan parent = null, CommandAttackProjection world = null,
+            IReadOnlyCollection<EntityId> initialKilledEnemyIds = null,
+            IReadOnlyCollection<EntityId> excludedKilledEnemyIds = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (engine == null) throw new ArgumentNullException(nameof(engine));
@@ -52,8 +56,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Owner owner = projected[actorId].Owner;
             // 미정(설계 §5.1 R9): 끌어오기 중 위험 요소로 죽은 적도 여기서는 처치로 센다(후속 공격은 세지 않음).
             // 끌어오기와 처치 연쇄를 함께 가진 유닛이 생기기 전에 이 귀속을 정한다.
-            int remaining = input.Characters.Count(c => !c.Health.IsDead && hostility.AreHostile(owner, c.Owner) &&
-                projected[c.EntityId].Health.IsDead);
+            int remaining;
+            // excludedKilledEnemyIds는 초기 근거를 찾을 때만 뺀다(예: 가시 폭탄 연쇄로만 생긴 사망). 명시한 근거에는 쓰지 않는다.
+            if (initialKilledEnemyIds == null)
+                remaining = input.Characters.Count(c => !c.Health.IsDead && hostility.AreHostile(owner, c.Owner) &&
+                    projected[c.EntityId].Health.IsDead && (excludedKilledEnemyIds == null || !excludedKilledEnemyIds.Contains(c.EntityId)));
+            else
+            {
+                // 스킬의 각 공격 발생은 자신이 만든 처치만 넘깁니다. 빈 집합도 명시한 값이며 이전 사망을 다시 찾지 않습니다.
+                var seeds = initialKilledEnemyIds.Distinct().ToArray();
+                if (seeds.Any(id => !projected.TryGetValue(id, out var dead) || !dead.Health.IsDead ||
+                    !hostility.AreHostile(owner, dead.Owner)))
+                    throw new ArgumentException("처치 연쇄의 초기 근거는 현재 투영에서 죽은 적 캐릭터여야 합니다.", nameof(initialKilledEnemyIds));
+                remaining = seeds.Length;
+            }
             var events = projection.Events;
             if (!ReferenceEquals(projected, projection.Damage.Characters))
                 throw new ArgumentException("처치 연쇄는 도착 투영과 같은 캐릭터 사전을 써야 합니다.", nameof(projected));
@@ -68,7 +84,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (candidates.Length == 0) return;
 
                 var victim = candidates[projection.ChooseRandom(candidates.Length)];
-                deliveredVictims.Add(victim.EntityId);
                 remaining--;
                 // 처치 연쇄는 원래 공격과 같은 원인이다(G14).
                 RoarHitCounter.Record(projected, victim.EntityId, hitCause, input.State.InCombat);
@@ -82,8 +97,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 var origin = new CombatDamageOrigin(actor.Anchor, actor.EntityId, attackGroups.Next());
                 // 처치 중 새 특성 기여를 얻었으면 다음 타격은 현재 투영에서 공격력을 읽습니다.
-                int currentDamage = parent != null
-                    ? CombatAttackCalculator.CommonAttackDamage(projection.CurrentInput(), actor, parent.Profile, traitScope: scope) : damage;
+                var currentInput = projection.CurrentInput();
+                int currentDamage = CombatAttackCalculator.CommonAttackDamage(currentInput, actor,
+                    parent?.Profile ?? CombatCommandCalculator.RequiredProfile(currentInput, actor), CombatDamageKind.ExtraAttack,
+                    traitScope: scope);
                 actor = scope?.ForDamage(actor) ?? actor;
                 var numeric = CombatDamageCalculator.Attack(input, engine, pipeline, actor, victim, currentDamage,
                     AttackTargetRole.Designated, 100, actor.Anchor, null, projection.Environment,
@@ -92,11 +109,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
                 int activationIndex = events.Count;
                 var recoveryBefore = projection.Damage.CaptureRecovery();
+                int healthStart = projection.Damage.HealthExecutions.Count;
                 // 희생 넘기기를 먼저 정한다. 즉사 여부는 넘기기 결과를 본 FiresOnHit 하나가 정한다.
                 var sacrificeUpgrade = SacrificeDamagePlanner.ResolveSingle(input, projected, actor, victim.EntityId, currentDamage,
                     AttackTargetRole.Designated, 100, origin, CombatDamageKind.ExtraAttack, projection.Environment,
                     engine, pipeline, attackGroups, scope, events, projection.ProfileReads);
                 var recipientId = sacrificeUpgrade?.RecipientId ?? victim.EntityId;
+                deliveredVictims.Add(recipientId);
                 bool instant = FinishingShotApplication.FiresOnHit(input, actor, victim.EntityId, recipientId, victim);
                 if (recipientId != victim.EntityId)
                     numeric = CombatDamageCalculator.Attack(input, engine, pipeline, actor, projected[recipientId], currentDamage,
@@ -119,10 +138,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     Array.Empty<CategoryActivationSnapshot>()));
 
                 var startEvent = (CombatEffectsEvent)events[activationIndex];
+                var bombAttachment = ThornBombAttackApplication.CaptureAttachment(input, actor, bindings, projected.Values, victim.Anchor);
+                projection.ThornBombs.RecordAttackHit(origin.AttackGroup, victim.EntityId, recipientId);
                 var before = projected[recipientId];
-                var applied = instant ? projection.Damage.Defeat(recipientId, origin) : projection.Damage.Apply(recipientId, CombatDamageKind.ExtraAttack, origin, dealt,
+                var healthSource = TraitEffectOrigin.Create(actor.EntityId, instant ? TraitKey.FinishingShot : TraitKey.KillChainAttack);
+                var applied = instant ? projection.Damage.Defeat(recipientId, origin, healthSource) : projection.Damage.Apply(recipientId, CombatDamageKind.ExtraAttack, origin, dealt,
                     usedDustSources: numeric.UsedDustSources, traitScope: scope, damageActor: actor, numericInput: numeric.FinalDamage, heldDefenseGroups: attackGroups,
-                    sacrificeUpgrade: sacrificeUpgrade);
+                    sacrificeUpgrade: sacrificeUpgrade, effectOrigin: healthSource);
                 if (!instant && applied.DamageBeforeItems != dealt)
                 {
                     var value = startEvent.Traits.Single();
@@ -136,10 +158,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 ArmorBreakerApplication.AfterHit(input, actor, recipientId, projected, events, origin);
                 var reaction = recipientId != victim.EntityId ? SacrificeDamagePlanner.Record(events, recipientId, victim.EntityId, applied.ActualHealthLoss, origin) : null;
                 int recovery = projection.Damage.CaptureRecovery().GetValueOrDefault(recipientId) - recoveryBefore.GetValueOrDefault(recipientId);
-                AttackResultFactory.AttachChild(events, startEvent, AttackResultFactory.SingleOutcome(recipientId, victim.EntityId,
+                var occurrence = AttackResultFactory.AttachChild(events, startEvent, AttackResultFactory.SingleOutcome(recipientId, victim.EntityId,
                     before.Health.CurrentHealth, after.Health.CurrentHealth, recovery, origin, reaction));
+                var healthScope = new CombatHealthScope(occurrence, 0, CombatHealthRecording.StepsInScope(projection.Damage.HealthExecutions, healthStart,
+                    projection.Damage.HealthExecutions.Count));
+                var steps = healthScope.Steps.Where(step => step.RecipientId == recipientId).ToArray();
+                projection.Damage.HealthClaims.Add(new CombatHealthClaim(CombatHealthClaimKind.ChildAttackHit,
+                    occurrence, 0, 0, recipientId, steps, healthScope));
                 WeaknessExposureApplication.CompleteHit(actor, CombatCommandCalculator.RequiredProfile(input, actor),
-                    CombatDamageKind.ExtraAttack, projected, events, victim.EntityId, origin);
+                    CombatDamageKind.ExtraAttack, projected, events, recipientId, origin);
                 TraitContactApplication.ApplyBleeding(actor, bindings, CombatDamageKind.ExtraAttack, projected, events, recipientId, origin);
                 LavaCannonApplication.ApplyCaptured(actor, bindings, CombatDamageKind.ExtraAttack, input.State.Turn,
                     projected, events, origin, new[] { victim.EntityId });
@@ -148,6 +175,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     deathAnchors[recipientId] = before.Anchor.Value;
                     remaining++;
                 }
+                foreach (var _ in ThornBombAttackApplication.CompleteAttachmentSteps(origin.AttackGroup, projection, bombAttachment,
+                    projection.ThornBombs, projection.MovementRules)) { }
             }
         }
     }

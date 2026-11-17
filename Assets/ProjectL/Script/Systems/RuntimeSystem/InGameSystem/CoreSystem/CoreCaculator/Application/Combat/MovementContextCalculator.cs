@@ -32,7 +32,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             input = projection.Input;
             var entries = new HashSet<CellCoord>();
             var objectCells = new HashSet<CellCoord>();
-            var thornCells = new HashSet<CellCoord>();
             var arrivals = new Dictionary<EntityId, CellCoord>();
             var targets = new HashSet<EntityId>();
             var terrainCells = new HashSet<CellCoord>();
@@ -43,7 +42,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             objectCells.UnionWith(projection.Events.OfType<CombatCharacterEvent>()
                 .Where(e => (e.Kind == CombatEventKind.Moved || e.Kind == CombatEventKind.Relocated) &&
                     e.Final.Anchor.HasValue).Select(e => e.Final.Anchor.Value));
-            thornCells.UnionWith(objectCells);
             foreach (var pair in projection.ArrivalCells) arrivals.Add(pair.Key, pair.Value);
             targets.UnionWith(projection.EffectTargetIds);
             foreach (var entityId in profileReads.Entries.Keys)
@@ -68,10 +66,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var environment = new MovementEnvironmentFacts(visible.Tiles.Where(t =>
                 tornadoActivated && input.EnvironmentBindings.TerrainSourceIds.Contains(t.Id) || (t is TraitTrailFact trail
                     ? trail.Key == TraitKey.GroundCompaction && t.Cell == actor.Anchor : t is DestinationTileModifierFact
-                    ? arrivals.Values.Contains(t.Cell) : t is StaticTerrainFact terrain
+                    ? arrivals.Values.Contains(t.Cell) : t is MovingPlatformFact platform
+                        ? pricedCells.Any(platform.Occupies) || terrainCells.Any(platform.Occupies)
+                        : t is StaticTerrainFact terrain
                         ? terrainCells.Contains(t.Cell) || pricedCells.Contains(t.Cell) &&
                             (terrain.Kind == StaticTerrainKind.HighGround || terrain.Kind == StaticTerrainKind.WeakGround ||
-                             terrain.Kind == StaticTerrainKind.Cliff)
+                             terrain.Kind == StaticTerrainKind.Cliff || terrain.Kind == StaticTerrainKind.FilledCliff)
                         : objectCells.Contains(t.Cell))).OrderBy(t => t.Id).ToArray());
             var occupancy = input.Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead)
                 .Select(c => (Id: c.EntityId, Owner: c.Owner, Cells: c.OccupiedCells))
@@ -99,14 +99,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 environment,
                 input.State, occupancy, input.Characters.Where(c => targets.Contains(c.EntityId)).OrderBy(c => c.EntityId).ToArray(),
                 input.State.Structures.Where(s => targets.Contains(s.EntityId)).OrderBy(s => s.EntityId).ToArray(),
-                input.State.ThornFields.Where(f => thornCells.Contains(f.Cell)).OrderBy(f => f.Cell.Y).ThenBy(f => f.Cell.X).ToArray(),
                 input.Kind == CombatCommandKind.Move ? input.Souls.Entries.Where(s => arrivals.Values.Contains(s.Cell)).OrderBy(s => s.Id).ToArray() : Array.Empty<SoulFieldFacts>(),
                 owned, input.SoulCounts.Where(p => owned.Any(o => o.Id == p.Key)).ToDictionary(p => p.Key, p => p.Value),
                 collectors.Any(c => c.OwnershipRole == Contracts.Roster.CharacterOwnershipRole.Main) ? input.Main : null,
                 definitions, artifactInputs, input.EnvironmentBindings,
                 input.ObstacleContents.Where(p => targets.Contains(p.EntityId)).OrderBy(p => p.EntityId).ToArray(), ownedProfiles,
                 tornadoActivated ? input.State.EnvironmentProgress.RandomState : (uint?)null,
-                Domain.Movement.MovementRouteValidator.SwapPassenger(input, input.Path.Endpoint), input.Battle?.GimmickDefinitions);
+                Domain.Movement.MovementRouteValidator.SwapPassenger(input, input.Path.Endpoint), input.Battle?.GimmickDefinitions,
+                Domain.Movement.GimmickOccupancyRules.BlockingCells(input.State.Gimmicks).ToArray());
         }
 
         /// <summary>같은 정의 키/보유 식별자의 읽기는 같은 선택 원본이어야 한다.</summary>
@@ -144,14 +144,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 (a.PositionSwapPassenger == null ? b.PositionSwapPassenger == null : a.PositionSwapPassenger.SameValues(b.PositionSwapPassenger)) &&
                 SameList(a.Occupancy, b.Occupancy, (x, y) => x.Id == y.Id && x.Owner == y.Owner && x.Cells.SequenceEqual(y.Cells)) &&
                 SameList(a.EffectTargets, b.EffectTargets, SameTarget) &&
-                SameList(a.EffectStructures, b.EffectStructures, (x, y) => x.EntityId == y.EntityId && x.Owner == y.Owner && x.Health.Equals(y.Health) &&
+                SameList(a.EffectStructures, b.EffectStructures, (x, y) => x.EntityId == y.EntityId && x.Owner == y.Owner &&
+                    Equals(x.ObstacleDurability, y.ObstacleDurability) && x.Health.Equals(y.Health) &&
                     x.Anchor == y.Anchor && x.Rotation == y.Rotation && x.OccupiedCells.SequenceEqual(y.OccupiedCells)) &&
                 a.VisibleEnvironment.SameValues(b.VisibleEnvironment) &&
                 a.EnvironmentRandomState == b.EnvironmentRandomState &&
+                a.GimmickBlockingCells.SequenceEqual(b.GimmickBlockingCells) &&
                 SameList(a.VisibleTornadoAreas, b.VisibleTornadoAreas, (x, y) => x.SameValues(y)) &&
                 a.VisibleTerrainBindings.SameValues(b.VisibleTerrainBindings) &&
                 ObstacleContentProfile.SameValues(a.ObstacleContents, b.ObstacleContents) &&
-                SameList(a.Thorns, b.Thorns, (x, y) => x.Cell == y.Cell && x.ThornDamage == y.ThornDamage && x.RemainingUnitTurns == y.RemainingUnitTurns && x.DefenseReductionPercent == y.DefenseReductionPercent && x.TickPhase == y.TickPhase) &&
                 SameList(a.Souls, b.Souls, (x, y) => x.Id == y.Id && x.Cell == y.Cell && x.Origin.Equals(y.Origin) && x.HealAmount == y.HealAmount && x.RemainingUnitTurns == y.RemainingUnitTurns) &&
                 SameList(a.Collectors, b.Collectors, (x, y) => x.SameValues(y)) &&
                 a.SoulCounts.Count == b.SoulCounts.Count && a.SoulCounts.All(p => b.SoulCounts.TryGetValue(p.Key, out int count) && count == p.Value) &&

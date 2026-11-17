@@ -78,7 +78,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// 포효가 임박한 보스의 포효 범위 칸입니다(포효 예고 설계 RF4). 전투 상태를 보이는 층이라 평소 화면에도 나오고 행동 중으로 치지 않습니다.
         /// 공격·이동 범위 층들보다 아래라 겹친 칸에서는 그 범위가 안쪽에 그려집니다. 순서·색·채움은 층 표가 원본입니다.
         /// </summary>
-        RoarForecast = 1 << 19
+        RoarForecast = 1 << 19,
+        /// <summary>
+        /// 스킬 모드에서 다음 점으로 고를 수 있는 칸입니다(Core 선택 답의 후보, 전투 스킬 View 설계 SK2). 행동 중 층입니다.
+        /// 원점 열기는 하지 않습니다(시전자 = 메인이 선택 유닛과 다를 수 있어 선택 유닛 칸 기준으로 열면 엉뚱한 변이 열림, 계획 TP-1 정정).
+        /// </summary>
+        SkillCandidate = 1 << 20,
+        /// <summary>스킬 모드에서 이미 고른 점입니다(전투 스킬 View 설계 SK2). 영향 칸 위에 보입니다.</summary>
+        SkillPoint = 1 << 21
     }
 
     /// <summary>칸에 실제로 칠할 색의 종류입니다.</summary>
@@ -107,13 +114,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         AllyHoverMoveRange = 17,
         /// <summary>호버한 적 유닛의 이동 칸입니다.</summary>
         EnemyMoveRange = 18,
-        /// <summary>낙석이 떨어질 칸입니다. 느낌표 이미지 색에 맞춘 씬 값입니다.</summary>
+        /// <summary>낙석이 떨어질 칸입니다. 느낌표 이미지 색에 맞춘 View DB 값입니다(필드 색 묶음, 필드 색 DB 설계 FC1).</summary>
         RockfallWarning = 19,
         /// <summary>호버한 토네이도·하붑·Rider 먼지 연막의 현재 영역 색입니다.</summary>
         GimmickHoverRange = 20,
         NexusReinforcementRange = 21,
         /// <summary>포효가 임박한 보스의 포효 범위 색입니다.</summary>
-        RoarForecast = 22
+        RoarForecast = 22,
+        /// <summary>스킬 모드의 다음 점 후보 칸 색입니다.</summary>
+        SkillCandidate = 23,
+        /// <summary>스킬 모드에서 고른 점 색입니다.</summary>
+        SkillPoint = 24
     }
 
     /// <summary>
@@ -147,6 +158,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             new LayerRow(FieldHighlightLayer.AllyHoverMoveRange,    FieldHighlightColor.AllyHoverMoveRange,   true,  false, SourceOpening.HoverOrigin),
             new LayerRow(FieldHighlightLayer.EnemyMoveRange,        FieldHighlightColor.EnemyMoveRange,       true,  false, SourceOpening.HoverOrigin),
             new LayerRow(FieldHighlightLayer.AttackRange,          FieldHighlightColor.AttackRange,          true,  false, SourceOpening.Origin),
+            // 스킬 후보 칸은 공격 범위와 같은 자리입니다. 둘은 전경이 배타라 함께 보이지 않습니다(전투 스킬 View 계획 TP-1).
+            new LayerRow(FieldHighlightLayer.SkillCandidate,        FieldHighlightColor.SkillCandidate,       true,  false, SourceOpening.None),
             // 아군 호버 범위는 공격 범위와 같은 색입니다(층만 나눔, View 2라운드 W5-6).
             new LayerRow(FieldHighlightLayer.AllyHoverRange,        FieldHighlightColor.AttackRange,          true,  false, SourceOpening.HoverOrigin, FieldHighlightLayer.AllyHoverMoveRange),
             new LayerRow(FieldHighlightLayer.EnemyAttackRange,      FieldHighlightColor.EnemyAttackRange,     true,  false, SourceOpening.HoverOrigin, FieldHighlightLayer.EnemyMoveRange),
@@ -157,6 +170,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             // 재생 강조는 영향 칸과 같은 색입니다.
             new LayerRow(FieldHighlightLayer.PresentationHighlight, FieldHighlightColor.Affected,             false, true,  SourceOpening.None),
             new LayerRow(FieldHighlightLayer.Affected,              FieldHighlightColor.Affected,             true,  false, SourceOpening.Origin),
+            // 고른 점은 영향 칸 위에 보입니다(마지막 점 호버 예보에서 영향 칸과 겹침, 전투 스킬 View 계획 TP-1).
+            new LayerRow(FieldHighlightLayer.SkillPoint,            FieldHighlightColor.SkillPoint,           true,  false, SourceOpening.None),
             // 끌어오기 도착 칸은 이동 초안 색입니다(테두리만).
             new LayerRow(FieldHighlightLayer.PullDestination,       FieldHighlightColor.MovementDraft,        false, false, SourceOpening.None),
             // 넉백 도착 칸은 전용 색으로 칸을 채웁니다(2026-10-27 사용자 요청, 넉백 미리보기 계획 §7.5).

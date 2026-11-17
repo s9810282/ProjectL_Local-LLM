@@ -196,7 +196,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
                 throw new ArgumentNullException("current");
             if (bindings.Currency == null)
                 throw new ArgumentNullException("currency");
-            _displayValues = new CombatDisplayValueReader(bindings.State, bindings.Characters, bindings.Currency, bindings.Current, bindings.Items);
+            _displayValues = new CombatDisplayValueReader(bindings.State, bindings.Characters, bindings.Currency,
+                bindings.Current, bindings.Items, bindings.Deck);
             if (bindings.InputRead == null)
                 throw new ArgumentNullException("inputRead");
             if (bindings.InputWrite == null)
@@ -419,6 +420,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         {
             List<Exception> errors = null;
             CleanupErrors.Try(Detach, ref errors);
+            _displayValues?.ClearOwnedStats();
             CleanupErrors.Try(_scene.Release, ref errors);
             CleanupErrors.ThrowIfAny(errors, "[CombatViewSystem] Combat 씬 연결 수명 정리 중 실패했습니다.");
         }
@@ -590,7 +592,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         {
             ICombatBattleDisplay display = _connection.Display;
             // 행동 버튼(공격·턴 종료·복귀)은 숨긴 채 연결하고, 보임·누름 가능은 입력 Layer를 맞춘 뒤(SyncInputLayer) Tick 끝에서 맞춘다(행동 버튼 설계 B6, SV6).
-            display.Actions.BindActions(_inputConnection.AttackPressed, _inputConnection.EndTurnPressed, _inputConnection.ReturnPressed);
+            display.Actions.BindActions(_inputConnection.AttackPressed, _inputConnection.EndTurnPressed, _inputConnection.ReturnPressed,
+                _inputConnection.SkillPressed);
             display.Actions.SetActionsAvailable(default);
 
             ShowBattle();

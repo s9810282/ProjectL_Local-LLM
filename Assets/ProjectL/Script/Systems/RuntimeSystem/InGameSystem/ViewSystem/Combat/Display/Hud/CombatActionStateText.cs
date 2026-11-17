@@ -44,6 +44,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 case nameof(AttackFailureReason.StageEnded): return "전투종료";
                 // 특성·기믹이 건 행동 제한입니다(특성 시스템 View 계획 TP-9). 이동 거절의 무장 해제도 같은 이름입니다.
                 case nameof(AttackFailureReason.Disarmed): return "무장해제";
+                // 기절은 이동·공격 거절 이유 이름이 같습니다(관통·죽음의 손 View 계획 TP-10).
+                case nameof(AttackFailureReason.Stunned): return "기절";
                 // 이동 제한의 사유 하나입니다. 낙석 속박도 이 사유라 특성 이름을 쓰지 않습니다(낙석 계획 RP-11).
                 case nameof(MovementFailureReason.AnkleBroken): return "이동불가";
                 default: return "사용불가";

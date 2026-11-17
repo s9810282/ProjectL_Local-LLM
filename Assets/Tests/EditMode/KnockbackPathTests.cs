@@ -73,17 +73,16 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void HeavyTarget_TraversesThorns()
+        public void HeavyTarget_TraversesHazards()
         {
             var input = WithHeavy(Input(3), EntityKey.Unit_Demon);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(3, 3), 3, 6)));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(3, 3), 6)));
 
-            var result = Attack(input);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
 
             Assert.That(Final(result).Anchor, Is.EqualTo(new CellCoord(5, 3)));
             Assert.That(Final(result).Health.CurrentHealth, Is.EqualTo(74));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
         }
 
         [Test]
@@ -102,26 +101,27 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void HeavyTarget_PreviewMatchesCommittedKnockbackAndThorns()
+        public void HeavyTarget_PreviewMatchesCommittedKnockbackAndHazards()
         {
             var input = WithHeavy(Input(3), EntityKey.Unit_Demon);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(3, 3), 3, 6)));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(3, 3), 6)));
 
-            var preview = CombatCommandCalculator.Preview(input, Array.Empty<IMovementTileRule>(), out var projection);
-            var result = Attack(input);
+            var preview = CombatCommandCalculator.Preview(input, EnvironmentDamageTests.DamageRules, out var projection);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
 
             Assert.That(preview.CanAttack, Is.True);
             Assert.That(projection.Accepted, Is.True, projection.Reason);
             Assert.That(Final(projection).Anchor, Is.EqualTo(new CellCoord(5, 3)));
             Assert.That(Final(result).Anchor, Is.EqualTo(Final(projection).Anchor));
-            Assert.That(preview.Targets.ToArray().Single(t => t.TargetId == Target).ExpectedDamage, Is.EqualTo(26));
+            var target = preview.Targets.ToArray().Single(t => t.TargetId == Target);
+            Assert.That(target.ExpectedDamage, Is.EqualTo(20));
+            Assert.That(target.TargetHealthAfter, Is.EqualTo(74));
             Assert.That(Final(projection).Health.CurrentHealth, Is.EqualTo(74));
             Assert.That(Final(result).Health.CurrentHealth, Is.EqualTo(74));
             var original = input.Characters.Single(c => c.EntityId == Target);
             Assert.That(original.Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(original.Anchor, Is.EqualTo(new CellCoord(2, 3)));
-            Assert.That(input.State.ThornFields.Single().Cell, Is.EqualTo(new CellCoord(3, 3)));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(input.State).Single().Cell, Is.EqualTo(new CellCoord(3, 3)));
             // 미리보기와 실제가 같은 넉백 요약을 낸다.
             var previewed = preview.Knockbacks.Single(k => k.TargetId == Target);
             var committed = Knockback(result);
@@ -233,14 +233,14 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LethalThornMidway_InterruptsAtThatCell()
+        public void LethalHazardMidway_InterruptsAtThatCell()
         {
             var input = Input(3, extra: Array.Empty<CharacterCombatFacts>());
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == Target
                 ? CombatCommandTestData.With(c, hp: 25) : c).ToArray());
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input, new ThornFieldCellSnapshot(new CellCoord(3, 3), 3, 6)));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(3, 3), 6)));
 
-            var result = Attack(input);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
 
             Assert.That(Final(result).Health.IsDead, Is.True);
             Assert.That(Knockback(result).Stop, Is.EqualTo(AttackKnockbackStop.Interrupted));
@@ -248,17 +248,17 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ThornMidway_DamagesWhilePassing_AndContinues()
+        public void HazardMidway_DamagesWhilePassing_AndContinues()
         {
             var input = Input(3);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input, new ThornFieldCellSnapshot(new CellCoord(3, 3), 3, 6)));
-            var withoutThorn = Final(Attack(Input(3))).Health.CurrentHealth;
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(3, 3), 6)));
+            var withoutHazard = Final(Attack(Input(3))).Health.CurrentHealth;
 
-            var result = Attack(input);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
 
             Assert.That(Final(result).Anchor, Is.EqualTo(new CellCoord(5, 3)));
-            Assert.That(Final(result).Health.CurrentHealth, Is.EqualTo(withoutThorn - 6));
-            Assert.That(result.FinalState.ThornFields.Any(f => f.Cell == new CellCoord(3, 3)), Is.False);
+            Assert.That(Final(result).Health.CurrentHealth, Is.EqualTo(withoutHazard - 6));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState).Any(f => f.Cell == new CellCoord(3, 3)), Is.False);
         }
 
         [Test]
@@ -314,7 +314,7 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void MineDuringKnockback_KillsBoss_StopsRemainingTargetsBeforeThorns()
+        public void MineDuringKnockback_KillsBoss_StopsRemainingTargetsBeforeHazards()
         {
             var bossId = new EntityId(8);
             var laterId = new EntityId(9);
@@ -328,23 +328,23 @@ namespace ProjectL.Tests.Core
                 ? new CombatAttackProfile(p.Definition, all) : p)
                 .Append(new CombatAttackProfile(With(CombatCommandTestData.Spec(EntityKey.Unit_Gravekeeper, 5), Immune), all)).ToArray();
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(1, 5), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation);
+            var state = EnvironmentDamageTests.WithDamageObjects(new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation), (new CellCoord(1, 5), 100));
             input = new CombatCommandInput(input.Number, input.Kind, input.ActorId, AttackAim.ForAll(), state,
                 input.Characters, profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
-                environmentBindings: input.EnvironmentBindings,
+                environmentBindings: EnvironmentDamageTests.WithDamageObjectBindings(input.EnvironmentBindings, state),
                 expectedBattleInstanceId: input.ExpectedBattleInstanceId, expectedControllerTurnSequence: input.ExpectedControllerTurnSequence,
                 battleInstanceId: input.BattleInstanceId);
 
-            var result = CombatCommandCalculator.Calculate(input, MineEnvironmentTests.Rules);
+            var result = CombatCommandCalculator.Calculate(input, MineEnvironmentTests.Rules.Concat(EnvironmentDamageTests.DamageRules).ToArray());
             var characters = CombatCommandComposition.Project(result).Characters;
 
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(characters.Single(c => c.EntityId == bossId).Health.IsDead, Is.True);
             Assert.That(result.Outcome.Reason, Is.EqualTo(StageOutcomeReason.DesignatedBossDefeated));
-            // 보스가 지뢰로 죽기 전 직접 피해 20은 유지하되, 이후 대상의 이동·가시 피해는 취소한다.
+            // 보스가 지뢰로 죽기 전 직접 피해 20은 유지하되, 이후 대상의 이동·위험 오브젝트 피해는 취소한다.
             Assert.That(characters.Single(c => c.EntityId == laterId).Anchor, Is.EqualTo(new CellCoord(1, 4)));
             Assert.That(characters.Single(c => c.EntityId == laterId).Health.CurrentHealth, Is.EqualTo(80));
-            Assert.That(result.FinalState.ThornFields.Single().Cell, Is.EqualTo(new CellCoord(1, 5)));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState).Single().Cell, Is.EqualTo(new CellCoord(1, 5)));
             Assert.That(result.Events.OfType<CombatCharacterEvent>().Any(e => e.Kind == CombatEventKind.Moved &&
                 e.Final.EntityId == laterId), Is.False);
             Assert.That(result.Events.OfType<CombatOutcomeEvent>().Count(), Is.EqualTo(1));
@@ -390,7 +390,7 @@ namespace ProjectL.Tests.Core
                 environmentBindings: input.EnvironmentBindings,
                 expectedBattleInstanceId: 0, expectedControllerTurnSequence: (input.State).Turn.ControllerTurnSequence);
 
-            var result = CombatCommandCalculator.Calculate(move, new IMovementTileRule[] { new PushRule(), new ThornMovementTileRule() });
+            var result = CombatCommandCalculator.Calculate(move, new IMovementTileRule[] { new PushRule(), new EnvironmentDamageTests.DamageRule() });
 
             Assert.That(result.Accepted, Is.True, result.Reason);
             var step = ImpactPatternCalculator.GetForwardStep(Rotation4.R90);
@@ -410,7 +410,7 @@ namespace ProjectL.Tests.Core
                 environmentBindings: input.EnvironmentBindings,
                 expectedBattleInstanceId: 0, expectedControllerTurnSequence: (input.State).Turn.ControllerTurnSequence);
 
-            var result = CombatCommandCalculator.Calculate(move, new IMovementTileRule[] { new PushRule(), new ThornMovementTileRule() });
+            var result = CombatCommandCalculator.Calculate(move, new IMovementTileRule[] { new PushRule(), new EnvironmentDamageTests.DamageRule() });
 
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.Characters.Characters.Single(c => c.Final.EntityId == input.ActorId).Final.Anchor,

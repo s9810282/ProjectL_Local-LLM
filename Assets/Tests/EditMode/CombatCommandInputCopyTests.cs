@@ -10,6 +10,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Items;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
@@ -19,10 +20,11 @@ namespace ProjectL.Tests.Core
     public sealed class CombatCommandInputCopyTests
     {
         private static readonly string[] Properties = {
-            "Number", "Kind", "ActorId", "Aim", "TargetCell", "Rotation", "Battle", "ProcessingKind", "State",
+            "Number", "Kind", "ActorId", "Aim", "SweepSide", "TargetCell", "Rotation", "Battle", "ProcessingKind", "State",
             "Characters", "Profiles", "MainId", "Main", "Owned", "SoulCounts", "Souls", "Artifacts", "Path", "MovementContext",
             "BattleInstanceId", "ArtifactItems", "EnvironmentBindings", "ObstacleContents", "ItemKey", "ItemInventory",
-            "ItemDefinitions", "GoldBalance", "FameBalance", "Membership", "ExpectedBattleInstanceId", "ExpectedControllerTurnSequence", "ExpectedMoveCommandNumber" };
+            "ItemDefinitions", "GoldBalance", "FameBalance", "Membership", "ExpectedBattleInstanceId", "ExpectedControllerTurnSequence", "ExpectedMoveCommandNumber",
+            "PlayerSkillRequest", "PlayerSkillSource" };
 
         [TestCase(true)]
         [TestCase(false)]
@@ -47,8 +49,9 @@ namespace ProjectL.Tests.Core
             foreach (var property in properties)
                 Assert.That(property.GetValue(fixture), Is.Not.EqualTo(property.PropertyType.IsValueType
                     ? Activator.CreateInstance(property.PropertyType) : null), property.Name);
-            foreach (var name in new[] { "WithIntent", "WithWorld", "WithPersistentFacts" })
-                Assert.That(typeof(CombatCommandInput).GetMethod(name).GetParameters().All(p => !p.IsOptional), Is.True, name);
+            foreach (var method in typeof(CombatCommandInput).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.Name is "WithIntent" or "WithWorld" or "WithPersistentFacts"))
+                Assert.That(method.GetParameters().All(p => !p.IsOptional), Is.True, method.Name);
         }
 
         [Test]
@@ -138,7 +141,7 @@ namespace ProjectL.Tests.Core
 
             var wrapped = CombatCommandComposition.Intent(source, CombatCommandKind.Attack);
             AssertCopy(source, wrapped, new Dictionary<string, object> { ["Kind"] = CombatCommandKind.Attack,
-                ["Aim"] = default(AttackAim), ["TargetCell"] = default(CellCoord) });
+                ["Aim"] = default(AttackAim), ["TargetCell"] = default(CellCoord), ["SweepSide"] = null });
             var aimed = CombatAttackQueries.WithAim(source, AttackAim.ForCell(new CellCoord(6, 5)));
             AssertCopy(source, aimed, new Dictionary<string, object> { ["Aim"] = AttackAim.ForCell(new CellCoord(6, 5)) });
         }
@@ -198,7 +201,7 @@ namespace ProjectL.Tests.Core
         {
             var source = Fixture();
             var s = source.State;
-            var final = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                s.Objective,s.Allocation,s.ItemRandomState,new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), 8));
+            var final = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,                s.Objective,s.Allocation,s.ItemRandomState,new CombatRewardFacts(false, Array.Empty<CharacterInstanceId>(), 8));
             var inventory = new ItemInventorySnapshot(new Dictionary<int, int> { [1] = 1 });
             var result = new CombatCommandTransition(source, true, "",
                 new CharacterChanges(Array.Empty<CharacterStateChange>(), Array.Empty<SoulCountChange>()),
@@ -265,6 +268,7 @@ namespace ProjectL.Tests.Core
             var s = CombatCommandTestData.Input();
             var path = new MovementPath(new[] { new CellCoord(1, 3), new CellCoord(2, 3) });
             var context = new MovementPreviewContext(83, Owner.Player, s.Characters[0], CombatCommandKind.Move, path);
+            var skillSource = new PlayerSkillSourceStamp(83, 7, 11, s.ActorId);
             return new CombatCommandInput(processing == CombatProcessingKind.Command ? 17 : 0, CombatCommandKind.Move,
                 s.ActorId, s.Aim, s.State, s.Characters, s.Profiles, s.Main, s.Owned,
                 s.SoulCounts.ToDictionary(p => p.Key, p => p.Value + 2), new SoulFieldSnapshot(17, Array.Empty<SoulFieldFacts>()),
@@ -277,7 +281,9 @@ namespace ProjectL.Tests.Core
                 new[] { new ObstacleContentProfile(new EntityId(91), ObstacleContentKind.PowderBarrel, 0) }, 1,
                 new ItemInventorySnapshot(new Dictionary<int, int> { [1] = 3 }), new[] { new ItemDefinition(1, new WhiskeyItemSpec(50, 10)) }, 19, 23, new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Deck.RunDeckSnapshot(
                     new RunId(Guid.NewGuid()), 7, new[] { s.MainId }.Concat(s.Owned.Where(o => o.Id != s.MainId).Select(o => o.Id)).ToArray()),
-                expectedBattleInstanceId: 83, expectedControllerTurnSequence: 7, expectedMoveCommandNumber: 9);
+                expectedBattleInstanceId: 83, expectedControllerTurnSequence: 7, expectedMoveCommandNumber: 9,
+                sweepSide: AttackSweepSide.Left,
+                playerSkillRequest: new PlayerSkillRequest(Array.Empty<CellCoord>(), skillSource), playerSkillSource: skillSource);
         }
     }
 }

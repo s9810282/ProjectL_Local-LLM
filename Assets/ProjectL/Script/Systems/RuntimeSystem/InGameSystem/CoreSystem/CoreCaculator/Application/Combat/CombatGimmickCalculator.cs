@@ -5,7 +5,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 {
     public static class CombatGimmickCalculator
     {
-        /// <summary>호출자의 이동 규칙으로 모든 등록 기믹을 진행한다. null 규칙은 허용하지 않는다.</summary>
+        /// <summary>호출자의 이동 규칙으로 지정 단계에 참여하는 기믹을 진행한다. null 규칙은 허용하지 않는다.</summary>
         public static CombatCommandTransition TryAdvance(CombatCommandInput input, StageGimmickBoundary boundary,
             System.Collections.Generic.IReadOnlyList<IMovementTileRule> rules) =>
             StageGimmickComposition.WithMovementRules(rules).TryAdvance(input, boundary);

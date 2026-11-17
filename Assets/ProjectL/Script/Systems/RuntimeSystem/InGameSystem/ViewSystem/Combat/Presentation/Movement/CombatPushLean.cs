@@ -22,6 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <para>
     /// 펴기는 경로 끝 방향 복귀가 합니다. 이동 표시가 밀린 경로 끝에 표시 회전이 남았으면 레인의 펴기(<see cref="CombatUnitMotionPlayback.BeginStraighten"/>)를 부릅니다.
     /// 반응 값이 없거나 Hit Angle이 0인 유닛, 밀림 방향이 없는 걸음(같은 칸)은 젖히지 않습니다.
+    /// 피격 클립이 있고 반응 값이 코드 피격 움직임을 켜 두지 않은 유닛도 젖히지 않습니다(<see cref="CombatUnitPresentationWindow.PlaysHitMotion"/>, 2026-11-17).
     /// </para>
     /// </remarks>
     internal sealed class CombatPushLean
@@ -51,6 +52,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             EntityId id = from.EntityId;
             if (_presentation.TryGetFacing(id, out _) || !from.Anchor.HasValue || !to.Anchor.HasValue ||
                 !_presentation.TryGetReactionSettings(id, out CombatUnitReactionPresentationData settings) || settings.HitAngle <= 0f ||
+                !_presentation.PlaysHitMotion(id) ||
                 !_presentation.TryGetRotation(id, out Quaternion upright))
                 return;
             Vector3 direction = Vector3.ProjectOnPlane(

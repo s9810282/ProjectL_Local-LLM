@@ -19,7 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         /// <summary>
         /// 막혀 멈춘 캐릭터 넉백이고 부딪힘 값이 있으면 부딪힘 사실을, 아니면 null을 돌려준다.
-        /// 완주·중단(가시·낙하·토네이도·전투 종료)·면역은 부딪힘이 아니다. 경로가 막힌 직후라 점유는 진입 판정 때와 같다.
+        /// 완주·중단(낙하·토네이도·전투 종료)·면역은 부딪힘이 아니다. 경로가 막힌 직후라 점유는 진입 판정 때와 같다.
         /// </summary>
         internal static AttackKnockbackCollision Find(CommandAttackPlan plan, CommandAttackProjection world, MovementProjection arrival,
             EffectKnockbackEvaluation knockback, EntityId flyerId, CellCoord start, CellCoord step, ForcedDisplacementPath path)
@@ -32,8 +32,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!knockback.Collision.HasValue || path.Stop != ForcedDisplacementStop.Blocked) return null;
             var from = path.Steps.Count == 0 ? start : path.Steps[path.Steps.Count - 1];
             var blocked = ForcedDisplacementGeometry.ResolveDestinationAnchor(from, step, 1);
-            var blocker = AttackForcedMovement.FindBlocker(plan.Input, arrival.Environment, world.Characters.Values,
-                world.Structures.Values, flyerId, from, blocked);
+            var blocker = AttackForcedMovement.FindBlocker(plan.Input, arrival.Environment, arrival.Bindings,
+                world.Characters.Values, world.Structures.Values, flyerId, from, blocked);
             if (blocker.IsNone)
                 throw new InvalidOperationException("막혀 멈춘 넉백인데 다음 칸을 막은 것이 없습니다.");
             return new AttackKnockbackCollision(blocker.Kind, blocked, blocker.EntityId);
@@ -61,7 +61,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 ? new[] { flyerId, collision.EntityId.Value }
                 : new[] { flyerId };
             // View 신호: 부딪힘 순간을 피해 사건보다 앞에 둔다. 칸은 막은 칸, 선택 칸은 날아간 대상이 멈춘 칸이다.
-            CombatCommandEvents.Trait(world.Events, new EntityId(source.OwnerInstanceId), (TraitKey)source.DefinitionKey,
+            var occurrence = CombatCommandEvents.Trait(world.Events, new EntityId(source.OwnerInstanceId), (TraitKey)source.DefinitionKey,
                 TraitActivationKind.CrashImpactCollided, baseDamage, recipients, new[] { collision.Cell }, origin,
                 selectedCell: flyer.Anchor);
             yield return "CrashImpactSignal";
@@ -76,7 +76,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 RoarHitCounter.Record(world.Characters, id, world.HitCause, plan.Input.State.InCombat);
                 int remaining = amount;
                 foreach (var phase in world.Damage.ApplySteps(id, CombatDamageKind.EnvironmentDamage, origin, amount,
-                    value => remaining = value.RemainingDamage, heldDefenseGroups: world.AttackGroups))
+                    value => remaining = value.RemainingDamage, heldDefenseGroups: world.AttackGroups, effectOrigin: source, contextEvent: occurrence))
                     yield return phase;
                 ledger.AddDamage(id, remaining);
                 if (id != flyerId) ledger.AddCollisionVictim(id);

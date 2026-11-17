@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                         new CategoryTraitProgressionSpec(r.Category, r.Steps, r.Pool, r.CommonWeight, r.CategoryWeight)).ToArray(),
                     definitions.GetAll().Select(r => new TraitGrowthDefinition(r.Group, TraitSpecAdapter.Read(r.Normal),
                         r.Enhanced == null ? null : TraitSpecAdapter.Read(r.Enhanced), r.Name, r.Description,
-                        r.EnhancedName, r.EnhancedDescription, r.Rank2, r.Rank3)).ToArray(), defaultTraits);
+                        r.EnhancedName, r.EnhancedDescription, r.Rank2, r.Rank3, r.AllowUnchangedRankValues)).ToArray(), defaultTraits);
                 TraitGrowthCatalogValidator.ValidateDefaultTraits(catalog);
                 return catalog;
             }

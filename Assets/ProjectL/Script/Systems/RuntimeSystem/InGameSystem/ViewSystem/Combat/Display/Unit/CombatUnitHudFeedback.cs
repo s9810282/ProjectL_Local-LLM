@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit
 {
@@ -31,15 +32,37 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
         /// <summary>Core가 제공한 예상 잔여 체력을 기존 대상에만 표시합니다. 이전 대상은 먼저 복원합니다.</summary>
-        internal void ShowAttackHealthPreview(ReadOnlyMemory<AttackTargetPreview> targets)
+        internal void ShowAttackHealthPreview(in AttackPreview attack)
         {
             ClearAttackHealthPreview();
-            foreach (AttackTargetPreview preview in targets.Span)
+            var bombHealth = attack.ThornBombFinalHealth;
+            foreach (AttackTargetPreview preview in attack.Targets.Span)
+                if (!bombHealth.ContainsKey(preview.TargetId))
+                    ShowHealth(preview.TargetId, ShownHealthOf(preview));
+            foreach (var health in bombHealth)
+                ShowHealth(health.Key, health.Value.Reconstructed ? 0 : health.Value.HealthAfter);
+        }
+
+        private void ShowHealth(EntityId id, int health)
+        {
+            if (!_targets.TryGetHud(id, out var target))
+                return;
+            target.SetHealthPreview(health);
+            _healthPreviewTargets.Add(id);
+        }
+
+        /// <summary>
+        /// 플레이어 스킬 예보의 예상 끝 체력을 기존 대상에만 표시합니다(전투 스킬 View 설계 SK2, 계획 TP-6). 이전 대상은 먼저 복원하고,
+        /// 지우기는 공격 예상 체력과 같은 <see cref="ClearAttackHealthPreview"/>입니다. 끝 체력의 규칙(죽음·재구성 = 0)은 예보 읽기가 정합니다.
+        /// </summary>
+        internal void ShowHealthPreview(IReadOnlyList<CombatHealthPreview> healths)
+        {
+            if (healths == null) throw new ArgumentNullException(nameof(healths));
+            ClearAttackHealthPreview();
+            for (int i = 0; i < healths.Count; i++)
             {
-                if (!_targets.TryGetHud(preview.TargetId, out var target))
-                    continue;
-                target.SetHealthPreview(ShownHealthOf(preview));
-                _healthPreviewTargets.Add(preview.TargetId);
+                CombatHealthPreview preview = healths[i];
+                ShowHealth(preview.TargetId, preview.Health);
             }
         }
 

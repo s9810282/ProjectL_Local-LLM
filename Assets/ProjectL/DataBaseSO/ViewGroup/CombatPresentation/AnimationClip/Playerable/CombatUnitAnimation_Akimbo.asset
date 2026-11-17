@@ -12,16 +12,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Akimbo
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 59c410e5f3eb5a749b5f5602cf3e25b7, type: 2}
-  attackCompanionClips: []
-  hitDelay: 0
-  shots:
-  - eventId: 1
-    point: 0
-  - eventId: 2
-    point: 1
+  attack:
+    pre:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    main:
+      body: {fileID: 7400000, guid: 36f80e1d1beff684db931dc90d8fe39f, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    post:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    events:
+    - eventId: 2
+      point: 2
+      delay: 0
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  motionStart: 1
+  motionStartDelay: 0
+  hit:
+    pre:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    main:
+      body: {fileID: 7400000, guid: 8ed117f80daffea49a7c22e28080c7d7, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    post:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
   attackAnimationStartMode: 0
-  attackAnimationStartKind: 310
   attackAnimationStartDelaySeconds: 0
-  hitClip: {fileID: 0}
-  hitCompanionClips: []

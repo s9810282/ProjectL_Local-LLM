@@ -16,8 +16,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Targeting.Item
         [SerializeField, Min(0)] private int splashPercent;
         [SerializeField] private TargetingChoiceAngle choiceAngle = TargetingChoiceAngle.Unrestricted;
 
+        [SerializeField, Min(0)] private int width;
+
         internal int MethodKey => methodKey;
 
-        public override IData GetData() => new TargetingMethodData(methodKey, shape, choiceMode, splash, splashPercent, choiceAngle);
+        public override IData GetData() => new TargetingMethodData(methodKey, shape, choiceMode, splash, splashPercent, choiceAngle, width);
     }
 }

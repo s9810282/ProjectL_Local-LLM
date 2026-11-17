@@ -45,6 +45,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             AttackPressed = Receiver.AttackToggleRequested;
             EndTurnPressed = Receiver.EndTurnRequested;
             ReturnPressed = Receiver.RequestReturn;
+            SkillPressed = Receiver.SkillRequested;
         }
 
         /// <summary>입력 수신 창구입니다. 씬 루트의 BattleChanger 입력 연결이 이것을 받습니다(조정자가 루트 구독 때 넘김).</summary>
@@ -64,6 +65,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 
         /// <summary>복귀 버튼의 입구입니다.</summary>
         internal Action ReturnPressed { get; }
+
+        /// <summary>스킬 버튼의 입구입니다. R 키와 같은 입구입니다(전투 스킬 View 설계 SK4).</summary>
+        internal Action SkillPressed { get; }
 
         /// <summary>
         /// 입력 연결을 목표 Layer로 맞춥니다. 목표가 없으면(준비 전·종료·입력 닫힘·전투 정리) 표현을 정리하고 입력을 해제합니다.

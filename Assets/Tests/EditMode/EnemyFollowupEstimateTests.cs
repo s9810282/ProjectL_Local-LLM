@@ -187,27 +187,28 @@ namespace ProjectL.Tests.Core
             Assert.That(budget.PreviewCount, Is.Zero);
         }
 
-        [TestCase(7)]
-        [TestCase(100)]
-        public void NoDoubleChargeForPreciseMoveAndNoFollowupAfterDeath(int damage)
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PreciseMoveDoesNotOfferFollowupAfterLethalLanding(bool collapses)
         {
-            // 재생 무시(R-1)로 이 이동은 정밀 평가다. 가시 피해는 정밀 사실에 한 번만 들어가고 진입 추정은 더하지 않는다.
             var input = Input();
-            input = CombatCommandTestData.With(input, state: input.State.With(thornFields:
-                new[] { new ThornFieldCellSnapshot(new CellCoord(1, 2), 2, damage) }));
+            if (collapses)
+                input = CliffFallTests.WithEnvironment(input, new StaticTerrainFact(71, new CellCoord(3, 2),
+                    StaticTerrainKind.WeakGround, true, new[] { Owner.Enemy }, entryThreshold: 2, entryCount: 1));
             var budget = new EnemyDecisionContext(input, EnemyDecisionSettings.Default);
             using var work = AssessMove(input, budget);
             Assert.That(work.Admitted, Is.True);
             Assert.That(work.Facts.IsPrecise, Is.True);
-            Assert.That(work.Facts.AlliedHpLossPermille, Is.EqualTo(damage * 10));
-            if (damage == 100) Assert.That(work.MovedFacts, Is.Null);
+            Assert.That(work.Facts.AlliedHpLossPermille, Is.EqualTo(collapses ? 1000 : 0));
+            if (collapses)
+                Assert.That(work.MovedFacts, Is.Null);
             else
             {
-                Assert.That(Actor(work.MovedFacts).Health.CurrentHealth, Is.EqualTo(93));
+                Assert.That(Actor(work.MovedFacts).Health.CurrentHealth, Is.EqualTo(100));
                 var score = Score(input, work.Facts, Followup(work.MovedFacts, budget, false));
-                Assert.That(score.AlliedHpLossPermille, Is.EqualTo(70));
-                Assert.That(Actor(input).Health.CurrentHealth, Is.EqualTo(100));
+                Assert.That(score.AlliedHpLossPermille, Is.Zero);
             }
+            Assert.That(Actor(input).Health.CurrentHealth, Is.EqualTo(100));
         }
 
         [Test]
@@ -456,7 +457,7 @@ namespace ProjectL.Tests.Core
             var definitions = railX < 0 ? Array.Empty<StageGimmickSpec>() : new StageGimmickSpec[] { new RailwayGimmickSpec(2, 3) };
             var rails = railX < 0 ? Array.Empty<CellCoord>() : Enumerable.Range(0, height).Select(y => new CellCoord(railX, y)).ToArray();
             var state = new CombatCommandState(width, height, CombatFlowPhase.Automatic, Array.Empty<StructureCombatFacts>(),
-                Array.Empty<ThornFieldCellSnapshot>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                     controllerTurnSequence: 2, completedPlayerTurnCount: 1, completedControllerTurnCount: 1));
             state = StageGimmickComposition.Initialize(state, definitions);
             var owned = new[] { new OwnedCharacterRecord(main.OwnedId.Value, main.CharacterKey, main.OwnershipRole.Value) };

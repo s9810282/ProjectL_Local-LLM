@@ -124,18 +124,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat
         }
 
         /// <summary>
-        /// 세대·토큰·완료 예약을 먼저 무효화한 뒤 진행 중 연출을 취소합니다. 반복 호출해도 안전합니다.
+        /// 세대·토큰·완료 예약을 먼저 무효화한 뒤 연결된 연출과 지속 표시를 취소합니다. 반복 호출해도 안전합니다.
         /// 오류 정지·Detach·Shutdown에서만 부르며, 정상 전투 종료에서는 부르지 않습니다.
         /// </summary>
         internal void Abort()
         {
-            bool wasPresenting = IsBusy;
+            bool wasAttached = _isAttached;
             _generation++;
             _isAttached = false;
             ClearCurrent();
 
             // 무효화를 마친 뒤 취소하므로, 취소 중 늦게 도착한 통지는 오래된 통지로 무시된다.
-            if (wasPresenting)
+            if (wasAttached)
                 _presentation.Cancel();
         }
 

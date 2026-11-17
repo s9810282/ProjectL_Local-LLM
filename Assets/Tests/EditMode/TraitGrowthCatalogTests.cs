@@ -28,10 +28,10 @@ namespace ProjectL.Tests.Core
         [Test]
         public void CategoryDefault_CoreValidationRejectsDeferredAssignmentWithoutAnyUnits()
         {
-            var definitions = new[] { Definition(new ThornFieldTraitSpec(1, 1)) };
+            var definitions = new[] { Definition(new FocusTraitSpec(1, 1)) };
             var rows = TraitGrowthCatalog.Disabled.Categories;
             Assert.DoesNotThrow(() => TraitGrowthCatalogValidator.Validate(new TraitGrowthCatalog(rows, definitions), Array.Empty<CombatAttackProfile>()));
-            var mapped = new TraitGrowthCatalog(rows, definitions, new Dictionary<CategoryKey, TraitKey> { [CategoryKey.Boss] = TraitKey.ThornField });
+            var mapped = new TraitGrowthCatalog(rows, definitions, new Dictionary<CategoryKey, TraitKey> { [CategoryKey.Boss] = TraitKey.Focus });
             Assert.Throws<InvalidOperationException>(() => TraitGrowthCatalogValidator.Validate(mapped, Array.Empty<CombatAttackProfile>()));
         }
 
@@ -175,14 +175,14 @@ namespace ProjectL.Tests.Core
             {
                 Definition(new SoloActionTraitSpec(1, 1, 0, 1), new SoloActionTraitSpec(3, 1, 0, 1)),
                 Definition(new KnockbackTraitSpec(1), new KnockbackTraitSpec(3)),
-                Definition(new ThornFieldTraitSpec(1, 1))
+                Definition(new FocusTraitSpec(1, 1))
             };
             var catalog = Catalog(Array.Empty<TraitGrowthStepSpec>(), definitions);
             var profile = Profile(native: new TraitSpec[] { new KnockbackTraitSpec(1) });
             Assert.That(Eligible(profile, catalog, owned: new[] { TraitKey.Knockback }), Is.EqualTo(new[] { TraitKey.SoloAction }));
             Assert.That(Eligible(profile, catalog, TraitGrowthKind.Enhance, new[] { TraitKey.Knockback, TraitKey.SoloAction },
                 new[] { TraitKey.Knockback }), Is.EqualTo(new[] { TraitKey.SoloAction }));
-            Assert.That(Eligible(Profile(), catalog, TraitGrowthKind.Enhance, new[] { TraitKey.ThornField }), Is.Empty);
+            Assert.That(Eligible(Profile(), catalog, TraitGrowthKind.Enhance, new[] { TraitKey.Focus }), Is.Empty);
             Assert.Throws<ArgumentOutOfRangeException>(() => Eligible(profile, catalog, TraitGrowthKind.None));
             var unavailable = Catalog(new[] { Acquire() }, definitions);
             Assert.DoesNotThrow(() => TraitGrowthCatalogValidator.Validate(unavailable, new[] { profile }));

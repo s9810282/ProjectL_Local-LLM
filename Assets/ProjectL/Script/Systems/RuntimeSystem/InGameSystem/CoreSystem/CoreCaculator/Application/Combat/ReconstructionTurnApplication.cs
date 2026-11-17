@@ -80,7 +80,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var start = victim.Anchor.Value;
                 var step = ForcedDisplacementGeometry.ResolveBranchStep(center, start);
                 ForcedDisplacementPath path = null;
-                foreach (var _ in MovementEnvironmentCalculator.ResolveForcedStepsSteps(projection, input, id, step, 1,
+                foreach (var _ in MovementEnvironmentCalculator.ResolveForcedStepsSteps(projection, id, step, 1,
                     knockbackTerrain: true, cause, rules, value => path = value)) { }
                 if (path.Steps.Count == 0) continue;
                 pushed.Add(id);

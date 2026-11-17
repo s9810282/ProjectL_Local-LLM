@@ -32,7 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// 사건 완료는 보통 공격처럼 첫 유효 해제입니다. 뒤따르는 피해는 그 공격 그룹으로 이 출처에 맺혀 맞는 순간에 시작합니다(특성 시스템 View 계획 R1·TP-2).
     /// 판정은 형식 표의 <see cref="CombatEventTypeTable.IsChildAttackStart"/> 하나이고, 연출 줄이 없어도 칩니다(결정 Q-TS1 A). 같은 판정이 이 사건을 출처를 여는 사건으로 만들어,
     /// 이전 공격 출처가 끝나고 모든 유닛 연출이 쉰 뒤에 시작합니다(결정 Q-TD1 A, 검토 M1·L5).
-    /// 공격 표시는 줄의 덮어쓰기, 없으면 발동 유닛의 일반 공격 표시입니다(결정 Q-TA3 B). 친 공격의 공격 소리 시점은 아직 없습니다(소리 표에 특성 갈래가 없음, 계획 P5).
+    /// 공격 표시는 줄의 덮어쓰기, 없으면 발동 유닛의 일반 공격 표시입니다(결정 Q-TA3 B). 친 공격의 공격 소리는 아직 없습니다(소리 표가 특성 발동 출처에 유닛 소리 줄을 고르지 않음, 계획 P5 — 유닛 소리 계획 TP-7).
     /// </para>
     /// <para>
     /// Core는 추가 공격 시작을 발동 하나짜리 사건으로 냅니다(<c>AttackResultFactory.AttachChild</c>). 발동이 둘 이상인 사건에 추가 공격 시작이 있으면 계약 오류로 던집니다(계획 TP-6). 이 검사와 추가 공격 방향 검사는 큐·행동을 내기 전에 합니다(묶음 끝 검토 L6).
@@ -224,7 +224,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                         close?.Invoke();
                     }, version))
                 {
-                    _feedback.ActionStarted(trait, version);
                     return;
                 }
                 close?.Invoke();
@@ -247,7 +246,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 Action close = group?.Open();
                 if (_pieces.TryBegin(CombatUnitActionComposer.ComposeMoment(actor, action, place, target, _facts.StandingPlaceOf, _hopHeight), close, version))
                 {
-                    _feedback.ActionStarted(trait, version);
                     return;
                 }
                 close?.Invoke();

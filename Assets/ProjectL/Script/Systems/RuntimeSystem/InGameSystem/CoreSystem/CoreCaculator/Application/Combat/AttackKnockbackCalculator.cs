@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 {
     /// <summary>
     /// 공격의 밀치기(S8)와 그 강제 도착(S12)을 처리한다. 모든 직접 피해와 사망을 고정한 뒤 ID 순서로 거리 N만큼 한 칸씩 밀고,
-    /// 지나가는 칸의 지형·가시밭·오브젝트를 즉시 정산한다. 요청 거리 N번째 칸의 오브젝트 도착은 비용 정산과 피격 체력 고정 뒤에 따로 처리한다.
+    /// 지나가는 칸의 지형·오브젝트를 즉시 정산한다. 요청 거리 N번째 칸의 오브젝트 도착은 비용 정산과 피격 체력 고정 뒤에 따로 처리한다.
     /// </summary>
     internal readonly struct ResolvedAttackDisplacement
     {
@@ -55,11 +55,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var input = plan.Input;
             var actor = plan.Actor;
             var projected = world.Characters;
-            var knockback = plan.Engine.EvaluateKnockback(plan.Bindings);
-            int distance = knockback.Contributions.Count == 0 ? 0 : knockback.Contributions.Max(c => c.DistanceCells);
+            var knockback = EvaluateKnockback(plan);
+            int distance = plan.ForcedDisplacement?.Distance ?? (knockback.Contributions.Count == 0 ? 0 : knockback.Contributions.Max(c => c.DistanceCells));
             if (distance == 0) yield break;
             // 가장 긴 거리의 기여가 여럿이면 부딪힘 값이 있는 기여(작렬)를 출처로 삼아 View가 작렬 연출을 고를 수 있게 한다.
-            var source = knockback.Contributions.Where(contribution => contribution.DistanceCells == distance)
+            var source = plan.ForcedDisplacement.HasValue ? default : knockback.Contributions.Where(contribution => contribution.DistanceCells == distance)
                 .OrderByDescending(contribution => contribution.Collision.HasValue).First();
             var movementCause = new CombatMovementCause(CombatMovementAgency.Forced,
                 source.Origin.Kind == EffectOwnerKind.Trait ? (TraitKey?)source.Origin.DefinitionKey : null);
@@ -72,7 +72,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var resultOrigin = new CombatDamageOrigin(physical, actor.EntityId, plan.AttackGroup);
                 outcomes.Add(new TraitActivationSnapshot(owner, id, key, kind, magnitude, targetCells: cells, resultOrigin: resultOrigin));
             }
-            bool impactCenter = knockback.Contributions[0].Mode == EffectKnockbackMode.ImpactCenter;
+            // 명시 방향(심판 요청·꺾인 투사체의 구간 방향)이 있으면 충돌 중심 모드를 쓰지 않는다. 우선순위는 ExplicitStep에 있다.
+            bool impactCenter = !plan.ForcedDisplacement.HasValue && plan.ProjectileIncomingSteps.Count == 0 &&
+                knockback.Contributions[0].Mode == EffectKnockbackMode.ImpactCenter;
             var origin = actor.Anchor.Value;
             IEnumerable<EntityId> candidates = ledger.Roles.Keys;
             if (impactCenter)
@@ -90,12 +92,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 // 앞선 대상의 이동 중 목표가 달성되거나 메인이 죽으면 이후 대상의 이동·지형 피해도 취소한다.
                 if (arrival.Terminal) break;
                 yield return "KnockbackCandidate";
+                var explicitStep = ExplicitStep(plan, ledger, id);
                 if (!projected.TryGetValue(id, out var victim))
                 {
                     if (impactCenter) continue;
                     (ForcedDisplacementPath Path, CellCoord Start, CellCoord Step)? obstacle = null;
                     foreach (var phase in KnockbackObstacleSteps(arrival, id, actor.Anchor.Value, distance, movementCause,
-                        (path, start, step) => obstacle = (path, start, step))) yield return phase;
+                        (path, start, step) => obstacle = (path, start, step), explicitStep)) yield return phase;
                     if (obstacle == null) continue;
                     Record(ledger, id, AttackKnockbackTargetKind.Structure, obstacle.Value.Start, obstacle.Value.Step, obstacle.Value.Path);
                     int steps = obstacle.Value.Path.Steps.Count;
@@ -108,11 +111,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (victim.Health.IsDead)
                 {
                     // 직접 피해로 죽은 사망 특성 보유자는 시체를 옮기지 않고 넉백 끝 칸만 사망 위치로 정한다(적 전용 특성 설계 D5·§6.3).
-                    if (!plan.PublicPreview) DisplaceCorpse(plan, world, arrival, id, origin, impactCenter, distance);
+                    if (plan.CompleteConsequences) DisplaceCorpse(plan, world, arrival, id, origin, impactCenter, distance, explicitStep);
                     continue;
                 }
                 CellCoord step = default;
-                if (impactCenter)
+                if (explicitStep.HasValue) step = explicitStep.Value;
+                else if (impactCenter)
                 {
                     if (!ImpactBoltTraitRule.TryResolveStep(victim, origin, out step)) continue;
                 }
@@ -161,6 +165,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
         }
 
+        /// <summary>
+        /// 대상 하나의 명시 밀림 방향이다. 명시 요청(심판)이 먼저, 다음은 꺾인 투사체가 그 대상을 맞힌 구간의 들어온 방향이다.
+        /// 수호자가 대신 맞았으면 처음 대신 맞은 원래 대상의 구간 방향을 쓴다. 없으면 null이고 호출자가 충돌 중심·공격자 칸 규칙을 쓴다.
+        /// 캐릭터·장애물·시체 밀림이 모두 이 순서를 따른다(마탄 넉백 방향 설계 2026-11-17).
+        /// </summary>
+        private static CellCoord? ExplicitStep(CommandAttackPlan plan, CommandAttackLedger ledger, EntityId recipient)
+        {
+            if (plan.ForcedDisplacement.HasValue) return plan.ForcedDisplacement.Value.Step;
+            if (plan.ProjectileIncomingSteps.Count == 0) return null;
+            var original = ledger.Contacts(recipient).OrderBy(contact => contact.DeliveryIndex)
+                .Select(contact => contact.OriginalTargetId).DefaultIfEmpty(recipient).First();
+            return plan.ProjectileIncomingSteps.TryGetValue(original, out var step) ? step : (CellCoord?)null;
+        }
+
+        private static EffectKnockbackEvaluation EvaluateKnockback(CommandAttackPlan plan)
+        {
+            if (!plan.ForcedDisplacement.HasValue) return plan.Engine.EvaluateKnockback(plan.Bindings);
+            // 명시적 요청이 방향·거리를 소유한다. 서로 다른 특성 모드는 정규화하고 독립적인 부딪힘 출처는 보존한다.
+            var evaluations = plan.Bindings.Select(binding => plan.Engine.EvaluateKnockback(new[] { binding })).ToArray();
+            return new EffectKnockbackEvaluation(evaluations.SelectMany(e => e.Contributions).Select(c =>
+                new EffectKnockbackContribution(c.Origin, plan.ForcedDisplacement.Value.Distance,
+                    EffectKnockbackMode.AttackerOrigin, c.Collision)).ToArray(), evaluations.SelectMany(e => e.Expectations).ToArray());
+        }
+
         /// <summary>살아서 밀려난 대상의 도착 칸 오브젝트와 강제 도착을 ID 순서로 처리한다(S12). 전투가 끝나면 멈춘다.</summary>
         internal static IEnumerable<string> ResolveArrivalsSteps(CommandAttackPlan plan, CommandAttackProjection world, MovementProjection arrival,
             IReadOnlyList<ResolvedAttackDisplacement> forcedArrivals)
@@ -186,11 +214,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// 사망 특성 보유자의 시체가 밀려날 경로를 계산만 한다. 죽은 캐릭터는 위치가 비어 있어 실제로 옮기거나 이동 사건·넉백 장부를 남기지 않는다.
-        /// 진입은 산 대상과 같은 판정이고 칸 효과(낙사·가시·지뢰 등)는 정산하지 않는다. 면역이면 그 자리다.
+        /// 진입은 산 대상과 같은 판정이고 칸 효과(낙사·지뢰 등)는 정산하지 않는다. 면역이면 그 자리다.
         /// 끝 칸을 사망 위치로 덮어써 영혼과 사망 특성이 그 칸을 쓰고, View를 위해 시작 → 끝 칸 목록을 발동 사건으로 남긴다.
         /// </summary>
         private static void DisplaceCorpse(CommandAttackPlan plan, CommandAttackProjection world, MovementProjection arrival,
-            EntityId id, CellCoord origin, bool impactCenter, int distance)
+            EntityId id, CellCoord origin, bool impactCenter, int distance, CellCoord? explicitStep)
         {
             var input = plan.Input;
             var corpse = CommandDeathSettlement.PreDeathFact(input, world.Events, id);
@@ -200,7 +228,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!deathTraits.HasContribution) return;
             var start = world.DeathAnchors.TryGetValue(id, out var anchor) ? anchor : corpse.Anchor.Value;
             CellCoord step;
-            if (impactCenter)
+            if (explicitStep.HasValue) step = explicitStep.Value;
+            else if (impactCenter)
             {
                 if (!ImpactBoltTraitRule.TryResolveStep(corpse, origin, out step)) return;
             }
@@ -211,8 +240,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             for (int i = 0; i < distance; i++)
             {
                 var next = current + step;
-                if (!AttackForcedMovement.CanEnterUnit(input, arrival.Environment, world.Characters.Values, world.Structures.Values,
-                    id, current, next)) break;
+                if (!AttackForcedMovement.CanEnterUnit(input, arrival.Environment, arrival.Bindings, world.Characters.Values,
+                    world.Structures.Values, id, current, next)) break;
                 cells.Add(next);
                 current = next;
             }
@@ -226,24 +255,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static void Record(CommandAttackLedger ledger, EntityId id, AttackKnockbackTargetKind kind, CellCoord start,
             CellCoord step, ForcedDisplacementPath path, AttackKnockbackCollision collision = null)
         {
-            var stop = path.Stop switch
-            {
-                ForcedDisplacementStop.Completed => AttackKnockbackStop.Completed,
-                ForcedDisplacementStop.Blocked => AttackKnockbackStop.Blocked,
-                ForcedDisplacementStop.Interrupted => AttackKnockbackStop.Interrupted,
-                _ => throw new InvalidOperationException("알 수 없는 강제 이동 멈춤 이유입니다: " + path.Stop),
-            };
-            ledger.RecordKnockback(new AttackKnockbackSnapshot(id, kind, start, step, path.RequestedDistance, path.Steps, stop, collision));
+            ledger.RecordKnockback(path.ToKnockback(id, kind, start, step, collision));
         }
 
         /// <summary>밀 수 있는 장애물이면 경로와 시작 칸·방향을, 밀 대상이 아니면 null을 돌려준다.</summary>
         private static IEnumerable<string> KnockbackObstacleSteps(MovementProjection projection,
             EntityId id, CellCoord origin, int distance, CombatMovementCause movementCause,
-            Action<ForcedDisplacementPath, CellCoord, CellCoord> completed)
+            Action<ForcedDisplacementPath, CellCoord, CellCoord> completed, CellCoord? explicitStep = null)
         {
             var before = projection.Structure(id);
             if (before == null || before.Health.IsDead || !projection.Bindings.ObstacleEntityIds.Contains(id)) yield break;
-            var step = ForcedDisplacementGeometry.ResolveBranchStep(origin, before.Anchor);
+            var step = explicitStep ?? ForcedDisplacementGeometry.ResolveBranchStep(origin, before.Anchor);
             // 다칸 장애물은 footprint 전체를 한 칸씩 옮기며 매 칸 같은 검사를 한다. 장애물에는 유닛용 오브젝트 효과를 적용하지 않는다.
             foreach (var phase in ForcedDisplacementPathCalculator.ExecuteSteps(before.Anchor, step, distance, CanEnter, Enter,
                 path => completed(path, before.Anchor, step))) yield return phase;
@@ -261,6 +283,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 var current = observation.Result;
                 allowed(cells.All(c => current.State.IsInside(c)) &&
+                    BoardSurfaceRules.AdmitsObstacleAt(projection.Environment, projection.Bindings, cells) &&
                     structure.OccupiedCells.All(c => EnvironmentTerrainRules.CanKnockback(projection.Environment, projection.Bindings, c, c + offset)) &&
                     !current.Characters.Any(c => !c.Health.IsDead && c.OccupiedCells.Intersect(cells).Any()) &&
                     !current.State.Structures.Any(s => s.EntityId != id && !s.Health.IsDead && s.OccupiedCells.Intersect(cells).Any()));
@@ -272,8 +295,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var structure = projection.Structure(id);
                 var offset = to - from;
                 var cells = structure.OccupiedCells.Select(c => c + offset).ToArray();
-                projection.MergeStructure(new StructureCombatFacts(id, structure.Definition, structure.Health, to,
-                    structure.Rotation, cells, structure.Owner), movementCause);
+                projection.MergeStructure(structure.WithPlacement(to, cells), movementCause);
                 yield return "KnockbackObstacleRelocation";
                 foreach (var cell in cells.OrderBy(c => c.Y).ThenBy(c => c.X))
                 {

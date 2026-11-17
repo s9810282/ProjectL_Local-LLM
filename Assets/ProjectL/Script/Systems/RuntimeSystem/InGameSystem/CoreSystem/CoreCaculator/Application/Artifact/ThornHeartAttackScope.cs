@@ -16,11 +16,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly EffectOriginKey _origin;
         private readonly bool _actualOrdinaryAttack;
         private readonly bool _inCombat;
+        private readonly long _triggeringAttackGroup;
         private bool _consumed;
 
-        internal ThornHeartAttackScope(CompiledArtifactLoadout loadout, bool actualOrdinaryAttack, bool inCombat)
+        internal ThornHeartAttackScope(CompiledArtifactLoadout loadout, bool actualOrdinaryAttack, bool inCombat,
+            long triggeringAttackGroup = CommandAttackGroups.Direct)
         {
             if (loadout == null) throw new ArgumentNullException(nameof(loadout));
+            if (triggeringAttackGroup <= 0) throw new ArgumentOutOfRangeException(nameof(triggeringAttackGroup));
             foreach (var compiled in loadout.Rules.Span)
             {
                 if (compiled.Rule is not ThornHeartRule rule) continue;
@@ -31,6 +34,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             _actualOrdinaryAttack = actualOrdinaryAttack;
             _inCombat = inCombat;
+            _triggeringAttackGroup = triggeringAttackGroup;
         }
 
         private ThornHeartAttackScope(ThornHeartAttackScope source)
@@ -39,6 +43,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _origin = source._origin;
             _actualOrdinaryAttack = source._actualOrdinaryAttack;
             _inCombat = source._inCombat;
+            _triggeringAttackGroup = source._triggeringAttackGroup;
             _consumed = source._consumed;
         }
 
@@ -65,7 +70,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             reflection = null;
             if (!CanReflect(attacker, struckAllyBeforeDamage)) return false;
             var context = new ThornHeartReflectionContext(struckAllyBeforeDamage.EntityId,
-                CommandAttackGroups.Direct, reflectionGroup);
+                _triggeringAttackGroup, reflectionGroup);
             int requested = _rule.EvaluateDamage(_inCombat, hasEnemyDirectHitOnAlly: true);
             if (requested == 0)
             {
@@ -78,7 +83,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var origin = new CombatDamageOrigin(struckAllyBeforeDamage.Anchor, null, reflectionGroup);
             int activationIndex = damage.Events.Count;
             // 반사도 공격의 공유 사전 전체를 쓰는 적용 경계를 지난다. 공격자 사실은 경계가 사전에 반영한다.
-            var outcome = damage.Apply(attacker.EntityId, CombatDamageKind.ReflectedDamage, origin, requested, deferTraitKills: true);
+            var outcome = damage.Apply(attacker.EntityId, CombatDamageKind.ReflectedDamage, origin, requested,
+                deferTraitKills: true, effectOrigin: _origin);
             int applied = outcome.ActualHealthLoss;
             var activation = new CombatArtifactEvent(new[]
             {
@@ -86,6 +92,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new ArtifactActivationSnapshot(_origin, attacker.EntityId, Math.Max(requested, outcome.DamageBeforeItems), applied),
             }, context);
             damage.Events.Insert(activationIndex, activation);
+            damage.HealthClaims.Add(new CombatHealthClaim(CombatHealthClaimKind.ArtifactDamage, activation, 0, -1, attacker.EntityId,
+                outcome.LossStep == null ? Array.Empty<CombatHealthStep>() : new[] { outcome.LossStep }, damageOrigin: origin));
             // 반사의 피격 아군 귀속이 보인 뒤 확정 사망을 소비해야 합니다.
             damage.SettleTraitKills(activationIndex);
             reflection = new ThornHeartReflection(new CharacterStateChange(outcome.Before, outcome.After), activation, origin);

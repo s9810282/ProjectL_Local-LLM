@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat
@@ -17,7 +18,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CombatCommandInput Input { get; }
         public MovementUndoResult UndoMovement { get; }
         public IReadOnlyList<MovementEffectUse> MovementEffectUses { get; }
-        public IReadOnlyList<MovementDamageExecution> DamageExecutions { get; }
+        public IReadOnlyList<CombatHealthExecution> HealthExecutions { get; }
+        public IReadOnlyList<CombatHealthClaim> HealthClaims { get; }
         public bool Accepted { get; }
         public string Reason { get; }
         public CharacterChanges Characters { get; }
@@ -25,6 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public CombatCommandState FinalState { get; }
         public StageOutcomeSnapshot Outcome { get; }
         public AttackResult? Attack { get; }
+        public PlayerSkillResult PlayerSkill { get; }
         public IReadOnlyList<long> ConsumedSoulIds { get; }
         public BattleCompletionChanges Completion { get; }
         public MovementDestination? Movement { get; }
@@ -43,9 +46,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             EnvironmentBindingsChange environmentBindings = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null, ItemInventoryChange inventoryChange = null,
             CombatRewardChange rewardChange = null, CombatRewardSettlement rewardSettlement = null, UnitActionUseSettlementSnapshot actionUseSettlement = null,
             MovementUndoResult undoMovement = null, IReadOnlyList<MovementEffectUse> movementEffectUses = null,
-            IReadOnlyList<MovementDamageExecution> damageExecutions = null)
+            IReadOnlyList<CombatHealthExecution> healthExecutions = null, IReadOnlyList<CombatHealthClaim> healthClaims = null,
+            PlayerSkillResult playerSkill = null)
+            : this(healthExecutions, healthClaims, input, accepted, reason, characters, field, finalState,
+                outcome, attack, consumedSoulIds, completion, movement, events, pathMovement, environmentBindings, blockedContacts,
+                inventoryChange, rewardChange, rewardSettlement, actionUseSettlement, undoMovement, movementEffectUses, playerSkill)
+        {
+        }
+
+        internal CombatCommandTransition(IEnumerable<CombatHealthExecution> healthExecutions, IEnumerable<CombatHealthClaim> healthClaims,
+            CombatCommandInput input, bool accepted, string reason,
+            CharacterChanges characters, SoulFieldChange field, CombatCommandState finalState,
+            StageOutcomeSnapshot outcome, AttackResult? attack = null,
+            IReadOnlyList<long> consumedSoulIds = null, BattleCompletionChanges completion = null,
+            MovementDestination? movement = null, IReadOnlyList<CombatEvent> events = null,
+            MovementPathResult pathMovement = null,
+            EnvironmentBindingsChange environmentBindings = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null, ItemInventoryChange inventoryChange = null,
+            CombatRewardChange rewardChange = null, CombatRewardSettlement rewardSettlement = null, UnitActionUseSettlementSnapshot actionUseSettlement = null,
+            MovementUndoResult undoMovement = null, IReadOnlyList<MovementEffectUse> movementEffectUses = null, PlayerSkillResult playerSkill = null)
         {
             Input = input ?? throw new ArgumentNullException(nameof(input));
+            PlayerSkill = playerSkill;
             if (!accepted && inventoryChange != null)
                 throw new ArgumentException("거절 결과에는 아이템 재고 변경을 넣을 수 없습니다.", nameof(inventoryChange));
             if (!accepted && rewardChange != null)
@@ -73,15 +94,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ActionUseSettlement = actionUseSettlement;
             if (!accepted && actionUseSettlement != null) throw new ArgumentException("거절 결과에는 행동 정산이 없습니다.");
             Events = Array.AsReadOnly((events ?? Array.Empty<CombatEvent>()).ToArray());
+            if (playerSkill != null)
+            {
+                if (!accepted || attack.HasValue || movement.HasValue || pathMovement != null || actionUseSettlement != null || undoMovement != null)
+                    throw new ArgumentException("스킬 결과는 수락된 독립 사용 정산이며 일반 행동·이동 결과와 섞을 수 없습니다.", nameof(playerSkill));
+                playerSkill.ValidateCommand(input.Kind, input.ActorId, Events);
+            }
             var uses = (movementEffectUses ?? Array.Empty<MovementEffectUse>()).ToArray();
             if (uses.Any(u => u == null || !Events.Contains(u.Execution)) || !accepted && uses.Length != 0 ||
                 uses.Where((u, i) => uses.Take(i).Any(u.SameValues)).Any())
                 throw new ArgumentException("효과 사용은 이 수락된 제안의 실행 사건에 한 번만 연결해야 합니다.", nameof(movementEffectUses));
             MovementEffectUses = Array.AsReadOnly(uses);
-            var executions = (damageExecutions ?? Array.Empty<MovementDamageExecution>()).ToArray();
-            if (!accepted && executions.Length != 0 || executions.Any(e => e == null || e.Evidence.Any(f => !Events.Contains(f))))
-                throw new ArgumentException("피해 실행 근거는 이 수락된 제안의 사건만 참조해야 합니다.", nameof(damageExecutions));
-            DamageExecutions = Array.AsReadOnly(executions);
+            bool HasEvent(CombatEvent occurrence) => Events.Any(e => ReferenceEquals(e, occurrence));
+
+            var executions = (healthExecutions ?? Array.Empty<CombatHealthExecution>()).ToArray();
+            if (!accepted && executions.Length != 0 || executions.Distinct().Count() != executions.Length ||
+                executions.Any(e => e == null || !e.Evidence.All(HasEvent) ||
+                    e.Steps.Any(step => step.Source.ContextEvent != null && !HasEvent(step.Source.ContextEvent))))
+                throw new ArgumentException("체력 실행은 이 수락된 제안의 사건만 참조하며 실행당 한 번만 포함되어야 합니다.", nameof(healthExecutions));
+            HealthExecutions = Array.AsReadOnly(executions);
+            var claims = (healthClaims ?? Array.Empty<CombatHealthClaim>()).ToArray();
+            if (claims.Length != 0)
+            {
+                var steps = executions.SelectMany(e => e.Steps).ToHashSet();
+                if (!accepted || claims.Any(claim => claim == null || !HasEvent(claim.Event) ||
+                    claim.Steps.Any(step => !steps.Contains(step))))
+                    throw new ArgumentException("체력 선언은 이 수락된 제안의 사건과 실행 단계만 참조해야 합니다.", nameof(healthClaims));
+            }
+            HealthClaims = Array.AsReadOnly(claims);
             if (Events.Any(e => e == null) || (!accepted && Events.Count != 0))
                 throw new ArgumentException("거절 결과 또는 null 사건을 게시할 수 없습니다.");
             MovementUndoResult.Validate(accepted, input.Kind, input.ActorId, undoMovement, actionUseSettlement, Events, movement, pathMovement, attack);
@@ -108,24 +148,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         public CombatCommandTransition WithCompletion(BattleCompletionChanges completion) =>
-            new CombatCommandTransition(Input, Accepted, Reason, completion.Characters,
+            new CombatCommandTransition(HealthExecutions, HealthClaims, Input, Accepted, Reason, completion.Characters,
                 completion.Settlement?.Field ?? Field, FinalState, Outcome, Attack, ConsumedSoulIds, completion, Movement, Events,
-                PathMovement, EnvironmentBindings, BlockedContacts, InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement, MovementEffectUses, DamageExecutions);
+                PathMovement, EnvironmentBindings, BlockedContacts, InventoryChange, RewardChange, RewardSettlement,
+                ActionUseSettlement, UndoMovement, MovementEffectUses, PlayerSkill);
 
         public CombatCommandTransition WithFinalState(CombatCommandState finalState) =>
-            new CombatCommandTransition(Input, Accepted, Reason, Characters, Field, finalState, Outcome, Attack,
+            new CombatCommandTransition(HealthExecutions, HealthClaims, Input, Accepted, Reason, Characters, Field, finalState, Outcome, Attack,
                 ConsumedSoulIds, Completion, Movement, Events, PathMovement, EnvironmentBindings, BlockedContacts,
-                InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement, MovementEffectUses, DamageExecutions);
+                InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement, MovementEffectUses, PlayerSkill);
+
+        internal CombatCommandTransition WithPlayerSkill(PlayerSkillResult skill, CombatCommandState finalState) =>
+            new CombatCommandTransition(HealthExecutions, HealthClaims, Input, Accepted, Reason, Characters, Field, finalState,
+                Outcome, Attack, ConsumedSoulIds, Completion, Movement, Events,
+                PathMovement, EnvironmentBindings, BlockedContacts, InventoryChange, RewardChange, RewardSettlement,
+                ActionUseSettlement, UndoMovement, MovementEffectUses, skill);
 
         public CombatCommandTransition WithMovementEffectUses(IReadOnlyList<MovementEffectUse> uses) =>
-            new CombatCommandTransition(Input, Accepted, Reason, Characters, Field, FinalState, Outcome, Attack,
+            new CombatCommandTransition(HealthExecutions, HealthClaims, Input, Accepted, Reason, Characters, Field, FinalState, Outcome, Attack,
                 ConsumedSoulIds, Completion, Movement, Events, PathMovement, EnvironmentBindings, BlockedContacts,
-                InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement, uses, DamageExecutions);
+                InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement, uses, PlayerSkill);
 
-        internal CombatCommandTransition WithDamageExecutions(IReadOnlyList<MovementDamageExecution> executions) =>
-            new CombatCommandTransition(Input, Accepted, Reason, Characters, Field, FinalState, Outcome, Attack,
+        internal CombatCommandTransition WithHealthEvidence(IReadOnlyList<CombatHealthExecution> executions, IReadOnlyList<CombatHealthClaim> claims) =>
+            new CombatCommandTransition(executions, claims, Input, Accepted, Reason, Characters, Field, FinalState, Outcome, Attack,
                 ConsumedSoulIds, Completion, Movement, Events, PathMovement, EnvironmentBindings, BlockedContacts,
                 InventoryChange, RewardChange, RewardSettlement, ActionUseSettlement, UndoMovement,
-                MovementDamageExecution.Collect(executions), executions);
+                CombatHealthExecution.CollectMovementUses(executions, MovementEffectUses), PlayerSkill);
     }
 }

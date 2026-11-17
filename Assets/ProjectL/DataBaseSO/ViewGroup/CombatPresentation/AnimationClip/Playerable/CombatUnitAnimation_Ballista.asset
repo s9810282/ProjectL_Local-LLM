@@ -12,9 +12,49 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Ballista
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 6e7448e7a0fdf114390b62f449f43ca2, type: 2}
+  attack:
+    main:
+      body: {fileID: 7400000, guid: 73150e572894ea64ea7188137521611b, type: 2}
+      mount: {fileID: 0}
+      companions:
+      - {fileID: 7400000, guid: 2f485cfc569b31b4eacb800c715af59e, type: 2}
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
+  hit:
+    main:
+      body: {fileID: 7400000, guid: a447aa59a6345f549a768b13622ab990, type: 2}
+      mount: {fileID: 0}
+      companions:
+      - {fileID: 7400000, guid: de5b9b0c950876d439f01044ffb81061, type: 2}
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackClip: {fileID: 7400000, guid: 73150e572894ea64ea7188137521611b, type: 2}
+  attackSpeed: 1
   attackCompanionClips:
-  - {fileID: 7400000, guid: 5d291a4550ab4604fa98cc34965001f9, type: 2}
+  - {fileID: 7400000, guid: 2f485cfc569b31b4eacb800c715af59e, type: 2}
   hitDelay: 0
-  hitClip: {fileID: 0}
-  hitCompanionClips: []
+  shots: []
+  hitClip: {fileID: 7400000, guid: a447aa59a6345f549a768b13622ab990, type: 2}
+  hitCompanionClips:
+  - {fileID: 7400000, guid: de5b9b0c950876d439f01044ffb81061, type: 2}

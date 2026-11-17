@@ -70,9 +70,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             // 사거리는 조준 칸(지정)만 제한한다. 관통 진행은 보드 끝까지다.
+            var victims = new List<CharacterCombatFacts>();
+            var victimPolicy = selection.Policy.Combine(new AttackTargetingPolicy(false, false, false, false,
+                allowsFriendlyCharacters: true));
+            foreach (var candidate in input.Characters)
+            {
+                if (AttackTargetEligibility.CanTargetCharacter(actor, candidate, victimPolicy))
+                    victims.Add(candidate);
+                yield return "DeliveryPierceVictim";
+            }
             PiercingShotTrace trace = null;
             foreach (var phase in PierceTargetCollector.CollectSingleSteps(origin, aim, actor.OccupiedCells,
-                input.State.BoardWidth, input.State.BoardHeight, selection.EligibleCharacters, selection.EligibleStructures, input.State.Structures,
+                input.State.BoardWidth, input.State.BoardHeight, victims, selection.EligibleStructures, input.State.Structures,
                 selection.Policy, walls, elevation, profile.Occlusion, value => trace = value)) yield return phase;
             var encounters = new List<PiercingShotEncounter>();
             foreach (var hit in trace.Encounters.Take(budget))
@@ -108,17 +117,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             => CurrentDamage(plan, actor, hitIndex).Damage;
 
         internal static (int Damage, IReadOnlyList<Contracts.Snapshots.Traits.TraitActivationSnapshot> Traits) CurrentDamage(
-            CommandAttackPlan plan, CharacterCombatFacts actor, int hitIndex)
+            CommandAttackPlan plan, CharacterCombatFacts actor, int hitIndex, int? projectileEncounter = null)
         {
-            int common = CombatAttackCalculator.CommonAttackDamage(plan.Input, actor, plan.Profile);
+            int common = CombatAttackCalculator.CommonAttackDamage(plan.DamageInput, actor, plan.Profile, plan.DamageKind);
             int damage = common == plan.CommonDamage ? plan.Delivery.Hits[hitIndex].BaseDamage
                 : plan.Delivery.PiercingShot == null ? common : PiercingFalloffTraitRule.ApplyFalloff(common,
                     plan.Delivery.PiercingShot.Encounters.Span[hitIndex].RemainingPercent);
             var traits = new List<Contracts.Snapshots.Traits.TraitActivationSnapshot>();
+            if (projectileEncounter.HasValue)
+            {
+                var falloff = plan.Engine.EvaluatePierceFalloff(plan.Bindings,
+                    new PierceFalloffEffectContext(plan.CommonDamage, projectileEncounter.Value));
+                damage = PiercingFalloffTraitRule.ApplyFalloff(common, falloff.RemainingPercent);
+                CombatDamageCalculator.AddEvidence(traits, falloff.Contributions.Single().Origin,
+                    TraitActivationKind.DamageModified, Math.Max(0, common - damage));
+            }
             if (plan.Delivery.PiercingShot != null)
                 CombatDamageCalculator.AddEvidence(traits, plan.Delivery.PiercingShot.Origin,
                     TraitActivationKind.DamageModified, Math.Max(0, common - damage));
-            return (damage, traits.AsReadOnly());
+            return (plan.DamagePercent == 100 ? damage : CategoryMatchupDamageCalculator.Apply(damage, plan.DamagePercent, 100),
+                traits.AsReadOnly());
         }
 
 
@@ -134,7 +152,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var target in selection.Targets)
             {
                 hits.Add(target.Value == AttackTargetRole.Additional
-                    ? new DeliveredAttackHit(target.Key, target.Value, commonDamage, profile.Method.SplashPercent, reachable.PrimaryCell)
+                    ? new DeliveredAttackHit(target.Key, target.Value, commonDamage, profile.Method.SplashPercent,
+                        reachable.PrimaryCell, landed: profile.Method.SplashPercent > 0)
                     : new DeliveredAttackHit(target.Key, target.Value, commonDamage, 100, actor.Anchor));
                 yield return "DeliveryDirectHit";
             }

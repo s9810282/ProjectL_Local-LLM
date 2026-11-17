@@ -115,7 +115,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentException>(() => new CombatEffectsEvent(new[] { reaction }, Array.Empty<CategoryActivationSnapshot>()));
             Assert.Throws<ArgumentException>(() => new TraitActivationSnapshot(new EntityId(1), new EntityId(2), TraitKey.LuckyBullet,
                 TraitActivationKind.FollowUpAttack, 20, resultOrigin: new CombatDamageOrigin(CellCoord.Zero, new EntityId(1), 3)).WithChildAttack(outcome));
-            Assert.That(typeof(AttackHitResult).GetConstructors().Any(c => c.GetParameters().Length == 7), Is.True);
+            Assert.DoesNotThrow(() => _ = new AttackHitResult(new EntityId(5), 100, 80, AttackTargetRole.Designated, 100, 0, 0));
             Assert.That(typeof(TraitActivationSnapshot).GetConstructors().Any(c => c.GetParameters().Length == 10), Is.True);
         }
 

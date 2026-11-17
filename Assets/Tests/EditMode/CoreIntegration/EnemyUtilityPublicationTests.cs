@@ -58,7 +58,7 @@ namespace ProjectL.Tests.CoreIntegration
 
         private static IMovementTileRule[] MovementRules() => new IMovementTileRule[]
         {
-            new ThornMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
+            new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
         };
     }
 }

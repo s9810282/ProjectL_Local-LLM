@@ -42,26 +42,26 @@ namespace ProjectL.Tests.Core
             Assert.That(addition.DistanceCells, Is.EqualTo(1));
         }
         [Test]
-        public void OwnedThornDescription_UsesEachResolvedInstance()
+        public void OwnedTraitSettings_UseEachResolvedInstance()
         {
-            var normal = new ThornFieldTraitSpec(5, 5);
-            var enhanced = new ThornFieldTraitSpec(7, 5, 30, UnitTurnTickPhase.Started);
+            var normal = new KnockbackTraitSpec(1);
+            var enhanced = new KnockbackTraitSpec(3);
             var basis = CombatCommandTestData.Spec(EntityKey.Unit_CactusCannon, 10, CategoryKey.Cannon, normal);
             var catalog = TraitGrowthFixtures.Catalog(new[] { new TraitGrowthStepSpec(10, 2, TraitGrowthKind.Enhance) }, CategoryKey.Cannon,
                 new[] { new TraitGrowthDefinition(normal, enhanced, "n", "d", "e", "ed") });
-            var selection = new TraitGrowthSelection(10, TraitKey.ThornField);
+            var selection = new TraitGrowthSelection(10, TraitKey.Knockback);
             var owned = new[] { new OwnedCharacterRecord(new CharacterInstanceId(1), basis.Key, CharacterOwnershipRole.Sub, 2),
                 new OwnedCharacterRecord(new CharacterInstanceId(2), basis.Key, CharacterOwnershipRole.Sub, 2, growth: new OwnedTraitGrowth(new[] { selection })) };
             var result = OwnedCharacterStatsCalculator.Calculate(UnitSpecTestFactory.Profiles(basis), UnitSpecTestFactory.CreateDefaultCategoryCatalog(), owned, null, owned.ToDictionary(o => o.Id, _ => 0), default, catalog);
-            var plain = result[0].ThornFieldDescription;
-            var selected = result[1].ThornFieldDescription;
-            Assert.That((plain.ThornDamage, plain.LifetimeUnitTurns, plain.DefenseReductionPercent, plain.TickPhase), Is.EqualTo((5, 5, 0, UnitTurnTickPhase.Ended)));
-            Assert.That((selected.ThornDamage, selected.LifetimeUnitTurns, selected.DefenseReductionPercent, selected.TickPhase), Is.EqualTo((7, 5, 30, UnitTurnTickPhase.Started)));
+            Assert.That(result[0].TraitSettings.TryGet<KnockbackTraitSpec>(out var plain), Is.True);
+            Assert.That(result[1].TraitSettings.TryGet<KnockbackTraitSpec>(out var selected), Is.True);
+            Assert.That(plain.DistanceCells, Is.EqualTo(1));
+            Assert.That(selected.DistanceCells, Is.EqualTo(3));
             Assert.That(selected, Is.Not.SameAs(plain));
             Assert.That(owned[0].Growth.IsEmpty, Is.True);
             Assert.That(owned[1].Growth.Selections[0], Is.SameAs(selection));
             Assert.That(basis.Traits.Span[0], Is.SameAs(normal));
-            Assert.That(catalog.GetTrait(TraitKey.ThornField).Enhanced, Is.SameAs(enhanced));
+            Assert.That(catalog.GetTrait(TraitKey.Knockback).Enhanced, Is.SameAs(enhanced));
         }
         [Test]
         public void Resolution_RetainsSharedBasisAndRejectsMissingDefinitionsOrWrongPrefix()

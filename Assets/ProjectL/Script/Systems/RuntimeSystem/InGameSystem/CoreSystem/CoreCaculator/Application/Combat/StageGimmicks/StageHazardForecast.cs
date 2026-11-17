@@ -20,6 +20,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         public CellCoord? Cell { get; }
         public bool InstantDefeat { get; }
         public RockfallGimmickSpec Rockfall { get; }
+        public MeteorGimmickSpec Meteor { get; }
+        public MeteorFootprint MeteorFootprint { get; }
+        public MeteorFlameArea MeteorFlame { get; }
         public CombatAssessmentGap Gaps { get; }
         public long? TornadoSourceId { get; }
         public IReadOnlyList<CellCoord> HaboobRegion { get; }
@@ -28,7 +31,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal HazardCellFact(StageGimmickId id, StageGimmickKey key, long boundaryCount, CellCoord? cell,
             bool instantDefeat = false, RockfallGimmickSpec rockfall = null, CombatAssessmentGap gaps = CombatAssessmentGap.None,
             long? tornadoSourceId = null, IReadOnlyList<CellCoord> haboobRegion = null, HaboobGimmickPhase? haboobPhase = null,
-            long? haboobNextBoundaryCount = null)
+            long? haboobNextBoundaryCount = null, MeteorGimmickSpec meteor = null, MeteorFootprint meteorFootprint = null,
+            MeteorFlameArea meteorFlame = null)
         {
             Id = id; Key = key; BoundaryCount = boundaryCount; Cell = cell;
             InstantDefeat = instantDefeat; Rockfall = rockfall; Gaps = gaps;
@@ -36,6 +40,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             HaboobRegion = haboobRegion;
             HaboobPhase = haboobPhase;
             HaboobNextBoundaryCount = haboobNextBoundaryCount;
+            Meteor = meteor;
+            MeteorFootprint = meteorFootprint;
+            MeteorFlame = meteorFlame;
         }
     }
 
@@ -190,7 +197,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bool laterOpportunity = cutoff == int.MaxValue && LastBoundaryCount > _firstBoundary;
             if (laterOpportunity && CombatActionAdmission.IsAttackRestricted(actor) && CombatActionAdmission.IsMovementRestricted(actor))
                 gaps |= CombatAssessmentGap.UnsupportedEffect | CombatAssessmentGap.FutureWarning;
-            var impacts = new HashSet<(StageGimmickId Id, long Boundary)>();
+            var impacts = new HashSet<(StageGimmickId Id, long Boundary, int Site)>();
             foreach (var (index, direct) in selected)
             {
                 if (index > cutoff) break;
@@ -206,16 +213,29 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 }
                 gaps |= fact.Gaps;
                 evidence.Add(fact);
-                if (!fact.InstantDefeat && fact.Rockfall == null) continue;
-                if (!impacts.Add((fact.Id, fact.BoundaryCount))) continue;
-                int loss = fact.InstantDefeat ? health - known : RockfallGimmickRule.HealthLoss(actor.Health.MaxHealth, fact.Rockfall);
+                // 칸이 있는 사슬 사실(경고된 진행 경로)만 위험이다. 방향을 아직 정하지 않은 다음 경고 사실은 칸이 없고,
+                // 다른 기믹의 다음 경고처럼 공백(FutureWarning)만 남긴다. 칸 없는 사실은 모든 칸에 적용되므로 여기서 거르지 않으면
+                // 판 전체가 치명 가능이 되어 다른 위험을 구분하지 못한다.
+                if (fact.Key == StageGimmickKey.LavaChain && fact.Cell.HasValue)
+                {
+                    // 경고 방향만 확정이다. 밀림·지형·재구성은 발동 시점의 위치와 보호 상태에 달린다.
+                    uncertainPosition = true;
+                    possible = health;
+                    possibleDeathEnd = Math.Min(possibleDeathEnd, _groupEnds[(fact.Id, fact.BoundaryCount)]);
+                }
+                if (!fact.InstantDefeat && fact.Rockfall == null && fact.Meteor == null) continue;
+                if (!impacts.Add((fact.Id, fact.BoundaryCount, fact.MeteorFootprint?.Ordinal ?? 0))) continue;
+                int loss = fact.InstantDefeat ? health - known : fact.Meteor != null
+                    ? MeteorGimmickRule.HealthDamage(actor.Health.MaxHealth, fact.Meteor)
+                    : RockfallGimmickRule.HealthLoss(actor.Health.MaxHealth, fact.Rockfall);
                 var endedSide = EndedSideAt(fact.BoundaryCount);
                 int duration = fact.Rockfall == null ? 0 : RockfallGimmickRule.BindEndCount(actor.Owner, endedSide, fact.Rockfall);
                 possible = (int)Math.Min(health, (long)possible + loss);
                 if (possible == health)
                     possibleDeathEnd = Math.Min(possibleDeathEnd, _groupEnds[(fact.Id, fact.BoundaryCount)]);
                 if (index > possibleCutoff) gaps |= CombatAssessmentGap.RandomOutcome;
-                if (uncertainPosition || index > possibleCutoff || fact.Cell == null ||
+                // 운석의 수치 피해 보호와 경고 뒤 지형 변화는 이 정적 판독에서 확정하지 않는다.
+                if (fact.Meteor != null || uncertainPosition || index > possibleCutoff || fact.Cell == null ||
                     (fact.Gaps & CombatAssessmentGap.RandomOutcome) != 0)
                 {
                     if (loss < health - known) possibleBind = Math.Max(possibleBind, duration);
@@ -270,6 +290,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             private readonly int _width;
             private readonly int _height;
             private readonly StageGimmickStateSet _gimmicks;
+            private readonly HashSet<CellCoord> _chainBlockers;
             private readonly bool _hasBattle;
             private readonly StageGimmickSpec[] _definitions;
             private readonly CellCoord[] _rails;
@@ -288,6 +309,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 _width = state.BoardWidth;
                 _height = state.BoardHeight;
                 _gimmicks = state.Gimmicks;
+                if (state.Gimmicks.Entries.Any(g => g is LavaChainGimmickState))
+                    _chainBlockers = LavaChainGimmickRule.HardBlockers(state, state.Environment, input.EnvironmentBindings, state.Structures);
                 _hasBattle = input.Battle != null;
                 _definitions = input.Battle?.GimmickDefinitions?.ToArray() ?? Array.Empty<StageGimmickSpec>();
                 _rails = input.Battle?.RailCells?.ToArray() ?? Array.Empty<CellCoord>();
@@ -312,6 +335,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (_phase != other._phase || _width != other._width || _height != other._height || !_turn.SameValues(other._turn) ||
                     !_objective.SameValues(other._objective)) return "state";
                 if (!_gimmicks.SameValues(other._gimmicks)) return "gimmicks";
+                if (_chainBlockers != null && (other._chainBlockers == null || !_chainBlockers.SetEquals(other._chainBlockers)))
+                    return "chainBlockers";
                 if (_hasBattle != other._hasBattle || _definitions.Length != other._definitions.Length || !_rails.SequenceEqual(other._rails))
                     return "battle";
                 for (int i = 0; i < _definitions.Length; i++)
@@ -390,7 +415,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         {
                             var fact = next.Value;
                             bool currentObservation = fact.BoundaryCount == current &&
-                                (fact.TornadoSourceId.HasValue || fact.HaboobRegion != null) && fact.Cell.HasValue;
+                                (fact.TornadoSourceId.HasValue || fact.HaboobRegion != null || fact.MeteorFlame != null) && fact.Cell.HasValue;
                             if ((!currentObservation && fact.BoundaryCount <= current) || fact.BoundaryCount > last ||
                                 fact.Cell.HasValue && !input.State.IsInside(fact.Cell.Value) ||
                                 !fact.Cell.HasValue && fact.Gaps == CombatAssessmentGap.None)
@@ -414,7 +439,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     int index = facts.Count;
                     facts.Add(fact);
                     var group = (fact.Id, fact.BoundaryCount);
-                    if (!groupEnds.ContainsKey(group) && (fact.InstantDefeat || fact.Rockfall != null) && fact.Cell.HasValue)
+                    if (fact.Cell.HasValue && (fact.Meteor != null && fact.Cell.Value == fact.MeteorFootprint.Cells[0] ||
+                        !groupEnds.ContainsKey(group) && (fact.InstantDefeat || fact.Rockfall != null || fact.Key == StageGimmickKey.LavaChain)))
                         damageGroups.Add(index);
                     groupEnds[group] = index;
                     if (fact.BoundaryCount == current)

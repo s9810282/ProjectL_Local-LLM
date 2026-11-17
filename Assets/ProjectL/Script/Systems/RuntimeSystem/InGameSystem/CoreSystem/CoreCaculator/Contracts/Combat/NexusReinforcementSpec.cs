@@ -28,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public const int DefaultFieldEnemyLimit = 5;
         public const int DefaultSpawnCountPerTurn = 2;
         public const int DefaultRangePadding = 2;
+        public const int DefaultSpawnIntervalTurns = 1;
 
         public IReadOnlyList<NexusReinforcementEntry> Pool { get; }
         public int SpawnCountPerTurn { get; }
@@ -35,10 +36,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int EnemyLevel { get; }
         /// <summary>적 턴 시작 때 필드의 살아 있는 적이 이 수 이상이면 증원하지 않는다. 초기 배치 수는 제한하지 않는다.</summary>
         public int FieldEnemyLimit { get; }
+        public int SpawnIntervalTurns { get; }
 
         public NexusReinforcementSpec(IReadOnlyList<NexusReinforcementEntry> pool, int enemyLevel,
             int spawnCountPerTurn = DefaultSpawnCountPerTurn, int rangePadding = DefaultRangePadding,
-            int fieldEnemyLimit = DefaultFieldEnemyLimit)
+            int fieldEnemyLimit = DefaultFieldEnemyLimit, int spawnIntervalTurns = DefaultSpawnIntervalTurns)
         {
             if (pool == null)
                 throw new ArgumentNullException(nameof(pool));
@@ -50,6 +52,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentOutOfRangeException(nameof(rangePadding));
             if (fieldEnemyLimit < 1)
                 throw new ArgumentOutOfRangeException(nameof(fieldEnemyLimit));
+            if (spawnIntervalTurns < 1)
+                throw new ArgumentOutOfRangeException(nameof(spawnIntervalTurns));
 
             var copy = new NexusReinforcementEntry[pool.Count];
             var keys = new HashSet<EntityKey>();
@@ -72,6 +76,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             RangePadding = rangePadding;
             EnemyLevel = enemyLevel;
             FieldEnemyLimit = fieldEnemyLimit;
+            SpawnIntervalTurns = spawnIntervalTurns;
         }
     }
 }

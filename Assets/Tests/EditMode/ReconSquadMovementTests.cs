@@ -50,9 +50,8 @@ namespace ProjectL.Tests.Core
         {
             var input = Route();
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == input.ActorId
-                ? c.WithHealth(new HealthStateSnapshot(3, 100)) : c).ToArray(), state: input.State.With(
-                thornFields: new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 3, 4) }));
-            var move = MovementUndoTestData.Run(input, new ThornMovementTileRule());
+                ? c.WithHealth(new HealthStateSnapshot(3, 100)) : c).ToArray(), state: EnvironmentDamageTests.WithDamageTiles(input.State, (new CellCoord(2, 1), 4)));
+            var move = MovementUndoTestData.Run(input, new EnvironmentDamageTests.DamageRule());
             Assert.That(move.Accepted, Is.True, move.Reason);
             Assert.That(move.PathMovement.DistanceSpent, Is.EqualTo(1));
             Assert.That(Grants(TraitCombatFixtures.Final(move, 2)).Count(), Is.EqualTo(1));

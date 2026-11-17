@@ -38,8 +38,9 @@ namespace ProjectL.Tests.CoreIntegration
         IUnitTableQuery, IPlayerLoadoutTableQuery, ITargetingMethodTableQuery,
         IStageTableQuery, IStageMapTableQuery, IFieldTableQuery, IUnitRosterTableQuery,
         IStructureTableQuery, IStageEconomyTableQuery, ICategoryConfigTableQuery, IArtifactDefinitionTableQuery,
-        IHasEnhancementTable, IEnhancementTableQuery, IHasTraitGrowthTables
+        IHasEnhancementTable, IEnhancementTableQuery, IHasTraitGrowthTables, IHasPlayerActiveSkillTable
     {
+        public IPlayerActiveSkillTableQuery PlayerActiveSkills { get; internal set; }
         public ICategoryTraitProgressionTableQuery CategoryTraitProgressions
         {
             get; internal set;

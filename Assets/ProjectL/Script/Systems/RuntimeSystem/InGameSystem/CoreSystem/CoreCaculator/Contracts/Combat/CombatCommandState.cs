@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
@@ -21,8 +22,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public uint ItemRandomState { get; }
         public CombatRewardFacts Rewards { get; }
         public IReadOnlyList<StructureCombatFacts> Structures { get; }
-        public IReadOnlyList<ThornFieldCellSnapshot> ThornFields { get; }
+        public ThornBombStateSet ThornBombs { get; }
         public CombatTurnFacts Turn { get; }
+        public long LastPlatformBoundaryCount { get; }
         public TraitTurnFacts TraitTurn { get; }
         public MovementEnvironmentFacts Environment { get; }
         public EnvironmentProgressFacts EnvironmentProgress { get; }
@@ -32,15 +34,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         /// <summary>새 개체 ID와 소환 난수 진행값이다. 원본은 여기 한 곳이며 Buffer가 연속성을 검사한다.</summary>
         public CombatAllocationFacts Allocation { get; }
         public NexusReinforcementState Reinforcements { get; }
+        public PlayerSkillBattleState PlayerSkill { get; }
 
         /// <param name="objective">생략하면 본부 목표다. 운영 생성 지점은 원본 목표를 그대로 넘긴다.</param>
         /// <param name="allocation">생략하면 할당 불가 상태다. 운영 생성 지점은 원본 진행값을 그대로 넘긴다.</param>
-        public CombatCommandState(int boardWidth,int boardHeight,CombatFlowPhase phase,IReadOnlyList<StructureCombatFacts> structures,            IReadOnlyList<ThornFieldCellSnapshot> thornFields,            CombatTurnFacts turn = null,MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            WallBlockingSpec wallBlocking = null,BattleObjective objective = null,CombatAllocationFacts allocation = null,uint itemRandomState = 0,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
-            NexusReinforcementState reinforcements = null)
+        public CombatCommandState(int boardWidth, int boardHeight, CombatFlowPhase phase, IReadOnlyList<StructureCombatFacts> structures,
+            CombatTurnFacts turn = null, MovementEnvironmentFacts environment = null, EnvironmentProgressFacts environmentProgress = null,
+            WallBlockingSpec wallBlocking = null, BattleObjective objective = null, CombatAllocationFacts allocation = null,
+            uint itemRandomState = 0, CombatRewardFacts rewards = null, TraitTurnFacts traitTurn = null,
+            MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
+            NexusReinforcementState reinforcements = null, PlayerSkillBattleState playerSkill = null, long lastPlatformBoundaryCount = 0,
+            ThornBombStateSet thornBombs = null)
         {
             Objective = objective ?? BattleObjective.EnemyHeadquarters;
             Allocation = allocation ?? CombatAllocationFacts.Unavailable;
             Reinforcements = reinforcements ?? NexusReinforcementState.Disabled;
+            PlayerSkill = playerSkill;
             if (boardWidth < 1 || boardHeight < 1) throw new ArgumentOutOfRangeException(nameof(boardWidth));
             if (!Enum.IsDefined(typeof(CombatFlowPhase), phase)) throw new ArgumentOutOfRangeException(nameof(phase));
             BoardWidth = boardWidth;
@@ -49,7 +58,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ItemRandomState = itemRandomState;
             Rewards = rewards ?? CombatRewardFacts.Empty;
             Structures = Array.AsReadOnly((structures ?? throw new ArgumentNullException(nameof(structures))).ToArray());
-            ThornFields = Array.AsReadOnly((thornFields ?? throw new ArgumentNullException(nameof(thornFields))).ToArray());
             Environment = environment ?? MovementEnvironmentFacts.Empty;
             WallBlocking = wallBlocking ?? WallBlockingSpec.Default;
             EnvironmentProgress = environmentProgress ?? EnvironmentProgressFacts.Initial(Environment);
@@ -58,9 +66,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (Environment.Tiles.OfType<ObjectSourceFact>().Any(o => o.EntryOrdinal >= EnvironmentProgress.NextObjectEntryOrdinal))
                 throw new ArgumentException("다음 Object 순서는 비활성 원본을 포함한 기존 순서보다 커야 합니다.", nameof(environmentProgress));
             Turn = turn ?? new CombatTurnFacts(StagePhase.Deployment);
+            if (lastPlatformBoundaryCount < 0 || lastPlatformBoundaryCount > Turn.CompletedControllerTurnCount)
+                throw new ArgumentOutOfRangeException(nameof(lastPlatformBoundaryCount));
+            LastPlatformBoundaryCount = lastPlatformBoundaryCount;
             TraitTurn = traitTurn ?? TraitTurnFacts.Empty;
             MovementUndo = movementUndo ?? MovementUndoState.Empty;
             Gimmicks = gimmicks ?? StageGimmickStateSet.Empty;
+            ThornBombs = thornBombs ?? ThornBombStateSet.Empty;
             var expectedPhase = Turn.StagePhase == StagePhase.Deployment || Turn.ControllerPhase == CombatControllerPhase.Player
                 ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic;
             if (phase != CombatFlowPhase.Finished && phase != CombatFlowPhase.None && phase != expectedPhase)
@@ -69,10 +81,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         /// <summary>지정한 사실만 바꾸고 나머지 불변 문맥은 보존한다.</summary>
-        public CombatCommandState With(CombatFlowPhase? phase = null,IReadOnlyList<StructureCombatFacts> structures = null,            IReadOnlyList<ThornFieldCellSnapshot> thornFields = null,CombatTurnFacts turn = null,            MovementEnvironmentFacts environment = null,EnvironmentProgressFacts environmentProgress = null,            CombatAllocationFacts allocation = null,uint? itemRandomState = null,CombatRewardFacts rewards = null,TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
-            NexusReinforcementState reinforcements = null) =>
-            new CombatCommandState(BoardWidth,BoardHeight,phase ?? Phase,structures ?? Structures,thornFields ?? ThornFields,turn ?? Turn,                environment ?? Environment,environmentProgress ?? EnvironmentProgress,WallBlocking,Objective,                allocation ?? Allocation,itemRandomState ?? ItemRandomState,rewards ?? Rewards,traitTurn ?? TraitTurn,movementUndo ?? MovementUndo,gimmicks ?? Gimmicks,
-                reinforcements ?? Reinforcements);
+        public CombatCommandState With(CombatFlowPhase? phase = null, IReadOnlyList<StructureCombatFacts> structures = null,
+            CombatTurnFacts turn = null, MovementEnvironmentFacts environment = null, EnvironmentProgressFacts environmentProgress = null,
+            CombatAllocationFacts allocation = null, uint? itemRandomState = null, CombatRewardFacts rewards = null,
+            TraitTurnFacts traitTurn = null, MovementUndoState movementUndo = null, StageGimmickStateSet gimmicks = null,
+            NexusReinforcementState reinforcements = null, PlayerSkillBattleState playerSkill = null, long? lastPlatformBoundaryCount = null,
+            ThornBombStateSet thornBombs = null) =>
+            new CombatCommandState(BoardWidth, BoardHeight, phase ?? Phase, structures ?? Structures, turn ?? Turn,
+                environment ?? Environment, environmentProgress ?? EnvironmentProgress, WallBlocking, Objective,
+                allocation ?? Allocation, itemRandomState ?? ItemRandomState, rewards ?? Rewards, traitTurn ?? TraitTurn,
+                movementUndo ?? MovementUndo, gimmicks ?? Gimmicks,
+                reinforcements ?? Reinforcements, playerSkill ?? PlayerSkill, lastPlatformBoundaryCount ?? LastPlatformBoundaryCount,
+                thornBombs ?? ThornBombs);
 
         public bool IsInside(CellCoord cell) => cell.X >= 0 && cell.Y >= 0 && cell.X < BoardWidth && cell.Y < BoardHeight;
 
@@ -82,19 +102,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         {
             if (other == null || BoardWidth != other.BoardWidth || BoardHeight != other.BoardHeight ||
                 Phase != other.Phase ||
-                ItemRandomState != other.ItemRandomState ||
-                Structures.Count != other.Structures.Count || !ThornFields.SequenceEqual(other.ThornFields) ||
-                !Turn.SameValues(other.Turn) || !TraitTurn.SameValues(other.TraitTurn) ||
+                ItemRandomState != other.ItemRandomState || LastPlatformBoundaryCount != other.LastPlatformBoundaryCount ||
+                Structures.Count != other.Structures.Count ||
+                !ThornBombs.SameValues(other.ThornBombs) || !Turn.SameValues(other.Turn) || !TraitTurn.SameValues(other.TraitTurn) ||
                 !Environment.SameValues(other.Environment) || !EnvironmentProgress.SameValues(other.EnvironmentProgress) ||
                 WallBlocking.CornerCutTicks != other.WallBlocking.CornerCutTicks || !Objective.SameValues(other.Objective) ||
                 !Gimmicks.SameValues(other.Gimmicks) || !Allocation.SameValues(other.Allocation) ||
-                !Reinforcements.SameValues(other.Reinforcements) || !Rewards.SameValues(other.Rewards)) return false;
+                !Reinforcements.SameValues(other.Reinforcements) || !Rewards.SameValues(other.Rewards) ||
+                !(PlayerSkill?.SameValues(other.PlayerSkill) ?? other.PlayerSkill == null)) return false;
             for (int i = 0; i < Structures.Count; i++)
             {
-                var a = Structures[i]; var b = other.Structures[i];
-                if (a.EntityId != b.EntityId || a.Definition != b.Definition || a.Owner != b.Owner ||
-                    !a.Health.Equals(b.Health) || a.Anchor != b.Anchor || a.Rotation != b.Rotation ||
-                    !a.OccupiedCells.SequenceEqual(b.OccupiedCells)) return false;
+                if (!Structures[i].SameValues(other.Structures[i])) return false;
             }
             return true;
         }

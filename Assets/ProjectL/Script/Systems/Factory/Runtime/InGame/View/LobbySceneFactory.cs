@@ -19,27 +19,30 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
         {
         }
 
-        public LobbyViewPopups FindPopups(LobbySceneRoot root, LobbyViewServices services, RuntimeFaultBoundary faults)
+        public LobbyViewPopups FindPopups(LobbySceneRoot root, LobbyViewServices services, LobbyMainSelection selection,
+            RuntimeFaultBoundary faults)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             if (services == null) throw new ArgumentNullException(nameof(services));
+            if (selection == null) throw new ArgumentNullException(nameof(selection));
             if (faults == null) throw new ArgumentNullException(nameof(faults));
             // 팝업 순서가 시작(앞에서부터)·Tick과 정리(뒤에서부터)의 순서입니다.
             return new LobbyViewPopups(new ILobbyPopupFactory[]
             {
-                new LobbyDeckPopupFactory(services.UI, root.UI.DeckScreen, faults),
+                new LobbyDeckPopupFactory(services.Deck, root.UI.DeckScreen, selection, faults),
                 new LobbyArtifactPopupFactory(new ArtifactPopupViewFactory(faults, services.Artifact), services.Audio)
             });
         }
 
         public LobbyViewScope Create(LobbySceneRoot root, Camera output, LobbyViewServices services, LobbyViewPopups popups,
-            RuntimeFaultBoundary faults)
+            LobbyMainSelection selection, RuntimeFaultBoundary faults)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (popups == null) throw new ArgumentNullException(nameof(popups));
+            if (selection == null) throw new ArgumentNullException(nameof(selection));
             if (faults == null) throw new ArgumentNullException(nameof(faults));
-            return new LobbyViewScope(root, output, services, popups, faults);
+            return new LobbyViewScope(root, output, services, popups, selection, faults);
         }
     }
 }

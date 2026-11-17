@@ -10,7 +10,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     public sealed class DistanceDamageScaleTraitSpec : TraitSpec
     {
         /// <summary>
-        /// 거리별 피해 백분율입니다. 0번이 거리 1이며, 공격이 닿는 모든 거리를 덮어야 합니다(목록 밖 거리는 계산 때 예외).
+        /// 거리별 피해 백분율입니다. 0번이 거리 1입니다. 원래 공격이 닿는 거리는 모두 설정해야 합니다.
+        /// 죽음의 손으로 목록 밖에 도달한 대상에는 마지막 백분율을 적용합니다.
         /// </summary>
         public IReadOnlyList<int> PercentByDistance { get; }
 

@@ -25,4 +25,6 @@ MonoBehaviour:
     attackPresentation: {fileID: 0}
     reactionPresentation: {fileID: 0}
     unitSoundPreset: -1
-    attackSoundSlotIndex: -1
+    attackSounds: []
+    hitSounds: []
+    deathSounds: []

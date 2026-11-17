@@ -13,6 +13,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Entities;
@@ -42,7 +43,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 // 미래 성장 경로의 전수 검사는 진입 때 한 번 수행하고, 매 명령 조립에서는 현재 이력만 합성한다.
                 foreach (var record in owned.Where(o => o.SpecializationCategory.HasValue))
                     TraitGrowthCatalogValidator.ValidateSpecialization(initialization.TraitGrowth,
-                        initialization.AttackProfiles.Single(p => p.Definition.Key == record.CharacterKey), record.SpecializationCategory.Value);
+                        initialization.AttackProfiles.Single(p => p.Definition.Key == record.CharacterKey), record.SpecializationCategory.Value,
+                        record.Role == CharacterOwnershipRole.Main ? initialization.PlayerSkill : null);
             }
             var items = new Dictionary<int, ItemDefinition>();
             var itemRules = ItemRuleRegistry.CreateDefault();
@@ -112,6 +114,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             if (mainRecord == null || draw.Order.Count != subCount)
                 throw new InvalidOperationException("메인과 전체 서브 드로우 목록이 필요합니다.");
+            var skillDefinition = initialization.PlayerSkill;
+            if (skillDefinition != null)
+            {
+                if (skillDefinition.MainCharacterKey != mainRecord.CharacterKey)
+                    throw new InvalidOperationException($"스킬 {skillDefinition.Key}의 메인 {skillDefinition.MainCharacterKey}과 로스터 메인 {mainRecord.CharacterKey}이 다릅니다.");
+                // 기본·획득·전직 특성을 모두 합성한 정의를 캐릭터 생성 전에 검사한다.
+                skillDefinition.ValidateTraits(ownedDefinitions[mainRecord.Id].TraitDefinitions.ToArray().Select(t => t.TraitKey));
+            }
             foreach (CharacterInstanceId id in draw.Order)
                 if (roster.TryGetValue(id, out var record) == false || record.Role != CharacterOwnershipRole.Sub)
                     throw new InvalidOperationException("드로우 대상은 보유 서브여야 합니다.");
@@ -121,8 +131,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var structures = new List<StructureCombatFacts>();
             int nextId = 1;
             UnitDefinition mainDefinition = ownedDefinitions[mainRecord.Id];
+            var mainActorId = new EntityId(nextId++);
             // 메인은 셔플과 별개로 첫 손패 0번 슬롯에 지급하고, 실제 위치는 최초 배치 명령이 정한다.
-            characters.Add(BattleCharacterCalculator.CreateOwned(new EntityId(nextId++), mainDefinition,
+            characters.Add(BattleCharacterCalculator.CreateOwned(mainActorId, mainDefinition,
                 mainRecord, main, souls[mainRecord.Id], 0,
                 null, null, Array.Empty<CellCoord>(), traits));
 
@@ -171,10 +182,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     definition.FootprintLocalCells.ToArray());
                 var cells = Place(footprint, placement.Anchor, placement.Rotation, Owner.Neutral, stage, occupied, false);
                 var id = new EntityId(nextId++);
-                structures.Add(new StructureCombatFacts(id, definition, new HealthStateSnapshot(definition.MaxHealth, definition.MaxHealth),
+                structures.Add(new StructureCombatFacts(id, definition,
+                    new ObstacleDurabilitySnapshot(placement.RequiredHits, placement.RequiredHits),
                     placement.Anchor, placement.Rotation, cells, Owner.Neutral));
                 obstacleContents.Add(new ObstacleContentProfile(id, placement.Kind, placement.ExplosionDamage,
-                    placement.HitAttackBonus, placement.DestructionAttackBonus));
+                    placement.HitAttackBonus, placement.DestructionAttackBonus, placement.FallLength));
             }
             var bindings = obstacleContents.Count == 0 ? initialization.EnvironmentBindings : new EnvironmentSemanticBindings(initialization.EnvironmentBindings.TerrainSourceIds,
                 initialization.EnvironmentBindings.ObjectSourceIds,
@@ -193,18 +205,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     souls[record.Id], slot + 1, null, null, Array.Empty<CellCoord>(), traits));
             }
 
-            var preparedCharacters = BattleEnvironmentPreparation.Prepare(initialization, characters, structures, main, bindings, obstacleContents,
-                environment);
-            var preparation = new BattlePreparation(preparedCharacters, new CombatPreparation(stage.MapWidth,
+            var playerSkill = skillDefinition == null ? null : new PlayerSkillBattleState(mainRecord.Id, mainActorId,
+                skillDefinition, mainRecord.PlayerSkillUpgrade);
+            var preparation = new BattlePreparation(characters, new CombatPreparation(stage.MapWidth,
                 stage.MapHeight, stage.ReserveCapacity, stage.TimelineSeed,
                 CombatFlowPhase.PlayerInput, draw.Order, draw.InitialCount, stage.PlayerZone,
                 OwnedUnitSpecResolver.BuildTraitSettings(initialization.Units, owned, initialization.TraitGrowth),
                 stage.RailCells.ToArray(), placed.Definitions.ToArray(),
                 environment, bindings, obstacleContents, wallBlocking: initialization.WallBlocking,
                 nexusReinforcements: initialization.NexusReinforcements), structures, nextId,
-                objective: objective, membership: membership, rosterRevision: rosterRevision, environmentProgress: placed.Progress);
+                objective: objective, membership: membership, rosterRevision: rosterRevision, environmentProgress: placed.Progress,
+                playerSkill: playerSkill);
             var state = StageGimmickComposition.Initialize(preparation.CommandState, preparation.Combat.StageGimmicks);
-            return ReferenceEquals(state, preparation.CommandState) ? preparation : new BattlePreparation(preparedCharacters,
+            var preparedCharacters = BattleEnvironmentPreparation.Prepare(initialization, characters, structures, main, bindings, obstacleContents,
+                environment, state.Gimmicks);
+            return new BattlePreparation(preparedCharacters,
                 preparation.Combat, structures, nextId, commandState: state, objective: objective,
                 membership: membership, rosterRevision: rosterRevision);
         }

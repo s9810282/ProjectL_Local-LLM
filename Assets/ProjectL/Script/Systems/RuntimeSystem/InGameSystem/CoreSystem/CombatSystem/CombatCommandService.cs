@@ -66,7 +66,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 path: command.Data.Path, movementContext: command.Data.MovementContext, itemKey: command.Data.ItemKey,
                 expectedBattleInstanceId: command.Data.ExpectedBattleInstanceId,
                 expectedControllerTurnSequence: command.Data.ExpectedControllerTurnSequence,
-                expectedMoveCommandNumber: command.Data.ExpectedMoveCommandNumber));
+                expectedMoveCommandNumber: command.Data.ExpectedMoveCommandNumber, sweepSide: command.Data.SweepSide,
+                playerSkill: command.Data.PlayerSkill));
             if (RunEnded) return false;
             CombatCommandTransition transition;
             using (CoreProfilerMarkers.Calculate.Auto())
@@ -89,6 +90,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             CombatViewCommandKind.Move => CombatCommandKind.Move,
             CombatViewCommandKind.UndoMove => CombatCommandKind.UndoMove,
             CombatViewCommandKind.Attack => CombatCommandKind.Attack,
+            CombatViewCommandKind.UsePlayerSkill => CombatCommandKind.UsePlayerSkill,
             CombatViewCommandKind.EndPlayerTurn => CombatCommandKind.EndPlayerTurn,
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };

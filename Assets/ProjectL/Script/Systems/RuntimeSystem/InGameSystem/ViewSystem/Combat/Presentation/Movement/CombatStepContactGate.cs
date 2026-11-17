@@ -133,6 +133,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_moved == null) return true;
             if (CombatEventTypeTable.IsActionStart(item) || IsMoverOwn(item) || (_voluntary && CombatEventTypeTable.IsMovement(item)))
                 return false;
+            // 같은 칸의 오브젝트에 먼저 닿아 걸음 사건이 풀려도, 지반은 이동자가 칸에 도착한 뒤 흔들립니다.
+            if (!_interpolated && item is CombatMovementSourceEvent change && CombatTerrainChanges.TryGetWeakGroundDescent(change, out _, out _) &&
+                _contacts.TryGetSegment(item, out CombatStepContacts.Step step) && ReferenceEquals(step, _step))
+                return false;
             if (_step != null && _contacts.TryGetGroup(item, out CombatStepContacts.Group group) && ReferenceEquals(group.Step, _step))
                 return group.Index < _released;
             return true;

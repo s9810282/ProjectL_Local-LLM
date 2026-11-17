@@ -37,7 +37,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     ShieldStatus value => $"잔여 예산 {value.RemainingBudget} / {(value.Eligible ? "적용 가능" : "현재 비활성")} / 마지막 초기화 {value.LastResetControllerTurnCount}",
                     WeaknessExposureStatus value => $"받는 피해 {value.IncreasePercent}% 증가" +
                         (value.Movement.HasValue ? $" / 이동 기록 #{value.Movement.Value.MoveCommandNumber}" : string.Empty),
-                    ActionRestrictionStatus value => value.Key == StatusEffectKey.Bind ? "이동 제한" : "행동 제한",
+                    ActionRestrictionStatus value => value.Key == StatusEffectKey.Bind ? "이동 제한"
+                        : value.Key == StatusEffectKey.Stun ? "기절" : "행동 제한",
                     TauntedStatus => "도발",
                     // 2026-11-07 폭주·용암포·출혈, 2026-11-10 재구성으로 생긴 상태입니다(값은 Core 상태가 그대로 줌).
                     FireStatus value => $"턴 시작마다 피해 {value.Damage}",
@@ -86,6 +87,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     EffectOwnerKind.Category => $"병과 {value.DefinitionKey}",
                     EffectOwnerKind.Artifact => $"유물 {value.DefinitionKey}",
                     EffectOwnerKind.Item => $"아이템 {value.DefinitionKey}",
+                    // 기절(스킬 단죄)이 거는 상태의 출처입니다(관통·죽음의 손 View 설계 §3.10, PD-b~d 검토 H1). 스킬 이름 외형은 스킬 View 작업에서 정합니다.
+                    EffectOwnerKind.PlayerSkill => $"스킬 {value.DefinitionKey}",
                     EffectOwnerKind.StageGimmick when value.DefinitionKey == (int)StageGimmickKey.Rockfall => _rockfall.DisplayName,
                     EffectOwnerKind.StageGimmick => $"기믹 {value.DefinitionKey}",
                     _ => throw new InvalidOperationException($"표시할 수 없는 출처 종류: {value.Kind}")

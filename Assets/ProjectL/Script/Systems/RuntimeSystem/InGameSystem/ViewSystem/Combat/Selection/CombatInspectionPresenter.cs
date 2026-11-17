@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Hud;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selection
@@ -17,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
         private Action _selectionChanged;
         internal void BindSelectionChanged(Action changed) => _selectionChanged = changed;
         private IReadOnlyList<OwnedCharacterRecord> _owned = Array.Empty<OwnedCharacterRecord>();
+        private IReadOnlyList<OwnedCharacterStatsSnapshot> _ownedStats = Array.Empty<OwnedCharacterStatsSnapshot>();
         // 같은 표시에서 받은 전투 중 불변 설정을 보관하고, 연출 중에는 최신 Buffer를 다시 읽지 않습니다.
         private BattleTraitSettings _traitSettings;
         private int _generation;
@@ -31,11 +34,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
             _selectionChanged = selectionChanged;
             _panel.BindInspection(ReadSelection);
         }
-        internal void Synchronize(StagePhase stage, IReadOnlyList<OwnedCharacterRecord> owned, BattleTraitSettings traitSettings)
+        internal void Synchronize(StagePhase stage, IReadOnlyList<OwnedCharacterRecord> owned, BattleTraitSettings traitSettings,
+            IReadOnlyList<OwnedCharacterStatsSnapshot> ownedStats)
         {
             if (_released) return;
             _traitSettings = traitSettings ?? throw new ArgumentNullException(nameof(traitSettings));
             _owned = owned ?? Array.Empty<OwnedCharacterRecord>();
+            _ownedStats = ownedStats ?? Array.Empty<OwnedCharacterStatsSnapshot>();
             _selection.Synchronize(stage);
         }
         internal void SelectCell(CellCoord? cell)
@@ -44,12 +49,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
             _selection.SelectCell(cell);
             Refresh();
         }
+        internal void SelectPicked(EntityId entity)
+        {
+            if (_released) return;
+            _selection.SelectPicked(entity);
+            Refresh();
+        }
+
+        internal bool TrySelectActor(EntityId actor)
+        {
+            if (_released || !_selection.TrySelectActor(actor)) return false;
+            Refresh();
+            return true;
+        }
         internal CombatInspectionInfo ReadSelection()
         {
             if (_released || !_facts.TryGet(_selection.SelectedEntityId, out var facts)) return null;
             if (_traitSettings == null)
                 throw new InvalidOperationException("[CombatInspectionPresenter] 선택 정보를 표시하기 전에 전투 특성 설정을 연결해야 합니다.");
-            return _mapper.Map(facts, _owned, facts.Character != null ? _traitSettings.For(facts.Character) : null);
+            return _mapper.Map(facts, _owned, facts.Character != null ? _traitSettings.For(facts.Character) : null, _ownedStats);
         }
         internal void Refresh()
         {
@@ -66,6 +84,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
             _generation++;
             _selection.Clear();
             _owned = Array.Empty<OwnedCharacterRecord>();
+            _ownedStats = Array.Empty<OwnedCharacterStatsSnapshot>();
             _traitSettings = null;
         }
         internal void Release()

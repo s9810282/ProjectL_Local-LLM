@@ -25,7 +25,8 @@ namespace ProjectL.Tests.Core
         private static readonly int[] Partitions = { 1, 2, 31 };
 
         /// <summary>
-        /// 모든 기준 fixture × 시드의 적 진영 전체를 캐시 없이·있게 두 번 돌려, 분할 1/2/31마다 같은 흔적인지 본다.
+        /// 대표 fixture와 시드의 적 진영을 캐시 없이·있게 돌려 분할 1/2/31마다 같은 흔적인지 본다.
+        /// 전체 회귀에서는 기준 fixture와 시드의 모든 조합을 검사한다.
         /// 흔적: 게시한 행동(종류·행위자·조준·경로·도발 근원), 대기·진영 종료, 결과 사건·상태, 진단 기록의 점수 항목과 대기 이유.
         /// 작업·확장·미리보기 횟수·캐시 적중·시간은 비교하지 않는다(계획 R-5 비교 범위).
         /// </summary>
@@ -34,9 +35,11 @@ namespace ProjectL.Tests.Core
         {
             int forecastHits = 0, threatHits = 0, decisions = 0;
             var reasons = new SortedDictionary<string, int>();
+            bool fullRegression = EnemyAiBenchmarkFixtures.FullRegressionEnabled;
             foreach (string fixture in EnemyAiBenchmarkFixtures.Ids)
             foreach (int seed in EnemyAiBenchmarkFixtures.Seeds)
             {
+                if (!fullRegression && !EnemyAiBenchmarkFixtures.IsRepresentative(fixture, seed)) continue;
                 var input = EnemyAiBenchmarkFixtures.Build(fixture, seed);
                 foreach (int partition in Partitions)
                 {

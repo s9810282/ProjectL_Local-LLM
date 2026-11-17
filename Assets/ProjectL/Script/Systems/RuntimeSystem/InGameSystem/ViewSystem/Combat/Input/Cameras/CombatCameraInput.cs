@@ -5,8 +5,8 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Cameras
 {
     /// <summary>
-    /// 전투 카메라 조작 입력입니다(카메라 조작 설계 CC1·CC2). 키 방향·휠 칸·마지막 포인터 위치를 받아 두고,
-    /// 조정자 Tick마다 한 번 이번 프레임의 이동 방향·줌 칸 수를 만들어 시점(<see cref="ICombatCameraControl"/>)에 넘깁니다.
+    /// 전투 카메라 조작 입력입니다(카메라 조작 설계 CC1·CC2, 카메라 회전 설계 CR5·CR8). 키 방향·휠 칸·회전 키 값·가운데 버튼 끌기 양·마지막 포인터 위치를 받아 두고,
+    /// 조정자 Tick마다 한 번 이번 프레임의 이동 방향·줌 칸 수·회전 방향·끌기 회전 양을 만들어 시점(<see cref="ICombatCameraControl"/>)에 넘깁니다.
     /// 카메라 위치·렌즈·속도·제한은 모릅니다.
     /// </summary>
     /// <remarks>
@@ -17,6 +17,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
     /// <para>
     /// 화면 가장자리 이동(결정 Q-CC5 A)은 포인터가 창 안이고, 가장자리 띠 안이며, UI 위가 아닐 때만 합니다. 창 포커스를 잃으면(<see cref="Clear"/>)
     /// 마지막 포인터를 잊어 포인터가 다시 움직일 때까지 가장자리 이동이 없습니다.
+    /// </para>
+    /// <para>
+    /// 가운데 버튼 끌기 회전(카메라 회전 설계 CR8)은 누르는 동안 포인터 가로 이동(픽셀)을 쌓아 Tick이 화면 너비 비율로 넘깁니다. 끄는 동안은 가장자리 이동·커서 스냅을 하지 않고,
+    /// 막힌 동안 쌓인 양과 기준점은 버립니다(풀린 뒤 한꺼번에 돌지 않게).
     /// </para>
     /// <para>
     /// 시점이 바뀐 프레임에는 <see cref="Tick"/>이 참을 돌려주고, 묶음이 마지막 포인터(<see cref="TryGetPointer"/>)로 포인터 이동을 다시 보냅니다
@@ -38,6 +42,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         // 이 기능의 계측 정의입니다. 일반 배포 빌드에서는 선언과 호출을 함께 제외합니다.
         private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraPan = new("Combat.Action.Interaction.Camera.Pan");
         private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraZoom = new("Combat.Action.Interaction.Camera.Zoom");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraRotate = new("Combat.Action.Interaction.Camera.Rotate");
+        private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraRotateDrag = new("Combat.Action.Interaction.Camera.RotateDrag");
         private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraPoll = new("Combat.Action.Interaction.Camera.Poll");
         private static readonly Unity.Profiling.ProfilerMarker _profileInteractionCameraClear = new("Combat.Action.Interaction.Camera.Clear");
 #endif
@@ -47,6 +53,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         private readonly Func<Vector2> _screenSize;
         private Vector2 _keyDirection;
         private int _zoomSteps;
+        // 회전 키 값입니다(−1 = Z, +1 = C, 0 = 안 누름). 누르는 동안 반복해서 오지 않으므로 마지막 값을 기억합니다.
+        private int _rotateDirection;
+        private int _rotateSteps;
+        // 가운데 버튼을 누르고 있는지입니다(카메라 회전 설계 CR8).
+        private bool _dragging;
+        // 끈 양을 셀 기준 위치가 있는지입니다. 누른 직후와 막힌 동안에는 없고, 다음 포인터 이동이 기준만 잡습니다.
+        private bool _dragAnchored;
+        private float _dragLastX;
+        // 이번 Tick까지 쌓인 가로 끌기 양(픽셀, 오른쪽 = 양수)입니다. Tick이 늘 비웁니다.
+        private float _dragPixels;
         private bool _hasPointer;
         private Vector2 _pointer;
         // 줌 렌즈가 새 크기로 옮겨 가는 남은 시간(초)입니다. 그동안 화면 아래 칸이 계속 바뀝니다.
@@ -73,6 +89,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
             _keyDirection = new Vector2(x, y);
         }
 
+        /// <summary>회전 키 값이 바뀌었습니다(−1 = Z, +1 = C). 떼거나 둘 다 누르면 0입니다. −1~1로 자릅니다(카메라 회전 설계 CR5).</summary>
+        internal void RotateChanged(float value)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraRotateSample = _profileInteractionCameraRotate.Auto();
+#endif
+            int direction = Math.Sign(value);
+            if (direction != _rotateDirection)
+                _rotateSteps += direction;
+            _rotateDirection = direction;
+        }
+
+        /// <summary>
+        /// 가운데 버튼을 눌렀거나 뗐습니다(카메라 회전 설계 CR8). 누르는 동안 포인터 가로 이동을 쌓고 <see cref="Tick"/>이 회전으로 넘깁니다.
+        /// 누른 뒤 첫 포인터 이동은 늘 기준만 잡습니다. 마지막 포인터 위치는 낡았을 수 있기 때문입니다(확인창 동안은 포인터 이동이 오지 않아,
+        /// 닫힌 뒤 마우스를 움직이지 않고 누르면 창 열기 전 위치가 남음 — 검토 M1). 뗄 때 이미 쌓인 양은 다음 Tick이 씁니다.
+        /// </summary>
+        internal void RotateDragChanged(bool held)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            using var profileInteractionCameraRotateDragSample = _profileInteractionCameraRotateDrag.Auto();
+#endif
+            if (held == _dragging)
+                return;
+            _dragging = held;
+            _dragAnchored = false;
+        }
+
         /// <summary>휠을 굴렸습니다. 값의 크기는 보지 않고 한 번 = 한 칸, 위 = 줌인으로 셉니다(계획 P1).</summary>
         internal void Scrolled(float delta)
         {
@@ -95,7 +139,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
 
             _pointer = new Vector2(screenX, screenY);
             _hasPointer = true;
+            if (_dragging)
+            {
+                if (_dragAnchored)
+                    _dragPixels += screenX - _dragLastX;
+                _dragLastX = screenX;
+                _dragAnchored = true;
+            }
         }
+
+        /// <summary>
+        /// 가운데 버튼 끌기 회전 중인지입니다(카메라 회전 설계 CR8). 끄는 동안 연결 입력 묶음이 커서 스냅을 쉬게 합니다(검토 M2).
+        /// 설정이 0(끌기 회전 끔)이어도 누르고 있으면 참입니다(검토 L3, 사용자 결정 = 그대로·툴팁에 적음).
+        /// </summary>
+        internal bool IsRotateDragging => _dragging;
 
         /// <summary>마지막 포인터 위치입니다. 받은 적이 없거나 비운 뒤면 false입니다.</summary>
         internal bool TryGetPointer(out float screenX, out float screenY)
@@ -105,7 +162,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
             return _hasPointer;
         }
 
-        /// <summary>창 포커스를 잃었거나 입력을 정지합니다. 누른 키·쌓인 휠·마지막 포인터를 모두 잊고, 포인터 다시 집기도 멈춥니다.</summary>
+        /// <summary>창 포커스를 잃었거나 입력을 정지합니다. 누른 키(이동·회전)·가운데 버튼 끌기·쌓인 휠·마지막 포인터를 모두 잊고, 포인터 다시 집기도 멈춥니다.</summary>
         internal void Clear()
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -113,6 +170,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
 #endif
 
             _keyDirection = Vector2.zero;
+            _rotateDirection = 0;
+            _rotateSteps = 0;
+            _dragging = false;
+            _dragAnchored = false;
+            _dragPixels = 0f;
             _zoomSteps = 0;
             _hasPointer = false;
             _zoomSettleSeconds = 0f;
@@ -120,8 +182,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
         }
 
         /// <summary>
-        /// 이번 프레임을 한 번 진행합니다. 쌓인 휠 칸은 늘 비웁니다(막힌 동안의 휠을 나중에 쓰지 않음).
-        /// <paramref name="canMove"/>가 참일 때만 줌 → 이동 순서로 시점에 넘깁니다.
+        /// 이번 프레임을 한 번 진행합니다. 쌓인 휠 칸·끌기 양은 늘 비웁니다(막힌 동안의 휠·끌기를 나중에 쓰지 않음).
+        /// <paramref name="canMove"/>가 참일 때만 줌 → 이동 → 회전(Z·C → 가운데 버튼 끌기) 순서로 시점에 넘깁니다.
         /// </summary>
         /// <param name="canMove">지금 카메라를 움직여도 되는지입니다(<c>CombatInputPolicy.CanMoveCamera</c>).</param>
         /// <returns>
@@ -134,8 +196,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
             using var profileInteractionCameraPollSample = _profileInteractionCameraPoll.Auto();
 #endif
 
+            int rotateSteps = _rotateSteps;
+            _rotateSteps = 0;
             int steps = _zoomSteps;
             _zoomSteps = 0;
+            float dragPixels = _dragPixels;
+            _dragPixels = 0f;
             bool changed = false;
             // 이미 옮겨 가는 줌의 남은 시간을 먼저 줄인다. 이번 Tick에 보낸 줌은 다음 프레임부터 보간되므로 여기서 줄이지 않는다.
             if (_zoomSettleSeconds > 0f)
@@ -153,7 +219,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
                     _zoomSettleSeconds = Mathf.Max(_zoomSettleSeconds, _camera.ZoomSeconds);
                     changed = true;
                 }
-                changed |= _camera.Pan(_keyDirection, EdgeDirection(), deltaTime);
+                // 끄는 동안에는 가장자리 이동을 하지 않습니다. 끌다 화면 끝에 닿아 화면이 밀리지 않게 합니다(카메라 회전 설계 CR8).
+                changed |= _camera.Pan(_keyDirection, _dragging ? Vector2.zero : EdgeDirection(), deltaTime);
+                // 회전도 화면 아래 칸을 바꾸므로 돌았으면 포인터를 다시 집습니다(카메라 회전 설계 CR5).
+                changed |= _camera.Rotate(rotateSteps, deltaTime);
+                if (dragPixels != 0f)
+                    changed |= RotateByDrag(dragPixels);
+            }
+            else
+            {
+                // 막힌 동안의 포인터 이동이 풀린 뒤 한꺼번에 돌지 않게 기준점을 버립니다. 다음 포인터 이동이 새 기준을 잡습니다.
+                _dragAnchored = false;
             }
             if (changed)
                 _repickTicks = 2;
@@ -161,6 +237,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ca
                 return false;
             --_repickTicks;
             return canMove && _hasPointer;
+        }
+
+        /// <summary>끈 픽셀을 화면 너비 비율로 바꿔 시점에 넘깁니다(카메라 회전 설계 CR8). 화면 너비를 모르면 돌지 않습니다.</summary>
+        private bool RotateByDrag(float pixels)
+        {
+            float width = _screenSize().x;
+            return width > 0f && _camera.RotateDrag(pixels / width);
         }
 
         /// <summary>마지막 포인터가 가장자리 띠 안이면 그쪽 방향(각 축 −1·0·1)입니다. 창 밖·UI 위·띠 없음이면 (0, 0)입니다.</summary>

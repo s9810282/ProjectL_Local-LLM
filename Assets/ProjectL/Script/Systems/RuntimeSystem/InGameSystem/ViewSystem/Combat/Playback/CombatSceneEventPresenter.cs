@@ -19,7 +19,6 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Cameras;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Effects;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Movement;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Reaction;
 using UnityEngine;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -46,7 +45,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatEnemyPresentationPacing _pacing;
         // 아래 부품 필드는 처리기·이동 표시 조립에 씁니다(분리 계획 §1).
         // 수명(시작 조건·Tick·완료·정리)은 재생기 실행 목록(_players)만 다룹니다.
-        private readonly CombatUnitReactionSet _reaction = new();
         // 밀림 걸음으로 바로 이어지는 피격 목록입니다(넉백 피격 연출, 임시). 결과 시작에 채우고 취소 때 비웁니다.
         private readonly CombatKnockbackLeadIns _knockbackLeadIns = new();
         private readonly CombatAttackPlayback _attacks;
@@ -83,11 +81,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatPositionSwapPresentation _positionSwap;
         // 연출 이펙트 창구입니다(이펙트 설계 EF6, 필수). 재생 취소 때 회수·해제 때 닫는 일은 이 Presenter가 합니다(결정 Q-E4 A).
         private readonly CombatEffectWindow _effects;
+        private readonly ThornBombAttachmentPresenter _thornBombs;
         // 사실 사건의 순간 큐를 내는 곳입니다(이펙트 창구 확장 설계 EC7). 사건 소리 바로 뒤에 부르고, 큐 값은 연결 동안 보관합니다.
         private readonly CombatMomentCuePlayback _momentCues;
         private readonly CombatTraitFeedbackPlayback _feedback;
         // 이 결과에서 터질 유닛과 그 몸 유지입니다(자폭 깜빡임 설계 SD1·SD5). 결과 시작·취소·끝의 수명은 이 Presenter가 맞춥니다.
         private readonly CombatSelfDestructDeaths _selfDestruct;
+        // 플레이어 액티브 스킬 사건 51의 처리기입니다. 결과마다 그 결과의 스킬·강화 키를 읽어 둡니다(전투 스킬 View 설계 SK3·P7).
+        private readonly CombatPlayerSkillEventHandler _playerSkill;
         private readonly CombatPreAttackPresentationStarts _preAttackStarts;
         private readonly CombatPreAttackPlayback _preAttackPlayback;
         // 전투 설치 때 미리 만들 몸 위 글자 프리팹을 고를 때만 씁니다(GC 끊김 설계 GH6). 글자 창구는 없을 수 있습니다.
@@ -113,8 +114,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <param name = "camera">맵 카메라 창구입니다. 표시 Factory가 맵 프랍과 함께 넘깁니다(카메라 연출 조각 설계 K1). 조각 실행이 줌을 빌립니다.</param>
         /// <param name = "effects">연출 이펙트 창구입니다(이펙트 설계 EF6). 클립 공격·투사체 접촉·피격 이펙트가 함께 씁니다.</param>
         /// <param name = "projectileRoot">투사체를 둘 부모입니다(필드 칸 루트).</param>
-        /// <param name = "ports">필드 표시 창구 묶음입니다(가시·오브젝트·토네이도·지형 바뀜·재생 강조).</param>
-        internal CombatSceneEventPresenter(FieldUnitPresenter units, CombatEventPresentationValues values, IAudioSystemService audio, CombatSoundPresets sounds, CombatCueSources cueSources, CombatCameraWindow camera, CombatEffectWindow effects, Transform projectileRoot, CombatFieldEventPorts ports, CombatBodyTextWindow bodyText = null, CombatTraitStateEvidenceRegistry feedbackEvidence = null, Action<CombatTurnEvent> showEnemyTurnStart = null)
+        /// <param name = "ports">필드 표시 창구 묶음입니다(오브젝트·토네이도·지형 바뀜·재생 강조).</param>
+        internal CombatSceneEventPresenter(FieldUnitPresenter units, CombatEventPresentationValues values, IAudioSystemService audio, CombatSoundPresets sounds, CombatCueSources cueSources, CombatCameraWindow camera, CombatEffectWindow effects, Transform projectileRoot, CombatFieldEventPorts ports, ThornBombAttachmentPresenter thornBombs, CombatBodyTextWindow bodyText = null, CombatTraitStateEvidenceRegistry feedbackEvidence = null, Action<CombatTurnEvent> showEnemyTurnStart = null)
         {
             if (units == null)
                 throw new ArgumentNullException(nameof(units));
@@ -135,6 +136,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Func<int> generation = () => _presentationVersion;
             Func<FieldGridMapper> mapper = () => _mapper;
             // 오래 보이는 이펙트(상태 유지·특성 상시)는 보인 사실을 그릴 때마다 맞춥니다(이펙트 끝 규칙 설계 EL4). 출처마다 클래스 하나입니다(계획 TP-E23).
+            _thornBombs = thornBombs ?? throw new ArgumentNullException(nameof(thornBombs));
             _attackModeTargets = new CombatAttackModeEffectSource(cueSources.Traits);
             var persistent = new CombatPersistentEffects(effects, new ICombatPersistentEffectSource[]
             {
@@ -150,15 +152,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _sound = new CombatEventAudio(audio, sounds, _facts.FindCharacter);
             // 투사체 접촉 이펙트도 같은 창구로 냅니다. 회수는 이 Presenter의 취소·해제가 합니다(투사체 접촉 이펙트 설계 IE5).
             _attacks = new CombatAttackPlayback(_presentation, projectileRoot, generation, _facts.TryGetBody, effects);
-            // 걸음 접촉 원본의 몸은 가시·오브젝트 표시가 좁은 조회로 줍니다(이동 접촉 설계 M2).
+            // 걸음 접촉 원본의 몸은 오브젝트 표시에서 조회합니다(이동 접촉 설계 M2).
             // 이동자 몸은 사실 그리기와 같은 배치 규칙을 쓰므로 유닛 표시가 줍니다(이동 접촉 설계 M2).
             // 걸음 모양 표는 값 묶음에서 한 번 만듭니다. 걸음 시간·높이·접촉 시점은 레인이 이 표에서 고른 모양에 묻습니다(걸음 모양 설계 ST2).
-            _motion = new CombatUnitMotionSet(_presentation, units.BodyOf, CombatStepStyles.From(values), values.MovementTurnSeconds, generation, _facts.ShowCharacter, _sound.PlayMovement, ports.ThornBody, ports.ObjectBody, values.LeapMotion);
+            _motion = new CombatUnitMotionSet(_presentation, units.BodyOf, CombatStepStyles.From(values), values.MovementTurnSeconds, generation, _facts.ShowCharacter, _sound.PlayMovement, ports.ObjectBody, values.LeapMotion);
             // 재생기를 이름으로 아는 곳은 이 조립 하나입니다(설계 B12). 그 밖의 멤버는 실행 목록과 역할 계약만 씁니다.
             var attackPlayer = new CombatAttackPlayer(_attacks);
             var stepPlayer = new CombatStepPlayer(_motion, PresentEvent, generation, mapper);
-            var reactionPlayer = new CombatReactionPlayer(_reaction);
-            // 조각 실행 집합입니다(조각·조립 설계 BP5). 포효·소환 처리기가 조립을 넘깁니다(설계 BP7).
+            // 조각 실행 집합입니다(조각·조립 설계 BP5). 포효·소환·피격·사망 처리기가 조립을 넘깁니다(설계 BP7, 피격·사망 반응은 피격 구조 정리 설계 HC1).
             var piecePlayer = new CombatPieceRunPlayer(_presentation, camera, attackPlayer, _attacks, generation, mapper);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             piecePlayer.Profiler = _profiler;
@@ -166,12 +167,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 #endif
             // 사실 사건의 순간 큐는 같은 조각 실행 집합에 곁들임 실행으로 넘깁니다(이펙트 창구 확장 설계 EC6).
             _momentCues = new CombatMomentCuePlayback(cueSources, piecePlayer, _facts, effects, camera, mapper, generation);
-            _players = CombatPresentationPlayers.Create(attack: attackPlayer, pieces: piecePlayer, step: stepPlayer, reaction: reactionPlayer, bodyText: bodyText, appearance: new CombatFieldAppearancePlayer(ports.TickAppearance, ports.AppearancePlaying, ports.AppearanceBlocksStart, ports.CancelAppearance));
+            _players = CombatPresentationPlayers.Create(attack: attackPlayer, pieces: piecePlayer, step: stepPlayer, bodyText: bodyText, appearance: new CombatFieldAppearancePlayer(ports.TickAppearance, ports.AppearancePlaying, ports.AppearanceBlocksStart, ports.CancelAppearance));
             _waitSlot = stepPlayer;
             // 조립은 이 생성자 안에서 합니다(설계 S8, 결정 Q-S3 A). 처리기는 원본(보인 사실·세대·Mapper)을 참조로 쓰고 사본을 갖지 않습니다.
             // 발동한 오브젝트 원본 표시는 사건 시점에 숨기고(이동 접촉 설계 M6), 결과 끝 Refresh가 최종 사실로 다시 맞춥니다.
             // 무너진 약한 지반은 사건 시점에 칸을 낭떠러지로 바꿉니다(약한 지반 설계 WG6). 배치는 이 Presenter의 Mapper를 씁니다.
-            Action<MovementTileFact> showTerrainChange = final => ports.ShowTerrainChange(final, _mapper);
+            Func<CellCoord, Action> bindSurfaceOccupants = _facts.BindSurfaceOccupants;
+            Action<StaticTerrainFact, StaticTerrainFact> showTerrainChange =
+                (before, after) => ports.ShowTerrainChange(before, after, _mapper, bindSurfaceOccupants);
             // 특성 흔적(땅 다지기·먼지 연막)도 사건 시점에 놓거나 지웁니다(특성 시스템 View 설계 TS7). 배치는 이 Presenter의 Mapper를 씁니다.
             Action<TraitTrailFact> showTrail = trail => ports.ShowTrail(trail, _mapper);
             // 특성 발동 연출 줄 보관 하나를 특성 처리기와 대신 맞기 앞 항목이 같이 씁니다(묶음 끝 검토 M2).
@@ -180,7 +183,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _selfDestruct = new CombatSelfDestructDeaths(activationRows);
             _preAttackStarts = new CombatPreAttackPresentationStarts(
                 id => _presentation.TryGetAttackClip(id, out var clip) ? clip : null, generation);
-            _feedback = new CombatTraitFeedbackPlayback(activationRows, _momentCues, piecePlayer, bodyText, _facts, mapper, generation, feedbackEvidence, persistent, _preAttackStarts);
+            _feedback = new CombatTraitFeedbackPlayback(activationRows, _momentCues, piecePlayer, bodyText, _facts, mapper, generation, feedbackEvidence, persistent);
             _positionSwap = new CombatPositionSwapPresentation(activationRows, piecePlayer, _facts, _feedback, generation);
             _movement = new CombatMovementPresentation(_motion, _pacing, _highlight, _waitSlot, _facts, _presentation, mapper, _positionSwap);
             // 대신 맞는 수호자의 행동은 그 줄로 찾고, 뛰기 높이는 걸음 모양 설정, 돌아오기는 순차 재생기의 후속 정리 질문(붙은 뒤 읽음)을 씁니다(유닛 행동 계획 TP-13·TP-21·TP-22).
@@ -189,22 +192,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             var structureFeedback = new CombatStructureHitFeedback(_facts.StandingBodyOf, _momentCues.PlayStructureHit,
                 (world, amount) => (_structureDamage ?? throw new InvalidOperationException("Structure 숫자 창구가 연결되지 않았습니다.")).Show(world, amount));
             _damageNumbers = new CombatVolleyDamageNumbers(units.HudFeedback, structureFeedback, _attacks.HitSourceOf, generation);
-            // 캐릭터 처리기는 연발 앞 탄의 접촉 피격도 내므로 공격 시작보다 먼저 만듭니다(2026-11-11 아킴보 피격 연출).
-            var characters = new CombatCharacterEventHandler(_damageNumbers, _presentation, _reaction, reactionPlayer.CancelUnavailable,
-                mapper, _facts, _sound, piecePlayer, generation, camera, effects, values.FallMotion, ports.Tornado, _attacks.IsAttackHit, _knockbackLeadIns,
+            // 피격 시작은 연발 앞 탄의 접촉 피격도 내므로 공격 시작보다 먼저 만듭니다(2026-11-11 아킴보 피격 연출, 피격 구조 정리 설계 HC2).
+            var hits = new CombatHitStart(_presentation, mapper, _facts, _sound, piecePlayer, generation, camera, effects, _knockbackLeadIns);
+            var characters = new CombatCharacterEventHandler(_damageNumbers, _presentation,
+                mapper, _facts, _sound, piecePlayer, generation, camera, effects, values.FallMotion, ports.Tornado, _attacks.IsAttackHit, hits,
                 _selfDestruct);
-            var contactHits = new CombatVolleyContactHits(_damageNumbers, characters.TryBeginContactHit, structureFeedback.ShowContactHit, generation);
+            var contactHits = new CombatVolleyContactHits(_damageNumbers, hits.TryBeginContact, structureFeedback.ShowContactHit, generation);
             var attackStart = new CombatAttackStart(_attacks, mapper, _sound, piecePlayer, _presentation, effects, camera, _facts, guards, _damageNumbers, contactHits);
             var traits = new CombatTraitEventHandler(attackStart, _facts, piecePlayer, values.StepLook.HopHeight, _feedback, _selfDestruct, _positionSwap);
+            // 스킬 사건 51도 공격 시작 하나로 시작합니다. 공격 연출 값은 스킬 외형 표(연출 큐 값 묶음이 들고 있음)에서 고릅니다(전투 스킬 View 계획 TP-14).
+            _playerSkill = new CombatPlayerSkillEventHandler(attackStart, cueSources, _facts);
             _preAttackPlayback = new CombatPreAttackPlayback(attackStart, piecePlayer, _attacks, generation, id =>
             {
                 CharacterCombatFacts character = _facts.FindCharacter(id);
                 return character != null && !character.Health.IsDead && character.Area == CharacterRuntimeArea.Field && _presentation.HasTarget(id);
             }, traits.MayUseUnitAction);
-            _preAttackStarts.BindReceiver(_preAttackPlayback.Reserve);
+            // 앞당김은 예약을 바로 시작시켜 보고 실제로 시작했을 때만 선행 사건을 붙잡습니다(묶음 끝 검토 M2).
+            _preAttackStarts.BindReceiver(_preAttackPlayback.Reserve, lead =>
+            {
+                _preAttackPlayback.Flush();
+                return _preAttackPlayback.HasStarted(lead);
+            });
             _handlers = CombatEventHandlerTable.Create(attack: new CombatAttackEventHandler(attackStart, _preAttackPlayback), roar: new CombatRoarEventHandler(piecePlayer, values.AbilityMotion, _attacks, mapper, _highlight, _facts, _sound, camera, values.CameraMotion), summon: new CombatSummonEventHandler(_facts, piecePlayer, values.AbilityMotion, mapper, _highlight),
             character: characters,
-            turn: new CombatTurnEventHandler(showEnemyTurnStart), facts: new CombatFactEventHandler(_facts, ports.ConsumeThorn, ports.HideObject, showTerrainChange, showTrail), pull: new CombatPullEventHandler(_motion, _facts, mapper, _preAttackStarts),
+            turn: new CombatTurnEventHandler(showEnemyTurnStart), facts: new CombatFactEventHandler(_facts, ports.HideObject, showTerrainChange, showTrail), pull: new CombatPullEventHandler(_motion, _facts, mapper),
             // 특성 발동 큐는 순간 큐와 같은 곁들임 실행 길로 냅니다(특성 발동 연출 설계 TA3). 큐 값은 순간 큐 내는 곳이 연결 동안 보관합니다.
             // 추가 공격 시작 발동은 줄이 있든 없든 공격 시작으로 다시 칩니다(설계 TA6, 특성 시스템 View 결정 Q-TS1 A).
             // 줄의 유닛 행동은 같은 조각 실행 집합에 유닛 실행으로 엽니다(유닛 행동 설계 AA7, 뛰기 높이는 걸음 모양 설정 — 계획 TP-21).
@@ -214,7 +225,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 tornado: new CombatTornadoEventHandler(ports.Tornado, piecePlayer, mapper, _sound),
                 rockfall: new CombatRockfallEventHandler(ports.Rockfall, _momentCues, piecePlayer, effects, camera, _facts, mapper, _sound),
                 haboob: new CombatHaboobEventHandler(ports.Haboob, piecePlayer, mapper, _sound),
-                reinforcement: new CombatReinforcementEventHandler(_facts, piecePlayer, values.AbilityMotion, mapper, _highlight));
+                reinforcement: new CombatReinforcementEventHandler(_facts, piecePlayer, values.AbilityMotion, mapper, _highlight),
+                playerSkill: _playerSkill,
+                // 폭발 연출은 특성 발동 줄 보관에서 가시 폭탄 폭발 줄을 찾아 순간 큐로 냅니다(가시 폭탄 Phase 4 D3).
+                thornBomb: new CombatThornBombEventHandler(_thornBombs, activationRows, _momentCues, mapper));
         }
 
         public void BeginPresentation(CombatResult result)
@@ -228,6 +242,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _facts.ForgetPullArrivals();
             _facts.ForgetFalls();
             _selfDestruct.Begin(result);
+            _playerSkill.Begin(result);
             _knockbackLeadIns.Begin(result);
             var placements = CombatPlacementBatchPlan.Build(result);
             _positionSwap.Prepare(placements);
@@ -275,10 +290,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _bodyText?.Prewarm(_cueSources.BodyTextPrefabs(_bodyText.DefaultPrefab));
         }
 
-        internal void Refresh(IReadOnlyList<CharacterData> characters, IReadOnlyList<StructureCombatFacts> structures) => Refresh((characters ?? throw new ArgumentNullException(nameof(characters))).Select(c => c.ToFacts()).ToArray(), structures);
+        internal void Refresh(IReadOnlyList<CharacterData> characters, IReadOnlyList<StructureCombatFacts> structures, ThornBombStateSet thornBombs) =>
+            Refresh((characters ?? throw new ArgumentNullException(nameof(characters))).Select(c => c.ToFacts()).ToArray(), structures, thornBombs);
         /// <summary>Buffer를 바꾸지 않고 표시용 사실 목록을 동기화합니다.</summary>
-        internal void Refresh(IReadOnlyList<CharacterCombatFacts> characters, IReadOnlyList<StructureCombatFacts> structures)
+        /// <param name="thornBombs">최종 활성 폭탄이다. 부착물을 이 목록과 맞추므로 비우려면 Empty를 명시한다.</param>
+        internal void Refresh(IReadOnlyList<CharacterCombatFacts> characters, IReadOnlyList<StructureCombatFacts> structures,
+            ThornBombStateSet thornBombs)
         {
+            if (thornBombs == null) throw new ArgumentNullException(nameof(thornBombs));
             RequireBound();
             if (_players.BlocksFinalFacts || !_preAttackPlayback.IsComplete)
                 throw new InvalidOperationException("[CombatSceneEventPresenter] 공격 완료 전에 최종 사실을 표시할 수 없습니다.");
@@ -286,9 +305,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _highlight.Clear();
             // 결과가 끝났으므로 터질 유닛 목록을 비우고, 자폭 발동이 오지 않아 남은 몸 유지가 있으면 최종 사실을 그리기 전에 놓습니다(계획 TP-7).
             _selfDestruct.Clear();
+            _playerSkill.Clear();
             _facts.Replace(characters, structures);
             // 유지 이펙트도 이 그리기에서 최종 사실로 맞춥니다(이펙트 끝 규칙 설계 EL4 — 옛 결과 끝 다시 내기를 대신함).
             _facts.Render();
+            _thornBombs.Sync(thornBombs);
             // 행동 끝 큐로 낸 이펙트 중 남은 것(완료가 오지 않은 행동·대신 맞기 길)을 거둡니다(계획 TP-E4).
             _effects.RecallActionBound();
             _preAttackStarts.Clear();
@@ -346,6 +367,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CleanupErrors.Try(() => _structureDamage?.Release(), ref errors);
             CleanupErrors.Try(Clear, ref errors);
             _players.ReleaseAll(ref errors);
+            CleanupErrors.Try(_thornBombs.Dispose, ref errors);
             CleanupErrors.Try(_effects.Release, ref errors);
             CleanupErrors.ThrowIfAny(errors, CleanupFailureMessage);
         }
@@ -364,7 +386,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 throw new ArgumentNullException(nameof(completed));
             // 넉백 같은 이동 후속은 히트 뒤 남은 공격·포효 연출과 겹쳐 시작할 수 있습니다(설계 §6 Q2 재결정).
             RequireIdleFor(step);
-            _movement.BeginStep(step, completed);
+            // 세대는 시작 전에 잡습니다. 시작 콜백이 세대를 바꾸면 지난 세대의 알림은 버려집니다(PD-b~d 검토 L1).
+            int version = _presentationVersion;
+            // 선행 구간 걸음(휩쓸기 걸음 등)이면 연출 시작을 그 공격의 조기 동작 예약에 알립니다(클립 칸 다시 짜기 설계 CS11, 계획 TP-12).
+            bool lead = _preAttackStarts.IsLead(step);
+            // 앞당김이면 공격 동작을 지금 시작하고 이 걸음을 그 초만큼 걸음 전 간격으로 붙잡습니다(11-17 사용자 결정 A).
+            float leadHold = lead ? TakeLeadHold(step) : 0f;
+            bool finished = false;
+            _movement.BeginStep(step, lead ? () => { finished = true; completed(); } : completed, leadHold);
+            if (lead && !finished)
+                _preAttackStarts.EventStarted(step, version);
+        }
+
+        // 앞당김 공격의 선행 구간에서 처음 닿은 사건이면 동작을 예약해 바로 시작시키고, 시작했으면 붙잡을 초를 돌려줍니다. 아니면 0입니다.
+        // 간격은 모든 걸음 레인을 멈추므로 진행 중인 레인이 있으면 붙잡지 않고, 동작을 시작하지 못해도 붙잡지 않습니다(어댑터가 경고 한 번).
+        private float TakeLeadHold(CombatEvent e)
+        {
+            if (!_preAttackStarts.IsLead(e)) return 0f;
+            int version = _presentationVersion;
+            float hold = _preAttackStarts.TakeLeadHold(e, version, canHold: !_motion.IsActive);
+            return version == _presentationVersion ? hold : 0f;
         }
 
         public void BeginMovementEnd(CombatCharacterEvent lastStep, Action completed)
@@ -398,6 +439,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             int version = _presentationVersion;
             _preAttackPlayback.AdvanceTime(deltaTime);
             _players.Tick(new CombatPlaybackFrame(deltaTime, _mapper != null));
+            _thornBombs.Tick();
             if (version == _presentationVersion)
                 _preAttackPlayback.Flush();
         }
@@ -422,13 +464,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _players.CancelAll(ref errors);
             // 깜빡임 대여를 되돌린 뒤 터질 유닛 목록을 비우고 남은 몸 유지를 놓습니다. 유닛을 다시 그리기 전이라 붙잡힌 모델이 남지 않습니다(계획 TP-7, 검토 F5).
             CleanupErrors.Try(_selfDestruct.Clear, ref errors);
+            CleanupErrors.Try(_playerSkill.Clear, ref errors);
             CleanupErrors.Try(_pacing.Clear, ref errors);
             CleanupErrors.Try(() => _presentation.ClearAllFacing(_facts.Characters, _mapper), ref errors);
+            // 뒤 단계 꼬리는 실행이 끝나도 채널이 혼자 돌리므로 실행 취소만으로는 끊기지 않습니다. 연출 취소에서 함께 끊습니다(클립 칸 다시 짜기 설계 P8).
+            CleanupErrors.Try(() => _presentation.CutClipTails(_facts.Characters), ref errors);
             // 대여를 모두 되돌린 뒤 유닛을 보인 사실 자리로 다시 그립니다. 보간 위치·서는 자리가 오류 정지 화면에 남지 않게 합니다(평가 G1-01·G1-02).
             // 첫 Bind 전(격자 없음)에는 건너뜁니다.
             if (redrawUnits && _mapper != null) CleanupErrors.Try(_facts.RenderUnits, ref errors);
             CleanupErrors.Try(_highlight.Clear, ref errors);
             // 남은 연출 이펙트를 회수합니다(결정 Q-E4 A). 정상 완료에는 불리지 않으므로 끝난 공격의 이펙트는 자연히 끝납니다.
+            CleanupErrors.Try(_thornBombs.Clear, ref errors);
             CleanupErrors.Try(_effects.StopAll, ref errors);
             CleanupErrors.ThrowIfAny(errors, CleanupFailureMessage);
         }
@@ -452,6 +498,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             // 행위자는 사건 형식 표가 원본입니다(View 2라운드 W7-1). 간격 계산은 그 ID와 표시 중인 사실의 Owner를 받습니다(구조 원칙 평가 R3).
             EntityId actor = CombatEventTypeTable.ActorOf(e);
             float gap = _pacing.BeforeEvent(e, actor, FindCharacter(actor)?.Owner);
+            // 앞당김(WithLead 음수 지연)이면 공격 동작을 지금 시작하고 이 사건 연출을 그 초만큼 간격으로 붙잡습니다(11-17 사용자 결정 A).
+            float leadHold = TakeLeadHold(e);
+            gap += leadHold;
             if (gap == 0f)
             {
                 PresentEvent(e, completed);
@@ -459,7 +508,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             }
 
             _waitSlot.StartGap(gap);
-            bool shownBeforeGap = handler.ShowsBeforeGap(e);
+            // 붙잡은 사건은 간격 뒤에 보입니다(먼저 보이면 앞당김이 되지 않음).
+            bool shownBeforeGap = leadHold == 0f && handler.ShowsBeforeGap(e);
             _waitSlot.HoldAfterGap(e, completed, shownBeforeGap);
             if (shownBeforeGap)
                 PresentEvent(e, null);
@@ -488,7 +538,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             int version = _presentationVersion;
             _preAttackPlayback.BeforeEvent(e);
             if (version != _presentationVersion) return;
-            PresentEventCore(e, completed);
+            // 선행 구간 사건이면 완료를 감싸 "그 시작 안에서 바로 끝났는지"를 봅니다. 선행 구간 밖 사건은 감싸지 않습니다(할당 없음).
+            bool lead = _preAttackStarts.IsLead(e);
+            bool finished = false;
+            PresentEventCore(e, lead && completed != null ? () => { finished = true; completed(); } : completed);
+            // 연출이 시작된 선행 구간 사건(바로 끝나지 않음)을 그 공격의 조기 동작 예약에 알리는 곳은 여기 하나입니다(클립 칸 다시 짜기 설계 CS11·P19, 계획 TP-12).
+            // 연출 없이 바로 끝난 사건(휩쓸기 머리·곁들임만 내는 발동 등)은 세지 않습니다.
+            if (lead && !finished && version == _presentationVersion)
+                _preAttackStarts.EventStarted(e, version);
             // 같은 특성 사건의 행동을 모두 연 뒤 예약을 처리해 기존 특성 행동에 대여 우선권을 줍니다.
             if (version == _presentationVersion)
                 _preAttackPlayback.Flush();

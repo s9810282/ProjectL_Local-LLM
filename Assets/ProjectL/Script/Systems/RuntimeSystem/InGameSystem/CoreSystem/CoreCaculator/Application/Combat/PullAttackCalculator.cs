@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
@@ -17,10 +15,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>끌어오기 규칙의 결정을 기존 공격 지정·이동 경계에 연결합니다. 영속 상태는 소유하지 않습니다.</summary>
     internal static class PullAttackCalculator
     {
-        internal static int SelectionRange(CharacterCombatFacts actor, CombatAttackProfile profile, int basicRange)
+        internal static int SelectionRange(CharacterCombatFacts actor, CombatAttackProfile profile, int basicRange,
+            bool includePreHitMovement = true)
         {
             var configuration = Configuration(actor, profile);
-            return configuration == null ? basicRange : PullTraitRule.SelectionRange(basicRange, configuration.ExtraRangeCells);
+            if (basicRange < 0) throw new ArgumentOutOfRangeException(nameof(basicRange));
+            return configuration == null || basicRange == 0 || !includePreHitMovement
+                ? basicRange
+                : PullTraitRule.SelectionRange(basicRange, configuration.ExtraRangeCells);
         }
 
         private static PullTraitSpec Configuration(CharacterCombatFacts actor, CombatAttackProfile profile)
@@ -44,6 +46,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (Configuration(actor, profile) == null) yield break;
             int basicRange = EnvironmentTerrainRules.AppointRange(input, actor, environment);
+            if (basicRange == 0)
+            {
+                completed(PullAttackEvaluation.Failure(AttackFailureReason.InvalidPrimaryTarget));
+                yield break;
+            }
             var contact = selection.Cells.PrimaryCell.Value;
             var destination = PullTraitRule.Destination(actor.Anchor.Value, contact, basicRange);
             var target = selection.EligibleCharacters.SingleOrDefault(c => c.EntityId == selection.SelectedTargetId);
@@ -76,8 +83,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             for (var current = contact; current != destination;)
             {
                 var next = current + step;
-                if (!AttackForcedMovement.CanEnterUnit(input, environment, input.Characters, input.State.Structures,
-                    target.EntityId, current, next) || walls.Occupies(next))
+                // 선택 단계는 공격 시작 환경으로 판정하므로 시작 바인딩이 그 짝이다(실행 중 새 지형이 생기기 전).
+                if (!AttackForcedMovement.CanEnterUnit(input, environment, input.EnvironmentBindings, input.Characters,
+                    input.State.Structures, target.EntityId, current, next) || walls.Occupies(next))
                 {
                     completed(PullAttackEvaluation.Failure(AttackFailureReason.PullPathBlocked));
                     yield break;
@@ -137,40 +145,5 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             yield return "PullResult";
         }
 
-        /// <summary>선택한 개체를 새 도착 위치로 다시 전달하되 최초 명령의 기대 상태와 비용은 유지합니다.</summary>
-        internal static IEnumerable<string> RebuildDeliverySteps(CommandAttackPlan originalPlan, CommandAttackProjection world,
-            MovementProjection arrival, EntityId targetId, Action<CommandAttackPlan> completed)
-        {
-            var target = world.Characters[targetId];
-            using var observation = arrival.BeginCurrentInput();
-            while (!observation.IsComplete)
-            {
-                observation.Step();
-                yield return "PullDeliveryObservation";
-            }
-            var current = CombatAttackQueries.WithAim(observation.Result, AttackAim.ForCell(target.Anchor.Value));
-            var actor = world.Characters[originalPlan.Actor.EntityId];
-            var environment = arrival.Environment;
-            // 벽은 공개 지형이라 형상은 원본에서 만든 최초 계획의 것을 그대로 쓴다. 공개 미리보기의 환경은 관찰자 투영이라
-            // 모든 지형이 한쪽에만 공개되어 벽 형상 검사를 통과하지 못한다(CombatAttackQueries.Selection과 같은 규칙).
-            var walls = originalPlan.Walls;
-            AttackElevation elevation = null;
-            foreach (var phase in AttackElevation.BuildSteps(environment, current.EnvironmentBindings, value => elevation = value))
-                yield return phase;
-            AttackSelectionEvaluation evaluation = null;
-            foreach (var phase in CombatAttackQueries.SelectionSteps(current, actor, originalPlan.Profile, null,
-                environment, walls, elevation, value => evaluation = value)) yield return phase;
-            if (evaluation.FailureReason != AttackFailureReason.None || evaluation.Selection.SelectedTargetId != targetId)
-                throw new InvalidOperationException("끌어오기 후 전달 대상의 식별자가 달라졌습니다.");
-            int damage = CombatAttackCalculator.CommonAttackDamage(current, actor, originalPlan.Profile, world.Events, originalPlan.TraitScope);
-            yield return "PullCommonDamage";
-            ResolvedAttackDelivery delivery = null;
-            foreach (var phase in CombatAttackDelivery.ResolveSteps(current, originalPlan.TraitScope?.ForDamage(actor) ?? actor,
-                originalPlan.Profile, evaluation.Selection, damage, walls, elevation, value => delivery = value)) yield return phase;
-            world.BlockedContacts.AddRange(delivery.BlockedContacts);
-            completed(new CommandAttackPlan(originalPlan.Input,originalPlan.Rules,originalPlan.Profile,                originalPlan.OriginalActor,actor,environment,walls,evaluation.Selection,delivery,                originalPlan.Engine,CombatCommandEffects.Capture(actor, originalPlan.Profile),originalPlan.Pipeline,                damage,originalPlan.Direction,originalPlan.PublicPreview,originalPlan.DamageKind,                originalPlan.AttackGroup,originalPlan.Cause,originalPlan.Aim,originalPlan.RequestedCells,originalPlan.TraitScope,
-                originalPlan.PreviewObserver));
-            yield return "PullDelivery";
-        }
     }
 }

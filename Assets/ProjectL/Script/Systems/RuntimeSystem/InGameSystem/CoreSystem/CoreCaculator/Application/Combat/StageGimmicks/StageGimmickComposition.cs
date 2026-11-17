@@ -22,7 +22,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         private static StageGimmickComposition Create(IReadOnlyList<IMovementTileRule> rules) =>
             new StageGimmickComposition(new IStageGimmickRule[] {
-                new TornadoGimmickRule(rules), new RailwayGimmickRule(), new HaboobGimmickRule(), new RockfallGimmickRule() });
+                new TornadoGimmickRule(rules), new RailwayGimmickRule(rules), new HaboobGimmickRule(), new RockfallGimmickRule(rules),
+                new MeteorGimmickRule(rules), new LavaChainGimmickRule(rules) });
 
         internal StageGimmickComposition(IReadOnlyList<IStageGimmickRule> rules)
         {
@@ -48,20 +49,54 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             uint random = state.EnvironmentProgress.RandomState;
             for (int i = 0; i < definitions.Count; i++)
             {
-                if (definitions[i] is RockfallGimmickSpec rockfall)
-                    entries.Add(new RockfallGimmickState(new StageGimmickId(i + 1), RockfallGimmickPhase.Cooldown,
-                        checked(state.Turn.CompletedControllerTurnCount + rockfall.CooldownControllerTurns), Array.Empty<CellCoord>()));
-                else if (definitions[i] is HaboobGimmickSpec haboob)
-                    entries.Add(HaboobGimmickRule.Prepare(state, haboob, new StageGimmickId(i + 1), ref random));
-                else if (definitions[i] is TornadoGimmickSpec tornado)
-                    entries.Add(TornadoGimmickPreparationCalculator.Prepare(tornado, new StageGimmickId(i + 1), state.BoardWidth,
-                        state.BoardHeight, ref random, state.Turn.CompletedControllerTurnCount));
+                var definition = definitions[i];
+                var rule = Default._rules.Single(r => r.Key == definition.GimmickKey);
+                var entry = rule.Initialize(state, definition, new StageGimmickId(i + 1), ref random);
+                if (entry != null) entries.Add(entry);
             }
             var gimmicks = new StageGimmickStateSet(entries);
             gimmicks.ValidateDefinitions(definitions, state.BoardWidth, state.BoardHeight);
             var progress = state.EnvironmentProgress;
             return state.With(gimmicks: gimmicks,
                 environmentProgress: new EnvironmentProgressFacts(progress.NextObjectEntryOrdinal, progress.NextSourceId, random));
+        }
+
+        /// <summary>
+        /// 도착 반응이 있는 기믹(<see cref="IStageGimmickEntryRule"/>)을 등록 순서대로 적용한다.
+        /// 이동 계산의 도착 지점은 이 함수 하나만 부르며, 새 도착 반응 기믹은 규칙에 인터페이스만 구현한다.
+        /// </summary>
+        internal static void ApplyEntry(MovementProjection projection, EntityId arriver)
+        {
+            if (projection == null) throw new ArgumentNullException(nameof(projection));
+            foreach (var (entry, definition, id) in EntryRules(projection.Input.Battle))
+                entry.ApplyEntry(projection, definition, id, arriver);
+        }
+
+        /// <summary>
+        /// 도착 반응 기믹이 이번 이동에서 바꾼 몫을 되돌림 영수증으로 모은다(<see cref="ApplyEntry"/>의 짝).
+        /// 이동 되돌리기는 이 함수 하나만 부르며, 새 도착 반응 기믹은 같은 규칙에 영수증 인정만 더한다.
+        /// </summary>
+        internal static void CollectEntryReceipts(CombatCommandInput input, MovementEffectId movement,
+            CharacterCombatFacts before, CharacterCombatFacts after, bool requireContact, ICollection<MovementEffectReceipt> receipts)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            if (receipts == null) throw new ArgumentNullException(nameof(receipts));
+            foreach (var (entry, definition, id) in EntryRules(input.Battle))
+                entry.CollectEntryReceipts(input, definition, id, movement, before, after, requireContact, receipts);
+        }
+
+        private static IEnumerable<(IStageGimmickEntryRule Rule, StageGimmickSpec Definition, StageGimmickId Id)> EntryRules(
+            CombatBattleFacts battle)
+        {
+            var definitions = battle?.GimmickDefinitions;
+            if (definitions == null || definitions.Count == 0) yield break;
+            foreach (var rule in Default._rules)
+            {
+                if (rule is not IStageGimmickEntryRule entry) continue;
+                for (int i = 0; i < definitions.Count; i++)
+                    if (definitions[i].GimmickKey == rule.Key)
+                        yield return (entry, definitions[i], new StageGimmickId(i + 1));
+            }
         }
 
         internal IEnumerable<HazardCellFact?> ForecastSteps(CombatCommandInput input, long lastBoundaryCount)
@@ -94,8 +129,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 throw new InvalidOperationException("예약 기믹에는 완료 진영 경계가 필요합니다.");
             var steps = new List<CombatCommandTransition>();
             var projected = input;
+            var phase = boundary?.Phase ?? StageGimmickBoundaryPhase.Scheduled;
             foreach (var rule in _rules)
             {
+                if (!rule.RunsAt(phase)) continue;
                 for (int i = 0; i < definitions.Count; i++)
                 {
                     if (definitions[i].GimmickKey != rule.Key) continue;

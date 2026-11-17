@@ -41,10 +41,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         internal static void RecordNormalization(List<CombatEvent> events, CharacterCombatFacts before,
-            CharacterCombatFacts after)
+            CharacterCombatFacts after, List<CombatHealthExecution> executions = null)
         {
-            if (before.Health.MaxHealth != after.Health.MaxHealth || before.Health.CurrentHealth != after.Health.CurrentHealth)
-                events.Add(new CombatCharacterEvent(CombatEventKind.HealthNormalized, before, after));
+            if (before.Health.Equals(after.Health)) return;
+            var evidence = new CombatCharacterEvent(CombatEventKind.HealthNormalized, before, after);
+            events.Add(evidence);
+            if (executions != null)
+                CombatHealthRecording.Add(executions, before.EntityId, before.Health, after.Health,
+                    new CombatHealthSource(CombatHealthOperationKind.Normalization, contextEvent: evidence), evidence,
+                    normalization: before.Health.CurrentHealth - after.Health.CurrentHealth);
         }
 
         internal static MainCharacterPersistentChange MainHealthChange(CombatCommandInput input, CharacterCombatFacts final)

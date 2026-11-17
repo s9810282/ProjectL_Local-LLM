@@ -42,7 +42,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public CombatStartBlock FindBlock(in CombatStartQuery query)
         {
             // 걸음 레인 자원(동시 처리 설계 C5): 주체 없는 사건·행동 사건은 모든 레인의 걸음 사건 완료 뒤, 결과·동시 사망 단정은 모든 레인이 쉰 뒤입니다.
-            // 규칙은 반응·유닛 실행과 같은 주체 막기 하나입니다(View 3라운드 W12-3). 걸음 Gate 규칙은 아래에서 따로 봅니다.
+            // 규칙은 유닛 실행(피격·사망 반응 포함)과 같은 주체 막기 하나입니다(View 3라운드 W12-3). 걸음 Gate 규칙은 아래에서 따로 봅니다.
             if (CombatSubjectBlocking.Blocks(query, this, this)) return CombatStartBlock.StepLane;
             // 걸음 Gate(이동 접촉 설계 M4). 넉백 걸음 중에는 공격 Gate와 함께 활성일 수 있습니다. 시작할 사건이 있을 때만 봅니다.
             if (query.Item != null && !_motion.CanBegin(query.Item))

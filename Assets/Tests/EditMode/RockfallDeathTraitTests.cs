@@ -71,7 +71,7 @@ namespace ProjectL.Tests.Core
             int blast = events.FindIndex(e => e is CombatEffectsEvent f && f.Traits.Any(t => t.TraitActivationKind == TraitActivationKind.SelfDestructExploded));
             Assert.That(lastRecipient, Is.GreaterThanOrEqualTo(0));
             Assert.That(blast, Is.GreaterThan(lastRecipient));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace ProjectL.Tests.Core
                 // 낙석 속박(남은 2)이 공포 속박(남은 1)보다 길어 그대로 남는다.
                 Assert.That(statuses.Single(s => s.Key == StatusEffectKey.Bind).Origin, Is.Not.EqualTo(origin), id.ToString());
             }
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace ProjectL.Tests.Core
                 Is.EqualTo(CombatEventKind.Reconstructed));
             var started = ReconstructionTraitTests.Activations(result, TraitActivationKind.ReconstructionStarted).Single();
             Assert.That(started.Magnitude, Is.EqualTo(10));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         private static CombatCommandInput Impact(CellCoord[] cells, RockfallGimmickSpec spec = null,

@@ -16,6 +16,7 @@ namespace ProjectL.Tests.Core
 {
     public sealed class LegacyEnhancementRetirementTests
     {
+        [TestCase(TraitKey.ThornField)]
         [TestCase(TraitKey.DoorBreaching)]
         [TestCase(TraitKey.ContemptForWeak)]
         [TestCase(TraitKey.PrecisionShot)]
@@ -33,6 +34,7 @@ namespace ProjectL.Tests.Core
             Assert.That(availability.PartialUnavailableReason, Is.Empty);
         }
 
+        [TestCase(TraitKey.ThornField)]
         [TestCase(TraitKey.DoorBreaching)]
         [TestCase(TraitKey.ContemptForWeak)]
         [TestCase(TraitKey.PrecisionShot)]
@@ -120,9 +122,12 @@ namespace ProjectL.Tests.Core
         public void SurvivingRegistry_PreservesAllNewAndDeferredIdentities()
         {
             var registrations = TraitRegistry.CreateDefault().OrderedRegistrations;
-            Assert.That(registrations.Count(r => DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(41));
-            Assert.That(registrations.Count(r => !DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(3));
-            Assert.That(registrations.Count(r => (int)r.TraitKey >= 220), Is.EqualTo(31));
+            Assert.That(registrations.Count(r => DeferredCombatFeatures.IsTraitAvailable(r.TraitKey)), Is.EqualTo(43));
+            Assert.That(registrations.Count(r => !DeferredCombatFeatures.IsTraitAvailable(r.TraitKey) &&
+                !DeferredCombatFeatures.IsImplementationPending(r.TraitKey)), Is.EqualTo(2));
+            Assert.That(registrations.Where(r => DeferredCombatFeatures.IsImplementationPending(r.TraitKey)).Select(r => r.TraitKey),
+                Is.Empty);
+            Assert.That(registrations.Count(r => (int)r.TraitKey >= 220), Is.EqualTo(33));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitAvailable((TraitKey)9999));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitRetired(TraitKey.None));
             Assert.Throws<ArgumentOutOfRangeException>(() => DeferredCombatFeatures.IsTraitRetired((TraitKey)9999));

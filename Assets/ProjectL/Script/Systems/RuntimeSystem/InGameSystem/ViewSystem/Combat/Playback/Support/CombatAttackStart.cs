@@ -23,7 +23,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// 공격자 외형에 공격 클립이 있으면 클립 길(근접 <see cref="CombatClipAttack.ComposeMelee"/>·원거리 <see cref="CombatClipAttack.ComposeRanged"/> 조립을
     /// 조각 실행 재생기로), 없으면 코드 모션 길입니다(클립 설계 AC7, 5차 AC15).
     /// 두 길의 공통 규칙(설계 AC7 표): 출처는 모양의 출처 사건, 사건 완료는 모양의 완료 정책(공격 사건은 첫 해제), 해제가 대상의 피격 사건을 엶,
-    /// 방향은 같은 함수(<see cref="CombatAttackFacing"/>), 공격 소리는 설정된 시점마다 냅니다(기본 한 번). 다른 점은 해제·소리 시점(코드 모션 = 모션의 타격,
+    /// 방향은 같은 함수(<see cref="CombatAttackFacing"/>), 공격 소리는 공격자 외형의 공격 소리 줄마다 그 시점에 냅니다(유닛 소리 설계 US1). 다른 점은 해제·기준 시점(코드 모션 = 모션의 타격,
     /// 근접 클립 = 첫 이벤트 + 선딜레이, 원거리 클립 = 지정 이벤트마다 발사·모든 탄 접촉 뒤 해제)과 전체 종료(모션 끝 / 클립 끝과 모든 탄 도착)입니다.
     /// 해제는 어느 종류든 출처의 대상을 모두 해제합니다.
     /// </para>
@@ -95,6 +95,35 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         }
 
         /// <summary>
+        /// 투사체 경로가 없는 스킬 사건 51(범위 폭발)의 연출을 시작합니다(전투 스킬 View 설계 SK3·P5). 맞는 순간 모든 대상을 한 번에 풉니다.
+        /// 공격 클립이 있는 시전자는 그 클립을 근접 조립으로 재생합니다(클립이 원거리 묶음이어도 투사체를 쏘지 않음 — 유닛 자신의 표시로 돌리는 덮어쓰기 규칙을 거치지 않음).
+        /// 클립이 없으면 근접 코드 모션입니다. 시작할 모션이 없으면 false라 틀의 일반 경로로 이어 갑니다.
+        /// </summary>
+        /// <param name="settings">스킬 외형의 공격 연출입니다. 투사체 없는 묶음이어야 합니다(아니면 설정 오류로 예외).</param>
+        internal bool TryBeginArea(CombatAttackShape shape, CombatAttackPresentationData settings, Action completed, int version)
+        {
+            if (shape == null) throw new ArgumentNullException(nameof(shape));
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (CombatUnitAnimationRules.FiresProjectile(settings.Kind))
+                throw new InvalidOperationException(
+                    $"[CombatAttackStart] 범위 스킬의 공격 연출은 투사체 없는 묶음이어야 합니다({settings.Kind}). PlayerSkillVisual 표를 확인하세요.");
+            if (!_presentation.TryGetAttackClip(shape.AttackerId, out CombatClipAttackData clip))
+                return BeginCodeMotion(shape, settings, completed, version);
+
+            FieldGridMapper mapper = _mapper();
+            CombatAttackPresentationKind kind = settings.Kind;
+            Func<ICombatUnitPose, Quaternion> facing = pose => CombatAttackFacing.For(kind, shape, mapper, pose.Position);
+            CombatComposition composition = CombatClipAttack.ComposeMelee(shape, clip, settings.Cues, facing,
+                () => _attacks.ReleaseAll(shape.Source, version), SinksFor(shape, settings, clip.Motion, null), ActorBodyOf(shape.AttackerId, settings.Cues),
+                _guards.LeadOf(shape), contactImpact: MeleeContactOf(shape, settings.Cues),
+                contactFeedback: ContactFeedback(shape.Source, clip.Events.Count, version));
+            if (!_pieces.TryBegin(composition, completed, version))
+                throw new InvalidOperationException(
+                    $"[CombatAttackStart] 범위 스킬 클립 조립을 시작하지 못했습니다(시전자 표시가 꺼졌거나 클립을 쓸 수 없음): {shape.AttackerId}");
+            return true;
+        }
+
+        /// <summary>
         /// 클립이 없는 공격의 코드 모션 조립입니다(범용 연출 구조 설계 G5, 계획 Gc.5). 시작할 모션이 없으면 조립을 만들지 않고 false입니다.
         /// </summary>
         private bool BeginCodeMotion(CombatAttackShape shape, CombatAttackPresentationData settings, Action completed, int version)
@@ -107,8 +136,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             FieldGridMapper mapper = _mapper();
             CombatComposition composition = CombatCodeMotionAttack.Compose(shape, settings.Cues,
                 (end, cue, hit) => _attacks.TryBeginMotion(attacker, shape, mapper, cue, hit, end, version, settings),
-                () => _attacks.ReleaseAll(shape.Source, version), SinksFor(shape, CombatProjectileSounds.From(settings)),
-                ActorBodyOf(attacker, settings.Cues), _guards.LeadOf(shape));
+                target => _attacks.Release(shape.Source, target, version), () => _attacks.ReleaseAll(shape.Source, version),
+                SinksFor(shape, settings, null, CombatProjectileSounds.From(settings)), ActorBodyOf(attacker, settings.Cues), _guards.LeadOf(shape));
             return _pieces.TryBegin(composition, completed, version);
         }
 
@@ -158,19 +187,62 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             Vector3? launchAimPoint = CombatAttackStyles.Of(kind) is CombatMortarStyle mortar
                 ? mortar.LaunchAimPoint(shape, settings, mapper)
                 : null;
-            // 해제는 종류와 상관없이 이 출처의 대상을 모두 해제합니다(출처 수명 계약, 세대가 같을 때만).
+            // 해제는 출처 수명 계약으로만 합니다(세대가 같을 때만). 원거리는 마지막 탄의 접촉마다 그 대상, 마지막 접촉에서 남은 대상 모두입니다
+            // (관통·죽음의 손 View 설계 D6). 근접은 해제 조각이 한 번에 모두 해제합니다.
             Action release = () => lifetime.ReleaseAll(shape.Source, version);
+            Action<EntityId> releaseTarget = target => lifetime.Release(shape.Source, target, version);
             CombatAttackLead lead = _guards.LeadOf(shape);
             // 원거리 판정은 DB 검사와 같은 함수 하나입니다(설계 5차 AC11, 계획 P10).
             // 근접 클립에는 투사체 소리를 넣지 않습니다(옛 입구의 projectileSounds: null).
             CombatComposition composition = CombatUnitAnimationRules.FiresProjectile(kind)
                 ? CombatClipAttack.ComposeRanged(shape, clip, settings.Cues, facing,
-                    (from, hit, arrived) => _attacks.FireShot(shape, settings, from, mapper, hit, arrived, version), release,
-                    SinksFor(shape, CombatProjectileSounds.From(settings)), ActorBodyOf(attacker, settings.Cues), lead, launchAimPoint, canRelease,
-                    ContactFeedback(shape.Source, clip.Shots.Count, version))
-                : CombatClipAttack.ComposeMelee(shape, clip, settings.Cues, facing, release, SinksFor(shape, null),
-                    ActorBodyOf(attacker, settings.Cues), lead, canRelease);
+                    (from, hit, arrived) => _attacks.FireShot(shape, settings, from, mapper, hit, arrived, version), releaseTarget, release,
+                    SinksFor(shape, settings, clip.Motion, CombatProjectileSounds.From(settings)), ActorBodyOf(attacker, settings.Cues), lead, launchAimPoint, canRelease,
+                    ContactFeedback(shape.Source, clip.Events.Count, version))
+                : CombatClipAttack.ComposeMelee(shape, clip, settings.Cues, facing, release, SinksFor(shape, settings, clip.Motion, null),
+                    ActorBodyOf(attacker, settings.Cues), lead, canRelease, MeleeContactOf(shape, settings.Cues),
+                    ContactFeedback(shape.Source, clip.Events.Count, version));
             return composition;
+        }
+
+        /// <summary>
+        /// 근접 맞는 순간마다 낼 접촉 이펙트입니다(공격 큐의 Contact·Every, 클립 칸 다시 짜기 설계 CS10, 설계 P17). 자리 = 그 출처가 맞히는 캐릭터마다 몸 중심,
+        /// 회전 = 공격자 → 대상의 수평 방향(맞은 방향)입니다. 그런 이펙트가 없으면 null입니다. 건물 대상은 자리를 내지 않습니다(구조물 피격 큐가 따로 있음).
+        /// </summary>
+        private Action MeleeContactOf(CombatAttackShape shape, CombatEventCues cues)
+        {
+            if (!HasEveryContact(cues))
+                return null;
+            return () =>
+            {
+                IReadOnlyList<CombatEvent> targets = _damageNumbers.ContactEventsOf(shape.Source);
+                _facts.TryGetBodyCenter(shape.AttackerId, out Vector3 from);
+                for (int t = 0; t < targets.Count; t++)
+                {
+                    if (targets[t] is not CombatCharacterEvent character)
+                        continue;
+                    CharacterCombatFacts target = character.Final ?? character.Expected;
+                    if (target == null || !_facts.TryGetBodyCenter(target.EntityId, out Vector3 center))
+                        continue;
+                    Vector3 flat = center - from;
+                    flat.y = 0f;
+                    Quaternion facing = flat.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(flat) : Quaternion.identity;
+                    for (int i = 0; i < cues.Effects.Count; i++)
+                    {
+                        CombatEffectCue effect = cues.Effects[i];
+                        if (!CombatPresentationCueRules.IsEveryContact(effect.Anchor, effect.ContactFilter)) continue;
+                        Pose at = CombatCuePoints.Apply(new Pose(center, facing), effect);
+                        _effects.Play(effect.Effect, at, CombatEffectPlacement.ForCue(effect, EntityId.Empty));
+                    }
+                }
+            };
+        }
+
+        private static bool HasEveryContact(CombatEventCues cues)
+        {
+            for (int i = 0; i < cues.Effects.Count; i++)
+                if (CombatPresentationCueRules.IsEveryContact(cues.Effects[i].Anchor, cues.Effects[i].ContactFilter)) return true;
+            return false;
         }
 
         /// <summary>
@@ -190,11 +262,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         }
 
         /// <summary>
-        /// 공격 하나의 창구 묶음입니다(평가 C4-08 2단계, 작은 묶음 설계 SB1). 세 조립 길이 이 한 곳에서 같은 창구·같은 소리 사건(모양의 출처 사건)을 받습니다.
-        /// 공격용 창구를 더하면 <see cref="CombatCueSinks.ForAttack"/>의 인자와 이 줄만 고칩니다.
+        /// 공격 하나의 창구 묶음입니다(평가 C4-08 2단계, 작은 묶음 설계 SB1). 세 조립 길이 이 한 곳에서 같은 창구·같은 공격 소리 줄을 받습니다.
+        /// 공격 소리 줄은 모양의 출처 사건으로 고르고(특성 발동 출처면 없음, 유닛 소리 계획 TP-7), 그 공격의 표시 종류·클립에 늘 맞춥니다(TP-4 — 덮어쓴 공격인지 모르므로).
+        /// 공격용 창구를 더하면 <see cref="CombatCueSinks.ForAttack"/>의 인자와 이 함수만 고칩니다.
         /// </summary>
-        private CombatCueSinks SinksFor(CombatAttackShape shape, CombatProjectileSounds projectileSounds) =>
-            CombatCueSinks.ForAttack(_effects, _camera, _sound, shape.Source, projectileSounds);
+        /// <param name="settings">이 공격에 쓰는 공격 표시입니다(덮어쓰기 포함).</param>
+        /// <param name="motion">이 공격의 클립 동작입니다. 코드 모션이면 null입니다.</param>
+        private CombatCueSinks SinksFor(CombatAttackShape shape, CombatAttackPresentationData settings, CombatClipMotion motion,
+            CombatProjectileSounds projectileSounds)
+        {
+            CombatUnitSoundSet sounds = _sound.UnitSoundsOf(shape.Source)
+                ?.ForAttack(CombatPresentationCueRules.AttackEventOf(settings.Kind), motion);
+            return CombatCueSinks.ForAttack(_effects, _camera, _sound, sounds, projectileSounds);
+        }
 
         /// <summary>
         /// 공격 칸 큐의 행위자 몸 자리입니다(큐 자리 <c>ActorBody</c>, 범용 연출 구조 설계 G3). 그 자리를 쓰는 큐가 없거나 보인 사실에서 몸을 찾지 못하면 null이고,

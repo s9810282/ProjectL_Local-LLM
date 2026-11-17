@@ -20,8 +20,8 @@ using ProjectL.Systems.DataBaseSystem.Data.View.Table.LobbyVisual;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Railway;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Recovery;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Rockfall;
-using ProjectL.Systems.DataBaseSystem.Data.View.Table.ThornField;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.UnitStatus;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.PlayerSkill;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Category;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Tutorial;
@@ -80,6 +80,7 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
 
             new ConsumableItemVisualTable(dataBaseGroup.GetDataBase<ConsumableItemVisualDataTableSO>()).ExportServices(builder);
             new UnitStatusVisualTable(dataBaseGroup.GetDataBase<UnitStatusVisualDataTableSO>()).ExportServices(builder);
+            new PlayerSkillVisualTable(dataBaseGroup.GetDataBase<PlayerSkillVisualDataTableSO>()).ExportServices(builder);
             new StageOfferTextTable(dataBaseGroup.GetDataBase<StageOfferTextDataTableSO>()).ExportServices(builder);
             new TutorialDefinitionTable(dataBaseGroup.GetDataBase<TutorialDefinitionDataTableSO>()).ExportServices(builder);
 
@@ -90,10 +91,6 @@ namespace ProjectL.Systems.Factory.DBFactory.Group
             var railwayVisualTable = new RailwayVisualTable(
                 dataBaseGroup.GetDataBase<RailwayVisualDataTableSO>());
             railwayVisualTable.ExportServices(builder);
-
-            var thornFieldVisualTable = new ThornFieldVisualTable(
-                dataBaseGroup.GetDataBase<ThornFieldVisualDataTableSO>());
-            thornFieldVisualTable.ExportServices(builder);
 
             new RockfallVisualTable(dataBaseGroup.GetDataBase<RockfallVisualDataTableSO>()).ExportServices(builder);
 

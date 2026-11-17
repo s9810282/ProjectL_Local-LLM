@@ -28,7 +28,3 @@ MonoBehaviour:
       end: 0
       endSeconds: 0
     shakes: []
-    sound:
-      anchor: 1
-      delay: 0
-    additionalSounds: []

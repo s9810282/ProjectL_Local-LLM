@@ -17,7 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     {
         private static readonly (CombatClipEventId Id, CombatPieceSignal Signal)[] Rows =
         {
-            (CombatClipEventId.Event, CombatPieceSignal.ClipEvent),
+            (CombatClipEventId.Event1, CombatPieceSignal.ClipEvent),
             (CombatClipEventId.Event2, CombatPieceSignal.ClipEvent2),
             (CombatClipEventId.Event3, CombatPieceSignal.ClipEvent3),
         };

@@ -26,7 +26,7 @@ namespace ProjectL.Tests.Core
             var nexus = new EntityId(30);
             if (reinforced)
                 input = CombatCommandTestData.With(input, state: input.State.With(reinforcements:
-                    new NexusReinforcementState(nexus, 19, new[] { new NexusReinforcementRecord(victim.EntityId, 0) })));
+                    new NexusReinforcementState(nexus, 19, new[] { new NexusReinforcementRecord(victim.EntityId, 0) }, 1)));
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.RewardSettlement.KillGold, Is.EqualTo(gold));
@@ -59,7 +59,7 @@ namespace ProjectL.Tests.Core
                 processingKind: CombatProcessingKind.Advance, goldBalance: 7, fameBalance: 0);
             var record = new NexusReinforcementRecord(created.EntityId, 0);
             var nexus = new EntityId(30);
-            var proposed = input.State.With(reinforcements: new NexusReinforcementState(nexus, 19, new[] { record }));
+            var proposed = input.State.With(reinforcements: new NexusReinforcementState(nexus, 19, new[] { record }, 1));
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             projected.Add(dead.EntityId, dead);
             var events = new List<CombatEvent>
@@ -73,7 +73,7 @@ namespace ProjectL.Tests.Core
             events.Add(new CombatCharacterEvent(CombatEventKind.Died, created, dead,
                 new[] { new CombatDamageOrigin(anchor, attribution == "indirect" ? original.ActorId : (EntityId?)null, 2) }));
             var result = CombatCommandCalculator.Finish(input, projected, input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, new Dictionary<CellCoord, ThornFieldCellSnapshot>(), Array.Empty<StructureCombatFacts>(), new List<long>(),
+                input.Souls, Array.Empty<StructureCombatFacts>(), new List<long>(),
                 new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, proposed, events: events);
 
             Assert.That(result.Characters.Created.Single().Health.IsDead, Is.True);

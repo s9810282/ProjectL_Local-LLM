@@ -21,6 +21,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         }
         internal OwnedCharacterRecord Award(OwnedCharacterRecord source, int amount) => new(source.Id, source.CharacterKey,
             source.Role, source.Level, source.Experience, source.Growth, checked(source.HunterAttackBonus + amount),
-            source.SpecializationCategory);
+            source.SpecializationCategory, source.PlayerSkillUpgrade);
     }
 }

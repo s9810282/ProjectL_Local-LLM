@@ -23,13 +23,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         internal ScrollPanelPresentation ScrollPresentation => scrollPresentation;
 
         [SerializeField] private TMP_Text eventNameText;
+        [Tooltip("대상 유닛·훈련 상태 안내입니다. 비어 있으면 숨기고 제목 아래의 빈 공간으로 카드 영역을 위로 당깁니다.")]
         [SerializeField] private TMP_Text eventDescText;
         [Tooltip("위쪽 유닛 얼굴입니다. 증강 화면(TraitUI)만 연결하고 이벤트 스테이지는 비워 둡니다. 그릴 얼굴이 없으면 꺼집니다.")]
         [SerializeField] private Image unitFace;
         [SerializeField] private TMP_Text goldText;
         [Tooltip("GoldText가 비면 함께 꺼집니다.")]
         [SerializeField] private GameObject goldBackground;
-        [Tooltip("골드와 나가기가 모두 없으면 꺼집니다.")]
+        [Tooltip("선택 장식선입니다. 연결한 경우 골드와 나가기가 모두 없으면 꺼집니다.")]
         [SerializeField] private GameObject underLine;
         [SerializeField] private Button exitButton;
         [Tooltip("나가기 버튼 글입니다. 글은 SO에서 옵니다.")]
@@ -50,6 +51,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         private IStageOfferInput _input;
         private UIInputBinding _exitBinding;
+        private RectTransform _cardArea;
+        private Vector2 _cardAreaPosition;
         private int _visibleCardCount;
         private int _fittedCardCount = -1;
         private float _errorElapsed;
@@ -58,7 +61,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         private bool _canExit;
 
         private bool HasRequiredReferences => eventNameText != null && eventDescText != null && goldText != null &&
-            goldBackground != null && underLine != null && exitButton != null && exitLabel != null && HasAllCards &&
+            goldBackground != null && exitButton != null && exitLabel != null && HasAllCards &&
             errorPanel != null && errorGroup != null && errorText != null;
 
         private bool HasAllCards
@@ -97,6 +100,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
 
         private void PrepareCore(UIBase owner)
         {
+            // 스크롤은 Viewport를 옮겨 Content의 가로 스크롤 위치와 분리합니다.
+            _cardArea = cardScroll != null ? cardScroll.viewport : cards[0].transform.parent as RectTransform;
+            if (_cardArea == null || _cardArea.parent == null)
+                throw new InvalidOperationException($"[StageOfferLayoutView] '{name}'의 카드 영역에는 부모가 있는 RectTransform이 필요합니다.");
+            _cardAreaPosition = _cardArea.anchoredPosition;
             _prepared = true;
             _exitBinding = UIInputBinding.Attach(exitButton, this, ExitSlot);
             for (int i = 0; i < cards.Count; i++)
@@ -149,7 +157,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
                 throw new InvalidOperationException($"[StageOfferLayoutView] '{name}'에 unitFace 참조가 없어 유닛 얼굴을 그릴 수 없습니다.");
 
             eventNameText.text = model.EventName;
-            eventDescText.text = model.EventDescription;
+            RenderSelectionPrompt(model.EventDescription);
             if (unitFace != null)
             {
                 unitFace.sprite = model.Portrait;
@@ -160,10 +168,33 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             goldBackground.SetActive(showGold);
             exitButton.gameObject.SetActive(model.ShowExit);
             exitLabel.text = model.ExitText;
-            underLine.SetActive(showGold || model.ShowExit);
+            if (underLine != null) underLine.SetActive(showGold || model.ShowExit);
             _canExit = model.ShowExit && model.CanExit;
             RenderCards(model.Cards);
             RefreshInteractability();
+        }
+
+        private void RenderSelectionPrompt(string prompt)
+        {
+            bool hasPrompt = !string.IsNullOrWhiteSpace(prompt);
+            eventDescText.text = prompt;
+            eventDescText.gameObject.SetActive(hasPrompt);
+
+            // 매번 프리팹의 기준 위치에서 계산하므로 안내 유무 전환과 다시 열기 때 이동량이 누적되지 않습니다.
+            _cardArea.anchoredPosition = _cardAreaPosition;
+            if (hasPrompt) return;
+
+            RectTransform promptRect = eventDescText.rectTransform;
+            Vector3 offset = _cardArea.parent.InverseTransformVector(
+                promptRect.TransformVector(Vector3.up * promptRect.rect.height));
+            RectTransform titleRect = eventNameText.rectTransform;
+            float titleBottom = _cardArea.parent.InverseTransformPoint(
+                titleRect.TransformPoint(new Vector3(0f, titleRect.rect.yMin, 0f))).y;
+            float cardTop = _cardArea.parent.InverseTransformPoint(
+                _cardArea.TransformPoint(new Vector3(0f, _cardArea.rect.yMax, 0f))).y;
+            // 프리팹에서 제목을 낮춘 경우에도 카드가 제목 영역까지 올라가지 않도록 제한합니다.
+            float shift = Mathf.Clamp(offset.y, 0f, Mathf.Max(0f, titleBottom - cardTop));
+            _cardArea.anchoredPosition = _cardAreaPosition + Vector2.up * shift;
         }
 
         internal void SetInteractable(bool interactable)

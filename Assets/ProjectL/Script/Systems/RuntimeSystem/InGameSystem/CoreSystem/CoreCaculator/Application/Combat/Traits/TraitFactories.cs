@@ -109,50 +109,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
     }
 
-    public sealed class ThornFieldTraitDefinitionFactory : ITraitDefinitionFactory
-    {
-        public TraitKey TraitKey => TraitKey.ThornField;
-        public Type SpecType => typeof(ThornFieldTraitSpec);
-        public Type DefinitionType => typeof(ThornFieldTraitDefinition);
-
-        public TraitDefinition BuildDefinition(TraitSpec spec)
-        {
-            if (spec == null)
-                throw new ArgumentNullException(nameof(spec));
-            if (spec is not ThornFieldTraitSpec thornFieldSpec)
-            {
-                throw new ArgumentException(
-                    "ThornField definition requires a matching spec.",
-                    nameof(spec));
-            }
-
-            return new ThornFieldTraitDefinition(
-                thornFieldSpec.ThornDamage,
-                thornFieldSpec.LifetimeUnitTurns, thornFieldSpec.DefenseReductionPercent, thornFieldSpec.TickPhase);
-        }
-    }
-
-    public sealed class ThornFieldRuntimeStateFactory : ITraitRuntimeStateFactory
-    {
-        public TraitKey TraitKey => TraitKey.ThornField;
-        public Type DefinitionType => typeof(ThornFieldTraitDefinition);
-        public Type RuntimeStateType => typeof(ThornFieldRuntimeState);
-
-        public TraitRuntimeState BuildRuntimeState(TraitDefinition definition)
-        {
-            if (definition == null)
-                throw new ArgumentNullException(nameof(definition));
-            if (definition is not ThornFieldTraitDefinition)
-            {
-                throw new ArgumentException(
-                    "ThornField runtime state requires a matching definition.",
-                    nameof(definition));
-            }
-
-            return new ThornFieldRuntimeState();
-        }
-    }
-
     public sealed class KnockbackTraitDefinitionFactory : ITraitDefinitionFactory
     {
         public TraitKey TraitKey => TraitKey.Knockback;

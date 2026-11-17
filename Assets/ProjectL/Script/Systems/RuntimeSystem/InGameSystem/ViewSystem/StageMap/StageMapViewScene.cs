@@ -60,7 +60,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         internal void ShowNodes(int mapKey, IReadOnlyList<StageProgressData> nodes, int currentNodeId,
             List<StageNodeDropTarget> dropTargets = null)
         {
-            Display.Show(mapKey, nodes, _services.MapData, _services.FindVisual, Root.MapRoot, currentNodeId, dropTargets);
+            Display.Show(mapKey, nodes, _services.MapData, _services.FindVisual, Root.MapRoot,
+                _services.ReadMainModel(), currentNodeId, dropTargets);
         }
 
         /// <summary>표시된 노드로 카메라 이동 범위를 정합니다(규칙은 <see cref="StageMapCameraBounds"/>). 끌기가 없으면 아무것도 하지 않습니다.</summary>

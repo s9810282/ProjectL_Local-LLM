@@ -6,8 +6,7 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Environment
 {
     /// <summary>
-    /// 사건 시점에 빠지는 바닥 교체 외형들의 무너짐(떨림 → 가라앉기) 집합입니다(타일 교체 설계 TR8, 묶음 끝 검토 M2).
-    /// 진행·떨림 집계·끝내기를 맡고, 다 무너진 외형은 시작할 때 받은 끝 콜백으로 돌려줍니다. 외형을 끄고 풀에 돌려주는 일은 콜백을 넘긴 지형 표시가 합니다.
+    /// 바닥 교체 외형의 진입·붕괴 연출을 진행합니다. 진입은 낮아진 표면을 남기고, 붕괴는 끝 콜백으로 외형을 반환합니다.
     /// </summary>
     internal sealed class CombatTileCollapseSet
     {
@@ -34,13 +33,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>무너지는 중인 외형이 하나라도 있는지입니다. 결과 끝 사실 반영이 이것까지 기다립니다.</summary>
         internal bool IsPlaying => _entries.Count > 0;
 
-        /// <summary>떨리는 중인 외형이 있는지입니다. 이 동안 다음 사건 시작을 막습니다(타일 교체 설계 Q-CL1 A).</summary>
-        internal bool IsShaking
+        /// <summary>진입 하강 중이거나 붕괴 직전 떨리는 동안 다음 사건 시작을 막습니다.</summary>
+        internal bool BlocksStart
         {
             get
             {
                 foreach (Entry entry in _entries)
-                    if (entry.Motion.IsShaking) return true;
+                    if (entry.Motion.BlocksStart) return true;
                 return false;
             }
         }
@@ -60,6 +59,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (_settings.TotalSeconds <= 0f) return false;
             _entries.Add(new Entry(new CombatTileCollapse(view, fieldX, fieldZ, fieldUp, _settings), finished));
             return true;
+        }
+
+        /// <summary>밟은 지반은 진입 배율로 떨림 시간·진폭과 하강 시간을 조절하고 실제 표면 높이 차만큼 내립니다.</summary>
+        internal void BeginEntry(Transform view, Vector3 fieldX, Vector3 fieldZ, Vector3 descent,
+            Action<float> applySurfaceProgress)
+        {
+            if (applySurfaceProgress == null) throw new ArgumentNullException(nameof(applySurfaceProgress));
+            var settings = _settings.ForEntry(descent.magnitude);
+            var motion = new CombatTileCollapse(view, fieldX, fieldZ, -descent, settings, applySurfaceProgress);
+            if (settings.TotalSeconds == 0f)
+                motion.Tick(0f);
+            else
+                _entries.Add(new Entry(motion, motion.FinishEntry));
         }
 
         /// <summary>무너짐을 진행하고, 다 무너진 외형의 끝 콜백을 부릅니다. 콜백 하나가 실패해도 나머지 외형을 돌려준 뒤 모아 던집니다(평가 C9-04).</summary>

@@ -5,8 +5,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 {
     /// <summary>
     /// 투사체 소리 값입니다. 공격 값에서 만들고 원거리 공격 조립이 큐 붙이기에 넘깁니다.
-    /// 클립은 각 탄의 발사·접촉에 비행·착탄 지연을 더하고, 코드 모션은 기존 Cue·Hit 시점을 씁니다.
-    /// 여러 탄의 피해 후속을 여는 집계 Hit과 개별 착탄 소리의 Contact는 별개입니다.
+    /// 클립은 각 탄의 발사·접촉에 비행·착탄 지연을 더하고, 코드 모션은 Event1(발사)·Contact FirstHit(맞음) 시점을 씁니다.
+    /// 여러 탄의 피해 후속을 여는 집계 FirstHit과 개별 착탄 소리의 Contact는 별개입니다.
     /// </summary>
     /// <remarks>
     /// 설정에서 꺼낸 연출 값 묶음이라 <c>Playback/Support/</c>에 둡니다(폴더 배치 안내 §2, 투사체·피격 소리 묶음 끝 검토 낮음 1).

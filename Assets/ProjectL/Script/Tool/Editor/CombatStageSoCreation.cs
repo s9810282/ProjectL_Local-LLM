@@ -62,7 +62,7 @@ namespace ProjectL.Tool.Editor
             Object combat = AssetDatabase.LoadMainAssetAtPath(combatPath);
             Object view = AssetDatabase.LoadMainAssetAtPath(viewPath);
             CombatStageSoAssets.Write(document, root, combat, view);
-            if (!copyPlacements) CombatStageSoAssets.ClearLegacyPlacements(combat);
+            if (!copyPlacements) CombatStageSoAssets.ClearPlacementsOutsideLayout(combat);
             Save(root, combat, view);
             return root;
         }

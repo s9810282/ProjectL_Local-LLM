@@ -165,7 +165,7 @@ namespace ProjectL.Tests.Core
             Assert.That(selection.FailureReason, Is.EqualTo(AttackFailureReason.None));
             var engine = new CombatEffectEngine();
             var bindings = CombatCommandEffects.Capture(actor, profile);
-            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack);
             var delivery = CombatAttackDelivery.Resolve(input, actor, profile, selection.Selection, damage, walls, AttackElevation.From(environment, input.EnvironmentBindings));
             if (duplicate) delivery = new ResolvedAttackDelivery(new[] { delivery.Hits[0], delivery.Hits[0] }, delivery.AffectedCells);
             var plan = new CommandAttackPlan(input,NoRules,profile,actor,actor,environment,walls,                selection.Selection,delivery,engine,bindings,                new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault())),damage,Rotation4.R0,false);

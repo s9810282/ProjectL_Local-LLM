@@ -11,13 +11,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public TargetingSplash Splash { get; }
         public int SplashPercent { get; }
         public TargetingChoiceAngle ChoiceAngle { get; }
+        public int Width { get; }
 
         public TargetingMethodSpec(
             TargetingShape shape,
             TargetingChoiceMode choiceMode,
             TargetingSplash splash,
             int splashPercent,
-            TargetingChoiceAngle choiceAngle = TargetingChoiceAngle.Unrestricted)
+            TargetingChoiceAngle choiceAngle = TargetingChoiceAngle.Unrestricted, int width = 0)
         {
             if (shape == TargetingShape.None || !Enum.IsDefined(typeof(TargetingShape), shape))
                 throw new ArgumentOutOfRangeException(nameof(shape));
@@ -32,12 +33,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (!Enum.IsDefined(typeof(TargetingChoiceAngle), choiceAngle))
                 throw new ArgumentOutOfRangeException(nameof(choiceAngle));
 
+            if (shape == TargetingShape.ForwardRectangle ? width <= 0 : width != 0)
+                throw new ArgumentOutOfRangeException(nameof(width));
+
             Shape = shape;
             ChoiceMode = choiceMode;
             Splash = splash;
             // None의 비율은 계산에서 사용하지 않습니다. 저작 상한은 별도 기획 계약입니다.
             SplashPercent = splashPercent;
             ChoiceAngle = choiceAngle;
+            Width = width;
         }
     }
 }

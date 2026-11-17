@@ -2,6 +2,7 @@ using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster
 {
@@ -26,10 +27,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int HunterAttackBonus { get; }
         /// <summary>이번 Run에서 고른 메인의 추가 병과다. 미전직이면 null이다.</summary>
         public CategoryKey? SpecializationCategory { get; }
+        public PlayerSkillUpgradeKey PlayerSkillUpgrade { get; }
 
         public OwnedCharacterRecord(CharacterInstanceId id, EntityKey characterKey, CharacterOwnershipRole role,
             int level = 1, int experience = 0, OwnedTraitGrowth growth = null, int hunterAttackBonus = 0,
-            CategoryKey? specializationCategory = null)
+            CategoryKey? specializationCategory = null, PlayerSkillUpgradeKey playerSkillUpgrade = PlayerSkillUpgradeKey.None)
         {
             if (id.IsEmpty)
                 throw new ArgumentException("보유 ID는 비어 있을 수 없습니다.", nameof(id));
@@ -42,6 +44,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (experience < 0)
                 throw new ArgumentOutOfRangeException(nameof(experience));
             if (hunterAttackBonus < 0) throw new ArgumentOutOfRangeException(nameof(hunterAttackBonus));
+            if (!Enum.IsDefined(typeof(PlayerSkillUpgradeKey), playerSkillUpgrade) ||
+                (role != CharacterOwnershipRole.Main && playerSkillUpgrade != PlayerSkillUpgradeKey.None))
+                throw new ArgumentOutOfRangeException(nameof(playerSkillUpgrade));
             if (specializationCategory.HasValue && (role != CharacterOwnershipRole.Main ||
                 specializationCategory != CategoryKey.Rider && specializationCategory != CategoryKey.Heavy &&
                 specializationCategory != CategoryKey.Cannon))
@@ -55,17 +60,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Growth = growth;
             HunterAttackBonus = hunterAttackBonus;
             SpecializationCategory = specializationCategory;
+            PlayerSkillUpgrade = playerSkillUpgrade;
         }
 
         /// <summary>식별·레벨·진행 경험치·특성 성장이 모두 같은지 비교한다. 명령 입력 원본 대조와 합성이 쓴다.</summary>
         public bool SameValues(OwnedCharacterRecord other) => other != null && Id == other.Id &&
             CharacterKey == other.CharacterKey && Role == other.Role && Level == other.Level && Experience == other.Experience &&
-            HunterAttackBonus == other.HunterAttackBonus && SpecializationCategory == other.SpecializationCategory && SameGrowth(other);
+            HunterAttackBonus == other.HunterAttackBonus && SpecializationCategory == other.SpecializationCategory &&
+            PlayerSkillUpgrade == other.PlayerSkillUpgrade && SameGrowth(other);
 
         public OwnedCharacterRecord WithGrowth(OwnedTraitGrowth growth) =>
             new(Id, CharacterKey, Role, Level, Experience, growth ?? throw new ArgumentNullException(nameof(growth)),
-                HunterAttackBonus, SpecializationCategory);
+                HunterAttackBonus, SpecializationCategory, PlayerSkillUpgrade);
 
         public bool SameGrowth(OwnedCharacterRecord other) => other != null && Growth.SameValues(other.Growth);
+
+        public OwnedCharacterRecord WithPlayerSkillUpgrade(PlayerSkillUpgradeKey upgrade) =>
+            new(Id, CharacterKey, Role, Level, Experience, Growth, HunterAttackBonus, SpecializationCategory, upgrade);
     }
 }

@@ -65,26 +65,42 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _time = 0;
         }
 
-        /// <summary>같은 공격의 후속 발동은 시간을 다시 잡지 않습니다. 결과 도착 시각은 사용하지 않습니다.</summary>
-        internal void Reserve(CombatPreAttackTraitBinding binding, CombatAttackAnimationStartData settings)
+        /// <summary>
+        /// 선행 구간 사건 하나의 연출이 시작됐습니다(클립 칸 다시 짜기 설계 CS11). 그 공격의 첫 시작만 예약하고, 같은 구간의 다음 사건은 시간을 다시 잡지 않습니다.
+        /// 결과 도착 시각은 사용하지 않습니다.
+        /// </summary>
+        /// <param name="delay">선행 연출 시작부터 공격 동작 시작까지의 초입니다(<see cref="CombatClipAttackData.MotionStartDelay"/>). 음수는 바로 시작과 같습니다.</param>
+        /// <param name="leadPending">그 사건이 아직 처리되지 않았는지입니다. 앞당김(사건을 붙잡기 전에 예약)에서만 참이고, 그 사건 자신도 의존 검사에 넣습니다.</param>
+        internal void Reserve(CombatPreAttackLead lead, float delay, bool leadPending)
         {
-            if (!ReferenceEquals(_result, binding.Attack.Result) || binding.Attack.Generation != _generation()) return;
+            if (!ReferenceEquals(_result, lead.Attack.Result) || lead.Attack.Generation != _generation()) return;
             // 포효·추가 공격은 기존 전용 조립을 유지합니다. 이 설정은 일반 공격 클립의 입력입니다.
-            if (_result.Events[binding.Attack.EventIndex] is not CombatAttackEvent attack ||
+            if (_result.Events[lead.Attack.EventIndex] is not CombatAttackEvent attack ||
                 !attack.Attack.Succeeded || _entered.Contains(attack) || _reservations.ContainsKey(attack)) return;
             var shape = CombatAttackShape.Of(attack);
             var reservation = new Reservation
             {
-                Key = binding.Attack,
+                Key = lead.Attack,
                 Event = attack,
                 Shape = shape,
                 Source = new CombatDeferredAttackSource(_attacks, _generation),
-                Due = _time + settings.DelaySeconds,
+                Due = _time + delay,
                 // 가로채기 배치·공격자 자신의 선행 사실·다른 출처를 조기 대여로 막지 않습니다.
-                WaitForEntry = shape.Reactions.Count != 0 || HasPrecedingDependency(binding, attack),
+                WaitForEntry = shape.Reactions.Count != 0 || HasPrecedingDependency(lead, attack, leadPending),
             };
             _reservations.Add(attack, reservation);
             _active.Add(reservation);
+        }
+
+        /// <summary>
+        /// 그 공격의 예약이 조기 동작을 이미 시작했는지입니다(실행이 있고 버리지 않음). 앞당김이 선행 사건을 붙잡기 전에 묻습니다 —
+        /// 시작하지 못했는데 붙잡으면 사건만 늦고 동작은 보이지 않습니다(묶음 끝 검토 M2). 지난 결과·세대면 거짓입니다.
+        /// </summary>
+        internal bool HasStarted(CombatPreAttackLead lead)
+        {
+            if (_result == null || !ReferenceEquals(_result, lead.Attack.Result) || lead.Attack.Generation != _generation()) return false;
+            return _result.Events[lead.Attack.EventIndex] is CombatAttackEvent attack &&
+                _reservations.TryGetValue(attack, out Reservation reservation) && !reservation.Discarded && reservation.Run != null;
         }
 
         internal void AdvanceTime(float deltaTime)
@@ -214,13 +230,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 completed?.Invoke();
         }
 
-        private bool HasPrecedingDependency(CombatPreAttackTraitBinding binding, CombatAttackEvent attack)
+        private bool HasPrecedingDependency(CombatPreAttackLead lead, CombatAttackEvent attack, bool leadPending)
         {
-            // Pull은 이동 시작 이전의 발동/사실 처리가 이미 끝났으므로 이동 사건 뒤만 확인합니다.
-            int startIndex = binding.PullEventIndex ?? binding.EventIndex;
-            for (int i = startIndex + 1; i < binding.Attack.EventIndex; i++)
+            // 연출이 시작된 사건 앞의 발동·사실 처리는 이미 끝났으므로 그 사건 뒤만 확인합니다(끌어오기면 이동 사건 뒤).
+            // 앞당김은 그 사건을 붙잡기 전에 예약하므로 그 사건 자신부터 봅니다.
+            for (int i = leadPending ? lead.EventIndex : lead.EventIndex + 1; i < lead.Attack.EventIndex; i++)
             {
-                CombatEvent item = binding.Attack.Result.Events[i];
+                CombatEvent item = lead.Attack.Result.Events[i];
                 if (CombatEventTypeTable.IsActionStart(item) || CombatEventTypeTable.OpensAttackSource(item) ||
                     item is CombatCharacterEvent character && character.Final?.EntityId == attack.Attack.AttackerId ||
                     item is CombatEffectsEvent effects && _mayUseUnitAction(effects, attack.Attack.AttackerId))

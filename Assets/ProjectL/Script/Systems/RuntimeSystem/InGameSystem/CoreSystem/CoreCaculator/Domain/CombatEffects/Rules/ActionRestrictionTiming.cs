@@ -31,9 +31,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
         /// <summary>기본 기간에 종료 감소가 남은 진영이면 1을 더한 행동 제한 기간입니다.</summary>
         internal static int Duration(int baseAffectedSideTurns, Owner affectedSide, CombatTurnFacts turn)
+            => Duration(baseAffectedSideTurns, affectedSide, PendingEndSide(turn));
+
+        /// <summary>종료 정리가 끝난 사전 처리 창은 null을 전달하여 다음 진영 기간을 늘리지 않는다.</summary>
+        internal static int Duration(int baseAffectedSideTurns, Owner affectedSide, Owner? pendingEndCleanupSide)
         {
             if (baseAffectedSideTurns < 1) throw new ArgumentOutOfRangeException(nameof(baseAffectedSideTurns));
-            return checked(baseAffectedSideTurns + (PendingEndSide(turn) == affectedSide ? 1 : 0));
+            return checked(baseAffectedSideTurns + (pendingEndCleanupSide == affectedSide ? 1 : 0));
         }
     }
 }

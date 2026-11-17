@@ -14,16 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitVisualData:
     key: 12
-    prefab: {fileID: 5556616307837866260, guid: 8ffc0a6b8a5119e49b7fa9abe1c1127f, type: 3}
+    prefab: {fileID: 904658592152046879, guid: 189244eaa27a73f063b327c890529bc1, type: 3}
     displayName: "\uB85C\uC988"
     description: 
     timelineIcon: {fileID: -1024492662, guid: 4cbffa326b5044f439d3dd534c7e7306, type: 3}
     infoIcon: {fileID: 21300000, guid: 702021fcc861cf9429c727d8e403568c, type: 3}
     attackPresentation: {fileID: 11400000, guid: 652cad1147994bb09bbc7a43998668a1, type: 2}
     reactionPresentation: {fileID: 11400000, guid: a8abfc172c494b67874ae1d73d6c310a, type: 2}
-    animationPresentation: {fileID: 0}
+    animationPresentation: {fileID: 11400000, guid: 57d0dfa3cd764613b5e6966b7da37c9a, type: 2}
     unitSoundPreset: 1
-    attackSoundSlotIndex: 7
     obstacleHitCues:
       effects: []
       shakes: []
@@ -33,3 +32,14 @@ MonoBehaviour:
     obstacleDestroyedCues:
       effects: []
       shakes: []
+    attackSounds:
+    - sound: 7
+      anchor: 2
+      contactFilter: 1
+      delay: 0
+    hitSounds: []
+    deathSounds:
+    - sound: 1
+      anchor: 1
+      contactFilter: 1
+      delay: 0

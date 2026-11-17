@@ -4,6 +4,7 @@ using System.Linq;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
@@ -29,16 +30,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 IReadOnlyList<StaticTerrainPlacementData> staticPlacements,
                 IReadOnlyList<InitialObjectPlacementSpec> objectPlacements = null,
                 IReadOnlyList<TornadoSourceFact> tornadoPlacements = null, IReadOnlyList<CellCoord> wallCells = null,
-                IReadOnlyList<long> reservedSourceIds = null)
+                IReadOnlyList<long> reservedSourceIds = null, IReadOnlyList<MovingPlatformSpec> movingPlatforms = null)
         {
             if (placements == null) throw new ArgumentNullException(nameof(placements));
             if (staticPlacements == null) throw new ArgumentNullException(nameof(staticPlacements));
             objectPlacements ??= Array.Empty<InitialObjectPlacementSpec>();
             tornadoPlacements ??= Array.Empty<TornadoSourceFact>();
+            movingPlatforms ??= Array.Empty<MovingPlatformSpec>();
             var walls = (wallCells ?? Array.Empty<CellCoord>()).OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray();
             if (walls.Distinct().Count() != walls.Length)
                 throw new ArgumentException("벽 셀을 중복 작성할 수 없습니다.", nameof(wallCells));
-            int terrainCount = placements.Count + staticPlacements.Count + tornadoPlacements.Count;
+            int terrainCount = placements.Count + staticPlacements.Count + tornadoPlacements.Count + movingPlatforms.Count;
             int sourceCount = terrainCount + objectPlacements.Count;
             var sources = new MovementTileFact[sourceCount + walls.Length];
             var terrainIds = new long[terrainCount + walls.Length];
@@ -62,6 +64,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             {
                 var source = tornadoPlacements[i] ?? throw new ArgumentException("Tornado 배치는 null일 수 없습니다.", nameof(tornadoPlacements));
                 int index = placements.Count + staticPlacements.Count + i;
+                sources[index] = source;
+                terrainIds[index] = source.Id;
+            }
+
+            for (int i = 0; i < movingPlatforms.Count; i++)
+            {
+                var source = new MovingPlatformFact(movingPlatforms[i]);
+                int index = placements.Count + staticPlacements.Count + tornadoPlacements.Count + i;
                 sources[index] = source;
                 terrainIds[index] = source.Id;
             }
@@ -91,7 +101,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
 
             var environment = new MovementEnvironmentFacts(sources);
             CellEnvironmentQuery.ValidateInitialEnvironment(boardWidth, boardHeight, environment);
-            if (sources.Where(s => terrainIds.Contains(s.Id)).GroupBy(source => source.Cell)
+            if (sources.Where(s => s is not MovingPlatformFact && terrainIds.Contains(s.Id)).GroupBy(source => source.Cell)
                 .Any(group => group.Count() > 1 && group.Any(EnvironmentContentSupport.IsExclusiveTerrain)))
                 throw new NotSupportedException("정적 지형과 다른 Terrain의 같은 셀 조합은 아직 지원하지 않습니다.");
             var bindings = new EnvironmentSemanticBindings(terrainIds, objectIds, Array.Empty<EntityId>());

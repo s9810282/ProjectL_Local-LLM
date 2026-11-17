@@ -29,7 +29,7 @@ namespace ProjectL.Tests.Core
             var cell = new CellCoord(2, 0);
             var enemy = CombatCommandTestData.With(CombatCommandTestData.Character(30, EntityKey.Unit_Demon,
                 new CellCoord(3, 0), Owner.Enemy), hp: 10);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                i.State.Structures,i.State.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell) }));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                i.State.Structures,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new[] { MineEnvironmentTests.Mine(cell: cell) }));
             var input = new CombatCommandInput(1, i.Kind, i.ActorId, default, state, new[] { hand, i.Characters[1], enemy },
                 i.Profiles, i.Main, i.Owned, i.SoulCounts, i.Souls, i.Artifacts, targetCell: cell,
                 battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0, progression: Spec),
@@ -83,7 +83,7 @@ namespace ProjectL.Tests.Core
             var turnInput = TornadoEnvironmentTests.Input(completed: 0, sources: sources,
                 characters: seed.Characters.ToArray());
             var s = turnInput.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                seed.State.Structures,seed.State.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                seed.State.Structures,s.Turn,s.Environment,s.EnvironmentProgress);
             var b = turnInput.Battle;
             var battle = new CombatBattleFacts(b.ReserveCapacity, b.TimelineSeed, b.PlayerDeploymentDepth,
                 b.EnemyDeploymentDepth, b.DrawOrder, b.DrawCursor, b.RailCells, b.GimmickDefinitions, b.Categories, Spec);

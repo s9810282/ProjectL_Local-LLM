@@ -266,10 +266,7 @@ namespace ProjectL.Tests.Core
             var definitions = new StageGimmickSpec[] { new RailwayGimmickSpec(1, 5) };
             var rails = Enumerable.Range(0, 25).Select(i => new CellCoord(i % 5, i / 5))
                 .Where(cell => cell != goal && !units.Skip(1).Any(unit => unit.Anchor == cell)).ToArray();
-            var observed = tile == null ? source.State.With(thornFields: new[]
-            {
-                new ThornFieldCellSnapshot(new CellCoord(2, 1), 1, actor.Health.CurrentHealth)
-            }) : source.State;
+            var observed = tile == null ? EnvironmentDamageTests.WithDamageTiles(source.State, (new CellCoord(2, 1), actor.Health.CurrentHealth)) : source.State;
             var state = StageGimmickComposition.Initialize(observed, definitions);
             var battle = new CombatBattleFacts(10, 1, 0, 0, Array.Empty<CharacterInstanceId>(), 0, rails, definitions);
             return new CombatCommandInput(source.Number, source.Kind, source.ActorId, source.Aim, state, units, source.Profiles,

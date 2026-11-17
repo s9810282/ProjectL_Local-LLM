@@ -30,14 +30,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         /// <summary>
         /// 등급·증강·전직이 반영된 특성 설정값이다(설명 수치 공개 설계 SP2). 순서는 <see cref="CharacterBaselineStatsSnapshot.TraitKeys"/>와 같다.
-        /// 설명 숫자는 이 묶음에서 읽는다. 아래 특성별 설명 속성 다섯은 View 이전 뒤 지울 옛 경로다(계획 SP-d).
+        /// 설명 숫자는 이 묶음에서 읽는다. 아래 특성별 설명 속성은 View 이전 뒤 지울 옛 경로다(계획 SP-d).
         /// </summary>
         public TraitSettingsSet TraitSettings { get; }
-
-        /// <summary>
-        /// 강화가 반영된 정의의 가시 설정값이다. 전투 중 잔여 수명·상태가 아니며, 가시 특성이 없으면 null이다.
-        /// </summary>
-        public ThornFieldTraitStatusSnapshot ThornFieldDescription { get; }
 
         /// <summary>정의에서 얻은 표식 증가율입니다. 전투 대상의 현재 표식을 보관하지 않습니다.</summary>
         public HuntersMarkTraitStatusSnapshot HuntersMarkDescription { get; }
@@ -61,7 +56,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
 
         public OwnedCharacterStatsSnapshot(CharacterInstanceId ownedId, EntityKey characterKey,
             CharacterOwnershipRole role, int level, ExperienceProgressSnapshot experience, int soulCount, CharacterBaselineStatsSnapshot stats,
-            AttackPatternSnapshot attackPattern, TraitSettingsSet traitSettings, ThornFieldTraitStatusSnapshot thornFieldDescription, HuntersMarkTraitStatusSnapshot huntersMarkDescription = null,
+            AttackPatternSnapshot attackPattern, TraitSettingsSet traitSettings, HuntersMarkTraitStatusSnapshot huntersMarkDescription = null,
             PullTraitStatusSnapshot pullDescription = null, ImpactBoltTraitStatusSnapshot impactBoltDescription = null,
             IReadOnlyList<TraitAvailabilitySnapshot> traitAvailability = null, ReconSquadTraitStatusSnapshot reconSquadDescription = null,
             IReadOnlyDictionary<TraitKey, int> traitRanks = null)
@@ -88,20 +83,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (!settingKeys.SequenceEqual(stats.TraitKeys.ToArray()))
                 throw new ArgumentException("특성 설정은 특성 키와 같은 키·순서여야 합니다.", nameof(traitSettings));
 
-            bool hasThornField = false;
             bool hasHuntersMark = false;
             bool hasPull = false;
             bool hasImpactBolt = false;
             foreach (TraitKey key in stats.TraitKeys.Span)
             {
-                if (key == TraitKey.ThornField) hasThornField = true;
                 if (key == TraitKey.HuntersMark) hasHuntersMark = true;
                 if (key == TraitKey.Pull) hasPull = true;
                 if (key == TraitKey.ImpactBolt) hasImpactBolt = true;
             }
-            if (hasThornField != (thornFieldDescription != null))
-                throw new ArgumentException("가시 특성 키와 가시 표시 설정값은 함께 있어야 합니다.", nameof(thornFieldDescription));
-
             if (hasHuntersMark != (huntersMarkDescription != null))
                 throw new ArgumentException("표식 특성 키와 표식 표시 설정값은 함께 있어야 합니다.", nameof(huntersMarkDescription));
 
@@ -139,7 +129,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Stats = stats;
             AttackPattern = attackPattern;
             TraitSettings = traitSettings;
-            ThornFieldDescription = thornFieldDescription;
             HuntersMarkDescription = huntersMarkDescription;
             PullDescription = pullDescription;
             ImpactBoltDescription = impactBoltDescription;

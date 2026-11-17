@@ -80,7 +80,7 @@ namespace ProjectL.Tests.Core
             var evaluation = CombatAttackQueries.Selection(input, actor, profile, walls: walls);
             Assert.That(evaluation.FailureReason, Is.EqualTo(AttackFailureReason.None));
             return CombatAttackDelivery.Resolve(input, actor, profile, evaluation.Selection,
-                CombatAttackCalculator.CommonAttackDamage(input, actor, profile), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings));
+                CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings));
         }
     }
 }

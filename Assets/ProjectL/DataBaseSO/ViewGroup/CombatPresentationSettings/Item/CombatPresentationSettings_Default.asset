@@ -63,6 +63,7 @@ MonoBehaviour:
     tileCollapseShakeFrequency: 25
     tileCollapseSinkSeconds: 0.5
     tileCollapseSinkDepth: 1.5
+    weakGroundEntryScale: 0.5
     roarZoomRatio: 0.85
     roarShakeStrength: 1
     roarShakeSeconds: 1
@@ -81,8 +82,11 @@ MonoBehaviour:
     nightBgmPreset: 3
     dayBgmPreset: 2
     afterCompletionBgmPreset: 1
+    weakGroundEntrySoundPresets:
+    - 1
+    - 2
+    weakGroundCollapseSoundPreset: 0
     fallSoundPreset: -1
-    weakGroundCollapseSoundPreset: -1
     fallCues:
       effects: []
       shakes: []

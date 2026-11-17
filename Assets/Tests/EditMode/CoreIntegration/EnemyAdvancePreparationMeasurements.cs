@@ -67,7 +67,7 @@ namespace ProjectL.Tests.CoreIntegration
                 var builder = new SystemBuilderHelper();
                 builder.AddService<IBufferQuery>(b);
                 int frame = 0;
-                var movementRules = CombatMovementRules.Validated(new IMovementTileRule[] { new ThornMovementTileRule(),
+                var movementRules = CombatMovementRules.Validated(new IMovementTileRule[] {
                     new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule() });
                 var service = new CombatAdvanceService(publication.Assembler, publication.Publisher,
                     movementRules, () => frame, Stopwatch.GetTimestamp, Stopwatch.Frequency, usePreparation: true);
@@ -199,7 +199,7 @@ namespace ProjectL.Tests.CoreIntegration
                 Assert.Ignore("Enable the structural-atom capture explicitly.");
             string folder = Environment.GetEnvironmentVariable("PROJECTL_ENEMY_AI_RAW");
             Assert.That(folder, Is.Not.Null.And.Not.Empty);
-            var rules = CombatMovementRules.Validated(new IMovementTileRule[] { new ThornMovementTileRule(),
+            var rules = CombatMovementRules.Validated(new IMovementTileRule[] {
                 new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule() });
             var atoms = new List<StructuralAtom>(1 << 20);
             foreach (string fixture in new[] { "N5", "N6", "N8", "G16" })

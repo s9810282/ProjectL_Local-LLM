@@ -9,7 +9,6 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Contracts;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Interaction;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field
 {
@@ -19,10 +18,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// </summary>
     /// <remarks>
     /// 강조 상태는 <see cref="FieldHighlightState"/> 한 곳에 두고, 그리기는 표시 모드별 <see cref="IFieldHighlightRenderer"/>에 맡깁니다.
-    /// 표시 모드·셀 프리팹·간격은 View DB(StageFieldView)에서, 강조 색은 이 컴포넌트의 씬 설정에서 읽습니다.
+    /// 표시 모드·셀 프리팹·간격과 필드 색은 View DB(StageFieldView)에서 읽습니다. 색은 팔레트(<see cref="FieldHighlightPalette"/>) 하나가
+    /// 묶음을 들고 그릴 때 읽으며, 에디터에서 그 SO를 고치면 전투 중에도 바로 다시 그립니다(필드 색 DB 설계 FC2·FC3).
     /// 정적 구성은 전투 설치 때 한 번 하고, 결과마다 셀을 다시 만들지 않습니다. Buffer·Core를 모르고 값만 받습니다.
-    /// 공격 궤적 점선(<see cref="FieldTrajectoryLine"/>)도 필드 구성·해제 수명을 따르며, 그리는 경로는 궤적 구성 쪽이 정합니다(공격 궤적 설계 TJ2).
-    /// 넉백 미리보기 화살표(<see cref="FieldKnockbackMarkers"/>)도 같은 수명이고, 도착 칸은 이 필드의 넉백 도착 층에 칠합니다(넉백 미리보기 계획 TP-1).
+    /// 공격 궤적 점선(선 묶음 <see cref="FieldTrajectoryLines"/>)도 필드 구성·해제 수명을 따르며, 그리는 경로는 궤적 구성 쪽이 정합니다(공격 궤적 설계 TJ2).
+    /// 넉백·끌어오기 미리보기 화살표(<see cref="FieldKnockbackMarkers"/>)도 같은 수명이고, 도착 칸은 이 필드의 넉백 도착 층에 칠합니다(넉백 미리보기 계획 TP-1).
     /// 강조 그리기는 프레임 끝입니다(GC 끊김 설계 GH1): 층 API는 상태만 바꾸고 바뀐 칸을 모으며, <c>LateUpdate</c>에서 한 번 그립니다.
     /// 한 프레임에 강조를 여러 번 바꿔도 마지막 상태 하나만 그립니다. 그린 결과를 같은 프레임에 바로 읽는 코드를 만들지 않습니다.
     /// 구성(<see cref="Build"/>)은 바로 그리고, 이 컴포넌트가 꺼져 있거나 재생 중이 아니면(LateUpdate가 돌지 않음) 층 API도 바로 그립니다.
@@ -38,91 +38,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         [Tooltip("셀이 놓일 루트. 월드 크기 (1,1,1)이어야 합니다. CellPrefab 모드는 Y축 회전만 허용하고, GridOutline 모드는 회전을 허용하지 않습니다(돌아가 있으면 전투 설치 때 예외).")]
         [SerializeField] private Transform cellsRoot;
 
-        // 칸 강조 색은 쓰임새별 묶음(정적 구역·호버 칸·입력·미리보기 층·상태 층·기믹 호버 범위·포효 예고·넉백 도착·낙석 경고)에 나눠 둡니다.
-        // 겹칠 때 우선순위는 호버 > 층 표(FieldHighlightLayers의 Rows) 뒤쪽 층 > … > 앞쪽 층 > 정적 구역이고, 그 표 한 곳이 원본입니다. 필드 순서는 인스펙터 묶음만 정하고 우선순위와는 상관없습니다.
-        [Header("정적 구역 색 (가장 아래 층)")]
-        [Tooltip("아군 배치 구역. CellPrefab 모드는 항상 칸 색, GridOutline 모드는 배치 드래그 중에만 테두리·채우기로 보입니다.")]
-        [SerializeField] private Color playerZoneColor = new(0.55f, 0.75f, 1f, 1f);
-        [Tooltip("레일 칸. 두 모드 모두 행동 중이 아니어도 보입니다.")]
-        [SerializeField] private Color railColor = new(0.85f, 0.75f, 0.45f, 1f);
-
-        [Header("호버 칸 색 (모든 층 위)")]
-        [Tooltip("공용 호버 칸(판단 전). 공용 호버 색 셋은 배치·아이템 Drag와 이동 경로 끝점이 씁니다. GridOutline 모드는 호버 칸 채우기도 이 색입니다.")]
-        [SerializeField] private Color hoverColor = new(1f, 1f, 0.6f, 1f);
-        [Tooltip("공용 호버 칸(가능). Core 응답이 가능일 때입니다.")]
-        [SerializeField] private Color hoverValidColor = new(0.35f, 1f, 0.45f, 1f);
-        [Tooltip("공용 호버 칸(불가). Core 응답이 불가일 때입니다.")]
-        [SerializeField] private Color hoverInvalidColor = new(1f, 0.3f, 0.3f, 1f);
-        [Tooltip("공격 조준 호버 칸(판단 전). 공격 호버 색 셋은 GridOutline 모드의 호버 칸·영향 칸 채우기도 따릅니다.")]
-        [SerializeField] private Color attackHoverColor = new(1f, 1f, 0.6f, 1f);
-        [Tooltip("공격 조준 호버 칸(공격 가능).")]
-        [SerializeField] private Color attackHoverValidColor = new(0.35f, 1f, 0.45f, 1f);
-        [Tooltip("공격 조준 호버 칸(공격 불가). 막힌 벽 층도 이 색입니다.")]
-        [SerializeField] private Color attackHoverInvalidColor = new(1f, 0.3f, 0.3f, 1f);
-
-        [Header("입력·미리보기 층 색 (위 칸이 이김)")]
-        [Tooltip("호버한 공격 조준의 영향 칸 테두리(CellPrefab 모드는 칸 색). 결과 재생 강조(포효·소환 칸)도 이 색입니다. GridOutline 채우기는 공격 호버 상태 색입니다.")]
-        [SerializeField] private Color affectedColor = new(1f, 0.55f, 0.15f, 1f);
-        [Tooltip("드래그한 이동 예정 경로. Core의 이동 가능 여부는 끝점의 공용 호버 색으로 구분합니다.")]
-        [SerializeField] private Color movementDraftColor = new(0.05f, 1f, 0.75f, 1f);
-        [Tooltip("지뢰·화약통에 호버했을 때 그 피해 칸(진영을 가리지 않는 위험). 유닛 호버 범위와 함께 보이지 않습니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color hazardRangeColor = new(0.75f, 0.45f, 1f, 1f);
-        [Tooltip("적 유닛에 호버했을 때 그 유닛의 공격 범위 칸. 공격 범위와 함께 보이지 않습니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color enemyAttackRangeColor = new(1f, 0.45f, 0.35f, 1f);
-        [Tooltip("공격 범위 응답의 칸. 공격 모드와 아군 유닛 호버 범위가 씁니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color attackRangeColor = new(0.45f, 0.85f, 1f, 1f);
-        [Tooltip("적 유닛에 호버했을 때 그 유닛의 이동 칸. 그 위에 적 공격 범위가 그려집니다. 이동 모드 이동 범위와 겹칠 수 있어 다른 색을 권장합니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color enemyMoveRangeColor = new(0.45f, 0.85f, 1f, 1f);
-        [Tooltip("아군 유닛에 호버했을 때 그 유닛의 이동 칸. 그 위에 아군 공격 범위가 그려집니다. 이동 모드 이동 범위와 겹칠 수 있어 다른 색을 권장합니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color allyHoverMoveRangeColor = new(0.45f, 0.85f, 1f, 1f);
-        [Tooltip("이동 범위 응답의 칸(이동 모드·이동 Drag). GridOutline 모드는 채우기도 이 색입니다.")]
-        [FormerlySerializedAs("rangeColor")]
-        [SerializeField] private Color moveRangeColor = new(0.45f, 0.85f, 1f, 1f);
-
-        [Header("상태 층 색 (행동 중이 아니어도 보임)")]
-        [Tooltip("현재 행위자가 점유한 칸.")]
-        [SerializeField] private Color activeActorColor = new(1f, 0.95f, 0.3f, 1f);
-        [Tooltip("전투 목표(지정 보스)가 점유한 칸. 현재 행위자 아래, 정적 구역 위입니다.")]
-        [SerializeField] private Color objectiveTargetColor = new(1f, 0.25f, 0.75f, 1f);
-        [Tooltip("적 본부의 증원 공급 기하 범위입니다. 실제 생성 가능 칸을 뜻하지 않으며, GridOutline 모드는 테두리와 윗면 채우기를 함께 보입니다.")]
-        [SerializeField] private Color nexusReinforcementRangeColor = new(0.6f, 0.35f, 0.9f, 1f);
-
-        [Header("기믹·먼지 연막 호버 범위 색")]
-        [Tooltip("호버한 토네이도·하붑·Rider 먼지 연막 그룹의 현재 영역입니다. 유닛 범위·이동 경로·공격 조준 아래에 표시하며, GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color gimmickHoverRangeColor = new(0.15f, 0.85f, 0.75f, 1f);
-
-        [Header("포효 예고 색 (포효 예고 설계 RF4)")]
-        [Tooltip("포효 카운터가 1 남은 보스의 포효 범위입니다. 공격·이동 범위 아래에 보이고, 행동 중이 아니어도 보입니다. GridOutline 모드는 채우기도 이 색입니다.")]
-        [SerializeField] private Color roarForecastColor = new(1f, 0.35f, 0.1f, 1f);
-
-        [Header("GridOutline 채우기")]
-        [Tooltip("GridOutline 모드에서 칸을 채우는 불투명도입니다. 모든 채우기(배치 구역·층 표에서 채움인 층·호버)가 함께 쓰며, 색은 각 강조 색의 RGB를 그대로 쓰고 알파는 강조 색 알파 × 이 값입니다.")]
-        [SerializeField, Range(0f, 1f)] private float fillAlpha = 0.25f;
-
-        [Header("공격 궤적 색 (공격 궤적 설계 TJ8)")]
-        [Tooltip("공격 모드에서 호버한 칸까지의 궤적 점선(공격 가능). 칸 강조 팔레트와 따로 궤적에만 씁니다.")]
-        [SerializeField] private Color trajectoryColor = new(1f, 0.95f, 0.75f, 1f);
-        [Tooltip("벽에 막힌 궤적 점선.")]
-        [SerializeField] private Color trajectoryBlockedColor = new(1f, 0.3f, 0.3f, 1f);
-
-        [Header("넉백 미리보기 색 (넉백 미리보기 설계 KB6)")]
-        [Tooltip("밀린 대상이 도착할 칸의 테두리와 채우기(GridOutline 모드, 채우기 불투명도는 fillAlpha). CellPrefab 모드는 칸 색입니다.")]
-        [SerializeField] private Color knockbackDestinationColor = new(0.05f, 1f, 0.75f, 1f);
-        [Tooltip("밀리는 대상의 화살표(다 가거나 중간에 멈춤). 칸 강조 팔레트와 따로 화살표에만 씁니다.")]
-        [SerializeField] private Color knockbackColor = new(1f, 0.85f, 0.2f, 1f);
-        [Tooltip("막혀서 덜 가거나 못 가는 대상의 화살표.")]
-        [SerializeField] private Color knockbackBlockedColor = new(1f, 0.3f, 0.3f, 1f);
-        [Tooltip("넉백 면역이라 안 움직이는 대상의 화살표.")]
-        [SerializeField] private Color knockbackImmuneColor = new(0.65f, 0.65f, 0.65f, 1f);
-        [Tooltip("막혀 멈춘 곳에서 부딪힘 피해를 받는 대상(작렬)의 화살표. 부딪힘 피해가 없는 막힘은 위 막힘 색입니다.")]
-        [SerializeField] private Color knockbackCollisionColor = new(1f, 0.55f, 0.1f, 1f);
-
         // 강조를 바꾸는 다른 LateUpdate보다 늦게 돌기 위한 실행 순서입니다(GC 끊김 계획 §3.7 L4).
         private const int DrawOrder = 10000;
-
-        [Header("낙석 경고 색 (낙석 View 계획 RP-16)")]
-        [Tooltip("낙석이 떨어질 칸의 테두리와 채우기입니다. 느낌표는 이미지 색 그대로라, 이 값을 바꾸면 느낌표 이미지(Sprites/rockfall_warning.png)도 함께 맞춥니다.")]
-        [SerializeField] private Color rockfallWarningColor = new(0.918f, 0.278f, 0.271f, 1f);
 
         private readonly FieldHighlightState _state = new();
         private IFieldHighlightRenderer _renderer;
@@ -134,7 +51,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _renderer?.SetVisible(visible);
         }
         private FieldGridMapper _mapper;
-        private FieldTrajectoryLine _trajectory;
+        // 필드 색을 읽는 곳 하나입니다. 처음 구성 때 만들고 매 구성마다 지금 묶음을 다시 가리킵니다(필드 색 DB 계획 TP-3).
+        // 표시기가 전투를 넘어 재사용되므로 객체는 바꾸지 않습니다.
+        private FieldHighlightPalette _palette;
+        private FieldTrajectoryLines _trajectory;
         private FieldKnockbackMarkers _knockbackMarkers;
         // 프레임 끝에 그릴 바뀐 칸입니다(GH1). 상태가 돌려주는 목록은 다시 쓰는 목록이라 옮겨 담고, 표시 배열로 같은 칸을 한 번만 담습니다.
         // 둘 다 구성 때 칸 수만큼 한 번 만들어 그리기 대기에 할당이 없습니다. 칸과 무관한 변경은 "전체 다시"로 표시합니다.
@@ -176,6 +96,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             ValidateCellsRoot();
             Release();
+            if (_palette == null)
+                _palette = new FieldHighlightPalette(config.Colors);
+            else
+                _palette.Use(config.Colors);
             EnsureRenderer(config, colors, outlines, meshes);
 
             try
@@ -189,6 +113,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 BuildTrajectory(config, colors, meshes);
                 BuildKnockbackMarkers(config, colors, meshes);
                 _mapper = mapper;
+#if UNITY_EDITOR
+                ListenToConfigEdits(config);
+#endif
             }
             catch
             {
@@ -454,10 +381,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// </summary>
         internal void Release()
         {
+#if UNITY_EDITOR
+            ListenToConfigEdits(null);
+#endif
             DropPending();
             _state.Clear();
             _mapper = null;
-            FieldTrajectoryLine trajectory = _trajectory;
+            FieldTrajectoryLines trajectory = _trajectory;
             FieldKnockbackMarkers knockbackMarkers = _knockbackMarkers;
             _trajectory = null;
             _knockbackMarkers = null;
@@ -480,7 +410,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         private void OnDestroy()
         {
-            FieldTrajectoryLine trajectory = _trajectory;
+#if UNITY_EDITOR
+            ListenToConfigEdits(null);
+#endif
+            FieldTrajectoryLines trajectory = _trajectory;
             FieldKnockbackMarkers knockbackMarkers = _knockbackMarkers;
             _trajectory = null;
             _knockbackMarkers = null;
@@ -534,13 +467,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         FieldGridMapper ICombatTrajectoryCanvas.Mapper => _mapper;
 
-        void ICombatTrajectoryCanvas.ShowAttackTrajectory(Vector3[] localPath, int count, bool blocked)
+        void ICombatTrajectoryCanvas.ShowAttackTrajectories(IReadOnlyList<FieldTrajectoryPath> paths, bool blocked)
         {
             // 구성 전이면 궤적 부품이 없어 아무것도 하지 않습니다(운영 설정은 DB 검사가 재질을 강제, 공격 궤적 계획 P1).
             if (_mapper == null || _trajectory == null)
                 return;
 
-            _trajectory.Show(localPath, count, blocked);
+            _trajectory.Show(paths, blocked);
         }
 
         void ICombatTrajectoryCanvas.ClearAttackTrajectory() => _trajectory?.Clear();
@@ -573,7 +506,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (config.TrajectoryMaterial == null)
                 return;
 
-            var trajectory = new FieldTrajectoryLine(_visualRoot, config, trajectoryColor, trajectoryBlockedColor, meshes, colors);
+            var trajectory = new FieldTrajectoryLines(_visualRoot, config, _palette, meshes, colors);
             trajectory.Build();
             _trajectory = trajectory;
         }
@@ -587,8 +520,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (config.KnockbackArrowMaterial == null)
                 return;
 
-            var knockbackMarkers = new FieldKnockbackMarkers(_visualRoot, config, knockbackColor, knockbackBlockedColor,
-                knockbackImmuneColor, knockbackCollisionColor, meshes, colors);
+            var knockbackMarkers = new FieldKnockbackMarkers(_visualRoot, config, _palette, meshes, colors);
             knockbackMarkers.Build();
             _knockbackMarkers = knockbackMarkers;
         }
@@ -617,22 +549,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             switch (config.DisplayMode)
             {
                 case FieldDisplayMode.CellPrefab:
-                    _renderer = new FieldCellColorRenderer(_visualRoot, config, colors, CreatePalette());
+                    _renderer = new FieldCellColorRenderer(_visualRoot, config, colors, _palette);
                     break;
                 case FieldDisplayMode.GridOutline:
-                    _renderer = new FieldOutlineRenderer(_visualRoot, config, outlines, CreatePalette(), meshes, colors);
+                    _renderer = new FieldOutlineRenderer(_visualRoot, config, outlines, _palette, meshes, colors);
                     break;
                 default:
                     throw new InvalidOperationException($"[FieldView] 알 수 없는 표시 모드입니다: {config.DisplayMode}.");
             }
-        }
-
-        private FieldHighlightPalette CreatePalette()
-        {
-            return new FieldHighlightPalette(playerZoneColor, railColor, hoverColor, hoverValidColor,
-                hoverInvalidColor, attackHoverColor, attackHoverValidColor, attackHoverInvalidColor, affectedColor, movementDraftColor, moveRangeColor, attackRangeColor, enemyAttackRangeColor, hazardRangeColor,
-                activeActorColor, objectiveTargetColor, knockbackDestinationColor, allyHoverMoveRangeColor, enemyMoveRangeColor, rockfallWarningColor,
-                nexusReinforcementRangeColor, fillAlpha, gimmickHoverRangeColor, roarForecastColor);
         }
 
         private void ValidateCellsRoot()
@@ -657,6 +581,70 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         }
 
 #if UNITY_EDITOR
+        #region 에디터 색 실시간 반영 (필드 색 DB 설계 FC3)
+
+        // 핫 리로드는 정적 신호 구독을 지우므로 "구독 중" 표시와 구성한 설정도 저장하지 않습니다.
+        // 남겨 두면 다시 구성해도 구독하지 않습니다(묶음 끝 검토 L7).
+        [NonSerialized] private bool _listeningToConfigEdits;
+        // 이 필드를 구성한 설정입니다. 그 SO에서 온 신호만 받습니다(묶음 끝 검토 L2).
+        [NonSerialized] private StageFieldViewData _editedConfig;
+
+        // 구성이 끝나면 그 설정으로 구독하고(설정), 해제·파괴 때 풉니다(null). 같은 상태로 다시 불러도 구독은 한 번입니다.
+        private void ListenToConfigEdits(StageFieldViewData config)
+        {
+            _editedConfig = config;
+            bool listen = config != null;
+            if (_listeningToConfigEdits == listen)
+                return;
+            if (listen)
+                StageFieldViewData.EditorChanged += OnConfigEdited;
+            else
+                StageFieldViewData.EditorChanged -= OnConfigEdited;
+            _listeningToConfigEdits = listen;
+        }
+
+        // 인스펙터에서 필드 설정 SO가 바뀌었습니다. 팔레트가 지금 묶음을 가리키게 하고 칸 전체·궤적·화살표 색을 다시 넣습니다.
+        // 모양 값(두께·길이·재질)은 다음 구성 때 반영됩니다(Q-FC3 A). 구성 전이면 무시합니다(계획 TP-7).
+        private void OnConfigEdited(StageFieldViewData current)
+        {
+            // 편집 모드에서 Release 없이 파괴되면 OnDestroy가 불리지 않아 구독이 남습니다. 그 신호에서 풉니다(묶음 끝 검토 L7).
+            if (this == null)
+            {
+                ListenToConfigEdits(null);
+                return;
+            }
+            if (_mapper == null || _palette == null || current?.Colors == null)
+                return;
+            // 다른 필드 설정 SO(등록되지 않은 에셋 등)를 고친 신호는 받지 않습니다. 같은 SO면 Unity가 안쪽 객체를 새로 만들어
+            // 끼웠어도 받고, 그 새 객체를 기억합니다(묶음 끝 검토 L2).
+            if (_editedConfig == null || !_editedConfig.IsSameEditorSource(current))
+                return;
+
+            _editedConfig = current;
+            _palette.Use(current.Colors);
+            QueueRepaintAll();
+            _trajectory?.ReapplyColors();
+            _knockbackMarkers?.ReapplyColors();
+        }
+
+        // 모든 칸을 바뀐 칸으로 넣습니다. CellPrefab 표시기는 바뀐 칸만 칠하고, GridOutline 표시기는 바뀐 칸이 있으면 전체 다시 한 번에
+        // 색을 비교해 실제로 달라진 것만 다시 그립니다(설계 P-FC3). 그래서 "전체 다시"는 따로 표시하지 않습니다 — 표시하면 GridOutline이
+        // 한 번 고칠 때 두 번 그립니다(묶음 끝 검토 L3). 대기 목록은 구성 때 칸 수만큼 있어 할당이 없습니다.
+        private void QueueRepaintAll()
+        {
+            for (int index = 0; index < _state.CellCount; index++)
+            {
+                if (_pendingMarks[index])
+                    continue;
+                _pendingMarks[index] = true;
+                _pendingCells.Add(index);
+            }
+            if (!DrawsAtFrameEnd)
+                FlushPending();
+        }
+
+        #endregion
+
         private void OnValidate()
         {
             if (cellsRoot == null)

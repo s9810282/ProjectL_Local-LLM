@@ -48,7 +48,7 @@ MonoBehaviour:
     trajectoryDotFill: 0.45
     trajectoryFlowSpeed: 0.6
     trajectoryBlockedMarker: {fileID: 0}
-    knockbackArrowMaterial: {fileID: 2100000, guid: 57f974494f6a435889f224efa2302097, type: 2}
+    knockbackArrowMaterial: {fileID: 2100000, guid: 7bd03d9d1a7687e448ff206bbf14d732, type: 2}
     knockbackArrowLength: 0.5
     knockbackArrowWidth: 0.8
     knockbackArrowLift: 0.25
@@ -63,3 +63,37 @@ MonoBehaviour:
     fieldUnitScale: 1
     movementOriginalOpacity: 0.65
     neutralGhostTint: {r: 0.8, g: 0.8, b: 0.8, a: 0.5}
+    colors:
+      playerZoneColor: {r: 0.55, g: 0.75, b: 1, a: 1}
+      railColor: {r: 0.85, g: 0.75, b: 0.45, a: 1}
+      hoverColor: {r: 1, g: 1, b: 0.6, a: 1}
+      hoverValidColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+      hoverInvalidColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+      attackHoverColor: {r: 1, g: 1, b: 0.6, a: 1}
+      attackHoverValidColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+      attackHoverInvalidColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+      affectedColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+      movementDraftColor: {r: 0.05, g: 1, b: 0.75, a: 1}
+      hazardRangeColor: {r: 1, g: 0.15686275, b: 0, a: 1}
+      enemyAttackRangeColor: {r: 1, g: 0.15662651, b: 0, a: 1}
+      attackRangeColor: {r: 1, g: 0.15686275, b: 0, a: 1}
+      enemyMoveRangeColor: {r: 0.45, g: 0.85, b: 1, a: 1}
+      allyHoverMoveRangeColor: {r: 0.45, g: 0.85, b: 1, a: 1}
+      moveRangeColor: {r: 0.10849059, g: 1, b: 0.20388347, a: 1}
+      activeActorColor: {r: 1, g: 0.95, b: 0.3, a: 1}
+      objectiveTargetColor: {r: 1, g: 0.25, b: 0.75, a: 1}
+      nexusReinforcementRangeColor: {r: 0.6, g: 0.35, b: 0.9, a: 1}
+      gimmickHoverRangeColor: {r: 0.15, g: 0.85, b: 0.75, a: 1}
+      roarForecastColor: {r: 0.6, g: 0.34901962, b: 0.90196085, a: 1}
+      rockfallWarningColor: {r: 0.918, g: 0.278, b: 0.271, a: 1}
+      skillCandidateColor: {r: 0.35, g: 0.75, b: 1, a: 1}
+      skillPointColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+      fillAlpha: 0.183
+      trajectoryColor: {r: 1, g: 0.95, b: 0.75, a: 1}
+      trajectoryBlockedColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+      knockbackDestinationColor: {r: 1, g: 0.8509804, b: 0.2, a: 1}
+      knockbackColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+      knockbackBlockedColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+      knockbackImmuneColor: {r: 0.65, g: 0.65, b: 0.65, a: 1}
+      knockbackCollisionColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+      pullArrowColor: {r: 0.05, g: 1, b: 0.75, a: 1}

@@ -20,6 +20,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 throw new ArgumentException("보유 기록 변경은 ID·정의 키·역할을 바꿀 수 없습니다.", nameof(final));
             if (expected.SpecializationCategory != final.SpecializationCategory)
                 throw new ArgumentException("일반 보유 변경은 전직 병과를 바꿀 수 없습니다.", nameof(final));
+            if (expected.PlayerSkillUpgrade != final.PlayerSkillUpgrade)
+                throw new ArgumentException("일반 보유 변경은 스킬 강화를 바꿀 수 없습니다.", nameof(final));
             if (!expected.SameGrowth(final))
                 throw new ArgumentException("경험치 변경은 특성 성장을 바꿀 수 없습니다.", nameof(final));
             if (final.HunterAttackBonus < expected.HunterAttackBonus)

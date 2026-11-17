@@ -1286,6 +1286,11 @@ namespace ProjectL.Tool.Editor
                 EditorGUILayout.HelpBox("외형 표를 읽지 못했습니다: " + exception.Message, MessageType.Error);
                 return;
             }
+            if (soVisuals.TerrainScaleError != null)
+            {
+                EditorGUILayout.HelpBox(soVisuals.TerrainScaleError + "\n칸 간격을 수정한 뒤 ‘목록 새로고침’을 누르세요.", MessageType.Error);
+                return;
+            }
             var space = new CombatStageSoSpace(soField.Columns, soField.Rows, soVisuals.FieldView, SoTileScene());
             bool player = EditorGUILayout.Toggle("Player 기준 (끄면 전체 배치)", soPlayerOnly);
             if (player != soPlayerOnly)

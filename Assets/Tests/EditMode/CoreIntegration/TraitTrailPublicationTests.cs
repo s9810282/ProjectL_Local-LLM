@@ -14,12 +14,12 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class TraitTrailPublicationTests
     {
-        [TestCase(1, 1)]
-        [TestCase(2, 2)]
-        [TestCase(3, 3)]
-        public void RankedCompaction_PublishedPathLastsThroughOpposingTurn(int rank, int bonus)
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void Compaction_PublishedPathLastsThroughOpposingTurn(int bonus)
         {
-            var trait = RankedCombatTestData.Spec(TraitKey.GroundCompaction, rank);
+            var trait = new GroundCompactionTraitSpec(bonus, opposingTurnEndsToExpire: 1);
             using var battle = new ConfiguredMovementBattle(ConfiguredMovementBattle.Config, new HuntersMarkBattleSource(trait));
             var start = battle.Actor.Anchor.Value;
             // 흔적은 지나간 칸에만 생긴다. 출발·도착 칸은 빠진다.

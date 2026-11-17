@@ -33,8 +33,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly List<CombatStageDamageEntry> _stageDamage = new();
 
         private readonly bool _captureMovementUses;
-        internal List<MovementDamageExecution> DamageExecutions { get; } = new();
-        internal IReadOnlyList<MovementEffectUse> MovementEffectUses => MovementDamageExecution.Collect(DamageExecutions);
+        internal List<CombatHealthExecution> HealthExecutions { get; } = new();
+        internal List<CombatHealthClaim> HealthClaims { get; } = new();
+        internal IReadOnlyList<MovementEffectUse> MovementEffectUses => CombatHealthExecution.CollectMovementUses(HealthExecutions);
         internal CombatProfileReadSet ProfileReads { get; }
         internal Dictionary<EntityId, CharacterCombatFacts> Characters { get; }
         internal List<CombatEvent> Events { get; }
@@ -65,24 +66,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 소지자와 효과 대상의 최종 사실은 공유 사전에 반영되며, 호출자는 결과의 After만 읽는다.
         /// </summary>
         internal CombatDamageOutcome Apply(EntityId recipientId, CombatDamageKind kind, CombatDamageOrigin origin,
-            int damageBeforeItems, IReadOnlyList<CombatDamageOrigin> eventOrigins = null, bool deferTraitKills = false,
+            int damageBeforeItems, bool deferTraitKills = false,
             IReadOnlyList<TraitTrailFact> usedDustSources = null, AttackTraitScope traitScope = null, CharacterCombatFacts damageActor = null,
             int? numericInput = null, CommandAttackGroups heldDefenseGroups = null, bool resolvedHeldProtection = false,
-            IReadOnlyList<(CombatDamageOrigin Origin, int Input)> resolvedHeldAbsorptions = null, SacrificeHitUpgrade? sacrificeUpgrade = null)
+            SacrificeHitUpgrade? sacrificeUpgrade = null, EffectOriginKey? effectOrigin = null)
         {
             CombatDamageOutcome result = default;
             foreach (var phase in ApplySteps(recipientId, kind, origin, damageBeforeItems, value => result = value,
-                eventOrigins, deferTraitKills, usedDustSources, traitScope, damageActor, numericInput, heldDefenseGroups,
-                resolvedHeldProtection, resolvedHeldAbsorptions, sacrificeUpgrade)) { }
+                deferTraitKills, usedDustSources, traitScope, damageActor, numericInput, heldDefenseGroups,
+                resolvedHeldProtection, sacrificeUpgrade, effectOrigin)) { }
             return result;
         }
 
         /// <summary>피해 전후의 상태 정산을 각각 끝낸 뒤 다음 피해 단계로 진행한다.</summary>
         internal IEnumerable<string> ApplySteps(EntityId recipientId, CombatDamageKind kind, CombatDamageOrigin origin,
-            int damageBeforeItems, Action<CombatDamageOutcome> completed, IReadOnlyList<CombatDamageOrigin> eventOrigins = null, bool deferTraitKills = false,
+            int damageBeforeItems, Action<CombatDamageOutcome> completed, bool deferTraitKills = false,
             IReadOnlyList<TraitTrailFact> usedDustSources = null, AttackTraitScope traitScope = null, CharacterCombatFacts damageActor = null,
             int? numericInput = null, CommandAttackGroups heldDefenseGroups = null, bool resolvedHeldProtection = false,
-            IReadOnlyList<(CombatDamageOrigin Origin, int Input)> resolvedHeldAbsorptions = null, SacrificeHitUpgrade? sacrificeUpgrade = null)
+            SacrificeHitUpgrade? sacrificeUpgrade = null, EffectOriginKey? effectOrigin = null, CombatEvent contextEvent = null,
+            MovementTileFact environmentSource = null)
         {
             if (origin == null) throw new ArgumentNullException(nameof(origin));
             if (sacrificeUpgrade.HasValue && sacrificeUpgrade.Value.RecipientId != recipientId)
@@ -107,7 +109,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             // 공격은 대상 산식의 비율 단계에서 처리합니다. 환경·반사는 같은 엔진을 이 공통 경계에서 한 번 통과합니다.
-            if (_traitInput != null && kind != CombatDamageKind.OrdinaryAttack && kind != CombatDamageKind.ExtraAttack && kind != CombatDamageKind.ReactionAttack)
+            if (_traitInput != null && !CombatDamageKinds.IsAttack(kind))
             {
                 var incoming = new CombatEffectEngine().EvaluateIncomingDamage(
                     CombatCommandEffects.CaptureIncoming(_traitInput, Characters.Values.ToArray(), before, profileReads: ProfileReads),
@@ -168,7 +170,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 : actualHealthLoss == recipient.Health.CurrentHealth ? CombatCommandCalculator.Hurt(recipient, remainingDamage)
                 : CharacterSettlementCalculator.Copy(recipient,
                     new HealthStateSnapshot(recipient.Health.CurrentHealth - actualHealthLoss, recipient.Health.MaxHealth), recipient.Stats);
-            var healthOrigins = eventOrigins ?? new[] { origin };
+            var healthOrigins = new[] { origin };
+            var lossSource = new CombatHealthSource(CombatHealthOperationKind.Damage, effectOrigin, healthOrigins,
+                contextEvent, CombatDamageCause.NumericDamage, environmentSource, kind);
+            var steps = new List<CombatHealthStep>();
             int reconstructionRecovery = 0;
             if (damaged.Health.IsDead && ReconstructionTraitRule.CanTrigger(recipient))
             {
@@ -177,17 +182,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var reconstructed = ReconstructionTraitRule.Trigger(recipient);
                 CombatCommandEvents.Trait(Events, recipientId, TraitKey.Reconstruction, TraitActivationKind.ReconstructionStarted,
                     actualHealthLoss, new[] { recipientId }, origin: origin);
-                Events.Add(new CombatCharacterEvent(CombatEventKind.Reconstructed, recipient, reconstructed, healthOrigins));
+                var evidence = new CombatCharacterEvent(CombatEventKind.Reconstructed, recipient, reconstructed, healthOrigins);
+                Events.Add(evidence);
+                steps.AddRange(CombatHealthRecording.Reconstruction(evidence, damaged.Health, lossSource, actualHealthLoss));
                 reconstructionRecovery = reconstructed.Health.CurrentHealth;
                 damaged = reconstructed;
             }
-            else CombatCommandEvents.Health(Events, recipient, damaged, healthOrigins);
+            else
+            {
+                var evidence = CombatCommandEvents.Health(Events, recipient, damaged, healthOrigins);
+                if (evidence != null)
+                    steps.Add(new CombatHealthStep(recipientId, recipient.Health, damaged.Health, actualHealthLoss, 0, 0,
+                        lossSource, evidence, 0));
+            }
+            var lossStep = steps.Count == 0 ? null : steps[0];
             // 체력 사건과 같은 출처 목록을 남겨, 넣은 피해의 귀속이 처치 귀속과 같은 출처를 보게 한다(스테이지 기록 설계 D4).
             if (actualHealthLoss > 0)
                 _stageDamage.Add(new CombatStageDamageEntry(recipientId, healthOrigins, actualHealthLoss));
             definition = CombatItemResolver.EquippedDefinition(_definitions, damaged);
             recipient = damaged;
             int recovery = 0;
+            CombatItemEvent item = null;
             if (definition != null)
             {
                 var decision = CombatItemResolver.AfterDamage(definition, new ItemAfterDamageContext(context, damaged, actualHealthLoss));
@@ -202,9 +217,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var finalTarget = decision.TargetId == recipientId ? recipient : affectedTarget?.Final ?? target;
                     int magnitude = decision.TemporaryEffect == null ? recovery :
                         CombatEffectiveStatsCalculator.ItemReduction(target, finalTarget, decision.TemporaryEffect.Stat);
-                    ItemCharacterChanges.AppendDecisionEvent(Events, definition, recipientId, decision, ItemEventStage.AfterDamage,
+                    item = ItemCharacterChanges.AppendDecisionEvent(Events, definition, recipientId, decision, ItemEventStage.AfterDamage,
                         kind, magnitude, added);
-                    CombatCommandEvents.Health(Events, damaged, recipient);
+                    var evidence = CombatCommandEvents.Health(Events, damaged, recipient);
+                    if (item.ActivationKind == ItemActivationKind.Healing)
+                    {
+                        var claimSteps = Array.Empty<CombatHealthStep>();
+                        if (recovery > 0)
+                        {
+                            var itemOrigin = new EffectOriginKey(EffectOwnerKind.Item, recipientId.Value, item.ItemKey,
+                                nameof(ItemEventStage.AfterDamage));
+                            var healing = new CombatHealthSource(CombatHealthOperationKind.EffectRecovery, itemOrigin, contextEvent: item);
+                            var step = new CombatHealthStep(recipientId, damaged.Health, recipient.Health, 0, recovery, 0, healing, evidence, 0);
+                            steps.Add(step);
+                            claimSteps = new[] { step };
+                        }
+                        HealthClaims.Add(new CombatHealthClaim(CombatHealthClaimKind.ItemRecovery, item, -1, -1, recipientId, claimSteps));
+                    }
                 }
             }
             yield return "DamageHealth";
@@ -237,27 +266,39 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         sacrificeUpgrade.Value.ShieldOnActivation, new[] { recipientId }, origin: origin);
                 }
             }
-            RecordMovementUses(before, origin, kind, numeric, exposureInput, exposure, usedDustSources,
-                traitScope, damageActor, eventStart);
-            // 여러 가시 출처는 기존의 개별 배지 처리와 단일 합산 피해를 유지합니다. 막힌 양수 입력도 같은 노출 선택 근거를 사용합니다.
-            foreach (var absorbed in resolvedHeldAbsorptions ?? Array.Empty<(CombatDamageOrigin Origin, int Input)>())
-            {
-                RecordMovementUses(before, absorbed.Origin, kind, absorbed.Input, absorbed.Input, exposure, null, null, null, eventStart);
-                yield return "DamageAbsorptionEvidence";
-            }
+            RecordExecution(before, origin, kind, numeric, exposureInput, exposure, usedDustSources,
+                traitScope, damageActor, eventStart, steps, item);
             completed(new CombatDamageOutcome(before, Characters[recipientId], remainingDamage, actualHealthLoss, recovery,
-                damageBeforeItems, usesExposure ? exposure : null));
+                damageBeforeItems, usesExposure ? exposure : null, lossStep));
         }
 
 
-        private void RecordMovementUses(CharacterCombatFacts recipient, CombatDamageOrigin origin, CombatDamageKind kind,
+        private void RecordExecution(CharacterCombatFacts recipient, CombatDamageOrigin origin, CombatDamageKind kind,
             int numeric, int exposureInput, WeaknessExposureEvaluation exposure, IReadOnlyList<TraitTrailFact> dust,
-            AttackTraitScope scope, CharacterCombatFacts actor, int eventStart)
+            AttackTraitScope scope, CharacterCombatFacts actor, int eventStart, IReadOnlyList<CombatHealthStep> steps = null,
+            CombatItemEvent item = null)
         {
-            if (!_captureMovementUses || _traitInput == null) return;
-            var execution = Events.Skip(eventStart).FirstOrDefault(e => MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId)) ??
-                Events.LastOrDefault(e => MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId));
-            if (execution == null) return;
+            steps ??= Array.Empty<CombatHealthStep>();
+            var localEvidence = Events.Skip(eventStart).Where(e => MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId));
+            var execution = localEvidence.FirstOrDefault() ?? Events.LastOrDefault(e => MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId));
+            var evidence = localEvidence.Concat(Events.Take(eventStart).Where(e => e is not CombatItemEvent &&
+                MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId)))
+                .Concat(steps.Select(step => step.EvidenceEvent));
+            if (execution != null) evidence = evidence.Append(execution);
+            if (item != null) evidence = evidence.Append(item);
+            var anchors = evidence.Distinct().ToArray();
+            if (anchors.Length == 0) return;
+
+            var uses = _captureMovementUses && _traitInput != null && execution != null
+                ? CaptureMovementUses(recipient, origin, kind, numeric, exposureInput, exposure, dust, scope, actor, execution)
+                : Array.Empty<MovementEffectUse>();
+            HealthExecutions.Add(new CombatHealthExecution(steps, anchors, uses));
+        }
+
+        private IReadOnlyList<MovementEffectUse> CaptureMovementUses(CharacterCombatFacts recipient, CombatDamageOrigin origin,
+            CombatDamageKind kind, int numeric, int exposureInput, WeaknessExposureEvaluation exposure, IReadOnlyList<TraitTrailFact> dust,
+            AttackTraitScope scope, CharacterCombatFacts actor, CombatEvent execution)
+        {
             var uses = new List<MovementEffectUse>();
             if (exposureInput > 0)
                 foreach (var contribution in exposure.UsedSources.Where(s => s.Movement.HasValue))
@@ -274,22 +315,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     new EffectOriginKey(EffectOwnerKind.Trait, actor.EntityId.Value, (int)TraitKey.Acceleration, "main"),
                     actor.EntityId, MovementEffectUseKind.AccelerationDamage, execution, origin, consumerBefore: actor,
                     numericInput: numeric, damageKind: kind, capturedAmount: scope.CapturedAcceleration));
-            var evidence = Events.Skip(eventStart).Where(e => MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId))
-                .Concat(Events.Take(eventStart).Where(e => e is not CombatItemEvent &&
-                MovementUndoPolicy.MatchesDamage(e, origin, recipient.EntityId))).Distinct().ToArray();
-            if (!evidence.Contains(execution)) evidence = evidence.Append(execution).ToArray();
-            DamageExecutions.Add(new MovementDamageExecution(evidence, uses));
+            return uses;
         }
 
         /// <summary>숫자 피해·아이템 피격·보호막을 거치지 않고 실제 HP를 사망 사실로 바꿉니다.</summary>
-        internal CombatDamageOutcome Defeat(EntityId recipientId, CombatDamageOrigin origin)
+        internal CombatDamageOutcome Defeat(EntityId recipientId, CombatDamageOrigin origin, EffectOriginKey? effectOrigin = null)
         {
             CombatDamageOutcome result = default;
-            foreach (var phase in DefeatSteps(recipientId, origin, value => result = value)) { }
+            foreach (var phase in DefeatSteps(recipientId, origin, value => result = value, effectOrigin)) { }
             return result;
         }
 
-        internal IEnumerable<string> DefeatSteps(EntityId recipientId, CombatDamageOrigin origin, Action<CombatDamageOutcome> completed)
+        internal IEnumerable<string> DefeatSteps(EntityId recipientId, CombatDamageOrigin origin, Action<CombatDamageOutcome> completed,
+            EffectOriginKey? effectOrigin = null)
         {
             if (origin == null) throw new ArgumentNullException(nameof(origin));
             var before = Characters[recipientId];
@@ -299,13 +337,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 yield break;
             }
             int eventStart = Events.Count;
+            var origins = new[] { origin };
+            var lossSource = new CombatHealthSource(CombatHealthOperationKind.Damage, effectOrigin, origins,
+                damageCause: CombatDamageCause.InstantDefeat);
+            CombatHealthStep lossStep;
             if (ReconstructionTraitRule.CanTrigger(before))
             {
                 // 즉사(마무리 사격 등)도 재구성이 버틴다(2026-11-10 사용자 결정, Q-ED1 바뀜). 사망이 아니므로 처치 정산을 하지 않는다.
                 var reconstructed = ReconstructionTraitRule.Trigger(before);
                 CombatCommandEvents.Trait(Events, recipientId, TraitKey.Reconstruction, TraitActivationKind.ReconstructionStarted,
                     before.Health.CurrentHealth, new[] { recipientId }, origin: origin);
-                Events.Add(new CombatCharacterEvent(CombatEventKind.Reconstructed, before, reconstructed, new[] { origin }));
+                var evidence = new CombatCharacterEvent(CombatEventKind.Reconstructed, before, reconstructed, origins);
+                Events.Add(evidence);
+                var depleted = new HealthStateSnapshot(0, before.Health.MaxHealth);
+                var steps = CombatHealthRecording.Reconstruction(evidence, depleted, lossSource, before.Health.CurrentHealth);
+                HealthExecutions.Add(new CombatHealthExecution(steps, new[] { evidence }));
+                lossStep = steps[0];
                 Characters[recipientId] = reconstructed;
                 _stageDamage.Add(new CombatStageDamageEntry(recipientId, new[] { origin }, before.Health.CurrentHealth));
                 RecordRecovery(recipientId, reconstructed.Health.CurrentHealth);
@@ -314,7 +361,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             {
                 var final = DiscardOnDeath(CombatCommandCalculator.Hurt(before, before.Health.CurrentHealth));
                 Characters[recipientId] = final;
-                Events.Add(new CombatCharacterEvent(CombatEventKind.Died, before, final, new[] { origin }, damageCause: CombatDamageCause.InstantDefeat));
+                var evidence = new CombatCharacterEvent(CombatEventKind.Died, before, final, origins, damageCause: CombatDamageCause.InstantDefeat);
+                Events.Add(evidence);
+                lossStep = CombatHealthRecording.Add(HealthExecutions, recipientId, before.Health, final.Health, lossSource, evidence,
+                    loss: before.Health.CurrentHealth);
                 _stageDamage.Add(new CombatStageDamageEntry(recipientId, new[] { origin }, before.Health.CurrentHealth));
                 SettleTraitKills(eventStart);
             }
@@ -327,7 +377,48 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     yield return "DefeatPresence";
                 }
             }
-            completed(new CombatDamageOutcome(before, Characters[recipientId], 0, before.Health.CurrentHealth, 0));
+            completed(new CombatDamageOutcome(before, Characters[recipientId], 0, before.Health.CurrentHealth, 0, lossStep: lossStep));
+        }
+
+        /// <summary>
+        /// 기둥 압사는 피격 방어·아이템·재구성을 거치지 않고 기존 사망·장비·처치 정산으로 이어진다.
+        /// <paramref name="completed"/>는 실제로 줄인 체력을 받는다. 이미 죽은 수신자는 0이다.
+        /// </summary>
+        internal IEnumerable<string> CrushSteps(EntityId recipientId, CombatDamageOrigin origin, CombatEvent contextEvent,
+            Action<int> completed)
+        {
+            if (origin == null) throw new ArgumentNullException(nameof(origin));
+            if (completed == null) throw new ArgumentNullException(nameof(completed));
+            if (contextEvent is not CombatPillarFallEvent fall || !fall.CrushedUnitIds.Contains(recipientId) ||
+                !fall.Reaction.Origin.Equals(origin))
+                throw new ArgumentException("압사는 해당 수신자를 가진 기둥 낙하 사건이 필요합니다.", nameof(contextEvent));
+            var before = Characters[recipientId];
+            if (before.Health.IsDead)
+            {
+                completed(0);
+                yield break;
+            }
+            int eventStart = Events.Count;
+            var final = DiscardOnDeath(CombatCommandCalculator.Hurt(before, before.Health.CurrentHealth));
+            Characters[recipientId] = final;
+            var origins = new[] { origin };
+            var evidence = new CombatCharacterEvent(CombatEventKind.Died, before, final, origins,
+                damageCause: CombatDamageCause.PillarCrush);
+            Events.Add(evidence);
+            var source = new CombatHealthSource(CombatHealthOperationKind.Damage, damageOrigins: origins,
+                contextEvent: fall, damageCause: CombatDamageCause.PillarCrush);
+            CombatHealthRecording.Add(HealthExecutions, recipientId, before.Health, final.Health, source, evidence,
+                loss: before.Health.CurrentHealth);
+            _stageDamage.Add(new CombatStageDamageEntry(recipientId, origins, before.Health.CurrentHealth));
+            completed(before.Health.CurrentHealth);
+            SettleTraitKills(eventStart);
+            yield return "PillarCrushDeath";
+            using var presence = BeginReconcilePresence(origin);
+            while (presence != null && !presence.IsComplete)
+            {
+                presence.Step();
+                yield return "PillarCrushPresence";
+            }
         }
 
         /// <summary>현재 명령에서 이미 받은 영구 처치 보상까지 포함해 보유 조건을 맞춥니다.</summary>
@@ -419,9 +510,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal int ActualHealthLoss { get; }
         internal int Recovery { get; }
         internal WeaknessExposureEvaluation Exposure { get; }
+        internal CombatHealthStep LossStep { get; }
 
         internal CombatDamageOutcome(CharacterCombatFacts before, CharacterCombatFacts after,
-            int remainingDamage, int actualHealthLoss, int recovery, int? damageBeforeItems = null, WeaknessExposureEvaluation exposure = null)
+            int remainingDamage, int actualHealthLoss, int recovery, int? damageBeforeItems = null, WeaknessExposureEvaluation exposure = null,
+            CombatHealthStep lossStep = null)
         {
             Before = before;
             After = after;
@@ -430,6 +523,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             ActualHealthLoss = actualHealthLoss;
             Recovery = recovery;
             Exposure = exposure;
+            LossStep = lossStep;
         }
     }
 }

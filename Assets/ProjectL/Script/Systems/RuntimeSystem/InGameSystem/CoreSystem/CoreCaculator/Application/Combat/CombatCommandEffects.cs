@@ -173,7 +173,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             FocusTraitStatusSnapshot f => new FocusEffectStateSnapshot(f.ActiveStacks, f.GainScheduled, f.MovedThisTurn),
             PiercingFalloffTraitStatusSnapshot => new PiercingFalloffEffectStateSnapshot(),
-            ThornFieldTraitStatusSnapshot => new ThornFieldEffectStateSnapshot(),
             KnockbackTraitStatusSnapshot => new KnockbackEffectStateSnapshot(),
             DistanceDamageScaleTraitStatusSnapshot => new DistanceDamageScaleEffectStateSnapshot(),
             KillChainAttackTraitStatusSnapshot => new KillChainAttackEffectStateSnapshot(),
@@ -183,7 +182,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             IntimidationTraitStatusSnapshot => new IntimidationEffectStateSnapshot(),
             HuntersMarkTraitStatusSnapshot => new HuntersMarkEffectStateSnapshot(),
             PullTraitStatusSnapshot => new PullEffectStateSnapshot(),
+            DeadHandTraitStatusSnapshot => new DeadHandEffectStateSnapshot(),
             ImpactBoltTraitStatusSnapshot => new ImpactBoltEffectStateSnapshot(),
+            ThornBombTraitStatusSnapshot => StatelessEffectStateSnapshot.Instance,
             CrashImpactTraitStatusSnapshot => new CrashImpactEffectStateSnapshot(),
             StationaryFireTraitStatusSnapshot s => new StationaryFireEffectStateSnapshot(s.MovedThisOwnTurn),
             AccelerationTraitStatusSnapshot s => new AccelerationEffectStateSnapshot(s.HeldAttackBonus),

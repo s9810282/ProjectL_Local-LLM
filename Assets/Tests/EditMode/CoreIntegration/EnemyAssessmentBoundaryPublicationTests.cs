@@ -34,7 +34,7 @@ namespace ProjectL.Tests.CoreIntegration
         private static readonly CellCoord EscapeCell = new(7, 4);
         private static readonly IMovementTileRule[] Rules =
         {
-            new ThornMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
+            new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
         };
 
         [TestCase(Scenario.RemoteEffects, 1)]

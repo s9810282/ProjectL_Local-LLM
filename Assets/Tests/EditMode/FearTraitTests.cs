@@ -50,7 +50,7 @@ namespace ProjectL.Tests.Core
             Assert.That(activation.TraitActivationKind, Is.EqualTo(TraitActivationKind.StatusApplied));
             Assert.That(activation.TargetIds, Is.EqualTo(new[] { new EntityId(1), new EntityId(3) }));
             Assert.That(activation.TargetCells, Is.EqualTo(new[] { FearCell }));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace ProjectL.Tests.Core
                 (StatusEffectKey.Disarm, (EffectOriginKey?)other, 3), (StatusEffectKey.Bind, (EffectOriginKey?)other, 3),
             }));
             Assert.That(FearActivations(result).Single().TargetIds, Is.EqualTo(new[] { new EntityId(1) }));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]

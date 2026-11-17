@@ -1,17 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProjectL.Framework.DataBase;
 using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.Factory.DBFactory;
-using ProjectL.Systems.Factory.Runtime.Buffer;
-using ProjectL.Systems.Factory.Runtime.InGame.Core;
-using ProjectL.Systems.RuntimeSystem.BufferSystems.Core;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
-using ProjectL.Systems.ServiceKeys.Runtime;
-using ProjectL.Systems.ServiceKeys.Runtime.InGame;
 using ProjectL.Framework.Composition;
 using ProjectL.Systems.DataBaseSystem.Data.InGame;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase;
@@ -26,10 +21,9 @@ using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Item;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Recovery.Item;
-using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Event;
-using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Shop;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.RecoverySystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -39,34 +33,31 @@ namespace ProjectL.Tests.CoreIntegration
     public sealed class DataBaseAssetTests
     {
         [Test]
-        public void RunGoldFacilities_ActiveRestReferencesAndOrdinaryShopMatchPurchases()
+        public void RecoveryProduction_RegistersTableAndPreservesEachStagesOptionOrderAndEffects()
         {
             const string prefix = "Assets/ProjectL/DataBaseSO/InGameGroup/";
-            var data = ProductionInGame();
-            var rest = (EventStageDetail)data.StageTableQuery.GetStages(1).First(s => s.StageData is EventStageDetail).StageData;
-            Assert.That(rest.RecoveryOptionKeys, Is.EqualTo(new[] { 2, 4 }));
-            var heal = data.RecoveryOptionTableQuery.GetRecoveryOption(2);
-            Assert.That((heal.Cost, heal.EffectKind, heal.HealMode, heal.HealValue),
-                Is.EqualTo((5, RecoveryEffectKind.Heal, RecoveryHealMode.PercentOfMax, 30)));
-            var growth = data.RecoveryOptionTableQuery.GetRecoveryOption(4);
-            Assert.That((growth.Cost, growth.EffectKind, growth.MaxHealthIncrease), Is.EqualTo((10, RecoveryEffectKind.MaxHealthGrowth, 10)));
-            Assert.That(data.RecoveryOptionTableQuery.TryGetRecoveryOption(1, out _), Is.True);
-            Assert.That(data.RecoveryOptionTableQuery.TryGetRecoveryOption(3, out _), Is.True);
-            var group = new SerializedObject(AssetDatabase.LoadMainAssetAtPath(prefix + "InGameGroup.asset"));
+            var database = ProductionDatabase();
+            var variants = new[]
+            {
+                (Chapter: 1, Stage: 1301, Options: new[] { 1, 2, 4 }),
+                (Chapter: 1, Stage: 1302, Options: new[] { 1, 3, 4 }),
+                (Chapter: 1, Stage: 1303, Options: new[] { 2, 3, 4 }),
+                (Chapter: 2, Stage: 2203, Options: new[] { 1, 2, 4 })
+            };
+            foreach (var variant in variants)
+            {
+                var stage = RecoveryDefinitionAdapter.Read(database, variant.Chapter, new StageKey(variant.Stage));
+                var options = stage.Options.ToArray();
+                Assert.That(options.Select(option => option.Id.Value), Is.EqualTo(variant.Options), $"Stage {variant.Stage}");
+                Assert.That(options.Select(option => option.EffectKind),
+                    Is.EqualTo(new[] { RecoveryEffectKind.Heal, RecoveryEffectKind.Heal, RecoveryEffectKind.MaxHealthGrowth }),
+                    $"Stage {variant.Stage}");
+            }
+
+            using var group = new SerializedObject(AssetDatabase.LoadMainAssetAtPath(prefix + "InGameGroup.asset"));
             var tables = group.FindProperty("databaseTables");
             Assert.That(Enumerable.Range(0, tables.arraySize).Select(i => tables.GetArrayElementAtIndex(i).objectReferenceValue),
                 Has.Member(AssetDatabase.LoadMainAssetAtPath(prefix + "Recovery/RecoveryOptionDataTable.asset")));
-            var source = new SerializedObject(AssetDatabase.LoadMainAssetAtPath(prefix + "Stage/Event/Event_Recovery.asset"));
-            var options = source.FindProperty("recoveryOptions");
-            Assert.That(options.arraySize, Is.EqualTo(2));
-            Assert.That(options.GetArrayElementAtIndex(0).objectReferenceValue,
-                Is.EqualTo(AssetDatabase.LoadMainAssetAtPath(prefix + "Recovery/Item/RecoveryOption_2.asset")));
-            Assert.That(options.GetArrayElementAtIndex(1).objectReferenceValue,
-                Is.EqualTo(AssetDatabase.LoadMainAssetAtPath(prefix + "Recovery/Item/RecoveryOption_4.asset")));
-            var office = (ShopStageDetail)data.StageTableQuery.GetStages(1).First(s => s.StageData is ShopStageDetail).StageData;
-            Assert.That(office.ItemKeys, Is.Empty);
-            Assert.That(office.UnitKeys, Is.EqualTo(new[] { EntityKey.Unit_ShotGun }));
-            Assert.That(office.UnitRecruitCostGold, Is.EqualTo(600));
         }
 
         [Test]
@@ -99,76 +90,87 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.Throws<InvalidOperationException>(() => ((RecoveryOptionData)asset.GetData()).Validate());
         }
 
-        private static readonly (TraitKey Key, int[] First, int[] Second)[] ProductionRanks =
+        private static readonly TraitKey[] RankedTraitKeys =
         {
-            (TraitKey.Vanguard, new[] { 1, 4, 9 }, null),
-            (TraitKey.CleanSweep, new[] { 1, 4, 7 }, null),
-            (TraitKey.SoloAction, new[] { 10, 19, 30 }, null),
-            (TraitKey.CallOfBlood, new[] { 10, 13, 17 }, null),
-            (TraitKey.MoraleBoost, new[] { 10, 20, 30 }, null),
-            (TraitKey.PositionSwap, new[] { 0, 10, 18 }, null),
-            (TraitKey.Cohesion, new[] { 1, 4, 7 }, new[] { 1, 6, 9 }),
-            (TraitKey.Taunt, new[] { 0, 10, 15 }, null),
-            (TraitKey.Entrenchment, new[] { 50, 56, 62 }, null),
-            (TraitKey.GroundCompaction, new[] { 1, 2, 3 }, null),
-            (TraitKey.ReconSquad, new[] { 10, 15, 20 }, null),
-            (TraitKey.StationaryFire, new[] { 100, 120, 150 }, null),
-            (TraitKey.ArmorBreaker, new[] { 10, 20, 30 }, null),
-            (TraitKey.FinishingShot, new[] { 15, 20, 30 }, null),
-            (TraitKey.TrackingShot, new[] { 50, 55, 60 }, new[] { 20, 25, 33 }),
-            (TraitKey.Hunter, new[] { 3, 5, 8 }, null),
-            (TraitKey.FocusedBombardment, new[] { 70, 80, 100 }, null),
+            TraitKey.Vanguard, TraitKey.CleanSweep, TraitKey.SoloAction, TraitKey.CallOfBlood,
+            TraitKey.MoraleBoost, TraitKey.PositionSwap, TraitKey.Cohesion, TraitKey.Taunt,
+            TraitKey.Entrenchment, TraitKey.GroundCompaction, TraitKey.ReconSquad, TraitKey.StationaryFire,
+            TraitKey.ArmorBreaker, TraitKey.FinishingShot, TraitKey.TrackingShot, TraitKey.Hunter,
+            TraitKey.FocusedBombardment, TraitKey.Sacrifice, TraitKey.DustScreen, TraitKey.DeadHand
         };
 
-        private static System.Collections.Generic.IEnumerable<TestCaseData> ProductionRankCases() =>
-            ProductionRanks.SelectMany(row => Enumerable.Range(1, 3).Select(rank => new TestCaseData(
-                row.Key, rank, row.First[rank - 1], row.Second?[rank - 1])));
-
-        internal static TraitGrowthCatalog ActiveGrowthCatalog()
+        private static IDataBaseQueryContext ProductionDatabase()
         {
             var assets = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
-            var data = ((IDataBaseQueryContext)DataBaseFactory.Create(assets)).InGameQuery;
+            return (IDataBaseQueryContext)DataBaseFactory.Create(assets);
+        }
+
+        internal static TraitGrowthCatalog ActiveGrowthCatalog() => ReadGrowthCatalog(ProductionDatabase().InGameQuery);
+
+        private static TraitGrowthCatalog ReadGrowthCatalog(IInGameQuery data)
+        {
             var tables = (IHasTraitGrowthTables)data;
             return TraitGrowthDefinitionAdapter.Build(tables.CategoryTraitProgressions, tables.TraitGrowthDefinitions,
                 data.CategoryConfigTableQuery.Config.DefaultTraits);
         }
 
         [Test]
-        public void GrowthProduction_OnlyTheSeventeenRankedKeysCanTrain()
+        public void GrowthProduction_OnlyRegisteredRankedKeysCanTrain()
         {
             Assert.That(ActiveGrowthCatalog().Definitions.Where(d => d.IsTrainable).Select(d => d.Key),
-                Is.EquivalentTo(ProductionRanks.Select(row => row.Key)
-                    .Concat(new[] { TraitKey.Sacrifice, TraitKey.DustScreen })));
+                Is.EquivalentTo(RankedTraitKeys));
         }
 
-        [TestCaseSource(nameof(ProductionRankCases))]
-        public void GrowthProduction_EffectiveSpecMatchesRankTuning(TraitKey key, int rank, int first, int? second)
+        [Test]
+        public void GrowthProduction_ResolvesAuthoredValuesAtEachRank()
         {
-            var spec = RankedCombatTestData.Spec(key, rank);
-            (int, int?) amounts = spec switch
+            var data = ProductionDatabase().InGameQuery;
+            var tables = (IHasTraitGrowthTables)data;
+            var catalog = ReadGrowthCatalog(data);
+            foreach (var authored in tables.TraitGrowthDefinitions.GetAll().Where(definition => definition.IsTrainable))
             {
-                VanguardTraitSpec t => (t.AttackBonus, null),
-                CleanSweepTraitSpec t => (t.AttackBonusPerAllyAttack, null),
-                SoloActionTraitSpec t => (t.ShieldAmount, null),
-                CallOfBloodTraitSpec t => (t.EnemyMaxHealthHealPercent, null),
-                MoraleBoostTraitSpec t => (t.DefeatedEnemyBaseAttackPercent, null),
-                PositionSwapTraitSpec t => (t.ShieldAmount, null),
-                CohesionTraitSpec t => (t.DefensePerAdjacentAlly, t.ShieldAmountPerAlly),
-                TauntTraitSpec t => (t.DamageReductionPercent, null),
-                EntrenchmentTraitSpec t => (t.DamageReductionPercent, null),
-                GroundCompactionTraitSpec t => (t.MovementRangeBonus, null),
-                ReconSquadTraitSpec t => (t.IncreasePercent, null),
-                StationaryFireTraitSpec t => (t.ExtraDamagePercent, null),
-                ArmorBreakerTraitSpec t => (t.DefenseReductionPercentPerHit, null),
-                FinishingShotTraitSpec t => (t.AttackThresholdPercent, null),
-                TrackingShotTraitSpec t => (t.TargetHealthThresholdPercent, t.ExtraDamagePercent),
-                HunterTraitSpec t => (t.AttackPerTargetKill, null),
-                FocusedBombardmentTraitSpec t => (t.ExtraDamagePercent, null),
-                _ => throw new ArgumentException($"Unexpected ranked spec: {spec.GetType().Name}.")
-            };
-            Assert.That(spec.TraitKey, Is.EqualTo(key));
-            Assert.That(amounts, Is.EqualTo((first, second)));
+                var normal = TraitSpecAdapter.Read(authored.Normal);
+                Assert.That(RankedCombatTestData.Spec(catalog, authored.Key, 1).SameValues(normal), Is.True,
+                    $"{authored.Key}, rank 1");
+                var purchasedRankValues = authored.Rank3 == null ? new[] { authored.Rank2 } : new[] { authored.Rank2, authored.Rank3 };
+                Assert.That(catalog.GetTrait(authored.Key).MaxRank, Is.EqualTo(purchasedRankValues.Length + 1), authored.Key.ToString());
+                for (int index = 0; index < purchasedRankValues.Length; index++)
+                {
+                    int rank = index + 2;
+                    var expected = purchasedRankValues[index];
+                    var effectiveSpec = RankedCombatTestData.Spec(catalog, authored.Key, rank);
+                    Assert.That(ReadEffectiveRankFields(effectiveSpec),
+                        Is.EqualTo((expected.Amount, expected.SecondAmount, expected.PreventsLethalSacrificeDamage, expected.ExemptsAlliedAttackRangePenalty)),
+                        $"{authored.Key}, rank {rank}");
+                }
+            }
         }
+
+        private static (int Amount, int? SecondAmount, bool PreventsLethalDamage, bool ExemptsAlliedRangePenalty)
+            ReadEffectiveRankFields(TraitSpec spec) => spec switch
+        {
+            VanguardTraitSpec trait => (trait.AttackBonus, null, false, false),
+            CleanSweepTraitSpec trait => (trait.AttackBonusPerAllyAttack, null, false, false),
+            SoloActionTraitSpec trait => (trait.ShieldAmount, null, false, false),
+            CallOfBloodTraitSpec trait => (trait.EnemyMaxHealthHealPercent, null, false, false),
+            MoraleBoostTraitSpec trait => (trait.DefeatedEnemyBaseAttackPercent, null, false, false),
+            PositionSwapTraitSpec trait => (trait.ShieldAmount, null, false, false),
+            CohesionTraitSpec trait => (trait.DefensePerAdjacentAlly, trait.ShieldAmountPerAlly, false, false),
+            TauntTraitSpec trait => (trait.DamageReductionPercent, null, false, false),
+            EntrenchmentTraitSpec trait => (trait.DamageReductionPercent, null, false, false),
+            GroundCompactionTraitSpec trait => (trait.MovementRangeBonus, null, false, false),
+            ReconSquadTraitSpec trait => (trait.IncreasePercent, null, false, false),
+            StationaryFireTraitSpec trait => (trait.ExtraDamagePercent, null, false, false),
+            ArmorBreakerTraitSpec trait => (trait.DefenseReductionPercentPerHit, null, false, false),
+            FinishingShotTraitSpec trait => (trait.AttackThresholdPercent, null, false, false),
+            TrackingShotTraitSpec trait => (trait.TargetHealthThresholdPercent, trait.ExtraDamagePercent, false, false),
+            HunterTraitSpec trait => (trait.AttackPerTargetKill, null, false, false),
+            FocusedBombardmentTraitSpec trait => (trait.ExtraDamagePercent, null, false, false),
+            SacrificeTraitSpec trait => (trait.ShieldOnActivation, null, trait.PreventsLethalSacrificeDamage, false),
+            DustScreenTraitSpec trait => (0, null, false, trait.ExemptsAlliedAttackRangePenalty),
+            DeadHandTraitSpec trait => (trait.DamagePercent, null, false, false),
+            _ => throw new ArgumentException($"Unexpected ranked spec: {spec.GetType().Name}.", nameof(spec))
+        };
 
         internal static IInGameQuery ProductionInGame()
         {
@@ -192,9 +194,24 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(catalog.GetCategory(CategoryKey.Rider).Pool, Has.Member(TraitKey.Leap).And.No.Member(TraitKey.SteadfastWill));
             Assert.That(catalog.GetCategory(CategoryKey.Heavy).Pool, Has.Member(TraitKey.SteadfastWill).And.No.Member(TraitKey.Leap));
             var raw = UnitSpecAdapter.ReadUnit(data.UnitTableQuery.GetUnit(EntityKey.Unit_ShotGun));
-            Assert.That(raw.Traits.ToArray().Count(t => t.TraitKey == TraitKey.SteadfastWill), Is.EqualTo(1));
             Assert.That(OwnedUnitSpecResolver.ResolveBase(raw, catalog).Traits.ToArray()
                 .Count(t => t.TraitKey == TraitKey.SteadfastWill), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ShotGunKeepsItsNativeSteadfastWillWhenHeavyDefaultChanges()
+        {
+            var data = ProductionInGame();
+            var raw = UnitSpecAdapter.ReadUnit(data.UnitTableQuery.GetUnit(EntityKey.Unit_ShotGun));
+            var tables = (IHasTraitGrowthTables)data;
+            var catalog = TraitGrowthDefinitionAdapter.Build(tables.CategoryTraitProgressions, tables.TraitGrowthDefinitions,
+                new Dictionary<CategoryKey, TraitKey> { [CategoryKey.Heavy] = TraitKey.SoloAction });
+            var effective = OwnedUnitSpecResolver.ResolveBase(raw, catalog).Traits.ToArray();
+
+            Assert.That(effective.Select(trait => trait.TraitKey), Has.Member(TraitKey.SoloAction));
+            Assert.That(effective.Count(trait => trait.TraitKey == TraitKey.SteadfastWill), Is.EqualTo(1),
+                "Replacing the Heavy default must preserve Shotgun's native Steadfast Will.");
+            Assert.That(raw.Traits.ToArray().Count(trait => trait.TraitKey == TraitKey.SteadfastWill), Is.EqualTo(1));
         }
 
         [Test]
@@ -224,16 +241,23 @@ namespace ProjectL.Tests.CoreIntegration
                     (10, 2, TraitGrowthKind.Acquire), (30, 3, TraitGrowthKind.Acquire)
                 }));
             }
-            Assert.That(catalog.Definitions.Count, Is.EqualTo(25));
+            Assert.That(catalog.Definitions.Count, Is.EqualTo(26));
             Assert.That(catalog.GetTrait(TraitKey.PositionSwap).Normal, Is.TypeOf<PositionSwapTraitSpec>());
             Assert.That(catalog.GetTrait(TraitKey.ReconSquad).Normal, Is.TypeOf<ReconSquadTraitSpec>());
         }
 
         [Test]
-        public void GrowthProduction_AkimboKeepsPrePresentationTestNativeTrait()
+        public void GrowthProduction_UnitCatalogPreservesAuthoredNativeTraits()
         {
-            var unit = UnitSpecAdapter.ReadUnit(ProductionInGame().UnitTableQuery.GetUnit(EntityKey.Unit_Akimbo));
-            Assert.That(unit.Traits.ToArray().Select(t => t.TraitKey), Is.EqualTo(new[] { TraitKey.KillChainAttack }));
+            var units = ProductionDatabase().InGameQuery.UnitTableQuery;
+            var akimbo = UnitSpecAdapter.ReadUnit(units.GetUnit(EntityKey.Unit_Akimbo));
+            Assert.That(akimbo.Traits.ToArray().Select(t => t.TraitKey), Is.EqualTo(new[] { TraitKey.KillChainAttack }));
+
+            var cactus = UnitSpecAdapter.ReadUnit(units.GetUnit(EntityKey.Unit_CactusCannon));
+            Assert.That(cactus.Traits.ToArray().Select(t => t.TraitKey), Is.EqualTo(new[] { TraitKey.ThornBomb }));
+            var bomb = (ThornBombTraitSpec)cactus.Traits.Span[0];
+            Assert.That(bomb.DamagePercent, Is.EqualTo(50));
+            Assert.That((cactus.AttackPower, cactus.AttackRange, cactus.CategoryKey), Is.EqualTo((15, 3, CategoryKey.Cannon)));
         }
 
         [TestCase(null)]
@@ -291,87 +315,6 @@ namespace ProjectL.Tests.CoreIntegration
                 Assert.That(secondResult.Succeeded, Is.True);
                 Assert.That(TraitGrowthRules.NextStep(secondResult.Change.Final, row), Is.Null);
                 Assert.That(TraitGrowthRules.Candidates(secondResult.Change.Final, profile, catalog), Is.Empty);
-            }
-        }
-
-        [TestCase(TraitKey.Taunt)]
-        [TestCase(TraitKey.Acceleration)]
-        public void GrowthProduction_CannonKeepsPreviouslyLegalTraitWithoutReopeningIt(TraitKey previousTrait)
-        {
-            var assets = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
-            var database = (IDataBaseQueryContext)DataBaseFactory.Create(assets);
-            var data = database.InGameQuery;
-            var tables = (IHasTraitGrowthTables)data;
-            var catalog = TraitGrowthDefinitionAdapter.Build(tables.CategoryTraitProgressions, tables.TraitGrowthDefinitions,
-                data.CategoryConfigTableQuery.Config.DefaultTraits);
-            var unit = data.UnitTableQuery.GetAllUnits().Select(UnitSpecAdapter.ReadUnit).First(u =>
-                u.CategoryKey == CategoryKey.Cannon && u.Role == UnitRole.Regular && u.OwnerEligibility != UnitOwnerEligibility.EnemyOnly &&
-                !u.Traits.ToArray().Any(t => t.TraitKey == previousTrait));
-            var profile = BattleDefinitionAdapter.ReadAttackProfiles(database, new[] { unit }).Single();
-            var owned = new OwnedCharacterRecord(new CharacterInstanceId(1), unit.Key, CharacterOwnershipRole.Sub, 3,
-                growth: new OwnedTraitGrowth(new[] { new TraitGrowthSelection(10, previousTrait) }));
-            TraitGrowthRules.ValidateHistory(owned, profile, catalog);
-            Assert.That(OwnedUnitSpecResolver.Resolve(unit, owned, catalog).Traits.ToArray().Select(t => t.TraitKey), Has.Member(previousTrait));
-            Assert.That(TraitGrowthRules.NextStep(owned, catalog.GetCategory(CategoryKey.Cannon)).StepId, Is.EqualTo(30));
-            var candidates = TraitGrowthRules.Candidates(owned, profile, catalog);
-            Assert.That(candidates, Is.Not.Empty);
-            Assert.That(candidates, Has.No.Member(previousTrait));
-            var sample = TraitGrowthOfferSampler.Sample(candidates, TraitGrowthKind.Acquire, 42);
-            var offer = new TraitGrowthOffer(new RunId(Guid.NewGuid()), 1, owned.Id, 30, TraitGrowthKind.Acquire,
-                sample.Select(k => new TraitGrowthChoice(k, TraitGrowthKind.Acquire, "trait", "description")).ToArray());
-            var request = new TraitGrowthChoiceRequest(offer.RunId, 1, owned.Id, 30, sample[0]);
-            var result = TraitGrowthRules.PlanChoice(owned, request, offer, profile, catalog);
-            Assert.That(result.Succeeded, Is.True);
-            Assert.That(OwnedUnitSpecResolver.Resolve(unit, result.Change.Final, catalog).Traits.ToArray().Select(t => t.TraitKey), Has.Member(previousTrait));
-            var fresh = new OwnedCharacterRecord(owned.Id, unit.Key, CharacterOwnershipRole.Sub, 3);
-            Assert.That(TraitGrowthRules.Candidates(fresh, profile, catalog), Has.No.Member(previousTrait));
-            var invalidOffer = new TraitGrowthOffer(offer.RunId, 2, fresh.Id, 10, TraitGrowthKind.Acquire,
-                new[] { new TraitGrowthChoice(previousTrait, TraitGrowthKind.Acquire, "trait", "description") });
-            Assert.That(TraitGrowthRules.PlanChoice(fresh, new TraitGrowthChoiceRequest(offer.RunId, 2, fresh.Id, 10, previousTrait),
-                invalidOffer, profile, catalog).FailureReason, Is.EqualTo(TraitGrowthFailureReason.NotCandidate));
-        }
-
-        [TestCase(CategoryKey.Rider, TraitKey.Leap)]
-        [TestCase(CategoryKey.Heavy, TraitKey.SteadfastWill)]
-        public void CategoryDefaultBattle_ProductionMainAndStagePrepareSpecializedTraits(CategoryKey selected, TraitKey expected)
-        {
-            var assets = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
-            var database = (IDataBaseQueryContext)DataBaseFactory.Create(assets);
-            var builder = new SystemBuilderHelper();
-            BufferSystemFactory.Create().ExportServices(builder);
-            InGameCoreSystemFactory.Create().ExportServices(builder);
-            var runtime = new FrameworkRuntime(builder.BuildSystemReader());
-            try
-            {
-                runtime.InitData(database);
-                runtime.PostBindService();
-                var core = runtime.GetService(InGameSystemGroupServiceKey.Core);
-                var buffers = runtime.GetService(BufferSystemKey.Buffer);
-                Assert.That(core.Characters.InitializeRoster(1).Succeeded, Is.True);
-                CoreIntegrationTestData.InstallDeck(buffers);
-                var roster = (CharacterRosterService)core.Characters;
-                var main = buffers.CharacterReadSink.Owned.Single(o => o.Role == CharacterOwnershipRole.Main);
-                Assert.That(main.CharacterKey, Is.EqualTo(database.InGameQuery.PlayerLoadoutTableQuery.GetPlayerLoadout(1).MainCharacterKey));
-                var choice = roster.PrepareMainSpecialization(buffers.RunProgressReadSink.RunId, buffers.CharacterReadSink.RosterRevision,
-                    main.Id, selected);
-                Assert.That(roster.ApplyMainSpecialization(choice).Succeeded, Is.True);
-                var source = CoreIntegrationTestData.DatabaseSource(buffers).Read(database, 1, new StageKey(1101));
-                Assert.That(buffers.RunDeckReadSink.TryGetCurrent(out var deck), Is.True);
-                var owned = deck.OrderedIds.Select(id => buffers.CharacterReadSink.Owned.Single(o => o.Id == id)).ToArray();
-                Assert.That(buffers.CharacterReadSink.TryGetMainState(main.Id, out var persistent), Is.True);
-                var prepared = BattlePreparationCalculator.Prepare(source, owned, persistent,
-                    owned.ToDictionary(o => o.Id, o => buffers.CharacterReadSink.GetSoulCount(o.Id)),
-                    core.Characters.PlanInitialDraw(source.Stage.TimelineSeed), Array.Empty<CharacterCombatFacts>(), deck);
-                var initial = prepared.Characters.Single(c => c.OwnedId == main.Id);
-                Assert.That(initial.Stats.CombatCategoryKey, Is.EqualTo(selected));
-                Assert.That(initial.Stats.TraitStatuses.ToArray().Count(t => t.Key == expected), Is.EqualTo(1));
-                var enemies = prepared.Characters.Where(c => c.Owner == Owner.Enemy && c.Stats.CombatCategoryKey == CategoryKey.Rider).ToArray();
-                Assert.That(enemies, Is.Not.Empty);
-                Assert.That(enemies.All(c => c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Leap)), Is.True);
-            }
-            finally
-            {
-                runtime.Shutdown();
             }
         }
 

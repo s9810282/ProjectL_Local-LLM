@@ -12,13 +12,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Cowboy
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 7ce74e98596654841b10864529482311, type: 2}
-  attackCompanionClips:
-  - {fileID: 7400000, guid: a2c108413b211cc4ab11164393ae9f6a, type: 2}
-  hitDelay: 0
-  shots: []
-  attackAnimationStartMode: 1
-  attackAnimationStartKind: 310
+  attack:
+    pre:
+      body: {fileID: 7400000, guid: 00bd6bd0675b77141b438717bb33a3da, type: 2}
+      mount: {fileID: 7400000, guid: bd7d87a3d72b4af4c9d23fd4f8754d96, type: 2}
+      companions:
+      - {fileID: 7400000, guid: c5c22023210adc64aa8d4cc0bc95b9c0, type: 2}
+    main:
+      body: {fileID: 7400000, guid: ee0da1a41f20d5d4899d9ba435beab65, type: 2}
+      mount: {fileID: 7400000, guid: a337a743922714e4793bb92996710bff, type: 2}
+      companions:
+      - {fileID: 7400000, guid: ed9c7137fc9677c40a3d225db55a81f5, type: 2}
+    post:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 1
+      seconds: 0.1
+    blendBetween:
+      enabled: 1
+      seconds: 0.1
+    blendOut:
+      enabled: 1
+      seconds: 0.2
+  motionStart: 1
+  motionStartDelay: 0
+  hit:
+    pre:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    main:
+      body: {fileID: 7400000, guid: a175f05178e0b0343a2f3ac67e5ad544, type: 2}
+      mount: {fileID: 7400000, guid: 88863f66bd3c17046b68d077a0bb9561, type: 2}
+      companions:
+      - {fileID: 7400000, guid: 1deefa9e49a76c742920b980e3112b36, type: 2}
+    post:
+      body: {fileID: 0}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackAnimationStartMode: 0
   attackAnimationStartDelaySeconds: 0
-  hitClip: {fileID: 0}
-  hitCompanionClips: []

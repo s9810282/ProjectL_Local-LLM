@@ -87,6 +87,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                     }
                     continue;
                 }
+                // 죽음의 손 휩쓸기 머리부터는 다음 공격의 앞 이동입니다. 앞 출처의 이동 후속으로 붙이지 않습니다(휩쓸기 묶음이 맡음, PD-b~d 검토 M1).
+                if (item is CombatSweepEvent)
+                {
+                    latest = null;
+                    continue;
+                }
                 if (latest == null) continue;
                 // 이동 사건·근원을 가질 수 있는 사건 종류·대상(주체) 판정은 사건 형식 표 한 곳을 씁니다(View 2라운드 W7-2).
                 if (item is CombatCharacterEvent character && CombatEventTypeTable.IsMovement(character))

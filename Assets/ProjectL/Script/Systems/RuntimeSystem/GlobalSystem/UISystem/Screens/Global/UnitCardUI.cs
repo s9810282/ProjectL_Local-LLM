@@ -58,6 +58,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         }
         public EntityId CharacterId => _displayed?.EntityId ?? _entityId;
         public CharacterInstanceId OwnedCharacterId => _ownedId;
+        internal CategoryKey DeckCategory =>
+            _displayed?.Stats.IdentityCategoryKey ?? _displayedStats?.Stats.CategoryKey ?? CategoryKey.None;
 
         /// <summary>같은 오브젝트의 표시 컴포넌트입니다. EditMode에서는 Awake가 없으므로 처음 쓸 때 찾습니다.</summary>
         public UnitCardView View

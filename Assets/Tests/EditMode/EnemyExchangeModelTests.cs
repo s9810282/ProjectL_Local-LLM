@@ -192,28 +192,29 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LethalTransitRouteExcluded()
+        public void LethalMineTransit_UsesSafeRoute()
         {
-            // 곧은 길의 가시 두 칸(60 + 60)은 체력 100 이상이다. 같은 끝 칸은 돌아가는 길로 남는다.
-            var thorns = new[] { new ThornFieldCellSnapshot(new CellCoord(1, 2), 3, 60), new ThornFieldCellSnapshot(new CellCoord(2, 2), 3, 60) };
-            var input = Arena(thorns: thorns, moveRange: 5);
+            // 곧은 길의 지뢰 두 칸(60 + 60)은 체력 100 이상이다. 같은 끝 칸은 돌아가는 길로 남는다.
+            var mineCells = new[] { new CellCoord(1, 2), new CellCoord(2, 2) };
+            var input = TraitTrailTestData.Environment(Arena(moveRange: 5), mineCells.Select((cell, i) =>
+                new MineSourceFact(71 + i, cell, 1 + i, 60, true, new[] { Owner.Enemy })).ToArray());
             var actor = Actor(input);
             var context = new EnemyDecisionContext(input, EnemyDecisionSettings.Default);
             using var candidates = new EnemyActionCandidates(context, actor, EnemyActionCandidateTests.MakeForecast(input));
             while (!candidates.IsComplete) candidates.Step();
-            var none = new HazardExposure(0, 0, 0, 0, CombatAssessmentGap.None, Array.Empty<HazardCellFact>());
-            Assert.That(EnemyActionCandidates.IsCertainLethal(100, none, false, Transit(candidates, Straight)), Is.True);
+            var forcedRoute = CombatCommandCalculator.AdvancePrepared(input,
+                EnemyDecision.Move(actor.EntityId, Straight, default), Rules);
+            Assert.That(forcedRoute.Accepted, Is.True, forcedRoute.Reason);
+            Assert.That(Actor(CombatCommandComposition.Project(forcedRoute).WithActor(actor.EntityId)).Health.IsDead, Is.True);
             // 탐색이 착지로 남긴 공격 위치 중에는 안전한 경로가 있다. 같은 끝 칸이면 곧은 길이 아니다.
-            var field = candidates.Field;
-            Assert.That(candidates.Moves.Any(move => field.IsAttackPosition(move.Path.Endpoint) && Transit(candidates, move.Path) < 100), Is.True,
-                string.Join(" ", candidates.Moves.Select(move => $"{string.Join(">", move.Path.Cells)}:{Transit(candidates, move.Path)}")));
-            var sameEnd = candidates.Moves.FirstOrDefault(move => move.Path.Endpoint == AttackCell && Transit(candidates, move.Path) < 100);
-            if (sameEnd != null) Assert.That(sameEnd.Path.Cells, Is.Not.EqualTo(Straight.Cells));
+            var attackRoutes = candidates.Moves.Where(move => candidates.Field.IsAttackPosition(move.Path.Endpoint)).ToArray();
+            Assert.That(attackRoutes, Is.Not.Empty);
+            Assert.That(attackRoutes.SelectMany(move => move.Path.Cells).Intersect(mineCells), Is.Empty);
 
             using var session = new EnemyDecisionSession(input, Rules, EnemyDecisionSettings.Default);
             EnemyUtilityDecisionTests.Drain(session);
             if (session.Decision.Kind == EnemyDecisionKind.Move)
-                Assert.That(Transit(candidates, session.Decision.Path), Is.LessThan(100), "치명 통과 경로는 고르지 않는다");
+                Assert.That(session.Decision.Path.Cells.Intersect(mineCells), Is.Empty);
             var result = CombatCommandCalculator.AdvancePrepared(input, session.Decision, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(Actor(CombatCommandComposition.Project(result).WithActor(actor.EntityId)).Health.IsDead, Is.False);
@@ -224,12 +225,11 @@ namespace ProjectL.Tests.Core
         {
             // 가능 손실만 체력 이상이면 거르지 않고, 위험 점수로만 뺀다.
             var uncertain = new HazardExposure(10, 100, 0, 0, CombatAssessmentGap.UnknownPosition, Array.Empty<HazardCellFact>());
-            Assert.That(EnemyActionCandidates.IsCertainLethal(100, uncertain, false, 0), Is.False);
-            Assert.That(EnemyActionCandidates.LethalRank(100, uncertain, false, 0).terminal, Is.False);
+            Assert.That(EnemyActionCandidates.IsCertainLethal(100, uncertain, false), Is.False);
+            Assert.That(EnemyActionCandidates.LethalRank(100, uncertain, false).terminal, Is.False);
             var certain = new HazardExposure(100, 100, 0, 0, CombatAssessmentGap.None, Array.Empty<HazardCellFact>());
-            Assert.That(EnemyActionCandidates.IsCertainLethal(100, certain, false, 0), Is.True);
-            Assert.That(EnemyActionCandidates.IsCertainLethal(100, uncertain, false, 90), Is.True, "확실한 통과 피해와 더한다");
-            Assert.That(EnemyActionCandidates.IsCertainLethal(100, uncertain, true, 0), Is.True, "붕괴 착지");
+            Assert.That(EnemyActionCandidates.IsCertainLethal(100, certain, false), Is.True);
+            Assert.That(EnemyActionCandidates.IsCertainLethal(100, uncertain, true), Is.True, "붕괴 착지");
 
             var penalized = new EnemyScoreFacts(CombatAssessmentGap.None).WithPosition(CombatAssessmentGap.None,
                 EnemyUtilityScorer.LossPermille(uncertain.PossibleHpLoss, 100, 100), 0, 0, 0);
@@ -261,13 +261,14 @@ namespace ProjectL.Tests.Core
             }
 
             var collapse = EnemyActionCandidates.LethalRank(100, new HazardExposure(0, 0, 0, 0, CombatAssessmentGap.None,
-                Array.Empty<HazardCellFact>()), true, 0);
+                Array.Empty<HazardCellFact>()), true);
             var railway = EnemyActionCandidates.LethalRank(100, new HazardExposure(100, 100, 0, 0, CombatAssessmentGap.None,
-                Array.Empty<HazardCellFact>()), false, 0);
-            var transit = EnemyActionCandidates.LethalRank(100, new HazardExposure(60, 60, 0, 0, CombatAssessmentGap.None,
-                Array.Empty<HazardCellFact>()), false, 50);
-            Assert.That(transit.terminal && railway.terminal && collapse.terminal, Is.True);
-            Assert.That(railway.CompareTo(transit), Is.LessThan(0));
+                Array.Empty<HazardCellFact>()), false);
+            // 경로 통과 피해(옛 가시 장판)는 없어졌다. 더 큰 확실한 손실로 "덜 치명적인 쪽이 앞" 순위를 확인한다(가시 폭탄 Phase 4 D7).
+            var heavier = EnemyActionCandidates.LethalRank(100, new HazardExposure(110, 110, 0, 0, CombatAssessmentGap.None,
+                Array.Empty<HazardCellFact>()), false);
+            Assert.That(heavier.terminal && railway.terminal && collapse.terminal, Is.True);
+            Assert.That(railway.CompareTo(heavier), Is.LessThan(0));
             Assert.That(railway.CompareTo(collapse), Is.EqualTo(0));
         }
 
@@ -291,10 +292,10 @@ namespace ProjectL.Tests.Core
             var win = new EnemyScoreFacts(CombatAssessmentGap.None, precise: true, projectedOutcome: StageOutcome.Defeat,
                 postActionActor: CombatMovementCalculator.MoveTo(actor, AttackCell));
             Assert.That(win.GuaranteedTerminal, Is.True);
-            Assert.That(EnemyDecisionSession.CandidateLethality(win, actor, AttackCell, hazards, false, 0).lethal, Is.False);
+            Assert.That(EnemyDecisionSession.CandidateLethality(win, actor, AttackCell, hazards, false).lethal, Is.False);
             var notWin = new EnemyScoreFacts(CombatAssessmentGap.HiddenEnvironment, precise: true, projectedOutcome: StageOutcome.Defeat,
                 postActionActor: CombatMovementCalculator.MoveTo(actor, AttackCell));
-            Assert.That(EnemyDecisionSession.CandidateLethality(notWin, actor, AttackCell, hazards, false, 0).lethal, Is.True);
+            Assert.That(EnemyDecisionSession.CandidateLethality(notWin, actor, AttackCell, hazards, false).lethal, Is.True);
         }
 
         [Test]
@@ -427,13 +428,6 @@ namespace ProjectL.Tests.Core
             return candidates.Attacks[0].Aim.Cell;
         }
 
-        private static long Transit(EnemyActionCandidates candidates, MovementPath path)
-        {
-            long loss = -1;
-            foreach (var _ in candidates.EntryEstimateSteps(path, (value, _) => loss = value)) { }
-            return loss;
-        }
-
         private static EnemyDecisionSession Session(CombatCommandInput input)
         {
             var session = new EnemyDecisionSession(input, Rules, EnemyDecisionSettings.Default,
@@ -453,10 +447,10 @@ namespace ProjectL.Tests.Core
 
         /// <summary>
         /// 기본 판(<see cref="EnemyFollowupEstimateTests.World"/>와 같은 유닛·턴)에 열차 칸·낙석 경고 칸(다음 경계에 최대 체력 100%)·
-        /// 가시밭·하붑을 마음대로 놓는다. 열차는 다음 경계(2)에 모든 열차 칸을 지난다.
+        /// 하붑을 마음대로 놓는다. 열차는 다음 경계(2)에 모든 열차 칸을 지난다.
         /// </summary>
         internal static CombatCommandInput Arena(int width = 9, int height = 5, CellCoord? actor = null, CellCoord? target = null,
-            CellCoord[] rails = null, CellCoord[] rockfall = null, ThornFieldCellSnapshot[] thorns = null, HaboobGimmickSpec haboob = null,
+            CellCoord[] rails = null, CellCoord[] rockfall = null, HaboobGimmickSpec haboob = null,
             int moveRange = 3, int actorHealth = 100, (int id, CellCoord cell)[] allies = null)
         {
             var enemy = Unit(11, EntityKey.Unit_Demon, Owner.Enemy, actor ?? Origin, 40, 1, moveRange)
@@ -473,7 +467,7 @@ namespace ProjectL.Tests.Core
             if (rockfall != null) definitions.Add(new RockfallGimmickSpec(maximumHealthLossPercent: 100, bindAffectedSideTurns: 1));
             if (haboob != null) definitions.Add(haboob);
             var state = new CombatCommandState(width, height, CombatFlowPhase.Automatic, Array.Empty<StructureCombatFacts>(),
-                thorns ?? Array.Empty<ThornFieldCellSnapshot>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
                     controllerTurnSequence: 2, completedPlayerTurnCount: 1, completedControllerTurnCount: 1));
             state = StageGimmickComposition.Initialize(state, definitions.ToArray());
             if (rockfall != null)

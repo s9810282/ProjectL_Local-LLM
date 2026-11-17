@@ -13,13 +13,14 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
     /// <summary>덱 카드와 전투 정보창이 공유하는 특성 표시 변환입니다. 선택·패널·DB 수명은 소유하지 않습니다.</summary>
     internal readonly struct UnitCardTraitContent
     {
-        internal UnitCardTraitContent(TraitKey key, TraitOrigin origin, Sprite icon, string name, string description)
+        internal UnitCardTraitContent(TraitKey key, TraitOrigin origin, Sprite icon, string name, string description, int? level)
         {
             Key = key;
             Origin = origin;
             Icon = icon;
             Name = name;
             Description = description;
+            Level = level;
         }
 
         internal TraitKey Key { get; }
@@ -27,9 +28,22 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         internal Sprite Icon { get; }
         internal string Name { get; }
         internal string Description { get; }
+        internal int? Level { get; }
+
+        internal string FormatLevel(IReadOnlyDictionary<TraitKey, int> ownedRanks = null)
+        {
+            int? level = ownedRanks != null && ownedRanks.TryGetValue(Key, out int rank) ? rank : Level;
+            return level switch
+            {
+                1 => "I",
+                2 => "II",
+                3 => "III",
+                _ => string.Empty
+            };
+        }
 
         internal static UnitCardTraitContent[] Create(ITraitVisualTableQuery visuals, ReadOnlySpan<TraitStatusSnapshot> traits,
-            TraitSettingsSet settings)
+            TraitSettingsSet settings, IReadOnlyDictionary<TraitKey, int> ownedRanks = null)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             var display = settings.Display;
@@ -48,7 +62,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 TraitDisplayEntry entry = display[i];
                 if (!statusByKey.TryGetValue(entry.Key, out var status))
                     throw new InvalidOperationException($"[UnitCardTraitContent] 표시 특성 {entry.Key}의 전투 상태가 없습니다.");
-                content[i] = Read(visuals, entry.Key, entry.Origin, TraitDescriptionFormatter.ReadSettings(settings, entry.Key), status);
+                TraitSpec spec = TraitDescriptionFormatter.ReadSettings(settings, entry.Key);
+                int? level = ownedRanks != null && ownedRanks.TryGetValue(entry.Key, out int rank)
+                    ? rank
+                    : spec switch
+                    {
+                        ReconstructionTraitSpec reconstruction => reconstruction.Level,
+                        SelfDestructTraitSpec selfDestruct => selfDestruct.Level,
+                        _ => null
+                    };
+                content[i] = Read(visuals, entry.Key, entry.Origin, spec, status, level: level);
             }
             return content;
         }
@@ -91,18 +114,18 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 if (ownedAvailability != null && ownedAvailability.Key != entry.Key)
                     throw new InvalidOperationException("[UnitCardTraitContent] 같은 읽기의 특성 가용성 순서가 다릅니다.");
                 content[i] = Read(visuals, entry.Key, entry.Origin, TraitDescriptionFormatter.ReadSettings(settings, entry.Key),
-                    ownedAvailability: ownedAvailability);
+                    ownedAvailability: ownedAvailability, level: source.TraitRanks[entry.Key]);
             }
             return content;
         }
 
         private static UnitCardTraitContent Read(ITraitVisualTableQuery visuals, TraitKey key, TraitOrigin origin, TraitSpec descriptionData,
-            TraitStatusSnapshot availability = null, TraitAvailabilitySnapshot ownedAvailability = null)
+            TraitStatusSnapshot availability = null, TraitAvailabilitySnapshot ownedAvailability = null, int? level = null)
         {
             string unavailable = availability?.UnavailableReason ?? ownedAvailability?.UnavailableReason ?? string.Empty;
             string partial = availability?.PartialUnavailableReason ?? ownedAvailability?.PartialUnavailableReason ?? string.Empty;
             if (unavailable == "Retired")
-                return new UnitCardTraitContent(key, origin, null, "사용할 수 없는 특성", DescribeAvailability(unavailable));
+                return new UnitCardTraitContent(key, origin, null, "사용할 수 없는 특성", DescribeAvailability(unavailable), level);
             if (visuals == null || !visuals.TryGetTraitVisual(key, out var visual))
             {
                 throw new InvalidOperationException($"[UnitCardTraitContent] TraitKey.{key}의 View 특성 표시 데이터가 필요합니다.");
@@ -119,7 +142,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 if (unavailable.Length == 0) name += " (일부 사용 불가)";
                 description += "\n\n일부 사용 불가: " + DescribeAvailability(partial);
             }
-            return new UnitCardTraitContent(key, origin, visual.Icon, name, description);
+            return new UnitCardTraitContent(key, origin, visual.Icon, name, description, level);
         }
 
         private static string DescribeAvailability(string reason)

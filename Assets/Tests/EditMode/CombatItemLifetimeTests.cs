@@ -79,7 +79,7 @@ namespace ProjectL.Tests.Core
                 var structure = new StructureCombatFacts(new EntityId(20), new StructureSpec(EntityKey.Structure_Headquarters,
                     1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(0, 100),
                     new CellCoord(7, 0), Rotation4.R0, new[] { new CellCoord(7, 0) });
-                input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                    new[] { structure },s.ThornFields,s.Turn));
+                input = CombatCommandTestData.With(input, state: new CombatCommandState(8,8,s.Phase,                    new[] { structure },s.Turn));
             }
             var changed = input.Characters.Single(c => c.EntityId.Value == (defeat ? 10 : 1));
             if (defeat) changed = CombatCommandCalculator.Hurt(changed, 100);

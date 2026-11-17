@@ -45,7 +45,7 @@ namespace ProjectL.Tests.Core
                 characters.Add(Character(3, EntityKey.Unit_Demon, new CellCoord(4, 4), Owner.Enemy));
                 characters.Add(Character(4, EntityKey.Unit_Demon, new CellCoord(5, 3), Owner.Enemy));
             }
-            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),Array.Empty<ThornFieldCellSnapshot>(),                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,CombatFlowPhase.PlayerInput,                Array.Empty<StructureCombatFacts>(),new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
             var profiles = new[]
             {
                 new CombatAttackProfile(Spec(EntityKey.Unit_Akimbo, 20, category), method),
@@ -88,7 +88,7 @@ namespace ProjectL.Tests.Core
                 profiles ?? input.Profiles.ToArray(), main ?? input.Main, input.Owned, input.SoulCounts,
                 souls ?? input.Souls, artifacts ?? input.Artifacts, input.TargetCell, input.Rotation,
                 input.Battle, input.ProcessingKind, input.Path, input.MovementContext, input.BattleInstanceId, input.ArtifactItems,
-                input.EnvironmentBindings, input.ObstacleContents, input.ItemKey, input.ItemInventory, input.ItemDefinitions,
+                EnvironmentDamageTests.WithDamageObjectBindings(input.EnvironmentBindings, state ?? input.State), input.ObstacleContents, input.ItemKey, input.ItemInventory, input.ItemDefinitions,
                 input.GoldBalance, input.FameBalance, input.Membership, input.ExpectedBattleInstanceId, input.ExpectedControllerTurnSequence, input.ExpectedMoveCommandNumber);
 
         /// <summary>새 입력 요청은 현재 공개 전투·진영 식별자를 포착한다. 기존 요청의 사본은 With를 쓴다.</summary>

@@ -220,7 +220,7 @@ namespace ProjectL.Tests.Core
             if (clearRewards != null)
             {
                 // 실제 공격으로 지정 보스를 처치하고, 진입 때 포착한 두 아군의 클리어 경험치를 정산한다.
-                state = new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,state.Structures,state.ThornFields,state.Turn,                    state.Environment,state.EnvironmentProgress,state.WallBlocking,BattleObjective.DesignatedBoss(new EntityId(2)),                    state.Allocation,state.ItemRandomState,new CombatRewardFacts(true, seed.Owned.Select(c => c.Id).ToArray(), 0));
+                state = new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,state.Structures,state.Turn,                    state.Environment,state.EnvironmentProgress,state.WallBlocking,BattleObjective.DesignatedBoss(new EntityId(2)),                    state.Allocation,state.ItemRandomState,new CombatRewardFacts(true, seed.Owned.Select(c => c.Id).ToArray(), 0));
             }
             return new CombatCommandInput(seed.Number, seed.Kind, seed.ActorId, seed.Aim, state, characters, profiles,
                 seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,

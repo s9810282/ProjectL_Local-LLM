@@ -182,6 +182,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             public void EndSource(CombatEvent source, int version) => throw InvalidSource();
             public void AbortSource(CombatEvent source) => throw InvalidSource();
             public void ReleaseAll(CombatEvent source, int version) => throw InvalidSource();
+            public void Release(CombatEvent source, EntityId target, int version) => throw InvalidSource();
         }
     }
 }

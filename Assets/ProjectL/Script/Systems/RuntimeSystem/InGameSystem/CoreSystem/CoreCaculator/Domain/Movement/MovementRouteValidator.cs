@@ -104,6 +104,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             IReadOnlyList<ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId> excluded,
             MovementEnvironmentFacts environment = null) =>
             input.State.IsInside(cell) &&
+            !GimmickOccupancyRules.Blocks(input.State.Gimmicks, cell) &&
             !EnvironmentTerrainRules.BlocksVoluntaryEntry(environment ?? input.State.Environment, input.EnvironmentBindings, cell) &&
             !input.Characters.Any(c => !excluded.Contains(c.EntityId) && IsLivingFieldUnit(c) && c.OccupiedCells.Contains(cell)) &&
             !input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell));
@@ -125,12 +126,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             internal IEnumerable<int> IndexSteps(MovementEnvironmentFacts environment)
             {
-                foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, _input.EnvironmentBindings, StaticTerrainKind.Wall))
-                {
-                    if (cell.HasValue) _terrain.Add(cell.Value);
-                    yield return 0;
-                }
-                foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, _input.EnvironmentBindings, StaticTerrainKind.Cliff))
+                foreach (var cell in GimmickOccupancyRules.BlockingCells(_input.State.Gimmicks)) _terrain.Add(cell);
+                foreach (var cell in EnvironmentTerrainRules.VoluntaryBlockedCellSteps(environment, _input.EnvironmentBindings))
                 {
                     if (cell.HasValue) _terrain.Add(cell.Value);
                     yield return 0;

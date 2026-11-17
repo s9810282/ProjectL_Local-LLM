@@ -35,13 +35,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
         {
             if (offer == null) throw new ArgumentNullException(nameof(offer));
             StageOfferTextData text = _texts.TraitGrowth;
-            // 유닛을 모르면 줄과 얼굴 없이 설명만 그립니다. 유닛은 아는데 외형 행이 없으면 예외입니다(팝업마다 같은 정책, 평가 N-23).
+            // 유닛을 모르면 대상 안내와 얼굴을 생략합니다. 유닛은 아는데 외형 행이 없으면 예외입니다(팝업마다 같은 정책, 평가 N-23).
             OwnedCharacterRecord record = _characters.TryGetOwned(offer.OwnedId, out var owned) ? owned : null;
             UnitVisualData visual = null;
             if (record != null && !_units.TryGetUnitVisual(record.CharacterKey, out visual))
                 throw new KeyNotFoundException($"[TraitGrowthPopup] 유닛 외형이 등록되지 않았습니다: {record.CharacterKey}");
             // 골드를 쓰지 않고 반드시 골라야 하므로 골드 칸과 나가기를 끕니다(R4).
-            _model.Reset(text.EventName, Description(text, offer, record, visual), string.Empty, false, false);
+            _model.Reset(text.EventName, SelectionPrompt(text, offer, record, visual), string.Empty, false, false);
             // 얼굴은 덱 편집·유닛 카드와 같은 유닛 외형 InfoIcon입니다(비어 있으면 얼굴 칸이 꺼집니다).
             _model.SetPortrait(visual?.InfoIcon);
             for (int i = 0; i < offer.Choices.Count; i++)
@@ -49,11 +49,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
             return _model;
         }
 
-        /// <summary>다음 제안을 준비하는 동안의 화면입니다. 카드 없이 이름·설명만 보입니다.</summary>
+        /// <summary>다음 제안을 준비하는 동안의 화면입니다. 카드와 대상 안내 없이 제목만 보입니다.</summary>
         internal StageOfferPopupModel Preparing()
         {
             StageOfferTextData text = _texts.TraitGrowth;
-            _model.Reset(text.EventName, text.EventDescription, string.Empty, false, false);
+            _model.Reset(text.EventName, string.Empty, string.Empty, false, false);
             return _model;
         }
 
@@ -88,14 +88,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.TraitG
                 text.SelectButtonText, true, false, KindLabel(text, choice.Kind));
         }
 
-        // 설명 글 아래 줄에 제안마다 다른 값(대상 유닛·레벨·종류)을 붙입니다. 유닛을 모르면 설명만입니다.
-        private static string Description(StageOfferTextData text, TraitGrowthOffer offer, OwnedCharacterRecord record,
+        // 선택에 필요한 대상 유닛·레벨·종류만 표시합니다. 일반 설명은 붙이지 않습니다.
+        private static string SelectionPrompt(StageOfferTextData text, TraitGrowthOffer offer, OwnedCharacterRecord record,
             UnitVisualData visual)
         {
-            if (record == null) return text.EventDescription;
+            if (record == null) return string.Empty;
             string name = visual.DisplayName;
-            return text.EventDescription + "\n" +
-                text.FormatLine(StageOfferLineKind.TraitGrowthHeader, name, record.Level, KindLabel(text, offer.Kind));
+            return text.FormatLine(StageOfferLineKind.TraitGrowthHeader, name, record.Level, KindLabel(text, offer.Kind));
         }
 
         private static string KindLabel(StageOfferTextData text, TraitGrowthKind kind) => text.FormatLine(

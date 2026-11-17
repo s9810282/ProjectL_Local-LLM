@@ -21,6 +21,3 @@ MonoBehaviour:
       delay: 0
       point: 5
     shakes: []
-    sound:
-      anchor: 2
-      delay: 0

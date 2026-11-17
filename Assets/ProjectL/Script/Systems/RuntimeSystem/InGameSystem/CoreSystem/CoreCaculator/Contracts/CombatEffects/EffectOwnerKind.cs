@@ -9,5 +9,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Artifact = 3,
         Item = 4,
         StageGimmick = 5,
+        PlayerSkill = 6,
     }
 }

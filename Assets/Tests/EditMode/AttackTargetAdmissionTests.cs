@@ -173,13 +173,15 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void FilteredCharacter_DoesNotConsumePierceEncounter()
+        public void FriendlyCharacter_ConsumesPierceEncounterWithoutBecomingAnAim()
         {
             var input = Input(CategoryKey.Main, pierce: true, targets: new[] {
                 Target(2, new CellCoord(3, 3), Owner.Player), Target(3, Center) });
             var hits = Pierce(input, 1);
-            Assert.That(hits.Select(h => h.Id), Is.EqualTo(new[] { new EntityId(3) }));
+            Assert.That(hits.Select(h => h.Id), Is.EqualTo(new[] { new EntityId(2) }));
             Assert.That(hits[0].Encounter, Is.Zero);
+            Assert.That(CombatCommandCalculator.GetAttackRange(input).AttackAims.ToArray(),
+                Has.No.Member(AttackAim.ForCell(new CellCoord(3, 3))));
         }
 
         [Test]
@@ -259,7 +261,7 @@ namespace ProjectL.Tests.Core
             var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight, input.State.Environment,
                 input.EnvironmentBindings, input.State.WallBlocking);
             var delivery = CombatAttackDelivery.Resolve(input, actor, input.Profiles[0], evaluation.Selection,
-                CombatAttackCalculator.CommonAttackDamage(input, actor, input.Profiles[0]), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings));
+                CombatAttackCalculator.CommonAttackDamage(input, actor, input.Profiles[0], CombatDamageKind.OrdinaryAttack), walls, AttackElevation.From(input.State.Environment, input.EnvironmentBindings));
             return delivery.PiercingShot.Encounters.ToArray().Take(budget).Select(h => (h.TargetId, h.EncounterIndex, 0)).ToArray();
         }
 
@@ -323,8 +325,9 @@ namespace ProjectL.Tests.Core
             CombatCommandTestData.Character(id, EntityKey.Unit_Demon, cell, owner);
 
         private static StructureCombatFacts Structure(int id, CellCoord cell, Owner owner, bool obstacle = false) =>
+            obstacle ? ObstacleReactionTests.Barrel(id, cell, 3, 0).Structure :
             new StructureCombatFacts(new EntityId(id),
-                new StructureSpec(obstacle ? EntityKey.Structure_PowderBarrel : EntityKey.Structure_Headquarters,
+                new StructureSpec(EntityKey.Structure_Headquarters,
                     1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), cell, Rotation4.R0, new[] { cell }, owner);
 
@@ -347,7 +350,7 @@ namespace ProjectL.Tests.Core
             var characters = new[] { actor, source.Characters[1] }.Concat(targets ?? Array.Empty<CharacterCombatFacts>()).ToArray();
             var profiles = source.Profiles.ToArray();
             profiles[0] = new CombatAttackProfile(CombatCommandTestData.Spec(actor.CharacterKey, attack, category, traits), method);
-            var state = new CombatCommandState(8,8,owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures ?? Array.Empty<StructureCombatFacts>(),source.State.ThornFields,turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
+            var state = new CombatCommandState(8,8,owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures ?? Array.Empty<StructureCombatFacts>(),turn: new CombatTurnFacts(StagePhase.Combat, controllerPhase: (owner == Owner.Player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic) == CombatFlowPhase.Automatic ? CombatControllerPhase.Enemy : CombatControllerPhase.Player, controllerTurnSequence: 1));
             var obstacles = obstacle ? structures.Select(s => new ObstacleContentProfile(s.EntityId, ObstacleContentKind.PowderBarrel, 0)).ToArray()
                 : Array.Empty<ObstacleContentProfile>();
             return new CombatCommandInput(owner == Owner.Player ? 1 : 0, CombatCommandKind.Attack, actor.EntityId, aim.Value, state, characters, profiles,

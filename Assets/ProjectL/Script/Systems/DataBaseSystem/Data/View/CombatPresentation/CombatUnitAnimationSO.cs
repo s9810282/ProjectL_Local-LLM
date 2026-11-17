@@ -1,120 +1,69 @@
 using System;
-using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 {
     /// <summary>
-    /// 유닛의 전투 사건 클립 묶음 입력입니다(클립 설계 AC1). 외형 표(<c>UnitVisualData</c>)가 참조하고 여러 유닛이 공유할 수 있습니다.
-    /// 클립마다 시작·첫 이벤트·끝을 하나씩 찍고, 중간 시점 2·3은 필요할 때만 더합니다. 클립은 모델 자식의 Transform만 움직입니다.
-    /// 칸마다 주 클립(몸, 이벤트 셋) 하나와 같은 시각으로 같이 도는 부속 클립(무기 등, 이벤트 없음)을 둡니다(설계 6차 AC16).
+    /// 유닛의 전투 사건 클립 묶음 입력입니다(클립 설계 AC1, 클립 칸 다시 짜기 설계 CS1). 외형 표(<c>UnitVisualData</c>)가 참조하고 여러 유닛이 공유할 수 있습니다.
+    /// 칸(공격·피격)마다 동작 하나 = 앞 단계(공격만) + 본 단계(몸 + 탑승물 + 부속) + 뒤 단계 + 이벤트 줄 목록([Event1, 0, 0]은 적지 않아도 맨 앞) + 재생 배율 + 전환 블렌드입니다.
+    /// 클립마다 시작·끝을 하나씩 찍고, 본 단계 몸 클립에만 첫 이벤트와 필요할 때 중간 시점 2·3을 더합니다. 클립은 모델 자식의 Transform만 움직입니다.
     /// </summary>
     [CreateAssetMenu(fileName = "CombatUnitAnimation", menuName = "ProjectL/Database/View/Combat Unit Animation")]
     internal sealed class CombatUnitAnimationSO : ScriptableObject
     {
-        [Header("공격")]
-        [Tooltip("공격 클립(주 클립, 몸)입니다. ClipStart·ClipEvent·ClipEnd를 하나씩 찍고 ClipEvent2·3은 필요할 때만 더합니다. 비워 두면 공격은 코드 모션입니다. 넣을 수 있는 공격 표시 종류는 외형 표 검사(CombatUnitAnimationRules)가 정합니다.")]
-        [SerializeField] private AnimationClip attackClip;
-        [Tooltip("공격 주 클립·부속 클립과 클립 이벤트의 재생 배율입니다. 1은 기본, 2는 두 배, 0.5는 절반 속도입니다. 유한한 양수여야 합니다. 투사체 속도·이펙트 자체 속도·별도 초 단위 지연은 바꾸지 않습니다.")]
-        [SerializeField, Min(0.01f)] private float attackSpeed = 1f;
-        [Tooltip("공격 클립과 같은 시각으로 같이 재생할 부속 클립(무기 등)입니다. 이벤트를 찍지 않고, 공격 클립과 다른 뼈만 움직입니다. 비워도 됩니다.")]
-        [SerializeField] private AnimationClip[] attackCompanionClips = Array.Empty<AnimationClip>();
-        [Tooltip("이벤트 타이밍 뒤 대상이 맞기까지의 초. 피격자의 피격 모션이 이때 시작합니다. 원거리(직선·곡사)는 0으로 둡니다(맞는 순간은 투사체가 정함, 규칙은 CombatUnitAnimationRules)")]
-        [SerializeField, Min(0f)] private float hitDelay;
-        [Tooltip("선택 발사 목록입니다. 비우면 ClipEvent에서 기본 지점 0으로 한 발을 쏩니다. 넣으면 이 목록만 사용하며 원거리 공격 클립에서만 허용합니다.")]
-        [SerializeField] private CombatClipShotEntry[] shots = Array.Empty<CombatClipShotEntry>();
-        [Tooltip("기존 순차 재생 또는 지정한 선행 특성 연출 시작 기준입니다. 공격 클립 시작 시각만 설정합니다.")]
-        [SerializeField] private CombatAttackAnimationStartMode attackAnimationStartMode;
-        [Tooltip("이 공격에 속한 선행 발동 중 시작 기준으로 사용할 Kind 하나입니다.")]
-        [SerializeField] private TraitActivationKind attackAnimationStartKind = TraitActivationKind.PullApplied;
-        [Tooltip("지정 Kind의 실제 연출 실행 시작부터 공격 클립을 시작하기까지의 초입니다. 0은 동시 시작입니다.")]
-        [SerializeField, Min(0f)] private float attackAnimationStartDelaySeconds;
-        // 옛 칸 soundDelay·attackEffect·effectDelay는 공격 묶음의 큐(소리 시점·이펙트)로 옮겼다(범용 연출 구조 계획 Gd.3). YAML의 옛 키는 다시 저장할 때 지운다.
-        [Header("피격")]
-        [Tooltip("피격 클립(주 클립, 몸)입니다. 비워 두면 피격은 코드 반응만 씁니다.")]
-        [SerializeField] private AnimationClip hitClip;
-        [Tooltip("피격 클립과 같은 시각으로 같이 재생할 부속 클립(무기 등)입니다. 이벤트를 찍지 않고, 피격 클립과 다른 뼈만 움직입니다. 비워도 됩니다.")]
-        [SerializeField] private AnimationClip[] hitCompanionClips = Array.Empty<AnimationClip>();
+        [Header("공격 — Events 기본 [Event1, 0, 0] = 공격 애니메이션 임팩트 타이밍")]
+        [Tooltip("공격 동작입니다. 본 단계 몸 클립을 비우면 공격은 코드 모션입니다. 넣을 수 있는 공격 표시 종류는 외형 표 검사(CombatUnitAnimationRules)가 정합니다. "
+            + "이벤트 목록([Event1, 0, 0]은 적지 않아도 맨 앞에 있음): 원거리 = 줄마다 한 발(지점 = 발사 지점, 지연 0), 근접 = 줄마다 맞는 순간(지연 = 이벤트 뒤 맞기까지의 초, 지점은 쓰지 않음).")]
+        [SerializeField] private CombatClipMotionInput attack = new();
+        [Tooltip("공격 동작(앞 단계가 있으면 앞 단계부터)을 언제 시작하는지입니다. AfterLead = 선행 구간(이 공격 결과의 발동·휩쓸기처럼 공격 사건 앞에 오는 사건)이 끝나고 공격 사건이 시작할 때(기본), "
+            + "WithLead = 선행 구간 사건 중 연출이 처음 시작되는 순간 + 지연. 선행 구간이 없는 공격은 둘 다 바로 시작합니다.")]
+        [SerializeField] private CombatAttackMotionStart motionStart;
+        [Tooltip("WithLead일 때 선행 연출 시작 기준의 공격 동작 시작 초입니다. 0 = 동시 시작, 양수 = 그만큼 늦게, "
+            + "음수 = 그만큼 먼저 시작하고 선행 구간의 첫 사건 연출(발동 글자·끌려옴·휩쓸기 걸음 등)과 그 뒤 사건이 그 초만큼 기다립니다(재생 전체가 그만큼 길어짐).")]
+        [SerializeField] private float motionStartDelay;
 
-        /// <summary>입력을 검사하고 매번 새 불변 값을 만듭니다(DB 규칙 P2). 피격 선딜레이는 공격 클립이 있을 때만 봅니다.</summary>
+        [Header("피격 — Events 기본 [Event1, 0, 0] = 피격 타이밍")]
+        [Tooltip("피격 동작입니다. 본 단계 몸 클립을 비우면 피격은 코드 반응만 씁니다. 앞 단계는 두지 않습니다. 이벤트 목록은 타이밍 표시 자리입니다([Event1, 0, 0]은 적지 않아도 맨 앞에 있음, 지연 0, 지점은 쓰지 않음 — 맞기 전 예열 동작 등을 위해 남김). 큐 시점은 클립 표식만 있으면 됩니다.")]
+        [SerializeField] private CombatClipMotionInput hit = new();
+
+        // 옛 시작 모드 칸입니다(0 기본 / 1 지정 Kind / 2 휩쓸기). 시작 기준으로 옮기는 도구(CombatClipSlotMigration 단계 3)만 읽고 DB는 읽지 않습니다(계획 TP-3).
+        // 도구가 옮긴 뒤 0으로 비우고, 다음 Phase에 지웁니다.
+        [SerializeField, HideInInspector] private int attackAnimationStartMode;
+        [SerializeField, HideInInspector] private float attackAnimationStartDelaySeconds;
+
+        /// <summary>입력을 검사하고 매번 새 불변 값을 만듭니다(DB 규칙 P2).</summary>
         internal CombatUnitAnimationData CreateData()
         {
-            if (!CombatPresentationValueRules.IsPositive(attackSpeed))
-                throw Invalid($"{nameof(attackSpeed)} — {CombatPresentationValueRules.PositiveRule}");
-            string startError = CombatAttackAnimationStartData.FindError(attackAnimationStartMode,
-                attackAnimationStartKind, attackAnimationStartDelaySeconds);
+            RequireMigrated();
+            string startError = CombatClipAttackData.FindStartError(motionStart, motionStartDelay);
             if (startError != null)
                 throw Invalid(startError);
-            var animationStart = new CombatAttackAnimationStartData(attackAnimationStartMode,
-                attackAnimationStartKind, attackAnimationStartDelaySeconds);
-            if (animationStart.UsesSelectedTrait && attackClip == null)
-                throw Invalid("attackAnimationStartMode — 지정 Kind 모드는 주 공격 클립(attackClip)이 있어야 합니다");
-            if (attackClip == null && shots != null && shots.Length > 0)
-                throw Invalid("발사 목록(shots)은 주 공격 클립(attackClip)이 있어야 합니다");
-            if (attackClip == null && hitClip == null && !HasAny(attackCompanionClips) && !HasAny(hitCompanionClips))
-                throw Invalid("공격·피격 클립이 모두 비어 있습니다(묶음을 연결하지 않으면 코드 모션입니다)");
-            RequireMainClip(attackClip, attackCompanionClips, nameof(attackClip), nameof(attackCompanionClips));
-            RequireMainClip(hitClip, hitCompanionClips, nameof(hitClip), nameof(hitCompanionClips));
-            CombatClipAttackData attack = null;
-            if (attackClip != null)
-            {
-                if (!CombatClipAttackData.IsValidDelay(hitDelay))
-                    throw Invalid($"{nameof(hitDelay)} — {CombatClipAttackData.DelayRule}");
-                try
-                {
-                    attack = new CombatClipAttackData(ReadClip(attackClip, attackCompanionClips, nameof(attackClip)), hitDelay, ReadShots(), animationStart, attackSpeed);
-                }
-                catch (ArgumentException error)
-                {
-                    throw Invalid($"{nameof(shots)} — {error.Message}", error);
-                }
-            }
-
-            CombatClipData hit = hitClip != null ? ReadClip(hitClip, hitCompanionClips, nameof(hitClip)) : null;
-            return new CombatUnitAnimationData(attack, hit);
-        }
-
-        private CombatClipShot[] ReadShots()
-        {
-            if (shots == null || shots.Length == 0) return Array.Empty<CombatClipShot>();
-            var values = new CombatClipShot[shots.Length];
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (shots[i] == null) throw Invalid($"{nameof(shots)}의 {i}번 칸이 비어 있습니다");
-                values[i] = shots[i].ToData();
-            }
-            return values;
-        }
-
-        /// <summary>
-        /// 클립 규칙(길이·반복·루트 곡선, <see cref="CombatUnitAnimationRules.RequireEventClip"/>), 부속 규칙(<see cref="CombatUnitAnimationRules.RequireCompanionClips"/>)과
-        /// 이벤트 셋을 보고 값으로 만듭니다.
-        /// </summary>
-        private CombatClipData ReadClip(AnimationClip clip, AnimationClip[] companions, string field)
-        {
-            CombatClipTimings timings;
+            CombatClipMotion attackMotion;
+            CombatClipMotion hitMotion;
             try
             {
-                CombatUnitAnimationRules.RequireEventClip(clip);
-                CombatUnitAnimationRules.RequireCompanionClips(clip, companions);
-                timings = CombatClipEvents.ReadTimings(clip);
+                attackMotion = (attack ?? throw new InvalidOperationException("공격 칸이 없습니다")).ToData(nameof(attack), allowsPre: true);
+                hitMotion = (hit ?? throw new InvalidOperationException("피격 칸이 없습니다")).ToData(nameof(hit), allowsPre: false);
             }
             catch (InvalidOperationException error)
             {
-                throw Invalid($"{field} — {error.Message}", error);
+                throw Invalid(error.Message, error);
             }
-
-            return new CombatClipData(clip, timings, companions);
+            if (motionStart == CombatAttackMotionStart.WithLead && attackMotion == null)
+                throw Invalid("motionStart — WithLead는 공격 본 단계 몸 클립이 있어야 합니다");
+            if (attackMotion == null && hitMotion == null)
+                throw Invalid("공격·피격 클립이 모두 비어 있습니다(묶음을 연결하지 않으면 코드 모션입니다)");
+            return new CombatUnitAnimationData(
+                attackMotion != null ? new CombatClipAttackData(attackMotion, motionStart, motionStartDelay) : null, hitMotion);
         }
 
-        /// <summary>주 클립 없이 부속만 있는 칸은 시점의 원본이 없어 거절합니다(계획 P15).</summary>
-        private void RequireMainClip(AnimationClip clip, AnimationClip[] companions, string clipField, string companionField)
+        // 옛 시작 모드 칸에만 값이 남아 있으면(옮기기 도구 단계 3을 아직 돌리지 않음) 조용히 기본 기준으로 두지 않고 멈춥니다(설계 CS9).
+        private void RequireMigrated()
         {
-            if (clip == null && HasAny(companions))
-                throw Invalid($"{companionField} — 주 클립({clipField}) 없이 부속 클립만 있습니다(부속은 주 클립의 시각으로만 돕니다)");
+            if (attackAnimationStartMode != 0)
+                throw Invalid($"옛 시작 모드 칸(attackAnimationStartMode = {attackAnimationStartMode})에 값이 남아 있습니다. "
+                    + "메뉴 ProjectL > Combat > 클립 칸 옮기기 (3) 시작 기준을 실행하세요");
         }
-
-        private static bool HasAny(AnimationClip[] clips) => clips != null && clips.Length > 0;
 
         private InvalidOperationException Invalid(string reason, Exception inner = null)
             => new($"[CombatUnitAnimationSO] 클립 묶음 값이 잘못되었습니다: {reason}, Asset: {name}", inner);

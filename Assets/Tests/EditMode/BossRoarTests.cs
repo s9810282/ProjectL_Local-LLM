@@ -317,7 +317,7 @@ namespace ProjectL.Tests.Core
             var turn = new CombatTurnFacts(StagePhase.Combat,
                 controllerPhase: withTargets ? CombatControllerPhase.Player : CombatControllerPhase.Enemy,
                 controllerTurnSequence: 1, completedPlayerTurnCount: 3);
-            var state = new CombatCommandState(8,8,withTargets ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures,Array.Empty<ThornFieldCellSnapshot>(),                turn);
+            var state = new CombatCommandState(8,8,withTargets ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic,structures,turn);
             var owned = characters.Where(c => c.OwnedId.HasValue).Select(c => new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator
                 .Contracts.Roster.OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray();
             return new CombatCommandInput(1, CombatCommandKind.Attack, withTargets ? Player : Boss, AttackAim.ForCell(boss.Anchor.Value), state,

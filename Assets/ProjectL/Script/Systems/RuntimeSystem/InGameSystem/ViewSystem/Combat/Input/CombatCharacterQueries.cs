@@ -8,7 +8,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
 {
     /// <summary>
     /// 입력 해석에 쓰는 캐릭터 찾기입니다(구조 개선 VR3). 받은 목록만 직접 순회하며 저장하거나 할당하지 않습니다.
-    /// 규칙 판정이 아니라 "누른 칸·손패에 누가 있는가"만 답합니다.
+    /// 포인터 입력과 유닛 순환이 선택할 대상을 찾습니다.
     /// </summary>
     internal static class CombatCharacterQueries
     {
@@ -29,6 +29,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
             return character != null && character.Owner == Owner.Player && character.Area == area && !character.Health.IsDead
                 ? character
                 : null;
+        }
+
+        /// <summary>행동이 남은 다음 병종을 찾습니다. 다른 병종에 후보가 없으면 같은 병종의 다른 유닛을 고릅니다.</summary>
+        internal static EntityId FindNextPlayerByCategory(IReadOnlyList<CharacterData> characters, EntityId selectedActor)
+        {
+            CharacterData selected = FindPlayerInArea(characters, selectedActor, CharacterRuntimeArea.Field);
+            int currentCategory = (int)(selected?.Stats.Category.Key ?? CategoryKey.None);
+            var best = (Group: int.MaxValue, Category: 0, Actor: EntityId.Empty);
+
+            for (int i = 0; i < characters.Count; i++)
+            {
+                CharacterData candidate = characters[i];
+                if (candidate.EntityId == selectedActor || candidate.Owner != Owner.Player ||
+                    candidate.Area != CharacterRuntimeArea.Field || candidate.Health.IsDead ||
+                    !UnitActionUseRules.CanStartAttack(candidate.ActionUse))
+                    continue;
+
+                int category = (int)candidate.Stats.Category.Key;
+                // 현재 병종 뒤부터 찾고 끝에 닿으면 처음부터 돕니다. 같은 병종만 남으면 유닛 ID 순으로 순환합니다.
+                int group = category > currentCategory ? 0 : category < currentCategory ? 1
+                    : candidate.EntityId.CompareTo(selectedActor) > 0 ? 2 : 3;
+                var rank = (group, category, candidate.EntityId);
+                if (rank.CompareTo(best) < 0)
+                    best = rank;
+            }
+
+            return best.Actor;
         }
 
         internal static CharacterData FindPlayerAt(IReadOnlyList<CharacterData> characters, CellCoord cell)

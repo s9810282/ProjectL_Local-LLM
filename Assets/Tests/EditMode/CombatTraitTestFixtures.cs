@@ -90,7 +90,7 @@ namespace ProjectL.Tests.Core
             var structures = building ? new[] { new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] {CellCoord.Zero}, 100, false, 0),
                 new HealthStateSnapshot(100,100), cell, Rotation4.R0, new[] {cell}, Owner.Enemy) } : Array.Empty<StructureCombatFacts>();
-            return CombatCommandTestData.With(input, characters, new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,structures,s.ThornFields,turn: s.Turn), profiles);
+            return CombatCommandTestData.With(input, characters, new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,structures,turn: s.Turn), profiles);
         }
 
         internal static TraitActivationSnapshot[] Activations(CombatCommandTransition result, TraitKey key) =>
@@ -104,14 +104,14 @@ namespace ProjectL.Tests.Core
                 c.Area, c.Health, stats, c.ReserveSlotIndex, c.Anchor, c.Rotation, c.OccupiedCells, c.ActionUse);
         }
 
-        internal static readonly IMovementTileRule[] ThornRules = { new ThornMovementTileRule() };
+        internal static readonly IMovementTileRule[] DamageRules = EnvironmentDamageTests.DamageRules;
 
-        internal static CombatCommandInput ThornMovement(int percent = 30, int hp = 100, int defense = 11)
+        internal static CombatCommandInput HazardMovement(int hp = 100, int defense = 11)
         {
             var input = CombatCommandTestData.Input(empty: true);
             var actor = CombatTraitTestFixtures.Stats(CombatCommandTestData.With(input.Characters[0], hp: hp), defense);
             input = CombatCommandTestData.With(input, new[] { actor, input.Characters[1] }, state:
-                CombatCommandEffectTests.WithFields(input, new ThornFieldCellSnapshot(new CellCoord(2, 3), 5, 7, percent, UnitTurnTickPhase.Started)));
+                EnvironmentDamageTests.WithDamageTiles(input.State, (new CellCoord(2, 3), 7)));
             return CombatCommandComposition.Intent(input, CombatCommandKind.Move,
                 path: new MovementPath(new[] { new CellCoord(1, 3), new CellCoord(2, 3) }));
         }

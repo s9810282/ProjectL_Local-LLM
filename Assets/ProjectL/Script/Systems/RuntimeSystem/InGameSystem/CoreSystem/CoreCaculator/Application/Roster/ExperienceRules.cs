@@ -69,7 +69,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             return new ExperienceGain(new OwnedCharacterRecord(record.Id, record.CharacterKey, record.Role, level, experience,
-                record.Growth, record.HunterAttackBonus, record.SpecializationCategory),
+                record.Growth, record.HunterAttackBonus, record.SpecializationCategory, record.PlayerSkillUpgrade),
                 level - record.Level);
         }
     }

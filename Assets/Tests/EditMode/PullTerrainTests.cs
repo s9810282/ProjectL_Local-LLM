@@ -33,14 +33,13 @@ namespace ProjectL.Tests.Core
 
         [TestCase(Owner.Enemy, 73)]
         [TestCase(Owner.Player, 93)]
-        public void TraversedThorns_ApplyBeforeAttackAndConsumeOnce(Owner owner, int health)
+        public void TraversedHazards_ApplyBeforeAttackAndConsumeOnce(Owner owner, int health)
         {
             var input = PullTestData.Input(extra: 2, distance: 3, owner: owner);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(9, 7), 3, 7)));
-            var result = PullTestData.Run(input);
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(9, 7), 7)));
+            var result = PullTestData.Run(input, EnvironmentDamageTests.DamageRules);
             Assert.That(PullTestData.Final(result).Health.CurrentHealth, Is.EqualTo(health));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
             Assert.That(result.Events.OfType<CombatCharacterEvent>().First(e => e.Kind == CombatEventKind.HealthChanged)
                 .Final.Anchor, Is.EqualTo(new CellCoord(9, 7)));
         }

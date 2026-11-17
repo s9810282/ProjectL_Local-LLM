@@ -45,11 +45,13 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             => CreateComposition(faultBoundary).Group;
 
         /// <summary>View와 그 View가 소유하는 입력을 한 번 조립해 그룹 및 등록 정보를 반환합니다.</summary>
+        /// <param name="autoStartTutorial">이번 재생에서 튜토리얼을 자동 시작할지입니다.</param>
         public static InGameViewSystemComposition CreateComposition(
             RuntimeFaultBoundary faultBoundary = null
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             , bool includeDevelopmentTools = false
 #endif
+            , bool autoStartTutorial = true
             )
         {
             RuntimeFaultBoundary faults = faultBoundary ?? new RuntimeFaultBoundary(Debug.LogException);
@@ -78,7 +80,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
             var traitGrowth = new TraitGrowthRequestLifetime(faults);
             traitGrowth.ExportServices(builder);
             // 튜토리얼 실행 소유자는 씬보다 오래 사는 런타임 수명이다(튜토리얼 설계 §10).
-            var tutorial = new TutorialViewSystem(faults, combatView.ReadInputWindow, TutorialDevLog, tutorialInput.Slot);
+            var tutorial = new TutorialViewSystem(faults, combatView.ReadInputWindow, TutorialDevLog, tutorialInput.Slot,
+                autoStartTutorial);
             tutorial.ExportServices(builder);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

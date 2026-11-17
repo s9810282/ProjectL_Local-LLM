@@ -39,11 +39,9 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
             [SerializeField] private GameObject connectionPrefab;
             [Tooltip("시작 지점 장식입니다. 비워 두면 시작 지점에는 아무것도 표시하지 않습니다.")]
             [SerializeField] private GameObject startVisualPrefab;
-            [Tooltip("현재 플레이어 노드 위에 표시하고 이동시킬 마커 프리팹입니다.")]
-            [SerializeField] private GameObject currentMarkerPrefab;
 
             [Header("Current Marker Presentation")]
-            [Tooltip("노드 루트 기준 모델의 표시 위치입니다. 원본 프리팹의 루트 Transform 대신 적용합니다.")]
+            [Tooltip("노드 루트 기준 메인 캐릭터 모델의 표시 위치입니다. 모델의 루트 Transform 대신 적용합니다.")]
             [SerializeField] private Vector3 markerOffset;
             [Tooltip("이동 방향에 더할 모델의 Y 회전 보정입니다.")]
             [SerializeField] private float markerYaw;
@@ -80,7 +78,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
 
             internal StageMapViewData ToData() => new(depthSpacing, widthSpacing, nodeScale, buildingHeight,
                 lineHeight, lineWidth, connectionPrefab, startVisualPrefab,
-                currentMarkerPrefab, markerOffset, markerYaw, markerScale, markerMoveDuration, markerJumpHeight,
+                markerOffset, markerYaw, markerScale, markerMoveDuration, markerJumpHeight,
                 pickDistance, lineColor, nodeDrop != null ? nodeDrop.ToData() :
                     throw new InvalidOperationException("[StageMapViewDataSO] Node Drop 설정이 필요합니다."),
                 mapIntro != null ? mapIntro.ToData() :

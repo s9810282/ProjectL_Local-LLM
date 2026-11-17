@@ -9,14 +9,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         // 다시 켜기 전 결정 사항(core-review-remediation 설계 §5.1):
         // - 사령술(R1): 공용 적 진영에서의 소환 주기를 기획과 정한 뒤에 소환을 되살린다.
-        // - 가시밭(R14): 필드 수명과 방어 감소 만료를 플레이어·적 진영 턴 단위로 정하고, 밤 종료 때 필드를 비운다.
         public static bool IsTraitAvailable(TraitKey key)
         {
             if (!Enum.IsDefined(typeof(TraitKey), key) || key == TraitKey.None)
                 throw new ArgumentOutOfRangeException(nameof(key));
             if (IsTraitRetired(key) || IsImplementationPending(key)) return false;
-            return key != TraitKey.Focus && key != TraitKey.ThornField &&
-                key != TraitKey.Necromancy;
+            return key != TraitKey.Focus && key != TraitKey.Necromancy;
         }
 
         /// <summary>직렬화 번호만 보존하며 실행·저작에서는 허용하지 않는 특성이다.</summary>
@@ -24,15 +22,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (!Enum.IsDefined(typeof(TraitKey), key) || key == TraitKey.None)
                 throw new ArgumentOutOfRangeException(nameof(key));
-            return key == TraitKey.MoveAttackDiscount || key == TraitKey.DoorBreaching || key == TraitKey.ContemptForWeak ||
+            return key == TraitKey.ThornField || key == TraitKey.MoveAttackDiscount ||
+                key == TraitKey.DoorBreaching || key == TraitKey.ContemptForWeak ||
                 key == TraitKey.PrecisionShot || key == TraitKey.DoubleShot ||
                 key == TraitKey.LuckyBullet || key == TraitKey.ChainExplosion;
         }
 
-        internal static bool IsImplementationPending(TraitKey key) => key switch
-        {
-            _ => false
-        };
+        internal static bool IsImplementationPending(TraitKey key) => false;
 
         public static string GetTraitUnavailableReason(TraitKey key) =>
             IsTraitAvailable(key) ? "" : IsTraitRetired(key) ? "Retired" :

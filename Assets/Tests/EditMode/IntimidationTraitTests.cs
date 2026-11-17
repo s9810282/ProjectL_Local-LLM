@@ -54,14 +54,13 @@ namespace ProjectL.Tests.Core
             Assert.That(registration.EffectRuleFactory(trait), Is.TypeOf<IntimidationEffectRule>());
         }
         [Test]
-        public void Registry_CoversEveryNonPendingTraitExactlyOnce()
+        public void Registry_CoversEveryNonRetiredTraitExactlyOnce()
         {
             var keys = TraitRegistry.CreateDefault().OrderedRegistrations.Select(r => r.TraitKey).ToArray();
             var declared = Enum.GetValues(typeof(TraitKey)).Cast<TraitKey>()
-                .Where(k => k != TraitKey.None && !DeferredCombatFeatures.IsTraitRetired(k) &&
-                    DeferredCombatFeatures.GetTraitUnavailableReason(k) != "ImplementationPending").ToArray();
+                .Where(k => k != TraitKey.None && !DeferredCombatFeatures.IsTraitRetired(k)).ToArray();
             Assert.That(keys, Is.EquivalentTo(declared));
-            Assert.That(keys.Distinct().Count(), Is.EqualTo(44));
+            Assert.That(keys.Distinct().Count(), Is.EqualTo(declared.Length));
         }
 
         [Test]

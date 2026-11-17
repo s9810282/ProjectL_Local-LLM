@@ -72,8 +72,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             // 이동 고스트는 포인터가 가리키는 칸에 설 자리를 따라갑니다(솟은 칸은 윗면, 들어간 칸은 타일 윗면, 고지대 View 계획 P14·타일 높이 계획 §8.7 L6).
             Vector3? point = !frozen && screenPosition.HasValue && _pointer.TryRayToStandingPoint(screenPosition.Value.x,
                 screenPosition.Value.y, out Vector3 world) ? world : (Vector3?)null;
+            // 커서가 필드 평면을 벗어나 투영할 수 없으면 마지막 자세를 유지한다.
+            bool keepPose = frozen || (screenPosition.HasValue && !point.HasValue);
             UpdatePointer(point, !valid.HasValue ? CombatHoverState.Neutral
-                : valid.Value ? CombatHoverState.Valid : CombatHoverState.Invalid, frozen);
+                : valid.Value ? CombatHoverState.Valid : CombatHoverState.Invalid, keepPose);
+        }
+
+        bool ICombatMovementFeedback.TryShowMovementStop(CellCoord cell)
+        {
+            if (_released || !_editing || _field.Mapper == null)
+                return false;
+            UpdatePointer(_field.Mapper.CellSurfaceToWorld(cell), CombatHoverState.Valid, false);
+            return true;
         }
 
         void ICombatMovementFeedback.EndMovementPlanning()
@@ -138,12 +148,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             }
         }
 
-        private void UpdatePointer(Vector3? point, CombatHoverState state, bool frozen)
+        private void UpdatePointer(Vector3? point, CombatHoverState state, bool keepPose)
         {
             if (_released || !_editing) return;
             _ghost.SetMovementTint(state);
-            // 확정 직전 월드 자세를 유지한다. 카메라 이동도 동결 위치를 바꾸지 않는다.
-            if (frozen) return;
+            if (keepPose) return;
             if (point.HasValue) _ghost.MoveTo(point.Value);
             _ghost.SetMovementVisible(point.HasValue);
         }

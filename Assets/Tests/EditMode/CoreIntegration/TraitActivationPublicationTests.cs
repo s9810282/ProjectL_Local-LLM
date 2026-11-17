@@ -23,8 +23,8 @@ namespace ProjectL.Tests.CoreIntegration
             battle.Submit(battle.Attack(battle.Actor, boss.Anchor.Value));
             Assert.That(battle.Buffers.CombatResultReadSink.TryGetLatest(out var result), Is.True);
             var roar = result.Events.OfType<CombatEffectsEvent>().SelectMany(e => e.Traits).Single(a => a.TraitKey == TraitKey.Roar);
-            var direct = result.Events.OfType<CombatStructureEvent>().First(e => e.Final.Definition.Key == EntityKey.Structure_PowderBarrel);
-            var origin = direct.DamageOrigins.Single();
+            var direct = result.Events.OfType<CombatObstacleDurabilityEvent>().First(e => e.Final.Definition.Key == EntityKey.Structure_PowderBarrel);
+            var origin = direct.Origin;
             Assert.That(roar.ResultOrigin.PhysicalCell, Is.EqualTo(boss.Anchor));
             Assert.That(roar.ResultOrigin.CreditedCharacterId, Is.EqualTo(boss.EntityId));
             Assert.That(roar.ResultOrigin.AttackGroup, Is.EqualTo(origin.AttackGroup));
@@ -60,7 +60,7 @@ namespace ProjectL.Tests.CoreIntegration
                 var barrel = new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 1, new[] { CellCoord.Zero }, 1, false, 0);
                 return new BattleInitialization(basis.Stage, basis.MainAnchor, basis.MainRotation, units, basis.Structures, basis.Categories,
                     profiles, obstaclePlacements: new[] { new InitialObstaclePlacementSpec(barrel, ObstacleContentKind.PowderBarrel,
-                        new CellCoord(6, 2), Rotation4.R0, 7) });
+                        new CellCoord(6, 2), Rotation4.R0, 1, 7) });
             }
         }
 

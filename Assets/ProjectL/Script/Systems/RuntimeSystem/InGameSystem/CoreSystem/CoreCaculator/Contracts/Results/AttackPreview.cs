@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -19,9 +20,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public EntityId PrimaryTargetId { get; }
         public PiercingShotDelivery PiercingShot { get; }
         public AttackPullSnapshot Pull { get; }
+        public AttackSweepSnapshot Sweep { get; }
         private readonly IReadOnlyList<AttackKnockbackSnapshot> _knockbacks;
         /// <summary>공격 결과의 넉백 요약과 같습니다. 칸 단위 재생은 Moved 사건을 씁니다.</summary>
         public IReadOnlyList<AttackKnockbackSnapshot> Knockbacks => _knockbacks ?? Array.Empty<AttackKnockbackSnapshot>();
+        private readonly IReadOnlyList<PillarFallPreview> _pillarFalls;
+        public IReadOnlyList<PillarFallPreview> PillarFalls => _pillarFalls ?? Array.Empty<PillarFallPreview>();
+        private readonly IReadOnlyList<ThornBombExplosionPreview> _thornBombExplosions;
+        /// <summary>같은 유닛이 여러 번 맞거나 밀려도 폭발 순서별 결과를 보존한다.</summary>
+        public IReadOnlyList<ThornBombExplosionPreview> ThornBombExplosions => _thornBombExplosions ?? Array.Empty<ThornBombExplosionPreview>();
+        private readonly ThornBombStateSet _projectedThornBombs;
+        /// <summary>명령 완료 뒤 예상 활성 폭탄이다. 첫 부착·재부착·소모 결과를 같은 계산에서 제공한다.</summary>
+        public ThornBombStateSet ProjectedThornBombs => _projectedThornBombs ?? ThornBombStateSet.Empty;
+        private static readonly IReadOnlyDictionary<EntityId, ThornBombHealthPreview> NoThornBombHealth =
+            new ReadOnlyDictionary<EntityId, ThornBombHealthPreview>(new Dictionary<EntityId, ThornBombHealthPreview>());
+        private readonly IReadOnlyDictionary<EntityId, ThornBombHealthPreview> _thornBombFinalHealth;
+        /// <summary>폭발에 맞은 유닛의 공격 정산 완료 체력과 재구성 사실입니다.</summary>
+        public IReadOnlyDictionary<EntityId, ThornBombHealthPreview> ThornBombFinalHealth => _thornBombFinalHealth ?? NoThornBombHealth;
         public Rotation4 AttackDirection { get; }
         public UnitActionUseSettlementSnapshot ActionUseSettlement { get; }
         public ReadOnlyMemory<CellCoord> AffectedCells { get; }
@@ -52,7 +67,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             CategorySnapshot projectedCategory,
             AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
             PiercingShotDelivery piercingShot = null, AttackPullSnapshot pull = null,
-            IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null)
+            IReadOnlyList<AttackKnockbackSnapshot> knockbacks = null, AttackSweepSnapshot sweep = null,
+            IReadOnlyList<PillarFallPreview> pillarFalls = null, IReadOnlyList<ThornBombExplosionPreview> thornBombExplosions = null,
+            ThornBombStateSet projectedThornBombs = null, IReadOnlyDictionary<EntityId, ThornBombHealthPreview> thornBombFinalHealth = null)
         {
             CellCoord[] copiedCells = (CellCoord[])affectedCells.Clone();
             AttackTargetPreview[] copiedTargets = (AttackTargetPreview[])targets.Clone();
@@ -74,6 +91,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             PrimaryTargetId = primaryTargetId;
             PiercingShot = piercingShot;
             Pull = pull;
+            sweep?.ValidateActor(attackerId);
+            Sweep = sweep;
             // 결과가 이미 복사한 읽기 전용 목록을 그대로 공유합니다.
             _knockbacks = knockbacks == null || knockbacks.Count == 0 ? null : knockbacks;
             TargetCell = targetCell;
@@ -85,11 +104,65 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             ProjectedCategory = projectedCategory;
             _cellSelection = cellSelection;
             _blockedContacts = AttackBlockedContact.CopyCollection(blockedContacts);
+            _pillarFalls = pillarFalls == null ? null : Array.AsReadOnly(pillarFalls.ToArray());
+            _thornBombExplosions = thornBombExplosions == null ? null : Array.AsReadOnly(thornBombExplosions.ToArray());
+            _projectedThornBombs = projectedThornBombs;
+            _thornBombFinalHealth = thornBombFinalHealth;
         }
 
+        /// <summary>
+        /// 폭탄 결과 세 칸만 바꾸고 나머지는 이미 검증·복사한 값을 그대로 공유한다.
+        /// 구조체 생성자는 모든 필드를 대입해야 하므로, 새 필드를 더하고 여기서 빠뜨리면 컴파일 오류가 난다.
+        /// </summary>
+        private AttackPreview(in AttackPreview source, IReadOnlyList<ThornBombExplosionPreview> thornBombExplosions,
+            ThornBombStateSet projectedThornBombs, IReadOnlyDictionary<EntityId, ThornBombHealthPreview> thornBombFinalHealth)
+        {
+            CanAttack = source.CanAttack;
+            _blockedContacts = source._blockedContacts;
+            FailureReason = source.FailureReason;
+            AttackerId = source.AttackerId;
+            PrimaryTargetId = source.PrimaryTargetId;
+            PiercingShot = source.PiercingShot;
+            Pull = source.Pull;
+            Sweep = source.Sweep;
+            _knockbacks = source._knockbacks;
+            _pillarFalls = source._pillarFalls;
+            // 빈 목록도 읽기 전용 목록으로 둔다(옛 재조립과 같은 공개 형식, 고정 기준 비교가 읽음).
+            _thornBombExplosions = thornBombExplosions == null ? null : Array.AsReadOnly(thornBombExplosions.ToArray());
+            _projectedThornBombs = projectedThornBombs;
+            _thornBombFinalHealth = thornBombFinalHealth;
+            AttackDirection = source.AttackDirection;
+            ActionUseSettlement = source.ActionUseSettlement;
+            AffectedCells = source.AffectedCells;
+            Targets = source.Targets;
+            ProjectedTraitStatuses = source.ProjectedTraitStatuses;
+            ProjectedCategory = source.ProjectedCategory;
+            TargetCell = source.TargetCell;
+            _cellSelection = source._cellSelection;
+        }
+
+        internal AttackPreview WithThornBombConsequences(IReadOnlyList<ThornBombExplosionPreview> explosions,
+            ThornBombStateSet projectedBombs, IReadOnlyDictionary<EntityId, CharacterCombatFacts> characters,
+            IReadOnlyList<CombatEvent> events)
+        {
+            IReadOnlyDictionary<EntityId, ThornBombHealthPreview> health = null;
+            if (explosions.Count != 0)
+            {
+                var reconstructed = events.OfType<CombatCharacterEvent>().Where(e => e.Kind == CombatEventKind.Reconstructed)
+                    .Select(e => e.Final.EntityId).ToHashSet();
+                var finalHealth = new Dictionary<EntityId, ThornBombHealthPreview>();
+                foreach (var explosion in explosions)
+                    foreach (var hit in explosion.Hits)
+                        finalHealth[hit.TargetId] = new ThornBombHealthPreview(characters[hit.TargetId].Health.CurrentHealth,
+                            reconstructed.Contains(hit.TargetId));
+                health = new ReadOnlyDictionary<EntityId, ThornBombHealthPreview>(finalHealth);
+            }
+            return new AttackPreview(this, explosions,
+                projectedBombs ?? throw new ArgumentNullException(nameof(projectedBombs)), health);
+        }
         /// <summary>공통 정산으로 계산한 피해를 표시한다. 빈 단일 중심에도 가짜 주 대상을 만들지 않는다.</summary>
         public static AttackPreview FromFacts(AttackResult result, AttackTargetPreview[] targets,
-            TraitStatusSnapshot[] traits, CategorySnapshot category)
+            TraitStatusSnapshot[] traits, CategorySnapshot category, IReadOnlyList<PillarFallPreview> pillarFalls = null)
         {
             if (result.FailureReason != AttackFailureReason.None)
                 return Failure(result.FailureReason, result.AttackerId, result.PrimaryTargetId, result.BlockedContacts);
@@ -110,7 +183,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 result.PrimaryCell, result.AttackDirection, result.ActionUseSettlement, affectedCells,
                 targets, traits, category, new AttackCellSelection(result.PrimaryCell,
                     result.DesignatedCells.ToArray(), result.AdditionalCells.ToArray()), result.BlockedContacts, result.PiercingShot, result.Pull,
-                result.Knockbacks);
+                result.Knockbacks, result.Sweep, pillarFalls);
         }
 
         public static AttackPreview Success(
@@ -123,7 +196,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             TraitStatusSnapshot[] projectedTraitStatuses,
             CategorySnapshot projectedCategory,
             AttackCellSelection cellSelection = null, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
-            PiercingShotDelivery piercingShot = null)
+            PiercingShotDelivery piercingShot = null, AttackSweepSnapshot sweep = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells,
@@ -145,7 +218,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             return new AttackPreview(
                 true, AttackFailureReason.None, attackerId, primaryTargetId, cellSelection?.PrimaryCell,
                 attackDirection, actionCostSettlement, affectedCells, targets,
-                projectedTraitStatuses, projectedCategory, cellSelection, blockedContacts, piercingShot);
+                projectedTraitStatuses, projectedCategory, cellSelection, blockedContacts, piercingShot, sweep: sweep);
         }
 
         public static AttackPreview SuccessForCell(
@@ -157,7 +230,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             AttackTargetPreview[] targets,
             TraitStatusSnapshot[] projectedTraitStatuses,
             CategorySnapshot projectedCategory, IReadOnlyList<AttackBlockedContact> blockedContacts = null,
-            PiercingShotDelivery piercingShot = null)
+            PiercingShotDelivery piercingShot = null, AttackSweepSnapshot sweep = null)
         {
             ValidateSuccess(
                 attackerId, attackDirection, actionCostSettlement, affectedCells,
@@ -170,7 +243,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             return new AttackPreview(
                 true, AttackFailureReason.None, attackerId, EntityId.Empty, targetCell,
                 attackDirection, actionCostSettlement, affectedCells, targets,
-                projectedTraitStatuses, projectedCategory, selection, blockedContacts, piercingShot);
+                projectedTraitStatuses, projectedCategory, selection, blockedContacts, piercingShot, sweep: sweep);
         }
 
         public static AttackPreview Failure(

@@ -224,7 +224,8 @@ namespace ProjectL.Tests.Core
             Assert.That(Final(result, 10).Anchor, Is.EqualTo(ally.Anchor.Value + new CellCoord(0, 1)));
             Assert.That(Final(result, 10).Health.CurrentHealth, Is.EqualTo(Final(ordinary, 10).Health.CurrentHealth));
             Assert.That(result.FinalState.Structures.Single().Anchor, Is.EqualTo(barrel.Structure.Anchor));
-            Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(ordinary.FinalState.Structures.Single().Health.CurrentHealth));
+            Assert.That(result.FinalState.Structures.Single().ObstacleDurability.RemainingHits,
+                Is.EqualTo(ordinary.FinalState.Structures.Single().ObstacleDurability.RemainingHits));
             // 중심 유닛과 구조물은 넉백 기록이 없다.
             Assert.That(result.Attack.Value.Knockbacks.Select(k => k.TargetId.Value), Is.EqualTo(new[] { 3, 10 }));
         }
@@ -295,17 +296,16 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ThornAndMineTraversal_PreservesDeferredFinalArrival()
+        public void HazardAndMineTraversal_PreservesDeferredFinalArrival()
         {
             var input = Input(2, 0, 1);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(4, 6), 3, 6)));
             input = CliffFallTests.WithEnvironment(input, MineEnvironmentTests.Mine(id: 60, damage: 7, cell: new CellCoord(4, 7)));
-            var result = Run(input, MineEnvironmentTests.Rules);
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(4, 6), 6)));
+            var result = Run(input, MineEnvironmentTests.Rules.Concat(EnvironmentDamageTests.DamageRules).ToArray());
             Assert.That(Final(result, 3).Anchor, Is.EqualTo(new CellCoord(4, 7)));
             Assert.That(Final(result, 3).Health.CurrentHealth, Is.EqualTo(917));
             Assert.That(result.Attack.Value.Hits.ToArray().Single(h => h.TargetId.Value == 3).TargetHealthAfter, Is.EqualTo(924));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
             Assert.That(result.FinalState.Environment.Tiles.OfType<MineSourceFact>().Single().Active, Is.False);
         }
 
@@ -381,7 +381,7 @@ namespace ProjectL.Tests.Core
             var hit = original.Delivery.Hits.Single(h => h.TargetId.Value == 3);
             var delivery = new ResolvedAttackDelivery(new[] { hit, hit }, original.Delivery.AffectedCells);
             var plan = new CommandAttackPlan(original.Input,original.Rules,original.Profile,original.OriginalActor,original.Actor,                original.Environment,original.Walls,original.Selection,delivery,original.Engine,original.Bindings,original.Pipeline,                original.CommonDamage,original.Direction,original.PublicPreview);
-            ledger.AddThornVictim(new EntityId(50));
+            ledger.AddCollisionVictim(new EntityId(50));
             var moved = AttackKnockbackCalculator.Resolve(plan, world, ledger, world.CreateArrivalProjection(plan));
             Assert.That(world.Characters[new EntityId(50)].Anchor, Is.EqualTo(new CellCoord(2, 2)));
             Assert.That(world.Characters[new EntityId(3)].Anchor, Is.EqualTo(new CellCoord(6, 4)));
@@ -409,7 +409,7 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void MineKillsObjective_StopsLaterTargetsBeforeTheirThorns()
+        public void MineKillsObjective_StopsLaterTargetsBeforeTheirHazards()
         {
             var input = Input(2, 0, 1);
             var bossId = new EntityId(8);
@@ -419,13 +419,13 @@ namespace ProjectL.Tests.Core
                 profiles: input.Profiles.Append(new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Gravekeeper, 1), Method())).ToArray());
             input = CliffFallTests.WithEnvironment(input, MineEnvironmentTests.Mine(id: 60, damage: 7, cell: new CellCoord(4, 6)));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(2, 4), 3, 100) },                s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation));
-            var result = Run(input, MineEnvironmentTests.Rules);
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(bossId),s.Allocation), (new CellCoord(2, 4), 100)));
+            var result = Run(input, MineEnvironmentTests.Rules.Concat(EnvironmentDamageTests.DamageRules).ToArray());
             Assert.That(Final(result, 8).Health.IsDead, Is.True);
             Assert.That(result.Outcome.Reason, Is.EqualTo(StageOutcomeReason.DesignatedBossDefeated));
             Assert.That(Final(result, 9).Anchor, Is.EqualTo(new CellCoord(3, 4)));
             Assert.That(Final(result, 9).Health.CurrentHealth, Is.EqualTo(930));
-            Assert.That(result.FinalState.ThornFields.Single().Cell, Is.EqualTo(new CellCoord(2, 4)));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState).Single().Cell, Is.EqualTo(new CellCoord(2, 4)));
             Assert.That(result.Events.OfType<CombatOutcomeEvent>().Count(), Is.EqualTo(1));
         }
 

@@ -4,6 +4,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Feedback;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
@@ -66,8 +67,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
         }
 
         /// <summary>정보창 사실을 이번 결과의 단계·보유 기록·특성 설정으로 맞춥니다.</summary>
-        internal void Synchronize(StagePhase stage, IReadOnlyList<OwnedCharacterRecord> owned, BattleTraitSettings traitSettings) =>
-            _inspection.Synchronize(stage, owned, traitSettings);
+        internal void Synchronize(StagePhase stage, IReadOnlyList<OwnedCharacterRecord> owned, BattleTraitSettings traitSettings,
+            IReadOnlyList<OwnedCharacterStatsSnapshot> ownedStats) =>
+            _inspection.Synchronize(stage, owned, traitSettings, ownedStats);
 
         /// <summary>
         /// 전투 목표 대상을 정합니다. 전투 동안 바뀌지 않지만 Buffer 원본을 매번 따릅니다(보스 활성화 설계 D3).
@@ -118,10 +120,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
                 _inspection.SelectCell(null);
         }
 
-        public void InspectUnit(float screenX, float screenY)
+        public bool TrySelectActor(EntityId actor) => !_lifetime.IsReleased && _inspection.TrySelectActor(actor);
+
+        public bool TryPickInspection(float screenX, float screenY, out CellCoord? cell, out EntityId entity)
         {
-            if (_lifetime.IsReleased || _pointer.IsPointerOverUi(screenX, screenY)) return;
-            _inspection.SelectCell(_pointer.TryPickCell(screenX, screenY, out CellCoord cell) ? cell : (CellCoord?)null);
+            cell = null;
+            entity = EntityId.Empty;
+            if (_lifetime.IsReleased || _pointer.IsPointerOverUi(screenX, screenY)) return false;
+            if (_pointer.TryPickCell(screenX, screenY, out CellCoord picked))
+            {
+                cell = picked;
+                if (_facts.TryPick(picked, out var occupant))
+                    entity = occupant;
+            }
+            return true;
+        }
+
+        public void InspectUnit(EntityId entity)
+        {
+            if (_lifetime.IsReleased) return;
+            _inspection.SelectPicked(entity);
             _unitHudLayer.SetSelectedEntity(_selection.SelectedEntityId);
             // 정보창의 UI 콜백에서 씬 연결이 해제될 수 있습니다.
             if (_lifetime.IsReleased) return;

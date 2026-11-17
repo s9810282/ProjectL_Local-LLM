@@ -17,7 +17,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     internal static class CombatReserveReturnCleanup
     {
         /// <param name="keepShieldBudget">배치 단계 손 복귀(`CombatPlacementCalculator.Return`)만 참. 방어막 남은 예산을 지우지 않고 자격만 끈다(`AppliedStatusRules.ClearForReserve`).</param>
-        internal static CharacterCombatFacts Clear(CharacterCombatFacts character, List<CombatEvent> events, bool keepShieldBudget = false)
+        internal static CharacterCombatFacts Clear(CharacterCombatFacts character, List<CombatEvent> events, bool keepShieldBudget = false,
+            List<CombatHealthExecution> executions = null, CombatCharacterEvent returned = null)
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
             var statuses = AppliedStatusRules.ClearForReserve(character.StatusEffects, keepShieldBudget);
@@ -59,7 +60,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 CombatCommandEvents.Trait(events, character.EntityId, TraitKey.Cohesion, TraitActivationKind.DefenseChanged,
                     character.TraitEffects.CohesionDefenseBonus, new[] { character.EntityId });
             // 정규화는 회복·피해가 아닙니다. 완전한 사실을 한 번 게시하고 스테이지 피해 기록은 만들지 않습니다.
-            CombatCommandEvents.TraitState(events, character, cleared);
+            var evidence = CombatCommandEvents.TraitState(events, character, cleared);
+            if (executions != null && !character.Health.Equals(cleared.Health))
+                CombatHealthRecording.Add(executions, character.EntityId, character.Health, cleared.Health,
+                    new CombatHealthSource(CombatHealthOperationKind.Normalization, contextEvent: returned ?? (CombatEvent)evidence),
+                    evidence, normalization: character.Health.CurrentHealth - cleared.Health.CurrentHealth);
             return cleared;
         }
     }

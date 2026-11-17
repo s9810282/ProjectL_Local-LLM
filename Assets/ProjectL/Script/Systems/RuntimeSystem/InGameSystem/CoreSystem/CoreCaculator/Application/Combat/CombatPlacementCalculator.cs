@@ -28,6 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (profile.Definition.FootprintLocalCells.Length != 1) return new CombatPlacementPreview(false, Array.Empty<CellCoord>());
             var cell = input.TargetCell;
             bool valid = input.State.IsInside(cell) && Zones(input).CanDeploy(actor.Owner, new[] { cell }) &&
+                !GimmickOccupancyRules.Blocks(input.State.Gimmicks, cell) &&
                 !EnvironmentTerrainRules.BlocksVoluntaryEntry(input.State.Environment, input.EnvironmentBindings, cell) &&
                 !input.Characters.Any(c => c.EntityId != actor.EntityId && c.OccupiedCells.Contains(cell)) &&
                 !input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(cell));
@@ -40,19 +41,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var actor = Actor(input);
             var departed = actor.Anchor == input.TargetCell ? actor : PositionTileModifierCalculator.Replace(actor, PositionTileModifier.None);
             var events = new List<CombatEvent>();
-            PositionTileModifierCalculator.RecordNormalization(events, actor, departed);
             var relocated = Location(departed, CharacterRuntimeArea.Field, null, input.TargetCell, input.Rotation);
-            events.Add(new CombatCharacterEvent(CombatEventKind.Placed, departed, relocated));
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             projected[actor.EntityId] = relocated;
-            var projection = MovementProjection.ForArrival(input, projected, events);
+            var projection = MovementProjection.ForArrival(input, projected, events, rules: rules);
+            PositionTileModifierCalculator.RecordNormalization(events, actor, departed, projection.Damage.HealthExecutions);
+            events.Add(new CombatCharacterEvent(CombatEventKind.Placed, departed, relocated));
             MovementEnvironmentCalculator.ResolveObjectsAt(projection, actor.EntityId, input.TargetCell, rules);
             if (!projected[actor.EntityId].Health.IsDead && !projection.Terminal)
             {
                 var arrived = projected[actor.EntityId];
                 var final = PositionTileModifierCalculator.Replace(arrived,
                     PositionTileModifierCalculator.ResolveAt(input.TargetCell, projection.Environment));
-                PositionTileModifierCalculator.RecordNormalization(events, arrived, final);
+                PositionTileModifierCalculator.RecordNormalization(events, arrived, final, projection.Damage.HealthExecutions);
                 projected[actor.EntityId] = final;
             }
             return projection.Complete();
@@ -69,8 +70,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (slot < 0) return CombatCommandCalculator.Reject(input, "ReserveFull");
             var events = new List<CombatEvent>();
             // 배치 단계 손 복귀는 자리 바꾸기라 방어막 예산을 남긴다. 다시 놓으면 끌어서 옮긴 것과 같다(밤 종료 회수는 0 그대로).
-            var final = Location(actor, CharacterRuntimeArea.Hand, slot, null, null, events, keepShieldBudget: true);
-            return TraitPresenceReconciler.AfterTransition(Items.ItemEquipmentCalculator.RefundReturn(input, actor, final, events));
+            var executions = new List<CombatHealthExecution>();
+            var final = Location(actor, CharacterRuntimeArea.Hand, slot, null, null, events, keepShieldBudget: true, executions: executions);
+            var transition = Items.ItemEquipmentCalculator.RefundReturn(input, actor, final, events);
+            return TraitPresenceReconciler.AfterTransition(transition.WithHealthEvidence(executions, transition.HealthClaims));
         }
 
         private static CharacterCombatFacts Actor(CombatCommandInput input) => input.Kind == CombatCommandKind.PlaceMainCharacter
@@ -89,21 +92,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <param name="keepShieldBudget">예비 구역 진입 때 방어막 예산을 남길지. 배치 단계 손 복귀(`Return`)만 참.</param>
         internal static CharacterCombatFacts Location(CharacterCombatFacts c, CharacterRuntimeArea area, int? slot,
-            CellCoord? anchor, Rotation4? rotation, List<CombatEvent> events = null, bool keepShieldBudget = false)
+            CellCoord? anchor, Rotation4? rotation, List<CombatEvent> events = null, bool keepShieldBudget = false,
+            List<CombatHealthExecution> executions = null)
         {
             bool returning = c.Area != area && (area == CharacterRuntimeArea.Hand || area == CharacterRuntimeArea.EnemyWaiting);
             if (area != CharacterRuntimeArea.Field || anchor != c.Anchor)
             {
                 var normalized = PositionTileModifierCalculator.Replace(c, PositionTileModifier.None);
-                if (returning && events != null) PositionTileModifierCalculator.RecordNormalization(events, c, normalized);
+                if (returning && events != null) PositionTileModifierCalculator.RecordNormalization(events, c, normalized, executions);
                 c = normalized;
             }
             var relocated = RampageApplication.ReconcileChange(c, c.WithPlacement(area: area, reserveSlotIndex: slot, anchor: anchor, rotation: rotation,
                 occupiedCells: anchor.HasValue ? new[] { anchor.Value } : Array.Empty<CellCoord>(), actionUse: UnitActionUse.Deferred));
             if (returning)
             {
-                events?.Add(new CombatCharacterEvent(CombatEventKind.Returned, c, relocated));
-                return CombatReserveReturnCleanup.Clear(relocated, events, keepShieldBudget);
+                var returned = events == null ? null : new CombatCharacterEvent(CombatEventKind.Returned, c, relocated);
+                events?.Add(returned);
+                return CombatReserveReturnCleanup.Clear(relocated, events, keepShieldBudget, executions, returned);
             }
             return c.Area != CharacterRuntimeArea.Field || area != CharacterRuntimeArea.Field
                 ? RegenerationTurnApplication.Reset(relocated) : relocated;
@@ -168,7 +173,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var arrived = projected[actor.EntityId];
                 projected[actor.EntityId] = PositionTileModifierCalculator.Replace(arrived,
                     PositionTileModifierCalculator.ResolveAt(cell, projection.Environment));
-                PositionTileModifierCalculator.RecordNormalization(projection.Events, arrived, projected[actor.EntityId]);
+                PositionTileModifierCalculator.RecordNormalization(projection.Events, arrived, projected[actor.EntityId], projection.Damage.HealthExecutions);
             }
         }
     }

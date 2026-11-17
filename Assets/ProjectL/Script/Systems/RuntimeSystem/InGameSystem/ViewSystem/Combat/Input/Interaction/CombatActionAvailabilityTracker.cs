@@ -164,7 +164,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             return false;
         }
 
-        internal static bool IsEligibleActor(CharacterCombatFacts character) =>
+        // 선택 추적기가 묻기 전에 거르는 용도입니다. Core 원본은 CombatActionAdmission.EligibilityFailure(아군·필드·생존)입니다(새 SSOT 설계 SN2).
+        private static bool IsEligibleActor(CharacterCombatFacts character) =>
             character.Owner == Owner.Player && character.Area == CharacterRuntimeArea.Field && !character.Health.IsDead;
     }
 }

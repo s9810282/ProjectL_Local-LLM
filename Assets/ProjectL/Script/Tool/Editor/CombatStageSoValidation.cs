@@ -51,7 +51,7 @@ namespace ProjectL.Tool.Editor
                 }
                 CombatStageSoAssets.Write(document, rootCopy, combatCopy, viewCopy,
                     guid => sharedCopies.TryGetValue(guid, out Object edited) ? edited : null);
-                if (clearLegacyPlacements) CombatStageSoAssets.ClearLegacyPlacements(combatCopy);
+                if (clearLegacyPlacements) CombatStageSoAssets.ClearPlacementsOutsideLayout(combatCopy);
                 // 본부 파괴 목표인데 본부가 없으면 게임은 이길 수 없어 멈추지도 않습니다. 저장 전에 막습니다(설계 §18).
                 if (!document.HasHeadquarters && CombatStageSoAssets.IsHeadquartersObjective(document, combat))
                     problems.Add(new CombatStageSoIssue("승리 조건이 본부 파괴인데 본부가 없습니다. 승리 조건을 바꾸거나 오른쪽 '참조'에서 본부 정의를 고르세요."));

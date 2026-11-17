@@ -22,8 +22,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal CellCoord? ImpactOrigin { get; }
         /// <summary>기본 피해의 일부라도 실제로 전달하는지 나타낸다. 스플래시 비율 0인 대상은 결과에는 남지만 피해를 받지 않는다.</summary>
         internal bool AppliesDamage => AppliedPercent > 0;
+        /// <summary>보고 전용 대상과 실제 접촉을 구분한다. 피해 계산이 0이어도 실제 접촉은 남는다.</summary>
+        internal bool Landed { get; }
 
-        internal DeliveredAttackHit(EntityId targetId, AttackTargetRole role, int baseDamage, int appliedPercent, CellCoord? impactOrigin, CombatDamageCause cause = CombatDamageCause.NumericDamage)
+        internal DeliveredAttackHit(EntityId targetId, AttackTargetRole role, int baseDamage, int appliedPercent,
+            CellCoord? impactOrigin, CombatDamageCause cause = CombatDamageCause.NumericDamage, bool landed = true)
         {
             if (targetId.IsEmpty) throw new ArgumentException("피격 대상 ID가 필요합니다.", nameof(targetId));
             if (role == AttackTargetRole.None || !System.Enum.IsDefined(typeof(AttackTargetRole), role))
@@ -37,6 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             BaseDamage = baseDamage;
             AppliedPercent = appliedPercent;
             ImpactOrigin = impactOrigin;
+            Landed = landed;
         }
     }
 }

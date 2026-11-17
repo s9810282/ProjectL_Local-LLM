@@ -222,7 +222,7 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput WithHighGround(CombatCommandInput input, params StaticTerrainFact[] highGround)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Concat(highGround).ToArray()),environmentProgress: null,                wallBlocking: s.WallBlocking,objective: s.Objective,allocation: s.Allocation,                itemRandomState: s.ItemRandomState,rewards: s.Rewards);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,                new MovementEnvironmentFacts(s.Environment.Tiles.Concat(highGround).ToArray()),environmentProgress: null,                wallBlocking: s.WallBlocking,objective: s.Objective,allocation: s.Allocation,                itemRandomState: s.ItemRandomState,rewards: s.Rewards);
             var b = input.EnvironmentBindings;
             var bindings = new EnvironmentSemanticBindings(b.TerrainSourceIds.Concat(highGround.Select(h => h.Id)).ToArray(),
                 b.ObjectSourceIds, b.ObstacleEntityIds);

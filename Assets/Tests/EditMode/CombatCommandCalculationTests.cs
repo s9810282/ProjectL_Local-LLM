@@ -113,24 +113,24 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Attack.Value.AdditionalCells.ToArray().All(c => c.X >= 0 && c.Y >= 0), Is.True);
         }
 
-        [TestCase(false, 50, 30)]
-        [TestCase(true, 20, 0)]
-        public void StructureFootprint_IsHitOnce_AndOccupiesEveryCellUntilDeath(bool lethal, int health, int remaining)
+        [TestCase(false, 2, 1)]
+        [TestCase(true, 1, 0)]
+        public void StructureFootprint_IsHitOnce_AndOccupiesEveryCellUntilDeath(bool lethal, int requiredHits, int remaining)
         {
             var input = CombatCommandTestData.Input(aim: AttackAim.ForCell(new CellCoord(2, 3)), empty: true);
             var cells = new[] { new CellCoord(2, 3), new CellCoord(2, 4) };
             var structure = new StructureCombatFacts(new EntityId(20),
-                new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 2, new[] { CellCoord.Zero, CellCoord.Up }, health, false, 0),
-                new HealthStateSnapshot(health, health), cells[0], Rotation4.R0, cells, Owner.Enemy);
-            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { structure },input.State.ThornFields,turn: input.State.Turn);
+                new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 2, new[] { CellCoord.Zero, CellCoord.Up }, 1, false, 0),
+                new ObstacleDurabilitySnapshot(requiredHits, requiredHits), cells[0], Rotation4.R0, cells, Owner.Enemy);
+            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { structure },turn: input.State.Turn);
             // 본부 파괴의 전투 종료와 폭발 피해를 제외하고 점유 해제만 검사한다.
             input = ObstacleReactionTests.Copy(CombatCommandTestData.With(input, state: state),
                 profiles: new[] { new ObstacleContentProfile(structure.EntityId, ObstacleContentKind.PowderBarrel, 0) });
             var result = CombatCommandCalculator.Calculate(input, Array.Empty<IMovementTileRule>());
             Assert.That(result.Attack.Value.Hits.Length, Is.EqualTo(1));
             Assert.That(result.Attack.Value.Hits.Span[0].Role, Is.EqualTo(AttackTargetRole.Primary));
-            Assert.That(result.Attack.Value.Hits.Span[0].DamageDealt, Is.EqualTo(20));
-            Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(remaining));
+            Assert.That(result.Attack.Value.Hits.Span[0].DamageDealt, Is.Zero);
+            Assert.That(result.FinalState.Structures.Single().ObstacleDurability.RemainingHits, Is.EqualTo(remaining));
             var projected = NextPlayer(CombatCommandComposition.Project(result));
             foreach (var cell in cells)
             {
@@ -141,7 +141,7 @@ namespace ProjectL.Tests.Core
                 Assert.That(move.Accepted, Is.EqualTo(lethal), move.Reason);
                 if (!lethal) Assert.That(move.Reason, Is.EqualTo("DestinationOccupied"));
             }
-            Assert.That(structure.Health.CurrentHealth, Is.EqualTo(health));
+            Assert.That(structure.ObstacleDurability.RemainingHits, Is.EqualTo(requiredHits));
         }
 
         [Test]
@@ -183,7 +183,7 @@ namespace ProjectL.Tests.Core
             var structure = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 50, false, 0),
                 new HealthStateSnapshot(50, 50), new CellCoord(3, 3), Rotation4.R0, new[] { new CellCoord(3, 3) }, Owner.Player);
-            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { structure },input.State.ThornFields,turn: input.State.Turn);
+            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { structure },turn: input.State.Turn);
             var result = CombatCommandCalculator.Calculate(CombatCommandTestData.With(input,
                 input.Characters.Concat(new[] { friend }).ToArray(), state), System.Array.Empty<IMovementTileRule>());
             Assert.That(result.Accepted, Is.EqualTo(accepted), result.Reason);
@@ -246,7 +246,7 @@ namespace ProjectL.Tests.Core
                 chars[3] = CombatCommandTestData.With(chars[3], hp: 1);
             }
             var turn = input.State.Turn;
-            var state = new CombatCommandState(8,8,input.State.Phase,                input.State.Structures,input.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,input.State.Phase,                input.State.Structures,turn);
             var result = CombatCommandCalculator.Calculate(CombatCommandTestData.With(input, chars, state), System.Array.Empty<IMovementTileRule>());
             Assert.That(CombatCommandComposition.Project(result).Characters.Where(c => c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead).Select(c => c.EntityId.Value),
                 Is.EquivalentTo(lethal ? new[] { 1, 4, 10 } : new[] { 1, 2, 3, 4, 10 }));

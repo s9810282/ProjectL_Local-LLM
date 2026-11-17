@@ -1,4 +1,5 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using System;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects;
@@ -12,6 +13,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 {
     internal sealed class CombatEffectEngine : ICombatEffectEngine
     {
+        public EffectAttackSweepEvaluation EvaluateAttackSweep(IReadOnlyList<EffectRuleBinding> bindings, in AttackSweepEffectContext context)
+        {
+            if (!Enum.IsDefined(typeof(CombatDamageKind), context.DamageKind))
+                throw new ArgumentOutOfRangeException(nameof(context));
+            EffectAttackSweepContribution? active = null;
+            var expectations = new List<EffectStateExpectation>();
+            foreach (var binding in CopyValidateAndSortBindings(bindings))
+            {
+                if (binding.Rule is not IEffectAttackSweepRule rule) continue;
+                var contribution = rule.EvaluateAttackSweep(new EffectRuleInput(binding.Origin, binding.ExpectedState), context);
+                if (!contribution.HasValue) continue;
+                if (active.HasValue || contribution.Value.Origin != binding.Origin || contribution.Value.DamagePercent < 0)
+                    throw new InvalidOperationException("공격 쓸기는 올바른 출처의 단일 기여만 허용합니다.");
+                active = contribution;
+                expectations.Add(new EffectStateExpectation(binding.Origin, binding.ExpectedState));
+            }
+            return new EffectAttackSweepEvaluation(active, expectations.ToArray());
+        }
+
         public bool RequiresOrderedHits(IReadOnlyList<EffectRuleBinding> bindings)
         {
             if (bindings == null) throw new ArgumentNullException(nameof(bindings));
@@ -186,38 +206,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
 
             return new EffectTargetDamageEvaluation(
-                contributions.ToArray(),
-                expectations.ToArray());
-        }
-
-        public EffectThornFieldEvaluation EvaluateThornFieldApplication(
-            IReadOnlyList<EffectRuleBinding> bindings,
-            in ThornFieldApplicationEffectContext context)
-        {
-            EffectRuleBinding[] ordered = CopyValidateAndSortBindings(bindings);
-            var contributions = new List<EffectThornFieldContribution>();
-            var expectations = new List<EffectStateExpectation>();
-
-            foreach (EffectRuleBinding binding in ordered)
-            {
-                if (binding.Rule is not IEffectThornFieldRule rule) continue;
-
-                var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);
-                EffectThornFieldContribution contribution =
-                    rule.EvaluateThornFieldApplication(input, context);
-                if (contribution.Origin != binding.Origin)
-                {
-                    throw new InvalidOperationException(
-                        "Invalid ThornField contribution origin.");
-                }
-
-                contributions.Add(contribution);
-                expectations.Add(new EffectStateExpectation(
-                    binding.Origin,
-                    binding.ExpectedState));
-            }
-
-            return new EffectThornFieldEvaluation(
                 contributions.ToArray(),
                 expectations.ToArray());
         }

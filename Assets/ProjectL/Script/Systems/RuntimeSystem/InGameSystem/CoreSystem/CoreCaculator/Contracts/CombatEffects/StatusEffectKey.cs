@@ -26,7 +26,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         MovementRangeDecrease = 17,
         Rampage = 18,
         /// <summary>적 전용 재구성 중입니다. 이동·공격 불가, 자기 진영 턴 시작을 정해진 횟수 지나면 부활합니다.</summary>
-        Reconstructing = 19
+        Reconstructing = 19,
+        Stun = 20
     }
 
     public enum StatusEffectClassification
@@ -46,7 +47,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             StatusEffectKey.Reconstructing => StatusEffectClassification.Buff,
             StatusEffectKey.AttackDecrease or StatusEffectKey.DefenseDecrease or
             StatusEffectKey.AttackRangeDecrease or StatusEffectKey.Disarm or
-            StatusEffectKey.Bind or StatusEffectKey.WeaknessExposure or StatusEffectKey.Taunted or
+            StatusEffectKey.Bind or StatusEffectKey.Stun or StatusEffectKey.WeaknessExposure or StatusEffectKey.Taunted or
             StatusEffectKey.Fire or StatusEffectKey.Bleeding or StatusEffectKey.MovementRangeDecrease => StatusEffectClassification.Debuff,
             _ => throw new ArgumentOutOfRangeException(nameof(key))
         };

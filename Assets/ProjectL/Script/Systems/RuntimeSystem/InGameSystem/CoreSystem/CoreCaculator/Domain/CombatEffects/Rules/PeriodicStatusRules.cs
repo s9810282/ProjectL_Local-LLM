@@ -17,7 +17,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             return Replace(current, new BleedingStatus(stacks.Count == 5 ? stacks : stacks.Append(stack).ToArray(), 3));
         }
 
-        public static StatusEffectSet ApplyFire(StatusEffectSet current, EffectOriginKey origin) => Replace(current, new FireStatus(origin, 2));
+        public static StatusEffectSet ApplyFire(StatusEffectSet current, EffectOriginKey origin, int remainingAffectedSideStarts = 2)
+        {
+            if (current == null) throw new ArgumentNullException(nameof(current));
+            var incoming = new FireStatus(origin, remainingAffectedSideStarts);
+            var prior = current.Entries.OfType<FireStatus>().SingleOrDefault();
+            return prior != null && prior.RemainingAffectedSideStarts > incoming.RemainingAffectedSideStarts
+                ? current : Replace(current, incoming);
+        }
 
         public static StatusEffectSet ApplySlow(StatusEffectSet current, EffectOriginKey origin, Owner affectedSide, CombatTurnFacts turn)
         {

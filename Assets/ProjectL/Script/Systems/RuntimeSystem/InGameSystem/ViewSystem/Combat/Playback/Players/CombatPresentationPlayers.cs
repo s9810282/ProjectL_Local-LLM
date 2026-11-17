@@ -7,9 +7,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback.Players
 {
     /// <summary>
-    /// 사건 Presenter의 재생기 실행 목록입니다(연출 조립 설계 B12). 외형 전환 → 몸 위 글자(있을 때)를 먼저 진행하고, 기존 겹침 순서(공격 독점 → 포효 히트 전 조각 행동 실행만 → 걸음·대기 → 반응,
+    /// 사건 Presenter의 재생기 실행 목록입니다(연출 조립 설계 B12). 외형 전환 → 몸 위 글자(있을 때)를 먼저 진행하고, 기존 겹침 순서(공격 독점 → 포효 히트 전 조각 행동 실행만 → 걸음·대기,
     /// 설계 B14 O1·O3·O5·O7) 자리마다 이름 있는 인자로 받아 고정합니다(보완 2). 만든 뒤에는 바뀌지 않습니다(지침 §11).
-    /// 조각 실행 집합 자리(<c>pieces</c>)는 옛 능력 자리의 규칙을 이어받았습니다(조각·조립 설계 BP5, B-2).
+    /// 조각 실행 집합 자리(<c>pieces</c>)는 옛 능력 자리의 규칙을 이어받았습니다(조각·조립 설계 BP5, B-2). 옛 반응 자리는 피격·사망 반응이
+    /// 조각 실행 안의 반응 조각으로 옮겨 걷었습니다(피격 구조 정리 설계 HC1, 2026-11-17).
     /// </summary>
     internal sealed class CombatPresentationPlayers
     {
@@ -18,8 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private CombatPresentationPlayers(ICombatPresentationPlayer[] players) => _players = players;
 
         internal static CombatPresentationPlayers Create(ICombatPresentationPlayer attack, ICombatPresentationPlayer pieces,
-            ICombatPresentationPlayer step, ICombatPresentationPlayer reaction, ICombatPresentationPlayer appearance,
-            ICombatPresentationPlayer bodyText = null) =>
+            ICombatPresentationPlayer step, ICombatPresentationPlayer appearance, ICombatPresentationPlayer bodyText = null) =>
             new(new[]
             {
                 // 외형은 유닛의 독점 연출과 함께 진행하므로 중단 가능한 재생기보다 먼저 Tick합니다.
@@ -28,7 +28,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                 attack ?? throw new ArgumentNullException(nameof(attack)),
                 pieces ?? throw new ArgumentNullException(nameof(pieces)),
                 step ?? throw new ArgumentNullException(nameof(step)),
-                reaction ?? throw new ArgumentNullException(nameof(reaction)),
             }.Where(player => player != null).ToArray());
 
         internal void BeginResult(CombatResult result)

@@ -35,7 +35,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private IEnumerator<int> _steps;
         private EnemyEngagementField _field;
         private MovementPath _pursuitPath;
-        private Dictionary<CellCoord, int> _entryDamage;
         private HashSet<CellCoord> _arrivalCells;
         private HashSet<CellCoord> _collapseLandings;
         private bool _disposed;
@@ -80,27 +79,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal long BestPrunedScore { get; private set; } = long.MinValue;
 
         /// <summary>
-        /// 확실한 치명 판정 하나다(계획 R-3 치명 위험 규칙 1~3). 도착: 다음 기회까지 서 있을 때의 확실한 손실이나 붕괴 착지.
-        /// 통과: 경로의 확실한 접촉 피해. 둘을 더해 남은 체력 이상이면 치명이다. 지나가기만 하는 칸은 도착이 아니다.
+        /// 확실한 치명 판정 하나다(계획 R-3 치명 위험 규칙 1~3). 다음 기회까지 서 있을 때의 확실한 손실이 남은 체력 이상이거나
+        /// 붕괴 착지면 치명이다. 지나가기만 하는 칸은 도착이 아니다. 경로 접촉 피해(옛 가시 장판)는 없어져 더하지 않는다(가시 폭탄 Phase 4 D7).
         /// 불확실한 손실(가능 손실, 무작위·위치 불명 공백, 토네이도 던지기)은 걸러 내지 않고 점수의 위험으로 남긴다.
-        /// 위험 종류를 고르지 않고 소유자 사실(예보 노출·약한 지반 착지·접촉 피해)만 읽는다. 후보 탐색과 결정 세션이 함께 부른다.
+        /// 위험 종류를 고르지 않고 소유자 사실(예보 노출·약한 지반 착지)만 읽는다. 후보 탐색과 결정 세션이 함께 부른다.
         /// </summary>
-        internal static bool IsCertainLethal(int health, in HazardExposure arrival, bool collapseLanding, long transitLoss) =>
-            collapseLanding || checked(transitLoss + arrival.KnownHpLoss) >= health;
+        internal static bool IsCertainLethal(int health, in HazardExposure arrival, bool collapseLanding) =>
+            collapseLanding || arrival.KnownHpLoss >= health;
 
         /// <summary>
-        /// 모두 치명일 때 덜 치명적인 쪽을 고르는 순위다(계획 R-3 규칙 4-4). 기존 위험 순위(<see cref="HazardRank"/>)에 통과 피해를 더하고,
+        /// 모두 치명일 때 덜 치명적인 쪽을 고르는 순위다(계획 R-3 규칙 4-4). 기존 위험 순위(<see cref="HazardRank"/>)이고,
         /// 붕괴 착지는 체력 전부를 잃는 것으로 본다. 첫 칸은 <see cref="IsCertainLethal"/>와 같은 판정이다.
         /// </summary>
         internal static (bool terminal, int possible, int known, int bind) LethalRank(int health, in HazardExposure arrival,
-            bool collapseLanding, long transitLoss)
+            bool collapseLanding)
         {
             if (collapseLanding) return (true, health, health, arrival.PossibleBindEndCount);
             var rank = HazardRank(arrival, health);
-            return (IsCertainLethal(health, arrival, false, transitLoss), Saturate(rank.possible + transitLoss),
-                Saturate(rank.known + transitLoss), rank.bind);
-
-            static int Saturate(long value) => (int)Math.Min(int.MaxValue, value);
+            return (IsCertainLethal(health, arrival, false), rank.possible, rank.known, rank.bind);
         }
         /// <summary>
         /// 접근 진척입니다(교전 필드의 남은 비용 감소). 필드가 칸 상한에 걸려 버려졌으면 대표 추격 경로의 끝 칸에만 그 걸음 수를 줍니다.
@@ -195,7 +191,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var walls = geometry.Walls;
             var elevation = geometry.Elevation;
             bool attackAllowed = targets.Count != 0 && CombatAttackQueries.Actor(_input, out _) == AttackFailureReason.None;
-            int damage = attackAllowed ? CombatAttackCalculator.CommonAttackDamage(_input, _actor, profile) : 0;
+            int damage = attackAllowed ? CombatAttackCalculator.CommonAttackDamage(_input, _actor, profile, CombatDamageKind.OrdinaryAttack) : 0;
             yield return 0;
 
             if (attackAllowed)
@@ -333,9 +329,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var traversal = new MovementRouteValidator.PursuitTraversal(_input, _actor);
             foreach (var _ in traversal.IndexSteps(environment)) yield return 0;
             var mines = new HashSet<CellCoord>();
-            var entry = new Dictionary<CellCoord, int>();
             _arrivalCells = new HashSet<CellCoord>();
-            _entryDamage = entry;
             foreach (var tile in environment.Tiles)
             {
                 if (tile.Active)
@@ -345,16 +339,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         (_collapseLandings ??= new HashSet<CellCoord>()).Add(tile.Cell);
                     else if (tile.TriggersArrivalRule)
                     {
-                        entry.TryAdd(tile.Cell, 0);
                         _arrivalCells.Add(tile.Cell);
                     }
                 }
-                yield return 0;
-            }
-            foreach (var thorn in _input.State.ThornFields)
-            {
-                // 정산 전의 공개 접촉 피해량만 경로 비교에 쓰며 실제 피해나 처치를 확정하지 않는다.
-                entry[thorn.Cell] = thorn.ThornDamage;
                 yield return 0;
             }
             bool leap = LeapTraitRule.AllowsIntermediate(_actor);
@@ -368,12 +355,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var holdExposure = _hazards.Evaluate(_actor, Array.Empty<CellCoord>(), origin.Cell);
             var currentRisk = HazardRank(holdExposure, health);
             // 제자리도 확실히 치명이면 치명 착지도 남겨 덜 치명적인 쪽을 고를 수 있게 한다(계획 R-3 규칙 4-4).
-            bool holdLethal = IsCertainLethal(health, holdExposure, false, 0);
+            bool holdLethal = IsCertainLethal(health, holdExposure, false);
             bool complete = _field != null && !_field.IsTruncated;
             var weights = EnemyScoreWeights.From(_context.Settings);
             EnemyThreatField threat = null;
             foreach (var _ in _context.ThreatSteps(value => threat = value)) yield return 0;
-            HoldCheapScore = CheapScore(origin.Cell, holdExposure, false, 0, false);
+            HoldCheapScore = CheapScore(origin.Cell, holdExposure, false, false);
             while (frontier.Count > 0)
             {
                 var from = frontier.Dequeue();
@@ -390,47 +377,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     bool canLand = !mines.Contains(cell) && (traversal.CanEnter(cell) ||
                         CombatMovementCalculator.CanLand(_input, cell, environment));
                     if (!canTraverse && !canLand) continue;
-                    var next = new Node(cell, from, from.Risk.Add(Contact(cell, entry)));
+                    var next = new Node(cell, from, from.Risk.Add(Contact(cell)));
                     if (canTraverse) frontier.Enqueue(next);
                     if (!canLand) continue;
 
                     var exposure = _hazards.Evaluate(_actor, Array.Empty<CellCoord>(), cell, next.Risk.Gaps);
                     bool collapse = CollapsesOnLanding(cell);
-                    var landing = next;
-                    if (!holdLethal && IsCertainLethal(health, exposure, collapse, next.Risk.EstimatedLoss))
+                    if (!holdLethal && IsCertainLethal(health, exposure, collapse))
                     {
-                        // 도착 자체가 치명이면 착지 후보에서 뺀다. 통과 피해만 치명이면 더 안전한 경로를 다시 찾고, 없으면 뺀다.
-                        if (collapse || IsCertainLethal(health, exposure, false, 0)) { LethalLandingsDropped++; continue; }
-                        Node refined = null;
-                        foreach (var _ in RefineSteps(origin, next, traversal, environment, mines, entry, leap, value => refined = value))
-                            yield return 0;
-                        if (refined == null || IsCertainLethal(health, exposure, false, refined.Risk.EstimatedLoss))
-                        {
-                            LethalLandingsDropped++;
-                            continue;
-                        }
-                        landing = refined;
+                        LethalLandingsDropped++;
+                        continue;
                     }
                     var hazard = collapse
                         ? (true, health, health, exposure.PossibleBindEndCount)
                         : HazardRank(exposure, health);
-                    long score = CheapScore(cell, exposure, collapse, landing.Risk.EstimatedLoss, true);
-                    destinations.Add(new Destination(landing, hazard, score, complete && _field.IsAttackPosition(cell),
+                    long score = CheapScore(cell, exposure, collapse, true);
+                    destinations.Add(new Destination(next, hazard, score, complete && _field.IsAttackPosition(cell),
                         complete ? _field.Progress(cell) : 0));
                     _cheapScores.Add((cell, score));
                     yield return 0;
                 }
             }
 
-            // 저가 점수(설계 6.6 1단계): 점수기 공식 그대로, 정밀 항 없이 착지 칸의 위험·통과 피해·플레이어 위험·진척·다음 기회 공격과
+            // 저가 점수(설계 6.6 1단계): 점수기 공식 그대로, 정밀 항 없이 착지 칸의 위험·플레이어 위험·진척·다음 기회 공격과
             // 공격 위치이면 그 칸 최선 대상의 값(후속 공격의 대리값)을 센다. 제자리는 진척·후속 공격 없이 같은 식이다.
-            long CheapScore(CellCoord cell, HazardExposure exposure, bool collapse, long transit, bool moving)
+            long CheapScore(CellCoord cell, HazardExposure exposure, bool collapse, bool moving)
             {
                 var threatAt = threat.Evaluate(_actor, cell);
                 long followup = moving && complete && _field.IsAttackPosition(cell) && _field.TryGetBestTarget(cell, out var best)
                     ? _field.TargetValue(best) : 0;
                 var facts = new EnemyScoreFacts(CombatAssessmentGap.None,
-                    alliedHpLoss: EnemyUtilityScorer.LossPermille(transit, health, maxHealth),
                     actorHazardLoss: EnemyUtilityScorer.LossPermille(collapse ? health : exposure.PossibleHpLoss, health, maxHealth),
                     playerThreat: threatAt.EstimatedLossPermille, playerThreatLethal: threatAt.IsLethal,
                     engagementProgress: moving && complete ? _field.Progress(cell) : 0, subsequentAttackBenefit: followup,
@@ -444,10 +420,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (tauntRoute == null && pursuit != null && !complete)
                 foreach (var _ in PursuitSteps(pursuit.Id, value => fallback = value)) yield return 0;
             _pursuitPath = tauntRoute ?? fallback;
-            // 대표 경로(도발·추격)가 확실히 치명이면 같은 끝 칸으로 가는 더 안전한 경로로 바꾸고, 없거나 도착 자체가 치명이면 뺀다(규칙 1).
+            // 대표 경로(도발·추격)의 착지가 확실히 치명이면 후보에서 뺀다.
             bool obligation = tauntRoute != null;
-            if (tauntRoute != null) foreach (var _ in SafeRoute(tauntRoute, value => tauntRoute = value)) yield return 0;
-            if (fallback != null) foreach (var _ in SafeRoute(fallback, value => fallback = value)) yield return 0;
+            tauntRoute = SafeRoute(tauntRoute);
+            fallback = SafeRoute(fallback);
 
             var beam = SelectBeam(destinations, currentRisk, obligation, tauntRoute, fallback);
             var built = new List<(EnemyDecision move, (long score, int steps, int y, int x) rank)>(beam.Count);
@@ -458,7 +434,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     var node = item.Destination.Node;
                     if (item.Escape && node.Risk.Contacts > 0)
-                        foreach (var _ in RefineSteps(origin, node, traversal, environment, mines, entry, leap, value => node = value))
+                        foreach (var _ in RefineSteps(origin, node, traversal, environment, mines, leap, value => node = value))
                             yield return 0;
                     foreach (var _ in PathSteps(node, value => path = value)) yield return 0;
                 }
@@ -468,41 +444,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             built.Sort((a, b) => a.rank.CompareTo(b.rank));
             foreach (var move in built) _moves.Add(move.move);
 
-            IEnumerable<int> SafeRoute(MovementPath path, Action<MovementPath> completed)
+            MovementPath SafeRoute(MovementPath path)
             {
-                var node = origin;
-                for (int i = 1; i < path.Cells.Count; i++) node = new Node(path.Cells[i], node, node.Risk.Add(Contact(path.Cells[i], entry)));
+                if (path == null || holdLethal) return path;
                 var arrival = _hazards.Evaluate(_actor, Array.Empty<CellCoord>(), path.Endpoint);
-                bool collapse = CollapsesOnLanding(path.Endpoint);
-                if (holdLethal || !IsCertainLethal(health, arrival, collapse, node.Risk.EstimatedLoss)) { completed(path); yield break; }
-                Node refined = null;
-                if (!collapse && !IsCertainLethal(health, arrival, false, 0))
-                    foreach (var _ in RefineSteps(origin, node, traversal, environment, mines, entry, leap, value => refined = value)) yield return 0;
-                if (refined == null || IsCertainLethal(health, arrival, false, refined.Risk.EstimatedLoss))
-                {
-                    LethalLandingsDropped++;
-                    completed(null);
-                    yield break;
-                }
-                MovementPath safe = null;
-                foreach (var _ in PathSteps(refined, value => safe = value)) yield return 0;
-                completed(safe);
+                if (!IsCertainLethal(health, arrival, CollapsesOnLanding(path.Endpoint))) return path;
+                LethalLandingsDropped++;
+                return null;
             }
         }
 
         internal IEnumerable<int> EntryEstimateSteps(MovementPath path, Action<long, CombatAssessmentGap> completed)
         {
-            long loss = 0;
             var gaps = CombatAssessmentGap.None;
             for (int i = 1; i < path.Cells.Count; i++)
             {
                 var cell = path.Cells[i];
                 if (_arrivalCells.Contains(cell)) gaps |= CombatAssessmentGap.UnsupportedEffect | CombatAssessmentGap.UnknownPosition;
-                loss += _entryDamage.GetValueOrDefault(cell);
                 yield return 0;
             }
             // 경로는 같은 칸을 두 번 밟을 수 없다. 중간에 무너질 칸을 밟아도 종점에 남아 있을 때만 낙사한다.
-            completed(CollapsesOnLanding(path.Endpoint) ? Math.Max(loss, _actor.Health.CurrentHealth) : loss, gaps);
+            completed(CollapsesOnLanding(path.Endpoint) ? _actor.Health.CurrentHealth : 0, gaps);
         }
 
         internal static IEnumerable<int> EstimateAttackSteps(EnemyDecisionContext context, CharacterCombatFacts actor,
@@ -512,7 +474,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var _ in context.GeometrySteps(value => geometry = value)) yield return 0;
             var input = CombatCommandComposition.Intent(context.Input.WithActor(actor.EntityId), CombatCommandKind.Attack, action.Aim);
             var profile = CombatCommandCalculator.RequiredProfile(input, actor);
-            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack);
             yield return 0;
             ResolvedAttackDelivery delivery = null;
             foreach (var _ in CombatAttackQueries.DeliverySteps(input, actor, profile, action.Aim, damage,
@@ -537,7 +499,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     Owner owner;
                     if (context.Units.TryGetValue(entry.Key, out var unit))
                     { health = unit.Health; owner = unit.Owner; }
-                    else if (context.Structures.TryGetValue(entry.Key, out var structure))
+                    else if (context.Structures.TryGetValue(entry.Key, out var structure) && structure.ObstacleDurability == null)
                     { health = structure.Health; owner = structure.Owner; }
                     else { yield return 0; continue; }
 
@@ -563,11 +525,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         }
 
         private IEnumerable<int> RefineSteps(Node origin, Node goal, MovementRouteValidator.PursuitTraversal traversal,
-            MovementEnvironmentFacts environment, HashSet<CellCoord> mines, Dictionary<CellCoord, int> entry, bool leap, Action<Node> completed)
+            MovementEnvironmentFacts environment, HashSet<CellCoord> mines, bool leap, Action<Node> completed)
         {
             int limit = Math.Min(256, _context.Settings.AlternateRouteNodeLimit);
-            var frontier = new SortedDictionary<((int throws, int loss, int contacts) risk, int steps, long order), Node>();
-            var ranks = new Dictionary<(CellCoord cell, int steps), (int throws, int loss, int contacts)>();
+            var frontier = new SortedDictionary<((int throws, int contacts) risk, int steps, long order), Node>();
+            var ranks = new Dictionary<(CellCoord cell, int steps), (int throws, int contacts)>();
             long order = 0;
             Node best = goal;
             Enqueue(origin);
@@ -601,7 +563,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         yield return 0;
                     }
                     if (repeated) continue;
-                    Enqueue(new Node(cell, node, node.Risk.Add(Contact(cell, entry))));
+                    Enqueue(new Node(cell, node, node.Risk.Add(Contact(cell))));
                 }
             }
             completed(best);
@@ -629,13 +591,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             completed(new MovementPath(cells));
         }
 
-        private EntryRisk Contact(CellCoord cell, Dictionary<CellCoord, int> entry)
+        private EntryRisk Contact(CellCoord cell)
         {
             var gaps = _hazards.EntryGaps(_actor, cell);
             bool throws = (gaps & CombatAssessmentGap.UnknownPosition) != 0;
-            bool other = entry.TryGetValue(cell, out int estimatedLoss);
+            bool other = _arrivalCells.Contains(cell);
             if (other) gaps |= CombatAssessmentGap.UnsupportedEffect;
-            return new EntryRisk(throws ? 1 : 0, estimatedLoss, throws || other ? 1 : 0, gaps);
+            return new EntryRisk(throws ? 1 : 0, throws || other ? 1 : 0, gaps);
         }
 
         /// <summary>
@@ -701,16 +663,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly struct EntryRisk
         {
             internal int Throws { get; }
-            internal int EstimatedLoss { get; }
             internal int Contacts { get; }
             internal CombatAssessmentGap Gaps { get; }
-            internal (int throws, int loss, int contacts) Rank => (Throws, EstimatedLoss, Contacts);
+            internal (int throws, int contacts) Rank => (Throws, Contacts);
 
-            internal EntryRisk(int throws, int estimatedLoss, int contacts, CombatAssessmentGap gaps)
-            { Throws = throws; EstimatedLoss = estimatedLoss; Contacts = contacts; Gaps = gaps; }
+            internal EntryRisk(int throws, int contacts, CombatAssessmentGap gaps)
+            {
+                Throws = throws;
+                Contacts = contacts;
+                Gaps = gaps;
+            }
 
             internal EntryRisk Add(EntryRisk next) => new EntryRisk(checked(Throws + next.Throws),
-                (int)Math.Min(int.MaxValue, (long)EstimatedLoss + next.EstimatedLoss),
                 checked(Contacts + next.Contacts), Gaps | next.Gaps);
         }
 

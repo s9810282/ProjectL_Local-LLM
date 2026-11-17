@@ -40,16 +40,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!input.State.IsInside(actor.Anchor.Value))
                 return MovementRangeResult.Failure(MovementFailureReason.OutOfBounds, input.ActorId);
             var environment = input.State.Environment.VisibleTo(actor.Owner);
-            var distances = Reach(input, actor, environment, CombatActionAdmission.MovementAllowance(input, actor).Value);
-            return MovementRangeResult.Success(input.ActorId, distances.Where(p => p.Value > 0 && CanLand(input, p.Key, environment))
-                .OrderBy(p => p.Key.Y).ThenBy(p => p.Key.X)
-                .Select(p => new MovementDestination(p.Key, new[] { p.Key }, p.Value)).ToArray());
+            var search = MovementRangeSearch.Calculate(input, actor, environment,
+                CombatActionAdmission.MovementAllowance(input, actor).Value);
+            return MovementRangeResult.Success(input.ActorId, search.Destinations.Select(cell => search.BuildRoute(cell)).ToArray());
         }
 
         /// <summary>
         /// 필드 유닛 하나가 지금 자리에서 스스로 걸어 닿을 수 있는 칸이다(자기 칸 제외, Y·X 순서, 호버 이동 범위 설계 EM1).
         /// 차례·국면·비용·행동 사용은 보지 않고, 유닛이 스스로 움직일 수 있는지와 진입 규칙만 본다. 움직일 수 없으면 빈 목록이다.
-        /// 지형 시점은 부르는 쪽이 넘긴다(유닛 조회는 플레이어 시점). 칸 탐색은 행동 범위(<see cref="Range"/>)와 같은 <see cref="Reach"/>다.
+        /// 지형 시점은 부르는 쪽이 넘긴다(유닛 조회는 플레이어 시점). 칸 탐색은 행동 범위(<see cref="Range"/>)와 같은 <see cref="MovementRangeSearch"/>를 쓴다.
+        /// 적 AI는 인지한 지뢰 등을 고려해 따로 경로를 고르므로 조회된 칸을 실제로 선택하지 않을 수 있다.
         /// </summary>
         internal static CellCoord[] UnitMoveCells(CombatCommandInput input, CharacterCombatFacts unit, MovementEnvironmentFacts environment)
         {
@@ -62,43 +62,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 !input.State.IsInside(unit.Anchor.Value))
                 return Array.Empty<CellCoord>();
             var query = input.WithActor(unit.EntityId).WithIntent(CombatCommandKind.Move, default, default, null, null);
-            return Reach(query, unit, environment, allowance.Value).Where(p => p.Value > 0 && CanLand(query, p.Key, environment)).Select(p => p.Key)
-                .OrderBy(c => c.Y).ThenBy(c => c.X).ToArray();
-        }
-
-        /// <summary>
-        /// 자리에서 네 방향으로 한 칸씩 나아가 <paramref name="allowance"/> 걸음 안에 닿는 칸과 그 걸음 수다(자리 = 0).
-        /// 지나갈 수 있는지는 <see cref="MovementRouteValidator.CanTraverse"/>가 정하고, 멈출 수 있는지(<see cref="MovementRouteValidator.CanEnter"/>)는
-        /// 부르는 쪽이 거른다. 행동 범위와 유닛 이동 칸 조회가 함께 쓴다.
-        /// 적 AI의 길 찾기(<c>EnemyMovementPathfinder</c>)는 따로 탐색하며 아는 지뢰 칸을 빼고 실제 지형을 쓴다. 그래서 유닛 이동 칸에는
-        /// 적이 실제로는 고르지 않는 칸이 들어 있을 수 있다(규칙상 닿는 칸, 호버 이동 범위 계획 §7.6 L3).
-        /// </summary>
-        private static Dictionary<CellCoord, int> Reach(CombatCommandInput input, CharacterCombatFacts actor,
-            MovementEnvironmentFacts environment, int allowance)
-        {
-            var distances = new Dictionary<CellCoord, int> { [actor.Anchor.Value] = 0 };
-            var queue = new Queue<CellCoord>();
-            queue.Enqueue(actor.Anchor.Value);
-            var directions = new[] { CellCoord.Right, CellCoord.Up, CellCoord.Left, CellCoord.Down };
-            while (queue.Count != 0)
-            {
-                var current = queue.Dequeue();
-                int distance = distances[current];
-                if (distance == allowance) continue;
-                foreach (var direction in directions)
-                {
-                    var cell = current + direction;
-                    if (distances.ContainsKey(cell)) continue;
-                    if (!MovementRouteValidator.CanTraverse(input, cell, false, environment))
-                    {
-                        if (CanLand(input, cell, environment)) distances.Add(cell, distance + 1);
-                        continue;
-                    }
-                    distances.Add(cell, distance + 1);
-                    queue.Enqueue(cell);
-                }
-            }
-            return distances;
+            return MovementRangeSearch.Calculate(query, unit, environment, allowance.Value).Destinations.ToArray();
         }
 
         internal static CombatCommandTransition Calculate(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
@@ -190,7 +154,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 { _failure = MovementFailureReason.DestinationOccupied; yield break; }
                 var normalizedInput = input.WithIntent(input.Kind, input.Aim, path.Endpoint, path, input.MovementContext);
                 var expectedPassenger = MovementRouteValidator.SwapPassenger(normalizedInput, path.Endpoint);
-                var projection = new MovementProjection(normalizedInput, preview, profileReads, preview ? visible : null);
+                var projection = new MovementProjection(normalizedInput, preview, profileReads, preview ? visible : null, rules);
                 yield return 0;
                 projection.BeginOrdinaryMove();
                 projection.ReplacePositionModifier(PositionTileModifier.None);
@@ -357,7 +321,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>
         /// 경로를 끝까지 걸은 행위자의 사실이다: 종점 자리, 도착 칸 보정, 행동 사용 <see cref="UnitActionUse.Moved"/>(경로 시작의
         /// <c>MovementProjection.BeginOrdinaryMove</c>와 같다), 이동 성공 효과(<see cref="ApplyMoveSucceeded"/>).
-        /// 경로 위 도착 연쇄(지뢰·가시·약한 지반 등)는 넣지 않는다. 그런 경로는 부르는 쪽이 따로 거른다.
+        /// 경로 위 도착 연쇄(지뢰·약한 지반 등)는 넣지 않는다. 그런 경로는 부르는 쪽이 따로 거른다.
         /// </summary>
         internal static CharacterCombatFacts MovedActor(CombatCommandInput input, CharacterCombatFacts actor, MovementPath path,
             MovementEnvironmentFacts environment)

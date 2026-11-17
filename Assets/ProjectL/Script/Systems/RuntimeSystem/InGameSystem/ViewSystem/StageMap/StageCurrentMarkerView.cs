@@ -11,7 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap
         internal const string MovementRootName = "StageCurrentMarker";
         private Transform _root;
 
-        /// <summary>프리팹과 표시 보정은 DB 생성 때 검사가 끝난 맵 표시 설정 값입니다(검사 후속 정리 R-f).</summary>
+        /// <summary>프리팹은 ShowNodes의 메인 모델 조회에서, 표시 보정은 맵 DB 생성 때 검사가 끝난 값입니다.</summary>
         internal void ShowAt(GameObject prefab, Transform nodeRoot, Vector3 offset, float yaw, float scale,
             Vector3 landingOffset)
         {

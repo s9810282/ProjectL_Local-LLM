@@ -18,7 +18,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         protected override ICombatAttackAnimation CreateAnimation(ICombatAttackStyleContext context, CombatAttackPresentationData settings,
             FieldGridMapper mapper, CombatProjectilePool pool, ICombatAttackUnitPose pose, Vector3 target, Quaternion direction,
-            CombatAttackShape shape, Action hit, Action cue) =>
-            new CombatMeleeAttackAnimation(settings, mapper, pose, target, direction, cue, context.CancelUnavailable, hit);
+            CombatAttackShape shape, CombatContactRelease hit, Action cue) =>
+            // 근접은 타격 순간 한 번에 모두 해제합니다(관통·죽음의 손 View 설계 D6의 접촉 하나 = 끝).
+            new CombatMeleeAttackAnimation(settings, mapper, pose, target, direction, cue, context.CancelUnavailable, hit.Finish);
     }
 }

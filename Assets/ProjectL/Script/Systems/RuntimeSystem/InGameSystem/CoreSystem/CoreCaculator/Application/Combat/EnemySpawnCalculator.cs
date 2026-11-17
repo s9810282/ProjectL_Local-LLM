@@ -65,15 +65,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             // 기존 구현처럼 모든 유닛 추첨 후 같은 난수 인스턴스로 행 우선 후보 칸을 섞는다.
             var random = new Random(seed);
-            var keys = new EntityKey[spawnCount];
-            for (int i = 0; i < keys.Length; i++)
+            var selections = new UnitSpec[spawnCount];
+            for (int i = 0; i < selections.Length; i++)
             {
                 int roll = random.Next(totalWeight);
                 foreach (EnemySpawnCandidate candidate in candidates)
                 {
                     roll -= candidate.Weight;
                     if (roll >= 0) continue;
-                    keys[i] = candidate.Definition.Key;
+                    selections[i] = candidate.Definition;
                     break;
                 }
             }
@@ -82,10 +82,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 int swap = random.Next(i + 1);
                 (cells[i], cells[swap]) = (cells[swap], cells[i]);
             }
+            KeepBossesOffPlatforms(selections, cells, environment, bindings);
             var placements = new InitialEnemyPlacementSpec[spawnCount];
             for (int i = 0; i < placements.Length; i++)
-                placements[i] = new InitialEnemyPlacementSpec(keys[i], cells[i], Rotation4.R0, level: level);
+                placements[i] = new InitialEnemyPlacementSpec(selections[i].Key, cells[i], Rotation4.R0, level: level);
             return placements;
+        }
+
+        private static void KeepBossesOffPlatforms(UnitSpec[] selections, List<CellCoord> cells,
+            MovementEnvironmentFacts environment, EnvironmentSemanticBindings bindings)
+        {
+            for (int i = 0; i < selections.Length; i++)
+            {
+                if (selections[i].CategoryKey != CategoryKey.Boss ||
+                    !BoardSurfaceRules.HasPlatformSupport(environment, bindings, cells[i])) continue;
+
+                // 추첨과 셔플 순서를 유지하고, 보스에게 필요한 경우에만 비플랫폼 칸을 교환한다.
+                int swap = 0;
+                while (swap < cells.Count && ((swap < selections.Length && selections[swap].CategoryKey == CategoryKey.Boss) ||
+                    BoardSurfaceRules.HasPlatformSupport(environment, bindings, cells[swap])))
+                    swap++;
+                if (swap == cells.Count)
+                    throw new InvalidOperationException("보스를 초기 배치할 비플랫폼 칸이 부족합니다.");
+                (cells[i], cells[swap]) = (cells[swap], cells[i]);
+            }
         }
 
         private static HashSet<CellCoord> ReservedStructureCells(StageConfig stage,

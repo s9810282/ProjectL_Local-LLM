@@ -173,7 +173,7 @@ namespace ProjectL.Tests.Core
             var input = CombatCommonCommandTests.Command(CombatCommandKind.PlaceMainCharacter);
             var s = input.State;
             var cell = new CellCoord(2, 1);
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.PlayerInput,s.Structures,s.ThornFields,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new MovementTileFact[] { Tile(7, cell, 0, -10) }));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,CombatFlowPhase.PlayerInput,s.Structures,new CombatTurnFacts(StagePhase.Deployment),                new MovementEnvironmentFacts(new MovementTileFact[] { Tile(7, cell, 0, -10) }));
             input = new CombatCommandInput(1, input.Kind, input.ActorId, default, state, input.Characters,
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,
                 targetCell: cell, battle: new CombatBattleFacts(10, 37, 2, 2, Array.Empty<CharacterInstanceId>(), 0),
@@ -198,7 +198,7 @@ namespace ProjectL.Tests.Core
                 actor.Owner, actor.OwnershipRole, actor.Area, new HealthStateSnapshot(hp, 10), actor.Stats,
                 actor.ReserveSlotIndex, actor.Anchor, actor.Rotation, actor.OccupiedCells, actor.ActionUse);
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(tiles));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,new MovementEnvironmentFacts(tiles));
             return new CombatCommandInput(input.Number, input.Kind, input.ActorId, input.Aim, state,
                 input.Characters.Select(c => c.EntityId == actor.EntityId ? changed : c).ToArray(),
                 input.Profiles, input.Main, input.Owned, input.SoulCounts, input.Souls, input.Artifacts,

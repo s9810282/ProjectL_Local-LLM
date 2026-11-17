@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50230345bbe23cedfc1b87e155427a19, type: 3}
+  m_Name: TraitVisual_ThornBomb
+  m_EditorClassIdentifier:
+  traitVisualData:
+    key: 540
+    displayName: "가시 폭탄"
+    icon: {fileID: 21300000, guid: 5b7681cdc68f04245ab7eb9361e9d7b0, type: 3}
+    description: "기본 공격이 닿은 중심 칸의 생존 유닛에게 가시 폭탄을 부착합니다. 폭탄은 공격이나 다른 가시 폭탄에 맞거나, 부착한 진영의 다음 턴이 시작될 때 폭발합니다. 중심과 주변의 피아 모두에게 부착 시 공격력의 {피해율}%만큼 방어력과 상성을 무시하는 피해를 주고, 주변 유닛을 바깥으로 1칸 밀어냅니다."
+    attachmentPrefab: {fileID: 1469355182125402400, guid: 46ae341f6d8a0424bb84e60a3cb79ed3, type: 3}
+    activations:
+    - kind: 420
+      direction: 0
+      cueTiming: 0
+      bodyText:
+        enabled: 0
+        textSource: 0
+        overrideText: 
+        target: 0
+        count: 0
+        color: {r: 1, g: 1, b: 1, a: 1}
+        fontSize: 28
+        positionOffset: {x: 0, y: 0}
+        prefabOverride: {fileID: 0}
+        holdSeconds: 0.25
+        fadeSeconds: 0.6
+      cues:
+        effects:
+        - effect: 2
+          anchor: 1
+          delay: 0
+          point: 7
+          actorPoint: 0
+          stayInPlace: 0
+          positionOffset: {x: 0, y: 0, z: 0}
+          riderYOffset: 0
+          rotationOffset: {x: 0, y: 0, z: 0}
+          end: 0
+          endSeconds: 0
+        shakes: []
+      attackPresentation: {fileID: 0}
+      unitActions: []
+      positionSwap:
+        enabled: 0
+        waitSeconds: 0.5
+      deathBlink:
+        enabled: 0
+        color: {r: 1, g: 0, b: 0, a: 1}
+        pulses: 3
+        seconds: 0.9
+        peakStrength: 1
+        lastPulseRatio: 1
+        pulseCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4

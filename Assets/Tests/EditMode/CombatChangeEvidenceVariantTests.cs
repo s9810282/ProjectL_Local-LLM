@@ -16,7 +16,9 @@ namespace ProjectL.Tests.Core
     {
         private static readonly TraitActivationKind[] Reserved = { TraitActivationKind.None, TraitActivationKind.FollowUpAttack,
             TraitActivationKind.FocusGainScheduled, TraitActivationKind.FocusStackApplied, TraitActivationKind.FocusReset,
-            TraitActivationKind.AttackDiscountArmed, TraitActivationKind.AttackCostReduced, TraitActivationKind.AttackDiscountExpired };
+            TraitActivationKind.AttackDiscountArmed, TraitActivationKind.AttackCostReduced, TraitActivationKind.AttackDiscountExpired,
+            // View 조회용 열쇠다. Core는 이 발동 사실을 내지 않는다(가시 폭탄 Phase 4 D3).
+            TraitActivationKind.ThornBombDetonated };
 
         [Test]
         public void EveryNestedTraitKindRequiresAnExplicitFixtureOrRejection()
@@ -27,22 +29,22 @@ namespace ProjectL.Tests.Core
             foreach (var kind in Reserved.Where(k => k != TraitActivationKind.None))
             {
                 var occurrence = new TraitActivationSnapshot(new EntityId(1), null, TraitKey.Acceleration, kind, 0);
-                Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new CombatEvent[] { Wrap(occurrence) }), kind.ToString());
+                Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new CombatEvent[] { Wrap(occurrence) }), kind.ToString());
             }
             foreach (var sample in samples)
             {
-                var evidence = CombatChangeEvidenceReader.ReadAll(sample.Events)[0];
+                var evidence = CombatChangeEvidenceReader.ReadEventShapes(sample.Events)[0];
                 Assert.That(evidence.AffectedEntityIds.Select(id => id.Value), Is.EquivalentTo(sample.Actors), sample.Kind.ToString());
                 Assert.That(evidence.ChangedSourceCells, Is.EquivalentTo(sample.Cells), sample.Kind.ToString());
                 if (sample.Kind is TraitActivationKind.TrailCreated or TraitActivationKind.TrailChanged or TraitActivationKind.TrailRemoved)
                 {
                     Assert.That(evidence.Kind, Is.EqualTo(CombatChangeEvidenceKind.Observation));
-                    var source = CombatChangeEvidenceReader.ReadAll(sample.Events)[1];
+                    var source = CombatChangeEvidenceReader.ReadEventShapes(sample.Events)[1];
                     Assert.That(source.ChangedSourceCells, Is.Empty);
                     Assert.That(source.ChangedSourceIds, Is.EqualTo(new long[] { 1 }));
                 }
                 if (sample.RequiresCompanion)
-                    Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] { sample.Events[0] }), sample.Kind.ToString());
+                    Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] { sample.Events[0] }), sample.Kind.ToString());
             }
         }
 
@@ -69,7 +71,7 @@ namespace ProjectL.Tests.Core
             Assert.That(events.Select(e => e.Reason).Distinct(), Is.EquivalentTo(Enum.GetValues(typeof(ItemEventReason))));
             foreach (var e in events)
             {
-                var evidence = CombatChangeEvidenceReader.ReadAll(new[] { e }).Single();
+                var evidence = CombatChangeEvidenceReader.ReadEventShapes(new[] { e }).Single();
                 Assert.That(evidence.Kind, Is.EqualTo(CombatChangeEvidenceKind.Effect));
                 Assert.That(evidence.AffectedEntityIds.Select(id => id.Value), Is.EquivalentTo(e.Reason == ItemEventReason.Activated && e.Stage != ItemEventStage.BeforeDamage ? new[] { 1, 2 } : new[] { 1 }));
                 Assert.That(evidence.ChangedSourceCells, Is.Empty);

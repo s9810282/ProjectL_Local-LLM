@@ -58,7 +58,7 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LegacyThorn_DoesNotGainCategoryOrHeavyRules()
+        public void EnvironmentalDamage_DoesNotGainCategoryOrHeavyRules()
         {
             var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var actor = CombatCommandTestData.With(input.Characters[0],
@@ -70,14 +70,14 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input,
                 characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray(),
                 profiles: profiles,
-                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    s.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 7) },s.Turn,s.Environment));
-            var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
+                state: EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                    s.Structures,s.Turn,s.Environment), (CellCoord.Right, 7)));
+            var rules = DamageRules;
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(93));
             Assert.That(preview.ProjectedActor.Health.CurrentHealth, Is.EqualTo(93));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
             var damage = result.Events.OfType<CombatCharacterEvent>().Single(e => e.Kind == CombatEventKind.HealthChanged);
             Assert.That(damage.DamageOrigins.Count, Is.EqualTo(1));
             Assert.That(damage.DamageOrigins.Single().PhysicalCell, Is.EqualTo(CellCoord.Right));
@@ -92,7 +92,7 @@ namespace ProjectL.Tests.Core
             var s = input.State;
             var credit = input.Characters.Single(c => c.EntityId != input.ActorId).EntityId;
             var source = new DamageTile(71, CellCoord.Right, true, lethal ? 100 : 7, credit);
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.Turn,                new MovementEnvironmentFacts(new MovementTileFact[] { source })));
             var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.FinalState.Environment.Tiles.Single().Active, Is.False);
@@ -136,12 +136,61 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentException>(() => new CombatDamageOrigin(null, EntityId.Empty));
         }
 
-        private sealed class DamageTile : MovementTileFact
+        internal static readonly IMovementTileRule[] DamageRules = { new DamageRule() };
+
+        internal static CombatCommandState WithDamageTiles(CombatCommandState state, params (CellCoord Cell, int Damage)[] hazards)
+        {
+            var progress = state.EnvironmentProgress;
+            var tiles = state.Environment.Tiles.Concat(hazards.Select((hazard, index) =>
+                (MovementTileFact)new DamageTile(checked(progress.NextSourceId + index), hazard.Cell, true, hazard.Damage, null))).ToArray();
+            return state.With(environment: new MovementEnvironmentFacts(tiles), environmentProgress: new EnvironmentProgressFacts(
+                progress.NextObjectEntryOrdinal, checked(progress.NextSourceId + hazards.Length), progress.RandomState));
+        }
+
+        internal static IReadOnlyList<MovementTileFact> ActiveDamageTiles(CombatCommandState state) =>
+            state.Environment.Tiles.Where(t => t is DamageTile or DamageObject && t.Active).ToArray();
+
+        internal static CombatCommandState WithDamageObjects(CombatCommandState state, params (CellCoord Cell, int Damage)[] hazards)
+        {
+            var progress = state.EnvironmentProgress;
+            var tiles = state.Environment.Tiles.Concat(hazards.Select((hazard, index) =>
+                (MovementTileFact)new DamageObject(checked(progress.NextSourceId + index), hazard.Cell,
+                    checked(progress.NextObjectEntryOrdinal + index), true, hazard.Damage))).ToArray();
+            return state.With(environment: new MovementEnvironmentFacts(tiles), environmentProgress: new EnvironmentProgressFacts(
+                checked(progress.NextObjectEntryOrdinal + hazards.Length), checked(progress.NextSourceId + hazards.Length), progress.RandomState));
+        }
+
+        internal static EnvironmentSemanticBindings WithDamageObjectBindings(EnvironmentSemanticBindings bindings, CombatCommandState state)
+        {
+            var ids = state.Environment.Tiles.OfType<DamageObject>().Select(t => t.Id).Except(bindings.ObjectSourceIds).ToArray();
+            return ids.Length == 0 ? bindings : new EnvironmentSemanticBindings(bindings.TerrainSourceIds,
+                bindings.ObjectSourceIds.Concat(ids).ToArray(), bindings.ObstacleEntityIds);
+        }
+
+        private sealed class DamageObject : ObjectSourceFact
         {
             internal int Damage { get; }
-            internal EntityId Credit { get; }
-            internal DamageTile(long id, CellCoord cell, bool active, int damage, EntityId credit, IReadOnlyList<Owner> knownTo = null)
-                : base(id, cell, "origin-fixture", 0, active, knownTo ?? new[] { Owner.Player })
+
+            internal DamageObject(long id, CellCoord cell, long ordinal, bool active, int damage, IReadOnlyList<Owner> knownTo = null)
+                : base(id, cell, "origin-fixture", ordinal, active, knownTo ?? new[] { Owner.Player, Owner.Enemy })
+            {
+                Damage = damage;
+            }
+
+            public override bool SameValues(MovementTileFact other) =>
+                other is DamageObject obj && SameObjectValues(obj) && Damage == obj.Damage;
+            public override ObjectSourceFact WithActive(bool active) =>
+                new DamageObject(Id, Cell, EntryOrdinal, active, Damage, KnownTo);
+            public override MovementTileFact WithKnownTo(IReadOnlyList<Owner> knownTo) =>
+                new DamageObject(Id, Cell, EntryOrdinal, Active, Damage, knownTo);
+        }
+
+        internal sealed class DamageTile : MovementTileFact
+        {
+            internal int Damage { get; }
+            internal EntityId? Credit { get; }
+            internal DamageTile(long id, CellCoord cell, bool active, int damage, EntityId? credit, IReadOnlyList<Owner> knownTo = null)
+                : base(id, cell, "origin-fixture", 0, active, knownTo ?? new[] { Owner.Player, Owner.Enemy })
             { Damage = damage; Credit = credit; }
             public override bool SameValues(MovementTileFact other) => SameSourceValues(other) &&
                 other is DamageTile tile && Damage == tile.Damage && Credit == tile.Credit;
@@ -149,17 +198,21 @@ namespace ProjectL.Tests.Core
                 new DamageTile(Id, Cell, Active, Damage, Credit, knownTo);
         }
 
-        private sealed class DamageRule : IMovementTileRule
+        internal sealed class DamageRule : IMovementTileRule
         {
             public string Key => "origin-fixture";
             public IReadOnlyList<EntityId> TargetIds(MovementTileFact tile, EntityId mover, CombatCommandInput current) => new[] { mover };
             public MovementStepEffects Evaluate(MovementStepInput input, MovementTileFact source)
             {
                 if (input.Phase != MovementEffectPhase.Hazard) return new MovementStepEffects();
+                if (source is DamageObject obj)
+                    return new MovementStepEffects(damage: new[] { new MovementHealthRequest(input.MoverId, obj.Damage) },
+                        expectedSource: obj, finalSource: obj.WithActive(false));
+
                 var tile = (DamageTile)source;
                 return new MovementStepEffects(damage: new[] { new MovementHealthRequest(input.MoverId,
                     tile.Damage, new CombatDamageOrigin(tile.Cell, tile.Credit)) }, expectedSource: tile,
-                    finalSource: new DamageTile(tile.Id, tile.Cell, false, tile.Damage, tile.Credit));
+                    finalSource: new DamageTile(tile.Id, tile.Cell, false, tile.Damage, tile.Credit, tile.KnownTo));
             }
         }
     }

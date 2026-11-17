@@ -9,14 +9,15 @@ namespace ProjectL.Tool.Editor
     internal static class CombatStageSoPlacementChecks
     {
         internal static List<CombatStageSoIssue> Check(IEnumerable<(string Label, List<Vector2Int> Cells, CombatStageSoIssueTarget Target)> targets,
-            HashSet<Vector2Int> walls, HashSet<Vector2Int> cliffs)
+            HashSet<Vector2Int> walls, HashSet<Vector2Int> cliffs, ISet<Vector2Int> platformCells = null)
         {
             var problems = new List<CombatStageSoIssue>();
             foreach (var target in targets)
             {
                 foreach (var cell in target.Cells)
                 {
-                    string terrain = walls.Contains(cell) ? "벽" : cliffs.Contains(cell) ? "낭떠러지" : null;
+                    bool supportsUnit = target.Target?.Layer == CombatStageSoLayer.Unit && platformCells?.Contains(cell) == true;
+                    string terrain = walls.Contains(cell) ? "벽" : cliffs.Contains(cell) && !supportsUnit ? "낭떠러지" : null;
                     if (terrain != null)
                         problems.Add(new CombatStageSoIssue($"{target.Label}: {terrain}과 점유 칸이 겹칩니다 ({cell.x}, {cell.y}).", cell, target.Target));
                 }

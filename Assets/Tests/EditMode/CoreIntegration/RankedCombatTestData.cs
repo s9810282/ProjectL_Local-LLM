@@ -12,9 +12,8 @@ namespace ProjectL.Tests.CoreIntegration
 {
     internal static class RankedCombatTestData
     {
-        internal static TraitSpec Spec(TraitKey key, int rank)
+        internal static TraitSpec Spec(TraitGrowthCatalog catalog, TraitKey key, int rank)
         {
-            var catalog = DataBaseAssetTests.ActiveGrowthCatalog();
             var definition = catalog.GetTrait(key);
             Assert.That(definition.IsTrainable, Is.True, key.ToString());
             var basis = new UnitSpec(EntityKey.Unit_Akimbo, UnitRole.Regular, 1, 1, new[] { CellCoord.Zero },

@@ -12,7 +12,7 @@ namespace ProjectL.Tests.Core
     public sealed class TornadoEnvironmentTests
     {
         internal static readonly IMovementTileRule[] Rules = {
-            new ThornMovementTileRule(), new FlagMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule() };
+            new EnvironmentDamageTests.DamageRule(), new FlagMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule() };
         internal static TornadoSourceFact Source(long id = 31, CellCoord? cell = null, long due = 3, int repeatInterval = 3) =>
             new(id, cell ?? new CellCoord(1, 3), new[] { Owner.Player, Owner.Enemy }, due, repeatIntervalUnitTurns: repeatInterval);
 
@@ -60,7 +60,7 @@ namespace ProjectL.Tests.Core
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: phase, controllerTurnSequence: sequence,
                 completedPlayerTurnCount: completed, completedControllerTurnCount: sequence - 1);
             bool player = phase == CombatControllerPhase.Player;
-            var state = new CombatCommandState(width, height, player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic, seed.State.Structures, seed.State.ThornFields, turn, environment);
+            var state = new CombatCommandState(width, height, player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic, seed.State.Structures, turn, environment);
             return WithStorms(new CombatCommandInput(player ? 1 : 0, player ? CombatCommandKind.EndPlayerTurn : CombatCommandKind.CompleteEnemyTurn,
                 EntityId.Empty, default, state, characters ?? seed.Characters, seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 battle: new CombatBattleFacts(4, 1, width, height, Array.Empty<CharacterInstanceId>(), 0),

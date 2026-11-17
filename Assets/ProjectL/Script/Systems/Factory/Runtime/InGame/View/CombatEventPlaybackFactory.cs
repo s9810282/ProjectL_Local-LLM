@@ -4,6 +4,7 @@ using ProjectL.Systems.DataBaseSystem.Data.View.Table.CombatPresentationSettings
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation.Text;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
@@ -19,25 +20,29 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
     /// <summary>운영 전투와 연출 확인 환경의 사건 재생을 같은 경로로 조립합니다.</summary>
     internal static class CombatEventPlaybackFactory
     {
-        internal static CombatEventPlaybackComposition Create(FieldView field, FieldUnitPresenter units, CombatEventPresentationValues values, IAudioSystemService audio, CombatSoundPresets sounds, CombatCueSources cues, CombatCameraWindow camera, CombatEffectWindow effects, CombatFieldEventPorts ports, FieldRailwayPresenter railway, FieldThornPresenter thorns, Camera output, CombatPresentationSettingsData settings, Action<CombatTurnEvent> showEnemyTurnStart = null)
+        internal static CombatEventPlaybackComposition Create(FieldView field, FieldUnitPresenter units, CombatEventPresentationValues values, IAudioSystemService audio, CombatSoundPresets sounds, CombatCueSources cues, CombatCameraWindow camera, CombatEffectWindow effects, CombatFieldEventPorts ports, FieldRailwayPresenter railway, Camera output, CombatPresentationSettingsData settings, Action<CombatTurnEvent> showEnemyTurnStart = null)
         {
             CombatBodyTextFactory.ValidatePrefabs(cues, settings.BodyTextPrefab);
             CombatBodyTextResources textResources = CombatBodyTextFactory.CreateResources(field.gameObject.scene, output);
             CombatBodyTextWindow bodyText = null;
             CombatSceneEventPresenter events = null;
+            ThornBombAttachmentPresenter thornBombs = null;
             try
             {
                 bodyText = new CombatBodyTextWindow(textResources, output, settings.BodyTextPrefab, settings.BodyTextStackGap, units.TrackBody);
+                var bombVisual = cues.Traits.GetTraitVisual(TraitKey.ThornBomb);
+                thornBombs = new ThornBombAttachmentPresenter(bombVisual.AttachmentPrefab, field.CellsRoot, units.TrackBodyPresence);
                 events = new CombatSceneEventPresenter(units, values, audio, sounds, cues, camera, effects, field.CellsRoot, ports,
-                    bodyText, CombatTraitFeedbackFactory.CreateEvidence(), showEnemyTurnStart);
-                var playback = new CombatSceneEventPlayback(events, railway, field, thorns, (Func<CharacterCombatFacts, FieldGridMapper, CombatBody>)units.BodyOf, camera, values.CameraMotion);
+                    thornBombs, bodyText, CombatTraitFeedbackFactory.CreateEvidence(), showEnemyTurnStart);
+                var playback = new CombatSceneEventPlayback(events, railway, field, (Func<CharacterCombatFacts, FieldGridMapper, CombatBody>)units.BodyOf, camera, values.CameraMotion);
                 return new CombatEventPlaybackComposition(events, playback);
             }
             catch
             {
                 try
                 {
-                    events?.Release();
+                    if (events != null) events.Release();
+                    else thornBombs?.Dispose();
                 }
                 finally
                 {

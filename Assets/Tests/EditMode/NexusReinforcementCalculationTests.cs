@@ -18,6 +18,49 @@ namespace ProjectL.Tests.Core
 {
     public sealed class NexusReinforcementCalculationTests
     {
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void Interval_FirstAttemptWaitsForConfiguredTurn(int interval)
+        {
+            var spec = new NexusReinforcementSpec(new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, 8) }, 1, spawnIntervalTurns: interval);
+            for (int turn = 1; turn <= interval; turn++)
+            {
+                var input = EnemyControllerPhaseTests.Input(NexusReinforcementTestData.Input(spec), CombatControllerPhase.Enemy, completed: turn);
+                Assert.That(NexusReinforcementCalculator.TryCalculate(input, 0) != null, Is.EqualTo(turn == interval));
+            }
+        }
+
+        [TestCase(false, 3)]
+        [TestCase(true, 3)]
+        [TestCase(false, 4)]
+        [TestCase(true, 4)]
+        [TestCase(false, 9)]
+        [TestCase(true, 9)]
+        public void Interval_BlockedThenPartialSuccessRestartsCycle(bool capacityBlocked, int successTurn)
+        {
+            var spec = new NexusReinforcementSpec(new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, 8) }, 1, spawnIntervalTurns: 2);
+            var cells = NexusReinforcementCalculator.Candidates(NexusReinforcementTestData.Input(spec)).ToArray();
+            var blocked = EnemyControllerPhaseTests.Input(NexusReinforcementTestData.Input(spec, blocked: capacityBlocked ? null : cells), CombatControllerPhase.Enemy, completed: 2);
+            for (int turn = 2; turn < successTurn; turn++)
+            {
+                blocked = EnemyControllerPhaseTests.Input(blocked, CombatControllerPhase.Enemy, completed: turn);
+                Assert.That(NexusReinforcementCalculator.TryCalculate(blocked, capacityBlocked ? 5 : 0), Is.Null);
+            }
+            var ready = EnemyControllerPhaseTests.Input(NexusReinforcementTestData.Input(spec, blocked: cells.Skip(1).ToArray()), CombatControllerPhase.Enemy, completed: successTurn);
+            var batch = NexusReinforcementCalculator.TryCalculate(ready, 0);
+            Assert.That(batch.Characters.Created.Count, Is.EqualTo(1));
+            Assert.That(batch.FinalState.Reinforcements.RemainingTotal(spec), Is.EqualTo(7));
+            var next = CombatCommandComposition.Project(batch);
+            var open = NexusReinforcementTestData.Input(spec);
+            next = open.WithWorld(next.State, next.Characters, next.Main, next.SoulCounts, next.Souls, next.EnvironmentBindings);
+            next = EnemyControllerPhaseTests.Input(next, CombatControllerPhase.Enemy, completed: successTurn + 1);
+            Assert.That(NexusReinforcementCalculator.Candidates(next).Count, Is.GreaterThan(2));
+            Assert.That(NexusReinforcementCalculator.TryCalculate(next, 1), Is.Null);
+            next = EnemyControllerPhaseTests.Input(next, CombatControllerPhase.Enemy, completed: successTurn + 2);
+            Assert.That(NexusReinforcementCalculator.TryCalculate(next, 1).Characters.Created.Count, Is.EqualTo(2));
+        }
+
         [TestCase(3, 2, 1)]
         [TestCase(3, 3, 0)]
         [TestCase(8, 6, 2)]
@@ -64,6 +107,7 @@ namespace ProjectL.Tests.Core
             uint random = input.State.Reinforcements.RandomState;
             for (int turn = 0; turn < 3; turn++)
             {
+                input = EnemyControllerPhaseTests.Input(input, CombatControllerPhase.Enemy, completed: turn + 1);
                 var cells = NexusReinforcementCalculator.Candidates(input).ToList();
                 var step = NexusReinforcementCalculator.TryCalculate(input, 0);
                 var creations = step.Events.OfType<CombatReinforcementEvent>().ToArray();
@@ -160,7 +204,7 @@ namespace ProjectL.Tests.Core
         {
             var input = NexusReinforcementTestData.Input(NexusReinforcementTestData.Pool(1, 0));
             var evt = NexusReinforcementCalculator.TryCalculate(input, 0).Events.OfType<CombatReinforcementEvent>().Single();
-            Assert.That(CombatChangeEvidenceReader.ReadAll(new[] { evt }).Single().AffectedEntityIds, Is.EqualTo(new[] { evt.Created.EntityId }));
+            Assert.That(CombatChangeEvidenceReader.ReadEventShapes(new[] { evt }).Single().AffectedEntityIds, Is.EqualTo(new[] { evt.Created.EntityId }));
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new CombatTurnEvent(CombatEventKind.Reinforced, EntityId.Empty, input.State.Turn, input.State.Turn));
         }

@@ -13,6 +13,33 @@ namespace ProjectL.Tests.Core
 {
     public sealed class NexusReinforcementStateTests
     {
+        [Test]
+        public void SpawnProgress_ValidatesHistoryEqualityAndElapsedTurns()
+        {
+            var id = new EntityId(30);
+            var records = new[] { new NexusReinforcementRecord(new EntityId(40), 0) };
+            var spec = NexusReinforcementTestData.Pool(interval: 2);
+            var empty = new NexusReinforcementState(id, 17, Array.Empty<NexusReinforcementRecord>());
+            Assert.Throws<ArgumentOutOfRangeException>(() => new NexusReinforcementState(id, 17, records, -1));
+            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(id, 17, records));
+            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(id, 17, Array.Empty<NexusReinforcementRecord>(), 1));
+            Assert.That(empty.IsSpawnDue(spec, 0), Is.False);
+            Assert.That(empty.IsSpawnDue(spec, 1), Is.False);
+            Assert.That(empty.IsSpawnDue(spec, 2), Is.True);
+            Assert.That(empty.IsSpawnDue(spec, 99), Is.True);
+            var success = new NexusReinforcementState(id, 17, records, 3);
+            Assert.That(success.IsSpawnDue(spec, 4), Is.False);
+            Assert.That(success.IsSpawnDue(spec, 5), Is.True);
+            Assert.That(success.SameValues(new NexusReinforcementState(id, 17, records, 2)), Is.False);
+            Assert.Throws<InvalidOperationException>(() => success.IsSpawnDue(spec, 2));
+            Assert.Throws<ArgumentNullException>(() => success.IsSpawnDue(null, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => empty.IsSpawnDue(spec, -1));
+            Assert.That(NexusReinforcementState.Disabled.IsSpawnDue(spec, 3), Is.False);
+            var late = new NexusReinforcementState(id, 17, records, long.MaxValue - 1);
+            Assert.That(late.IsSpawnDue(spec, long.MaxValue), Is.False);
+            Assert.That(new NexusReinforcementState(id, 17, records, long.MaxValue - 2).IsSpawnDue(spec, long.MaxValue), Is.True);
+        }
+
         private static readonly NexusReinforcementSpec Spec = new(
             new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, 3), new NexusReinforcementEntry(EntityKey.Unit_Cowboy, 2) }, 1);
 
@@ -24,7 +51,7 @@ namespace ProjectL.Tests.Core
             {
                 first, new NexusReinforcementRecord(new EntityId(41), 0), new NexusReinforcementRecord(new EntityId(42), 1)
             };
-            var state = new NexusReinforcementState(new EntityId(30), 17, records);
+            var state = new NexusReinforcementState(new EntityId(30), 17, records, 1);
             records[0] = null;
 
             Assert.That(state.Records[0], Is.SameAs(first));
@@ -43,14 +70,14 @@ namespace ProjectL.Tests.Core
             var record = new NexusReinforcementRecord(new EntityId(40), 0);
             Assert.Throws<ArgumentException>(() => new NexusReinforcementRecord(EntityId.Empty, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => new NexusReinforcementRecord(record.EntityId, -1));
-            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(EntityId.Empty, 0, Array.Empty<NexusReinforcementRecord>()));
-            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(nexus, 0, new[] { record, record }));
-            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(nexus, 0, new NexusReinforcementRecord[] { null }));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new NexusReinforcementState(nexus, 0, new[] { record }).RemainingCount(Spec, 2));
-            var wrongPool = new NexusReinforcementState(nexus, 0, new[] { new NexusReinforcementRecord(record.EntityId, 2) });
+            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(EntityId.Empty, 0, Array.Empty<NexusReinforcementRecord>(), 0));
+            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(nexus, 0, new[] { record, record }, 1));
+            Assert.Throws<ArgumentException>(() => new NexusReinforcementState(nexus, 0, new NexusReinforcementRecord[] { null }, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new NexusReinforcementState(nexus, 0, new[] { record }, 1).RemainingCount(Spec, 2));
+            var wrongPool = new NexusReinforcementState(nexus, 0, new[] { new NexusReinforcementRecord(record.EntityId, 2) }, 1);
             Assert.Throws<InvalidOperationException>(() => wrongPool.RemainingTotal(Spec));
             var overspent = new NexusReinforcementState(nexus, 0, Enumerable.Range(40, 3)
-                .Select(id => new NexusReinforcementRecord(new EntityId(id), 1)).ToArray());
+                .Select(id => new NexusReinforcementRecord(new EntityId(id), 1)).ToArray(), 1);
             Assert.Throws<InvalidOperationException>(() => overspent.RemainingTotal(Spec));
         }
 
@@ -81,7 +108,7 @@ namespace ProjectL.Tests.Core
                 source.Souls, source.Artifacts, battle: battle);
             Assert.That(input.State.With().Reinforcements, Is.SameAs(progress));
 
-            var before = EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingEnemy);
+            var before = EnemyControllerPhaseTests.Input(input, CombatControllerPhase.StartingEnemy, completed: 2);
             var started = CombatTurnCalculator.BeginControllerTurn(before, Array.Empty<IMovementTileRule>());
             Assert.That(started.Accepted, Is.True, started.Reason);
             var projected = CombatCommandComposition.Project(started);
@@ -107,12 +134,12 @@ namespace ProjectL.Tests.Core
             var id = new EntityId(30);
             var progress = Progress(id);
             var state = CombatCommandTestData.Input().State.With(reinforcements: progress);
-            var same = new NexusReinforcementState(id, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 0) });
-            var otherIndex = new NexusReinforcementState(id, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 1) });
+            var same = new NexusReinforcementState(id, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 0) }, 1);
+            var otherIndex = new NexusReinforcementState(id, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 1) }, 1);
             Assert.That(state.SameValues(state.With(reinforcements: same)), Is.True);
             Assert.That(state.SameGameplayValues(state.With(reinforcements: otherIndex)), Is.False);
-            Assert.That(state.SameGameplayValues(state.With(reinforcements: new NexusReinforcementState(id, 0, progress.Records))), Is.False);
-            Assert.That(state.SameGameplayValues(state.With(reinforcements: new NexusReinforcementState(new EntityId(31), 79, progress.Records))), Is.False);
+            Assert.That(state.SameGameplayValues(state.With(reinforcements: new NexusReinforcementState(id, 0, progress.Records, 1))), Is.False);
+            Assert.That(state.SameGameplayValues(state.With(reinforcements: new NexusReinforcementState(new EntityId(31), 79, progress.Records, 1))), Is.False);
             Assert.That(state.SameGameplayValues(state.With(reinforcements: NexusReinforcementState.Disabled)), Is.False);
         }
 
@@ -126,7 +153,7 @@ namespace ProjectL.Tests.Core
             Assert.That(initial.NexusId, Is.EqualTo(nexus.EntityId));
             Assert.That(initial.RandomState, Is.EqualTo(unchecked((uint)first.Combat.TimelineSeed ^ 0x4E585350u)));
             var spent = first.CommandState.With(reinforcements: Progress(nexus.EntityId));
-            var seededRecord = new NexusReinforcementState(nexus.EntityId, initial.RandomState, spent.Reinforcements.Records);
+            var seededRecord = new NexusReinforcementState(nexus.EntityId, initial.RandomState, spent.Reinforcements.Records, 1);
 
             Assert.Throws<ArgumentException>(() => Rebuild(first, spent));
             Assert.Throws<ArgumentException>(() => Rebuild(first, first.CommandState.With(reinforcements: seededRecord)));
@@ -141,7 +168,7 @@ namespace ProjectL.Tests.Core
         }
 
         private static NexusReinforcementState Progress(EntityId nexus) =>
-            new(nexus, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 0) });
+            new(nexus, 79, new[] { new NexusReinforcementRecord(new EntityId(40), 0) }, 1);
 
         private static BattlePreparation Rebuild(BattlePreparation prepared, CombatCommandState state) =>
             new(prepared.Characters, prepared.Combat, prepared.Structures, commandState: state);

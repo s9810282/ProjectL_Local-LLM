@@ -55,6 +55,9 @@ namespace ProjectL.Systems.ServiceKeys.DBFactory.Group
         public static readonly SystemGroupKey<IUnitStatusVisualTableQuery> UnitStatusVisual =
             new(nameof(UnitStatusVisual));
 
+        public static readonly SystemGroupKey<IPlayerSkillVisualTableQuery> PlayerSkillVisual =
+            new(nameof(PlayerSkillVisual));
+
         public static readonly SystemGroupKey<IStageOfferTextTableQuery> StageOfferText =
             new(nameof(StageOfferText));
 
@@ -66,9 +69,6 @@ namespace ProjectL.Systems.ServiceKeys.DBFactory.Group
 
         public static readonly SystemGroupKey<IRailwayVisualTableQuery> RailwayVisual =
             new(nameof(RailwayVisual));
-
-        public static readonly SystemGroupKey<IThornFieldVisualTableQuery> ThornFieldVisual =
-            new(nameof(ThornFieldVisual));
 
         public static readonly SystemGroupKey<IRockfallVisualTableQuery> RockfallVisual =
             new(nameof(RockfallVisual));

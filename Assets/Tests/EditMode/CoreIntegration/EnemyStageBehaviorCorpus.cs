@@ -48,7 +48,7 @@ namespace ProjectL.Tests.CoreIntegration
     {
         private static readonly IMovementTileRule[] Rules =
         {
-            new ThornMovementTileRule(), new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
+            new SheriffBadgeMovementTileRule(), new MineMovementTileRule(), new FlagMovementTileRule()
         };
         private static readonly CellCoord[] Directions = { CellCoord.Right, CellCoord.Up, CellCoord.Left, CellCoord.Down };
         private const int Rounds = 5;
@@ -74,6 +74,7 @@ namespace ProjectL.Tests.CoreIntegration
         [Test, Timeout(900000), Explicit("Production-stage enemy behaviour corpus (enemy AI foundation redesign R-0).")]
         public void MeasureProductionStages()
         {
+            RequireFullRegression();
             var catalog = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
             var production = (IDataBaseQueryContext)DataBaseFactory.Create(catalog);
             var stages = CombatStages(production);
@@ -228,6 +229,7 @@ namespace ProjectL.Tests.CoreIntegration
         [Test, Timeout(900000)]
         public void CacheOnOffIdenticalTracesOnProductionStages()
         {
+            RequireFullRegression();
             var catalog = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
             var production = (IDataBaseQueryContext)DataBaseFactory.Create(catalog);
             var artifact = RepresentativeArtifact(production);
@@ -261,6 +263,7 @@ namespace ProjectL.Tests.CoreIntegration
         [Test, Timeout(900000)]
         public void EveryEnemyKindAttacksWhenItCan()
         {
+            RequireFullRegression();
             var catalog = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
             var production = (IDataBaseQueryContext)DataBaseFactory.Create(catalog);
             var artifact = RepresentativeArtifact(production);
@@ -292,6 +295,7 @@ namespace ProjectL.Tests.CoreIntegration
         [Explicit("Stage 1127 enemy decision record dump")]
         public void DumpStage1127DecisionRecords(bool advancePlayers)
         {
+            RequireFullRegression();
             using var battle = Stage1127(advancePlayers);
             var log = new StringBuilder();
             var cache = new EnemyDecisionSideCache();
@@ -331,6 +335,12 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         // 사용자 화면과 같은 배치 (2,1)(4,2)(8,2)(10,2). 전진 각본이면 1라운드에 진단 시험과 같은 걸음을 시도한다.
+        private static void RequireFullRegression()
+        {
+            if (Environment.GetEnvironmentVariable("PROJECTL_ENEMY_AI_FULL_REGRESSION") != "1")
+                Assert.Ignore("Set PROJECTL_ENEMY_AI_FULL_REGRESSION=1 to run the full production-stage corpus.");
+        }
+
         private static ProductionBattle Stage1127(bool advancePlayers)
         {
             var catalog = AssetDatabase.LoadAssetAtPath<DatabaseCatalogSO>("Assets/ProjectL/DataBaseSO/DatabaseCatalogSO.asset");
@@ -1455,8 +1465,22 @@ namespace ProjectL.Tests.CoreIntegration
                 _stage = stage;
             }
 
-            public BattleInitialization Read(IDataBaseQueryContext database, int chapterKey, StageKey stageKey) =>
-                Definition = CoreIntegrationTestData.DatabaseSource(Buffers).Read(_production, _stage.MapKey, new StageKey(_stage.StageKey));
+            public BattleInitialization Read(IDataBaseQueryContext database, int chapterKey, StageKey stageKey)
+            {
+                var source = CoreIntegrationTestData.DatabaseSource(Buffers).Read(_production, _stage.MapKey, new StageKey(_stage.StageKey));
+                // 코퍼스는 기존 시험 로스터의 서브 저격수를 유지한다. 운영 Main 전환은 되돌리지 않고 역할만 시험 정의에 고정한다.
+                var units = source.Units.Select(unit => unit.Key != EntityKey.Unit_Sniper ? unit : new UnitSpec(
+                    unit.Key, UnitRole.Regular, unit.FootprintWidth, unit.FootprintHeight, unit.FootprintLocalCells.ToArray(),
+                    unit.MaxHealth, unit.MoveMethod, unit.AttackRange, unit.CategoryKey, unit.AttackPower, unit.PhysicalDefense,
+                    unit.Priority, unit.Traits.ToArray(), unit.OwnerEligibility, unit.Occlusion, unit.Behavior, unit.KillReward)).ToArray();
+                var byKey = units.ToDictionary(unit => unit.Key);
+                var profiles = source.AttackProfiles.Select(profile => new CombatAttackProfile(byKey[profile.Definition.Key],
+                    profile.Method, profile.OwnedId)).ToArray();
+                return Definition = new BattleInitialization(source.Stage, source.MainAnchor, source.MainRotation, units, source.Structures,
+                    source.Categories, profiles, source.Environment, source.EnvironmentBindings, source.ObstaclePlacements, source.WallBlocking,
+                    source.ObjectiveKind, source.ItemDefinitions, source.Progression, source.InitialRandomTornadoPlacements, source.ClearRewards,
+                    source.TraitGrowth, source.NexusReinforcements, source.PlayerSkill);
+            }
         }
 
         private sealed class DefinitionRead : IBattleDefinitionRead

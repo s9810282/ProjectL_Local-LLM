@@ -35,7 +35,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         public override bool IsComplete => IsRunning && PoseDone && _impacted;
         protected override void Advance(float previous, float next)
         {
-            if (_impacted || next < _settings.MeleeDuration * .55f || !IsRunning) return;
+            if (_impacted || next < _settings.MeleeDuration * .55f) return;
             Render(.55f);
             _impacted = true;
             int version = Version;

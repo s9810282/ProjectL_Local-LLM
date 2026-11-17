@@ -12,13 +12,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     {
         public Owner EndedSide { get; }
         public long CompletedControllerTurnCount { get; }
+        public StageGimmickBoundaryPhase Phase { get; }
 
-        public StageGimmickBoundary(Owner endedSide, long completedControllerTurnCount)
+        public StageGimmickBoundary(Owner endedSide, long completedControllerTurnCount,
+            StageGimmickBoundaryPhase phase = StageGimmickBoundaryPhase.Scheduled)
         {
             if (endedSide != Owner.Player && endedSide != Owner.Enemy) throw new ArgumentOutOfRangeException(nameof(endedSide));
             if (completedControllerTurnCount < 1) throw new ArgumentOutOfRangeException(nameof(completedControllerTurnCount));
+            if (!Enum.IsDefined(typeof(StageGimmickBoundaryPhase), phase)) throw new ArgumentOutOfRangeException(nameof(phase));
             EndedSide = endedSide;
             CompletedControllerTurnCount = completedControllerTurnCount;
+            Phase = phase;
         }
     }
 
@@ -50,6 +54,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         }
 
         public abstract bool SameValues(StageGimmickState other);
+
+        /// <summary>
+        /// 이 기믹이 지금 확정적으로 점유해 유닛의 이동·배치·강제 이동 착지를 막는 칸이다. 공격 대상이나 차폐가 아니다.
+        /// 점유가 없는 기믹은 빈 목록이다. 새 점유 기믹은 이 값만 재정의하고 공통 점유 규칙은 고치지 않는다.
+        /// </summary>
+        public virtual IReadOnlyList<CellCoord> BlockingCells => Array.Empty<CellCoord>();
 
         internal static IReadOnlyList<CellCoord> CopyCells(IReadOnlyList<CellCoord> cells, bool allowEmpty)
         {
@@ -140,7 +150,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             {
                 var definition = definitions[i];
                 if (definition is RailwayGimmickSpec) continue;
-                if (definition is not RockfallGimmickSpec && definition is not HaboobGimmickSpec && definition is not TornadoGimmickSpec)
+                if (definition is not RockfallGimmickSpec && definition is not HaboobGimmickSpec &&
+                    definition is not TornadoGimmickSpec && definition is not MeteorGimmickSpec && definition is not LavaChainGimmickSpec)
                     throw new InvalidOperationException("지원하지 않는 기믹 정의입니다.");
                 var entry = Get(new StageGimmickId(i + 1));
                 if (entry.Key != definition.GimmickKey) throw new InvalidOperationException("기믹 정의와 상태 종류가 다릅니다.");
@@ -152,6 +163,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 if (entry is TornadoGimmickState tornado && definitions[entry.Id.Value - 1] is TornadoGimmickSpec tornadoSpec)
                 {
                     tornado.ValidateDefinition(tornadoSpec, width, height);
+                    continue;
+                }
+                if (entry is MeteorGimmickState meteor && definitions[entry.Id.Value - 1] is MeteorGimmickSpec meteorSpec)
+                {
+                    meteor.ValidateDefinition(meteorSpec, width, height);
+                    continue;
+                }
+                if (entry is LavaChainGimmickState chain && definitions[entry.Id.Value - 1] is LavaChainGimmickSpec)
+                {
+                    chain.ValidateBoard(width, height);
                     continue;
                 }
                 var cells = entry is RockfallGimmickState rockfall ? rockfall.WarnedCells :

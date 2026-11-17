@@ -201,7 +201,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                     for (int i = 0; i < renderers.Length; i++)
                     {
                         Renderer renderer = renderers[i];
-                        if (renderer.GetComponentInParent<TMPro.TMP_Text>(true) != null || renderer.GetComponentInParent<Canvas>(true) != null)
+                        if (!UnitModelParts.Is(renderer))
                             continue;
                         renderer.shadowCastingMode = ShadowCastingMode.Off;
                         renderer.receiveShadows = false;

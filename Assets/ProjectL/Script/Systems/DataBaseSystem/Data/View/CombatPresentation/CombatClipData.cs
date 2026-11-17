@@ -16,19 +16,24 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     {
         /// <summary>검사된 불변 시각을 보관합니다. 재생 커서는 이 시각 객체를 공유합니다. 시각 규칙은 <see cref="CombatClipTimings"/>가 만들 때 봅니다.</summary>
         /// <param name="companions">같이 재생할 부속 클립입니다. 없으면 null 또는 빈 목록입니다. 생성 때 복사합니다.</param>
-        /// <exception cref="ArgumentException">부속 목록이 <see cref="FindCompanionError"/>의 규칙에 맞지 않을 때입니다.</exception>
-        internal CombatClipData(AnimationClip clip, CombatClipTimings timings, IReadOnlyList<AnimationClip> companions = null)
+        /// <param name="mount">같이 재생할 탑승물(말) 클립입니다(클립 칸 다시 짜기 설계 CS5). 없으면 null입니다.</param>
+        /// <exception cref="ArgumentException">부속·탑승물이 <see cref="FindCompanionError"/>의 규칙에 맞지 않을 때입니다.</exception>
+        internal CombatClipData(AnimationClip clip, CombatClipTimings timings, IReadOnlyList<AnimationClip> companions = null, AnimationClip mount = null)
         {
             if (clip == null) throw new ArgumentNullException(nameof(clip));
             Timings = timings ?? throw new ArgumentNullException(nameof(timings));
-            string companionError = FindCompanionError(clip, companions);
+            string companionError = FindCompanionError(clip, companions, mount);
             if (companionError != null) throw new ArgumentException(companionError, nameof(companions));
             Clip = clip;
+            Mount = mount;
             Companions = Copy(companions);
         }
 
         /// <summary>주 클립입니다. 이벤트 셋을 찍은 클립이며 시각은 이 클립에서 읽었습니다.</summary>
         internal AnimationClip Clip { get; }
+
+        /// <summary>탑승물(말) 클립입니다. 없으면 null입니다. 층 순서는 몸 0 · 탑승물 1 · 부속 2..입니다(설계 P6).</summary>
+        internal AnimationClip Mount { get; }
 
         /// <summary>이 클립의 시각 원본입니다. 선택 이벤트를 포함하며 생성 뒤 바뀌지 않습니다.</summary>
         internal CombatClipTimings Timings { get; }
@@ -50,8 +55,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// 목록이 null이거나 비면 맞습니다. 맞으면 null, 아니면 이유입니다. 이 값의 생성자와 클립 규칙(<see cref="CombatUnitAnimationRules.RequireCompanionClips"/>)이 부릅니다.
         /// 부속 클립 하나하나의 규칙(길이·반복·이벤트·곡선 겹침)은 클립 규칙이 원본입니다.
         /// </summary>
-        internal static string FindCompanionError(AnimationClip clip, IReadOnlyList<AnimationClip> companions)
+        internal static string FindCompanionError(AnimationClip clip, IReadOnlyList<AnimationClip> companions, AnimationClip mount = null)
         {
+            if (mount != null && mount == clip)
+                return $"탑승물 클립이 주 클립과 같습니다: {mount.name}";
             if (companions == null)
                 return null;
             for (int i = 0; i < companions.Count; i++)
@@ -61,6 +68,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                     return $"부속 클립 {i}번 칸이 비어 있습니다";
                 if (companion == clip)
                     return $"부속 클립 {i}번 칸이 주 클립과 같습니다: {companion.name}";
+                if (companion == mount)
+                    return $"부속 클립 {i}번 칸이 탑승물 클립과 같습니다: {companion.name}";
                 for (int j = 0; j < i; j++)
                 {
                     if (companions[j] == companion)

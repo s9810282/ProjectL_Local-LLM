@@ -171,7 +171,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 
         /// <summary>
         /// 공격 칸의 연출 큐입니다(범용 연출 구조 설계 G2). 클립·코드 모션 두 길의 조립이 같은 큐를 붙이고, 접촉(Contact) 시점 이펙트는 공격 재생의 접촉 입구가 냅니다
-        /// (곡사 = 착탄, 직선 = 주 대상 몸 접촉, 계획 P5). 소리 시점은 늘 있습니다(계획 P15).
+        /// (곡사 = 착탄, 직선 = 주 대상 몸 접촉, 계획 P5). 공격 소리는 이 큐가 아니라 유닛 외형의 공격 소리 줄입니다(유닛 소리 설계 US2).
         /// </summary>
         internal CombatEventCues Cues { get; }
 
@@ -184,7 +184,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// <summary>맞는 순간 뒤 착탄 소리까지의 초입니다.</summary>
         internal float ImpactSoundDelay { get; }
 
-        /// <summary>투사체 비행 소리 프리셋입니다(-1 = 없음). 발사 순간(Cue) + <see cref="FlightSoundDelay"/>에 한 번 냅니다(결정 Q-PS1).</summary>
+        /// <summary>투사체 비행 소리 프리셋입니다(-1 = 없음). 발사 순간(Event1) + <see cref="FlightSoundDelay"/>에 한 번 냅니다(결정 Q-PS1).</summary>
         internal int FlightSoundPreset { get; }
 
         /// <summary>발사 순간 뒤 비행 소리까지의 초입니다.</summary>

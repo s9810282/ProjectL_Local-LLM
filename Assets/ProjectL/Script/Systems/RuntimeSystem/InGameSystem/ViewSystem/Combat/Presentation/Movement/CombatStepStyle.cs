@@ -28,7 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>이동자 몸이 접촉 원본에 닿는 보간 진행률(0~1)입니다. 닿지 않으면 1(걸음 끝)입니다(이동 접촉 설계 M2). 고정 접촉 모양은 부르지 않습니다.</summary>
         /// <param name="moverStart">걸음 시작 칸에서 보간 중 표시 방향(걸음 방향으로 돈 뒤)의 이동자 몸입니다.</param>
         /// <param name="moverEndCenter">같은 방향으로 걸음 끝 칸에 놓인 이동자 몸의 중심입니다.</param>
-        /// <param name="source">접촉 원본(가시·오브젝트)의 몸입니다.</param>
+        /// <param name="source">접촉 원본(오브젝트)의 몸입니다.</param>
         internal abstract float ContactProgress(CombatBody moverStart, Vector2 moverEndCenter, CombatBody source);
     }
 }

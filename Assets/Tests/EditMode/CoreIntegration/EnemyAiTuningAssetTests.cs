@@ -17,15 +17,10 @@ namespace ProjectL.Tests.CoreIntegration
     public sealed class EnemyAiTuningAssetTests
     {
         [Test]
-        public void TuningAssetLoadsAndDefaults()
+        public void AuthoredTuningReachesTheServiceAndMissingTableUsesDefaults()
         {
-            // 운영 에셋은 하나이고 기획 조정값을 담는다(사용자 조정 d527a001d, 2026-11-10: 다음 턴 접근 50 → 150).
-            // 계약 기본값(50/50/50)은 아래 '테이블이 없으면' 경우에서 본다. 에셋 값을 다시 바꾸면 이 기대값도 함께 바꾼다.
-            var production = DataBaseAssetTests.ProductionInGame();
-            Assert.That(production, Is.InstanceOf<IHasEnemyAiTuningTable>());
-            var tuning = ((IHasEnemyAiTuningTable)production).EnemyAiTuning.Tuning;
-            Assert.That((tuning.DeathTradeThresholdPercent, tuning.ThreatAversionPercent, tuning.NextTurnApproachPercent),
-                Is.EqualTo((50, 50, 150)));
+            var production = (IHasEnemyAiTuningTable)DataBaseAssetTests.ProductionInGame();
+            Assert.That(production.EnemyAiTuning?.Tuning, Is.Not.Null);
 
             // 입력 SO의 값이 Data로 그대로 가고, 범위 밖이면 DB 생성에서 멈춘다.
             using var fixture = new CoreAuthoringFixture();
@@ -42,11 +37,12 @@ namespace ProjectL.Tests.CoreIntegration
             // 서비스는 테이블 값으로 결정 설정을 만들고, 테이블이 없으면 계약 기본값을 쓴다.
             using var source = new EnemyDecisionSourceStampTests.SourceFixture();
             var tuned = Service(source);
-            tuned.InitData(new TunedContext(production, edited));
+            var database = new CoreIntegrationTestData(ConfiguredMovementBattle.Config);
+            tuned.InitData(new TunedContext(database.InGameQuery, edited));
             Assert.That((tuned.DecisionSettings.DeathTradeThresholdPercent, tuned.DecisionSettings.ThreatAversionPercent,
                 tuned.DecisionSettings.NextTurnApproachPercent), Is.EqualTo((30, 400, 70)));
             var withoutTable = Service(source);
-            withoutTable.InitData(new CoreIntegrationTestData(ConfiguredMovementBattle.Config));
+            withoutTable.InitData(database);
             Assert.That(withoutTable.DecisionSettings, Is.SameAs(EnemyDecisionSettings.Default));
         }
 

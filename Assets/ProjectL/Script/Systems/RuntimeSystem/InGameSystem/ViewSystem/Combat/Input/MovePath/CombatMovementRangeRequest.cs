@@ -7,6 +7,13 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.MovePath
 {
+    internal enum MovementRangeAnswer
+    {
+        Unrelated,
+        Stale,
+        Accepted
+    }
+
     /// <summary>이동 범위 요청 당시의 공개 사실을 값으로 보관합니다.</summary>
     internal readonly struct CombatMovementRangeFacts
     {
@@ -15,9 +22,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         internal CellCoord Origin { get; }
         internal long ResultSequence { get; }
 
+        internal long QueryRevision { get; }
+        private long TurnSequence { get; }
+
         internal bool IsInitialized => BattleInstanceId > 0 && !ActorId.IsEmpty && ResultSequence >= 0;
 
-        internal CombatMovementRangeFacts(long battleInstanceId, EntityId actorId, CellCoord origin, long resultSequence)
+        internal CombatMovementRangeFacts(long battleInstanceId, EntityId actorId, CellCoord origin, long resultSequence, long queryRevision, long turnSequence)
         {
             if (battleInstanceId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(battleInstanceId));
@@ -30,11 +40,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             ActorId = actorId;
             Origin = origin;
             ResultSequence = resultSequence;
+            QueryRevision = queryRevision;
+            TurnSequence = turnSequence;
         }
 
         internal bool Matches(in CombatMovementRangeFacts other) =>
             BattleInstanceId == other.BattleInstanceId && ActorId == other.ActorId &&
-            Origin == other.Origin && ResultSequence == other.ResultSequence;
+            Origin == other.Origin && ResultSequence == other.ResultSequence && QueryRevision == other.QueryRevision &&
+            TurnSequence == other.TurnSequence;
     }
 
     /// <summary>
@@ -89,7 +102,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
         /// 이번 지정의 현재 범위 응답만 한 번 소비합니다. 실패/빈 범위도 정식 응답이면 소비합니다.
         /// 불일치 응답은 보관 중인 요청을 바꾸지 않으며, 반환값으로 이동 실행을 승인하지 않습니다.
         /// </summary>
-        internal bool TryConsume(long generation, in CombatMovementRangeFacts current,
+        internal MovementRangeAnswer Consume(long generation, in CombatMovementRangeFacts current,
             bool hasPreview, in CombatViewPreviewRequest currentRequest, CombatPreviewResult response,
             out MovementRangeResult range)
         {
@@ -97,11 +110,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Mo
             if (generation != _generation || !MatchesFacts(current) || !OwnsPreview(hasPreview, currentRequest) ||
                 response == null || response.RequestNumber != _requestNumber || !response.MoveRange.HasValue ||
                 response.MoveRange.Value.UnitId != _facts.ActorId)
-                return false;
+                return MovementRangeAnswer.Unrelated;
 
             range = response.MoveRange.Value;
             Cancel();
-            return true;
+            return range.SourceRevision > 0 && range.SourceRevision == current.QueryRevision
+                ? MovementRangeAnswer.Accepted : MovementRangeAnswer.Stale;
         }
 
         /// <summary>로컬 요청 수명을 끝냅니다. 다른 입력의 최신 슬롯에는 접근하지 않습니다.</summary>

@@ -23,7 +23,6 @@ MonoBehaviour:
     reactionPresentation: {fileID: 0}
     animationPresentation: {fileID: 0}
     unitSoundPreset: 0
-    attackSoundSlotIndex: -1
     structureHitCues:
       effects:
       - effect: 4
@@ -36,3 +35,6 @@ MonoBehaviour:
         end: 0
         endSeconds: 0
       shakes: []
+    attackSounds: []
+    hitSounds: []
+    deathSounds: []

@@ -35,6 +35,11 @@ namespace ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable
                 if (!_dataByKey.TryAdd(data.Key, data))
                     throw new InvalidOperationException($"[TraitVisualTable] Duplicate key: {data.Key}.");
             }
+
+            // 부착물을 붙이는 특성의 줄은 전투 사건 재생 조립이 필수로 읽는다. 빠지면 Combat 진입 대신 여기서 멈춘다(가시 폭탄 Phase 4 D2).
+            foreach (TraitKey key in System.Enum.GetValues(typeof(TraitKey)))
+                if (TraitVisualData.RequiresAttachment(key) && !_dataByKey.ContainsKey(key))
+                    throw new InvalidOperationException($"[TraitVisualTable] 부착물을 붙이는 특성의 줄이 없습니다. Key: {key}.");
         }
 
         public TraitVisualData GetTraitVisual(TraitKey key)

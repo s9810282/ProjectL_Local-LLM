@@ -27,6 +27,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (!state.Reinforcements.IsEnabled || state.Objective.Kind != BattleObjectiveKind.EnemyHeadquartersDestroyed)
                 throw new InvalidOperationException("증원 정의에 맞는 넥서스와 전투 목표가 필요합니다.");
 
+            if (!state.Reinforcements.IsSpawnDue(spec, state.Turn.CompletedPlayerTurnCount))
+                return null;
+
             int capacity = spec.FieldEnemyLimit - livingFieldEnemiesAtStart;
             if (capacity <= 0)
                 return null;
@@ -85,10 +88,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 turn.ControllerPhase, turn.ControllerTurnSequence, turn.CompletedPlayerTurnCount,
                 origins, turn.Summons, turn.CompletedControllerTurnCount),
                 allocation: new CombatAllocationFacts(nextId, state.Allocation.SummonRandomState),
-                reinforcements: new NexusReinforcementState(state.Reinforcements.NexusId, random, records));
+                reinforcements: new NexusReinforcementState(state.Reinforcements.NexusId, random, records, turn.CompletedPlayerTurnCount));
             // 배치 전체가 보이는 세계에서 한 번 정산하고 생성 개체의 최종 사실까지 같은 결과로 보낸다.
             return CombatCommandCalculator.Finish(input, projected, input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, state.ThornFields.ToDictionary(f => f.Cell), state.Structures.ToArray(), new List<long>(),
+                input.Souls, state.Structures.ToArray(), new List<long>(),
                 new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, final, events: events);
         }
 
@@ -133,8 +136,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                      bindings.TerrainSourceIds.Contains(source.Id) || bindings.ObjectSourceIds.Contains(source.Id)))
                     blocked.Add(source.Cell);
 
-            foreach (var thorn in input.State.ThornFields)
-                blocked.Add(thorn.Cell);
             AddGimmickCells(input, blocked);
 
             return Array.AsReadOnly(area.Where(cell => !blocked.Contains(cell)).ToArray());

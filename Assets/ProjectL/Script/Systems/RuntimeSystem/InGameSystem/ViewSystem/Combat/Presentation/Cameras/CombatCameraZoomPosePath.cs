@@ -75,6 +75,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 rotationDelta * pose.rotation);
         }
 
+        /// <summary>
+        /// 지금 기준에서 줌아웃 끝 자세(이동 포함)입니다. 줌 정도와 무관한 회전 중심을 이 자세의 화면 가운데 바닥 점으로 잡습니다(카메라 회전 계획 TP-5).
+        /// </summary>
+        internal Pose ZoomOutAt(Vector2 offset, Pose currentReference) => EvaluateAtReference(_maxSize, offset, currentReference);
+
         private static void ValidatePose(Pose pose, string name)
         {
             Vector3 p = pose.position;

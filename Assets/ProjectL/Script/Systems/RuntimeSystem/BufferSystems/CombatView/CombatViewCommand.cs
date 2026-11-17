@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -22,16 +24,19 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         public Rotation4 Rotation { get; }
         /// <summary>공격 조준입니다.</summary>
         public AttackAim Aim { get; }
+        public AttackSweepSide? SweepSide { get; }
         public MovementPath Path { get; }
         public MovementPreviewContext MovementContext { get; }
         /// <summary>입력 당시의 전투와 진영 턴이다. 처리 시점의 최신 값으로 바꾸지 않는다.</summary>
         public long ExpectedBattleInstanceId { get; }
         public long ExpectedControllerTurnSequence { get; }
         public int ExpectedMoveCommandNumber { get; }
+        public PlayerSkillRequest PlayerSkill { get; }
 
         private CombatViewCommandData(CombatViewCommandKind kind, EntityId entityId,
             CellCoord cell, Rotation4 rotation, AttackAim aim, MovementPath path = null, MovementPreviewContext movementContext = null, int? itemKey = null,
-            long expectedBattleInstanceId = 0, long expectedControllerTurnSequence = 0, int expectedMoveCommandNumber = 0)
+            long expectedBattleInstanceId = 0, long expectedControllerTurnSequence = 0, int expectedMoveCommandNumber = 0,
+            AttackSweepSide? sweepSide = null, PlayerSkillRequest playerSkill = null)
         {
             ItemKey = itemKey;
             Kind = kind;
@@ -39,10 +44,23 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
             Cell = cell;
             Rotation = rotation;
             Aim = aim;
+            AttackSweepSideValidation.Validate(sweepSide);
+            SweepSide = sweepSide;
             Path = path; MovementContext = movementContext;
             ExpectedBattleInstanceId = expectedBattleInstanceId;
             ExpectedControllerTurnSequence = expectedControllerTurnSequence;
             ExpectedMoveCommandNumber = expectedMoveCommandNumber;
+            PlayerSkill = playerSkill;
+        }
+
+        public static CombatViewCommandData ForPlayerSkill(EntityId actorId, IReadOnlyList<CellCoord> completePoints,
+            PlayerSkillSourceStamp expectedSource)
+        {
+            CombatViewInputGuard.RequireEntity(actorId, nameof(actorId));
+            if (expectedSource.ActorId != actorId) throw new ArgumentException("스킬 출처의 행위자가 요청과 다릅니다.", nameof(expectedSource));
+            return new CombatViewCommandData(CombatViewCommandKind.UsePlayerSkill, actorId, default, default, default,
+                expectedBattleInstanceId: expectedSource.BattleInstanceId, expectedControllerTurnSequence: expectedSource.ControllerTurnSequence,
+                playerSkill: new PlayerSkillRequest(completePoints, expectedSource));
         }
 
         public static CombatViewCommandData PlaceMainCharacter(CellCoord cell, Rotation4 rotation)
@@ -96,14 +114,14 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         }
 
         public static CombatViewCommandData Attack(EntityId attacker, AttackAim aim,
-            long expectedBattleInstanceId, long expectedControllerTurnSequence)
+            long expectedBattleInstanceId, long expectedControllerTurnSequence, AttackSweepSide? sweepSide = null)
         {
             CombatViewInputGuard.RequireEntity(attacker, nameof(attacker));
             CombatViewInputGuard.RequireAim(aim);
             CombatViewInputGuard.RequireTurnIdentity(expectedBattleInstanceId, expectedControllerTurnSequence);
             return new CombatViewCommandData(CombatViewCommandKind.Attack,
                 attacker, default, default, aim, expectedBattleInstanceId: expectedBattleInstanceId,
-                expectedControllerTurnSequence: expectedControllerTurnSequence);
+                expectedControllerTurnSequence: expectedControllerTurnSequence, sweepSide: sweepSide);
         }
 
         public static CombatViewCommandData EndPlayerTurn(long expectedBattleInstanceId, long expectedControllerTurnSequence)

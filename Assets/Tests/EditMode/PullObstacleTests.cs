@@ -15,7 +15,7 @@ namespace ProjectL.Tests.Core
         public void Obstacle_InnerAttackUnchanged_OuterAttackRejected_NoMovement(int distance, bool multiCell)
         {
             var input = PullTestData.Input(distance: distance);
-            var barrel = ObstacleReactionTests.Barrel(51, input.Aim.Cell.Value, 100, 7,
+            var barrel = ObstacleReactionTests.Barrel(51, input.Aim.Cell.Value, 3, 7,
                 multiCell ? new[] { CellCoord.Zero, new CellCoord(0, 1) } : null);
             input = ObstacleReactionTests.Copy(input,
                 characters: input.Characters.Where(c => c.EntityId != PullTestData.Target).ToArray(),
@@ -26,7 +26,7 @@ namespace ProjectL.Tests.Core
             var result = CombatCommandCalculator.Calculate(input, PullTestData.NoRules);
             Assert.That(result.Accepted, Is.EqualTo(distance == 1), result.Reason);
             var final = result.FinalState.Structures.Single();
-            Assert.That(final.Health.CurrentHealth, Is.EqualTo(distance == 1 ? 80 : 100));
+            Assert.That(final.ObstacleDurability.RemainingHits, Is.EqualTo(distance == 1 ? 2 : 3));
             Assert.That(final.Anchor, Is.EqualTo(barrel.Structure.Anchor));
             Assert.That(final.OccupiedCells, Is.EqualTo(barrel.Structure.OccupiedCells));
             Assert.That(result.Events.Any(e => e.GetType().Name == "CombatPullEvent"), Is.False);

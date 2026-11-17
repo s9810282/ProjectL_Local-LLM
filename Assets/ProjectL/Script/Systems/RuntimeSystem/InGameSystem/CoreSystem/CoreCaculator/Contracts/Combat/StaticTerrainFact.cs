@@ -11,7 +11,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Sandstorm = 2,
         Wall = 3,
         WeakGround = 4,
-        Cliff = 5
+        Cliff = 5,
+        FilledCliff = 6
     }
 
     /// <summary>지형의 종류와 약한 지반 한 칸의 누적 진입 상태를 보관하는 불변 사실이다.</summary>
@@ -81,6 +82,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 return false;
             return !singleEntry || EntryCount < long.MaxValue && final.EntryCount == EntryCount + 1;
         }
+
+        /// <summary>기둥에 메워진 낭떠러지는 같은 원본 ID와 공개 범위를 유지한다.</summary>
+        public StaticTerrainFact FillCliff()
+        {
+            if (!Active || Kind != StaticTerrainKind.Cliff)
+                throw new InvalidOperationException("활성 낭떠러지만 기둥으로 메울 수 있습니다.");
+            return new StaticTerrainFact(Id, Cell, StaticTerrainKind.FilledCliff, Active, KnownTo);
+        }
+
+        public bool IsPillarFillSuccessor(StaticTerrainFact final) =>
+            Active && Kind == StaticTerrainKind.Cliff && final != null && FillCliff().SameValues(final);
 
         public override bool SameValues(MovementTileFact other) =>
             SameSourceValues(other) && other is StaticTerrainFact terrain && Kind == terrain.Kind &&

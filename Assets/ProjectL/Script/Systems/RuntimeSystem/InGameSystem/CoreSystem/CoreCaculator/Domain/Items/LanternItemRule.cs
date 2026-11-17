@@ -17,7 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             var holder = context.RecipientAfterDamage;
             var hit = context.Damage;
             if (holder.Health.IsDead || holder.Items.EquippedItemKey != definition.Key ||
-                hit.Kind != CombatDamageKind.OrdinaryAttack || hit.Attacker == null ||
+                (hit.Kind != CombatDamageKind.OrdinaryAttack && hit.Kind != CombatDamageKind.PlayerSkillAttack) || hit.Attacker == null ||
                 !Hostility.AreHostile(holder.Owner, hit.Attacker.Owner))
                 return ItemRuleDecision.NoActivation();
             return ItemRuleDecision.ApplyEffect(hit.Attacker.EntityId,

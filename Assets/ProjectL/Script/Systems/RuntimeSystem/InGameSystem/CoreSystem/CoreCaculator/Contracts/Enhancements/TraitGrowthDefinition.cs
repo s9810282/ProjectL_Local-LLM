@@ -11,6 +11,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public TraitSpec Enhanced { get; }
         public TraitRankValues Rank2 { get; }
         public TraitRankValues Rank3 { get; }
+        public bool AllowUnchangedRankValues { get; }
         public int MaxRank { get; }
         public bool IsTrainable => MaxRank > 1;
         public string Name { get; }
@@ -56,14 +57,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         internal TraitSpec ResolveRank(TraitSpec source, int rank) => ValuesAt(rank).Apply(source, Normal);
 
         public TraitGrowthDefinition(TraitSpec normal, TraitSpec enhanced, string name, string description,
-            string enhancedName, string enhancedDescription, TraitRankValues rank2 = null, TraitRankValues rank3 = null)
-            : this(TraitGrowthGroup.Common, normal, enhanced, name, description, enhancedName, enhancedDescription, rank2, rank3)
+            string enhancedName, string enhancedDescription, TraitRankValues rank2 = null, TraitRankValues rank3 = null,
+            bool allowUnchangedRankValues = false)
+            : this(TraitGrowthGroup.Common, normal, enhanced, name, description, enhancedName, enhancedDescription, rank2, rank3,
+                allowUnchangedRankValues)
         {
         }
 
         public TraitGrowthDefinition(TraitGrowthGroup group, TraitSpec normal, TraitSpec enhanced, string name,
             string description, string enhancedName, string enhancedDescription, TraitRankValues rank2 = null,
-            TraitRankValues rank3 = null)
+            TraitRankValues rank3 = null, bool allowUnchangedRankValues = false)
         {
             if (group == TraitGrowthGroup.Unspecified || !Enum.IsDefined(typeof(TraitGrowthGroup), group))
                 throw new ArgumentOutOfRangeException(nameof(group), group, "특성 성장 그룹을 명시해야 합니다.");
@@ -77,6 +80,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             MaxRank = ValidateRankSlots(normal.TraitKey, rank2, rank3);
             Rank2 = rank2;
             Rank3 = rank3;
+            AllowUnchangedRankValues = allowUnchangedRankValues;
             Group = group;
             Normal = normal;
             Enhanced = enhanced;
@@ -91,7 +95,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             for (int rank = 2; rank <= MaxRank; rank++)
             {
                 var current = ResolveRank(Normal, rank);
-                if (previous.SameValues(current))
+                if (!AllowUnchangedRankValues && previous.SameValues(current))
                     throw new ArgumentException($"이전 등급과 특성 효과가 같습니다: {Key}, Rank={rank}.");
                 previous = current;
             }

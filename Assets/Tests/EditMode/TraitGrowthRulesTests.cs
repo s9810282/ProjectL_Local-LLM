@@ -26,7 +26,7 @@ namespace ProjectL.Tests.Core
         public void ValidatorAndRuntime_UseEquivalentEligibility()
         {
             var p = TraitGrowthFixtures.Profile(CategoryKey.Heavy, new KnockbackTraitSpec(1));
-            var definitions = TraitGrowthFixtures.Definitions.Append(new TraitGrowthDefinition(new ThornFieldTraitSpec(5, 5), new ThornFieldTraitSpec(7, 5), "n", "d", "e", "ed")).ToArray();
+            var definitions = TraitGrowthFixtures.Definitions.Append(new TraitGrowthDefinition(new FocusTraitSpec(5, 5), new FocusTraitSpec(7, 5), "n", "d", "e", "ed")).ToArray();
             var c = TraitGrowthFixtures.Catalog(definitions: definitions);
             TraitGrowthCatalogValidator.Validate(c, new[] { p });
             var o = TraitGrowthFixtures.Owned(p);

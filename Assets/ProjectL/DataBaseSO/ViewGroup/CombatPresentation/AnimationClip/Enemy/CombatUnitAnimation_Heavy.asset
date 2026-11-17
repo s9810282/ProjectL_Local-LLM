@@ -12,13 +12,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 870abfb8e4aa47df9fb2edb07fed2577, type: 3}
   m_Name: CombatUnitAnimation_Heavy
   m_EditorClassIdentifier: 
-  attackClip: {fileID: 7400000, guid: 179957540e9fa0849b01b5cf13bb5b82, type: 2}
+  attack:
+    main:
+      body: {fileID: 7400000, guid: 1bd925c8b80462c498849aa1b91d4e7b, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackAnimationStartMode: 0
+  attackAnimationStartKind: 310
+  attackAnimationStartDelaySeconds: 0
+  hit:
+    main:
+      body: {fileID: 7400000, guid: 25ad9e50593ab6841a78216501edd5a4, type: 2}
+      mount: {fileID: 0}
+      companions: []
+    events: []
+    animSpeed: 1
+    blendIn:
+      enabled: 0
+      seconds: 0.1
+    blendBetween:
+      enabled: 0
+      seconds: 0.1
+    blendOut:
+      enabled: 0
+      seconds: 0.1
+  attackClip: {fileID: 7400000, guid: 1bd925c8b80462c498849aa1b91d4e7b, type: 2}
   attackSpeed: 1
   attackCompanionClips: []
   hitDelay: 0
   shots: []
-  attackAnimationStartMode: 0
-  attackAnimationStartKind: 310
-  attackAnimationStartDelaySeconds: 0
-  hitClip: {fileID: 0}
+  hitClip: {fileID: 7400000, guid: 25ad9e50593ab6841a78216501edd5a4, type: 2}
   hitCompanionClips: []

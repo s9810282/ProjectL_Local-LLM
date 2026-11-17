@@ -138,6 +138,12 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         [Header("Haboob")]
         [SerializeField] private HaboobGimmickAuthoring haboob = new();
 
+        [Header("Meteor")]
+        [SerializeField] private MeteorGimmickAuthoring meteor = new();
+
+        [Header("Lava Chain")]
+        [SerializeField] private LavaChainGimmickAuthoring lavaChain = new();
+
         // 기존 에셋의 직렬화 경로를 유지합니다. 전용 Inspector의 호환용 항목에서만 표시합니다.
         [SerializeField, HideInInspector] private CellInput[] initialWallCells = Array.Empty<CellInput>();
         [SerializeField, HideInInspector] private StaticTerrainPlacementInput[] staticTerrainPlacements = Array.Empty<StaticTerrainPlacementInput>();
@@ -189,7 +195,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
                 initialRandomTornadoPlacements: environmentData.RandomTornadoes,
                 playerDeploymentCells: CellInput.ToCellCoords(playerDeploymentCells),
                 rockfall: rockfall?.ToData(), haboob: haboob?.ToData(), tornado: environmentData.Tornado,
-                nexusReinforcements: nexusReinforcements?.ToSpec(enemyLevel));
+                nexusReinforcements: nexusReinforcements?.ToSpec(enemyLevel), movingPlatforms: environmentData.Platforms, meteor: meteor?.ToData(), lavaChain: lavaChain?.ToData());
             if (fieldDefinition != null)
             {
                 var field = (FieldData)fieldDefinition.GetData();

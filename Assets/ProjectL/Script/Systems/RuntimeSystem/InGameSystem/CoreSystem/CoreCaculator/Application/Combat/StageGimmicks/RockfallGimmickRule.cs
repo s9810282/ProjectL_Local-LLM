@@ -7,6 +7,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.StageGimmicks;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Rules;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
@@ -16,7 +17,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 {
     internal sealed class RockfallGimmickRule : IStageGimmickRule
     {
+        private readonly IReadOnlyList<IMovementTileRule> _rules;
+        internal RockfallGimmickRule(IReadOnlyList<IMovementTileRule> rules = null) { _rules = rules; }
         public StageGimmickKey Key => StageGimmickKey.Rockfall;
+
+        public bool RunsAt(StageGimmickBoundaryPhase phase) => phase == StageGimmickBoundaryPhase.Scheduled;
+
+        public StageGimmickState Initialize(CombatCommandState initialState, StageGimmickSpec definition,
+            StageGimmickId id, ref uint randomState)
+        {
+            var spec = definition as RockfallGimmickSpec ?? throw new InvalidOperationException("낙석 설정 형식이 다릅니다.");
+            return new RockfallGimmickState(id, RockfallGimmickPhase.Cooldown,
+                checked(initialState.Turn.CompletedControllerTurnCount + spec.CooldownControllerTurns), Array.Empty<CellCoord>());
+        }
 
         internal static int HealthLoss(int maxHealth, RockfallGimmickSpec spec) =>
             checked((int)((long)maxHealth * spec.MaximumHealthLossPercent / 100));
@@ -92,7 +105,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 new CombatEvent[] { new CombatRockfallEvent(RockfallGimmickStep.Warning, before, after, Array.Empty<EntityId>()) });
         }
 
-        private static CombatCommandTransition Impact(CombatCommandInput input, RockfallGimmickSpec spec,
+        private CombatCommandTransition Impact(CombatCommandInput input, RockfallGimmickSpec spec,
             RockfallGimmickState before, StageGimmickBoundary end)
         {
             var cells = before.WarnedCells.ToHashSet();
@@ -101,22 +114,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             var events = new List<CombatEvent>();
             var activations = new List<CombatEvent>();
+            var outcomes = new List<(CombatCharacterEvent Evidence, HealthStateSnapshot AfterLoss)>();
             var origin = before.BindOrigin;
             foreach (var victim in victims)
             {
                 // 수치 피해 경로를 거치지 않아 방어·방어막·피해 감소와 공격 귀속을 만들지 않는다.
                 int loss = HealthLoss(victim.Health.MaxHealth, spec);
                 var hurt = CombatCommandCalculator.Hurt(victim, loss);
+                var afterLoss = hurt.Health;
+                CombatCharacterEvent evidence;
                 if (hurt.Health.IsDead && ReconstructionTraitRule.CanTrigger(victim))
                 {
                     // 낙석 치명도 재구성이 버틴다(적 전용 특성 설계 Q-ED2 A). 사망이 아니므로 생존자처럼 속박을 받는다.
                     // 발동 사건은 수신자 사건이 모두 끝난 뒤에 둔다. 판독기는 충돌 바로 뒤에 수신자 사건이 차례로 오기를 요구한다.
                     hurt = ReconstructionTraitRule.Trigger(victim);
-                    events.Add(new CombatCharacterEvent(CombatEventKind.Reconstructed, victim, hurt));
+                    evidence = new CombatCharacterEvent(CombatEventKind.Reconstructed, victim, hurt);
+                    events.Add(evidence);
                     CombatCommandEvents.Trait(activations, victim.EntityId, TraitKey.Reconstruction, TraitActivationKind.ReconstructionStarted,
                         victim.Health.CurrentHealth, new[] { victim.EntityId });
                 }
-                else CombatCommandEvents.Health(events, victim, hurt);
+                else evidence = CombatCommandEvents.Health(events, victim, hurt);
+                if (evidence != null) outcomes.Add((evidence, afterLoss));
                 if (!hurt.Health.IsDead)
                 {
                     int ends = BindEndCount(victim.Owner, end.EndedSide, spec);
@@ -133,12 +151,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bool terminal = BattleOutcomeCalculator.Resolve(projected.Values.ToArray(), input.State.Structures, input.State.Objective).IsStageEnded;
             var after = terminal ? null : new RockfallGimmickState(before.Id, RockfallGimmickPhase.Cooldown,
                 checked(end.CompletedControllerTurnCount + spec.CooldownControllerTurns), Array.Empty<CellCoord>());
-            events.Insert(0, new CombatRockfallEvent(RockfallGimmickStep.Impact, before, after, victims.Select(c => c.EntityId).ToArray()));
+            var impact = new CombatRockfallEvent(RockfallGimmickStep.Impact, before, after, victims.Select(c => c.EntityId).ToArray());
+            events.Insert(0, impact);
             var state = input.State.With(gimmicks: terminal ? input.State.Gimmicks.Without(before.Id) : input.State.Gimmicks.Replace(after));
             // 사망·영혼·보상·승패 정산은 이동 투영의 명령 완료 정산 한 번으로 끝낸다. 자폭·공포 확인도 여기서 탄다(적 전용 특성 설계 D7·P17).
             // 환경 효과라 행위자를 비운다. 충돌로 죽은 유닛의 영혼 자리는 맞기 전 위치로 정산된다(완료 정산의 기본 위치와 같음).
-            var settled = MovementProjection.ForArrival(input.WithActor(EntityId.Empty), projected, events, state).Complete();
-            return CombatCommandComposition.Merge(input, new[] { settled });
+            var projection = MovementProjection.ForArrival(input.WithActor(EntityId.Empty), projected, events, state, rules: _rules);
+            var source = new CombatHealthSource(CombatHealthOperationKind.Environment, contextEvent: impact,
+                damageCause: CombatDamageCause.NumericDamage);
+            foreach (var (evidence, afterLoss) in outcomes)
+            {
+                var expected = evidence.Expected;
+                int actualLoss = expected.Health.CurrentHealth - afterLoss.CurrentHealth;
+                if (evidence.Kind == CombatEventKind.Reconstructed)
+                {
+                    var steps = CombatHealthRecording.Reconstruction(evidence, afterLoss, source, actualLoss);
+                    projection.Damage.HealthExecutions.Add(new CombatHealthExecution(steps, new[] { evidence }));
+                }
+                else CombatHealthRecording.Add(projection.Damage.HealthExecutions, expected.EntityId, expected.Health, afterLoss,
+                    source, evidence, loss: actualLoss);
+            }
+            return CombatCommandComposition.Merge(input, new[] { projection.Complete() });
         }
     }
 }

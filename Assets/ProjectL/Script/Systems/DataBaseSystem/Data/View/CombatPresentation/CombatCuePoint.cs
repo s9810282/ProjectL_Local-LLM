@@ -4,14 +4,15 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
     /// 이펙트 큐를 내는 자리입니다(범용 연출 구조 설계 G3). 흔들림·소리·플래시는 자리를 보지 않습니다. 0은 쓰지 않습니다.
     /// 사건마다 고를 수 있는 자리는 큐 규칙(<see cref="CombatPresentationCueRules"/>) 한 곳이 정합니다.
     /// 자리마다 위치와 회전(z = 앞)이 있고, 이펙트 큐의 위치·회전 보정은 이 회전 기준입니다(이펙트 창구 확장 설계 EC1·EC2).
+    /// 옛 ActorEffectPoint(1)·ActorMuzzle(2)는 이벤트 지점 하나로 합쳤습니다(클립 칸 다시 짜기 설계 CS4). 값 2는 비웁니다.
     /// </summary>
     internal enum CombatCuePoint
     {
-        /// <summary>행위자의 이펙트 지점(<see cref="CombatAnimationEvents"/>의 effectPoint)과 그 회전입니다. 공격 클립이 있는 유닛만 씁니다(계획 P6).</summary>
-        ActorEffectPoint = 1,
-
-        /// <summary>행위자의 발사 지점(muzzle) 위치와 행위자 자세 방향입니다(지점 자체의 회전은 쓰지 않음). 원거리 공격 클립이 있는 유닛만 씁니다(계획 P6).</summary>
-        ActorMuzzle = 2,
+        /// <summary>
+        /// 행위자의 이벤트 지점(<see cref="CombatAnimationEvents"/>의 Event Points 목록, 번호는 큐의 Event Point)입니다. 회전은 큐의 Event Point Rotation이 고릅니다
+        /// (Point = 지점 회전, Actor = 행위자 자세 방향). 공격 클립이 있는 유닛만 씁니다(계획 P6).
+        /// </summary>
+        ActorEventPoint = 1,
 
         /// <summary>행위자 몸 상자 중심과 모델 방향입니다.</summary>
         ActorBody = 3,
@@ -22,7 +23,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// </summary>
         SubjectBody = 4,
 
-        /// <summary>투사체 접촉점과 진행 방향입니다. <see cref="CombatCueAnchor.Contact"/> 시점에서만 씁니다.</summary>
+        /// <summary>투사체 접촉점과 진행 방향입니다. 접촉(<see cref="CombatCueAnchor.Contact"/>)의 Every에서만 씁니다.</summary>
         Contact = 5,
 
         /// <summary>

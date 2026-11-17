@@ -52,13 +52,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     statuses.Add(new PiercingFalloffTraitStatusSnapshot(
                         falloff.ReductionPercentPerTarget));
                 }
-                else if (state is ThornFieldRuntimeState &&
-                         traitDefinition is ThornFieldTraitDefinition thornField)
-                {
-                    statuses.Add(new ThornFieldTraitStatusSnapshot(
-                        thornField.ThornDamage,
-                        thornField.LifetimeUnitTurns, thornField.DefenseReductionPercent, thornField.TickPhase));
-                }
                 else if (state is KnockbackRuntimeState &&
                          traitDefinition is KnockbackTraitDefinition knockback)
                 {
@@ -97,9 +90,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 {
                     statuses.Add(new ImpactBoltTraitStatusSnapshot(bolt.DistanceCells));
                 }
+                else if (state is ThornBombRuntimeState && traitDefinition is ThornBombTraitDefinition bomb)
+                {
+                    statuses.Add(new ThornBombTraitStatusSnapshot(bomb.DamagePercent));
+                }
                 else if (state is CrashImpactRuntimeState && traitDefinition is CrashImpactTraitDefinition crash)
                 {
                     statuses.Add(new CrashImpactTraitStatusSnapshot(crash.DistanceCells, crash.WallDamagePercent, crash.UnitDamagePercent));
+                }
+                else if (state is DeadHandRuntimeState && traitDefinition is DeadHandTraitDefinition)
+                {
+                    statuses.Add(new DeadHandTraitStatusSnapshot());
                 }
                 else if (state is PullRuntimeState && traitDefinition is PullTraitDefinition pull)
                 {

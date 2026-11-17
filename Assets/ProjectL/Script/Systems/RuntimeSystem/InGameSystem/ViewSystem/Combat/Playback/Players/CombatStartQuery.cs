@@ -28,7 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     {
         None,
 
-        /// <summary>공격·조각 실행·반응 중 유닛·무기 표시가 사라졌습니다. 다음 Tick이 그 원인으로 실패를 알립니다.</summary>
+        /// <summary>공격·조각 실행(피격·사망 반응 포함) 중 유닛·무기 표시가 사라졌습니다. 다음 Tick이 그 원인으로 실패를 알립니다.</summary>
         Unavailable,
 
         /// <summary>공격 출처 Gate가 아직 이 사건을 허락하지 않습니다(히트 타이밍 설계 H3).</summary>
@@ -40,11 +40,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// <summary>조각 행동 실행(조립된 포효·소환)이 진행 중이고 겹침이 허용되지 않습니다(조각·조립 설계 BP5).</summary>
         PieceBusy,
 
-        /// <summary>사건 주체(또는 모든 유닛)의 조각 유닛 실행(조립된 피격·사망)이 진행 중입니다(조각·조립 설계 BP5).</summary>
+        /// <summary>
+        /// 사건 주체(또는 모든 유닛)의 조각 유닛 실행(조립된 피격·사망, 그 반응 움직임 포함)이 진행 중입니다(조각·조립 설계 BP5).
+        /// 옛 막는 이유 <c>Reaction</c>(반응 재생기)은 반응이 조각 실행 안으로 옮겨 이 값에 합쳤습니다(피격 구조 정리 설계 HC1).
+        /// </summary>
         PieceSubject,
-
-        /// <summary>사건 주체(또는 모든 유닛)의 반응이 진행 중입니다(동시 처리 설계 C5).</summary>
-        Reaction,
 
         /// <summary>사건 주체(또는 모든 유닛)의 걸음 레인이 진행 중입니다(동시 처리 설계 C5).</summary>
         StepLane,

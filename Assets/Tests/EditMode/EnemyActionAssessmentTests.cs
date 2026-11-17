@@ -21,7 +21,7 @@ namespace ProjectL.Tests.Core
 {
     public sealed class EnemyActionAssessmentTests
     {
-        internal const string RouteReference = "docs/superpowers/reports/2026-11-07-enemy-utility-ai/phase-4-route-reference.tsv";
+        internal const string RouteReference = "docs/superpowers/reports/2026-11-12-combat-health-execution-evidence/phase-4-route-reference.tsv";
 
         [Test]
         public void MoveAssessmentHidesUnknownMine()

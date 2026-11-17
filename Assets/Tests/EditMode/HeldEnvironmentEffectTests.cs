@@ -68,7 +68,7 @@ namespace ProjectL.Tests.Core
         {
             var barrel = ObstacleReactionTests.Barrel(51, new CellCoord(2, 3), 1, killsCredit ? 100 : 7);
             var supply = new StructureCombatFacts(new EntityId(52), new StructureSpec(EntityKey.Structure_Supplies,
-                1, 1, new[] { CellCoord.Zero }, 10, false, 0), new HealthStateSnapshot(10, 10),
+                1, 1, new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(2, 2),
                 new CellCoord(3, 3), Rotation4.R0, new[] { new CellCoord(3, 3) }, Owner.Neutral);
             var i = ObstacleReactionTests.Barrels(barrel, (supply, new ObstacleContentProfile(supply.EntityId,
                 ObstacleContentKind.Supplies, 0, 2, 5)));
@@ -89,7 +89,7 @@ namespace ProjectL.Tests.Core
         public void Supplies_ActualAttackRewardsPersistIntoNextAttack_AndRetainBadge()
         {
             var supply = new StructureCombatFacts(new EntityId(51), new StructureSpec(EntityKey.Structure_Supplies,
-                1, 1, new[] { CellCoord.Zero }, 30, false, 0), new HealthStateSnapshot(30, 30),
+                1, 1, new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(2, 2),
                 new CellCoord(4, 3), Rotation4.R0, new[] { new CellCoord(4, 3) }, Owner.Neutral);
             var i = ObstacleReactionTests.Barrels((supply, new ObstacleContentProfile(supply.EntityId,
                 ObstacleContentKind.Supplies, 0, 2, 5)));
@@ -98,10 +98,14 @@ namespace ProjectL.Tests.Core
             var firstActor = first.Characters.Characters.Single(c => c.Final.EntityId == i.ActorId).Final;
             Assert.That(firstActor.HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(2));
             Assert.That(firstActor.HeldEnvironment.BadgeAvailable, Is.True);
-            Assert.That(first.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(10));
+            Assert.That(first.FinalState.Structures.Single().ObstacleDurability.RemainingHits, Is.EqualTo(1));
             var nextInput = CombatCommandTestData.NextPlayerTurn(CombatCommandComposition.Project(first));
             Assert.That(CombatCommandCalculator.Preview(nextInput, Array.Empty<IMovementTileRule>()).Targets.ToArray()
-                .Single(t => t.TargetId == supply.EntityId).ExpectedDamage, Is.EqualTo(22));
+                .Single(t => t.TargetId == supply.EntityId).ExpectedDamage, Is.Zero);
+            var enemy = nextInput.Characters.Single(c => c.EntityId == new EntityId(3));
+            var unitAim = CombatAttackQueries.WithAim(nextInput, AttackAim.ForCell(enemy.Anchor.Value));
+            Assert.That(CombatCommandCalculator.Preview(unitAim, Array.Empty<IMovementTileRule>()).Targets.ToArray()
+                .Single(t => t.TargetId == enemy.EntityId).ExpectedDamage, Is.EqualTo(22));
             var second = CombatCommandCalculator.Calculate(nextInput, Array.Empty<IMovementTileRule>());
             Assert.That(second.Characters.Characters.Single(c => c.Final.EntityId == i.ActorId).Final.HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(7));
         }
@@ -111,7 +115,7 @@ namespace ProjectL.Tests.Core
         public void Supplies_PerHitRewardsAccumulate_DestroyingHitIsExclusive(bool deadCredit)
         {
             var supply = new StructureCombatFacts(new EntityId(51), new StructureSpec(EntityKey.Structure_Supplies,
-                1, 1, new[] { CellCoord.Zero }, 30, false, 0), new HealthStateSnapshot(30, 30),
+                1, 1, new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(3, 3),
                 new CellCoord(4, 3), Rotation4.R0, new[] { new CellCoord(4, 3) }, Owner.Neutral);
             var input = ObstacleReactionTests.Barrels((supply, new ObstacleContentProfile(supply.EntityId,
                 ObstacleContentKind.Supplies, 0, 2, 5)));
@@ -119,15 +123,15 @@ namespace ProjectL.Tests.Core
             if (deadCredit) characters[input.ActorId] = CombatCommandCalculator.Hurt(characters[input.ActorId], 100);
             var structures = input.State.Structures.ToDictionary(s => s.EntityId);
             var events = new System.Collections.Generic.List<CombatEvent>();
-            var calc = new ObstacleReactionCalculator(input, input.State.Environment,
+            var calc = new ObstacleReactionCalculator(input,
+                new CommandEnvironmentState(input.State.Environment, input.EnvironmentBindings, input.State.EnvironmentProgress),
                 CombatDamageApplication.For(input, characters, events), structures,
                 new System.Collections.Generic.Dictionary<EntityId, CellCoord>());
             var origin = new CombatDamageOrigin(new CellCoord(1, 3), input.ActorId, 1);
-            calc.DamageStructure(supply.EntityId, 0, origin);
-            calc.DamageStructure(supply.EntityId, 10, origin);
-            calc.DamageStructure(supply.EntityId, 10, origin);
-            calc.DamageStructure(supply.EntityId, 10, origin);
-            calc.DamageStructure(supply.EntityId, 10, origin);
+            calc.ApplyHit(supply.EntityId, origin);
+            calc.ApplyHit(supply.EntityId, origin);
+            calc.ApplyHit(supply.EntityId, origin);
+            calc.ApplyHit(supply.EntityId, origin);
             Assert.That(characters[input.ActorId].HeldEnvironment.SuppliesAttackBonus, Is.EqualTo(deadCredit ? 0 : 9));
             Assert.That(events.OfType<CombatObstacleReactionEvent>().Select(e => e.Reaction),
                 Is.EqualTo(new[] { ObstacleReactionKind.Hit, ObstacleReactionKind.Hit, ObstacleReactionKind.Destroyed }));
@@ -153,7 +157,7 @@ namespace ProjectL.Tests.Core
                 new CharacterHeldEnvironmentState(41, true, 7))).ToDictionary(c => c.EntityId);
             projected[new EntityId(10)] = CombatCommandCalculator.Hurt(projected[new EntityId(10)], 100);
             var result = CombatCommandCalculator.Finish(i, projected, i.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                i.Souls, new System.Collections.Generic.Dictionary<CellCoord, ThornFieldCellSnapshot>(),
+                i.Souls,
                 i.State.Structures.ToArray(), new System.Collections.Generic.List<long>(),
                 new System.Collections.Generic.Dictionary<EntityId, CellCoord>(),
                 new ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact.SoulEffectCalculator(i.Artifacts), null);
@@ -176,13 +180,13 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Badge_ThornsInOneRouteAreIndependentAttacks_AndPreventReturn()
+        public void Badge_HazardsInOneRouteAreIndependentAttacks_AndPreventReturn()
         {
             var i = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0));
             var chars = i.Characters.Select(c => c.EntityId == i.ActorId ? HeldEnvironmentEffects.AcquireBadge(c, 41) : c).ToArray();
             var s = i.State;
-            var input = CombatCommandTestData.With(i, chars, new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(CellCoord.Right, 2, 7), new ThornFieldCellSnapshot(new CellCoord(2, 0), 2, 7) },s.Turn,s.Environment));
-            var rules = new IMovementTileRule[] { new ThornMovementTileRule() };
+            var input = CombatCommandTestData.With(i, chars, EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                s.Turn,s.Environment), (CellCoord.Right, 7), (new CellCoord(2, 0), 7)));
+            var rules = new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() };
             var preview = CombatMovementCalculator.Preview(input, rules);
             var result = CombatCommandCalculator.Calculate(input, rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
@@ -191,7 +195,7 @@ namespace ProjectL.Tests.Core
             Assert.That(MovementTestData.Actor(result).HeldEnvironment.BadgeAvailable, Is.False);
             Assert.That(result.Events.OfType<CombatHeldEnvironmentEvent>().Count(), Is.EqualTo(1));
             Assert.That(MovementTestData.Actor(result).Anchor, Is.EqualTo(new CellCoord(2, 0)));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
         }
 
         [Test]
@@ -294,7 +298,7 @@ namespace ProjectL.Tests.Core
             var characters = i.Characters.Select(c => HeldEnvironmentEffects.WithHeldState(c,
                 new CharacterHeldEnvironmentState(41, true, 7))).ToArray();
             var turn = new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1, completedPlayerTurnCount: completedPlayerTurns);
-            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                i.State.Structures,i.State.ThornFields,turn);
+            var state = new CombatCommandState(8,8,CombatFlowPhase.Automatic,                i.State.Structures,turn);
             var battle = new CombatBattleFacts(4, 1, 8, 8,
                 Array.Empty<CharacterInstanceId>(), 0);
             var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, i.ActorId, i.Aim,

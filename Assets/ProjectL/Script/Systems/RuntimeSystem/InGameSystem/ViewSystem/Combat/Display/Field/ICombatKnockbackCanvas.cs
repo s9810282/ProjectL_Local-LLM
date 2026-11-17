@@ -16,7 +16,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>넉백 면역이라 안 움직이는 대상입니다.</summary>
         Immune = 3,
         /// <summary>막혀 멈춘 곳에서 부딪힘 피해를 받는 대상입니다(작렬, 작렬 View 설계 CV6).</summary>
-        Collision = 4
+        Collision = 4,
+        /// <summary>
+        /// 끌어오기 공격으로 끌려오는 대상입니다(궤적 대상별 선 설계 PL3). 색은 View DB 필드 색 묶음의 값 하나(기본값 = 끌어오기 도착 칸 색, 필드 색 DB 설계 FC1)이고, 멈춘 이유로 나누지 않습니다.
+        /// </summary>
+        Pull = 5
     }
 
     /// <summary>
@@ -40,7 +44,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     }
 
     /// <summary>
-    /// 넉백 미리보기(도착 칸 층과 화살표)를 필드에 그리는 좁은 계약입니다(넉백 미리보기 설계 KB1, 계획 TP-1). 구현: <see cref="FieldView"/>.
+    /// 넉백 미리보기(도착 칸 층과 화살표, 끌어오기 화살표 포함)를 필드에 그리는 좁은 계약입니다(넉백 미리보기 설계 KB1, 계획 TP-1,
+    /// 끌어오기는 궤적 대상별 선 설계 PL4). 구현: <see cref="FieldView"/>.
     /// 구성 쪽은 좌표 변환과 이 두 동작만 알고, 어느 층에 칠하는지·인스턴스·색 핸들은 모릅니다.
     /// </summary>
     internal interface ICombatKnockbackCanvas

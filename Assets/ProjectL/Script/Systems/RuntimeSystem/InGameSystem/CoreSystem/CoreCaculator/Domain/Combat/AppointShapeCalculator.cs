@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat
@@ -35,7 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             CellCoord.Down, new CellCoord(-1, -1), CellCoord.Left, new CellCoord(-1, 1),
         };
 
-        public static CellCoord[] CreateBaseMask(TargetingShape shape, int range)
+        public static CellCoord[] CreateBaseMask(TargetingShape shape, int range, int width = 0)
         {
             ValidateRange(range);
             ValidateShape(shape);
@@ -46,11 +48,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 case TargetingShape.EightDirectionLine: return MergeRays(EightSteps, range);
                 case TargetingShape.Fan:
                     return CreateFilledMask(shape, range, null, CheckedCellCount((long)range * range, 4));
+                case TargetingShape.ForwardRectangle:
+                    return RectangleMaskSteps(range, width, CardinalSteps).Where(c => c.HasValue).Select(c => c.Value).ToArray();
                 default: return CreateSquare(range);
             }
         }
 
-        public static CellCoord[] CreateDirectionMask(TargetingShape shape, int range, AttackDirection direction)
+        public static CellCoord[] CreateDirectionMask(TargetingShape shape, int range, AttackDirection direction, int width = 0)
         {
             ValidateRange(range);
             ValidateShape(shape);
@@ -65,13 +69,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                     return MergeRays(CreateOrderedRaySteps(shape, direction), range);
                 case TargetingShape.Fan:
                     return CreateFilledMask(shape, range, forward, CheckedCellCount((long)range * range));
+                case TargetingShape.ForwardRectangle:
+                    return RectangleMaskSteps(range, width, new[] { forward }).Select(c => c.Value).ToArray();
                 default:
                     return CreateFilledMask(shape, range, forward, CheckedCellCount((long)range * (2L * range + 1L)));
             }
         }
 
         /// <summary>행·열 순서를 유지하고, 칸을 내지 않는 검사도 한 진행 단위로 남긴다.</summary>
-        internal static IEnumerable<CellCoord?> MaskSteps(TargetingShape shape, int range, AttackDirection? direction)
+        internal static IEnumerable<CellCoord?> MaskSteps(TargetingShape shape, int range, AttackDirection? direction, int width = 0)
         {
             ValidateRange(range);
             ValidateShape(shape);
@@ -87,6 +93,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                 yield break;
             }
             var forward = direction.HasValue ? GetDirectionStep(direction.Value) : (CellCoord?)null;
+            if (shape == TargetingShape.ForwardRectangle)
+            {
+                foreach (var cell in RectangleMaskSteps(range, width, forward.HasValue ? new[] { forward.Value } : CardinalSteps))
+                    yield return cell;
+                yield break;
+            }
             if (shape == TargetingShape.Fan) CheckedCellCount((long)range * range, forward.HasValue ? 1 : 4);
             else if (forward.HasValue) CheckedCellCount((long)range * (2L * range + 1L));
             else CheckedSquareCount(range);
@@ -105,10 +117,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
         }
 
-        internal static bool ContainsBaseMask(TargetingShape shape, int range, long x, long y)
+        internal static bool ContainsBaseMask(TargetingShape shape, int range, long x, long y, int width = 0)
         {
             ValidateRange(range);
             ValidateShape(shape);
+            if (shape == TargetingShape.ForwardRectangle)
+            {
+                int first = RectangleLateralStart(width);
+                foreach (var forward in CardinalSteps)
+                    if (ContainsRectangle(x, y, forward, range, first, first + width - 1))
+                        return true;
+                return false;
+            }
             if (ContainsSquare(x, y, range) == false)
                 return false;
             switch (shape)
@@ -156,6 +176,85 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             for (int i = 0; i < cells.Length; i++)
                 cells[i] = new CellCoord(checked(origin.X + offsets[i].X), checked(origin.Y + offsets[i].Y));
             return cells;
+        }
+
+        private static int RectangleLateralStart(int width)
+        {
+            if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
+            return -(width / 2);
+        }
+
+        internal static int MaximumBaseDistance(TargetingMethodSpec method, int range) =>
+            method.Shape == TargetingShape.ForwardRectangle && range > 0
+                ? Math.Max(range, -RectangleLateralStart(method.Width))
+                : range;
+
+        private static bool ContainsRectangle(long x, long y, CellCoord forward, int range, int first, int last)
+        {
+            long depth = x * forward.X + y * forward.Y;
+            long lateral = x * forward.Y - y * forward.X;
+            return depth >= 1 && depth <= range && lateral >= first && lateral <= last;
+        }
+
+        internal static IEnumerable<CellCoord> RectangleRangeSteps(int range, int width, TargetingChoiceAngle angle, Owner owner)
+        {
+            ValidateRange(range);
+            var legalDirections = CardinalSteps.Where(direction => TargetingAngleCalculator.Contains(angle, owner, CellCoord.Zero, direction))
+                .ToArray();
+            foreach (var cell in RectangleMaskSteps(range, width, legalDirections))
+                if (cell.HasValue && TargetingAngleCalculator.Contains(angle, owner, CellCoord.Zero, cell.Value))
+                    yield return cell.Value;
+        }
+
+        private static IEnumerable<CellCoord?> RectangleMaskSteps(int range, int width, CellCoord[] directions)
+        {
+            int first = RectangleLateralStart(width);
+            int last = first + width - 1;
+            long cellsPerDirection = (long)range * width;
+            // 마주 보는 두 범위는 겹치지 않습니다. 인접 방향과의 교차 넓이를 한 번씩 뺍니다.
+            long overlap = (long)Math.Min(range, -first) * Math.Min(range, last);
+            int intersections = 0;
+            for (int i = 0; i < directions.Length; i++)
+                for (int j = i + 1; j < directions.Length; j++)
+                    if (directions[i].X != directions[j].X && directions[i].Y != directions[j].Y)
+                        intersections++;
+            // 방향별 셀 수부터 검사해 합계의 곱셈이 long 범위를 넘지 않게 합니다.
+            CheckedCellCount(cellsPerDirection);
+            CheckedCellCount(cellsPerDirection * directions.Length - overlap * intersections);
+            if (range == 0) yield break;
+
+            // 방향별 직사각형을 행·열 순서로 병합합니다. 겹치는 교차부는 순서상 연속으로 만나므로 한 번만 반환합니다.
+            var starts = new CellCoord[directions.Length];
+            var ends = new CellCoord[directions.Length];
+            var positions = new CellCoord[directions.Length];
+            var active = new bool[directions.Length];
+            for (int i = 0; i < directions.Length; i++)
+            {
+                var step = directions[i];
+                var right = new CellCoord(step.Y, -step.X);
+                var a = new CellCoord(step.X + right.X * first, step.Y + right.Y * first);
+                var b = new CellCoord(step.X * range + right.X * last, step.Y * range + right.Y * last);
+                starts[i] = new CellCoord(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
+                ends[i] = new CellCoord(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+                positions[i] = starts[i];
+                active[i] = true;
+            }
+
+            CellCoord? previous = null;
+            while (true)
+            {
+                int next = -1;
+                for (int i = 0; i < positions.Length; i++)
+                    if (active[i] && (next < 0 || CompareCells(positions[i], positions[next]) < 0))
+                        next = i;
+                if (next < 0) yield break;
+                var cell = positions[next];
+                if (cell.X < ends[next].X) positions[next] = new CellCoord(cell.X + 1, cell.Y);
+                else if (cell.Y < ends[next].Y) positions[next] = new CellCoord(starts[next].X, cell.Y + 1);
+                else active[next] = false;
+                yield return previous.HasValue && previous.Value.Equals(cell) ? null : cell;
+                previous = cell;
+            }
         }
 
         private static CellCoord[] CreateFilledMask(TargetingShape shape, int range, CellCoord? forward, int count)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Loadout.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Roster;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
@@ -13,10 +14,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
     {
         internal static CharacterAcquisitionDecision Plan(IPlayerLoadoutTableQuery loadouts, IUnitTableQuery units,
             int loadoutKey, bool rosterIsEmpty, out PlayerLoadoutData loadout) =>
-            Plan(loadouts, units, loadoutKey, rosterIsEmpty, out loadout, out _);
+            Plan(loadouts, units, loadoutKey, rosterIsEmpty, mainCharacterOverride: null, out loadout, out _);
 
         internal static CharacterAcquisitionDecision Plan(IPlayerLoadoutTableQuery loadouts, IUnitTableQuery units,
             int loadoutKey, bool rosterIsEmpty, out PlayerLoadoutData loadout,
+            out IReadOnlyDictionary<EntityKey, CharacterDefinitionFacts> definitions) =>
+            Plan(loadouts, units, loadoutKey, rosterIsEmpty, mainCharacterOverride: null, out loadout, out definitions);
+
+        internal static CharacterAcquisitionDecision Plan(IPlayerLoadoutTableQuery loadouts, IUnitTableQuery units,
+            int loadoutKey, bool rosterIsEmpty, EntityKey? mainCharacterOverride, out PlayerLoadoutData loadout,
             out IReadOnlyDictionary<EntityKey, CharacterDefinitionFacts> definitions)
         {
             if (loadouts == null) throw new ArgumentNullException(nameof(loadouts));
@@ -26,8 +32,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             if (!loadouts.TryGetPlayerLoadout(loadoutKey, out loadout))
                 return CharacterAcquisitionDecision.Failure(RosterAcquireFailureReason.InvalidDefinition);
             loadout.Validate();
-            var main = CharacterDefinitionAdapter.Read(units, loadout.MainCharacterKey);
-            if (main == null) return CharacterAcquisitionDecision.Failure(RosterAcquireFailureReason.InvalidDefinition);
+            var mainKey = mainCharacterOverride ?? loadout.MainCharacterKey;
+            if (mainCharacterOverride.HasValue &&
+                (mainKey == EntityKey.None || !Enum.IsDefined(typeof(EntityKey), mainKey)))
+                return CharacterAcquisitionDecision.Failure(RosterAcquireFailureReason.InvalidDefinition);
+
+            var main = CharacterDefinitionAdapter.Read(units, mainKey);
+            // 명시한 키가 시작 서브와 겹치면 보유 한도보다 메인 정의 오류를 먼저 돌려준다.
+            if (main == null || (mainCharacterOverride.HasValue && main.Role != UnitRole.MainCharacter))
+                return CharacterAcquisitionDecision.Failure(RosterAcquireFailureReason.InvalidDefinition);
+
             byKey.Add(main.Key, main);
             var resulting = new List<CharacterDefinitionFacts> { main };
             var subs = new List<CharacterDefinitionFacts>();

@@ -59,5 +59,58 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (distance > .000001f) raisedFrom += (raisedTo - raisedFrom) / distance * Mathf.Min(LinearStartOffset, distance);
             return raisedFrom;
         }
+
+        /// <summary>
+        /// 꺾인 직선 경로의 누적 길이를 채우고 전체 길이를 돌려줍니다(전투 스킬 View 설계 SK3). <paramref name="cumulative"/>[i]는 점 0에서 점 i까지의 길이이고
+        /// 점 0은 0입니다. 위치·접선·접촉 진행률이 이 값 하나를 씁니다.
+        /// </summary>
+        internal static float FillPathLengths(Vector3[] points, int count, float[] cumulative)
+        {
+            if (points == null) throw new ArgumentNullException(nameof(points));
+            if (cumulative == null) throw new ArgumentNullException(nameof(cumulative));
+            if (count < 2 || count > points.Length || count > cumulative.Length)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "꺾인 경로는 점이 둘 이상이어야 합니다.");
+            cumulative[0] = 0f;
+            for (int i = 1; i < count; i++)
+                cumulative[i] = cumulative[i - 1] + Vector3.Distance(points[i - 1], points[i]);
+            return cumulative[count - 1];
+        }
+
+        /// <summary>꺾인 직선 경로 위 진행률 <paramref name="progress"/>(전체 길이 비율 0~1)의 점입니다. 길이가 0이면 첫 점입니다.</summary>
+        internal static Vector3 PathPoint(Vector3[] points, float[] cumulative, int count, float progress)
+        {
+            int segment = SegmentAt(cumulative, count, progress, out float local);
+            return Vector3.Lerp(points[segment], points[segment + 1], local);
+        }
+
+        /// <summary>꺾인 직선 경로 위 진행률의 구간 방향입니다(꺾이는 점에서 다음 구간으로 바뀜).</summary>
+        internal static Vector3 PathTangent(Vector3[] points, float[] cumulative, int count, float progress)
+        {
+            int segment = SegmentAt(cumulative, count, progress, out _);
+            return points[segment + 1] - points[segment];
+        }
+
+        // 진행률이 놓인 구간 번호와 그 구간 안의 비율입니다. 길이가 0인 구간은 건너뜁니다.
+        private static int SegmentAt(float[] cumulative, int count, float progress, out float local)
+        {
+            float total = cumulative[count - 1];
+            if (!(total > 0f))
+            {
+                local = 0f;
+                return 0;
+            }
+            float distance = Mathf.Clamp01(progress) * total;
+            for (int i = 1; i < count; i++)
+            {
+                if (distance <= cumulative[i] || i == count - 1)
+                {
+                    float length = cumulative[i] - cumulative[i - 1];
+                    local = length > 0f ? Mathf.Clamp01((distance - cumulative[i - 1]) / length) : 1f;
+                    return i - 1;
+                }
+            }
+            local = 1f;
+            return count - 2;
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Unit_DynamiteHammer = 24,
         Unit_UndeadCannonCart = 25,
         Unit_UndeadHeavy = 26,
+        Unit_SoulEater = 27,
 
         Structure_Headquarters = 20,
         Structure_PowderBarrel = 21,
@@ -29,5 +30,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Unit_UndeadCannon_SoloAction = 86,
         Unit_UndeadRider_Disarm = 87,
         Unit_UndeadHeavy_Entrenchment = 88,
+        Structure_Pillar = 28,
     }
 }

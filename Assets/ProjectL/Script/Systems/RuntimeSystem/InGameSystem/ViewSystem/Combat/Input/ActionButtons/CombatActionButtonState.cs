@@ -12,8 +12,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
     /// </remarks>
     internal readonly struct CombatActionButtonState
     {
-        internal CombatActionButtonState(bool canEnterAttack, bool isAttackActive, bool canUseReturn, CombatActionAvailability availability)
+        internal CombatActionButtonState(bool canEnterAttack, bool isAttackActive, bool canUseReturn, CombatActionAvailability availability,
+            CombatSkillButton skill = default)
         {
+            Skill = skill;
             CanEnterAttack = canEnterAttack;
             IsAttackActive = isAttackActive;
             CanUseReturn = canUseReturn;
@@ -31,5 +33,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
 
         /// <summary>선택 아군의 Core 가용성 답입니다. 입력이 닫혔거나 아직 답이 없으면 null입니다.</summary>
         internal CombatActionAvailability Availability { get; }
+
+        /// <summary>스킬 버튼 값입니다(전투 스킬 View 설계 SK4). 스킬이 없으면 기본값(숨김)입니다.</summary>
+        internal CombatSkillButton Skill { get; }
     }
 }

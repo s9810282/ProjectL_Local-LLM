@@ -261,7 +261,7 @@ namespace ProjectL.Tests.Core
                 actor.Area, actor.Health, actor.Stats, actor.ReserveSlotIndex, actor.Anchor, actor.Rotation, actor.OccupiedCells, actor.ActionUse);
             var s = input.State;
             input = CombatCommandTestData.With(input, characters: input.Characters.Select((c, i) => i == 0 ? actor : c).ToArray(),
-                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                    s.ThornFields,s.Turn,s.Environment,new EnvironmentProgressFacts(1, 100, 0xA51E),s.WallBlocking));
+                state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                    s.Turn,s.Environment,new EnvironmentProgressFacts(1, 100, 0xA51E),s.WallBlocking));
             var beforeStats = actor.Stats;
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Reason, Is.EqualTo(nameof(AttackFailureReason.BlockedByWall)));
@@ -373,7 +373,7 @@ namespace ProjectL.Tests.Core
             input = CombatCommandTestData.With(input, characters: characters, profiles: new[] { profile, input.Profiles[1], input.Profiles[2] });
             input = WallMovementTests.WithWalls(input, (walls ?? Array.Empty<CellCoord>()).Select((c, i) => WallStateLifecycleTests.Wall(71 + i, c)).ToArray());
             var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(10,10,s.Phase,                structures ?? s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,new WallBlockingSpec(cut)));
+            return CombatCommandTestData.With(input, state: new CombatCommandState(10,10,s.Phase,                structures ?? s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,new WallBlockingSpec(cut)));
         }
     }
 }

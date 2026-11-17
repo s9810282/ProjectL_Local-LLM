@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4f852c48c584293aa827b480a30bf9e, type: 3}
+  m_Name: PlayerSkillVisual_PowderBlossom
+  m_EditorClassIdentifier: 
+  playerSkillVisualData:
+    skillKey: 1
+    displayName: "화약꽃"
+    icon: {fileID: 21300000, guid: b9756d474ddb2bd4585e084200fc2300, type: 3}
+    description: "주변에 폭발을 일으켜 피해를 줍니다. 폭발로 적을 처치하면 다시 폭발합니다."
+    attackPresentation: {fileID: 11400000, guid: 3ce031ca2bd64fbfaedaab95933f0636, type: 2}
+    areaCellCues:
+      effects: []
+      shakes: []
+    upgrades:
+    - upgradeKey: 1
+      displayName: "화약꽃: 만개"
+      description: "다시 폭발할 때마다 범위가 넓어집니다."
+      attackPresentation: {fileID: 0}
+    - upgradeKey: 2
+      displayName: "화약꽃: 단죄"
+      description: "처음부터 넓게 폭발하고 맞은 적을 기절시킵니다. 다시 폭발하지 않습니다."
+      attackPresentation: {fileID: 0}

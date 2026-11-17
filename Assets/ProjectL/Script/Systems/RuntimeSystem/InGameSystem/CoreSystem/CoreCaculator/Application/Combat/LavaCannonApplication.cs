@@ -25,8 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatDamageOrigin origin, IReadOnlyList<EntityId> capturedEnemyIds)
         {
             if (capturedEnemyIds == null) throw new ArgumentNullException(nameof(capturedEnemyIds));
-            if (kind != CombatDamageKind.OrdinaryAttack && kind != CombatDamageKind.ExtraAttack &&
-                kind != CombatDamageKind.ReactionAttack) return;
+            if (!CombatDamageKinds.IsAttack(kind)) return;
             foreach (var binding in bindings)
             {
                 if (binding.Rule is not LavaCannonEffectRule rule) continue;

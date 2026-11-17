@@ -201,9 +201,8 @@ namespace ProjectL.Tests.Core
         public void Death_ClearsHeldOwnerAtExistingCommandCompletion()
         {
             var input = WithState(Route(), 1, 6, true);
-            input = CombatCommandTestData.With(input, state: input.State.With(
-                thornFields: new[] { new ThornFieldCellSnapshot(new CellCoord(1, 3), remainingUnitTurns: 1, thornDamage: 100) }));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(input.State, (new CellCoord(1, 3), 100)));
+            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             var actor = MovementTestData.Actor(result);
             Assert.That(actor.Health.IsDead, Is.True);

@@ -16,10 +16,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Ac
     internal interface ICombatActionDisplay
     {
         /// <summary>
-        /// 세 입구(공격·턴 종료·이동 되돌리기)를 연결합니다. 세 번째 인자 이름 returnToCheckpoint는 옛 복귀 이름입니다. 모두 null이면 연결을 끊습니다.
+        /// 네 입구(공격·턴 종료·이동 되돌리기·스킬)를 연결합니다. 세 번째 인자 이름 returnToCheckpoint는 옛 복귀 이름입니다. 모두 null이면 연결을 끊습니다.
         /// 씬 연결 해제 뒤 새 연결은 무시하지만 연결 해제는 항상 전달합니다.
         /// </summary>
-        void BindActions(Action attack, Action endTurn, Action returnToCheckpoint);
+        void BindActions(Action attack, Action endTurn, Action returnToCheckpoint, Action skill);
 
         /// <summary>버튼 보임·누름 가능·공격 강조를 적용합니다. 같은 값이면 다시 쓰지 않습니다.</summary>
         void SetActionsAvailable(in CombatActionButtons buttons);

@@ -119,9 +119,9 @@ namespace ProjectL.Tests.Core
         {
             var seed = CombatCommandTestData.Input(empty: true);
             var structure = new StructureCombatFacts(new EntityId(51), new StructureSpec(EntityKey.Structure_PowderBarrel,
-                1, 1, new[] { CellCoord.Zero }, 100, false, 0), new HealthStateSnapshot(100, 100), Cell, Rotation4.R0, new[] { Cell }, Owner.Neutral);
+                1, 1, new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(3, 3), Cell, Rotation4.R0, new[] { Cell }, Owner.Neutral);
             var s = seed.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                new[] { structure },s.ThornFields,s.Turn,new MovementEnvironmentFacts(new[] { Ground() }));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                new[] { structure },s.Turn,new MovementEnvironmentFacts(new[] { Ground() }));
             var input = new CombatCommandInput(seed.Number, seed.Kind, seed.ActorId, seed.Aim, state, seed.Characters,
                 seed.Profiles, seed.Main, seed.Owned, seed.SoulCounts, seed.Souls, seed.Artifacts,
                 environmentBindings: new EnvironmentSemanticBindings(new[] { 71L }, Array.Empty<long>(), new[] { structure.EntityId }),
@@ -133,7 +133,7 @@ namespace ProjectL.Tests.Core
             var result = projection.Complete();
             Assert.That(result.FinalState.Structures.Single().Health.IsDead, Is.True);
             Assert.That(projection.Bindings.ObstacleEntityIds, Has.Member(structure.EntityId));
-            Assert.That(result.Events.OfType<CombatStructureEvent>().Count(), Is.EqualTo(1));
+            Assert.That(result.Events.OfType<CombatObstacleDurabilityEvent>().Single().Cause, Is.EqualTo(ObstacleDestructionCause.Fall));
             Assert.That(result.Events.OfType<CombatObstacleReactionEvent>(), Is.Empty);
             Assert.That(result.Characters.Characters, Is.Empty);
             Assert.That(result.Field.Final.Entries, Is.Empty);
@@ -141,7 +141,7 @@ namespace ProjectL.Tests.Core
 
         [TestCase(StaticTerrainKind.Cliff)]
         [TestCase(StaticTerrainKind.WeakGround)]
-        public void AttackKnockback_ResolvesTerrainBeforeThornsAndObjects_AndPreviewAgrees(StaticTerrainKind kind)
+        public void AttackKnockback_ResolvesTerrainBeforeDamageTilesAndObjects_AndPreviewAgrees(StaticTerrainKind kind)
         {
             var seed = Knockback();
             var destination = new CellCoord(5, 3);
@@ -149,7 +149,7 @@ namespace ProjectL.Tests.Core
             var badge = new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player });
             var input = WithEnvironment(seed, ground, badge);
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.Turn,s.Environment), (destination, 7)));
             var attackPreview = CombatCommandCalculator.Preview(input, TornadoEnvironmentTests.Rules, out var preview);
             var result = CombatCommandCalculator.Calculate(input, TornadoEnvironmentTests.Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
@@ -168,7 +168,7 @@ namespace ProjectL.Tests.Core
                 Assert.That(targetPreview.ExpectedDamage, Is.EqualTo(20));
                 Assert.That(targetPreview.SecondaryDamage, Is.Zero);
                 Assert.That(result.Events.OfType<CombatFallEvent>().Count(), Is.EqualTo(1));
-                Assert.That(result.FinalState.ThornFields.Count, Is.EqualTo(1));
+                Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState).Count, Is.EqualTo(1));
                 Assert.That(result.FinalState.Environment.Tiles.Single(t => t.Id == badge.Id).Active, Is.True);
                 Assert.That(result.Field.Final.Entries, Is.Empty);
             }
@@ -263,7 +263,7 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput SoulReady(CombatCommandInput input)
         {
             var s = input.State;
-            return CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment),
+            return CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.Turn,s.Environment),
                 artifacts: new ArtifactLoadoutSnapshot(0, new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
         }
 
@@ -277,7 +277,7 @@ namespace ProjectL.Tests.Core
         internal static CombatCommandInput WithEnvironment(CombatCommandInput input, params MovementTileFact[] sources)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.ThornFields,s.Turn,new MovementEnvironmentFacts(sources));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,                s.Structures,s.Turn,new MovementEnvironmentFacts(sources));
             return Copy(CombatCommandTestData.With(input, state: state), new EnvironmentSemanticBindings(
                 sources.OfType<StaticTerrainFact>().Select(t => t.Id).ToArray(), sources.OfType<ObjectSourceFact>().Select(t => t.Id).ToArray(), input.EnvironmentBindings.ObstacleEntityIds));
         }

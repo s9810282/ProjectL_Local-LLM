@@ -137,7 +137,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
                     return;
                 if (!outcome.IsCompleted)
                     throw outcome.Error ?? new InvalidOperationException("잘못된 재생 완료 통지입니다.");
-                _display.Events.Refresh(entry.After, Array.Empty<StructureCombatFacts>());
+                // 시나리오는 가시 폭탄 상태를 저작하지 않는다. 부착물은 단계마다 비운다.
+                _display.Events.Refresh(entry.After, Array.Empty<StructureCombatFacts>(), ThornBombStateSet.Empty);
                 ++_cursor;
                 if (_cursor == _program.Entries.Count)
                 {
@@ -198,7 +199,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Dev.TraitPrevie
             _display?.Dispose();
             _display = null;
             _display = _create();
-            _display.Events.Refresh(facts, Array.Empty<StructureCombatFacts>());
+            _display.Events.Refresh(facts, Array.Empty<StructureCombatFacts>(), ThornBombStateSet.Empty);
             _ordered.Attach(_display.Playback);
         }
 

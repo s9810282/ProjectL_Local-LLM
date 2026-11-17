@@ -38,7 +38,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             TryBeginBeforeFacts(e, completed, version);
 
         /// <summary>
-        /// 사건 스냅샷을 표시 사실·필드 표시(가시·오브젝트·기믹 등)에 반영합니다. 다시 그리기는 틀이 합니다. 사건 공통 소리·순간 큐는 틀이 이 단계 앞에서 냅니다.
+        /// 사건 스냅샷을 표시 사실·필드 표시(오브젝트·기믹 등)에 반영합니다. 다시 그리기는 틀이 합니다. 사건 공통 소리·순간 큐는 틀이 이 단계 앞에서 냅니다.
         /// 반영한 뒤의 표시 상태에 기대는 소리·곁들임 큐(낙석 경고의 터널 폭발·경고음, 토네이도 이동·경고음)는 처리기가 여기서 냅니다.
         /// </summary>
         internal virtual void ApplyFacts(CombatEvent e)

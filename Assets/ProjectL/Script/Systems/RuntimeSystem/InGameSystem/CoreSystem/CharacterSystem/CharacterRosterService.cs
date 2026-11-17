@@ -15,6 +15,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Enhancements;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
@@ -27,6 +28,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
         RosterAcquireResult Acquire(EntityKey key, int initialLevel = 1);
         InitialDrawPlan PlanInitialDraw(int seed);
         TraitGrowthProgressSnapshot PrepareNextTraitGrowthOffer();
+        PlayerSkillUpgradeAvailability ReadPlayerSkillUpgradeAvailability();
+        PlayerSkillUpgradeApplyResult TryApplyPlayerSkillUpgrade(RunId expectedRunId, long expectedRosterRevision,
+            CharacterInstanceId mainId, PlayerSkillUpgradeKey selectedBranch);
     }
 
     /// <summary>DB와 Buffer의 로스터 사실을 Core 규칙에 전달하고 결정된 획득을 반영한다.</summary>
@@ -125,7 +129,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             if (!FindNext(catalog, out var target, out var step))
                 return ReadTraitGrowthProgress();
             var profile = ReadProfile(target);
-            var candidates = TraitGrowthRules.Candidates(target, profile, catalog);
+            var candidates = TraitGrowthRules.Candidates(target, profile, catalog, ReadPlayerSkillDefinition(target));
             int seed = TraitGrowthOfferSampler.Seed(progress.RunId, target.Id, step.StepId);
             IReadOnlyList<TraitKey> keys;
             if (step.Kind == TraitGrowthKind.Acquire)
@@ -177,7 +181,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 return Failure(TraitGrowthFailureReason.StaleOffer);
             var catalog = ReadValidatedGrowthCatalog();
             var profile = ReadProfile(record);
-            var decision = TraitGrowthRules.PlanChoice(record, request, offer, profile, catalog);
+            var decision = TraitGrowthRules.PlanChoice(record, request, offer, profile, catalog, ReadPlayerSkillDefinition(record));
             if (!DefaultsStillMatch(catalog))
                 return Failure(TraitGrowthFailureReason.SourceChanged);
             if (_buffers.RunProgressReadSink.RunId != run || _buffers.CharacterReadSink.RosterRevision != revision ||
@@ -204,10 +208,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             var catalog = ReadCatalog();
             // 다른 보유자의 강화 원본까지 확인한 뒤에만 새 성장 결과를 게시한다.
             foreach (var record in _buffers.CharacterReadSink.Owned)
+            {
+                var playerSkill = ReadPlayerSkillDefinition(record);
                 if (!record.Growth.IsEmpty)
-                    TraitGrowthRules.ValidateHistory(record, ReadProfile(record), catalog);
+                    TraitGrowthRules.ValidateHistory(record, ReadProfile(record), catalog, playerSkill);
+                else if (playerSkill != null)
+                {
+                    var basis = UnitSpecAdapter.ReadUnit(_units.GetUnit(record.CharacterKey));
+                    var current = OwnedUnitSpecResolver.Resolve(basis, record, catalog);
+                    playerSkill.ValidateTraits(current.Traits.ToArray().Select(t => t.TraitKey));
+                }
+            }
             return catalog;
         }
+
+        private PlayerSkillDefinition ReadPlayerSkillDefinition(OwnedCharacterRecord record) =>
+            record.Role == CharacterOwnershipRole.Main ? PlayerActiveSkillTable.FindForMain(_query, record.CharacterKey) : null;
 
         private bool DefaultsStillMatch(TraitGrowthCatalog catalog) =>
             catalog.MatchesDefaultTraits(_query.CategoryConfigTableQuery.Config.DefaultTraits);

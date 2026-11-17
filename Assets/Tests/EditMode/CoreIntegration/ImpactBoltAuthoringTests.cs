@@ -224,11 +224,11 @@ namespace ProjectL.Tests.CoreIntegration
                     OwnedUnitSpecResolver.Resolve(basis, owned[i], catalog).Traits.ToArray().Select(t => (t, TraitOrigin.Unit)))), Is.True);
             var first = stats[0];
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(first.OwnedId, first.CharacterKey, first.Role,
-                first.Level, first.Experience, first.SoulCount, first.Stats, first.AttackPattern, first.TraitSettings, null));
+                first.Level, first.Experience, first.SoulCount, first.Stats, first.AttackPattern, first.TraitSettings));
             var s = first.Stats;
             var noTraits = new CharacterBaselineStatsSnapshot(s.CurrentHealth,s.MaxHealth,s.AttackPower,s.PhysicalDefense,                s.MoveMethod,s.MoveRange,s.AttackRange,s.Priority,s.CategoryKey,Array.Empty<TraitKey>());
             Assert.Throws<ArgumentException>(() => new OwnedCharacterStatsSnapshot(first.OwnedId, first.CharacterKey, first.Role,
-                first.Level, first.Experience, first.SoulCount, noTraits, first.AttackPattern, TraitSettingsSet.Empty, null, impactBoltDescription: first.ImpactBoltDescription));
+                first.Level, first.Experience, first.SoulCount, noTraits, first.AttackPattern, TraitSettingsSet.Empty, impactBoltDescription: first.ImpactBoltDescription));
         }
 
         [Test]

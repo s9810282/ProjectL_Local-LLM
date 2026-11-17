@@ -13,6 +13,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
     {
         /// <summary>닫기 버튼의 입력 슬롯 번호입니다. 덱 Presenter도 이 값으로 닫기를 구분합니다.</summary>
         internal const int CloseSlot = -1;
+        /// <summary>"다음 Run 메인으로 선택" 버튼의 입력 슬롯 번호입니다. 덱 Presenter도 이 값으로 선택을 구분합니다.</summary>
+        internal const int SelectSlot = -2;
 
         [Tooltip("등록 루트와 구분된 자식 패널입니다. 표시만 열고 닫습니다.")]
         [SerializeField] private GameObject panel;
@@ -21,11 +23,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
         [SerializeField] private LobbyDeckListItemView cardTemplate;
         [SerializeField] private UnitCardView details;
         [SerializeField] private Button closeButton;
+        [Tooltip("고정한 카드를 다음 Run 메인으로 고르는 버튼입니다. 출발하지 않고 선택만 바꿉니다. 패널 안에 있어야 합니다.")]
+        [SerializeField] private Button selectButton;
         [SerializeField] private float cardSpacing = 112f;
 
         private readonly List<LobbyDeckListItemView> _items = new();
         private IUIInputReceiver _receiver;
         private UIInputBinding _closeBinding;
+        private UIInputBinding _selectBinding;
+        // 선택 버튼을 눌러도 되는지의 마지막 판정입니다. 목록·수신자가 바뀌거나 닫히면 거짓으로 되돌리고 Presenter가 다시 넘깁니다.
+        private bool _selectEnabled;
         private int _visibleCount;
         private int _version;
         private int _stateVersion;
@@ -48,6 +55,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             if (details != null)
                 details.BindOwner(this);
             EnsureCloseBinding();
+            EnsureSelectBinding();
             if (cardTemplate != null)
                 cardTemplate.gameObject.SetActive(false);
             ShowDetails(null);
@@ -71,6 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             if (version != _version || !_isOpen)
                 return;
             EnsureCloseBinding();
+            EnsureSelectBinding();
             if (version != _version || !_isOpen)
                 return;
             _acceptInput = _receiver != null;
@@ -97,6 +106,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
                 {
                     _isOpen = false;
                     _acceptInput = false;
+                    _selectEnabled = false;
                     ++_version;
                 }
                 int stateVersion = wasOpen ? ++_stateVersion : _stateVersion;
@@ -128,7 +138,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             finally
             {
                 if (version == _version)
+                {
                     _acceptInput = false;
+                    // 목록이 바뀌면 고정 카드도 없어지므로 선택 버튼 판정을 버립니다. Presenter가 새 목록으로 다시 넘깁니다.
+                    _selectEnabled = false;
+                }
             }
             if (!current)
                 return;
@@ -162,6 +176,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             }
 
             EnsureCloseBinding();
+            EnsureSelectBinding();
             if (version != _version)
                 return;
             _acceptInput = _isOpen && _receiver != null;
@@ -204,22 +219,45 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
                 {
                     _acceptInput = false;
                     _receiver = null;
+                    // 이전 수신자가 넘긴 선택 버튼 판정을 새 수신자에게 넘기지 않습니다. 새 Presenter가 다시 판정합니다.
+                    _selectEnabled = false;
                 }
             }
             if (!current)
                 return;
             _receiver = receiver;
             EnsureCloseBinding();
+            EnsureSelectBinding();
             if (version != _version)
                 return;
             _acceptInput = _isOpen && receiver != null;
             RefreshInputStates();
         }
 
+        /// <summary>지금 목록에서 <paramref name="slot"/> 칸만 선택 표시를 켭니다. -1이거나 목록 밖이면 모두 끕니다.</summary>
+        public void ShowSelected(int slot)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (_items[i] != null)
+                    _items[i].SetSelected(i == slot && i < _visibleCount);
+            }
+        }
+
+        public void SetSelectEnabled(bool enabled)
+        {
+            _selectEnabled = enabled;
+            RefreshSelectButton();
+        }
+
         internal void Validate()
         {
             if (panel == null || cardsRoot == null || cardTemplate == null || details == null || closeButton == null)
                 throw new InvalidOperationException("[LobbyDeckUI] 패널·목록·원본·상세·닫기 참조가 필요합니다.");
+            if (selectButton == null)
+                throw new InvalidOperationException("[LobbyDeckUI] 다음 Run 메인 선택 버튼(selectButton) 참조가 필요합니다.");
+            if (!selectButton.transform.IsChildOf(panel.transform))
+                throw new InvalidOperationException("[LobbyDeckUI] 다음 Run 메인 선택 버튼은 패널 안에 있어야 합니다.");
             if (panel == gameObject || !panel.transform.IsChildOf(transform))
                 throw new InvalidOperationException("[LobbyDeckUI] 패널은 등록 루트와 구분된 자식이어야 합니다.");
             if (!cardsRoot.IsChildOf(panel.transform) || !cardTemplate.transform.IsChildOf(panel.transform) ||
@@ -243,6 +281,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             if (slot == CloseSlot)
             {
                 // 닫기 버튼의 켜짐·상호작용 가능 여부는 UIInputBinding이 보고 부릅니다(N-22).
+                _receiver.Click(slot);
+            }
+            else if (slot == SelectSlot)
+            {
+                // 버튼 켜짐은 UIInputBinding이 보고, 선택해도 되는지는 수신자(Presenter)가 클릭 순간 다시 판정합니다.
                 _receiver.Click(slot);
             }
             else if (IsInteractiveSlot(slot))
@@ -270,15 +313,26 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
                 _closeBinding = UIInputBinding.Attach(closeButton, this, CloseSlot);
         }
 
+        private void EnsureSelectBinding()
+        {
+            if (_selectBinding == null && selectButton != null)
+                _selectBinding = UIInputBinding.Attach(selectButton, this, SelectSlot);
+        }
+
         /// <summary>
-        /// 닫기·목록 입력을 끄며 호버 해제를 보냅니다. 콜백 도중 다른 호출이 들어와 <paramref name="version"/>이
+        /// 닫기·선택·목록 입력을 끄며 호버 해제를 보냅니다. 콜백 도중 다른 호출이 들어와 <paramref name="version"/>이
         /// 낡으면 남은 항목을 건드리지 않고 false를 돌려줍니다.
         /// </summary>
         private bool ClearControlInput(int version)
         {
             if (closeButton != null)
                 closeButton.interactable = false;
+            if (selectButton != null)
+                selectButton.interactable = false;
             _closeBinding?.OnHoverExit();
+            if (version != _version)
+                return false;
+            _selectBinding?.OnHoverExit();
             if (version != _version)
                 return false;
             for (int i = 0; i < _items.Count; i++)
@@ -302,6 +356,18 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
                 if (_items[i] != null)
                     _items[i].SetInputEnabled(enabled && i < _visibleCount);
             }
+            RefreshSelectButton();
+        }
+
+        /// <summary>선택 버튼은 화면이 입력을 받을 수 있고 Presenter가 허락했을 때만 켭니다. 꺼지면 호버를 한 번 풉니다.</summary>
+        private void RefreshSelectButton()
+        {
+            if (selectButton == null)
+                return;
+            bool interactable = _selectEnabled && _acceptInput && _isOpen && _receiver != null;
+            selectButton.interactable = interactable;
+            if (!interactable)
+                _selectBinding?.OnHoverExit();
         }
 
         private void NotifyOpenStateChanged(bool open, int stateVersion)

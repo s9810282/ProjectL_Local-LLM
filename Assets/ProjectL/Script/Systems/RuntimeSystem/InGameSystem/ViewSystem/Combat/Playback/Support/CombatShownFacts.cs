@@ -334,6 +334,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// </summary>
         internal void RenderUnits() => _units.RenderFacts(_characters, _structures, _mapper());
 
+        /// <summary>하강이 다음 사건을 막는 동안 갱신할 점유자를 시작 시점에 한 번 찾습니다.</summary>
+        internal Action BindSurfaceOccupants(CellCoord cell)
+        {
+            var occupants = new List<(EntityId Id, CellCoord Anchor, IReadOnlyList<CellCoord> Cells)>();
+            foreach (CharacterCombatFacts character in _characters)
+                if (IsOnField(character))
+                    AddOccupant(character.EntityId, character.Anchor.Value, character.OccupiedCells);
+            foreach (StructureCombatFacts structure in _structures)
+                if (!structure.Health.IsDead)
+                    AddOccupant(structure.EntityId, structure.Anchor, structure.OccupiedCells);
+            if (occupants.Count == 0) return null;
+            return AlignOccupants;
+
+            void AddOccupant(EntityId id, CellCoord anchor, IReadOnlyList<CellCoord> cells)
+            {
+                if (cells.Count == 0 ? anchor == cell : cells.Contains(cell))
+                    occupants.Add((id, anchor, cells));
+            }
+
+            void AlignOccupants()
+            {
+                FieldGridMapper mapper = _mapper();
+                if (mapper == null) return;
+                foreach (var occupant in occupants)
+                    _units.AlignToSurface(occupant.Id, occupant.Anchor, occupant.Cells, mapper);
+            }
+        }
+
         /// <summary>
         /// 유닛을 다시 그리지 않고 유지 이펙트만 지금 보인 사실로 맞춥니다. 보인 사실이 아닌 입력(공격 모드 대상)이 바뀌었을 때 씁니다(계획 Ed.3).
         /// </summary>

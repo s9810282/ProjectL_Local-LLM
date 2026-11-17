@@ -76,6 +76,7 @@ namespace ProjectL.Tool.Editor
             if (start == StageStart && GameBootstrapEditorOverrides.StageChapterKey == 2)
                 start = Chapter2Start;
             bool useDevProgress = GameBootstrapEditorOverrides.UseDevProgress;
+            bool useTutorial = GameBootstrapEditorOverrides.UseTutorial;
             int loadout = GameBootstrapEditorOverrides.DevLoadoutKey;
             int chapter = GameBootstrapEditorOverrides.DevChapterKey;
             int node = GameBootstrapEditorOverrides.DevNodeId;
@@ -90,6 +91,10 @@ namespace ProjectL.Tool.Editor
                 EditorGUI.indentLevel++;
                 start = EditorGUILayout.IntPopup("Start Life Cycle", start, StartLabels, StartValues);
                 bool chapterStart = start == StageStart || start == Chapter2Start;
+                useTutorial = EditorGUILayout.Toggle("튜토리얼 사용", useTutorial);
+                EditorGUILayout.HelpBox(
+                    "켜면 기존 첫 전투 조건에 따라 튜토리얼을 시작하고, 끄면 자동 시작을 건너뜁니다. 다음 재생부터 적용됩니다.",
+                    MessageType.None);
 
                 EditorGUILayout.Space();
                 using (new EditorGUI.DisabledScope(start != CombatStart))
@@ -134,6 +139,7 @@ namespace ProjectL.Tool.Editor
                 if (chapterStart)
                     GameBootstrapEditorOverrides.StageChapterKey = start == Chapter2Start ? 2 : 1;
                 GameBootstrapEditorOverrides.UseDevProgress = useDevProgress;
+                GameBootstrapEditorOverrides.UseTutorial = useTutorial;
                 GameBootstrapEditorOverrides.DevLoadoutKey = loadout;
                 GameBootstrapEditorOverrides.DevChapterKey = chapter;
                 GameBootstrapEditorOverrides.DevNodeId = node;

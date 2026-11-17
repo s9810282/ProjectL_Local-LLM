@@ -70,7 +70,7 @@ namespace ProjectL.Tests.Core
             var barrel = new StructureSpec(EntityKey.Structure_PowderBarrel, 2, 1,
                 new[] { new CellCoord(0, 0), new CellCoord(1, 0) }, 10, false, 0);
             var obstacles = new[] { new InitialObstaclePlacementSpec(barrel, ObstacleContentKind.PowderBarrel,
-                new CellCoord(3, 4), Rotation4.R90, 0) };
+                new CellCoord(3, 4), Rotation4.R90, 2, 0) };
             InitialEnemyPlacementSpec[] Spawn() => EnemySpawnCalculator.Calculate(new StageConfig(8, 6, 8, 4, 2),
                 new[] { new EnemySpawnCandidate(Unit(), 1) }, count, 7, Array.Empty<StructureSpec>(), obstacles: obstacles);
             if (count == 15)

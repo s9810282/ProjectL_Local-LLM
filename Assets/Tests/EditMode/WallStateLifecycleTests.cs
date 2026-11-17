@@ -124,7 +124,7 @@ namespace ProjectL.Tests.Core
         internal static StaticTerrainFact Wall(long id, CellCoord cell) =>
             new(id, cell, StaticTerrainKind.Wall, true, new[] { Owner.Player, Owner.Enemy });
 
-        private static CombatCommandState Copy(CombatCommandState s, int cut) => new(s.BoardWidth,s.BoardHeight,            s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,            s.EnvironmentProgress,new WallBlockingSpec(cut));
+        private static CombatCommandState Copy(CombatCommandState s, int cut) => new(s.BoardWidth,s.BoardHeight,            s.Phase,s.Structures,s.Turn,s.Environment,            s.EnvironmentProgress,new WallBlockingSpec(cut));
 
         private static StageConfig Stage(CellCoord[] rails = null, InitialEnemyStructurePlacementSpec[] structures = null) =>
             new(8, 6, 8, 2, 2, 42, Array.Empty<InitialEnemyPlacementSpec>(), rails ?? Array.Empty<CellCoord>(),

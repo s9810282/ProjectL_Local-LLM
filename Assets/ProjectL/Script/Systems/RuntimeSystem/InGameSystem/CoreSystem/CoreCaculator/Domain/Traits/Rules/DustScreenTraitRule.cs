@@ -34,7 +34,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal bool Reduces(TraitTrailFact trail, CharacterCombatFacts recipient, CombatDamageKind kind) => trail != null && trail.Active &&
             trail.Key == TraitKey.DustScreen && recipient != null && !recipient.Health.IsDead && recipient.Area == CharacterRuntimeArea.Field &&
             recipient.OccupiedCells.Contains(trail.Cell) &&
-            (kind == CombatDamageKind.OrdinaryAttack || kind == CombatDamageKind.ExtraAttack || kind == CombatDamageKind.ReactionAttack);
+            CombatDamageKinds.IsAttack(kind);
 
         internal TraitTrailFact Create(DustScreenTraitDefinition definition, EffectOriginKey origin, Owner side, CellCoord cell, long id) =>
             new(id, cell, origin, side, 0, definition.AttackRangeReduction, definition.AttackDamageReductionPercent,

@@ -21,6 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         private readonly Action _ended;
         private readonly CombatClipEventCursor _cursor;
         private readonly float _playbackSpeed;
+        private readonly CombatClipBlend _blend;
         private float _time;
         private bool _begun;
         private bool _cancelled;
@@ -29,13 +30,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <param name="eventReached">중간 이벤트(기준·선택)에서 그 순번(<see cref="CombatClipTimings.Events"/>의 칸)으로 부릅니다. 받는 곳이 없으면 null입니다.
         /// 콜백이 이벤트마다 하나가 아니라 순번 하나라, 이벤트 번호를 더해도 재생은 고치지 않습니다(평가 C2-04).</param>
         /// <param name="ended">끝 이벤트에서 부릅니다. 받는 곳이 없으면 null입니다.</param>
+        /// <param name="blend">이 클립을 꽂을 때 앞(Idle 또는 앞 단계)에서 섞는 블렌드입니다(클립 칸 다시 짜기 설계 CS7). 기본은 바로 바꿈입니다.
+        /// 섞기 시간은 이 재생이 아니라 대여를 쥔 조각이 넣습니다(클립 시각·이벤트는 섞는 동안에도 0초부터 흐름).</param>
         internal CombatClipPlayback(ICombatUnitClip lease, CombatClipData data, Action started, Action<int> eventReached, Action ended,
-            float playbackSpeed = 1f)
+            float playbackSpeed = 1f, CombatClipBlend blend = default)
         {
             _lease = lease ?? throw new ArgumentNullException(nameof(lease));
             _data = data ?? throw new ArgumentNullException(nameof(data));
             CombatPresentationValueRules.RequirePositive(playbackSpeed, nameof(playbackSpeed));
             _playbackSpeed = playbackSpeed;
+            _blend = blend;
             _started = started;
             _eventReached = eventReached;
             _ended = ended;
@@ -45,6 +49,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>끝 이벤트를 냈는지입니다. 취소된 재생은 완료가 아닙니다.</summary>
         internal bool IsComplete => _cursor.IsFinished;
 
+        /// <summary>
+        /// 끝 이벤트 시각을 넘긴 받은 시간(실제 초, 재생 배율을 나눈 값)입니다. 끝나지 않았으면 0입니다.
+        /// 단계를 이어 붙일 때 다음 단계가 이 시간만큼 바로 진행합니다(클립 칸 다시 짜기 설계 CS6).
+        /// </summary>
+        internal float Overflow => IsComplete && _time > _data.EndTime ? (_time - _data.EndTime) / _playbackSpeed : 0f;
+
         /// <summary>클립을 대여에 꽂고(시각 0) 0초 이벤트를 냅니다. 한 번만 부릅니다.</summary>
         internal void Begin()
         {
@@ -52,7 +62,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new InvalidOperationException("[CombatClipPlayback] 이미 시작한 재생입니다.");
             _begun = true;
             if (_cancelled) return;
-            _lease.Play(_data);
+            _lease.Play(_data, _blend);
             Emit(0f);
         }
 

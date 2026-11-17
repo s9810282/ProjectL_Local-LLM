@@ -10,5 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         Haboob = 20,
         Rockfall = 30,
         Tornado = 40,
+        Meteor = 50,
+        LavaChain = 60,
     }
 }

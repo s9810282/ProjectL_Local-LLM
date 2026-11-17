@@ -1,6 +1,7 @@
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Rewards;
 using System;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.Items;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
@@ -41,7 +42,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             var projected = input.Characters.ToDictionary(c => c.EntityId);
             var events = new List<CombatEvent>();
-            var projection = MovementProjection.ForArrival(input, projected, events);
+            var projection = MovementProjection.ForArrival(input, projected, events, rules: rules);
             projection.Rewards = CombatParticipationCalculator.Capture(input.State.Rewards, input.Characters);
             var allocation = input.State.Allocation;
 
@@ -91,17 +92,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 수락한 진영 종료와 누계 증가를 먼저 기록한 뒤 공통 기믹 순서로 정산한다.
             var events = new List<CombatEvent> { new CombatTurnEvent(CombatEventKind.PlayerTurnEnded, EntityId.Empty, before, turn) };
 
-            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), events);
+            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), events, rules: rules);
 
             var ended = projection.Complete(turn: turn, phase: CombatFlowPhase.Automatic);
 
-            return CleanupControllerTurn(ResolveEndGimmick(ended, Owner.Player, rules), Owner.Player);
+            return ResolveEndBoundary(ended, Owner.Player, StageGimmickComposition.WithMovementRules(rules));
         }
 
-        /// <param name="rules">재구성 Lv3 부활 넉백이 밀린 칸의 가시·오브젝트·토네이도를 정산할 때 씁니다.</param>
+        /// <param name="rules">재구성 Lv3 부활 넉백이 밀린 칸의 오브젝트·토네이도를 정산할 때 씁니다.</param>
         internal static CombatCommandTransition BeginControllerTurn(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
+            input = input.WithResolutionWindow(CombatResolutionWindow.Normal);
             if (input.State.Phase == CombatFlowPhase.Finished)
                 return CombatCommandCalculator.Reject(input, "StageEnded");
 
@@ -138,12 +140,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var state = State(input.State,turn, player ? CombatFlowPhase.PlayerInput : CombatFlowPhase.Automatic)
                 .With(traitTurn: input.State.TraitTurn.BeginTurn(owner));
 
-            var projection = MovementProjection.ForArrival(input, characters, events, state);
+            var projection = MovementProjection.ForArrival(input, characters, events, state, rules: rules);
 
             // 재구성 중인 유닛은 지속 피해 앞에서 부활 여부를 정한다(적 전용 특성 설계 P3).
             ReconstructionTurnApplication.BeginSide(projection, owner, rules);
 
             PeriodicStatusApplication.BeginSide(input, projection, owner);
+            projection.ThornBombs.ScheduleDue(owner, turn.ControllerTurnSequence);
+            foreach (var _ in projection.ThornBombs.ResolveSteps(projection, rules)) { }
 
             var started = projection.Complete();
             if (started.Outcome.IsStageEnded || player || input.Battle?.NexusReinforcements == null)
@@ -172,21 +176,51 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             // 기믹 착지로 승패가 나더라도 이미 수락한 적 국면 종료와 누계 증가는 유지한다.
             var events = new List<CombatEvent>();
 
-            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), events);
+            var projection = MovementProjection.ForArrival(input, input.Characters.ToDictionary(c => c.EntityId), events, rules: rules);
 
             events.Add(new CombatTurnEvent(CombatEventKind.EnemyPhaseEnded, EntityId.Empty, before, turn));
 
             var ended = projection.Complete(turn: turn, phase: CombatFlowPhase.Automatic);
 
-            return CleanupControllerTurn(ResolveEndGimmick(ended, Owner.Enemy, rules), Owner.Enemy);
+            return ResolveEndBoundary(ended, Owner.Enemy, StageGimmickComposition.WithMovementRules(rules));
         }
 
-        private static CombatCommandTransition CleanupControllerTurn(CombatCommandTransition ended, Owner owner)
+        internal static CombatCommandTransition ResolveEndBoundary(CombatCommandTransition ended, Owner endedSide,
+            StageGimmickComposition gimmicks)
         {
-            if (ended.Outcome.IsStageEnded) 
-                return ended;
+            if (ended.Outcome.IsStageEnded) return ended;
 
-            var after = CombatCommandComposition.Project(ended);
+            var steps = new List<CombatCommandTransition> { ended };
+            var projected = CombatCommandComposition.Project(ended);
+            long count = projected.State.Turn.CompletedControllerTurnCount;
+
+            // 각 단계는 바로 앞 정산을 읽는다. 승패가 확정되면 이후 단계와 정리도 실행하지 않는다.
+            if (Advance(StageGimmickBoundaryPhase.Expiry) &&
+                Advance(StageGimmickBoundaryPhase.Scheduled) &&
+                Advance(StageGimmickBoundaryPhase.EndOccupancy) &&
+                Append(CleanupControllerTurn(projected, endedSide)) &&
+                Advance(StageGimmickBoundaryPhase.AfterCleanup))
+            {
+                Advance(StageGimmickBoundaryPhase.Warning);
+            }
+
+            return steps.Count == 1 ? ended : CombatCommandComposition.Merge(ended.Input, steps);
+
+            bool Advance(StageGimmickBoundaryPhase phase) =>
+                Append(gimmicks.TryAdvance(projected, new StageGimmickBoundary(endedSide, count, phase)));
+
+            bool Append(CombatCommandTransition step)
+            {
+                if (step == null) return true;
+                steps.Add(step);
+                if (step.Outcome.IsStageEnded) return false;
+                projected = CombatCommandComposition.Project(step);
+                return true;
+            }
+        }
+
+        private static CombatCommandTransition CleanupControllerTurn(CombatCommandInput after, Owner owner)
+        {
             var characters = after.Characters.ToDictionary(c => c.EntityId);
             var events = new List<CombatEvent>();
 
@@ -194,31 +228,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
             var state = TraitTrailCalculator.EndControllerTurn(after.State, owner, events);
 
-            RegenerationTurnApplication.EndOwnSide(after, CombatDamageApplication.For(after, characters, events), owner);
+            var damage = CombatDamageApplication.For(after, characters, events);
+            RegenerationTurnApplication.EndOwnSide(after, damage, owner);
 
             RoarTurnApplication.EndControllerTurn(after, characters, owner, events);
 
-            if (after.Characters.All(c => ReferenceEquals(c, characters[c.EntityId])) && ReferenceEquals(state, after.State)) 
-                return ended;
+            if (damage.HealthExecutions.Count == 0 && damage.HealthClaims.Count == 0 &&
+                after.Characters.All(c => ReferenceEquals(c, characters[c.EntityId])) && ReferenceEquals(state, after.State))
+                return null;
 
-            var cleaned = Changed(after, characters, state, events);
-
-            return CombatCommandComposition.Merge(ended.Input, new[] { ended, cleaned });
-        }
-
-        private static CombatCommandTransition ResolveEndGimmick(CombatCommandTransition ended, Owner endedSide, IReadOnlyList<IMovementTileRule> rules)
-        {
-            var gimmick = CombatGimmickCalculator.TryAdvance(CombatCommandComposition.Project(ended),
-                new StageGimmickBoundary(endedSide, ended.FinalState.Turn.CompletedControllerTurnCount), rules);
-
-            return gimmick == null ? ended : CombatCommandComposition.Merge(ended.Input, new[] { ended, gimmick });
+            return Changed(after, characters, state, events).WithHealthEvidence(damage.HealthExecutions, damage.HealthClaims);
         }
 
         internal static CombatBattleFacts RequiredBattle(CombatCommandInput input) => input.Battle ??
             throw new InvalidOperationException("전투 설정·드로우 Buffer 사실이 필요합니다.");
 
-        internal static CombatCommandState State(CombatCommandState source,CombatTurnFacts turn,CombatFlowPhase phase,CombatAllocationFacts allocation = null) => new(source.BoardWidth,source.BoardHeight,phase,source.Structures,                source.ThornFields.ToArray(),turn,source.Environment,source.EnvironmentProgress,                source.WallBlocking,source.Objective,allocation ?? source.Allocation,source.ItemRandomState,source.Rewards,source.TraitTurn,gimmicks: source.Gimmicks,
-            reinforcements: source.Reinforcements);
+        internal static CombatCommandState State(CombatCommandState source, CombatTurnFacts turn, CombatFlowPhase phase,
+            CombatAllocationFacts allocation = null) =>
+            source.With(phase: phase, turn: turn, allocation: allocation, movementUndo: MovementUndoState.Empty);
 
         internal static CombatCommandTransition Changed(CombatCommandInput input,
             IReadOnlyDictionary<EntityId, CharacterCombatFacts> projected, CombatCommandState state, IReadOnlyList<CombatEvent> events = null)

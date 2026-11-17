@@ -15,6 +15,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
@@ -24,13 +25,14 @@ namespace ProjectL.Tests.Core
 {
     public sealed class AttackPreviewParityTests
     {
-        internal const string ReferenceRelativePath = "docs/superpowers/reports/2026-11-07-enemy-utility-ai/phase-2-preview-reference.json";
+        private const string ReferenceDirectory = "docs/superpowers/reports/2026-11-12-combat-health-execution-evidence";
+        internal const string ReferenceRelativePath = ReferenceDirectory + "/phase-2-preview-reference.json";
 
         [Test]
         public void FrozenPreviewAndActualSemanticsMatch() =>
             CheckVectors(Vectors(), ReferenceRelativePath, "preview-reference");
 
-        internal const string MovementReferencePath = "docs/superpowers/reports/2026-11-07-enemy-utility-ai/phase-2-movement-reference.json";
+        internal const string MovementReferencePath = ReferenceDirectory + "/phase-2-movement-reference.json";
 
         [Test]
         public void FrozenMovementContinuationSemanticsMatch() =>
@@ -274,7 +276,34 @@ namespace ProjectL.Tests.Core
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Length == 0 && p.CanRead).OrderBy(p => p.Name, StringComparer.Ordinal).ToArray();
             var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public).OrderBy(f => f.Name, StringComparer.Ordinal).ToArray();
             if (properties.Length + fields.Length == 0) throw new InvalidOperationException("공개 사실이 없는 형식: " + type.FullName);
-            foreach (var property in properties) { text.Append(','); Quote(property.Name, text); text.Append(':'); Write(property.GetValue(value), text, types, depth + 1); }
+            foreach (var property in properties)
+            {
+                object propertyValue = property.GetValue(value);
+                // 추가된 선택적 사실의 기본값은 기존 동결 기록과 같은 형태로 씁니다. 지정한 값은 그대로 비교합니다.
+                if (value is TargetingMethodSpec && property.Name == nameof(TargetingMethodSpec.Width) && (int)propertyValue == 0 ||
+                    value is CombatCommandInput && property.Name == nameof(CombatCommandInput.SweepSide) && propertyValue == null ||
+                    value is CombatCommandInput && property.Name is (nameof(CombatCommandInput.PlayerSkillRequest) or
+                        nameof(CombatCommandInput.PlayerSkillSource)) && propertyValue == null ||
+                    value is CombatCommandState && property.Name == nameof(CombatCommandState.PlayerSkill) && propertyValue == null ||
+                    value is CombatCommandState && property.Name == nameof(CombatCommandState.LastPlatformBoundaryCount) && (long)propertyValue == 0 ||
+                    value is NexusReinforcementState { IsEnabled: false, LastSpawnEnemyTurn: 0 } &&
+                        property.Name == nameof(NexusReinforcementState.LastSpawnEnemyTurn) ||
+                    value is AttackPreview && property.Name == nameof(AttackPreview.PillarFalls) && ((AttackPreview)value).PillarFalls.Count == 0 ||
+                    value is CombatCommandTransition && property.Name == nameof(CombatCommandTransition.PlayerSkill) && propertyValue == null ||
+                    value is OwnedCharacterRecord && property.Name == nameof(OwnedCharacterRecord.PlayerSkillUpgrade) &&
+                        (PlayerSkillUpgradeKey)propertyValue == PlayerSkillUpgradeKey.None ||
+                    value is AttackResult && property.Name == nameof(AttackResult.Sweep) && propertyValue == null ||
+                    value is AttackPreview && property.Name == nameof(AttackPreview.Sweep) && propertyValue == null ||
+                    value is AttackHitResult && property.Name == nameof(AttackHitResult.IsObstacle) && !(bool)propertyValue ||
+                    value is ObstacleContentProfile obstacleProfile && obstacleProfile.Kind != ObstacleContentKind.Pillar &&
+                        property.Name == nameof(ObstacleContentProfile.FallLength) && (int)propertyValue == 0 ||
+                    value is CombatObstacleReactionEvent && property.Name == nameof(CombatObstacleReactionEvent.SuppressSupplyRewards) &&
+                        !(bool)propertyValue ||
+                    value is StructureCombatFacts structure && structure.ObstacleDurability == null &&
+                        property.Name is (nameof(StructureCombatFacts.ObstacleDurability) or nameof(StructureCombatFacts.IsDestroyed)))
+                    continue;
+                text.Append(','); Quote(property.Name, text); text.Append(':'); Write(propertyValue, text, types, depth + 1);
+            }
             foreach (var field in fields) { text.Append(','); Quote(field.Name, text); text.Append(':'); Write(field.GetValue(value), text, types, depth + 1); }
             text.Append('}');
         }

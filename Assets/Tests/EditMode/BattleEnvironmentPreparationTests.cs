@@ -71,7 +71,7 @@ namespace ProjectL.Tests.Core
             var initialized = new BattleInitialization(original.Stage, original.MainAnchor, original.MainRotation,
                 original.Units, original.Structures, original.Categories, original.AttackProfiles,
                 original.Environment, original.EnvironmentBindings,
-                new[] { new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 7) });
+                new[] { new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, cell, Rotation4.R0, 2, 7) });
             Assert.Throws<InvalidOperationException>(() => Prepare(initialized));
         }
 
@@ -141,7 +141,7 @@ namespace ProjectL.Tests.Core
             var initialized = new BattleInitialization(original.Stage, original.MainAnchor, original.MainRotation,
                 original.Units, original.Structures, original.Categories, original.AttackProfiles,
                 original.Environment, original.EnvironmentBindings,
-                new[] { new InitialObstaclePlacementSpec(definition, kind, new CellCoord(4, 3), Rotation4.R0, 0,
+                new[] { new InitialObstaclePlacementSpec(definition, kind, new CellCoord(4, 3), Rotation4.R0, 2, 0,
                     supplies ? 2 : 0, supplies ? 5 : 0) });
             if (supplies)
             {
@@ -158,7 +158,7 @@ namespace ProjectL.Tests.Core
             Assert.Throws<ArgumentException>(() => new ObstacleContentProfile(new EntityId(51), ObstacleContentKind.Supplies, 0));
             var definition = new StructureSpec(EntityKey.Structure_Supplies, 1, 1, new[] { CellCoord.Zero }, 10, false, 0);
             Assert.Throws<ArgumentException>(() => new InitialObstaclePlacementSpec(definition, ObstacleContentKind.Supplies,
-                CellCoord.Zero, Rotation4.R0, 0));
+                CellCoord.Zero, Rotation4.R0, 2, 0));
         }
 
         [Test]
@@ -169,7 +169,7 @@ namespace ProjectL.Tests.Core
             var initialized = new BattleInitialization(original.Stage, original.MainAnchor, original.MainRotation,
                 original.Units, original.Structures, original.Categories, original.AttackProfiles,
                 original.Environment, original.EnvironmentBindings,
-                new[] { new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, new CellCoord(4, 3), Rotation4.R0, 7) });
+                new[] { new InitialObstaclePlacementSpec(definition, ObstacleContentKind.PowderBarrel, new CellCoord(4, 3), Rotation4.R0, 2, 7) });
             var result = Prepare(initialized);
             Assert.That(result.Structures.Single().Definition.Key, Is.EqualTo(EntityKey.Structure_PowderBarrel));
             Assert.That(result.Structures.Single().Owner, Is.EqualTo(Owner.Neutral));

@@ -24,7 +24,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
     /// <para>
     /// 사실 정체성은 (전투 번호, 조회 원본 버전)입니다. 결과 재생 중·입력 닫힘·종료·밤 전투 아님이면 지웁니다. 새로 묻는 것은 플레이어 입력의
     /// 안정 상태(<see cref="CombatInputPolicy.CanQueryRoarForecast"/>)에서만이라 적 턴에는 보이지 않습니다. 전경 입력(공격 모드·이동·배치·아이템 드래그)
-    /// 중에는 새로 묻지 않고, 이미 그린 범위는 남기되 넉백 화살표는 숨깁니다(공격 조준이 호버마다 자기 넉백을 지우는 사이에 끼지 않게, 검토 M1).
+    /// 중에는 새로 묻지 않고, 이미 그린 범위는 남깁니다. 넉백을 그릴지는 넉백 미리보기가 정하며, 이 객체는 매 Tick 전경 입력 사실을 넘깁니다
+    /// (새 SSOT 설계 SN3, 포효 예고 검토 M1).
     /// 슬롯은 배경 요청 규칙(<see cref="CombatPreviewSlotRule"/>)을 따릅니다.
     /// 보스·범위 목록은 사실이 바뀔 때만 다시 모으므로 매 Tick 할당이 없습니다.
     /// </para>
@@ -50,8 +51,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         private int _request;
         private EntityId _requestedBoss;
         private bool _shown;
-        // 전경 입력(공격 모드·이동·배치·아이템 드래그) 중이라 포효 넉백을 숨기는지입니다(검토 M1). 바닥 범위는 숨기지 않습니다.
-        private bool _hideKnockback;
 
         internal CombatRoarForecastTracker(ICombatViewBufferReadSink read, ICombatViewBufferWriteSink write,
             ICombatRoarForecastFeedback display)
@@ -85,7 +84,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         /// <summary>
         /// 매 Tick 맞춥니다: 지울 사실이면 지우고, 사실이 바뀌었으면 보스를 다시 모으고, 자기 응답이면 그리고, 답을 못 받은 보스가 있으면 묻습니다.
         /// </summary>
-        /// <param name="hasForeground">전경 입력 소유자가 활성인지입니다. 활성이면 새로 묻지 않고(TP-15) 포효 넉백을 숨깁니다(검토 M1).</param>
+        /// <param name="hasForeground">전경 입력 소유자가 활성인지입니다. 활성이면 새로 묻지 않고(TP-15), 넉백 미리보기에 그대로 넘깁니다(새 SSOT 설계 SN3).</param>
         /// <param name="answeredNumber">Core가 마지막으로 답한 요청 번호입니다.</param>
         /// <param name="latest">마지막으로 게시된 미리보기 응답입니다(번호 무관). 없으면 null입니다.</param>
         internal void Sync(in CombatInputFacts facts, IReadOnlyList<CharacterData> characters, bool hasForeground,
@@ -103,14 +102,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
                 _revision = facts.QueryRevision;
                 CollectBosses(characters);
             }
-            // 공격 조준은 호버 칸을 옮길 때마다 자기 넉백을 지웁니다. 그 사이에 포효 넉백이 끼어 보이지 않게 전경 입력 중에는 넉백만 숨기고,
-            // 전경 입력이 끝나면 다시 넘깁니다(검토 M1). 그리는 중일 때만 다시 넘깁니다.
-            if (_hideKnockback != hasForeground)
-            {
-                _hideKnockback = hasForeground;
-                if (_shown)
-                    Redraw();
-            }
+            // 전경 입력 사실은 그린 것이 없어도 매 Tick 넘깁니다. 그려 둔 것이 있을 때만 넘기면, 전경 입력 중에 처음 받은 답이 포효 넉백을 그립니다
+            // (포효 예고 검토 M1). 바뀜 거르기와 넉백 출처 고르기는 넉백 미리보기가 합니다(새 SSOT 설계 SN3).
+            _display.SetForegroundInput(hasForeground);
             if (_request != 0)
                 ConsumeOrForget(latest, answeredNumber);
 
@@ -187,7 +181,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
         }
 
         // 성공한 답의 범위 칸을 합치고 대상이 있는 답의 공격 미리보기(넉백 기록)를 모아 넘깁니다. 범위가 없으면 지웁니다.
-        // 전경 입력 중이면 넉백은 빈 목록으로 넘겨 범위만 남깁니다(검토 M1).
         private void Redraw()
         {
             _cells.Clear();
@@ -209,8 +202,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             if (_cells.Count > 0)
             {
                 _shown = true;
-                IReadOnlyList<AttackPreview> attacks = _hideKnockback ? Array.Empty<AttackPreview>() : _attacks;
-                _display.ShowRoarForecast(_cells, attacks);
+                _display.ShowRoarForecast(_cells, _attacks);
             }
             else if (_shown)
             {

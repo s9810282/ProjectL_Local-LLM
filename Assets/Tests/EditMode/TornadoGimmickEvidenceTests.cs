@@ -15,13 +15,13 @@ namespace ProjectL.Tests.Core
         {
             var raw = TornadoGimmickResolutionTests.Advance(TornadoGimmickResolutionTests.Input(center: new CellCoord(2, 2), warned: true), 2);
             var result = WithBoundary(raw);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
             Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ValidateGimmickChanges(result));
             var input = TornadoGimmickResolutionTests.Input();
             var projection = new MovementProjection(input);
             TornadoCalculator.ResolveGroupedEntry(projection, input.ActorId, input.Path.Origin, TornadoEnvironmentTests.Rules);
             result = projection.Complete();
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
             Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ValidateGimmickChanges(result));
             Assert.That(result.Events.OfType<CombatCharacterEvent>().Single(c => c.Kind == CombatEventKind.Relocated).TornadoContact.StepIndex, Is.EqualTo(-1));
         }
@@ -35,7 +35,7 @@ namespace ProjectL.Tests.Core
                 center: new CellCoord(2, 2), warned: true, multiple: true), 2));
             Assert.That(travel.Events.OfType<CombatTornadoGimmickEvent>().Count(), Is.EqualTo(1));
             Assert.That(travel.Events.OfType<CombatTornadoGimmickEvent>().Single().Advances.Select(a => a.Expected.SourceId), Is.EqualTo(new long[] { 31, 32 }));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(travel.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(travel.Events));
             Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ValidateGimmickChanges(travel));
         }
 
@@ -104,7 +104,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Events.Count(e => e.Kind == CombatEventKind.StageEnded), Is.EqualTo(1));
             Assert.That(result.Events.OfType<CombatCharacterEvent>().Single(e => e.Kind == CombatEventKind.Relocated).TornadoContact.StepIndex, Is.EqualTo(1));
             Assert.That(result.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(result.Input.State.EnvironmentProgress.RandomState));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
             Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ValidateGimmickChanges(result));
         }
 
@@ -176,7 +176,7 @@ namespace ProjectL.Tests.Core
                 raw.Input.SoulCounts, raw.Input.Souls, raw.Input.EnvironmentBindings);
             var events = new CombatEvent[] { new CombatTurnEvent(CombatEventKind.PlayerTurnEnded, EntityId.Empty, old, raw.FinalState.Turn) }.Concat(raw.Events).ToArray();
             return new CombatCommandTransition(original, true, "", raw.Characters, raw.Field, raw.FinalState, raw.Outcome,
-                events: events, environmentBindings: raw.EnvironmentBindings, damageExecutions: raw.DamageExecutions);
+                events: events, environmentBindings: raw.EnvironmentBindings, healthExecutions: raw.HealthExecutions);
         }
     }
 }

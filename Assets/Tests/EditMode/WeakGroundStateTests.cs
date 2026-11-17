@@ -21,10 +21,10 @@ namespace ProjectL.Tests.Core
                 CombatEventKind.SoulFieldSettled, CombatEventKind.CombatEntered,
                 CombatEventKind.GimmickActivated,
                 CombatEventKind.StageEnded, CombatEventKind.HealthNormalized, CombatEventKind.MovementSourceChanged,
-                CombatEventKind.ThornConsumed, CombatEventKind.ObstacleReacted, CombatEventKind.HeldEnvironmentChanged,
+                CombatEventKind.ObstacleReacted, CombatEventKind.HeldEnvironmentChanged,
                 CombatEventKind.ObjectActivated, CombatEventKind.ObjectCreated, CombatEventKind.Relocated,
                 CombatEventKind.TornadoActivated, CombatEventKind.Fell };
-            Assert.That(eventKinds.Select(kind => (int)kind), Is.EqualTo(Enumerable.Range(1, 27).Where(value => value != 4 && value != 13 && value != 14 && value != 15)));
+            Assert.That(eventKinds.Select(kind => (int)kind), Is.EqualTo(Enumerable.Range(1, 27).Where(value => value != 4 && value != 13 && value != 14 && value != 15 && value != 20)));
         }
 
         [Test]

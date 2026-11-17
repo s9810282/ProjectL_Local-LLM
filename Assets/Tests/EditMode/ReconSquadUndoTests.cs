@@ -192,25 +192,24 @@ namespace ProjectL.Tests.Core
             Assert.That(TraitCombatFixtures.Final(result, 2).Health.CurrentHealth, Is.EqualTo(100));
             Assert.That(result.MovementEffectUses.Count(u => u.Kind == MovementEffectUseKind.ExposureDamage), Is.EqualTo(amount > 0 ? 1 : 0));
             Assert.That(result.FinalState.MovementUndo.Checkpoints.Count, Is.EqualTo(amount > 0 ? 0 : 1));
-            Assert.That(result.DamageExecutions, Is.Not.Empty);
+            Assert.That(result.HealthExecutions, Is.Not.Empty);
         }
 
         [TestCase(false)]
         [TestCase(true)]
-        public void PullDamage_UsesActualReachedRecipientFacts(bool intermediateThorn)
+        public void PullDamage_UsesActualReachedRecipientFacts(bool intermediateHazard)
         {
             var input = PullTestData.Input(extra: 2, distance: 3);
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == PullTestData.Target
                 ? c.WithStatusEffects(new StatusEffectSet(new AppliedStatus[] { new WeaknessExposureStatus(
                     new EffectOriginKey(EffectOwnerKind.Trait, 90, (int)TraitKey.ReconSquad, "main"), 10,
                     WeaknessExposureLifetimeKind.UntilReserveReturnOrDeath, movement: new MovementEffectId(1, 1, new EntityId(90), 1)) })) : c).ToArray());
-            if (intermediateThorn) input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(new CellCoord(9, 7), 3, 7)));
-            var result = PullTestData.Run(input);
+            if (intermediateHazard) input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (new CellCoord(9, 7), 7)));
+            var result = PullTestData.Run(input, EnvironmentDamageTests.DamageRules);
             Assert.That(PullTestData.Final(result).Anchor, Is.EqualTo(new CellCoord(8, 7)));
-            Assert.That(PullTestData.Final(result).Health.CurrentHealth, Is.EqualTo(intermediateThorn ? 71 : 78));
+            Assert.That(PullTestData.Final(result).Health.CurrentHealth, Is.EqualTo(intermediateHazard ? 71 : 78));
             Assert.That(result.MovementEffectUses.Where(u => u.Kind == MovementEffectUseKind.ExposureDamage)
-                .Select(u => u.ConsumerBefore.Anchor.Value), Is.EqualTo(intermediateThorn
+                .Select(u => u.ConsumerBefore.Anchor.Value), Is.EqualTo(intermediateHazard
                     ? new[] { new CellCoord(9, 7), new CellCoord(8, 7) } : new[] { new CellCoord(8, 7) }));
         }
 
@@ -224,7 +223,7 @@ namespace ProjectL.Tests.Core
             return MovementUndoPolicy.Reconcile(new CombatCommandTransition(input, true, "", new CharacterChanges(input.Characters
                 .Where(c => !c.SameValues(current[c.EntityId])).Select(c => new CharacterStateChange(c, current[c.EntityId])).ToArray(),
                 Array.Empty<SoulCountChange>()), new SoulFieldChange(input.Souls, input.Souls), input.State,
-                new StageOutcomeSnapshot(StageOutcome.InProgress, StageOutcomeReason.None), events: events, movementEffectUses: damage.MovementEffectUses, damageExecutions: damage.DamageExecutions));
+                new StageOutcomeSnapshot(StageOutcome.InProgress, StageOutcomeReason.None), events: events, movementEffectUses: damage.MovementEffectUses, healthExecutions: damage.HealthExecutions));
         }
     }
 }

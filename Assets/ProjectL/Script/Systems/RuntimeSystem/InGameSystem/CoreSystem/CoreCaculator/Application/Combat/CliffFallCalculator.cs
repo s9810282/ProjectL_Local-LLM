@@ -3,6 +3,7 @@ using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat
 {
@@ -12,8 +13,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection));
             projection.TerrainQueryCells.Add(cell);
-            var cliff = projection.Environment.Tiles.OfType<StaticTerrainFact>().SingleOrDefault(t =>
-                t.Active && t.Kind == StaticTerrainKind.Cliff && t.Cell == cell && projection.Bindings.TerrainSourceIds.Contains(t.Id));
+            var cliff = BoardSurfaceRules.UnsupportedCliffAt(projection.Environment, projection.Bindings, cell);
             if (cliff == null) return false;
             var structure = projection.Structure(entityId);
             if (structure != null)

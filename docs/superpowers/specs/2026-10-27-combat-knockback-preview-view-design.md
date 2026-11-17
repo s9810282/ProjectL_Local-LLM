@@ -1,6 +1,7 @@
 # 전투 넉백 미리보기 View 설계 초안
 
 - 작성일: 2026-10-27. 코드 변경 없음(설계만).
+- **2026-11-14 보충:** 끌어오기 공격도 같은 화살표(표지 종류 `Pull`, 끌어오기 도착 칸 색)를 쓴다. 원본은 [궤적 대상별 선 설계 §9](2026-11-14-combat-attack-trajectory-per-target-design.md)(PL1~PL5).
 - **결정 완료(2026-10-27 사용자): Q-KB1~Q-KB6·Q-KB-T 모두 권장안 A.** Task 계획은 [knockback-preview-view-plan](../plans/2026-10-27-combat-knockback-preview-view-plan.md)(KB-a~KB-c)이다. 계획에서 이 설계와 다르게 정한 것은 계획 §0.2(TP-1·TP-2)이다.
 - **KB-b 검토 뒤 바뀐 것(2026-10-27 사용자 결정 Q-KBb1·Q-KBb3 A, 계획 §7.2):** P3은 "체력 예상 조건을 걸지 않는다"에서 **"체력·비용 예상과 같은 조건(결과 재생 중이 아님)에서만 그린다"**로 바뀌었다(미리보기 답이 재생 중에도 오기 때문). KB2의 화살표 높이는 **점유 칸과 그 앞 칸(판 안) 표면 중 가장 높은 값**으로 바뀌었다(고지대 쪽으로 밀릴 때 묻히지 않게).
 - 사용자 요청: 공격 모드 호버 때 궤적(노란 선)이 착탄 칸까지 보이고, 착탄 칸 기준으로 주변 대상이 **어디로 밀릴지** 미리 보이게 한다(레퍼런스: Into the Breach 화면). 설계는 7기준(SSOT·SOLID·FW 계약·기능 변경의 독립성·캡슐화·C#/Unity 권장 구조·무의미한 If/Tick)을 염두에 둔다.
@@ -114,6 +115,8 @@ CombatSceneDisplay.ShowKnockbackPreview(preview)        해제 뒤면 무시
 - 프리팹은 Renderer 하나를 가져야 한다(검사, KB6).
 
 ### KB6. 값
+
+> **대신함(2026-11-14):** 아래 `FieldView` 씬 색 셋은 그 뒤 더한 부딪힘·끌어오기 화살표 색, 넉백 도착 칸 색과 함께 View DB `StageFieldViewData`의 필드 색 묶음(`Colors`)으로 옮겼다. 에디터에서 고치면 전투 중에 바로 반영된다([필드 색 DB 설계](2026-11-14-combat-field-colors-db-design.md) FC1·FC3). 모양 값(재질·길이·너비·띄움)은 그대로 "Knockback Preview" 묶음이다.
 
 - View DB `StageFieldViewData`에 머리말 "Knockback Preview"와 칸 둘을 더한다.
   - `knockbackArrowPrefab`(필수, Renderer 필요)

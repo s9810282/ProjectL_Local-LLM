@@ -12,7 +12,6 @@ namespace ProjectL.Tests.Core
     public sealed class DeferredCombatFeatureTests
     {
         [TestCase(TraitKey.Focus)]
-        [TestCase(TraitKey.ThornField)]
         [TestCase(TraitKey.Necromancy)]
         public void UnitClockTraits_AreExplicitlyUnavailable(TraitKey key)
         {

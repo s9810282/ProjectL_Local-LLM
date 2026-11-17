@@ -44,7 +44,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>
         /// <paramref name="time"/>(재생 시각, 초)까지 아직 내지 않은 다음 이벤트를 하나 냅니다. 없으면 false입니다.
-        /// 한 시각에 여러 이벤트가 걸리면 시작 → 존재하는 중간 이벤트들(목록 순) → 끝 순으로 하나씩 냅니다.
+        /// 중간 이벤트는 번호가 아니라 시각 순(<see cref="CombatClipTimings.EventsInTimeOrder"/>)으로 냅니다(Event2가 Event1보다 앞설 수 있음, 11-17 사용자).
+        /// 한 시각에 여러 이벤트가 걸리면 시작 → 존재하는 중간 이벤트들(시각 순, 같은 시각은 번호 순) → 끝 순으로 하나씩 냅니다.
         /// </summary>
         /// <param name="eventIndex">중간 이벤트면 <see cref="CombatClipTimings.Events"/>의 칸, 시작·끝이면 -1입니다(계획 TP-6). 받는 쪽이 이 칸으로 바로 고릅니다.</param>
         internal bool TryNext(float time, out CombatClipEventKind kind, out int eventIndex)
@@ -55,8 +56,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             if (IsFinished)
                 return false;
             int eventCount = _timings.Events.Count;
+            int slot = _next == 0 || _next == eventCount + 1 ? -1 : _timings.EventsInTimeOrder[_next - 1];
             float nextTime = _next == 0 ? _timings.StartTime
-                : _next == eventCount + 1 ? _timings.EndTime : _timings.Events[_next - 1].Time;
+                : _next == eventCount + 1 ? _timings.EndTime : _timings.Events[slot].Time;
             if (time < nextTime)
                 return false;
             if (_next == 0)
@@ -66,7 +68,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             else
             {
                 kind = CombatClipEventKind.Event;
-                eventIndex = _next - 1;
+                eventIndex = slot;
             }
             _next++;
             return true;

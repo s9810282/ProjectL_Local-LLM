@@ -31,23 +31,19 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Unit.Trait
     [Serializable]
     internal sealed class PiercingFalloffTraitAuthoring : UnitTraitAuthoring
     {
-        [SerializeField, Range(1, 100)] private int reductionPercentPerTarget = 50;
+        [SerializeField, Range(1, 100)] private int reductionPercentPerTarget = 25;
         [Tooltip("광선 하나가 맞힐 최대 대상 수입니다. 0이면 타격하지 않습니다.")]
-        [SerializeField, Min(0)] private int maxTargetsPerRay;
+        [SerializeField, Min(0)] private int maxTargetsPerRay = 4;
 
         internal override UnitTraitData ToData() => new PiercingFalloffTraitData(reductionPercentPerTarget, maxTargetsPerRay);
     }
 
     [Serializable]
-    internal sealed class ThornFieldTraitAuthoring : UnitTraitAuthoring
+    internal sealed class DeadHandTraitAuthoring : UnitTraitAuthoring
     {
-        [SerializeField, Min(1)] private int thornDamage = 1;
-        [SerializeField, Min(1)] private int lifetimeUnitTurns = 1;
+        [SerializeField, Min(0)] private int damagePercent = 100;
 
-        [SerializeField, Range(0, 100)] private int defenseReductionPercent;
-        [SerializeField] private UnitTurnTickPhase tickPhase = UnitTurnTickPhase.Ended;
-
-        internal override UnitTraitData ToData() => new ThornFieldTraitData(thornDamage, lifetimeUnitTurns, defenseReductionPercent, tickPhase);
+        internal override UnitTraitData ToData() => new DeadHandTraitData(damagePercent);
     }
 
     [Serializable]

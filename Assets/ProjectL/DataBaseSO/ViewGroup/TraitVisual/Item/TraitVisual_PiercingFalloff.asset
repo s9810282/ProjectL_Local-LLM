@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   traitVisualData:
     key: 30
-    displayName: "\uAD00\uD1B5 \uBCFC\uD2B8"
+    displayName: "관통"
     icon: {fileID: 21300000, guid: 5e0eabc3eed1b42408bac0bae8afdd07, type: 3}
-    description: "공격 방향의 대상을 일직선으로 관통합니다. \\n대상을 하나 관통할 때마다 이후 대상에게 주는 피해가 30% 감소합니다.\n해당 특성 폐기."
+    description: "공격 방향 일직선의 적과 아군을 꿰뚫습니다.\n대상을 지날 때마다 피해가 {대상당피해감소율}%씩 줄고, 최대 {최대관통대상수}명까지 맞힙니다."
     activations: []
     trailPrefab: {fileID: 0}
     trailLocalOffset: {x: 0, y: 0, z: 0}

@@ -170,12 +170,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// 전체(All) 지정은 방향이 없어 Core 결과의 공격 방향이 기본값(R0)이라, 그 방향을 쓰면 적 보스의 동작이 플레이어 반대쪽으로 재생되기 때문입니다.
         /// 모양의 공격자는 <paramref name="actorId"/>와 같아야 합니다.</param>
         /// <param name="cue">기준 순간 콜백입니다(근접 = 타격, 직선·곡사 = 발사, 옛 효과음 순간). 근접은 이 콜백 뒤 같은 순간에 <paramref name="hit"/>을 부릅니다.</param>
-        /// <param name="hit">타격 순간입니다. 대상 해제와 그 뒤 신호를 호출자가 묶어 넘깁니다(<see cref="CombatHitMoment.ReleaseThenSignal"/>). 투사체 종류는 접촉 이펙트 뒤에 부릅니다.</param>
+        /// <param name="hit">타격 해제 규칙입니다(대상 해제와 그 뒤 신호, <see cref="CombatContactRelease"/>). 근접·곡사는 타격 순간 한 번에 끝내고,
+        /// 직선은 접촉마다 그 대상을 해제합니다(관통·죽음의 손 View 설계 D6). 투사체 종류는 접촉 이펙트 뒤에 부릅니다.</param>
         /// <param name="end">모션의 전체 완료입니다. 세대가 같을 때만 부릅니다.</param>
         /// <param name="settings">공격 표시 덮어쓰기입니다(특성 추가 공격 줄의 공격 표시, 특성 발동 연출 결정 Q-TA3 B). 없으면 행위자 외형의 공격 표시입니다.</param>
         /// <returns>시작했으면 true, 시작할 코드 모션이 없으면(<see cref="HasCodeMotion(CombatAttackPresentationData, bool)"/>이 아님, 곡사 무기 없음) false입니다.</returns>
-        internal bool TryBeginMotion(EntityId actorId, CombatAttackShape shape, FieldGridMapper mapper, Action cue, Action hit, Action end, int version,
-            CombatAttackPresentationData settings = null)
+        internal bool TryBeginMotion(EntityId actorId, CombatAttackShape shape, FieldGridMapper mapper, Action cue, CombatContactRelease hit, Action end,
+            int version, CombatAttackPresentationData settings = null)
         {
             if (shape != null && shape.AttackerId != actorId)
                 throw new ArgumentException($"[CombatAttackPlayback] 공격 모양의 공격자({shape.AttackerId})가 모션 행위자({actorId})와 다릅니다.", nameof(shape));
@@ -269,12 +270,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// 출처 발사(클립 공격의 발사 조각)입니다(클립 설계 5차 AC12, 계획 T29b). 목표점과 맞는 순간은 종류의 전략이 정하고
         /// (곡사 = 주 칸 중심 착탄, 직선 = 발사 높이로 올린 목표점·주 대상 몸 접촉 진행률, View 3라운드 W8),
         /// 날리기·진행·회수는 투사체 진행이 합니다. 근접은 쏘지 않아 예외입니다.
-        /// <paramref name="hit"/>은 맞는 순간, <paramref name="arrived"/>는 끝에 닿은 순간이며(곡사는 같은 순간, 맞음 먼저) 재생 세대가 같을 때만 부릅니다.
+        /// <paramref name="hit"/>은 접촉마다(대상, 그 탄의 마지막 접촉인지), <paramref name="arrived"/>는 끝에 닿은 순간이며(곡사는 같은 순간, 맞음 먼저)
+        /// 재생 세대가 같을 때만 부릅니다. 관통 탄은 조우마다 접촉이 하나씩입니다(관통·죽음의 손 View 설계 §3.1).
         /// </summary>
         /// <param name="shape">공격 모양입니다(특성 발동 연출 설계 TA5).</param>
         /// <param name="from">발사 지점(포구)입니다. 직선의 목표점 해석 출발점도 이 점입니다(계획 P11).</param>
         internal ICombatShot FireShot(CombatAttackShape shape, CombatAttackPresentationData settings, Vector3 from, FieldGridMapper mapper,
-            Action hit, Action arrived, int version)
+            Action<EntityId, bool> hit, Action arrived, int version)
         {
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
@@ -332,8 +334,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             };
 
         /// <summary>
-        /// "투사체가 닿으면 무엇을 내나"의 한 곳입니다(설계 IE5, 범용 연출 구조 계획 Gd.7). 공격 칸 큐 가운데 접촉(Contact) 시점 이펙트를 접촉 자리에 냅니다.
-        /// 접촉 시점은 이펙트만 두고 지연은 0이라(계획 P5) 조립 항목이 아니라 여기서 바로 냅니다. 자리 해석은 큐 자리 한 곳(<see cref="Pieces.CombatCuePoints.Contact"/>)입니다.
+        /// "투사체가 닿으면 무엇을 내나"의 한 곳입니다(설계 IE5, 범용 연출 구조 계획 Gd.7). 공격 칸 큐 가운데 접촉(Contact)의 Every 이펙트를 접촉 자리에 냅니다.
+        /// 접촉의 Every는 이펙트만 두고 지연은 0이라(계획 P5) 조립 항목이 아니라 여기서 바로 냅니다. 자리 해석은 큐 자리 한 곳(<see cref="Pieces.CombatCuePoints.Contact"/>)입니다.
         /// 낸 이펙트의 회수는 창구 주인(사건 Presenter)이 재생 취소·해제 때 합니다(클립 이펙트 결정 Q-E4 A).
         /// </summary>
         private void PlayImpact(CombatAttackPresentationData settings, CombatProjectileContact contact)
@@ -341,37 +343,62 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             IReadOnlyList<CombatEffectCue> effects = settings.Cues.Effects;
             for (int i = 0; i < effects.Count; i++)
             {
-                if (effects[i].Anchor != CombatCueAnchor.Contact) continue;
+                if (!CombatPresentationCueRules.IsEveryContact(effects[i].Anchor, effects[i].ContactFilter)) continue;
                 // 접촉 자리의 보정은 여기서 적용합니다(이펙트 창구 확장 계획 P3).
                 Pose at = Pieces.CombatCuePoints.Apply(Pieces.CombatCuePoints.Contact(contact), effects[i]);
                 _effects.Play(effects[i].Effect, at, CombatEffectPlacement.ForCue(effects[i], EntityId.Empty));
             }
         }
 
-        /// <summary>세대가 같을 때만 이 출처의 대상을 모두 해제합니다. 코드 모션의 타격(조립이 <see cref="CombatHitMoment.ReleaseThenSignal"/>로 묶음)과 클립 공격의 해제 조각이 같은 입구를 씁니다.</summary>
+        /// <summary>
+        /// 세대가 같을 때만 이 출처의 대상을 모두 해제합니다. 코드 모션의 타격과 클립 공격의 해제 조각·접촉 집계가 같은 입구를 씁니다
+        /// (해제 순서 규칙은 <see cref="CombatContactRelease"/>·<see cref="CombatHitMoment.ReleaseThenSignal"/>).
+        /// </summary>
         public void ReleaseAll(CombatEvent source, int version)
         {
             if (version == _generation()) _gate.ReleaseAll(source);
         }
 
-        /// <summary>
-        /// 직선 투사체의 히트 진행률을 발사 경로가 정해질 때 한 번 정합니다(설계 H6). 주 대상이 없거나(방향·전체 지정) 몸 조회에 실패하면 종점 도착(1)입니다.
-        /// 몸과 궤적이 닿지 않으면 주 셀 투영(설계 §6 Q3 B)이며 주 셀 사실이 없으면 오류입니다.
-        /// 주 대상이 가로채졌으면 실제로 맞은 수호자 몸(옮긴 자리)으로 잽니다(<see cref="CombatAttackShape.ContactTargetId"/>, 유닛 행동 설계 P5).
-        /// </summary>
-        private float LinearContactProgress(CombatAttackShape shape, Vector3 from, Vector3 to, FieldGridMapper mapper)
+        /// <summary>세대가 같을 때만 이 출처의 대상 하나를 해제합니다(투사체가 그 대상에 닿는 순간, 관통·죽음의 손 View 설계 D6).</summary>
+        public void Release(CombatEvent source, EntityId target, int version)
         {
-            EntityId target = shape.ContactTargetId;
-            if (target.IsEmpty || !_bodies(target, out CombatBody body, out EntityKey key))
-                return 1f;
-            return ContactProgress(shape, target, key.ToString(), body, shape.DeliveryCell, from, to, mapper);
+            if (version == _generation()) _gate.Release(source, target);
         }
+
+        /// <summary>
+        /// 직선 탄 하나의 접촉 목록입니다(관통·죽음의 손 View 설계 §3.1, 규칙 원본 <see cref="CombatProjectileContacts.Collect"/>). 발사 경로가 정해질 때 한 번 부릅니다.
+        /// 관통이면 조우마다, 아니면 접촉 대상(주 대상, 가로채졌으면 실제로 맞은 수호자 몸, 유닛 행동 설계 P5) 하나입니다.
+        /// </summary>
+        private IReadOnlyList<CombatShotContact> CollectContacts(CombatAttackShape shape, Vector3 from, Vector3 to, FieldGridMapper mapper)
+        {
+            if (shape == null)
+                return CombatProjectileContacts.Collect(null, EntityId.Empty, null, (_, _) => 1f);
+            return CombatProjectileContacts.Collect(shape.PiercingShot, shape.ContactTargetId, shape.DeliveryCell,
+                (target, cell) => ContactProgressOf(shape, target, cell, from, to, mapper));
+        }
+
+        /// <summary>
+        /// 대상 하나의 몸 접촉 진행률입니다(설계 H6). 몸 조회에 실패하면 관통 조우는 Core 조우 칸 투영, 그 밖은 종점 도착(1, 옛 주 대상 규칙)입니다.
+        /// 몸과 궤적이 닿지 않으면 Core 칸 투영(설계 §6 Q3 B)이며 칸 사실이 없으면 오류입니다.
+        /// </summary>
+        private float ContactProgressOf(CombatAttackShape shape, EntityId target, CellCoord? cell, Vector3 from, Vector3 to, FieldGridMapper mapper)
+        {
+            if (target.IsEmpty)
+                return 1f;
+            if (!_bodies(target, out CombatBody body, out EntityKey key))
+                return shape.PiercingShot != null && cell.HasValue ? ProjectCell(cell.Value, from, to, mapper) : 1f;
+            return ContactProgress(shape, target, key.ToString(), body, cell, from, to, mapper);
+        }
+
+        private static float ProjectCell(CellCoord cell, Vector3 from, Vector3 to, FieldGridMapper mapper) =>
+            CombatContactGeometry.ProjectOnSegment(CombatBody.Flatten(mapper.WorldToLocal(from)), CombatBody.Flatten(mapper.WorldToLocal(to)),
+                CombatBody.Flatten(mapper.CellCenterToLocal(cell)));
 
         /// <summary>
         /// 접촉 시각 결정 경계입니다(설계 H5·§6 Q3). 점 투사체와 몸의 처음 닿는 진행률이고, 닿지 않으면
         /// Core가 준 접촉 칸(<paramref name="cell"/>)을 경로에 투영한 진행률입니다. 대체할 때는 진단 경고를 남기되 점 몸의 미교차는
         /// 콜라이더 없음 경고(<see cref="FieldUnitPresenter.TryGetBodyShape"/>)가 원인을 이미 알려 내지 않습니다. 경고는 진행을 바꾸지 않습니다.
-        /// 몸 조회 실패는 부르는 쪽(직선)이 종점 도착으로 이미 처리했습니다(옛 Ballista 관통 길만 실패한 몸으로 불렀고, 그 길과 함께 갈래를 걷음).
+        /// 몸 조회 실패는 부르는 쪽(<c>ContactProgressOf</c>)이 이미 처리했습니다(관통 조우 = Core 칸 투영, 그 밖 = 종점 도착).
         /// </summary>
         /// <param name="subject">경고에 쓸 대상 이름입니다(외형 키).</param>
         private float ContactProgress(CombatAttackShape shape, EntityId target, string subject, CombatBody body, CellCoord? cell,
@@ -419,9 +446,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Vector3 spin, CombatProjectileEasing easing, Action hit, Action arrived, int version, CombatArcRotationMode rotationMode) =>
             _flights.FireArc(prefab, from, to, duration, height, up, spin, easing, hit, arrived, version, rotationMode);
 
-        ICombatShot ICombatAttackStyleContext.FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up, float hitAt,
-            CombatProjectileEasing easing, Action hit, Action arrived, int version) =>
-            _flights.FireLinear(prefab, from, to, speed, up, hitAt, easing, hit, arrived, version);
+        ICombatShot ICombatAttackStyleContext.FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up,
+            CombatProjectileEasing easing, IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version) =>
+            _flights.FireLinear(prefab, from, to, speed, up, easing, contacts, arrived, version);
+
+        ICombatShot ICombatAttackStyleContext.FirePath(GameObject prefab, IReadOnlyList<Vector3> points, float speed, Vector3 up,
+            CombatProjectileEasing easing, IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version) =>
+            _flights.FirePath(prefab, points, speed, up, easing, contacts, arrived, version);
 
         void ICombatAttackStyleContext.BeginAnimation(ICombatAttackAnimation animation, Action ended, int version) =>
             BeginAnimation(animation, ended, version);
@@ -432,8 +463,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         Action ICombatAttackStyleContext.ImpactThen(CombatAttackPresentationData settings, Action hit, CombatProjectileContact contact) =>
             ImpactThen(settings, hit, contact);
 
-        float ICombatAttackStyleContext.LinearContactProgress(CombatAttackShape shape, Vector3 from, Vector3 to, FieldGridMapper mapper) =>
-            LinearContactProgress(shape, from, to, mapper);
+        IReadOnlyList<CombatShotContact> ICombatAttackStyleContext.CollectContacts(CombatAttackShape shape, Vector3 from, Vector3 to,
+            FieldGridMapper mapper) =>
+            CollectContacts(shape, from, to, mapper);
 
         void ICombatAttackStyleContext.CancelUnavailable() => CancelUnavailable();
     }

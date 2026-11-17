@@ -16,7 +16,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
         /// 검사 순서: 함수 이름(모르는 이름·둘 이상) → 없음(시작 → 기준 이벤트 → 끝) → 시각 규칙(<see cref="CombatClipTimings.FindTimeError"/>) → 클립 길이(작은 묶음 설계 §3 SB2).
         /// </summary>
         /// <exception cref="InvalidOperationException">이벤트가 빠졌거나·겹치거나·순서·범위가 틀렸거나·모르는 함수 이름일 때입니다. 문구에 클립 이름과 이유가 있습니다.</exception>
-        internal static CombatClipTimings ReadTimings(AnimationClip clip)
+        internal static CombatClipTimings ReadTimings(AnimationClip clip) => Read(clip, stage: false);
+
+        /// <summary>
+        /// 앞·뒤 단계 몸 클립의 시각을 읽습니다(클립 칸 다시 짜기 설계 CS6·P7). <c>ClipStart</c>·<c>ClipEnd</c>가 하나씩 있어야 하고,
+        /// 중간 이벤트(<c>ClipEvent</c>~<c>ClipEvent3</c>)는 본 단계에만 찍으므로 있으면 실패합니다. 만든 값은 중간 이벤트가 없습니다.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">시작·끝이 빠졌거나·겹치거나·중간 이벤트가 있거나·순서·범위가 틀렸을 때입니다.</exception>
+        internal static CombatClipTimings ReadStageTimings(AnimationClip clip) => Read(clip, stage: true);
+
+        private static CombatClipTimings Read(AnimationClip clip, bool stage)
         {
             if (clip == null) throw new ArgumentNullException(nameof(clip));
             float startTime = 0f;
@@ -38,6 +47,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
                     Take(clip, function, item.time, ref hasEnd, ref endTime);
                 else if (CombatClipEventIds.TryFindByFunction(function, out CombatClipEventId id))
                 {
+                    if (stage)
+                        throw Invalid(clip, $"앞·뒤 단계 몸 클립에는 {function}을(를) 찍지 않습니다(중간 이벤트는 본 단계 몸 클립에만, ClipStart·ClipEnd만 둡니다)");
                     int index = CombatClipEventIds.IndexOf(id);
                     Take(clip, function, item.time, ref seen[index], ref times[index]);
                 }
@@ -47,7 +58,8 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation
 
             RequirePresent(clip, hasStart, nameof(CombatAnimationEvents.ClipStart));
             CombatClipEventId primary = CombatClipEventIds.Primary;
-            RequirePresent(clip, seen[CombatClipEventIds.IndexOf(primary)], CombatClipEventIds.FunctionNameOf(primary));
+            if (!stage)
+                RequirePresent(clip, seen[CombatClipEventIds.IndexOf(primary)], CombatClipEventIds.FunctionNameOf(primary));
             RequirePresent(clip, hasEnd, nameof(CombatAnimationEvents.ClipEnd));
 
             int present = 0;

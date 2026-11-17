@@ -54,7 +54,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
             var cells = new List<CellCoord>();
             var direction = method.ChoiceMode == TargetingChoiceMode.All ? (AttackDirection?)null : aim.Direction;
-            foreach (var offset in AppointShapeCalculator.MaskSteps(method.Shape, range, direction))
+            foreach (var offset in AppointShapeCalculator.MaskSteps(method.Shape, range, direction, method.Width))
             {
                 if (offset.HasValue && TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, CellCoord.Zero, offset.Value))
                     cells.Add(new CellCoord(checked(origin.X + offset.Value.X), checked(origin.Y + offset.Value.Y)));
@@ -79,7 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
                         aim.Cell.HasValue == false || aim.Direction != AttackDirection.None)
                         return AttackFailureReason.InvalidAttackAim;
                     if (!AppointShapeCalculator.ContainsBaseMask(method.Shape, range,
-                        (long)aim.Cell.Value.X - origin.X, (long)aim.Cell.Value.Y - origin.Y) ||
+                        (long)aim.Cell.Value.X - origin.X, (long)aim.Cell.Value.Y - origin.Y, method.Width) ||
                         !TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, origin, aim.Cell.Value))
                         return AttackFailureReason.InvalidPrimaryTarget;
                     break;

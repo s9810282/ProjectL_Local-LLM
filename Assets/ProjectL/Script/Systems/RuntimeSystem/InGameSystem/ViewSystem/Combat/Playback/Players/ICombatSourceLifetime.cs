@@ -29,5 +29,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         /// 클립 공격의 해제 조각이 부릅니다. 코드 모션 공격은 같은 입구를 모션의 타격 콜백으로 씁니다.
         /// </summary>
         void ReleaseAll(CombatEvent source, int version);
+
+        /// <summary>
+        /// 세대가 같을 때만 이 출처의 대상 하나를 해제합니다(투사체가 그 대상에 닿는 순간, 관통·죽음의 손 View 설계 D6). 그 출처의 히트 대상이 아니거나
+        /// 이미 풀린 대상이면 아무 일도 없습니다(규칙은 Gate). 원거리 접촉 해제 규칙(<see cref="CombatContactRelease"/>)이 부릅니다.
+        /// </summary>
+        void Release(CombatEvent source, EntityId target, int version);
     }
 }

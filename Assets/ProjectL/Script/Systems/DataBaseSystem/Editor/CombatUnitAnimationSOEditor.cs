@@ -5,24 +5,15 @@ using UnityEngine;
 
 namespace ProjectL.Systems.DataBaseSystem.Editor
 {
-    /// <summary>공격 클립의 시작 모드에 필요한 입력만 표시합니다. Kind 목록은 런타임 지원 분류를 공유합니다.</summary>
+    /// <summary>
+    /// 클립 묶음의 인스펙터입니다. 공격 동작 시작 기준(클립 칸 다시 짜기 설계 CS11)이 WithLead일 때만 지연 칸을 보입니다.
+    /// 나머지 칸(동작 칸의 단계·이벤트 목록·블렌드)은 기본 그리기입니다.
+    /// </summary>
     [CustomEditor(typeof(CombatUnitAnimationSO)), CanEditMultipleObjects]
     internal sealed class CombatUnitAnimationSOEditor : UnityEditor.Editor
     {
-        private GUIContent[] _kindLabels;
-        private int[] _kindValues;
-
-        private void OnEnable()
-        {
-            var choices = CombatPreAttackTraitKinds.Choices;
-            _kindLabels = new GUIContent[choices.Count];
-            _kindValues = new int[choices.Count];
-            for (int i = 0; i < choices.Count; i++)
-            {
-                _kindLabels[i] = new GUIContent(choices[i].ToString());
-                _kindValues[i] = (int)choices[i];
-            }
-        }
+        private const string StartField = "motionStart";
+        private const string DelayField = "motionStartDelay";
 
         public override void OnInspectorGUI()
         {
@@ -32,35 +23,25 @@ namespace ProjectL.Systems.DataBaseSystem.Editor
             while (property.NextVisible(enterChildren))
             {
                 enterChildren = false;
-                if (property.name == "attackAnimationStartKind" || property.name == "attackAnimationStartDelaySeconds")
+                if (property.name == DelayField)
                     continue;
                 using (new EditorGUI.DisabledScope(property.name == "m_Script"))
                     EditorGUILayout.PropertyField(property, true);
-                if (property.name == "attackAnimationStartMode")
-                    DrawStartSettings(property);
+                if (property.name == StartField)
+                    DrawStartDelay(property);
             }
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawStartSettings(SerializedProperty mode)
+        private void DrawStartDelay(SerializedProperty start)
         {
-            if (mode.hasMultipleDifferentValues || mode.intValue != (int)CombatAttackAnimationStartMode.FromSelectedTraitPresentationStart)
+            if (start.hasMultipleDifferentValues || start.intValue != (int)CombatAttackMotionStart.WithLead)
                 return;
-            SerializedProperty kind = serializedObject.FindProperty("attackAnimationStartKind");
-            Rect rect = EditorGUILayout.GetControlRect();
-            EditorGUI.BeginProperty(rect, new GUIContent("기준 Kind"), kind);
-            EditorGUI.showMixedValue = kind.hasMultipleDifferentValues;
-            EditorGUI.BeginChangeCheck();
-            int value = EditorGUI.IntPopup(rect, new GUIContent("기준 Kind"), kind.intValue, _kindLabels, _kindValues);
-            if (EditorGUI.EndChangeCheck())
-                kind.intValue = value;
-            EditorGUI.showMixedValue = false;
-            EditorGUI.EndProperty();
-            if (!kind.hasMultipleDifferentValues && !CombatPreAttackTraitKinds.SupportsKind(
-                (ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitActivationKind)kind.intValue))
-                EditorGUILayout.HelpBox("지원하지 않는 Kind입니다. 목록에서 다시 선택하세요.", MessageType.Error);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("attackAnimationStartDelaySeconds"), new GUIContent("시작 지연 (초)"));
-            EditorGUILayout.HelpBox("지정 Kind 연출의 실제 실행 시작 기준입니다. 타격 시점(Hit Delay)은 별도입니다.", MessageType.Info);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(DelayField), new GUIContent("시작 지연 (초)"));
+            EditorGUILayout.HelpBox("이 공격의 선행 구간(공격 사건 앞의 발동·끌어오기·휩쓸기 등) 사건 중 연출이 처음 시작되는 순간부터 셉니다. "
+                + "연출 없이 바로 끝나는 사건은 세지 않습니다. 맞는 순간의 지연(이벤트 줄)은 별도입니다.\n"
+                + "음수면 그만큼 먼저 시작합니다: 선행 구간의 첫 사건이 닿는 순간 동작을 시작하고, 그 사건 연출(과 뒤 사건)이 그 초만큼 기다립니다. "
+                + "이번 공격에 선행 구간이 없으면 앞당길 사건이 없어 공격과 함께 시작합니다.", MessageType.Info);
         }
     }
 }

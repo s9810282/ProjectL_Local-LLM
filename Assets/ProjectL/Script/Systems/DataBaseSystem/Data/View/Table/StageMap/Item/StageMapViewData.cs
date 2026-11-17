@@ -13,7 +13,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
 
         internal StageMapViewData(float depthSpacing, float widthSpacing, float nodeScale, float buildingHeight,
             float lineHeight, float lineWidth,
-            GameObject connectionPrefab, GameObject startVisualPrefab, GameObject currentMarkerPrefab,
+            GameObject connectionPrefab, GameObject startVisualPrefab,
             Vector3 markerOffset, float markerYaw, float markerScale, float markerMoveDuration,
             float markerJumpHeight, float pickDistance, Color lineColor, StageNodeDropData nodeDrop,
             StageMapIntroData mapIntro, StageMapCameraFocusData cameraFocus, StageMarkerVisitData markerVisit,
@@ -28,7 +28,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
             LineColor = lineColor;
             ConnectionPrefab = connectionPrefab;
             StartVisualPrefab = startVisualPrefab;
-            CurrentMarkerPrefab = currentMarkerPrefab;
             MarkerOffset = markerOffset;
             MarkerYaw = markerYaw;
             MarkerScale = markerScale;
@@ -51,7 +50,6 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
         public Color LineColor { get; }
         public GameObject ConnectionPrefab { get; }
         public GameObject StartVisualPrefab { get; }
-        public GameObject CurrentMarkerPrefab { get; }
         public Vector3 MarkerOffset { get; }
         public float MarkerYaw { get; }
         public float MarkerScale { get; }
@@ -90,14 +88,10 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageMap.Item
                 throw new InvalidOperationException($"{Owner} {nameof(MarkerJumpHeight)} must be a finite value of 0 or more.");
 
             ViewPrefabRules.RequirePrefabAsset(ConnectionPrefab, $"{Owner} {nameof(ConnectionPrefab)}");
-            ViewPrefabRules.RequirePrefabAsset(CurrentMarkerPrefab, $"{Owner} {nameof(CurrentMarkerPrefab)}");
             if (StartVisualPrefab != null)
                 ViewPrefabRules.RequirePrefabAsset(StartVisualPrefab, $"{Owner} {nameof(StartVisualPrefab)}");
 
             ValidateConnectionPrefab();
-            if (CurrentMarkerPrefab.GetComponentInChildren<Renderer>(true) == null)
-                throw new InvalidOperationException($"{Owner} Current Marker prefab requires a Renderer.");
-            ViewPrefabRules.RequireActiveRoot(CurrentMarkerPrefab, $"{Owner} {nameof(CurrentMarkerPrefab)}");
         }
 
         private void ValidateConnectionPrefab()

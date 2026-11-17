@@ -18,26 +18,28 @@ MonoBehaviour:
     effects:
     - effect: 3
       anchor: 2
+      contactFilter: 1
       delay: 0
-      point: 2
-      actorPoint: 0
+      point: 1
+      eventPoint: 0
+      eventPointRotation: 2
       stayInPlace: 0
       positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
       rotationOffset: {x: 0, y: 0, z: 0}
       end: 0
       endSeconds: 0
     - effect: 3
       anchor: 6
+      contactFilter: 1
       delay: 0
-      point: 2
-      actorPoint: 1
+      point: 1
+      eventPoint: 2
+      eventPointRotation: 2
       stayInPlace: 0
       positionOffset: {x: 0, y: 0, z: 0}
+      riderYOffset: 0
       rotationOffset: {x: 0, y: 0, z: 0}
       end: 0
       endSeconds: 0
     shakes: []
-    sound:
-      anchor: 2
-      delay: 0
-    additionalSounds: []

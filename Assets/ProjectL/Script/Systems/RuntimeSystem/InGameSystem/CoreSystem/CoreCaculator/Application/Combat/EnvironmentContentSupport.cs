@@ -8,7 +8,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     {
         /// <summary>초기 배치에서 Terrain으로 분류할 수 있는 원본이다.</summary>
         public static bool IsSupportedInitialTerrain(MovementTileFact source) =>
-            source is DestinationTileModifierFact || IsExclusiveTerrain(source);
+            source is DestinationTileModifierFact or MovingPlatformFact || IsExclusiveTerrain(source);
 
         /// <summary>같은 셀의 다른 Terrain과 아직 조합하지 않는 원본이다.</summary>
         public static bool IsExclusiveTerrain(MovementTileFact source) =>

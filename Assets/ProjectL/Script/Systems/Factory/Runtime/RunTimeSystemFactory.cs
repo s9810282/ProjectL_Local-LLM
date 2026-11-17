@@ -21,9 +21,11 @@ namespace ProjectL.Systems.Factory.Runtime
         /// 준비 입력은 Core에만, 오류 경계는 View·LifeCycle에만 전달합니다.
         /// 리플렉션으로 호출할 때는 선택 인자가 자동으로 채워지지 않으므로 인자 배열을 모두 넘깁니다.
         /// </remarks>
+        /// <param name="autoStartTutorial">이번 재생에서 튜토리얼을 자동 시작할지입니다. View 조립에만 전달합니다.</param>
         public static FrameworkRuntime Create(
             IBattleInitializationSource battleSource = null,
-            RuntimeFaultBoundary faultBoundary = null)
+            RuntimeFaultBoundary faultBoundary = null,
+            bool autoStartTutorial = true)
         {
             RuntimeFaultBoundary faults = faultBoundary ?? new RuntimeFaultBoundary(Debug.LogException);
             SystemBuilderHelper systemBuilderHelper = new();
@@ -36,6 +38,7 @@ namespace ProjectL.Systems.Factory.Runtime
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 , includeDevelopmentTools: true
 #endif
+                , autoStartTutorial: autoStartTutorial
                 );
 
             BufferSystemFactory.Create().ExportServices(systemBuilderHelper);

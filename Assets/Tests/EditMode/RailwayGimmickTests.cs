@@ -69,7 +69,7 @@ namespace ProjectL.Tests.Core
             var cells = new[] { hitBoss ? new CellCoord(4, 3) : CellCoord.Zero,
                 hitMain ? new CellCoord(7, 7) : new CellCoord(0, 1) };
             var input = Input(5, cells);
-            var state = new CombatCommandState(input.State.BoardWidth,input.State.BoardHeight,input.State.Phase,input.State.Structures,input.State.ThornFields,                input.State.Turn,objective: BattleObjective.DesignatedBoss(new EntityId(2)));
+            var state = new CombatCommandState(input.State.BoardWidth,input.State.BoardHeight,input.State.Phase,input.State.Structures,input.State.Turn,objective: BattleObjective.DesignatedBoss(new EntityId(2)));
             input = input.WithWorld(state, input.Characters, input.Main, input.SoulCounts, input.Souls, input.EnvironmentBindings);
             var result = CombatGimmickCalculator.TryAdvance(input);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(expected));

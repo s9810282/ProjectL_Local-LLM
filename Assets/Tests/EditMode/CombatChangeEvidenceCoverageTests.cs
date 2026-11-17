@@ -8,6 +8,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.StageGimmicks;
@@ -36,15 +37,15 @@ namespace ProjectL.Tests.Core
             var activation = Activation(new EntityId(1));
             var calculation = new CombatArtifactEvent(new[] { activation }, CombatArtifactPurpose.AttackPowerContribution);
             Assert.That(calculation.Purpose, Is.EqualTo(CombatArtifactPurpose.AttackPowerContribution));
-            Assert.That(CombatChangeEvidenceReader.ReadAll(new[] { calculation }).Single().AffectedEntityIds, Is.Empty);
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] {
+            Assert.That(CombatChangeEvidenceReader.ReadEventShapes(new[] { calculation }).Single().AffectedEntityIds, Is.Empty);
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] {
                 new CombatArtifactEvent(new[] { activation }, CombatArtifactPurpose.Healing) }));
-            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadAll(new[] { new CombatArtifactEvent(new[] { activation }) }));
+            Assert.Throws<InvalidOperationException>(() => CombatChangeEvidenceReader.ReadEventShapes(new[] { new CombatArtifactEvent(new[] { activation }) }));
         }
 
         private static void AssertSample(Sample sample)
         {
-            var evidence = CombatChangeEvidenceReader.ReadAll(sample.Events)[0];
+            var evidence = CombatChangeEvidenceReader.ReadEventShapes(sample.Events)[0];
             Assert.That(evidence.Kind, Is.EqualTo(sample.Kind), sample.Name);
             Assert.That(evidence.AffectedEntityIds, Is.EquivalentTo(sample.Actors.Select(id => new EntityId(id))), sample.Name);
             Assert.That(evidence.ChangedSourceCells, Is.EquivalentTo(sample.Cells), sample.Name);
@@ -67,6 +68,20 @@ namespace ProjectL.Tests.Core
 
         private static IEnumerable<Sample> Samples()
         {
+            var platform = new MovingPlatformFact(new MovingPlatformSpec(100, 1, PlatformAxis.Horizontal,
+                new CellCoord(1, 1), new CellCoord(4, 1), new CellCoord(1, 1), 1));
+            var sourceChange = new CombatMovementSourceEvent(platform, new MovingPlatformFact(platform.Spec, new CellCoord(2, 1), 1));
+            var passenger = CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(1, 1), Owner.Player);
+            var passengerMoved = new CombatCharacterEvent(CombatEventKind.Moved, passenger,
+                passenger.WithPlacement(passenger.Area, null, new CellCoord(2, 1), passenger.Rotation, new[] { new CellCoord(2, 1) }));
+            var platformStep = new CombatPlatformStepEvent(1, 0, 0, PlatformStepKind.Translation, sourceChange,
+                new[] { new PlatformPassengerStep(passenger.EntityId, new CellCoord(1, 1), new CellCoord(2, 1), false) }, passengerMoved);
+            yield return Row(new CombatPlatformBoundaryEvent(1, new long[] { 100 }, Array.Empty<CombatEnvironmentRandomEvent>()),
+                CombatChangeEvidenceKind.Lifecycle, Array.Empty<int>());
+            yield return Row(platformStep, CombatChangeEvidenceKind.Effect, new[] { 1 }, new[] { new CellCoord(1, 1), new CellCoord(2, 1) });
+            yield return Row(new CombatPlatformMotionEvent(1, 0, platform, platformStep.Final, new[] { platformStep }, PlatformMotionStopReason.BudgetConsumed),
+                CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { new CellCoord(1, 1), new CellCoord(2, 1) });
+            yield return Row(new CombatEnvironmentRandomEvent(42, 1083814273, 2, 1), CombatChangeEvidenceKind.Observation, Array.Empty<int>());
             var stormId = new StageGimmickId(1);
             var stormBefore = new TornadoMemberState(31, CellCoord.Zero, 1, TornadoGimmickPhase.Cooldown, 1, null);
             var stormAfter = new TornadoMemberState(31, CellCoord.Zero, 1, TornadoGimmickPhase.Warning, 2, new CellCoord(1, 1));
@@ -88,6 +103,23 @@ namespace ProjectL.Tests.Core
                 new RockfallGimmickState(new StageGimmickId(1), RockfallGimmickPhase.Cooldown, 2, Array.Empty<CellCoord>()),
                 new RockfallGimmickState(new StageGimmickId(1), RockfallGimmickPhase.Warning, 4, new[] { CellCoord.Zero }),
                 Array.Empty<EntityId>()), CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { CellCoord.Zero });
+            var meteor = new MeteorFootprint(4, 1, new[] { CellCoord.Zero });
+            var meteorId = new StageGimmickId(1);
+            yield return Row(new CombatMeteorEvent(MeteorGimmickStep.Warning,
+                new StageGimmickBoundary(Owner.Player, 2, StageGimmickBoundaryPhase.Warning),
+                new MeteorGimmickState(meteorId, 2, Array.Empty<MeteorFootprint>(), Array.Empty<MeteorFlameArea>()),
+                new MeteorGimmickState(meteorId, 4, new[] { meteor }, Array.Empty<MeteorFlameArea>()),
+                42u, 42u), CombatChangeEvidenceKind.Effect, Array.Empty<int>(), meteor.Cells.ToArray());
+            yield return Row(new CombatMeteorImpactEvent(meteorId, meteor, false, new[] { new EntityId(1) }),
+                CombatChangeEvidenceKind.Effect, new[] { 1 }, meteor.Cells.ToArray());
+            var chain = new LavaChainGimmickState(new StageGimmickId(1), CellCoord.Zero, 2);
+            yield return Row(new CombatLavaChainEvent(LavaChainGimmickStep.Warning,
+                new StageGimmickBoundary(Owner.Player, 2, StageGimmickBoundaryPhase.Warning), chain,
+                new LavaChainGimmickState(chain.Id, chain.HeadCell, 3, true, CellCoord.Right),
+                new[] { chain.HeadCell }, 42u, 42u), CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { chain.HeadCell });
+            yield return Row(new CombatLavaChainContactEvent(chain.Id, 1, CellCoord.Right, new EntityId(1),
+                CellCoord.Right, new CellCoord(1, 1), new CellCoord(1, 1), LavaChainPushFailure.None, true),
+                CombatChangeEvidenceKind.Observation, Array.Empty<int>());
             var a = CombatCommandTestData.Character(1, EntityKey.Unit_Akimbo, new CellCoord(1, 1), Owner.Player);
             var moved = a.WithPlacement(a.Area, null, new CellCoord(2, 1), a.Rotation, new[] { new CellCoord(2, 1) });
             var hurt = a.WithHealth(new HealthStateSnapshot(90, 100));
@@ -103,6 +135,24 @@ namespace ProjectL.Tests.Core
             // 재구성: 맞기 전 사실 → 최대 체력 사실 하나로 남는다(체력·사망 사건 없음).
             yield return Row(new CombatCharacterEvent(CombatEventKind.Reconstructed, hurt, a), CombatChangeEvidenceKind.Effect, new[] { 1 });
             var spec = new StructureSpec(EntityKey.Structure_PowderBarrel, 1, 1, new[] { CellCoord.Zero }, 10, false, 0);
+            var obstacle = new StructureCombatFacts(new EntityId(5), spec, new ObstacleDurabilitySnapshot(2, 2),
+                new CellCoord(4, 4), Rotation4.R0, new[] { new CellCoord(4, 4) });
+            var obstacleHit = new CombatObstacleDurabilityEvent(obstacle,
+                obstacle.WithObstacleDurability(new ObstacleDurabilitySnapshot(1, 2)), ObstacleDestructionCause.DeliveredHit, origin);
+            yield return Row(obstacleHit, CombatChangeEvidenceKind.Effect, new[] { 5 });
+            var pillar = PillarTestData.Pillar().Structure;
+            var pillarDestroyed = new CombatObstacleDurabilityEvent(pillar,
+                pillar.WithObstacleDurability(new ObstacleDurabilitySnapshot(0, 1)), ObstacleDestructionCause.DeliveredHit,
+                new CombatDamageOrigin(new CellCoord(1, 3), a.EntityId));
+            var pillarReaction = new CombatObstacleReactionEvent(pillar.EntityId, ObstacleContentKind.Pillar,
+                ObstacleReactionKind.Destroyed, new CombatDamageOrigin(pillar.Anchor, a.EntityId), 0);
+            var impactCell = new CellCoord(5, 3);
+            var pillarFall = new CombatPillarFallEvent(pillarDestroyed, pillarReaction, 1, CellCoord.Right,
+                new[] { impactCell }, new[] { a.EntityId }, Array.Empty<EntityId>());
+            yield return Row(pillarFall, CombatChangeEvidenceKind.Effect, new[] { 51, 1 }, new[] { impactCell });
+            yield return Row(new CombatPillarTerrainEvent(pillarFall, null,
+                new StaticTerrainFact(99, impactCell, StaticTerrainKind.Wall, true, new[] { Owner.Player, Owner.Enemy })),
+                CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { impactCell });
             var structure = new StructureCombatFacts(new EntityId(5), spec, new HealthStateSnapshot(10, 10), new CellCoord(4, 4), Rotation4.R0, new[] { new CellCoord(4, 4) });
             foreach (var hp in new[] { 5, 0 })
                 yield return Row(new CombatStructureEvent(structure, new StructureCombatFacts(structure.EntityId, spec,
@@ -111,6 +161,8 @@ namespace ProjectL.Tests.Core
                 new UnitActionUseSettlementSnapshot(a.EntityId, UnitActionUse.Available, UnitActionUse.Attacked),
                 new[] { new CellCoord(6, 6) }, Array.Empty<AttackHitResult>(), new AttackCellSelection(new CellCoord(6, 6), new[] { new CellCoord(6, 6) }, Array.Empty<CellCoord>()));
             yield return Row(new CombatAttackEvent(attack), CombatChangeEvidenceKind.Action, new[] { 1 });
+            yield return Row(new CombatPlayerSkillAttackEvent(new PlayerSkillAttackResult(a.EntityId, 0, 1,
+                Array.Empty<CellCoord>(), Array.Empty<AttackHitResult>())), CombatChangeEvidenceKind.Action, new[] { 1 });
             yield return Row(new CombatRoarEvent(new EntityId(7), null, new[] { new CellCoord(1, 1) }), CombatChangeEvidenceKind.Effect, new[] { 7 });
             yield return Row(new CombatEffectsEvent(new[] { new TraitActivationSnapshot(a.EntityId, null, TraitKey.Leap,
                 TraitActivationKind.MovementChanged, 1, new[] { a.EntityId }, new[] { a.Anchor.Value }) }, Array.Empty<CategoryActivationSnapshot>()),
@@ -119,6 +171,16 @@ namespace ProjectL.Tests.Core
             yield return Row(new CombatHeldEnvironmentEvent(a, a.With(heldEnvironment: new CharacterHeldEnvironmentState(1, true))), CombatChangeEvidenceKind.Effect, new[] { 1 });
             yield return Row(new CombatHuntersMarkEvent(a.EntityId, null, new HuntersMarkState(new EntityId(7), Owner.Enemy, 20)), CombatChangeEvidenceKind.Effect, new[] { 1 });
             yield return Row(new CombatPullEvent(new AttackPullSnapshot(a.EntityId, a.Anchor.Value, moved.Anchor.Value, new[] { moved.Anchor.Value })), CombatChangeEvidenceKind.Effect, new[] { 1 });
+            var sweepCell = new CellCoord(4, 4);
+            var sweepTarget = new EntityId(2);
+            var sweepOrigin = new EffectOriginKey(EffectOwnerKind.Trait, a.EntityId.Value, (int)TraitKey.DeadHand, "main");
+            var sweep = new AttackSweepSnapshot(sweepOrigin, a.EntityId, Rotation4.R0, AttackSweepSide.Right,
+                new[] { sweepCell }, new[] { sweepTarget }, new[]
+                {
+                    new AttackSweepTargetSnapshot(sweepTarget, sweepCell, sweepCell + CellCoord.Right,
+                        Array.Empty<CellCoord>(), sweepCell, AttackSweepStop.Immune)
+                }, false);
+            yield return Row(new CombatSweepEvent(sweep, 1), CombatChangeEvidenceKind.Observation, Array.Empty<int>());
             yield return Row(new CombatFallEvent(a.EntityId, 1, a.Anchor.Value), CombatChangeEvidenceKind.Effect, new[] { 1 });
             var mine = new MineSourceFact(1, new CellCoord(3, 3), 1, 1, true, new[] { Owner.Player });
             var source = new CombatMovementSourceEvent(mine, mine.WithActive(false));
@@ -128,7 +190,12 @@ namespace ProjectL.Tests.Core
             var tornado = new TornadoSourceFact(2, new CellCoord(3, 3), new[] { Owner.Player });
             yield return Row(new CombatTornadoEvent(tornado, tornado.AfterActivation(new CellCoord(4, 3))), CombatChangeEvidenceKind.Effect,
                 Array.Empty<int>(), new[] { new CellCoord(3, 3), new CellCoord(4, 3) });
-            yield return Row(new CombatThornConsumedEvent(new ThornFieldCellSnapshot(new CellCoord(4, 4), 1, 2)), CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { new CellCoord(4, 4) });
+            var thornBomb = new ThornBombSnapshot(1, a.EntityId, Owner.Player, new EntityId(7), CellCoord.Zero,
+                capturedAttackPower: 15, damagePercent: 50, dueControllerTurnSequence: 3);
+            yield return Row(new CombatThornBombAttachedEvent(thornBomb), CombatChangeEvidenceKind.Effect, new[] { 7 });
+            yield return Row(new CombatThornBombDetonatedEvent(thornBomb, new CellCoord(2, 2), ThornBombTrigger.DueControllerTurn, attackGroup: 1),
+                CombatChangeEvidenceKind.Effect, new[] { 7 });
+            yield return Row(new CombatThornBombDiscardedEvent(thornBomb), CombatChangeEvidenceKind.Effect, new[] { 7 });
             var soul = new SoulFieldFacts(1, new EffectOriginKey(EffectOwnerKind.Trait, 7, (int)TraitKey.CallOfBlood, "main"), new CellCoord(6, 6), 1, 1);
             var added = new SoulFieldChange(SoulFieldSnapshot.Empty, new SoulFieldSnapshot(2, new[] { soul }));
             yield return Row(new CombatSoulEvent(added), CombatChangeEvidenceKind.Effect, Array.Empty<int>(), new[] { soul.Cell });
@@ -138,10 +205,8 @@ namespace ProjectL.Tests.Core
             yield return Row(new CombatSoulEvent(consumed, a.EntityId, collection), CombatChangeEvidenceKind.Effect, new[] { 1 }, new[] { soul.Cell });
             yield return Row(new CombatArtifactEvent(new[] { Activation(a.EntityId) }, CombatArtifactPurpose.Healing), CombatChangeEvidenceKind.Effect,
                 new[] { 1 }, companions: new CombatCharacterEvent(CombatEventKind.HealthChanged, hurt, a));
-            var structureHurt = new CombatStructureEvent(structure, new StructureCombatFacts(structure.EntityId, spec, new HealthStateSnapshot(5, 10),
-                structure.Anchor, structure.Rotation, structure.OccupiedCells), new[] { origin });
             yield return Row(new CombatObstacleReactionEvent(structure.EntityId, ObstacleContentKind.PowderBarrel, ObstacleReactionKind.Hit, origin, 1),
-                CombatChangeEvidenceKind.Effect, new[] { 5 }, companions: structureHurt);
+                CombatChangeEvidenceKind.Effect, new[] { 5 }, companions: obstacleHit);
             yield return Row(new CombatGimmickEvent(new RailwayGimmickActivationSnapshot(new StageGimmickId(1), new[] { a.Anchor.Value, new CellCoord(7, 7) }, new[] { a.EntityId })),
                 CombatChangeEvidenceKind.Effect, new[] { 1 }, companions: new CombatCharacterEvent(CombatEventKind.Died, a, dead));
             yield return Row(new CombatSummonEvent(new CombatSummonRecord(a.EntityId, new EntityId(7), TraitKey.Necromancy), a), CombatChangeEvidenceKind.Effect, new[] { 1 });

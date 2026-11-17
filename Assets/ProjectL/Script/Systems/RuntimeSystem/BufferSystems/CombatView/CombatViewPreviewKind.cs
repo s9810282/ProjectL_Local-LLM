@@ -22,6 +22,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         /// <summary>현재 진영·예산·행동 사용 상태에 따른 일반 행동 가능 여부.</summary>
         ActionAvailability = 9,
         /// <summary>보스가 지금 포효하면 어떻게 되는지의 예고(범위 칸·넉백). 지형은 플레이어 시점입니다(포효 예고 설계 RF2).</summary>
-        RoarForecast = 10
+        RoarForecast = 10,
+        SkillAvailability = 11,
+        SkillSelection = 12,
+        SkillForecast = 13,
+        /// <summary>자격 아군 모두의 일반 행동 가능 여부를 한 번에 묻습니다(행위자 없음, 새 SSOT 설계 SN2).</summary>
+        ActionAvailabilities = 14,
+        PlatformForecast = 15
     }
 }

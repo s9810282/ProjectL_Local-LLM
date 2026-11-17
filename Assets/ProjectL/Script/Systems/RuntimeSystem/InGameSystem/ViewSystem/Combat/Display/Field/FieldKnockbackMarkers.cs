@@ -8,7 +8,7 @@ using UnityEngine;
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field
 {
     /// <summary>
-    /// 넉백 미리보기의 공용 삼각형 화살촉을 필요한 수만큼 만들어 다시 씁니다. 상태별 색·띄움 높이를 정하며,
+    /// 넉백·끌어오기 미리보기의 공용 삼각형 화살촉을 필요한 수만큼 만들어 다시 씁니다. 상태별 색·띄움 높이를 정하며,
     /// 메시·색 핸들 수명과 삼각형 자세는 FieldArrowhead가 소유합니다. 받은 표지만 그리며 매 프레임 하는 일은 없습니다.
     /// </summary>
     internal sealed class FieldKnockbackMarkers
@@ -19,17 +19,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly float _length;
         private readonly float _width;
         private readonly float _lift;
-        private readonly Color _pushColor;
-        private readonly Color _blockedColor;
-        private readonly Color _immuneColor;
-        private readonly Color _collisionColor;
+        private readonly FieldHighlightPalette _palette;
         private readonly IMeshSystemService _meshes;
         private readonly IColorSystemService _colors;
         private readonly List<FieldArrowhead> _markers = new();
+        // 마지막으로 그린 표지 종류입니다(화살촉 i번째 = 종류 i번째). 에디터 값 바뀜 때 색을 다시 넣는 데 씁니다(필드 색 DB 계획 TP-8).
+        private readonly List<FieldKnockbackMarkKind> _shownKinds = new();
         private GameObject _root;
 
-        internal FieldKnockbackMarkers(Transform parent, StageFieldViewData config, Color pushColor, Color blockedColor,
-            Color immuneColor, Color collisionColor, IMeshSystemService meshes, IColorSystemService colors)
+        /// <param name="palette">표지 종류별 색을 그릴 때 읽는 필드 색입니다(필드 색 DB 설계 FC2).</param>
+        internal FieldKnockbackMarkers(Transform parent, StageFieldViewData config, FieldHighlightPalette palette,
+            IMeshSystemService meshes, IColorSystemService colors)
         {
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             if (config == null)
@@ -40,10 +40,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _length = config.KnockbackArrowLength;
             _width = config.KnockbackArrowWidth;
             _lift = config.KnockbackArrowLift;
-            _pushColor = pushColor;
-            _blockedColor = blockedColor;
-            _immuneColor = immuneColor;
-            _collisionColor = collisionColor;
+            _palette = palette ?? throw new ArgumentNullException(nameof(palette));
             _meshes = meshes ?? throw new ArgumentNullException(nameof(meshes));
             _colors = colors ?? throw new ArgumentNullException(nameof(colors));
         }
@@ -82,9 +79,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 throw new InvalidOperationException("[FieldKnockbackMarkers] 구성하기 전에 그릴 수 없습니다.");
             while (_markers.Count < marks.Count)
                 _markers.Add(CreateMarker());
+            _shownKinds.Clear();
             for (int i = 0; i < marks.Count; i++)
             {
                 FieldKnockbackMark mark = marks[i];
+                _shownKinds.Add(mark.Kind);
                 _markers[i].Show(mark.LocalPosition + (Vector3.up * _lift), mark.LocalRotation * Vector3.forward,
                     ColorOf(mark.Kind), _length * 0.5f);
             }
@@ -95,8 +94,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>모든 표지를 숨깁니다. 구성 전에도 안전합니다.</summary>
         internal void Clear()
         {
+            _shownKinds.Clear();
             for (int i = 0; i < _markers.Count; i++)
                 _markers[i].Clear();
+        }
+
+        /// <summary>보이는 표지에 지금 필드 색을 다시 넣습니다(필드 색 DB 설계 FC3, 에디터 값 바뀜 때). 화살촉이 같은 색이면 건너뜁니다.</summary>
+        internal void ReapplyColors()
+        {
+            for (int i = 0; i < _shownKinds.Count; i++)
+                _markers[i].SetColor(ColorOf(_shownKinds[i]));
         }
 
         /// <summary>표지의 모든 핸들과 부모를 거둡니다. 일부 해제가 실패해도 나머지 해제를 계속합니다.</summary>
@@ -117,6 +124,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 }
             }
             _markers.Clear();
+            _shownKinds.Clear();
             if (root != null)
             {
                 root.SetActive(false);
@@ -136,10 +144,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             switch (kind)
             {
-                case FieldKnockbackMarkKind.Push: return _pushColor;
-                case FieldKnockbackMarkKind.Blocked: return _blockedColor;
-                case FieldKnockbackMarkKind.Immune: return _immuneColor;
-                case FieldKnockbackMarkKind.Collision: return _collisionColor;
+                case FieldKnockbackMarkKind.Push: return _palette.Knockback;
+                case FieldKnockbackMarkKind.Blocked: return _palette.KnockbackBlocked;
+                case FieldKnockbackMarkKind.Immune: return _palette.KnockbackImmune;
+                case FieldKnockbackMarkKind.Collision: return _palette.KnockbackCollision;
+                case FieldKnockbackMarkKind.Pull: return _palette.PullArrow;
                 default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
         }

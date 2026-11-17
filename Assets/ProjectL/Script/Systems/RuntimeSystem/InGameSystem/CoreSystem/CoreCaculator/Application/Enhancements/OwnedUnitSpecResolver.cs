@@ -122,6 +122,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     throw new InvalidOperationException($"훈련할 수 없는 특성의 구매 이력이 있습니다: {key}.");
                 ranks?.Add(key, rank);
             }
+            TraitCompatibilityRules.Validate(traits);
             display?.AddRange(DisplayOf(traits, benefit, acquired));
             if (!changed) return basis;
             return new UnitSpec(basis.Key, basis.Role, basis.FootprintWidth, basis.FootprintHeight,

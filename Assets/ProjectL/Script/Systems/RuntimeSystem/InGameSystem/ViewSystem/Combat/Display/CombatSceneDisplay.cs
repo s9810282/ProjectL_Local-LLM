@@ -206,7 +206,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
             if (!_eventPlayback.IsPresentationComplete) throw new InvalidOperationException("남은 기차·유닛 연출을 마친 뒤 최종 사실을 표시해야 합니다.");
             CombatStateData state = values.State;
             _snapshot.Record(characters, state.CommandState.Turn, state.CommandState.Phase);
-            _selection.Synchronize(state.CommandState.Turn.StagePhase, values.Owned, state.TraitSettings);
+            _selection.Synchronize(state.CommandState.Turn.StagePhase, values.Owned, state.TraitSettings, values.OwnedStats);
             // 칸 표면 높이(고지대)는 그 위에 서는 유닛보다 먼저 정합니다(고지대 View 설계 F10·HG-2).
             _field.SyncSurface(state);
             // 설치 첫 그리기와 결과 끝 그리기의 국면 배경음은 배경음 정책이 냅니다(평가 C2-03). 결과 재생 중 국면이 바뀌는 사건의 배경음은 사건 소리(CombatEventAudio)가 냅니다.
@@ -214,7 +214,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display
             _bgm.ApplyPhase(state.CommandState.InCombat);
             // 목표 대상은 사실 그리기(_events.Refresh) 전에 정해, 그 그리기가 부르는 강조 맞춤이 이번 목표를 쓰게 한다(평가 C1-14).
             _selection.SetObjective(state.CommandState.Objective);
-            _events.Refresh(_snapshot.Characters, state.Structures);
+            _events.Refresh(_snapshot.Characters, state.Structures,
+                state.Phase == CombatFlowPhase.Finished ? ThornBombStateSet.Empty : state.CommandState.ThornBombs);
             _selection.AfterFacts();
             _field.RenderObjects(state, values.StageKey);
             _hud.RenderStatus(values.RunGold, state.CommandState.Turn, state.CommandState.Phase);

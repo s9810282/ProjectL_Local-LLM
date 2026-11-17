@@ -156,7 +156,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             resetBoss = RoarHitCounter.Reset(boss);
             projected[boss.EntityId] = resetBoss;
             return CombatCommandCalculator.Finish(input, projected, input.SoulCounts.ToDictionary(p => p.Key, p => p.Value),
-                input.Souls, input.State.ThornFields.ToDictionary(f => f.Cell), input.State.Structures.ToArray(), new List<long>(),
+                input.Souls, input.State.Structures.ToArray(), new List<long>(),
                 new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), null, input.State,
                 events: new List<CombatEvent>());
         }

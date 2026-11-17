@@ -33,7 +33,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             ValidateBoundInput(input);
             return new EffectTargetDistanceDamageContribution(
                 input.Origin,
-                _rule.EvaluatePercent(_definition, context.Distance));
+                _rule.EvaluatePercent(_definition, context.Distance, context.PreSweepDistance));
         }
 
         private void ValidateBoundInput(in EffectRuleInput input)

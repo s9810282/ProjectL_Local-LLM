@@ -559,5 +559,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 378d3a5b11384872878d44f32311cd40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  eventPoints:
+  - {fileID: 4650636685245811703}
+  - {fileID: 6739061090031196022}
   muzzle: {fileID: 4650636685245811703}
   effectPoint: {fileID: 6739061090031196022}
+  additionalAttackPoints: []

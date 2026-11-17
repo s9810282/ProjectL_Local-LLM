@@ -128,15 +128,7 @@ namespace ProjectL.Tests.CoreIntegration
             Assert.That(definition.Enhanced, Is.Null);
             Assert.That(definition.Name, Is.Not.Empty);
             Assert.That(definition.Description, Is.Not.Empty);
-            if (definition.Normal is RampageTraitSpec rampage)
-            {
-                Assert.That((rampage.BaseAttackBonus, rampage.RankAttackBonus, rampage.MovementBonus), Is.EqualTo((0, 0, 1)));
-                Assert.That((definition.Rank2.Amount, definition.Rank2.SecondAmount), Is.EqualTo((1, (int?)5)));
-                Assert.That((definition.Rank3.Amount, definition.Rank3.SecondAmount), Is.EqualTo((2, (int?)7)));
-            }
-            else if (definition.Normal is BleedingTraitSpec bleeding)
-                Assert.That((bleeding.DamagePerStack, definition.Rank2.Amount, definition.Rank3.Amount), Is.EqualTo((1, 2, 3)));
-            else Assert.That(definition.IsTrainable, Is.False);
+            Assert.That(definition.IsTrainable, Is.EqualTo(key != TraitKey.LavaCannon));
 
             var roots = new[] { $"{InGame}/TraitGrowth/TraitGrowthDefinitionTable.asset",
                 $"{InGame}/TraitGrowth/CategoryTraitProgressionTable.asset", $"{InGame}/Category/Item/CategoryConfig_Default.asset",

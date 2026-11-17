@@ -19,7 +19,7 @@ namespace ProjectL.Tests.Core
     public sealed class MovementEnvironmentTests
     {
         private static readonly IReadOnlyList<IMovementTileRule> Rules = Array.AsReadOnly(
-            new IMovementTileRule[] { new ThornMovementTileRule(), new FixtureRule() });
+            new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule(), new FixtureRule() });
 
         [Test]
         public void Soul_CollectedOnlyAtActualDestination_BeforePositionModifier()
@@ -62,15 +62,15 @@ namespace ProjectL.Tests.Core
             cells.Select((cell, i) => new SoulFieldFacts(i + 1,
                 new EffectOriginKey(EffectOwnerKind.Artifact, 4, 11, "soul"), cell, 5, 2)).ToArray());
         [Test]
-        public void ThornEntry_ConsumesAndDamagesInTheMoveCommand()
+        public void HazardEntry_ConsumesAndDamagesInTheMoveCommand()
         {
             var input = Route();
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                new[] { new ThornFieldCellSnapshot(new CellCoord(2, 1), 3, 2) },s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,                s.Turn,s.Environment), (new CellCoord(2, 1), 2)));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(8));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(result.FinalState), Is.Empty);
         }
 
         [Test]
@@ -235,7 +235,7 @@ namespace ProjectL.Tests.Core
             var hq = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 5, false, 0),
                 new HealthStateSnapshot(5, 5), new CellCoord(6, 5), Rotation4.R0, new[] { new CellCoord(6, 5) });
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,new[] { hq },s.ThornFields,s.Turn,s.Environment));
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,new[] { hq },s.Turn,s.Environment));
             var result = CombatCommandCalculator.Calculate(input, Rules);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(expected));
             Assert.That(result.PathMovement.DistanceSpent, Is.EqualTo(1));
@@ -280,43 +280,6 @@ namespace ProjectL.Tests.Core
             var pushed = current.Characters.Single(c => c.EntityId == target.EntityId);
             Assert.That(pushed.Anchor, Is.EqualTo(new CellCoord(3, 4)));
             Assert.That(pushed.ActionUse, Is.EqualTo(target.ActionUse));
-        }
-
-        [TestCase(true, 100)]
-        [TestCase(false, 100)]
-        [TestCase(true, 7)]
-        [TestCase(false, 7)]
-        public void TileForcedThornContact_DamagesWithoutArmingDeferredPoison(bool moveActor, int hp)
-        {
-            var input = CombatTraitTestFixtures.ThornMovement();
-            var target = moveActor ? input.Characters[0] : CombatTraitTestFixtures.Stats(
-                CombatCommandTestData.Character(2, EntityKey.Unit_Demon, new CellCoord(3, 3), Owner.Enemy), defense: 11);
-            target = CombatCommandTestData.With(target, hp: hp);
-            target = CombatDebuffApplication.WithDebuffs(target, new CharacterDebuffState(
-                new IntimidationDebuffState(20), defenseReduction: new DefenseReductionDebuffState(20, 1)));
-            input = CombatCommandTestData.With(input, moveActor ? new[] { target, input.Characters[1] }
-                : new[] { input.Characters[0], input.Characters[1], target });
-            var destination = moveActor ? new CellCoord(1, 5) : new CellCoord(3, 4);
-            input = CombatCommandTestData.With(input, state: CombatCommandEffectTests.WithFields(input,
-                new ThornFieldCellSnapshot(destination, 5, 7, 30, UnitTurnTickPhase.Started)));
-            input = WithTiles(MovementTestData.Route(input, new CellCoord(1, 3), new CellCoord(1, 4)),
-                new FixtureTile(7, new CellCoord(1, 4), target: target.EntityId, force: true));
-            var result = CombatCommandCalculator.Calculate(input, Rules);
-            Assert.That(result.Accepted, Is.True, result.Reason);
-            var final = result.Characters.Characters.Single(c => c.Final.EntityId == target.EntityId).Final;
-            Assert.That(final.Health.CurrentHealth, Is.EqualTo(hp - 7));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
-            Assert.That(target.Debuffs.DefenseReduction.ReductionPercent, Is.EqualTo(20));
-            if (hp == 7)
-            {
-                Assert.That(final.Debuffs.DefenseReduction, Is.Null);
-                return;
-            }
-            Assert.That(final.Anchor, Is.EqualTo(destination));
-            Assert.That(final.Debuffs.DefenseReduction.ReductionPercent, Is.EqualTo(20));
-            Assert.That(final.Debuffs.DefenseReduction.RemainingOwnTurnEnds, Is.EqualTo(1));
-            Assert.That(CombatEffectiveStatsCalculator.PhysicalDefense(final), Is.EqualTo(target.Stats.PhysicalDefense));
-            Assert.That(final.Debuffs.Intimidation, Is.SameAs(target.Debuffs.Intimidation));
         }
 
         private static CombatCommandInput ThreeSteps(CombatCommandInput input) => MovementTestData.Route(input,

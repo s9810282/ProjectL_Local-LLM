@@ -15,12 +15,11 @@ MonoBehaviour:
   stageViewPropData:
     stageKey: 1126
     mode: 2
-    gameObject: {fileID: 3299811704027612336, guid: e496bf63056bfb6479a8bf47b005b53b, type: 3}
+    gameObject: {fileID: 2349454289311148492, guid: 064dd034278054746af77c89e81429d8, type: 3}
     map: {fileID: 0}
     positionOffset: {x: 0.4, y: 0, z: 0}
     rotationOffset: {x: 0, y: -90, z: 0}
     scaleOffset: {x: 0.75, y: 0.75, z: 0.75}
-    cameraSettings: {fileID: 11400000, guid: d3d258fc9dc94d5a8297d2f88842ccef, type: 2}
     disableRockfallTunnelExplosion: 0
     mapTiles:
       tileSet: {fileID: 11400000, guid: b469a3ec5b5fa7519caf1fa5467b0f72, type: 2}

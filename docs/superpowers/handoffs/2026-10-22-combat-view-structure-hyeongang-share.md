@@ -439,7 +439,7 @@ W13~W16 정적 검토에서 남은 구체적 결함은 없지만 **변경 후 �
 
 5차([후속 수정 계획](../plans/2026-11-04-combat-view-evaluation-fixes-plan.md) §9)에서 현강님 줄은 바꾸지 않았습니다. 평가 중간 문제 가운데 현강님과 정해야 하는 것 둘을 여쭙니다.
 
-- **C1-38 약한 지반 소리 프리셋:** `Playback/Support/CombatEventSounds.cs` 158·178-186줄은 11-02 `8fe4a688b`("환경요소 사운드 연결")에서 DB 값을 코드 숫자 2로 바꾼 줄입니다. 그래서 설정 표의 `weakGroundCollapseSoundPreset`(지금 -1)을 바꿔도 아무 일이 없습니다. 둘 중 어느 쪽으로 할까요?
+- **C1-38 약한 지반 소리 프리셋 — (2026-11-12 정함: 설정 표 원본, §30)** `Playback/Support/CombatEventSounds.cs` 158·178-186줄은 11-02 `8fe4a688b`("환경요소 사운드 연결")에서 DB 값을 코드 숫자 2로 바꾼 줄입니다. 그래서 설정 표의 `weakGroundCollapseSoundPreset`(지금 -1)을 바꿔도 아무 일이 없습니다. 둘 중 어느 쪽으로 할까요?
   - (권장) DB 값 하나로: 표 기본값을 2로 맞추고 코드는 `presets.WeakGroundCollapse()`를 읽습니다. 진입 1·2회 프리셋(0·1)도 표 칸으로 올릴지 함께 정합니다.
   - 코드 숫자를 원본으로: 설정 칸과 `WeakGroundCollapse()`를 지웁니다.
   - 어느 쪽이든 붕괴 소리(2번)는 지금처럼 납니다. 표 값과 코드는 한 커밋에 넣어야 합니다.
@@ -513,3 +513,60 @@ W13~W16 정적 검토에서 남은 구체적 결함은 없지만 **변경 후 �
 - `Factory/Runtime/InGame/View/CombatSceneInputFactory.cs`: 생성 순서 주석(현강님 줄 `:61`)에 "포효 예고 조회" 한 단계, 반환 줄(현강님 줄 `:104`) 끝에 인자 하나.
 - 화면 차이: HUD 조회가 슬롯을 쓰는 차례가 포효 예고 요청 하나만큼 늦어질 수 있다(보스 카운터가 1 남은 동안, 결과마다 한 번).
 - 컴파일·Unity 확인 문제 없음(사용자), 새 시험 없음.
+
+## 29. 2026-11-12 HUD 행동 가능 여부 조회 — Core 묶음 조회로 (미전달)
+
+[새 SSOT 계획](../plans/2026-11-11-combat-view-new-ssot-plan.md) SN-c(설계 [new-ssot-design](../specs/2026-11-11-combat-view-new-ssot-design.md) SN2, 재평가 C1-N02)에서 현강님 파일 `Input/Interaction/CombatHudActionAvailability.cs`(`f6595326`)를 다시 썼습니다. 컴파일 미확인, 새 시험 없음, 시험 변경 없음.
+
+- **왜:** 지금까지는 판이 바뀌면 "그 유닛 사실이 바뀌었나 + 필드에 여러 칸 유닛이 있나"로 다시 물을 유닛을 골라 하나씩 물었습니다. 둘째 식이 Core `DefersMultiCellAttack`의 사본이었고, Core 답이 다른 유닛·환경에 기대는 조건을 더하면 HUD가 옛 값으로 남을 수 있었습니다.
+- **지금:** 판이 바뀌면 새 미리보기 종류 `ActionAvailabilities`로 Core에 한 번 묻고, 자격 아군 모두의 답(입력 유닛 순)을 한꺼번에 받습니다. 누구를 물을지는 Core 자격 규칙 `CombatActionAdmission.EligibilityFailure`가 정합니다.
+  - 답이 올 때까지 이전 아이콘을 그대로 둡니다(설계 Q-SN4 A — 지금은 다시 물을 유닛 아이콘을 먼저 비움). 턴이 바뀌거나 국면·입력이 닫히면 지금처럼 모두 지웁니다.
+  - 받은 목록에 없는 유닛(죽음·손패 복귀 등)은 숨깁니다.
+  - 선택 유닛은 지금처럼 선택 추적기 답도 함께 보입니다. 마지막으로 보인 답과 같은 객체면 다시 그리지 않아 매 Tick HUD 쓰기가 없습니다.
+  - 걷은 것: `_dirty`·`_observed`·`_next`·`_hasNonSingleCellUnit`·`ObserveCharacters`·`_requestedActor`·선택 유닛 건너뛰기.
+- **서명:** `Sync`와 `CombatSceneInput.SyncHudActionAvailability`에서 `characters` 인자를 뺐습니다(입력 분배 `CombatSceneInputDriver` 호출 맞춤). 생성자와 Factory 줄은 그대로입니다.
+- `CombatActionAvailabilityTracker.IsEligibleActor`(현강님 줄)는 이제 선택 추적기만 써서 `private`로 바꾸고, Core 원본을 가리키는 주석을 달았습니다.
+- **화면 차이:** 이동·공격 뒤 답이 올 때까지(보통 1~2 Tick) 옛 아이콘이 남습니다. 결과 직후 공격 모드·끌기에 들어가면 그 입력이 끝날 때까지 남습니다. 대신 행동마다 다른 아이콘이 깜빡이지 않습니다(Unity 확인 U-9~U-11).
+
+## 30. 2026-11-12 약한 지반·추락 소리 번호를 설정 표로 (미전달)
+
+기록: [소리 프리셋 원본·곡사 공통 수명 계획](../plans/2026-11-12-combat-view-sound-preset-mortar-lifecycle-plan.md) SM-a(§10.2), 설계 [sound-preset-mortar-lifecycle-design](../specs/2026-11-12-combat-view-sound-preset-mortar-lifecycle-design.md) SP1~SP3. 재평가 C1-38(중간)·C1-N19(낮음)입니다. §23의 첫 질문(C1-38)은 사용자가 "설정 표를 원본으로"(권장안)로 정했습니다. 줄 번호는 HEAD `03d3555aa` 기준입니다.
+
+- **왜:** 약한 지반 진입·붕괴 소리 번호가 코드 숫자(`Math.Min(2, 남은 횟수)`·`0`)여서 설정 표 칸 `weakGroundCollapseSoundPreset`을 바꿔도 아무 일이 없었고, 툴팁("-1이면 소리 없음")과 실제가 반대였습니다. 추락 칸 `fallSoundPreset`도 읽는 곳이 없었습니다.
+- **바뀐 현강님 줄(`Playback/Support/CombatEventSounds.cs`):**
+  - 추락 갈래 141-144(`8fe4a688b`·`c0f92a5d8`): `EffectWithoutPreset(UnitEvent.Fall)` → `EffectKeepingPreset(UnitEvent.Fall, presets.Fall())`. 칸이 -1(지금)이면 지금과 같은 소리입니다. 보인 캐릭터만 내는 조건은 그대로입니다.
+  - 진입 갈래 145-146·도우미 189-197: 도우미는 "진입인지와 남은 횟수"만 답하고(`TryGetWeakGroundEntry`, 조건 그대로), 번호는 `presets.WeakGroundEntry(remaining)`이 설정 표 새 목록 `weakGroundEntrySoundPresets`(기본 `[1, 2]`, 남은 횟수가 더 많으면 마지막 원소)에서 고릅니다. 지금 소리와 같습니다.
+  - 붕괴 줄 169: 숫자 `0` → `presets.WeakGroundCollapse()`. 칸 기본값을 -1 → 0으로 바꿔 지금 소리와 같습니다.
+  - 장애물 도우미 `Obstacle`(서명 201 `df422cbcf`): 지웠습니다. 순간 표 두 줄이 같은 규칙 함수 `CombatSoundCue.EffectKeepingPreset(UnitEvent.ObsDamaged / ObsBroken, presets.Obstacle(kind))`를 바로 부릅니다. 추락과 장애물이 이 함수 하나를 씁니다("-1 = 프리셋을 바꾸지 않고 냄").
+  - `CombatSoundCue.Attack` 91-92(`686900826`): `slotIndex >= 0` → `CombatSoundPresets.IsSound(slotIndex)`(같은 판정을 공통 규칙으로, 재평가 C1-N19).
+- **바뀐 현강님 줄(`Playback/Support/CombatSoundPresets.cs`):** 클래스 요약 16(`686900826`) — 설정 표 원본 목록에 진입·붕괴를 더했습니다. 새 답 `WeakGroundEntry(remaining)`·`Fall()`.
+- **확인 부탁:**
+  - 추락 소리를 유닛만 내는 것(11-10 변경 그대로, 구조물 추락은 소리 없음)이 의도인지(설계 Q-SP2, 툴팁도 "유닛"으로 고쳤습니다).
+  - 추락 칸 -1은 이제 "프리셋을 바꾸지 않고 냄"입니다(Boot `Fall` 칸에 프리셋이 없어서). 0 이상을 쓰려면 Boot `Fall` 칸에 그 프리셋을 먼저 만들어야 하고, 없으면 재생 때 AudioSystem 예외입니다.
+- 사운드 작업자 안내 §3·§4.2·§6과 이펙트·소리 창구 안내 §1의 추락·약한 지반 줄도 고쳤습니다(옛 "슬롯 대기" → 나옴).
+- 컴파일 미확인, 새 시험 없음. 설정 표 코드와 에셋은 한 커밋입니다(코드만 들어가면 에셋 붕괴 칸 -1이 남아 붕괴 소리가 사라짐).
+
+## 31. 2026-11-17 플레이어 액티브 스킬 — 키 설정 열거·행동 안내 문구·행동 패널 스킬 칸 (미전달)
+
+기록: [플레이어 스킬 View 계획](../plans/2026-11-16-combat-player-skill-view-plan.md) §6.1 표(줄 작성자)·§6.2~§6.6, 설계 [player-skill-view-design](../specs/2026-11-16-combat-player-skill-view-design.md) SK1·SK4·SK6. 천명님 Core 액티브 스킬(화약꽃·마탄)을 전투에서 쓰게 했습니다. 컴파일 미확인, 새 시험 없음, 시험 변경 없음. 사용자 Unity 확인(Ua~Ue) 문제 없음(11-17) — 조건부 문구 없앰(§6.4)도 확인됨, 그 뒤 메인을 골랐을 때만 누름(§6.6)·검토 반영(§6.7)은 Unity 확인 대기.
+
+- **키(결정 Q-SK1):** 전투 이동 되돌리기 키가 R → Q가 되고, R은 새 액션 `Combat/Skill`입니다.
+  - `GlobalSystem/InputSystem/View/IKeyBindingService.cs:14` 열거 `KeyBindingAction` 맨 끝에 `Skill`(직렬화된 정수가 바뀌지 않게 맨 끝).
+  - **`GlobalSystem/UISystem/Screens/Global/KeySettingUI.cs:66` 고정 수 6은 아직 그대로입니다**(→ 11-17 프리팹 줄과 함께 7로 바꿈, 이 절 끝 덧붙임). 7로 바꾸면 Boot 씬 `GlobalUICanvas.prefab` 키 설정 화면이 6줄이라 부트의 `BindButtons`에서 예외로 모든 Play가 멈춥니다. 프리팹에 일곱째 줄(Action = Skill, Button, Text)을 넣는 것과 6 → 7을 한 커밋으로 하려고 미뤘습니다(계획 §6.2 TP-16). 그 전까지 스킬 키는 키 설정 화면에 안 보이지만, 정의 줄(호진님 `StageInputKeyBindings`)이 있어 겹침 검사는 됩니다.
+  - 예전에 저장한 키 설정은 전투 그룹 줄 수가 달라져 한 번 기본값으로 돌아갑니다(경고 한 번, 멈추지 않음). 고치려면 GlobalSystem 키 설정 읽기 규칙을 바꿔야 해 그대로 두었습니다 — 바꿀지 판단 부탁드립니다.
+- **행동 안내(`Combat/Input/Assist/CombatActionNotice.cs`):**
+  - 계약 `ICombatActionRejectionSink`(10-14)에 `SkillRejected(PlayerSkillFailureReason)` 한 줄(:16), 구현 :43.
+  - `OnResult`에 스킬 명령 갈래(:55) — 스킬 실패 이유 이름(무장 해제·기절)이 공격 문구로 가지 않게 공격 갈래보다 먼저 봅니다.
+  - 스킬 문구 `ShowSkillFailure`(:116, 초안 — 지금은 스킬을 쓸 수 없음·메인이 필드에 있어야 함·스킬 없음·무장 해제·기절·횟수 다 씀·이번 턴 사용·상황이 바뀜). 점 고르기 오류는 후보로 걸러 오므로 문구가 없습니다. 문구 손질 부탁드립니다.
+  - 한때 예보 동안 띄우던 조건부 문구("알려진 정보 기준 예상입니다") 입구 둘은 사용자 결정으로 걷었습니다(공용 안내 창이라 호버마다 팝업이 깜빡임, 계획 §6.4).
+- **행동 패널(`Combat/Display/Hud/CombatActionPanel.cs`):**
+  - 넷째 칸 `SkillSlot = 3`(:42), 선택 참조 `skillButton`(:66)·`skillIcon`·`skillUsesText`·`skillActiveIndicator`.
+  - `Bind(attack, endTurn, returnToCheckpoint, skill)`(:116) — 세 입구 함께 검사를 네 입구로.
+  - `BindUIService` 재정의(:136)로 공용 Hover 패널(`UITextPresentation`)을 받아, 스킬 버튼 호버 때 이름·설명 + "남은 횟수 r/l"을 보입니다(UnitInfo 특성 칸과 같은 방식, 밖에서 닫혔으면 다른 사용처 것이라 안 닫음).
+  - 스킬 칸 적용 `ApplySkill`(:258) — 보임 = 패널이 보이고 메인에 스킬이 있음, 누름 = 메인을 골랐고 Core 가용성 답이 쓸 수 있음(또는 스킬 모드 끄기), 아이콘·남은/한도 글자·스킬 모드 켜짐 표시. `OnUIHidden`(:100)에서 호버를 닫습니다.
+  - `skillButton`은 아직 선택 참조입니다(비어 있으면 스킬이 보일 때 경고 한 번, R 키로만). `Combat.unity` 연결이 끝나 필수 참조로 바꿀 차례입니다(계획 e.3).
+- **옆에 더하기만 한 줄(현강님 줄 무변경):** 병종 순환 줄 옆의 `StageInput/StageInputNames.cs`·`CombatInputController.cs`·`IStageInputReceiver.cs`(`SkillRequested`)·`StageInputReceiverSlot.cs`·`Combat/Input/CombatInputReceiver.cs`·`CombatInputRouter.cs`(`Request.Skill`·우클릭 `SkillBack`), `Combat/Input/Interaction/CombatInteraction.cs`·`CombatSceneInput.cs`(스킬 모드·버튼 배경 조회 생성 인자·목록).
+- **덧붙임(11-17, 계획 §6.8) — 키 설정 화면 스킬 줄을 넣었습니다(사용자 지시, 컴파일 미확인, Unity 확인 대기):**
+  - `Prefabs/UI/GlobalUICanvas.prefab` `KeySetting` 아래에 되돌리기 줄을 복사한 `Skill` 줄(라벨 "스킬")을 `Return` 뒤에 넣고 `keyButtons` 끝에 `action: 6`(Skill)을 더했습니다.
+  - 줄이 손으로 놓은 자리라 "전투 조작" 묶음을 위로 올리고 간격을 100 → 90으로 좁혔습니다(머리글 425, 전투 시작 310, 턴 종료 220, 공격 모드 130, 되돌리기 40, 스킬 -50). "아티팩트 조작" 묶음은 그대로입니다. 임시 배치이니 보기 좋게 옮겨 주세요.
+  - `KeySettingUI.cs:66` 고정 수 6 → 7(+ 예외 문구). 프리팹과 한 커밋이어야 합니다. 제안: 고정 수 대신 `KeyBindingAction` 값 수와 비교하면 다음 키를 더할 때 이 줄을 안 고쳐도 됩니다(중복 검사가 이미 있어 길이가 같으면 모든 액션이 한 번씩 연결됨) — 바꿀지 판단 부탁드립니다.

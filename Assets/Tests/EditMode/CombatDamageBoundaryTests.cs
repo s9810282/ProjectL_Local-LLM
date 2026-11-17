@@ -44,14 +44,14 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void ThornDamage_IsUnchangedBesideHeavy()
+        public void EnvironmentalDamage_IsUnchangedBesideHeavy()
         {
             var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right);
             var provider = UnownedHeavy(88, Owner.Player, new CellCoord(1, 1));
             var state = input.State;
             input = CombatCommandTestData.With(input, input.Characters.Concat(new[] { provider }).ToArray(),
-                state: new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,                    state.Structures,new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 6) },turn: state.Turn));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+                state: EnvironmentDamageTests.WithDamageTiles(new CombatCommandState(state.BoardWidth,state.BoardHeight,state.Phase,                    state.Structures,turn: state.Turn), (CellCoord.Right, 6)));
+            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(MovementTestData.Actor(result).Health.CurrentHealth, Is.EqualTo(94));
         }

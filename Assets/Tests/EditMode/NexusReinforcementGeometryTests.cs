@@ -98,17 +98,16 @@ namespace ProjectL.Tests.Core
             var warning = new CellCoord(8, 2);
             var rockfall = new RockfallGimmickState(new StageGimmickId(3), RockfallGimmickPhase.Warning, 1, new[] { warning });
             var gimmicks = new StageGimmickStateSet(new StageGimmickState[] { tornado, haboob, rockfall });
-            var thorn = new ThornFieldCellSnapshot(new CellCoord(8, 0), 1, 1);
             var rail = new CellCoord(9, 0);
 
             var input = Input(characters, environment, bindings,
-                new[] { barrel, supplies, playerStructure, deadStructure }, new[] { thorn }, new[] { rail }, gimmicks,
+                new[] { barrel, supplies, playerStructure, deadStructure }, new[] { rail }, gimmicks,
                 new StageGimmickSpec[] { movingTornado, new HaboobGimmickSpec(), new RockfallGimmickSpec() });
             var candidates = NexusReinforcementCalculator.Candidates(input);
 
             var blocked = staticTerrain.Select(t => t.Cell)
                 .Concat(new[] { mine.Cell, flag.Cell, badge.Cell, trail.Cell, modifier.Cell, legacyTornado.Cell, boundTerrain.Cell,
-                    barrel.Anchor, supplies.Anchor, playerStructure.Anchor, thorn.Cell, rail, new CellCoord(10, 1) })
+                    barrel.Anchor, supplies.Anchor, playerStructure.Anchor, rail, new CellCoord(10, 1) })
                 .Concat(TornadoGeometry.Footprint(center, 3)).Concat(haboob.Cells);
             Assert.That(candidates.Intersect(blocked), Is.Empty);
             var allowed = new[] { consumedMine.Cell, consumedBadge.Cell, expiredTrail.Cell, deadStructure.Anchor,
@@ -155,14 +154,14 @@ namespace ProjectL.Tests.Core
 
         private static CombatCommandInput Input(CharacterCombatFacts[] characters, MovementEnvironmentFacts environment = null,
             EnvironmentSemanticBindings bindings = null, StructureCombatFacts[] structures = null,
-            ThornFieldCellSnapshot[] thorns = null, CellCoord[] railCells = null, StageGimmickStateSet gimmicks = null,
+            CellCoord[] railCells = null, StageGimmickStateSet gimmicks = null,
             StageGimmickSpec[] definitions = null)
         {
             var basis = CombatCommandTestData.Input(empty: true);
             var nexus = Nexus();
             var progress = new NexusReinforcementState(nexus.EntityId, 77, Array.Empty<NexusReinforcementRecord>());
             var state = new CombatCommandState(12, 12, CombatFlowPhase.Automatic,
-                new[] { nexus }.Concat(structures ?? Array.Empty<StructureCombatFacts>()).ToArray(), thorns ?? Array.Empty<ThornFieldCellSnapshot>(),
+                new[] { nexus }.Concat(structures ?? Array.Empty<StructureCombatFacts>()).ToArray(),
                 new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy, controllerTurnSequence: 1),
                 environment, gimmicks: gimmicks, reinforcements: progress);
             var spec = new NexusReinforcementSpec(new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, 1) }, 1, rangePadding: 12);

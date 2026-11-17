@@ -24,16 +24,16 @@ namespace ProjectL.Tool.Editor
         internal static CombatStageSoRangeShape ShapeOf(Object unitDefinition, int direction)
         {
             if (unitDefinition == null) return CombatStageSoRangeShape.Fail("유닛 정의가 없습니다.");
-            if (!CombatStageSoAssets.ReadAttack(unitDefinition, out int range, out int shapeValue, out int splashValue))
+            if (!CombatStageSoAssets.ReadAttack(unitDefinition, out int range, out int shapeValue, out int splashValue, out int width))
                 return CombatStageSoRangeShape.Fail($"{unitDefinition.name}: 지정 방식 SO가 없어 범위를 그릴 수 없습니다.");
             var shape = (TargetingShape)shapeValue;
             try
             {
                 CellCoord[] reach = direction == AllDirections
-                    ? AppointShapeCalculator.CreateBaseMask(shape, range)
-                    : AppointShapeCalculator.CreateDirectionMask(shape, range, (AttackDirection)direction);
+                    ? AppointShapeCalculator.CreateBaseMask(shape, range, width)
+                    : AppointShapeCalculator.CreateDirectionMask(shape, range, (AttackDirection)direction, width);
                 CellCoord[] splash = AppointShapeCalculator.CreateSplashOffsets((TargetingSplash)splashValue);
-                return new CombatStageSoRangeShape(ToVectors(reach), ToVectors(splash), DirectionsOf(shape, range), null);
+                return new CombatStageSoRangeShape(ToVectors(reach), ToVectors(splash), DirectionsOf(shape, range, width), null);
             }
             catch (ArgumentException exception)
             {
@@ -72,17 +72,17 @@ namespace ProjectL.Tool.Editor
         }
 
         // 고를 수 있는 방향입니다. 사각형(RadialSquare)은 방향이 없는 모양이라 비우고, 나머지는 Core가 받아 주는 방향만 냅니다.
-        private static int[] DirectionsOf(TargetingShape shape, int range)
+        private static int[] DirectionsOf(TargetingShape shape, int range, int width)
         {
             if (shape == TargetingShape.RadialSquare) return Array.Empty<int>();
-            return Directions.Where(direction => Supports(shape, range, direction)).Select(direction => (int)direction).ToArray();
+            return Directions.Where(direction => Supports(shape, range, direction, width)).Select(direction => (int)direction).ToArray();
         }
 
-        private static bool Supports(TargetingShape shape, int range, AttackDirection direction)
+        private static bool Supports(TargetingShape shape, int range, AttackDirection direction, int width)
         {
             try
             {
-                AppointShapeCalculator.CreateDirectionMask(shape, range, direction);
+                AppointShapeCalculator.CreateDirectionMask(shape, range, direction, width);
                 return true;
             }
             catch (ArgumentOutOfRangeException) { return false; }

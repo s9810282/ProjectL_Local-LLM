@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DeckEditUI : UIBase, IUIInputReceiver, IDeckEditDisplay, IDeckCombatDisplay,
-        IDeckEditDragReceiver, IDeckEditInteractionReceiver, IScrollPopupDisplay
+        IDeckEditDragReceiver, IDeckEditInteractionReceiver, IDeckSlotInfoReceiver, IScrollPopupDisplay
     {
         private const int OpenSlot = -1;
         private const int CloseSlot = -2;
@@ -579,19 +579,56 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
             CancelChangeMode();
             CancelDrag();
             if (_infoId == card.OwnedId) { CloseInfo(); return; }
-            GetVisual(card, out string displayName, out Sprite portrait);
-            slotInfoPanel.Render(card, displayName, portrait, _traitVisuals);
-            _infoId = card.OwnedId;
+            RenderInfo(card);
             ui.OpenUI(UIId.DeckSlotInfo);
         }
 
-        void IDeckEditInteractionReceiver.CloseSlotInfo()
+        void IDeckSlotInfoReceiver.MoveSlotInfo(int direction)
+        {
+            if (!CanInteract || _infoId.IsEmpty || _displayModel == null) return;
+            DeckEditCardModel current = FindInfoCard(out int ownedIndex);
+            if (current == null) return;
+            DeckEditCardModel next = ownedIndex >= 0 ? FindAdjacentOwnedCard(ownedIndex, direction) :
+                FindAdjacentDeckCard(current.Category, direction);
+            if (next == null) return;
+            CancelChangeMode();
+            CancelDrag();
+            RenderInfo(next);
+        }
+
+        private DeckEditCardModel FindAdjacentDeckCard(CategoryKey category, int direction)
+        {
+            int index = DeckEditSlotLayout.IndexOf(category);
+            if (index < 0) return null;
+            int count = DeckEditSlotLayout.Count;
+            for (int step = 1; step < count; step++)
+            {
+                DeckEditCardModel card = _displayModel.Deck[(index + count + direction * step) % count];
+                if (card != null) return card;
+            }
+            return null;
+        }
+
+        private DeckEditCardModel FindAdjacentOwnedCard(int index, int direction)
+        {
+            // 필터가 고정된 카드를 숨겨도 원래 목록 위치에서 다음 보이는 카드를 찾습니다.
+            IReadOnlyList<DeckEditCardModel> owned = _displayModel.Owned;
+            int count = owned.Count;
+            for (int step = 1; step < count; step++)
+            {
+                DeckEditCardModel card = owned[(index + count + direction * step) % count];
+                if (ownedFilter.Includes(card.Category)) return card;
+            }
+            return null;
+        }
+
+        void IDeckSlotInfoReceiver.CloseSlotInfo()
         {
             CancelChangeMode();
             CloseInfo();
         }
 
-        void IDeckEditInteractionReceiver.SlotInfoHidden() => _infoId = CharacterInstanceId.Empty;
+        void IDeckSlotInfoReceiver.SlotInfoHidden() => _infoId = CharacterInstanceId.Empty;
 
         private IUISystemService RequireUI() => UISystemService ??
             throw new InvalidOperationException("[DeckEditUI] UIId.DeckEdit: 공용 SlotInfoPannel 개폐에 UISystem 바인딩이 필요합니다.");
@@ -607,17 +644,31 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         private void RefreshInfo()
         {
             if (_infoId.IsEmpty) return;
-            DeckEditCardModel found = null;
+            DeckEditCardModel card = FindInfoCard(out _);
+            if (card == null) CloseInfo();
+            else RenderInfo(card);
+        }
+
+        private DeckEditCardModel FindInfoCard(out int ownedIndex)
+        {
+            ownedIndex = -1;
             foreach (var card in _displayModel.Deck)
-                if (card != null && card.OwnedId == _infoId) found = card;
-            foreach (var card in _displayModel.Owned)
-                if (card.OwnedId == _infoId) found = card;
-            if (found == null) CloseInfo();
-            else
+                if (card != null && card.OwnedId == _infoId) return card;
+            for (int i = 0; i < _displayModel.Owned.Count; i++)
             {
-                GetVisual(found, out string displayName, out Sprite portrait);
-                slotInfoPanel.Render(found, displayName, portrait, _traitVisuals);
+                DeckEditCardModel card = _displayModel.Owned[i];
+                if (card.OwnedId != _infoId) continue;
+                ownedIndex = i;
+                return card;
             }
+            return null;
+        }
+
+        private void RenderInfo(DeckEditCardModel card)
+        {
+            GetVisual(card, out string displayName, out Sprite portrait);
+            slotInfoPanel.Render(card, displayName, portrait, _traitVisuals);
+            _infoId = card.OwnedId;
         }
 
         bool IDeckEditDragReceiver.BeginOwnedDrag(OwnedUnitSlot source, PointerEventData eventData)

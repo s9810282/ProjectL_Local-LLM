@@ -173,7 +173,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.Trait.Item
             // 행위자 지점 자리는 유닛마다 다른 조건(공격 클립·프리팹 지점)인데, 이 줄은 그 특성을 가진 어느 유닛이 쓸지 모릅니다. 그래서 여기서 막습니다
             // (묶음 끝 검토 M2). 유닛 자신의 공격 표시는 외형 표 검사가 그 유닛 기준으로 봅니다.
             if (CombatPresentationCueRules.UsesActorPoint(presentation.Cues))
-                throw new InvalidOperationException($"{context}: 공격 표시 덮어쓰기의 이펙트 큐는 행위자 지점 자리(ActorEffectPoint·ActorMuzzle)를 쓸 수 없습니다. 어느 유닛이 쓸지 모르기 때문입니다. " + "ActorBody 등 다른 자리를 고르거나 덮어쓰기를 비우세요(비우면 그 유닛의 공격 표시를 씁니다).");
+                throw new InvalidOperationException($"{context}: 공격 표시 덮어쓰기의 이펙트 큐는 이벤트 지점 자리(ActorEventPoint)를 쓸 수 없습니다. 어느 유닛이 쓸지 모르기 때문입니다. " + "ActorBody 등 다른 자리를 고르거나 덮어쓰기를 비우세요(비우면 그 유닛의 공격 표시를 씁니다).");
         }
 
         // 깜빡임 값은 만들 때 스스로 검사합니다. 어느 특성 줄인지 알 수 있게 감싸고, 허용 줄(AllowsDeathBlink)이 아니면 막습니다.

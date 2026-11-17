@@ -14,6 +14,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
         [SerializeField] private TMP_Text title;
         [SerializeField] private Image icon;
         [SerializeField] private Button actionButton;
+        [Tooltip("다음 Run 메인으로 고른 항목에만 켜는 표시입니다. 상세 고정과 따로 보입니다. 항목 루트가 아닌 자식이어야 합니다.")]
+        [SerializeField] private GameObject selectedMark;
 
         private UIInputBinding _binding;
 
@@ -26,6 +28,11 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
             if (!title.transform.IsChildOf(transform) || !icon.transform.IsChildOf(transform) ||
                 (actionButton.transform != transform && !actionButton.transform.IsChildOf(transform)))
                 throw new InvalidOperationException("[LobbyDeckListItemView] 표시와 입력 참조는 목록 항목 안에 있어야 합니다.");
+            if (selectedMark == null)
+                throw new InvalidOperationException("[LobbyDeckListItemView] 선택 표시(selectedMark) 참조가 필요합니다.");
+            // 항목 루트를 끄면 항목 전체가 사라지므로 자식만 받습니다.
+            if (selectedMark == gameObject || !selectedMark.transform.IsChildOf(transform))
+                throw new InvalidOperationException("[LobbyDeckListItemView] 선택 표시는 목록 항목 루트가 아닌 자식이어야 합니다.");
         }
 
         internal void Bind(IUIInputReceiver receiver, int slot)
@@ -39,6 +46,13 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Lobby
                 actionButton.interactable = enabled;
             if (!enabled)
                 _binding?.OnHoverExit();
+        }
+
+        /// <summary>다음 Run 메인으로 고른 항목인지 표시합니다. 바뀔 때만 켜고 끕니다.</summary>
+        internal void SetSelected(bool selected)
+        {
+            if (selectedMark.activeSelf != selected)
+                selectedMark.SetActive(selected);
         }
 
         internal void Render(LobbyDeckCardContent content)

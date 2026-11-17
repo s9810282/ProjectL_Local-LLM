@@ -1,6 +1,7 @@
 using System;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.Artifact.Item;
 using ProjectL.Systems.DataBaseSystem.Data.View.Table.LobbyVisual.Item;
+using ProjectL.Systems.DataBaseSystem.Data.View.Table.Unit.Item;
 using ProjectL.Systems.DataBaseSystem.Queries.ViewDataBase.ViewTable;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Artifact;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.ArtifactView;
@@ -10,8 +11,11 @@ using ProjectL.Systems.RuntimeSystem.GlobalSystem.InputSystem.View;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.RenderSystem.Core.CameraGroup.UnityCameraCatalogSystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UtilitySystem.DelaySystem.View;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactInput;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.ArtifactPopup;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby.Deck;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.LobbyInput;
 using ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby;
 
@@ -23,6 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
     /// 모든 칸이 운영에 필요하므로 만들 때 null만 한 번 검사하고, 쓰는 곳은 다시 검사하지 않습니다(검사 후속 정리 설계 §12.2 B1·B2).
     /// DB 값(판·이동·캐릭터 보정·호버·아티팩트 설정)은 DB 생성(<c>LobbyVisualTable</c>·<c>ArtifactPopupConfigTable</c>)이 검사한 원본이라 여기서 다시 검사하지 않습니다(로비 리팩토링 설계 LR5-3).
     /// 배경음 서비스(<see cref="Audio"/>)도 이 묶음이 원본이며, 배경음을 트는 시점은 System이 정합니다. 씬 노드 등록은 넣지 않습니다.
+    /// 다음 Run 메인 후보 조회(<see cref="ReadMainOptions"/>)와 덱 팝업 묶음(<see cref="Deck"/>)도 여기서 넘깁니다(로비 메인 선택 설계 LM2).
     /// </summary>
     internal sealed class LobbyViewServices
     {
@@ -36,17 +41,22 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
             ILobbyReceiverSlot slot, IArtifactInputSlot artifactSlot,
             IUISystemService ui, IUITextPresentation text, IInputLayerService layers, IDelayService delay,
             IUnityCameraCatalogService outputs, IAudioSystemService audio,
-            ILobbyProgressReader progress)
+            ILobbyProgressReader progress,
+            Func<RunStartMainOptions> readMainOptions, Func<EntityKey, UnitVisualData> unitVisuals,
+            Func<Func<EntityKey>, IDisposable> bindMainPortrait)
         {
             if (artifactVisuals == null) throw new ArgumentNullException(nameof(artifactVisuals));
             if (progress == null) throw new ArgumentNullException(nameof(progress));
+            ReadMainOptions = readMainOptions ?? throw new ArgumentNullException(nameof(readMainOptions));
+            BindMainPortrait = bindMainPortrait ?? throw new ArgumentNullException(nameof(bindMainPortrait));
             UI = ui ?? throw new ArgumentNullException(nameof(ui));
             Layers = layers ?? throw new ArgumentNullException(nameof(layers));
             Audio = audio ?? throw new ArgumentNullException(nameof(audio));
             Departure = departure ?? throw new ArgumentNullException(nameof(departure));
             Text = text ?? throw new ArgumentNullException(nameof(text));
-            Scene = new LobbySceneServices(models, board, characterPresentation);
+            Scene = new LobbySceneServices(models, board, characterPresentation, unitVisuals);
             Input = new LobbyInputServices(layers, delay, motion, facilityHover, audio, slot);
+            Deck = new LobbyDeckServices(ui, unitVisuals);
             // 표에 없는 아티팩트 ID는 원인 ID를 담은 예외(KeyNotFoundException)로 멈춥니다(로비 리팩토링 2차 설계 M-03).
             // 아티팩트 도메인 정지(처리 기록 누락)는 LifeCycle 사실이 원본입니다. View는 읽기만 합니다(M-06).
             Artifact = new ArtifactPopupServices(ui, layers, artifactBoard, artifactInput, artifactWriter, artifactResults,
@@ -60,6 +70,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
         internal LobbyInputServices Input { get; }
         /// <summary>아티팩트 팝업의 묶음입니다. 아티팩트 팝업 Factory가 직접 받습니다.</summary>
         internal ArtifactPopupServices Artifact { get; }
+        /// <summary>덱 팝업의 묶음입니다. 덱 팝업 Factory가 직접 받습니다.</summary>
+        internal LobbyDeckServices Deck { get; }
+        /// <summary>
+        /// 출발 로드아웃의 메인 후보·기본 메인을 Core에 묻습니다. 시작 명령은 넘기지 않습니다.
+        /// System이 씬 연결마다(이전 연결을 떼기 전에) 한 번 부릅니다.
+        /// </summary>
+        internal Func<RunStartMainOptions> ReadMainOptions { get; }
+        /// <summary>로비 선택의 초상화 읽기 연결입니다. Scope가 반환값의 수명을 소유합니다.</summary>
+        internal Func<Func<EntityKey>, IDisposable> BindMainPortrait { get; }
         /// <summary>출발 창구입니다. 읽기 계약만 주고받습니다(로비 리팩토링 2차 설계 N-75).</summary>
         internal ILobbyViewBufferWriteSink Departure { get; }
         internal IUITextPresentation Text { get; }

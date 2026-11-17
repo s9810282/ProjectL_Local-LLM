@@ -332,14 +332,19 @@ namespace ProjectL.Tests.Core
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(31)]
+        [Timeout(900000)]
         public void AllPartitionsMatchFrozenPreview(int partition)
         {
             var reference = AttackPreviewParityTests.ReadReference();
             foreach (var entry in AttackPreviewParityTests.ReadReference(Path.Combine(Directory.GetCurrentDirectory(),
                 AttackPreviewParityTests.MovementReferencePath)))
                 reference.Add(entry.Key, entry.Value);
+            bool fullRegression = EnemyAiBenchmarkFixtures.FullRegressionEnabled;
             foreach (var vector in AttackPreviewParityTests.Vectors().Concat(AttackPreviewParityTests.MovementVectors()))
             {
+                if (!fullRegression && vector.Id is not ("single" or "direction" or "all" or "W8-1"
+                    or "reflection-launched-pierce" or "sacrifice-ordered" or "hidden-attack-rejection"
+                    or "terminal-main" or "weak-pull")) continue;
                 using var work = CombatCommandCalculator.BeginPreview(vector.Input, vector.Rules);
                 string before = Facts(vector.Input);
                 while (!work.IsComplete)
@@ -368,10 +373,12 @@ namespace ProjectL.Tests.Core
         [Test]
         public void CancelAtEveryObservedBoundaryLeavesSourceUntouched()
         {
+            bool fullRegression = EnemyAiBenchmarkFixtures.FullRegressionEnabled;
             foreach (var vector in AttackPreviewParityTests.Vectors().Where(v =>
                 v.Id == "single" || v.Id == "pull" || v.Id == "terminal-main" || v.Id == "sacrifice-ordered")
                 .Concat(AttackPreviewParityTests.MovementVectors()))
             {
+                if (!fullRegression && vector.Id is not ("single" or "weak-pull")) continue;
                 int count;
                 using (var whole = CombatCommandCalculator.BeginPreview(vector.Input, vector.Rules))
                 {

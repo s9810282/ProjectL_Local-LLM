@@ -498,7 +498,7 @@ MonoBehaviour:
     currentPresetIndex: -1
   - slotName: UIReward
     displayName: Reward
-    selectedEventPath: event:/UI/Reward
+    selectedEventPath: event:/UI/Combat/Reward
     selectedEventGuid: '{13b3f167-90d5-4460-a177-13b035d4fcf6}'
     playbackMode: 1
     playOnStart: 0
@@ -588,7 +588,7 @@ MonoBehaviour:
     currentPresetIndex: -1
   - slotName: CardShuffle
     displayName: CardShuffle
-    selectedEventPath: event:/UI/CardShuffle
+    selectedEventPath: event:/UI/Combat/CardShuffle
     selectedEventGuid: '{9e9bd4c4-ecae-47f2-958c-9df6b418b416}'
     playbackMode: 1
     playOnStart: 0
@@ -1807,7 +1807,7 @@ MonoBehaviour:
     currentPresetIndex: -1
   - slotName: Event Slot 9
     displayName: StageDeploy
-    selectedEventPath: event:/PostFX/SFX/StageDeploy
+    selectedEventPath: event:/PostFX/SFX/Terrain/StageDeploy
     selectedEventGuid: '{0fe60e5a-8fd2-47b0-a85c-eb8c41309300}'
     playbackMode: 1
     playOnStart: 0
@@ -2089,7 +2089,7 @@ MonoBehaviour:
   eventSlots:
   - slotName: Event Slot 0
     displayName: ChangeTurn
-    selectedEventPath: event:/UI/ChangeTurn
+    selectedEventPath: event:/UI/Combat/ChangeTurn
     selectedEventGuid: '{d0ff3370-69e3-40d4-b29c-f962c122829c}'
     playbackMode: 0
     playOnStart: 0
@@ -2224,7 +2224,7 @@ MonoBehaviour:
     currentPresetIndex: -1
   - slotName: Event Slot 5
     displayName: StageWin
-    selectedEventPath: event:/UI/StageWin
+    selectedEventPath: event:/UI/Combat/StageWin
     selectedEventGuid: '{0a236600-f397-4ab9-9273-e85fcf559597}'
     playbackMode: 0
     playOnStart: 0
@@ -2239,7 +2239,7 @@ MonoBehaviour:
     currentPresetIndex: -1
   - slotName: Event Slot 6
     displayName: StageDefeat
-    selectedEventPath: event:/UI/StageDefeat
+    selectedEventPath: event:/UI/Combat/StageDefeat
     selectedEventGuid: '{b543755b-c14b-4c35-a4db-585f575f23b9}'
     playbackMode: 0
     playOnStart: 0

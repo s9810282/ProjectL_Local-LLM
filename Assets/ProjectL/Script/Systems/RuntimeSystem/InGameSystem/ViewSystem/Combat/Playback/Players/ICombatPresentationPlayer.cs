@@ -9,8 +9,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// <remarks>
     /// 지켜야 할 뜻(설계 §5.2 L):
     /// <list type="bullet">
-    /// <item><see cref="BeginFrame"/>은 프레임 시작 사실만 기록하고 진행하지 않습니다. 프레임 맨 앞에서 알려야 하는 실패(반응 불가, 설계 B14 O13)만
-    /// 여기서 던지고, 다른 재생기의 실패는 자기 <see cref="Tick"/>에서 던집니다. 예외가 먼저 나는 순서를 지키기 위해서입니다.</item>
+    /// <item><see cref="BeginFrame"/>은 프레임 시작 사실만 기록하고 진행하지 않습니다. 실패는 자기 <see cref="Tick"/>에서 던집니다.
+    /// 지금 여기서 던지는 재생기는 없습니다(옛 반응 재생기의 반응 불가 — 설계 B14 O13 — 는 피격 구조 정리 설계 HC1로 조각 실행의 사라짐이 되어 그 Tick에서 던집니다).</item>
     /// <item><see cref="Tick"/>의 false는 "이 프레임의 뒤 재생기를 진행하지 않음"만 뜻합니다. 실패는 예외입니다.</item>
     /// <item><see cref="FindBlock"/>·<see cref="IsComplete"/>·<see cref="BlocksFinalFacts"/>는 부수효과 없는 읽기입니다.</item>
     /// </list>

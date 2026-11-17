@@ -7,7 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
     /// </summary>
     /// <remarks>
     /// 문구는 모델을 만들 때 한 번 만들어 둡니다(성능 규칙 R4). 값 형식이라 목록에 넣어도 할당이 없습니다.
-    /// 상점: 제목 = 캐릭터 이름, 첫 줄 = 가격("2G"), 둘째 줄 = 보유 수("보유 1").
+    /// 유닛 상품: 제목 = 캐릭터 이름, 첫 줄 = 가격("2G"), 상단 오른쪽 = 레벨, 초상화 아래 가운데 = 보유 수입니다.
     /// 증강: 첫 줄은 비우고(가격 없음), 종류 글 = "신규 특성"·"특성 강화"입니다.
     /// </remarks>
     public readonly struct StageOfferCardContent
@@ -17,6 +17,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public string Title { get; }
         public string PrimaryText { get; }
         public string SecondaryText { get; }
+        /// <summary>유닛 상품의 상단 오른쪽 레벨입니다. 비어 있으면 칸을 끕니다.</summary>
+        public string UnitLevelText { get; }
+        /// <summary>유닛 상품의 초상화 아래 보유 수입니다. 비어 있으면 칸을 끕니다.</summary>
+        public string UnitOwnedText { get; }
         /// <summary>증강 종류 글입니다. 비어 있으면 칸을 끕니다.</summary>
         public string KindText { get; }
         public string ButtonText { get; }
@@ -26,12 +30,15 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Stage
         public bool IsCompleted { get; }
 
         internal StageOfferCardContent(Sprite icon, string title, string primaryText, string secondaryText,
-            string buttonText, bool isButtonEnabled, bool isCompleted, string kindText = null)
+            string buttonText, bool isButtonEnabled, bool isCompleted, string kindText = null,
+            string unitLevelText = null, string unitOwnedText = null)
         {
             Icon = icon;
             Title = title ?? string.Empty;
             PrimaryText = primaryText ?? string.Empty;
             SecondaryText = secondaryText ?? string.Empty;
+            UnitLevelText = unitLevelText ?? string.Empty;
+            UnitOwnedText = unitOwnedText ?? string.Empty;
             ButtonText = buttonText ?? string.Empty;
             IsButtonEnabled = isButtonEnabled;
             IsCompleted = isCompleted;

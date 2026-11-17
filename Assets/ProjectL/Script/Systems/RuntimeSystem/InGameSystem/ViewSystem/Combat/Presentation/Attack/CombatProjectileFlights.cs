@@ -77,22 +77,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>
-        /// 출처 발사 직선 한 발입니다(클립 공격). 진행률이 <paramref name="hitAt"/>을 지나면 <paramref name="hit"/>을 한 번 부르고,
-        /// 끝에 닿으면 (아직 맞지 않았으면 <paramref name="hit"/> 먼저) <paramref name="arrived"/>를 부릅니다. 재생 세대가 <paramref name="version"/>과 다르면 부르지 않습니다.
+        /// 출처 발사 직선 한 발입니다(클립 공격). 경로 위 접촉 순간들을 진행률이 지날 때마다 그 콜백을 한 번씩 순서대로 부르고,
+        /// 끝에 닿으면 남은 순간을 먼저 부른 뒤 <paramref name="arrived"/>를 부릅니다. 재생 세대가 <paramref name="version"/>과 다르면 부르지 않습니다.
+        /// 관통 탄은 조우마다 순간이 하나씩이고, 그 밖은 접촉 하나입니다(관통·죽음의 손 View 설계 §3.1, 목록 원본 <see cref="CombatProjectileContacts"/>).
         /// </summary>
-        /// <param name="hitAt">경로 위에서 맞는 정규화 진행률(0~1)입니다. 풀이 알리는 진행률도 경로 기준이라 완급 곡선과 상관없이 접촉 지점에서 맞습니다.</param>
         /// <param name="easing">완급 곡선입니다(투사체 완급 설계 EZ1).</param>
-        internal ICombatShot FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up, float hitAt,
-            CombatProjectileEasing easing, Action hit, Action arrived, int version) =>
-            FireThrough(prefab, from, to, speed, up, easing, new[] { (hitAt, hit) }, arrived, version);
-
-        /// <summary>
-        /// 출처 발사 직선 한 발이 경로 위 순간들에 닿는 경우입니다. 진행률이 각 순간을 지날 때마다
-        /// 그 콜백을 한 번씩 순서대로 부르고, 끝에 닿으면 남은 순간을 먼저 부른 뒤 <paramref name="arrived"/>를 부릅니다.
-        /// 재생 세대가 <paramref name="version"/>과 다르면 부르지 않습니다. 지금은 <see cref="FireLinear"/>(한 순간)만 부릅니다(옛 Ballista 관통이 여러 순간을 썼음).
-        /// </summary>
-        /// <param name="contacts">경로 위에서 닿는 정규화 진행률(0~1)과 그 순간의 콜백입니다. 진행률 오름차순이어야 합니다.</param>
-        private ICombatShot FireThrough(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up, CombatProjectileEasing easing,
+        /// <param name="contacts">경로 위에서 닿는 정규화 진행률(0~1)과 그 순간의 콜백입니다. 진행률 오름차순이어야 합니다.
+        /// 풀이 알리는 진행률도 경로 기준이라 완급 곡선과 상관없이 접촉 지점에서 맞습니다.</param>
+        internal ICombatShot FireLinear(GameObject prefab, Vector3 from, Vector3 to, float speed, Vector3 up, CombatProjectileEasing easing,
             IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version)
         {
             if (contacts == null) throw new ArgumentNullException(nameof(contacts));
@@ -107,6 +99,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             CombatProjectilePool pool = PoolOf(prefab);
             var shot = new Shot(this, pool, contacts, arrived, version);
             shot.Hold(pool.FireLinear(from, to, speed, up, shot.Advance, shot.Arrive, easing));
+            return shot;
+        }
+
+        /// <summary>
+        /// 출처 발사 꺾인 직선 한 발입니다(클립 공격의 스킬 사건 51, 전투 스킬 View 설계 SK3). 접촉 순간 규칙은 <see cref="FireLinear"/>와 같고,
+        /// 진행률은 전체 길이 비율입니다.
+        /// </summary>
+        internal ICombatShot FirePath(GameObject prefab, IReadOnlyList<Vector3> points, float speed, Vector3 up, CombatProjectileEasing easing,
+            IReadOnlyList<(float Time, Action Reached)> contacts, Action arrived, int version)
+        {
+            if (contacts == null) throw new ArgumentNullException(nameof(contacts));
+            for (int i = 0; i < contacts.Count; i++)
+            {
+                float time = contacts[i].Time;
+                if (!float.IsFinite(time) || time < 0f || time > 1f)
+                    throw new ArgumentOutOfRangeException(nameof(contacts), time, "맞는 진행률은 0~1이어야 합니다.");
+                if (i > 0 && time < contacts[i - 1].Time)
+                    throw new ArgumentException("맞는 진행률은 오름차순이어야 합니다.", nameof(contacts));
+            }
+            CombatProjectilePool pool = PoolOf(prefab);
+            var shot = new Shot(this, pool, contacts, arrived, version);
+            shot.Hold(pool.FirePath(points, speed, up, shot.Advance, shot.Arrive, easing));
             return shot;
         }
 

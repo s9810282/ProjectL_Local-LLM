@@ -52,24 +52,20 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void SplashWithDeferredThornTrait_CountsOnce()
+        public void Splash_CountsOnce()
         {
-            // 가시밭 생성이 보류되어도 스플래시 피격은 보스 횟수에 한 번 반영된다.
             var input = BossRoarTests.Input(0);
-            var characters = input.Characters.Select(c => c.EntityId == BossRoarTests.Player
-                ? CombatCommandTestData.With(c, traits: new TraitStatusSnapshot[] { new ThornFieldTraitStatusSnapshot(5, 5) }) : c).ToArray();
             var splash = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.Radial, 70);
             var profiles = input.Profiles.Select(p => p.Definition.Key == EntityKey.Unit_Akimbo
-                ? new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Main, new ThornFieldTraitSpec(5, 5)), splash)
+                ? new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Akimbo, 20, CategoryKey.Main), splash)
                 : p).ToArray();
-            input = CombatAttackQueries.WithAim(CombatCommandTestData.With(input, characters, profiles: profiles), AttackAim.ForCell(new CellCoord(3, 4)));
+            input = CombatAttackQueries.WithAim(CombatCommandTestData.With(input, profiles: profiles), AttackAim.ForCell(new CellCoord(3, 4)));
 
             var result = Calculate(input);
 
             var bossHits = result.Events.OfType<CombatCharacterEvent>().Count(e => e.Final.EntityId == Boss &&
                 e.Final.Health.CurrentHealth < e.Expected.Health.CurrentHealth);
             Assert.That(bossHits, Is.EqualTo(1));
-            Assert.That(result.FinalState.ThornFields, Is.Empty);
             Assert.That(RoarHitCounter.HitCount(BossRoarTests.Final(result, Boss)), Is.EqualTo(1));
         }
 
@@ -97,8 +93,7 @@ namespace ProjectL.Tests.Core
             var events = new List<CombatEvent>();
             var projection = new MovementProjection(input, input.State,
                 CombatDamageApplication.For(input, input.Characters.ToDictionary(c => c.EntityId), events),
-                input.State.Structures.ToDictionary(s => s.EntityId), input.State.ThornFields.ToDictionary(f => f.Cell),
-                input.SoulCounts.ToDictionary(p => p.Key, p => p.Value), input.Souls, new List<long>(),
+                input.State.Structures.ToDictionary(s => s.EntityId), input.SoulCounts.ToDictionary(p => p.Key, p => p.Value), input.Souls, new List<long>(),
                 new Dictionary<EntityId, CellCoord>(), new SoulEffectCalculator(input.Artifacts), hitCause: new CombatHitCause());
 
             projection.ChangeHealth(new MovementHealthRequest(Boss, 3, new CombatDamageOrigin(new CellCoord(3, 2), null, projection.NextAttackGroup())), false);

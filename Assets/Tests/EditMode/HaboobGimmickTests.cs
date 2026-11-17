@@ -100,8 +100,8 @@ namespace ProjectL.Tests.Core
             Assert.That(warning.FinalState.EnvironmentProgress.RandomState, Is.EqualTo(input.State.EnvironmentProgress.RandomState));
             var moved = CombatGimmickCalculator.TryAdvance(At(CombatCommandComposition.Project(warning), 2), new StageGimmickBoundary(Owner.Enemy, 2));
             Assert.That(((HaboobGimmickState)moved.FinalState.Gimmicks.Entries.Single()).Cells.SequenceEqual(initial.Cells), Is.False);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(warning.Events));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(moved.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(warning.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(moved.Events));
         }
 
         [Test]
@@ -125,8 +125,7 @@ namespace ProjectL.Tests.Core
 
         private static CombatCommandState Base(int width, int height) =>
             new CombatCommandState(width, height, CombatFlowPhase.PlayerInput,
-                Array.Empty<StructureCombatFacts>(), Array.Empty<ThornFieldCellSnapshot>(),
-                new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
+                Array.Empty<StructureCombatFacts>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Player, controllerTurnSequence: 1));
 
         internal static CombatCommandInput Input(HaboobGimmickSpec spec = null, CombatCommandState state = null)
         {

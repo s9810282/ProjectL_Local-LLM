@@ -14,8 +14,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
         private EntityId _selected;
         internal void Bind(ICombatInspectionFactsReader facts) => _facts = facts ?? throw new ArgumentNullException(nameof(facts));
         public EntityId SelectedEntityId => _selected;
-        public EntityId SelectedActorId => _facts != null && _facts.TryGet(_selected, out var facts) &&
-            facts.Character != null && facts.Owner == Owner.Player ? _selected : EntityId.Empty;
+        public EntityId SelectedActorId => IsPlayerActor(_selected) ? _selected : EntityId.Empty;
         public IReadOnlyList<CellCoord> SelectedActorCells => _facts != null && _facts.TryGet(SelectedActorId, out var facts)
             ? facts.Cells : Array.Empty<CellCoord>();
         internal void Synchronize(StagePhase stage)
@@ -34,6 +33,23 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Selectio
             if (_facts == null) throw new InvalidOperationException("선택 사실 reader가 연결되지 않았습니다.");
             _selected = cell.HasValue && _facts.TryPick(cell.Value, out EntityId id) ? id : EntityId.Empty;
         }
+        internal void SelectPicked(EntityId entity)
+        {
+            if (_stage == StagePhase.Combat || _stage == StagePhase.Deployment)
+                _selected = entity;
+        }
+
+        internal bool TrySelectActor(EntityId actor)
+        {
+            if (_stage != StagePhase.Combat) return false;
+            if (_facts == null) throw new InvalidOperationException("선택 사실 reader가 연결되지 않았습니다.");
+            if (!IsPlayerActor(actor)) return false;
+            _selected = actor;
+            return true;
+        }
+        private bool IsPlayerActor(EntityId id) => _facts != null && _facts.TryGet(id, out var facts) &&
+            facts.Character != null && facts.Owner == Owner.Player;
+
         internal void Clear()
         {
             _selected = EntityId.Empty;

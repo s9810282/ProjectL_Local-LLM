@@ -7,21 +7,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
     /// <summary>
     /// 연결 한 번의 출발 요청을 소유합니다. 제출·취소와 "출발이 입력을 붙잡는지"를 답하고, 거절은 공용 안내로 한 번 알립니다.
     /// 처리 단계는 저장하지 않고 요청(Buffer)에서 읽습니다(검사 후속 정리 설계 §12.2 B4, TP-R7).
+    /// 제출 순간 다음 Run 메인 선택을 요청에 담고, 이후 실행은 요청에 담긴 키만 씁니다(로비 메인 선택 설계 LM4).
     /// </summary>
-    internal sealed class LobbyDepartureFlow
+    internal sealed class LobbyDepartureFlow : ILobbyDepartureHold
     {
         // 거절 안내 시간(초)입니다. 기획 확인 전 임시 값입니다(검사 후속 정리 계획 TP-R7).
         private const float RejectionNoticeSeconds = 3f;
         // 출발 창구는 읽기 계약만 주고받습니다. 단계 변경은 실행 계층 Job만 합니다(로비 리팩토링 2차 설계 N-75).
         private readonly ILobbyViewBufferWriteSink _write;
         private readonly IUITextPresentation _text;
+        private readonly ILobbyMainSelectionReader _selection;
         private readonly Func<bool> _canWork;
         private ILobbyDepartureState _owned;
 
-        internal LobbyDepartureFlow(ILobbyViewBufferWriteSink write, IUITextPresentation text, Func<bool> canWork)
+        internal LobbyDepartureFlow(ILobbyViewBufferWriteSink write, IUITextPresentation text,
+            ILobbyMainSelectionReader selection, Func<bool> canWork)
         {
             _write = write ?? throw new ArgumentNullException(nameof(write));
             _text = text ?? throw new ArgumentNullException(nameof(text));
+            _selection = selection ?? throw new ArgumentNullException(nameof(selection));
             _canWork = canWork ?? throw new ArgumentNullException(nameof(canWork));
         }
 
@@ -31,10 +35,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Lobby
         /// </summary>
         internal bool IsHolding => _write.Current?.IsPending == true || (_owned != null && !_owned.CanResubmit);
 
-        /// <summary>출발을 제출합니다. 열어도 되는지는 부르는 쪽(시설 실행)이 이미 확인했습니다.</summary>
+        // 메인 선택의 잠김이 같은 판정을 읽습니다. 판정식은 위 한 곳입니다(로비 메인 선택 설계 LM2).
+        bool ILobbyDepartureHold.IsHolding => IsHolding;
+
+        /// <summary>
+        /// 지금 고른 다음 Run 메인을 담아 출발을 제출합니다. 열어도 되는지는 부르는 쪽(시설 실행)이 이미 확인했습니다.
+        /// 처리 중인 요청이 있으면 Buffer가 그 요청을 키째 돌려주므로, 선택을 바꿔도 이미 제출한 키는 바뀌지 않습니다.
+        /// </summary>
         internal void Submit()
         {
-            ILobbyDepartureState request = _write.Submit();
+            ILobbyDepartureState request = _write.Submit(_selection.Selected);
             _owned = request;
             // 반환 전에 교체·폐기돼도 반환된 자기 요청 참조만 취소합니다.
             if (!_canWork()) _write.Cancel(request);

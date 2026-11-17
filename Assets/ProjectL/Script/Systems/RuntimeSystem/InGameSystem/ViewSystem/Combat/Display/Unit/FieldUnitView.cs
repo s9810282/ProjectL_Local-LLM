@@ -136,6 +136,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _clipChannel?.Resume();
         }
 
+        // 채널에 넘긴 꼬리(뒤 단계·Out 섞기·남은 섞기)만 프레임마다 진행합니다(클립 칸 다시 짜기 계획 TP-10, 설계 P10·CS7). 꼬리가 없으면 확인 하나뿐입니다.
+        private void Update()
+        {
+            if (_clipChannel != null && _clipChannel.HasTail)
+                _clipChannel.TickTail(Time.deltaTime);
+        }
+
         private void SyncHudActive()
         {
             if (_unitHud == null) return;
@@ -196,18 +203,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _actualHealth = currentHealth;
             _actualMaxHealth = maxHealth;
             changed |= SetAttackHealthPreview(null);
-            Transform self = transform;
-
             // 연출·풀 재사용이 바꾼 값도 되돌리도록 저장값이 아니라 실제 표시값과 비교한다.
             // 자세·서는 자리 대여가 있으면 위치·회전은 그 대여가 쓴다(서는 자리는 유닛 행동 설계 AA2).
-            bool leased = _poseSlot.Current != null || _standSlot.Current != null;
-            if (!leased && self.position != worldPosition)
-            {
-                self.position = worldPosition;
-                changed = true;
-            }
-
-            if (!leased) changed |= ApplyRotation(worldRotation);
+            changed |= ApplyStandingPosition(worldPosition);
+            if (!HasLeasedPoseOrStand) changed |= ApplyRotation(worldRotation);
 
             if (gameObject.activeSelf != visible)
             {
@@ -218,6 +217,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             changed |= RefreshHealthLabel();
 
             return changed;
+        }
+
+        private bool HasLeasedPoseOrStand => _poseSlot.Current != null || _standSlot.Current != null;
+
+        internal bool ApplyStandingPosition(Vector3 position)
+        {
+            if (HasLeasedPoseOrStand || transform.position == position) return false;
+            transform.position = position;
+            return true;
         }
 
         /// <summary>표시용 예상 체력만 적용합니다. 실제 체력과 AP는 변경하지 않습니다.</summary>
@@ -378,19 +386,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_appearance != null || colors == null) return;
             var models = new List<Renderer>();
             foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
-                if (IsUnitModelPart(renderer))
+                if (UnitModelParts.Is(renderer))
                     models.Add(renderer);
             _appearance = new UnitModelAppearance(models.ToArray(), colors);
         }
-
-        /// <summary>
-        /// 그 Renderer가 유닛 모델 표시의 일부인지입니다. HUD·문자(Canvas·TMP)와 선택 커서 같은 몸체 아닌 표시(<see cref="UnitModelBoundsExclusion"/>)는 아닙니다.
-        /// 모델 외형 층 수집과 모델 경계 측정이 이 규칙 하나를 씁니다. 몸체가 아닌 표시가 외형 층(반투명·플래시·디졸브·외곽선)에 잡히지 않게 합니다.
-        /// </summary>
-        private static bool IsUnitModelPart(Renderer renderer) =>
-            renderer.GetComponentInParent<TMP_Text>(true) == null
-            && renderer.GetComponentInParent<Canvas>(true) == null
-            && renderer.GetComponentInParent<UnitModelBoundsExclusion>(true) == null;
 
         /// <summary>이전 모델 재질만 전투용 Cartoon으로 바꿉니다. 임시 사망 재질은 반환까지 유지합니다.</summary>
         internal bool SetCartoonMaterialFallback(bool enabled)
@@ -505,7 +504,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             {
                 if (renderer == null || !renderer.enabled
                     || !(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
-                    || !IsUnitModelPart(renderer))
+                    || !UnitModelParts.Is(renderer))
                     continue;
                 if (found) bounds.Encapsulate(renderer.bounds);
                 else bounds = renderer.bounds;
@@ -561,7 +560,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             return lease;
         }
 
-        private void ResetClip() => _clipSlot.Reset(lease => lease.RestoreClip());
+        // 표시 대여 정리(취소·풀 반환)는 뒤 단계 꼬리도 끊습니다(클립 칸 다시 짜기 설계 P8). 대여가 넘긴 꼬리는 대여 반환만으로는 끊기지 않습니다.
+        private void ResetClip()
+        {
+            try { _clipSlot.Reset(lease => lease.RestoreClip()); }
+            finally { _clipChannel?.CutTail(); }
+        }
+
+        /// <summary>뒤 단계 꼬리가 있으면 끊습니다(연출 취소, 설계 P8). 표시 대여는 건드리지 않습니다.</summary>
+        internal void CutClipTail() => _clipChannel?.CutTail();
 
         /// <summary>남은 사건 클립 대여를 끝내고 채널을 해제합니다(그래프 파괴, 넘겨받은 컨트롤러 반환). 표시 집합 해제와 파괴 때 부릅니다.</summary>
         internal void ReleaseClipChannel()
@@ -656,6 +663,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         bool ICombatUnitPresentationTarget.SupportsClip => SupportsClip;
 
         ICombatUnitClip ICombatUnitPresentationTarget.BeginClip(Action cancelled) => BeginClip(cancelled);
+        void ICombatUnitPresentationTarget.CutClipTail() => CutClipTail();
 
         bool ICombatUnitPresentationTarget.HasStand => _standSlot.Current != null;
 
@@ -738,6 +746,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 if (_view._statusAppearance?.IsReplaced == true || !_view.TryGetComponent(out CombatUnitRagdoll ragdoll))
                     return false;
 
+                // 래그돌이 몸을 맡기 전에 뒤 단계 꼬리를 끊습니다(클립 칸 다시 짜기 설계 P8).
+                _view._clipChannel?.CutTail();
                 _view._clipChannel?.Pause();
                 try
                 {
@@ -890,6 +900,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         {
             private readonly FieldUnitView _view;
             private readonly EntityId _entityId;
+            // 이 대여가 첫 단계를 꽂았는지입니다. 다시 꽂으면 단계 바뀜(Between)입니다(클립 칸 다시 짜기 설계 CS7).
+            private bool _played;
+            // 본 단계 끝에 나머지를 채널에 넘겼는지입니다(설계 CS6). 넘긴 뒤 대여 반환은 돌고 있는 꼬리를 끊지 않습니다.
+            private bool _tailed;
 
             internal PresentationUnitClip(FieldUnitView view)
             {
@@ -901,10 +915,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             public bool IsAvailable => IsCurrent && _view.gameObject.activeInHierarchy && _view._clipChannel != null;
 
-            public void Play(CombatClipData clip)
+            public void Play(CombatClipData clip, CombatClipBlend blend)
             {
                 RequireAvailable();
-                _view._clipChannel.Begin(clip);
+                if (_tailed)
+                    throw new InvalidOperationException("[FieldUnitView] 나머지를 채널에 넘긴 대여는 단계를 꽂지 않습니다.");
+                if (_played)
+                    _view._clipChannel.CrossFade(clip, blend);
+                else
+                    _view._clipChannel.Begin(clip, blend);
+                _played = true;
+            }
+
+            public bool IsBlending => IsAvailable && _view._clipChannel.IsBlending;
+
+            public void AdvanceBlend(float deltaTime)
+            {
+                RequireAvailable();
+                if (!_tailed)
+                    _view._clipChannel.AdvanceBlend(deltaTime);
             }
 
             public void AimWeapon(CombatWeaponAim aim)
@@ -916,29 +945,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             public void SetTime(float time)
             {
                 RequireAvailable();
+                if (_tailed)
+                    throw new InvalidOperationException("[FieldUnitView] 뒤 단계를 채널에 넘긴 대여는 시각을 정하지 않습니다.");
                 _view._clipChannel.SetTime(time);
+            }
+
+            public void PlayTail(CombatClipData tail, float speed, CombatClipBlend between, CombatClipBlend fadeOut)
+            {
+                RequireAvailable();
+                if (_tailed)
+                    throw new InvalidOperationException("[FieldUnitView] 이 대여는 이미 나머지를 채널에 넘겼습니다.");
+                _view._clipChannel.HandOff(tail, speed, between, fadeOut);
+                _tailed = true;
             }
 
             public void RestoreClip()
             {
                 if (!IsCurrent || !_view._clipSlot.Release(this)) return;
-                _view._clipChannel?.End();
+                // 넘긴 뒤 단계·Out 섞기는 채널이 혼자 끝까지 돌립니다(설계 CS6·CS7). 넘길 때 남은 In·Between 섞기만 있거나 아무것도 안 넘겼으면 지금처럼 바로 돌아갑니다.
+                // 대여 정리(취소·풀 반환)는 FieldUnitView.ResetClip이 따로 끊습니다.
+                UnitClipChannel channel = _view._clipChannel;
+                if (channel != null && !(_tailed && channel.HoldsTail))
+                    channel.End();
             }
 
-            public bool TryGetMuzzle(out Vector3 position) => TryGetMuzzle(0, out position);
-
-            public bool TryGetMuzzle(int point, out Vector3 position)
+            public bool TryGetEventPoint(int point, out Vector3 position, out Quaternion rotation)
             {
                 RequireAvailable();
-                return _view._clipChannel.TryGetMuzzle(point, out position);
-            }
-
-            public bool TryGetEffectPoint(out Vector3 position, out Quaternion rotation) => TryGetEffectPoint(0, out position, out rotation);
-
-            public bool TryGetEffectPoint(int point, out Vector3 position, out Quaternion rotation)
-            {
-                RequireAvailable();
-                return _view._clipChannel.TryGetEffectPoint(point, out position, out rotation);
+                return _view._clipChannel.TryGetEventPoint(point, out position, out rotation);
             }
 
             private void RequireAvailable()

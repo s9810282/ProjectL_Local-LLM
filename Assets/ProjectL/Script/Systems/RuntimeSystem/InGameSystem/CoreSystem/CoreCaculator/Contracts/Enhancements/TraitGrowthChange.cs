@@ -18,6 +18,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 expected.Level != final.Level || expected.Experience != final.Experience ||
                 expected.HunterAttackBonus != final.HunterAttackBonus ||
                 expected.SpecializationCategory != final.SpecializationCategory ||
+                expected.PlayerSkillUpgrade != final.PlayerSkillUpgrade ||
                 !expected.Growth.SamePurchases(final.Growth) ||
                 final.Growth.Selections.Count != expected.Growth.Selections.Count + 1 ||
                 expected.Growth.Selections.Where((s, i) => !s.SameValues(final.Growth.Selections[i])).Any())

@@ -15,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (recipient.Health.IsDead || recipient.Area != CharacterRuntimeArea.Field ||
                 !new HostilityPolicy().AreHostile(attacker.Owner, recipient.Owner) ||
-                kind != CombatDamageKind.OrdinaryAttack && kind != CombatDamageKind.ExtraAttack && kind != CombatDamageKind.ReactionAttack)
+                !CombatDamageKinds.IsAttack(kind))
                 return recipient.StatusEffects;
             return PeriodicStatusRules.ApplyBleeding(recipient.StatusEffects, origin, definition.DamagePerStack);
         }

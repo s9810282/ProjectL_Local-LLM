@@ -22,6 +22,7 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.CombatView
         EquipItem = 10,
         UnequipItem = 11,
         ReplaceItem = 12,
-        UndoMove = 15
+        UndoMove = 15,
+        UsePlayerSkill = 16
     }
 }

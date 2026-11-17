@@ -176,7 +176,7 @@ namespace ProjectL.Tests.Core
             var headquarters = new StructureCombatFacts(new EntityId(20),
                 new StructureSpec(EntityKey.Structure_Headquarters, 1, 1, new[] { CellCoord.Zero }, 100, false, 0),
                 new HealthStateSnapshot(100, 100), new CellCoord(3, 3), Rotation4.R0, new[] { new CellCoord(3, 3) }, Owner.Enemy);
-            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { headquarters },input.State.ThornFields,turn: input.State.Turn);
+            var state = new CombatCommandState(8,8,input.State.Phase,                new[] { headquarters },turn: input.State.Turn);
 
             CombatCommandTransition result = CombatCommandCalculator.Calculate(
                 CombatCommandTestData.With(input, chars, state), Array.Empty<IMovementTileRule>());

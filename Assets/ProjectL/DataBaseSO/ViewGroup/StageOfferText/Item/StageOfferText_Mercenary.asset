@@ -27,8 +27,10 @@ MonoBehaviour:
     exitButtonText: "떠난다"
     backButtonText: ""
     lines:
-    - kind: 1
-      format: "Lv. {0} · 보유 {1}"
+    - kind: 18
+      format: "Lv. {0}"
+    - kind: 19
+      format: "보유 {0}"
     - kind: 2
       format: "수량 1 · {0}"
     defaultErrorText: "상점 상태가 바뀌어 화면을 다시 불러옵니다."

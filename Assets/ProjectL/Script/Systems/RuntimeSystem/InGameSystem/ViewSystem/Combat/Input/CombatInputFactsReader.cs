@@ -79,10 +79,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input
                 controllerTurnSequence: command?.Turn.ControllerTurnSequence ?? 0,
                 isTutorialPracticeGoalPending: hasBattle && _blockedInput.IsPracticeGoalPending(_state.BattleInstanceId), queryRevision: _state.QueryRevision,
                 isEntryPresentationPending: _progress.IsEntryPresentationPending,
-                // 대상 판정은 입력 기능 묶음 한 곳입니다(평가 C4-13). 연결 입력이 없으면 공격 모드·아이템 드래그가 없는 것으로 봅니다.
+                // 대상 판정은 입력 기능 묶음 한 곳입니다(평가 C4-13). 연결 입력이 없으면 공격 모드·아이템 드래그·스킬 모드가 없는 것으로 봅니다.
                 pointerTarget: input != null
                     ? input.ResolvePointerTarget(layer)
-                    : CombatInputRouter.ResolvePointerTarget(layer, false, false));
+                    : CombatInputRouter.ResolvePointerTarget(layer, false, false, false));
         }
 
         /// <summary>현재 입력 요청 번호와 일치하는 응답만 돌려줍니다.</summary>

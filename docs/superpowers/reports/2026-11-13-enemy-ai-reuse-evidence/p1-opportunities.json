@@ -1,0 +1,3450 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "360ab06e9e626cd3aaffcf10fe5d279fbde66135",
+  "sourceFiles": [
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs",
+      "sha256": "ad7e6215e4d31a1077a3d4f5df6ccfc2cf86e91f6fd28612084e75620bca22c4"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs",
+      "sha256": "ebd4e00ed9d11394917833263794cdf63a420ebcb98c2e4746d09865312d509f"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyEngagementField.cs",
+      "sha256": "5a905cda3648e8474d61dc69ec57036522e778fc20fed169d06df0cac59cbc9a"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiReuseMeasurements.cs",
+      "sha256": "c91f78003ef294061453813d520a25f8179f018ec414cd8851fa8d29874c12d4"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CombatAttackPreparationTests.cs",
+      "sha256": "e67150e4cb5f1e2bfc45e5ce47494f31a2c456d8ed80968938e66f953b4175aa"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CombatAttackPreparationTests.cs.meta",
+      "sha256": "7f8616ebb11b37613e8651569f8da195c3b2479a93b478c2aa7873536719f8c6"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs",
+      "sha256": "1b5c48a8ec21984a3ecc147921791466790dc0dfba7db274df2a77a856228e8b"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs.meta",
+      "sha256": "7fb0c64606c986b74f528a5ee6736c694e7cad59c0bcf0c34acb5139b5770998"
+    }
+  ],
+  "diagnosticPatch": {
+    "path": "p1-diagnostic.patch",
+    "sha256": "94b33b80ce684df429323c8189195aa3b3f43f1d44678b7242490826d1cf676d"
+  },
+  "restoredDiagnosticPaths": [
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs",
+      "sha256": "EBD4E00ED9D11394917833263794CDF63A420EBCB98C2E4746D09865312D509F"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackCalculator.cs",
+      "sha256": "F0320638E4CF6665385B02886B172D8BF58C43A3C4CC4459F4E32634BB128EA6"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs",
+      "sha256": "AD7E6215E4D31A1077A3D4F5DF6CCFC2CF86E91F6FD28612084E75620BCA22C4"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs",
+      "sha256": "F1311B0DE96561EDE82F481F6A8D8F494C56D3800CAE694BE280EABDDC476123"
+    }
+  ],
+  "unchangedPreflightFiles": [
+    {
+      "path": "Assets/Audio/FMODplus/New Fmod Event Catalog.asset",
+      "sha256": "F20461F3B4EB6BE81BAB0F1AB9D3D4918F92B27BDB20752FDBA72EE851BDEF12"
+    },
+    {
+      "path": "Assets/Plugins/FMOD/Cache/Editor/FMODStudioCache.asset",
+      "sha256": "9E4DE776DC4423C29A02F2B52A84F2EEF29AD8F482506E2226E55C4F7C091AE6"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/SCDream7 SDF.asset",
+      "sha256": "2D0D6E6985F5D6CBFE3363153700FCD91D6EFA779FD2735133166BA724D1642D"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/Unchained-Halftone SDF.asset",
+      "sha256": "4C271FB844412EDC32B6138434919E33E5E6965C84AC358CDC35AD03F84F8653"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/Unchained-Regular SDF.asset",
+      "sha256": "2D395118855719C9F43F441E17EB291F8EA5AE11E864A54859ED141C54351361"
+    },
+    {
+      "path": "Assets/Settings/PC_RPAsset.asset",
+      "sha256": "3B9B9201519C0D40221988CB27CD52387EC41DF257FE2DD497F6684A105CB76F"
+    },
+    {
+      "path": "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset",
+      "sha256": "755598A93AAFF35A78B021B0BE8B493FF056ACB6368FB781108F9F3EFAA8224C"
+    },
+    {
+      "path": "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset",
+      "sha256": "BADE25830034A7FFCCE99BC07E08F7B7516A9F116985E1C4756BCC1ED322A4F2"
+    },
+    {
+      "path": "ProjectSettings/GraphicsSettings.asset",
+      "sha256": "56C816BD980CA4B9C5A33F5EF233BCAEA6C08505A1AF65AC5E5E633CE8BAD6FE"
+    },
+    {
+      "path": "ProjectSettings/ProjectSettings.asset",
+      "sha256": "C4968E25E4056B79ECE453F7B8389249FBFCA0BBA36064BDA6988AF7B2E02A23"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyDecisionReuseParityTests.cs",
+      "sha256": "E974D7BC4D6CC64AAE815C96A81544FFE4C83DA776A8EA26FC94A38FA62F7C32"
+    }
+  ],
+  "frozen": {
+    "profiles": [
+      {
+        "file": "baseline-default.json",
+        "tuning": [
+          50,
+          50,
+          50
+        ],
+        "sha256": "a04635402e16cbff4cc669ad12573fff7467e397a710bbc281f6645a49d4f7d2"
+      },
+      {
+        "file": "baseline-current-tuning.json",
+        "tuning": [
+          20,
+          20,
+          200
+        ],
+        "sha256": "f0749d18c0cbb5a0997f7b6922e7ce61c96642874b29740013233bf1525541f2"
+      }
+    ],
+    "partitions": [
+      1,
+      2,
+      31
+    ],
+    "scenariosPerProfile": 56,
+    "totalComparisons": 336
+  },
+  "verification": {
+    "restored": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p1-verify-restored",
+      "xmlSha256": "c4662bfd71bbfff0cd69ba874bc68977d41945512115eee057de57ff45ac8fbd",
+      "passed": 212,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 151.988935,
+      "suites": {
+        "ProjectL.Tests.Core.AttackPreviewParityTests": 2,
+        "ProjectL.Tests.Core.CombatAttackPreparationTests": 18,
+        "ProjectL.Tests.Core.EnemyAlliedExposureTests": 16,
+        "ProjectL.Tests.Core.EnemyAttackReachReuseTests": 7,
+        "ProjectL.Tests.Core.EnemyCandidateBeamTests": 6,
+        "ProjectL.Tests.Core.EnemyDecisionBudgetTests": 6,
+        "ProjectL.Tests.Core.EnemyDecisionReuseParityTests": 6,
+        "ProjectL.Tests.Core.EnemyEffectHarmScopeTests": 20,
+        "ProjectL.Tests.Core.EnemyEngagementFieldTests": 15,
+        "ProjectL.Tests.Core.EnemyForcedMovementAssessmentTests": 4,
+        "ProjectL.Tests.Core.EnemyPursuitEquivalenceTests": 108,
+        "ProjectL.Tests.Core.EnemyPursuitResumptionTests": 4
+      }
+    },
+    "counts": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p1-counts",
+      "xmlSha256": "ecc246fbc522e4cc12a333fa7f657777623983357485dc8341531dc698b3e3b5",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 2.199507,
+      "suites": {
+        "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+      }
+    },
+    "selection": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p1-selection-verified",
+      "xmlSha256": "cf488014622b6675f379c76cf4db9c1b59d100b9a81f5bbcb4e14ba9c12580b6",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 4.4383791,
+      "suites": {
+        "ProjectL.Tests.Core.AttackPreviewParityTests": 2,
+        "ProjectL.Tests.Core.CombatAttackPreparationTests": 18
+      }
+    },
+    "reach": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p1-reach-green",
+      "xmlSha256": "69a82f34dbbe7a6faf9b5cd98018e6ef122178fdc399004c3e51e9f344e712af",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 0.6304964,
+      "suites": {
+        "ProjectL.Tests.Core.EnemyAttackReachReuseTests": 7
+      }
+    },
+    "pureTiming": [
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-1",
+        "xmlSha256": "f11ff7692aa2bb3b10b6f6bfc03c795d139ee957b54335dd06b1a24f98bf3f0a",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 18.2546,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-2",
+        "xmlSha256": "f02f5bf181b674f2663591558780e9ecf689df693978fca4c1ab60e341375c22",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 18.4476706,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-3",
+        "xmlSha256": "f22b80fcea1180948fe34f3cb52d0b1a2cad021b88da1cc6c6bc98a1022c5989",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 18.2871647,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      }
+    ]
+  },
+  "timings": {
+    "baseline": [
+      {
+        "run": 1,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p0-timing-1",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 13.3525,
+              "p95": 23.4716
+            },
+            "total": {
+              "median": 14.24305,
+              "p95": 24.9317
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 444.2371,
+                "total": 503.5717
+              },
+              {
+                "seed": 7,
+                "preparation": 13.0482,
+                "total": 13.9126
+              },
+              {
+                "seed": 19,
+                "preparation": 16.5116,
+                "total": 17.5187
+              },
+              {
+                "seed": 41,
+                "preparation": 13.5876,
+                "total": 14.4822
+              },
+              {
+                "seed": 97,
+                "preparation": 12.5715,
+                "total": 13.5065
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 33.171,
+              "p95": 74.2904
+            },
+            "total": {
+              "median": 33.85105,
+              "p95": 74.8364
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 54.3814,
+                "total": 55.6174
+              },
+              {
+                "seed": 7,
+                "preparation": 36.4638,
+                "total": 37.0119
+              },
+              {
+                "seed": 19,
+                "preparation": 47.4275,
+                "total": 47.9453
+              },
+              {
+                "seed": 41,
+                "preparation": 32.6734,
+                "total": 33.5055
+              },
+              {
+                "seed": 97,
+                "preparation": 52.634,
+                "total": 53.365
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.2324,
+              "p95": 78.3406
+            },
+            "total": {
+              "median": 19.40335,
+              "p95": 82.08
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 36.0931,
+                "total": 37.4426
+              },
+              {
+                "seed": 7,
+                "preparation": 23.8386,
+                "total": 25.5239
+              },
+              {
+                "seed": 19,
+                "preparation": 17.8525,
+                "total": 19.075
+              },
+              {
+                "seed": 41,
+                "preparation": 17.953,
+                "total": 19.1845
+              },
+              {
+                "seed": 97,
+                "preparation": 17.9794,
+                "total": 19.2456
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.28655,
+              "p95": 63.5138
+            },
+            "total": {
+              "median": 31.619999999999997,
+              "p95": 63.8435
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 32.2999,
+                "total": 42.9115
+              },
+              {
+                "seed": 7,
+                "preparation": 30.1687,
+                "total": 30.5046
+              },
+              {
+                "seed": 19,
+                "preparation": 31.1619,
+                "total": 31.5064
+              },
+              {
+                "seed": 41,
+                "preparation": 30.0901,
+                "total": 30.4201
+              },
+              {
+                "seed": 97,
+                "preparation": 30.8445,
+                "total": 31.1853
+              }
+            ],
+            "gcAffected": 6
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.343,
+              "p95": 17.9212
+            },
+            "total": {
+              "median": 13.11525,
+              "p95": 18.9169
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 12.5767,
+                "total": 13.3478
+              },
+              {
+                "seed": 7,
+                "preparation": 11.5831,
+                "total": 12.2838
+              },
+              {
+                "seed": 19,
+                "preparation": 12.3392,
+                "total": 13.0841
+              },
+              {
+                "seed": 41,
+                "preparation": 12.4771,
+                "total": 13.2573
+              },
+              {
+                "seed": 97,
+                "preparation": 12.3321,
+                "total": 13.1101
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 31.48075,
+              "p95": 57.1195
+            },
+            "total": {
+              "median": 32.02815,
+              "p95": 59.0656
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 30.9751,
+                "total": 31.5721
+              },
+              {
+                "seed": 7,
+                "preparation": 30.8763,
+                "total": 31.4115
+              },
+              {
+                "seed": 19,
+                "preparation": 78.3993,
+                "total": 78.9053
+              },
+              {
+                "seed": 41,
+                "preparation": 32.3561,
+                "total": 32.9623
+              },
+              {
+                "seed": 97,
+                "preparation": 31.9985,
+                "total": 32.5579
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.55605,
+              "p95": 74.8331
+            },
+            "total": {
+              "median": 20.06535,
+              "p95": 79.2003
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 18.3221,
+                "total": 19.4509
+              },
+              {
+                "seed": 7,
+                "preparation": 23.4652,
+                "total": 24.7865
+              },
+              {
+                "seed": 19,
+                "preparation": 17.9723,
+                "total": 19.7241
+              },
+              {
+                "seed": 41,
+                "preparation": 17.8634,
+                "total": 19.1798
+              },
+              {
+                "seed": 97,
+                "preparation": 90.9147,
+                "total": 92.5792
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 30.92225,
+              "p95": 66.8617
+            },
+            "total": {
+              "median": 31.3091,
+              "p95": 67.1903
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 33.451,
+                "total": 33.8603
+              },
+              {
+                "seed": 7,
+                "preparation": 30.7252,
+                "total": 31.0724
+              },
+              {
+                "seed": 19,
+                "preparation": 29.7868,
+                "total": 30.1087
+              },
+              {
+                "seed": 41,
+                "preparation": 32.1332,
+                "total": 32.4758
+              },
+              {
+                "seed": 97,
+                "preparation": 30.3119,
+                "total": 30.6832
+              }
+            ],
+            "gcAffected": 6
+          }
+        ]
+      },
+      {
+        "run": 2,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p0-timing-2",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 13.32265,
+              "p95": 23.7668
+            },
+            "total": {
+              "median": 14.214500000000001,
+              "p95": 24.6174
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 463.387,
+                "total": 522.4267
+              },
+              {
+                "seed": 7,
+                "preparation": 12.5734,
+                "total": 13.3351
+              },
+              {
+                "seed": 19,
+                "preparation": 17.0845,
+                "total": 18.1708
+              },
+              {
+                "seed": 41,
+                "preparation": 13.7585,
+                "total": 14.5985
+              },
+              {
+                "seed": 97,
+                "preparation": 13.1401,
+                "total": 13.9764
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 33.078,
+              "p95": 60.7508
+            },
+            "total": {
+              "median": 33.6923,
+              "p95": 61.3046
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 52.7512,
+                "total": 54.1495
+              },
+              {
+                "seed": 7,
+                "preparation": 33.0068,
+                "total": 33.959
+              },
+              {
+                "seed": 19,
+                "preparation": 32.627,
+                "total": 33.2076
+              },
+              {
+                "seed": 41,
+                "preparation": 31.9035,
+                "total": 32.4414
+              },
+              {
+                "seed": 97,
+                "preparation": 62.2389,
+                "total": 62.7883
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.352800000000002,
+              "p95": 28.0572
+            },
+            "total": {
+              "median": 19.60115,
+              "p95": 29.2362
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 37.7717,
+                "total": 39.113
+              },
+              {
+                "seed": 7,
+                "preparation": 21.2183,
+                "total": 22.4163
+              },
+              {
+                "seed": 19,
+                "preparation": 25.0017,
+                "total": 26.5172
+              },
+              {
+                "seed": 41,
+                "preparation": 17.8413,
+                "total": 19.0796
+              },
+              {
+                "seed": 97,
+                "preparation": 18.3541,
+                "total": 19.5364
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.31375,
+              "p95": 110.3563
+            },
+            "total": {
+              "median": 31.69325,
+              "p95": 111.515
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 32.6214,
+                "total": 43.1814
+              },
+              {
+                "seed": 7,
+                "preparation": 31.9281,
+                "total": 32.2683
+              },
+              {
+                "seed": 19,
+                "preparation": 32.7519,
+                "total": 33.0899
+              },
+              {
+                "seed": 41,
+                "preparation": 32.6594,
+                "total": 33.0157
+              },
+              {
+                "seed": 97,
+                "preparation": 64.0399,
+                "total": 64.3766
+              }
+            ],
+            "gcAffected": 6
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.44465,
+              "p95": 17.0644
+            },
+            "total": {
+              "median": 13.186900000000001,
+              "p95": 18.0931
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 12.6711,
+                "total": 13.4322
+              },
+              {
+                "seed": 7,
+                "preparation": 12.3172,
+                "total": 13.0399
+              },
+              {
+                "seed": 19,
+                "preparation": 12.66,
+                "total": 13.3946
+              },
+              {
+                "seed": 41,
+                "preparation": 11.9288,
+                "total": 12.6505
+              },
+              {
+                "seed": 97,
+                "preparation": 12.2614,
+                "total": 12.9936
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 31.53225,
+              "p95": 68.3224
+            },
+            "total": {
+              "median": 32.0713,
+              "p95": 68.9048
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 31.9707,
+                "total": 32.5958
+              },
+              {
+                "seed": 7,
+                "preparation": 39.015,
+                "total": 39.6342
+              },
+              {
+                "seed": 19,
+                "preparation": 30.8917,
+                "total": 31.4469
+              },
+              {
+                "seed": 41,
+                "preparation": 31.8082,
+                "total": 32.3665
+              },
+              {
+                "seed": 97,
+                "preparation": 31.5479,
+                "total": 32.0798
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.9358,
+              "p95": 33.4782
+            },
+            "total": {
+              "median": 19.1438,
+              "p95": 37.2162
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 17.8328,
+                "total": 19.0885
+              },
+              {
+                "seed": 7,
+                "preparation": 17.4485,
+                "total": 18.5846
+              },
+              {
+                "seed": 19,
+                "preparation": 17.8581,
+                "total": 19.4941
+              },
+              {
+                "seed": 41,
+                "preparation": 17.8933,
+                "total": 19.098
+              },
+              {
+                "seed": 97,
+                "preparation": 17.8992,
+                "total": 19.0689
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.01735,
+              "p95": 83.9611
+            },
+            "total": {
+              "median": 31.351399999999998,
+              "p95": 84.2981
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 31.0937,
+                "total": 31.4227
+              },
+              {
+                "seed": 7,
+                "preparation": 29.8615,
+                "total": 30.1868
+              },
+              {
+                "seed": 19,
+                "preparation": 29.7587,
+                "total": 30.0845
+              },
+              {
+                "seed": 41,
+                "preparation": 30.502,
+                "total": 30.825
+              },
+              {
+                "seed": 97,
+                "preparation": 31.0938,
+                "total": 31.4443
+              }
+            ],
+            "gcAffected": 6
+          }
+        ]
+      },
+      {
+        "run": 3,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p0-timing-3",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.855699999999999,
+              "p95": 22.0174
+            },
+            "total": {
+              "median": 13.637599999999999,
+              "p95": 24.4309
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 406.5625,
+                "total": 474.1739
+              },
+              {
+                "seed": 7,
+                "preparation": 13.2291,
+                "total": 13.9964
+              },
+              {
+                "seed": 19,
+                "preparation": 16.5957,
+                "total": 17.4961
+              },
+              {
+                "seed": 41,
+                "preparation": 13.1437,
+                "total": 13.9266
+              },
+              {
+                "seed": 97,
+                "preparation": 12.0956,
+                "total": 12.8256
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 32.1595,
+              "p95": 61.312
+            },
+            "total": {
+              "median": 32.74735,
+              "p95": 63.2972
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 49.9591,
+                "total": 51.0573
+              },
+              {
+                "seed": 7,
+                "preparation": 31.3782,
+                "total": 31.9558
+              },
+              {
+                "seed": 19,
+                "preparation": 32.0207,
+                "total": 32.527
+              },
+              {
+                "seed": 41,
+                "preparation": 44.9632,
+                "total": 45.6472
+              },
+              {
+                "seed": 97,
+                "preparation": 32.6986,
+                "total": 33.2294
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.120649999999998,
+              "p95": 32.7269
+            },
+            "total": {
+              "median": 19.38575,
+              "p95": 36.8274
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 35.3673,
+                "total": 36.6271
+              },
+              {
+                "seed": 7,
+                "preparation": 19.0699,
+                "total": 20.2304
+              },
+              {
+                "seed": 19,
+                "preparation": 19.3197,
+                "total": 20.4757
+              },
+              {
+                "seed": 41,
+                "preparation": 23.521,
+                "total": 25.6086
+              },
+              {
+                "seed": 97,
+                "preparation": 17.6169,
+                "total": 18.7481
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.6784,
+              "p95": 72.7053
+            },
+            "total": {
+              "median": 32.0346,
+              "p95": 73.0388
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 32.6717,
+                "total": 43.2194
+              },
+              {
+                "seed": 7,
+                "preparation": 42.4511,
+                "total": 42.7796
+              },
+              {
+                "seed": 19,
+                "preparation": 30.3876,
+                "total": 30.7419
+              },
+              {
+                "seed": 41,
+                "preparation": 29.7096,
+                "total": 30.054
+              },
+              {
+                "seed": 97,
+                "preparation": 30.95,
+                "total": 31.294
+              }
+            ],
+            "gcAffected": 6
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.38165,
+              "p95": 13.9619
+            },
+            "total": {
+              "median": 13.1518,
+              "p95": 14.7174
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 12.8325,
+                "total": 13.6375
+              },
+              {
+                "seed": 7,
+                "preparation": 18.8689,
+                "total": 19.8393
+              },
+              {
+                "seed": 19,
+                "preparation": 12.2596,
+                "total": 13.0555
+              },
+              {
+                "seed": 41,
+                "preparation": 13.7531,
+                "total": 14.7597
+              },
+              {
+                "seed": 97,
+                "preparation": 13.0016,
+                "total": 13.7407
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 31.062649999999998,
+              "p95": 65.8565
+            },
+            "total": {
+              "median": 31.56015,
+              "p95": 66.3559
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 30.465,
+                "total": 30.9666
+              },
+              {
+                "seed": 7,
+                "preparation": 31.5141,
+                "total": 32.03
+              },
+              {
+                "seed": 19,
+                "preparation": 30.9896,
+                "total": 31.507
+              },
+              {
+                "seed": 41,
+                "preparation": 31.057,
+                "total": 31.5852
+              },
+              {
+                "seed": 97,
+                "preparation": 31.2709,
+                "total": 31.7789
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.8842,
+              "p95": 26.1019
+            },
+            "total": {
+              "median": 19.1186,
+              "p95": 27.6819
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 24.5429,
+                "total": 31.0079
+              },
+              {
+                "seed": 7,
+                "preparation": 17.954,
+                "total": 19.132
+              },
+              {
+                "seed": 19,
+                "preparation": 18.5065,
+                "total": 19.8032
+              },
+              {
+                "seed": 41,
+                "preparation": 17.6156,
+                "total": 18.783
+              },
+              {
+                "seed": 97,
+                "preparation": 17.3987,
+                "total": 18.5134
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.44325,
+              "p95": 62.1041
+            },
+            "total": {
+              "median": 31.801099999999998,
+              "p95": 62.4423
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 30.6232,
+                "total": 30.9704
+              },
+              {
+                "seed": 7,
+                "preparation": 30.4207,
+                "total": 30.7565
+              },
+              {
+                "seed": 19,
+                "preparation": 30.6453,
+                "total": 30.9719
+              },
+              {
+                "seed": 41,
+                "preparation": 31.4069,
+                "total": 31.7365
+              },
+              {
+                "seed": 97,
+                "preparation": 32.63,
+                "total": 32.9877
+              }
+            ],
+            "gcAffected": 5
+          }
+        ]
+      }
+    ],
+    "changed": [
+      {
+        "run": 1,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-1",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.5689,
+              "p95": 30.2095
+            },
+            "total": {
+              "median": 13.524450000000002,
+              "p95": 32.0975
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 396.0492,
+                "total": 455.4551
+              },
+              {
+                "seed": 7,
+                "preparation": 12.6308,
+                "total": 13.4997
+              },
+              {
+                "seed": 19,
+                "preparation": 19.8443,
+                "total": 20.8056
+              },
+              {
+                "seed": 41,
+                "preparation": 11.8124,
+                "total": 12.6057
+              },
+              {
+                "seed": 97,
+                "preparation": 12.9951,
+                "total": 13.7436
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 27.8548,
+              "p95": 55.5603
+            },
+            "total": {
+              "median": 28.40005,
+              "p95": 56.1249
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 47.8758,
+                "total": 49.1147
+              },
+              {
+                "seed": 7,
+                "preparation": 28.0907,
+                "total": 28.6601
+              },
+              {
+                "seed": 19,
+                "preparation": 27.3585,
+                "total": 27.8789
+              },
+              {
+                "seed": 41,
+                "preparation": 28.1866,
+                "total": 28.7325
+              },
+              {
+                "seed": 97,
+                "preparation": 29.3946,
+                "total": 30.0314
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.802500000000002,
+              "p95": 30.1501
+            },
+            "total": {
+              "median": 19.0381,
+              "p95": 35.4797
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 38.323,
+                "total": 39.9005
+              },
+              {
+                "seed": 7,
+                "preparation": 17.6661,
+                "total": 18.8125
+              },
+              {
+                "seed": 19,
+                "preparation": 17.9123,
+                "total": 19.1101
+              },
+              {
+                "seed": 41,
+                "preparation": 36.2559,
+                "total": 37.5884
+              },
+              {
+                "seed": 97,
+                "preparation": 17.1638,
+                "total": 18.7245
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 30.926949999999998,
+              "p95": 65.9436
+            },
+            "total": {
+              "median": 31.2697,
+              "p95": 66.2775
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 32.0307,
+                "total": 42.3448
+              },
+              {
+                "seed": 7,
+                "preparation": 40.7733,
+                "total": 42.6447
+              },
+              {
+                "seed": 19,
+                "preparation": 31.5744,
+                "total": 31.9404
+              },
+              {
+                "seed": 41,
+                "preparation": 30.7988,
+                "total": 31.1666
+              },
+              {
+                "seed": 97,
+                "preparation": 33.0444,
+                "total": 33.3807
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 11.725750000000001,
+              "p95": 16.3468
+            },
+            "total": {
+              "median": 12.50375,
+              "p95": 17.276
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 11.0385,
+                "total": 11.7468
+              },
+              {
+                "seed": 7,
+                "preparation": 36.775,
+                "total": 37.4848
+              },
+              {
+                "seed": 19,
+                "preparation": 12.5243,
+                "total": 13.2617
+              },
+              {
+                "seed": 41,
+                "preparation": 12.8789,
+                "total": 13.6151
+              },
+              {
+                "seed": 97,
+                "preparation": 11.4645,
+                "total": 12.1948
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 26.841,
+              "p95": 38.9655
+            },
+            "total": {
+              "median": 27.383850000000002,
+              "p95": 39.5603
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 26.7285,
+                "total": 27.2481
+              },
+              {
+                "seed": 7,
+                "preparation": 26.3444,
+                "total": 26.8717
+              },
+              {
+                "seed": 19,
+                "preparation": 35.3557,
+                "total": 36.1272
+              },
+              {
+                "seed": 41,
+                "preparation": 58.0465,
+                "total": 58.6025
+              },
+              {
+                "seed": 97,
+                "preparation": 27.528,
+                "total": 28.0376
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.64625,
+              "p95": 26.6752
+            },
+            "total": {
+              "median": 18.8315,
+              "p95": 28.5057
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 17.6491,
+                "total": 19.0043
+              },
+              {
+                "seed": 7,
+                "preparation": 18.1156,
+                "total": 19.3432
+              },
+              {
+                "seed": 19,
+                "preparation": 27.1243,
+                "total": 29.0827
+              },
+              {
+                "seed": 41,
+                "preparation": 17.4464,
+                "total": 18.5928
+              },
+              {
+                "seed": 97,
+                "preparation": 17.2588,
+                "total": 18.4004
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.199199999999998,
+              "p95": 59.5385
+            },
+            "total": {
+              "median": 31.548099999999998,
+              "p95": 59.8936
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 30.6372,
+                "total": 30.9848
+              },
+              {
+                "seed": 7,
+                "preparation": 126.5123,
+                "total": 127.7311
+              },
+              {
+                "seed": 19,
+                "preparation": 31.3429,
+                "total": 31.7202
+              },
+              {
+                "seed": 41,
+                "preparation": 41.6508,
+                "total": 41.9808
+              },
+              {
+                "seed": 97,
+                "preparation": 58.0188,
+                "total": 58.3774
+              }
+            ],
+            "gcAffected": 5
+          }
+        ]
+      },
+      {
+        "run": 2,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-2",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.9128,
+              "p95": 24.3879
+            },
+            "total": {
+              "median": 13.833649999999999,
+              "p95": 25.8347
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 394.2696,
+                "total": 450.6683
+              },
+              {
+                "seed": 7,
+                "preparation": 13.2313,
+                "total": 14.2597
+              },
+              {
+                "seed": 19,
+                "preparation": 13.0691,
+                "total": 13.9129
+              },
+              {
+                "seed": 41,
+                "preparation": 21.0873,
+                "total": 22.2508
+              },
+              {
+                "seed": 97,
+                "preparation": 13.9006,
+                "total": 14.9221
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 29.4267,
+              "p95": 60.5631
+            },
+            "total": {
+              "median": 30.0013,
+              "p95": 62.647
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 46.7453,
+                "total": 47.9327
+              },
+              {
+                "seed": 7,
+                "preparation": 28.1873,
+                "total": 28.7498
+              },
+              {
+                "seed": 19,
+                "preparation": 28.62,
+                "total": 29.2078
+              },
+              {
+                "seed": 41,
+                "preparation": 27.3361,
+                "total": 27.8486
+              },
+              {
+                "seed": 97,
+                "preparation": 29.7293,
+                "total": 30.3643
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.18045,
+              "p95": 72.6886
+            },
+            "total": {
+              "median": 19.6244,
+              "p95": 78.0003
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 35.5896,
+                "total": 36.8533
+              },
+              {
+                "seed": 7,
+                "preparation": 18.3549,
+                "total": 19.5383
+              },
+              {
+                "seed": 19,
+                "preparation": 18.3681,
+                "total": 19.5393
+              },
+              {
+                "seed": 41,
+                "preparation": 40.877,
+                "total": 45.9937
+              },
+              {
+                "seed": 97,
+                "preparation": 17.6456,
+                "total": 18.7946
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.40795,
+              "p95": 59.2799
+            },
+            "total": {
+              "median": 31.7605,
+              "p95": 59.6136
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 31.8855,
+                "total": 41.851
+              },
+              {
+                "seed": 7,
+                "preparation": 34.0717,
+                "total": 34.603
+              },
+              {
+                "seed": 19,
+                "preparation": 31.3871,
+                "total": 31.7206
+              },
+              {
+                "seed": 41,
+                "preparation": 32.0596,
+                "total": 32.3812
+              },
+              {
+                "seed": 97,
+                "preparation": 31.5944,
+                "total": 31.9306
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 11.7258,
+              "p95": 15.1466
+            },
+            "total": {
+              "median": 12.46535,
+              "p95": 16.0079
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 13.4053,
+                "total": 14.2522
+              },
+              {
+                "seed": 7,
+                "preparation": 18.9602,
+                "total": 20.0926
+              },
+              {
+                "seed": 19,
+                "preparation": 11.7226,
+                "total": 12.4536
+              },
+              {
+                "seed": 41,
+                "preparation": 11.3954,
+                "total": 12.1198
+              },
+              {
+                "seed": 97,
+                "preparation": 11.3811,
+                "total": 12.2117
+              }
+            ],
+            "gcAffected": 1
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 27.505200000000002,
+              "p95": 35.0438
+            },
+            "total": {
+              "median": 28.0168,
+              "p95": 35.6386
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 27.7539,
+                "total": 28.2586
+              },
+              {
+                "seed": 7,
+                "preparation": 26.6819,
+                "total": 27.2434
+              },
+              {
+                "seed": 19,
+                "preparation": 27.9721,
+                "total": 28.5534
+              },
+              {
+                "seed": 41,
+                "preparation": 26.6836,
+                "total": 27.1943
+              },
+              {
+                "seed": 97,
+                "preparation": 37.2957,
+                "total": 37.9469
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.847900000000003,
+              "p95": 27.8551
+            },
+            "total": {
+              "median": 19.02015,
+              "p95": 29.4998
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 57.5341,
+                "total": 58.7395
+              },
+              {
+                "seed": 7,
+                "preparation": 17.4994,
+                "total": 18.8497
+              },
+              {
+                "seed": 19,
+                "preparation": 17.5387,
+                "total": 18.6619
+              },
+              {
+                "seed": 41,
+                "preparation": 17.6275,
+                "total": 18.7687
+              },
+              {
+                "seed": 97,
+                "preparation": 17.5109,
+                "total": 18.6741
+              }
+            ],
+            "gcAffected": 3
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.616300000000003,
+              "p95": 71.7336
+            },
+            "total": {
+              "median": 31.950400000000002,
+              "p95": 72.7834
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 30.8122,
+                "total": 31.1474
+              },
+              {
+                "seed": 7,
+                "preparation": 30.895,
+                "total": 31.2866
+              },
+              {
+                "seed": 19,
+                "preparation": 57.437,
+                "total": 57.7959
+              },
+              {
+                "seed": 41,
+                "preparation": 30.4274,
+                "total": 30.7611
+              },
+              {
+                "seed": 97,
+                "preparation": 31.4379,
+                "total": 31.7749
+              }
+            ],
+            "gcAffected": 5
+          }
+        ]
+      },
+      {
+        "run": 3,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p1-timing-3",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "aggregate": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "N8",
+            "preparation": {
+              "median": 12.78285,
+              "p95": 24.8174
+            },
+            "total": {
+              "median": 13.6995,
+              "p95": 26.35
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 383.4919,
+                "total": 440.6503
+              },
+              {
+                "seed": 7,
+                "preparation": 11.8294,
+                "total": 12.6323
+              },
+              {
+                "seed": 19,
+                "preparation": 14.4611,
+                "total": 15.6721
+              },
+              {
+                "seed": 41,
+                "preparation": 16.5834,
+                "total": 17.4545
+              },
+              {
+                "seed": 97,
+                "preparation": 13.0515,
+                "total": 13.8626
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "A8",
+            "preparation": {
+              "median": 28.91975,
+              "p95": 70.7024
+            },
+            "total": {
+              "median": 29.457949999999997,
+              "p95": 71.2326
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 47.0084,
+                "total": 48.5163
+              },
+              {
+                "seed": 7,
+                "preparation": 29.8731,
+                "total": 30.4538
+              },
+              {
+                "seed": 19,
+                "preparation": 29.1368,
+                "total": 29.855
+              },
+              {
+                "seed": 41,
+                "preparation": 28.2146,
+                "total": 28.7542
+              },
+              {
+                "seed": 97,
+                "preparation": 27.3341,
+                "total": 27.8531
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "W8",
+            "preparation": {
+              "median": 18.18955,
+              "p95": 59.4854
+            },
+            "total": {
+              "median": 19.40305,
+              "p95": 60.893
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 35.3393,
+                "total": 36.5641
+              },
+              {
+                "seed": 7,
+                "preparation": 17.9131,
+                "total": 19.1002
+              },
+              {
+                "seed": 19,
+                "preparation": 18.2809,
+                "total": 19.4835
+              },
+              {
+                "seed": 41,
+                "preparation": 17.7542,
+                "total": 18.9259
+              },
+              {
+                "seed": 97,
+                "preparation": 18.7471,
+                "total": 19.9641
+              }
+            ],
+            "gcAffected": 4
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.29685,
+              "p95": 55.2282
+            },
+            "total": {
+              "median": 31.682299999999998,
+              "p95": 55.5805
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 140.0746,
+                "total": 152.6413
+              },
+              {
+                "seed": 7,
+                "preparation": 30.7407,
+                "total": 31.0765
+              },
+              {
+                "seed": 19,
+                "preparation": 30.4396,
+                "total": 30.7696
+              },
+              {
+                "seed": 41,
+                "preparation": 31.4179,
+                "total": 31.7565
+              },
+              {
+                "seed": 97,
+                "preparation": 30.4613,
+                "total": 30.8023
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "N8",
+            "preparation": {
+              "median": 11.66725,
+              "p95": 15.8212
+            },
+            "total": {
+              "median": 12.436,
+              "p95": 16.8248
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 20.6002,
+                "total": 21.6817
+              },
+              {
+                "seed": 7,
+                "preparation": 11.6941,
+                "total": 12.4406
+              },
+              {
+                "seed": 19,
+                "preparation": 11.3781,
+                "total": 12.0909
+              },
+              {
+                "seed": 41,
+                "preparation": 11.3853,
+                "total": 12.139
+              },
+              {
+                "seed": 97,
+                "preparation": 10.996,
+                "total": 11.6752
+              }
+            ],
+            "gcAffected": 2
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "A8",
+            "preparation": {
+              "median": 27.37555,
+              "p95": 54.5028
+            },
+            "total": {
+              "median": 27.89345,
+              "p95": 55.0271
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 27.8612,
+                "total": 28.4529
+              },
+              {
+                "seed": 7,
+                "preparation": 27.0108,
+                "total": 27.5375
+              },
+              {
+                "seed": 19,
+                "preparation": 27.2369,
+                "total": 27.767
+              },
+              {
+                "seed": 41,
+                "preparation": 27.3734,
+                "total": 27.9016
+              },
+              {
+                "seed": 97,
+                "preparation": 27.0423,
+                "total": 27.5872
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "W8",
+            "preparation": {
+              "median": 17.76625,
+              "p95": 36.0411
+            },
+            "total": {
+              "median": 19.024549999999998,
+              "p95": 46.4198
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 17.3868,
+                "total": 18.5377
+              },
+              {
+                "seed": 7,
+                "preparation": 17.3722,
+                "total": 18.5461
+              },
+              {
+                "seed": 19,
+                "preparation": 17.8205,
+                "total": 19.0076
+              },
+              {
+                "seed": 41,
+                "preparation": 17.4367,
+                "total": 18.6166
+              },
+              {
+                "seed": 97,
+                "preparation": 18.9522,
+                "total": 20.0873
+              }
+            ],
+            "gcAffected": 5
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "preparation": {
+              "median": 31.00495,
+              "p95": 66.7474
+            },
+            "total": {
+              "median": 31.32995,
+              "p95": 67.0991
+            },
+            "first": [
+              {
+                "seed": 1,
+                "preparation": 31.9086,
+                "total": 32.2705
+              },
+              {
+                "seed": 7,
+                "preparation": 31.0274,
+                "total": 31.3755
+              },
+              {
+                "seed": 19,
+                "preparation": 30.1302,
+                "total": 30.4628
+              },
+              {
+                "seed": 41,
+                "preparation": 31.7727,
+                "total": 32.0983
+              },
+              {
+                "seed": 97,
+                "preparation": 30.5354,
+                "total": 30.8978
+              }
+            ],
+            "gcAffected": 5
+          }
+        ]
+      }
+    ]
+  },
+  "reach": [
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 109,
+      "uniquePositions": 39,
+      "aimAttempts": 109,
+      "uniqueAimKeys": 109,
+      "damageBuilds": 39,
+      "damagePositions": 39,
+      "selectionBuilds": 39,
+      "selectionPositions": 39,
+      "deliveries": 109,
+      "uniqueDeliveryKeys": 109,
+      "deliveryResolves": 109,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 39,
+      "peakProjected": 39,
+      "peakPrerequisites": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 980,
+      "uniquePositions": 245,
+      "aimAttempts": 498,
+      "uniqueAimKeys": 384,
+      "damageBuilds": 112,
+      "damagePositions": 112,
+      "selectionBuilds": 112,
+      "selectionPositions": 112,
+      "deliveries": 498,
+      "uniqueDeliveryKeys": 384,
+      "deliveryResolves": 60,
+      "nullDeliveries": 438,
+      "targetMisses": 0,
+      "peakMoved": 245,
+      "peakProjected": 112,
+      "peakPrerequisites": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 1,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 7,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 19,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 41,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 97,
+      "scope": 1,
+      "kind": "fallback",
+      "positionAttempts": 960,
+      "uniquePositions": 960,
+      "aimAttempts": 1,
+      "uniqueAimKeys": 1,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 1,
+      "uniqueDeliveryKeys": 1,
+      "deliveryResolves": 1,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "peakMoved": 0,
+      "peakProjected": 0,
+      "peakPrerequisites": 0
+    },
+    {
+      "tuning": "focused",
+      "fixture": "piercing-cap-1",
+      "seed": 1,
+      "scope": 1,
+      "kind": "relocations",
+      "positionAttempts": 2,
+      "uniquePositions": 1,
+      "aimAttempts": 8,
+      "uniqueAimKeys": 6,
+      "damageBuilds": 1,
+      "damagePositions": 1,
+      "selectionBuilds": 1,
+      "selectionPositions": 1,
+      "deliveries": 8,
+      "uniqueDeliveryKeys": 6,
+      "deliveryResolves": 4,
+      "nullDeliveries": 4,
+      "targetMisses": 3,
+      "peakMoved": 1,
+      "peakProjected": 1,
+      "peakPrerequisites": 1
+    }
+  ],
+  "visibility": [
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 1,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 7,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 19,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 41,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "seed": 97,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 1,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 7,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 19,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 41,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "seed": 97,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 1,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 7,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 19,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 41,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "seed": 97,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 1,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 7,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 19,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 41,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "U8",
+      "seed": 97,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 1,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 7,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 19,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 41,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "seed": 97,
+      "context": 1,
+      "builds": 18,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 14
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 1,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 7,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 19,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 41,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "seed": 97,
+      "context": 1,
+      "builds": 17,
+      "uniqueKeys": 3,
+      "consecutiveRepeats": 13
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 1,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 7,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 19,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 41,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "seed": 97,
+      "context": 1,
+      "builds": 8,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 7
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 1,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 7,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 19,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 41,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "U8",
+      "seed": 97,
+      "context": 1,
+      "builds": 56,
+      "uniqueKeys": 1,
+      "consecutiveRepeats": 55
+    }
+  ],
+  "aggregate": [
+    {
+      "tuning": "50/50/50",
+      "fixture": "N8",
+      "kind": "relocations",
+      "scopes": 5,
+      "damageBefore": 545,
+      "damageAfter": 195,
+      "selectionBefore": 545,
+      "selectionAfter": 195,
+      "deliveries": 545,
+      "uniqueDeliveryKeys": 545,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 109,
+      "maxPrerequisites": 39,
+      "maxMoved": 39,
+      "maxProjected": 39
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "A8",
+      "kind": "relocations",
+      "scopes": 5,
+      "damageBefore": 840,
+      "damageAfter": 560,
+      "selectionBefore": 2490,
+      "selectionAfter": 560,
+      "deliveries": 2490,
+      "uniqueDeliveryKeys": 1920,
+      "nullDeliveries": 2190,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 384,
+      "maxPrerequisites": 112,
+      "maxMoved": 245,
+      "maxProjected": 112
+    },
+    {
+      "tuning": "50/50/50",
+      "fixture": "W8",
+      "kind": "fallback",
+      "scopes": 5,
+      "damageBefore": 5,
+      "damageAfter": 5,
+      "selectionBefore": 5,
+      "selectionAfter": 5,
+      "deliveries": 5,
+      "uniqueDeliveryKeys": 5,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 1,
+      "maxPrerequisites": 0,
+      "maxMoved": 0,
+      "maxProjected": 0
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "N8",
+      "kind": "relocations",
+      "scopes": 5,
+      "damageBefore": 545,
+      "damageAfter": 195,
+      "selectionBefore": 545,
+      "selectionAfter": 195,
+      "deliveries": 545,
+      "uniqueDeliveryKeys": 545,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 109,
+      "maxPrerequisites": 39,
+      "maxMoved": 39,
+      "maxProjected": 39
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "A8",
+      "kind": "relocations",
+      "scopes": 5,
+      "damageBefore": 840,
+      "damageAfter": 560,
+      "selectionBefore": 2490,
+      "selectionAfter": 560,
+      "deliveries": 2490,
+      "uniqueDeliveryKeys": 1920,
+      "nullDeliveries": 2190,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 384,
+      "maxPrerequisites": 112,
+      "maxMoved": 245,
+      "maxProjected": 112
+    },
+    {
+      "tuning": "20/20/200",
+      "fixture": "W8",
+      "kind": "fallback",
+      "scopes": 5,
+      "damageBefore": 5,
+      "damageAfter": 5,
+      "selectionBefore": 5,
+      "selectionAfter": 5,
+      "deliveries": 5,
+      "uniqueDeliveryKeys": 5,
+      "nullDeliveries": 0,
+      "targetMisses": 0,
+      "maxUniqueDeliveryKeys": 1,
+      "maxPrerequisites": 0,
+      "maxMoved": 0,
+      "maxProjected": 0
+    },
+    {
+      "tuning": "focused",
+      "fixture": "piercing-cap-1",
+      "kind": "relocations",
+      "scopes": 1,
+      "damageBefore": 2,
+      "damageAfter": 1,
+      "selectionBefore": 8,
+      "selectionAfter": 1,
+      "deliveries": 8,
+      "uniqueDeliveryKeys": 6,
+      "nullDeliveries": 4,
+      "targetMisses": 3,
+      "maxUniqueDeliveryKeys": 6,
+      "maxPrerequisites": 1,
+      "maxMoved": 1,
+      "maxProjected": 1
+    }
+  ],
+  "matchedTimingIntents": 40
+}

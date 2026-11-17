@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 
@@ -22,7 +23,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
             TargetingAngleCalculator.Validate(method.ChoiceAngle, owner);
-            var offsets = AppointShapeCalculator.CreateBaseMask(method.Shape, range);
+            if (method.Shape == TargetingShape.ForwardRectangle && method.ChoiceMode == TargetingChoiceMode.Direction &&
+                method.ChoiceAngle != TargetingChoiceAngle.Unrestricted)
+            {
+                var offsetsInLegalDirections = AppointShapeCalculator.RectangleRangeSteps(range, method.Width, method.ChoiceAngle, owner)
+                    .ToArray();
+                return AppointShapeCalculator.Translate(offsetsInLegalDirections, origin);
+            }
+            var offsets = AppointShapeCalculator.CreateBaseMask(method.Shape, range, method.Width);
             return AppointShapeCalculator.Translate(
                 TargetingAngleCalculator.FilterOffsets(method.ChoiceAngle, owner, offsets), origin);
         }

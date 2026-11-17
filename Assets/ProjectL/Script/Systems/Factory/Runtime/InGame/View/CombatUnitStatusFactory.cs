@@ -20,6 +20,8 @@ namespace ProjectL.Systems.Factory.Runtime.InGame.View
                 new CombatEffectFormatter<ShieldEffectSnapshot>(StatusEffectKey.Shield, s => s.RemainingEligibleBudget),
                 new CombatEffectFormatter<ActionRestrictionEffectSnapshot>(StatusEffectKey.Disarm),
                 new CombatEffectFormatter<ActionRestrictionEffectSnapshot>(StatusEffectKey.Bind),
+                // 기절은 이동·공격·스킬을 모두 막는 행동 제한입니다(관통·죽음의 손 View 설계 §3.10, 거는 곳 = 스킬 단죄).
+                new CombatEffectFormatter<ActionRestrictionEffectSnapshot>(StatusEffectKey.Stun),
                 new CombatEffectFormatter<WeaknessExposureEffectSnapshot>(StatusEffectKey.WeaknessExposure, s => s.EffectiveIncreasePercent),
                 new CombatEffectFormatter<TauntedEffectSnapshot>(StatusEffectKey.Taunted),
                 new CombatEffectFormatter<FireEffectSnapshot>(StatusEffectKey.Fire, s => s.Damage, s => s.RemainingAffectedSideStarts),

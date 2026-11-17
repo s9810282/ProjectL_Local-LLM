@@ -24,16 +24,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
     /// </remarks>
     internal sealed class CombatCueSources
     {
-        private static readonly CombatEventCues NoCues = new(null, null, null, null);
+        private static readonly CombatEventCues NoCues = new(null, null, null);
         private readonly IUnitVisualTableQuery _units;
         private readonly IObjectVisualTableQuery _objects;
         private readonly IConsumableItemVisualTableQuery _items;
         private readonly ITraitVisualTableQuery _traits;
         private readonly CombatPresentationSettingsData _settings;
         /// <param name="statuses">상태 외형 표입니다. 상태 유지 이펙트의 출처가 읽습니다(이펙트 끝 규칙 계획 TP-E15).</param>
+        /// <param name="playerSkills">플레이어 액티브 스킬 외형 표입니다. 사건 51 처리기가 공격 연출을 읽습니다(전투 스킬 View 계획 TP-14).</param>
         internal CombatCueSources(IUnitVisualTableQuery units, IObjectVisualTableQuery objects, IConsumableItemVisualTableQuery items, ITraitVisualTableQuery traits, CombatPresentationSettingsData settings,
-            IUnitStatusVisualTableQuery statuses)
+            IUnitStatusVisualTableQuery statuses, IPlayerSkillVisualTableQuery playerSkills)
         {
+            PlayerSkills = playerSkills ?? throw new ArgumentNullException(nameof(playerSkills));
             UnitStatuses = statuses ?? throw new ArgumentNullException(nameof(statuses));
             _units = units ?? throw new ArgumentNullException(nameof(units));
             _objects = objects ?? throw new ArgumentNullException(nameof(objects));
@@ -72,6 +74,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
 
         /// <summary>상태 외형 표입니다. 상태 유지 이펙트(상태 외형 칸 <c>whileEffect</c>)의 원본입니다(이펙트 끝 규칙 설계 EL2).</summary>
         internal IUnitStatusVisualTableQuery UnitStatuses { get; }
+
+        /// <summary>플레이어 액티브 스킬 외형 표입니다(전투 스킬 View 설계 SK5). 사건 51의 공격 연출은 (스킬, 강화)로 고릅니다.</summary>
+        internal IPlayerSkillVisualTableQuery PlayerSkills { get; }
 
         /// <summary>특성 외형 표입니다. 특성 상시 이펙트(특성 외형 칸 <c>alwaysEffects</c>)의 출처가 읽습니다(이펙트 끝 규칙 설계 EL3).</summary>
         internal ITraitVisualTableQuery Traits => _traits;

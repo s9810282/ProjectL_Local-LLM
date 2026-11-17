@@ -23,7 +23,7 @@ namespace ProjectL.Tests.Core
     public sealed class ReconstructionReviveKnockbackTests
     {
         private static readonly IMovementTileRule[] NoRules = Array.Empty<IMovementTileRule>();
-        private static readonly IMovementTileRule[] ThornRules = { new ThornMovementTileRule() };
+        private static readonly IMovementTileRule[] DamageRules = { new EnvironmentDamageTests.DamageRule() };
         private static readonly TargetingMethodSpec SingleNoSplash =
             new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0);
         private static readonly CellCoord Center = new CellCoord(4, 4);
@@ -61,7 +61,7 @@ namespace ProjectL.Tests.Core
             Assert.That(moves.Select(e => e.Final.EntityId.Value), Is.EquivalentTo(expected.Keys));
             Assert.That(moves.All(e => e.MovementCause.Agency == CombatMovementAgency.Forced &&
                 e.MovementCause.TraitKey == TraitKey.Reconstruction), Is.True);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace ProjectL.Tests.Core
             Assert.That(ReconstructionTraitTests.Final(result, input, 5).Anchor, Is.EqualTo(new CellCoord(2, 4)));
             Assert.That(ReconstructionTraitTests.Activations(result, TraitActivationKind.KnockbackApplied).Single().TargetIds,
                 Is.EqualTo(new[] { new EntityId(5) }));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
@@ -109,18 +109,18 @@ namespace ProjectL.Tests.Core
             Assert.That(prevented.SourceUnitId, Is.EqualTo(new EntityId(3)));
             Assert.That(prevented.TraitKey, Is.EqualTo(TraitKey.SteadfastWill));
             Assert.That(ReconstructionTraitTests.Activations(result, TraitActivationKind.KnockbackApplied), Is.Empty);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
-        public void NeighborPushedOntoAThornAndKilled_SelfDestructsAtTheTurnStartEnd()
+        public void NeighborPushedOntoHazardAndKilled_SelfDestructsAtTheTurnStartEnd()
         {
             var bomber = CombatCommandTestData.With(CombatCommandTestData.Character(3, EntityKey.Unit_Sniper, new CellCoord(5, 4), Owner.Enemy, 20),
                 hp: 5, traits: new TraitStatusSnapshot[] { new SelfDestructTraitStatusSnapshot(1) });
             var input = TurnInput(3, new[] { bomber, Demon(4, new CellCoord(7, 4)) },
                 new CombatAttackProfile(CombatCommandTestData.Spec(EntityKey.Unit_Sniper, 20, CategoryKey.Main, new SelfDestructTraitSpec(1)), SingleNoSplash),
-                new[] { new ThornFieldCellSnapshot(new CellCoord(6, 4), 3, 10) });
-            var result = CombatTurnCalculator.BeginControllerTurn(input, ThornRules);
+                new[] { (new CellCoord(6, 4), 10) });
+            var result = CombatTurnCalculator.BeginControllerTurn(input, DamageRules);
 
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(ReconstructionTraitTests.Final(result, input, 3).Health.IsDead, Is.True);
@@ -129,16 +129,16 @@ namespace ProjectL.Tests.Core
             Assert.That(blast.TargetCell, Is.EqualTo(new CellCoord(6, 4)));
             Assert.That(ReconstructionTraitTests.Final(result, input, 4).Health.CurrentHealth, Is.EqualTo(90));
             Assert.That(ReconstructionTraitTests.Final(result, input, 2).Health.CurrentHealth, Is.EqualTo(100));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [Test]
         public void StageEnd_StopsTheRemainingPushes()
         {
-            // 메인 10이 먼저 밀려 가시에 죽으면 패배가 정해지고, 뒤의 적 11은 밀지 않는다(설계 P13·P6).
+            // 메인 10이 먼저 밀려 위험 오브젝트로 죽으면 패배가 정해지고, 뒤의 적 11은 밀지 않는다(설계 P13·P6).
             var input = TurnInput(3, new[] { Main(new CellCoord(3, 4)), Demon(11, new CellCoord(5, 4)) },
-                thorns: new[] { new ThornFieldCellSnapshot(new CellCoord(2, 4), 3, 150) });
-            var result = CombatTurnCalculator.BeginControllerTurn(input, ThornRules);
+                hazards: new[] { (new CellCoord(2, 4), 150) });
+            var result = CombatTurnCalculator.BeginControllerTurn(input, DamageRules);
 
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.Outcome.Outcome, Is.EqualTo(StageOutcome.Defeat));
@@ -148,7 +148,7 @@ namespace ProjectL.Tests.Core
         }
 
         private static CombatCommandInput TurnInput(int level, IEnumerable<CharacterCombatFacts> neighbors,
-            CombatAttackProfile extraProfile = null, IReadOnlyList<ThornFieldCellSnapshot> thorns = null)
+            CombatAttackProfile extraProfile = null, (CellCoord Cell, int Damage)[] hazards = null)
         {
             var input = CombatCommandTestData.Input(SingleNoSplash, empty: true);
             var holder = CombatCommandTestData.With(CombatCommandTestData.Character(2, EntityKey.Unit_Gravekeeper, Center, Owner.Enemy, 20),
@@ -161,7 +161,7 @@ namespace ProjectL.Tests.Core
             var profiles = input.Profiles.Append(new CombatAttackProfile(
                 CombatCommandTestData.Spec(EntityKey.Unit_Gravekeeper, 20, CategoryKey.Main, new ReconstructionTraitSpec(level)), SingleNoSplash));
             if (extraProfile != null) profiles = profiles.Append(extraProfile);
-            var state = thorns == null ? input.State : input.State.With(thornFields: thorns);
+            var state = hazards == null ? input.State : EnvironmentDamageTests.WithDamageObjects(input.State, hazards);
             var source = CombatCommandTestData.With(input, characters.Values.OrderBy(c => c.EntityId).ToArray(), state, profiles.ToArray());
             return EnemyControllerPhaseTests.Input(source, CombatControllerPhase.StartingEnemy, completed: 1);
         }

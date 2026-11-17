@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>
     /// 이펙트 하나를 내는 시간 없는 조각입니다(이펙트 설계 EF2). 사건 소리·흔들림 조각과 같은 모양으로, 시작에서 내고 바로 끝납니다.
     /// 내는 일은 창구(<see cref="CombatEffectWindow"/>)가 하고, 자리는 만드는 함수가 정합니다(피격 이펙트 설계 HE4):
-    /// 공격 클립 이펙트는 <see cref="AtClipPoint"/>(시작 때 그 유닛 클립 대여의 이펙트 지점), 정해진 월드 자리는 <see cref="At"/>입니다.
+    /// 공격 클립 이펙트는 <see cref="AtEventPoint"/>(시작 때 그 유닛 클립 대여의 이벤트 지점), 정해진 월드 자리는 <see cref="At"/>입니다.
     /// 따라갈지·언제 끝나나는 큐의 놓기 값(<see cref="CombatEffectPlacement.ForCue"/>)입니다(이펙트 끝 규칙 설계 EL1·EL5).
     /// </summary>
     /// <remarks>
@@ -40,40 +40,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         /// <summary>
-        /// 시작 때 그 유닛 클립 대여의 이펙트 지점(위치·회전)에 냅니다. 조립이 그 유닛의 클립 채널을 적어야 합니다.
+        /// 시작 때 그 유닛 클립 대여의 이벤트 지점(큐의 번호)에 냅니다(클립 칸 다시 짜기 설계 CS4). 조립이 그 유닛의 클립 채널을 적어야 합니다.
+        /// 회전은 큐가 고릅니다: <see cref="CombatEventPointRotation.Point"/> = 지점 회전(옛 ActorEffectPoint),
+        /// <see cref="CombatEventPointRotation.Actor"/> = 같은 실행이 빌린 그 유닛의 자세 방향(옛 ActorMuzzle, 클립 공격 조립은 자세·클립을 함께 빌림).
         /// 지점은 시작 순간에만 읽을 수 있어 큐의 위치·회전 보정도 이 조각이 그때 적용합니다(이펙트 창구 확장 계획 P3).
         /// </summary>
         /// <param name="unit">클립 채널을 빌린 유닛입니다.</param>
         /// <param name="cue">낼 이펙트 큐입니다. 이펙트가 비어 있으면 안 됩니다(없는 칸은 조립이 항목을 넣지 않음).</param>
-        internal static CombatEffectPiece AtClipPoint(EntityId unit, CombatEffectWindow effects, CombatEffectCue cue)
+        internal static CombatEffectPiece AtEventPoint(EntityId unit, CombatEffectWindow effects, CombatEffectCue cue)
         {
             if (unit.IsEmpty)
                 throw new ArgumentException("이펙트를 낼 유닛이 비어 있습니다.", nameof(unit));
             if (cue == null) throw new ArgumentNullException(nameof(cue));
             return new CombatEffectPiece(effects, cue.Effect, context =>
             {
-                if (!context.Clip(unit).TryGetEffectPoint(cue.ActorPoint, out Vector3 position, out Quaternion rotation))
+                if (!context.Clip(unit).TryGetEventPoint(cue.EventPoint, out Vector3 position, out Quaternion rotation))
                     throw new InvalidOperationException(
-                        $"[CombatEffectPiece] 공격 이펙트 지점 {cue.ActorPoint}가 없습니다(외형 표 검사가 막아야 함): {unit}");
+                        $"[CombatEffectPiece] 이벤트 지점 {cue.EventPoint}가 없습니다(외형 표 검사가 막아야 함): {unit}");
+                if (cue.EventPointRotation == CombatEventPointRotation.Actor)
+                    rotation = context.Pose(unit).Rotation;
                 return CombatCuePoints.Apply(new Pose(position, rotation), cue, effects.AdditionalWorldOffsetOf(unit, cue.RiderYOffset));
-            }, CombatEffectPlacement.ForCue(cue, EntityId.Empty));
-        }
-
-        /// <summary>
-        /// 클립 채널을 빌린 유닛의 발사 지점에서 내는 이펙트입니다(범용 연출 구조 설계 G3 자리 <c>ActorMuzzle</c>). 회전은 발사 지점이 위치만 주므로
-        /// 같은 실행이 빌린 그 유닛의 자세 방향입니다(클립 공격 조립은 자세·클립을 함께 빌림, 계획 Gd.5에서 정함). 보정은 시작 순간에 이 조각이 적용합니다.
-        /// </summary>
-        internal static CombatEffectPiece AtClipMuzzle(EntityId unit, CombatEffectWindow effects, CombatEffectCue cue)
-        {
-            if (unit.IsEmpty)
-                throw new ArgumentException("이펙트를 낼 유닛이 비어 있습니다.", nameof(unit));
-            if (cue == null) throw new ArgumentNullException(nameof(cue));
-            return new CombatEffectPiece(effects, cue.Effect, context =>
-            {
-                if (!context.Clip(unit).TryGetMuzzle(cue.ActorPoint, out Vector3 position))
-                    throw new InvalidOperationException(
-                        $"[CombatEffectPiece] 공격 총구 지점 {cue.ActorPoint}가 없습니다(외형 표 검사가 막아야 함): {unit}");
-                return CombatCuePoints.Apply(new Pose(position, context.Pose(unit).Rotation), cue, effects.AdditionalWorldOffsetOf(unit, cue.RiderYOffset));
             }, CombatEffectPlacement.ForCue(cue, EntityId.Empty));
         }
 

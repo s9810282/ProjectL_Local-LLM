@@ -176,7 +176,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
 
                 IServiceModule database = DataBaseFactory.Create(databaseCatalog);
                 CreateGlobalUI();
-                _runtime = FrameworkRuntimeFactory.Create(CreateDevBattleSource(), _faults);
+                // 이번 재생의 자동 시작 설정을 고정한다. 에디터 덮어쓰기 외에는 기존 동작을 유지한다.
+                bool autoStartTutorial = true;
+#if UNITY_EDITOR
+                autoStartTutorial = !GameBootstrapEditorOverrides.Enabled || GameBootstrapEditorOverrides.UseTutorial;
+#endif
+                _runtime = FrameworkRuntimeFactory.Create(CreateDevBattleSource(), _faults, autoStartTutorial);
                 _runtime.BindScene();
                 _runtime.InitData(database);
                 _runtime.PostBindService();

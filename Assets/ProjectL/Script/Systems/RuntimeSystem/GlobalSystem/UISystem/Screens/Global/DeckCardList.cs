@@ -237,6 +237,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 if (hitDrag == null) hitDrag = fanLayout.HitButton(i).gameObject.AddComponent<DeckCardDragBinding>();
                 hitDrag.Bind(this, i);
             }
+            infoPanel.BindCards(_cards);
             _prepared = true;
         }
 

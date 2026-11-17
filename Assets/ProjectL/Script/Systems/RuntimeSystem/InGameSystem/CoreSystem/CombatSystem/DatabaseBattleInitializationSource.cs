@@ -5,8 +5,10 @@ using ProjectL.Systems.DataBaseSystem.Queries.InGameDataBase.InGameTable;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
+using ProjectL.Systems.RuntimeSystem.BufferSystems.Run;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
 {
@@ -17,6 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
     internal sealed class DatabaseBattleInitializationSource : IBattleInitializationSource, ISystemPostBindService
     {
         private ICharacterBufferReadSink _characters;
+        private IRunDeckReadSink _deck;
         private readonly IConsumableItemTableQuery _items;
 
         internal DatabaseBattleInitializationSource(IConsumableItemTableQuery items = null)
@@ -28,6 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         {
             var buffers = resolver.GetService(BufferSystemKey.Buffer);
             _characters = buffers.CharacterReadSink;
+            _deck = buffers.RunDeckReadSink;
         }
 
         public BattleInitialization Read(IDataBaseQueryContext database, int chapterKey, StageKey stageKey)
@@ -39,8 +43,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             if (_characters == null)
                 throw new InvalidOperationException("G7: 전투 정의 조회는 Buffer 서비스 바인딩이 필요합니다.");
             var items = _items ?? (database?.InGameQuery as IHasConsumableItemTable)?.ConsumableItems;
+            var playerSkill = _deck.TryGetCurrent(out var deck) &&
+                _characters.TryGetOwned(deck.MainId, out var main) && main.Role == CharacterOwnershipRole.Main
+                ? PlayerActiveSkillTable.FindForMain(database?.InGameQuery, main.CharacterKey) : null;
             BattleInitialization definition = BattleDefinitionAdapter.Read(database, chapterKey, stageKey.Value, _characters.Owned,
-                items == null ? null : ItemDefinitionAdapter.Build(items.GetAll()));
+                items == null ? null : ItemDefinitionAdapter.Build(items.GetAll()), playerSkill);
 
             return definition.WithAttackProfiles(BattleDefinitionAdapter.ReadAttackProfiles(database, definition.Units));
         }

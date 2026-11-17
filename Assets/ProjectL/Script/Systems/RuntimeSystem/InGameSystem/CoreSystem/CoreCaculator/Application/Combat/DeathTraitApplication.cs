@@ -26,7 +26,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection));
             var engine = new CombatEffectEngine();
-            var handled = new HashSet<EntityId>();
+            var handled = projection.SettledDeathEffects;
             while (!projection.Terminal)
             {
                 var round = FindNewDeaths(projection, engine, handled);
@@ -104,11 +104,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             {
                 var characterBefore = projection.Damage.Characters.GetValueOrDefault(targetId);
                 var structureBefore = characterBefore == null ? projection.Structure(targetId) : null;
-                foreach (var phase in projection.ChangeHealthSteps(new MovementHealthRequest(targetId, amount, origin), false))
+                foreach (var phase in projection.ChangeHealthSteps(new MovementHealthRequest(targetId, amount, origin), false,
+                    effectOrigin: death.Evaluation.SelfDestructOrigin))
                     yield return phase;
                 bool changed = characterBefore != null
                     ? !characterBefore.SameValues(projection.Character(targetId))
-                    : structureBefore != null && projection.Structure(targetId).Health.CurrentHealth != structureBefore.Health.CurrentHealth;
+                    : structureBefore != null && StructureChanged(structureBefore, projection.Structure(targetId));
                 if (changed) affected.Add(targetId);
             }
             // 폭발은 맞은 대상이 없어도 기록한다(연출). 대상 목록에는 실제로 바뀐 개체만 싣는다.
@@ -117,6 +118,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 affected, area, origin, selectedCell: death.Cell);
             projection.Events.Insert(activationIndex, events[0]);
         }
+
+        /// <summary>장애물 체력은 호환용 0/1이라 파괴하지 않은 타격을 놓친다. 장애물은 남은 타격 수로 비교한다(검토 OB-10).</summary>
+        private static bool StructureChanged(StructureCombatFacts before, StructureCombatFacts after) =>
+            before.ObstacleDurability != null
+                ? !before.ObstacleDurability.Equals(after.ObstacleDurability)
+                : after.Health.CurrentHealth != before.Health.CurrentHealth;
 
         private static List<CellCoord> Surrounding(MovementProjection projection, CellCoord center)
         {
@@ -136,7 +143,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (var targetId in targets)
             {
                 var target = projection.Character(targetId);
-                int duration = ActionRestrictionTiming.Duration(FearTraitRule.BaseAffectedSideTurns, target.Owner, projection.Turn);
+                int duration = ActionRestrictionTiming.Duration(FearTraitRule.BaseAffectedSideTurns, target.Owner, projection.PendingEndCleanupSide);
                 bool disarmed = projection.ApplyStatus(targetId, new ActionRestrictionStatus(StatusEffectKey.Disarm, origin, duration));
                 bool bound = projection.ApplyStatus(targetId, new ActionRestrictionStatus(StatusEffectKey.Bind, origin, duration));
                 if (disarmed || bound) affected.Add(targetId);

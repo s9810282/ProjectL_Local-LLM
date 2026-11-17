@@ -26,6 +26,73 @@ namespace ProjectL.Tests.CoreIntegration
 {
     public sealed class NexusReinforcementPublicationTests
     {
+        [TestCase(2, 1)]
+        [TestCase(1, 3)]
+        public void IntervalPublication_RejectsEarlyCreationOrWrongStamp(int interval, long stamp)
+        {
+            using var battle = CreateBattle(1, interval: interval);
+            var parts = Publication(battle);
+            var proposal = CreationProposal(ToEnemyStart(battle, parts), "");
+            var progress = proposal.FinalState.Reinforcements;
+            proposal = proposal.WithFinalState(proposal.FinalState.With(reinforcements:
+                new NexusReinforcementState(progress.NexusId, progress.RandomState, progress.Records, stamp)));
+            var before = new CoreIntegrationSnapshot(battle.Buffers);
+            Assert.Throws<InvalidOperationException>(() => parts.Publisher.Publish(proposal));
+            before.AssertUnchanged(battle.Buffers);
+        }
+
+        [Test]
+        public void IntervalPublication_NoCreationCannotChangeStamp()
+        {
+            using var battle = CreateBattle(1, supply: 4);
+            var parts = Publication(battle);
+            Assert.That(parts.Publisher.Publish(CreationProposal(ToEnemyStart(battle, parts), "")), Is.True);
+            battle.AdvanceToPlayerOrDay();
+            var input = ToEnemyStart(battle, parts);
+            var old = input.State.Reinforcements;
+            var proposal = CreationProposal(input, "rng only");
+            proposal = proposal.WithFinalState(proposal.FinalState.With(reinforcements:
+                new NexusReinforcementState(old.NexusId, old.RandomState, old.Records, old.LastSpawnEnemyTurn + 1)));
+            var before = new CoreIntegrationSnapshot(battle.Buffers);
+            Assert.Throws<InvalidOperationException>(() => parts.Publisher.Publish(proposal));
+            before.AssertUnchanged(battle.Buffers);
+        }
+
+        [Test]
+        public void IntervalPublication_RetriesAfterFieldCapacityOpens()
+        {
+            using var battle = CreateBattle(1, supply: 8, interval: 2, passive: true, limit: 1);
+            for (int turn = 1; turn <= 5; turn++)
+            {
+                if (turn == 3)
+                    battle.Submit(battle.Attack(battle.Actor, new CellCoord(0, 2)));
+                battle.Submit(battle.EndPlayerTurn());
+                Assert.That(battle.Core.CombatAdvance.AdvanceCombat(), Is.True);
+                var state = battle.Buffers.CombatStateReadSink.Current;
+                var progress = state.CommandState.Reinforcements;
+                Assert.That(progress.LastSpawnEnemyTurn, Is.EqualTo(turn < 3 ? 0 : 3));
+                Assert.That(progress.Records.Count, Is.EqualTo(turn < 3 ? 0 : 1));
+                if (turn == 4) Assert.That(progress.IsSpawnDue(state.NexusReinforcements, turn), Is.False);
+                if (turn == 5) Assert.That(progress.IsSpawnDue(state.NexusReinforcements, turn), Is.True);
+                battle.AdvanceToPlayerOrDay();
+            }
+        }
+
+        [Test]
+        public void IntervalPublication_RealTurnsPublishOnlyDueBatches()
+        {
+            using var battle = CreateBattle(1, supply: 8, interval: 2, passive: true);
+            for (int turn = 1; turn <= 4; turn++)
+            {
+                battle.Submit(battle.EndPlayerTurn());
+                Assert.That(battle.Core.CombatAdvance.AdvanceCombat(), Is.True);
+                var progress = battle.Buffers.CombatStateReadSink.Current.CommandState.Reinforcements;
+                Assert.That(progress.LastSpawnEnemyTurn, Is.EqualTo(turn - turn % 2));
+                Assert.That(progress.Records.Count, Is.EqualTo(turn / 2 * 2));
+                battle.AdvanceToPlayerOrDay();
+            }
+        }
+
         [Test]
         public void BufferRange_IsGeometricAndReadOnly()
         {
@@ -40,7 +107,7 @@ namespace ProjectL.Tests.CoreIntegration
             var mine = new MineSourceFact(1, hiddenCell, 1, 5, true, new[] { Owner.Enemy });
             var original = snapshot.CommandState.Reinforcements;
             var exhausted = new NexusReinforcementState(original.NexusId, 91,
-                new[] { new NexusReinforcementRecord(new EntityId(99), 0) });
+                new[] { new NexusReinforcementRecord(new EntityId(99), 0) }, 1);
             var hiddenEnvironment = new MovementEnvironmentFacts(new MovementTileFact[] { mine });
             var withChanges = snapshot.CommandState.With(reinforcements: exhausted,
                 environment: hiddenEnvironment, environmentProgress: EnvironmentProgressFacts.Initial(hiddenEnvironment));
@@ -161,7 +228,7 @@ namespace ProjectL.Tests.CoreIntegration
             var proposal = CreationProposal(input, "rng only");
             var progress = input.State.Reinforcements;
             var rewritten = new NexusReinforcementState(progress.NexusId, progress.RandomState,
-                new[] { new NexusReinforcementRecord(progress.Records.Single().EntityId, 1) });
+                new[] { new NexusReinforcementRecord(progress.Records.Single().EntityId, 1) }, 1);
             var before = new CoreIntegrationSnapshot(battle.Buffers);
             Assert.Throws<InvalidOperationException>(() => parts.Publisher.Publish(
                 proposal.WithFinalState(proposal.FinalState.With(reinforcements: rewritten))));
@@ -178,16 +245,14 @@ namespace ProjectL.Tests.CoreIntegration
             var created = creation.Characters.Created.Single();
             var dead = created.WithPlacement(CharacterRuntimeArea.Excluded, null, null, null, Array.Empty<CellCoord>(),
                 health: new HealthStateSnapshot(0, created.Health.MaxHealth));
-            var proposal = new CombatCommandTransition(input, true, "",
-                new CharacterChanges(creation.Characters.Characters, Array.Empty<SoulCountChange>(), created: new[] { dead }),
-                creation.Field, creation.FinalState, creation.Outcome,
-                events: creation.Events.Append(new CombatCharacterEvent(CombatEventKind.Died, created, dead)).ToArray());
+            var proposal = WithDeath(creation, created, creation.Events.ToList());
 
             Assert.That(parts.Publisher.Publish(proposal), Is.True);
             Assert.That(battle.Buffers.CharacterReadSink.Characters.Single(c => c.EntityId == dead.EntityId).ToFacts().SameValues(dead), Is.True);
             var snapshot = battle.Buffers.CombatStateReadSink.Current;
             Assert.That(snapshot.CommandState.Reinforcements.RemainingTotal(snapshot.NexusReinforcements), Is.Zero);
             Assert.That(snapshot.CommandState.Reinforcements.Records, Has.Count.EqualTo(1));
+            Assert.That(snapshot.CommandState.Reinforcements.LastSpawnEnemyTurn, Is.EqualTo(input.State.Turn.CompletedPlayerTurnCount));
             Assert.That(battle.Buffers.CombatResultReadSink.TryGetLatest(out var result), Is.True);
             Assert.That(result.Events.OfType<CombatReinforcementEvent>().Single().Created.Health.IsDead, Is.False);
         }
@@ -276,7 +341,7 @@ namespace ProjectL.Tests.CoreIntegration
                 startTurn.ControllerPhase, startTurn.ControllerTurnSequence, startTurn.CompletedPlayerTurnCount, origins, summons, startTurn.CompletedControllerTurnCount);
             var finalRecords = summon || fault == "missing record" ? source.Records : source.Records.Concat(records).ToArray();
             var progress = summon ? source : new NexusReinforcementState(
-                fault == "wrong binding" ? new EntityId(999) : nexus, source.RandomState + 1, finalRecords);
+                fault == "wrong binding" ? new EntityId(999) : nexus, source.RandomState + 1, finalRecords, finalRecords.Count == 0 ? 0 : count > 0 ? Math.Max(1, turn.CompletedPlayerTurnCount) : source.LastSpawnEnemyTurn);
             var events = new List<CombatEvent>();
             if (starts) events.Add(new CombatTurnEvent(CombatEventKind.ControllerTurnStarted, EntityId.Empty, turn, startTurn));
             if (summon)
@@ -380,26 +445,34 @@ namespace ProjectL.Tests.CoreIntegration
             var cell = new CellCoord(6, 4);
             var moved = initial.WithPlacement(CharacterRuntimeArea.Field, null, cell, initial.Rotation, new[] { cell });
             var events = proposal.Events.Append(new CombatCharacterEvent(CombatEventKind.Moved, initial, moved)).ToList();
-            var final = moved;
-            if (dies)
-            {
-                final = moved.WithPlacement(CharacterRuntimeArea.Excluded, null, null, null, Array.Empty<CellCoord>(),
-                    health: new HealthStateSnapshot(0, moved.Health.MaxHealth));
-                events.Add(new CombatCharacterEvent(CombatEventKind.Died, moved, final));
-            }
-            Assert.That(parts.Publisher.Publish(WithCreation(proposal, final, events)), Is.True);
+            var final = dies
+                ? moved.WithPlacement(CharacterRuntimeArea.Excluded, null, null, null, Array.Empty<CellCoord>(),
+                    health: new HealthStateSnapshot(0, moved.Health.MaxHealth))
+                : moved;
+            var candidate = dies ? WithDeath(proposal, moved, events) : WithCreation(proposal, moved, events);
+            Assert.That(parts.Publisher.Publish(candidate), Is.True);
             var installed = battle.Buffers.CharacterReadSink.Characters.Single(c => c.EntityId == final.EntityId).ToFacts();
             Assert.That(installed.SameValues(final), Is.True);
             Assert.That(battle.Buffers.CombatStateReadSink.Current.CommandState.Turn.EnemyOrigins
                 .Single(o => o.EntityId == final.EntityId).Anchor, Is.EqualTo(initial.Anchor));
         }
 
+        private static CombatCommandTransition WithDeath(CombatCommandTransition source, CharacterCombatFacts living,
+            List<CombatEvent> events)
+        {
+            var projected = new Dictionary<EntityId, CharacterCombatFacts> { [living.EntityId] = living };
+            var damage = new CombatDamageApplication(source.Input.ItemDefinitions, projected, events);
+            var outcome = damage.Defeat(living.EntityId, new CombatDamageOrigin(living.Anchor, null));
+            return WithCreation(source, outcome.After, events, source.HealthExecutions.Concat(damage.HealthExecutions).ToArray());
+        }
+
         private static CombatCommandTransition WithCreation(CombatCommandTransition source, CharacterCombatFacts final,
-            IReadOnlyList<CombatEvent> events) =>
+            IReadOnlyList<CombatEvent> events, IReadOnlyList<CombatHealthExecution> executions = null) =>
             new(source.Input, source.Accepted, source.Reason,
                 new CharacterChanges(source.Characters.Characters, source.Characters.Souls, source.Characters.Main,
                     new[] { final }, source.Characters.Owned), source.Field, source.FinalState, source.Outcome,
-                events: events, rewardSettlement: source.RewardSettlement, rewardChange: source.RewardChange);
+                events: events, rewardSettlement: source.RewardSettlement, rewardChange: source.RewardChange,
+                healthExecutions: executions ?? source.HealthExecutions, healthClaims: source.HealthClaims);
 
         private static ConfiguredMovementBattle PresenceBattle(bool taunt)
         {
@@ -427,14 +500,17 @@ namespace ProjectL.Tests.CoreIntegration
         }
 
         private static ConfiguredMovementBattle CreateBattle(int enemyCount, bool enabled = true, bool enterCombat = true,
-            int supply = 1, int padding = 2)
+            int supply = 1, int padding = 2, int interval = 1, bool passive = false, int limit = 5)
         {
             var config = ConfiguredMovementBattle.Config;
             var database = new CoreIntegrationTestData(config);
+            if (passive)
+                database.SetUnit(new UnitData(EntityKey.Unit_Demon, UnitRole.Regular, UnitOwnerEligibility.EnemyOnly, 1, 1, 1, 0, 0, CategoryKey.Heavy,
+                    1, 1, Array.Empty<UnitTraitData>(), targetingMethodKey: 1, behavior: new UnitBehaviorSpec(false, true, false), killReward: new UnitKillRewardSpec(0, 0)));
             var spec = enabled ? new NexusReinforcementSpec(
-                new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, supply) }, 1, rangePadding: padding) : null;
+                new[] { new NexusReinforcementEntry(EntityKey.Unit_Demon, supply) }, 1, rangePadding: padding, fieldEnemyLimit: limit, spawnIntervalTurns: interval) : null;
             var enemies = Enumerable.Range(0, enemyCount)
-                .Select(x => new EntityPlacement(EntityKey.Unit_Demon, new CellCoord(x, 4), Rotation4.R0)).ToArray();
+                .Select(x => new EntityPlacement(EntityKey.Unit_Demon, new CellCoord(x, passive ? 2 : 4), Rotation4.R0)).ToArray();
             database.SetStage(new StageRootData(1101, 1, StageMapRole.Regular,
                 new CombatStageDetail(17, "field", 1, 0, 1, enemies,
                     Array.Empty<EntityKey>(), Array.Empty<EntityPlacement>(), EntityKey.Structure_Headquarters,

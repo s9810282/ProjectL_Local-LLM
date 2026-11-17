@@ -85,11 +85,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
         public RockfallGimmickData Rockfall { get; }
         public HaboobGimmickData Haboob { get; }
         public TornadoGimmickSpec Tornado { get; }
+        public MeteorGimmickData Meteor { get; }
+        public LavaChainGimmickData LavaChain { get; }
         public IReadOnlyList<TerrainPresencePlacementData> TerrainPresencePlacements { get; }
         public IReadOnlyList<StaticTerrainPlacementData> StaticTerrainPlacements { get; }
         public IReadOnlyList<InitialObstaclePlacementSpec> ObstaclePlacements { get; }
         public IReadOnlyList<InitialObjectPlacementSpec> ObjectPlacements { get; }
         public IReadOnlyList<TornadoSourceFact> TornadoPlacements { get; }
+        public IReadOnlyList<MovingPlatformSpec> MovingPlatforms { get; }
         /// <summary>최초 칸을 전투 준비가 무작위로 정하는 토네이도입니다. 칸이 없으므로 공간 검증에 넣지 않습니다.</summary>
         public IReadOnlyList<InitialRandomTornadoPlacementSpec> InitialRandomTornadoPlacements { get; }
         public IReadOnlyList<CellCoord> WallCells { get; }
@@ -122,11 +125,14 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             int enemyLevel = 1,
             IReadOnlyList<InitialRandomTornadoPlacementSpec> initialRandomTornadoPlacements = null,
             IReadOnlyList<CellCoord> playerDeploymentCells = null, RockfallGimmickData rockfall = null, HaboobGimmickData haboob = null,
-            TornadoGimmickSpec tornado = null, NexusReinforcementSpec nexusReinforcements = null)
+            TornadoGimmickSpec tornado = null, NexusReinforcementSpec nexusReinforcements = null,
+            IReadOnlyList<MovingPlatformSpec> movingPlatforms = null, MeteorGimmickData meteor = null, LavaChainGimmickData lavaChain = null)
         {
             Tornado = tornado;
             Rockfall = rockfall;
             Haboob = haboob;
+            Meteor = meteor;
+            LavaChain = lavaChain;
             ObjectiveKind = objectiveKind;
             PlayerDeploymentCells = Array.AsReadOnly((playerDeploymentCells ?? Array.Empty<CellCoord>()).ToArray());
             EnemyLevel = enemyLevel;
@@ -171,14 +177,18 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.Stage.Combat
             var randomTornadoes = (initialRandomTornadoPlacements ?? Array.Empty<InitialRandomTornadoPlacementSpec>()).ToArray();
             if (randomTornadoes.Any(p => p == null))
                 throw new ArgumentException("최초 무작위 토네이도 배치는 null일 수 없습니다.", nameof(initialRandomTornadoPlacements));
+            var platforms = (movingPlatforms ?? Array.Empty<MovingPlatformSpec>()).ToArray();
+            if (platforms.Any(p => p == null))
+                throw new ArgumentException("플랫폼 정의는 null일 수 없습니다.", nameof(movingPlatforms));
             var sourceIds = terrain.Select(p => p.SourceId).Concat(staticTerrain.Select(p => p.SourceId))
                 .Concat(objects.Select(p => p.CreateSource(1).Id)).Concat(tornadoes.Select(p => p.Id))
-                .Concat(randomTornadoes.Select(p => p.SourceId)).ToArray();
+                .Concat(randomTornadoes.Select(p => p.SourceId)).Concat(platforms.Select(p => p.SourceId)).ToArray();
             if (sourceIds.Distinct().Count() != sourceIds.Length)
                 throw new ArgumentException("환경 배치 원본 ID는 중복될 수 없습니다.");
             ObjectPlacements = Array.AsReadOnly(objects);
             TornadoPlacements = Array.AsReadOnly(tornadoes);
             InitialRandomTornadoPlacements = Array.AsReadOnly(randomTornadoes);
+            MovingPlatforms = Array.AsReadOnly(platforms);
         }
 
         public void Validate()

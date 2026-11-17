@@ -15,6 +15,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
         [SerializeReference] private UnitTraitAuthoring enhanced;
         [SerializeReference] private TraitRankAuthoring rank2;
         [SerializeReference] private TraitRankAuthoring rank3;
+        [SerializeField] private bool allowUnchangedRankValues;
         [SerializeField] private string displayName = "";
         [SerializeField, TextArea] private string description = "";
         [SerializeField] private string enhancedName = "";
@@ -27,7 +28,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
             try
             {
                 return new TraitGrowthDefinitionData(group, normal.ToData(), enhanced?.ToData(), displayName, description,
-                    enhancedName, enhancedDescription, rank2?.ToValues(), rank3?.ToValues());
+                    enhancedName, enhancedDescription, rank2?.ToValues(), rank3?.ToValues(), allowUnchangedRankValues);
             }
             catch (Exception exception) when (exception is InvalidOperationException || exception is ArgumentException)
             {

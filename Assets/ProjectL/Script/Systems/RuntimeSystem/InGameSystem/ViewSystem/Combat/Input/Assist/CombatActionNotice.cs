@@ -2,6 +2,7 @@ using System;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.PlayerSkills;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Assist
@@ -11,6 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
     {
         void AttackRejected(AttackFailureReason reason);
         void MovementRejected(MovementFailureReason reason);
+        /// <summary>플레이어 액티브 스킬을 쓸 수 없는 이유입니다(전투 스킬 View 설계 SK1). 점 고르기 오류는 후보로 걸러 오지 않습니다.</summary>
+        void SkillRejected(PlayerSkillFailureReason reason);
     }
 
     /// <summary>공개된 Core 실패 사실을 사용자 안내로 변환합니다. 규칙 판정은 하지 않습니다.</summary>
@@ -37,6 +40,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             ShowActionFailure(reason.ToString());
         }
 
+        public void SkillRejected(PlayerSkillFailureReason reason) => ShowSkillFailure(reason);
+
         internal void MainCharacterNotPlaced() =>
             _text.ShowNotice("메인캐릭터가 배치되지 않았습니다!", Duration);
 
@@ -45,6 +50,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             if (result == null) throw new ArgumentNullException(nameof(result));
             if (result.Accepted || result.Kind != CombatProcessingKind.Command)
                 return;
+
+            // 스킬 명령의 사유 코드는 스킬 실패 이유 이름입니다(Core 인계 §7). 같은 이름(무장 해제·기절)이 공격 문구로 가지 않게 먼저 봅니다.
+            if (result.CommandKind == CombatCommandKind.UsePlayerSkill)
+            {
+                if (System.Enum.TryParse(result.Reason, out PlayerSkillFailureReason skillFailure))
+                    ShowSkillFailure(skillFailure);
+                return;
+            }
 
             // 최종 결과 계약은 문자열 사유 코드입니다. 행동 거절 안내를 우선합니다.
             if (ShowActionFailure(result.Reason))
@@ -79,6 +92,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
                 case nameof(AttackFailureReason.Disarmed):
                     message = "무장 해제 상태라 공격할 수 없습니다.";
                     break;
+                // 기절은 이동·공격을 모두 막습니다. 공격·이동 거절 이유 이름이 같아 한 줄입니다(관통·죽음의 손 View 계획 TP-10).
+                case nameof(AttackFailureReason.Stunned):
+                    message = "기절 상태라 행동할 수 없습니다.";
+                    break;
                 // 투사체가 막힌다는 뜻이 아니라 지정 규칙입니다(하붑 View 설계 §3.5).
                 case nameof(AttackFailureReason.HaboobDesignationBlocked):
                     message = "공격자와 지정한 칸이 모두 먼지구름 안이거나 모두 밖이어야 합니다.";
@@ -93,6 +110,45 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.As
             }
             _text.ShowNotice(message, duration);
             return true;
+        }
+
+        // 스킬 실패 이유의 문구입니다(초안). 점 고르기 오류(점 수·판 밖·벽·사거리·방향·막힘)는 후보로 거르므로 문구가 없습니다(설계 SK1).
+        private void ShowSkillFailure(PlayerSkillFailureReason reason)
+        {
+            string message;
+            switch (reason)
+            {
+                case PlayerSkillFailureReason.NoActiveBattle:
+                case PlayerSkillFailureReason.NotPlayerCombatTurn:
+                    message = "지금은 스킬을 쓸 수 없습니다.";
+                    break;
+                case PlayerSkillFailureReason.NotSelectedMain:
+                case PlayerSkillFailureReason.ActorUnavailable:
+                    message = "메인 캐릭터가 필드에 있어야 스킬을 쓸 수 있습니다.";
+                    break;
+                case PlayerSkillFailureReason.NoSkillConfigured:
+                    message = "쓸 수 있는 스킬이 없습니다.";
+                    break;
+                case PlayerSkillFailureReason.Disarmed:
+                    message = "무장 해제 상태라 스킬을 쓸 수 없습니다.";
+                    break;
+                case PlayerSkillFailureReason.Stunned:
+                    message = "기절 상태라 스킬을 쓸 수 없습니다.";
+                    break;
+                case PlayerSkillFailureReason.StageUsesExhausted:
+                    message = "이번 스테이지에서 쓸 수 있는 횟수를 모두 썼습니다.";
+                    break;
+                case PlayerSkillFailureReason.UsedThisTurn:
+                    message = "이번 턴에는 이미 스킬을 썼습니다.";
+                    break;
+                case PlayerSkillFailureReason.SourceChanged:
+                case PlayerSkillFailureReason.BattleChanged:
+                    message = "상황이 바뀌었습니다. 스킬을 다시 지정해주세요.";
+                    break;
+                default:
+                    return;
+            }
+            _text.ShowNotice(message, Duration);
         }
 
         private static bool IsTargetFailure(AttackFailureReason reason)

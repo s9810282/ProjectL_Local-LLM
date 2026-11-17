@@ -11,6 +11,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Contexts;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Rules;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 
@@ -224,7 +225,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         CombatAttackQueries.IntrinsicUnitReadiness(observed, attacker) != AttackFailureReason.None) continue;
                     // 다음 플레이어 기회의 기하를 보므로 현재 턴의 행동 사용은 검사하지 않는다.
                     var profile = CombatCommandCalculator.RequiredProfile(observed, attacker);
-                    int damage = CombatAttackCalculator.CommonAttackDamage(observed, attacker, profile);
+                    int damage = CombatAttackCalculator.CommonAttackDamage(observed, attacker, profile, CombatDamageKind.OrdinaryAttack);
                     var bindings = new List<EffectRuleBinding>();
                     foreach (var binding in CombatCommandEffects.CaptureSteps(attacker, profile))
                     {
@@ -236,8 +237,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         }
                         yield return 0;
                     }
+                    // 칸 위협 추정은 쓸기 뒤의 위치·도착 효과·대상별 피해를 모형화하지 않는다.
+                    bool sweeping = engine.EvaluateAttackSweep(bindings,
+                        new AttackSweepEffectContext(CombatDamageKind.OrdinaryAttack)).Contribution.HasValue;
+                    if (sweeping)
+                        gaps |= CombatAssessmentGap.UnsupportedEffect;
                     if (damage <= 0) continue;
-                    var policy = engine.EvaluateAttackTargeting(bindings).Policy;
+                    var policy = CombatAttackQueries.EffectiveTargetingPolicy(engine.EvaluateAttackTargeting(bindings).Policy, sweeping);
+                    var occlusion = CombatAttackQueries.EffectiveOcclusion(profile, sweeping);
                     int basicRange = EnvironmentTerrainRules.AppointRange(observed, attacker, visible);
                     int splashDamage = profile.Method.Splash == TargetingSplash.None ? 0
                         : SplashDamageCalculator.CalculateAdditional(damage, profile.Method.SplashPercent);
@@ -272,7 +279,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         if (selected == null) continue;
                         AttackCellSelection reachable = null;
                         foreach (var _ in AttackOcclusionResolver.ResolveCellSteps(attacker.Anchor.Value, selected, walls,
-                            elevation, profile.Occlusion, (value, _) => reachable = value)) yield return 0;
+                            elevation, occlusion, (value, _) => reachable = value)) yield return 0;
                         for (int i = 0; i < reachable.DesignatedCells.Length; i++)
                         {
                             Record(damageByCell, reachable.DesignatedCells.Span[i], damage);

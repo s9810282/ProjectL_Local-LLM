@@ -19,7 +19,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 수락된 일반 공격은 피해가 없는 끌어오기여도 공격 완료로 보고 공격자의 위협 효과를 끝냅니다(설계 R11).
         /// </summary>
         internal static void CompleteAttack(CombatCommandInput input, CharacterCombatFacts attackerAtStart,
-            IReadOnlyCollection<EntityId> deliveredVictims, IDictionary<EntityId, CharacterCombatFacts> projected,
+            IEnumerable<EntityId> deliveredVictims, IDictionary<EntityId, CharacterCombatFacts> projected,
             List<CombatEvent> events = null, CombatDamageOrigin origin = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));

@@ -57,7 +57,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 new CharacterTraitEffects(statuses, legacy.CohesionDefenseBonus);
         }
 
-        private static bool IsDebuff(AppliedStatus status) => status is AttackDecreaseStatus || status is ActionRestrictionStatus || status is DefenseDecreaseStatus;
+        private static bool IsDebuff(AppliedStatus status) =>
+            status is AttackDecreaseStatus or DefenseDecreaseStatus ||
+            status is ActionRestrictionStatus && status.Key is StatusEffectKey.Disarm or StatusEffectKey.Bind;
         private static bool IsTraitEffect(AppliedStatus status) => status is AttackIncreaseStatus || status is ShieldStatus;
 
         private static bool Matches(StatusEffectSet statuses, StatusEffectSet imported, Func<AppliedStatus, bool> owns)

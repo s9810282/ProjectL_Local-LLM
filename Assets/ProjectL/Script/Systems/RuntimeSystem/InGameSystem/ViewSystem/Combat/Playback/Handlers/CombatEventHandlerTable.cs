@@ -27,7 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         internal static CombatEventHandlerTable Create(CombatEventHandler attack, CombatEventHandler roar, CombatEventHandler summon,
             CombatEventHandler character, CombatEventHandler turn, CombatEventHandler facts, CombatEventHandler pull,
             CombatEventHandler trait, CombatEventHandler tornado, CombatEventHandler rockfall, CombatEventHandler haboob,
-            CombatEventHandler structure, CombatEventHandler reinforcement)
+            CombatEventHandler structure, CombatEventHandler reinforcement, CombatEventHandler playerSkill, CombatEventHandler thornBomb)
         {
             var table = new CombatEventHandlerTable();
             IReadOnlyList<Type> eventTypes = CombatEventTypeTable.EventTypes;
@@ -48,6 +48,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     CombatEventHandlerSlot.Reinforcement => reinforcement,
                     CombatEventHandlerSlot.Facts => facts,
                     CombatEventHandlerSlot.Structure => structure,
+                    CombatEventHandlerSlot.PlayerSkill => playerSkill,
+                    CombatEventHandlerSlot.ThornBomb => thornBomb,
                     // 처리기 칸을 더하고 여기 갈래를 빠뜨리면 사실 처리기로 조용히 가지 않게 만들 때 알립니다.
                     _ => throw new InvalidOperationException($"[CombatEventHandlerTable] 처리기를 맞추지 않은 처리기 칸입니다: {eventTypes[i]}"),
                 };

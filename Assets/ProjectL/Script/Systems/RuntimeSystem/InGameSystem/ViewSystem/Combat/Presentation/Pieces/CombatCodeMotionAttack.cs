@@ -20,7 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// 타격에 대상 모두 해제 → <see cref="CombatPieceSignal.Hit"/>을 냅니다. 모션 끝이 이 항목의 끝입니다.</item>
     /// </list>
     /// <para>그 뒤 공격 칸의 큐를 붙입니다(범용 연출 구조 설계 G6): 기준 순간 = 항목 0의 <see cref="CombatPieceSignal.MotionCue"/>, 맞음 = 항목 0의 <see cref="CombatPieceSignal.Hit"/>,
-    /// 끝 = 모션 끝. 소리 시점 기본(Cue + 0)이 옛 코드 모션이 효과음을 내던 순간과 같습니다(계획 §0.4 1번). 행위자 지점 자리는 클립 채널이 없어 쓰지 않습니다(계획 P6).</para>
+    /// 끝 = 모션 끝. 공격 소리 줄의 Event1(= 기준 순간 + 0)이 옛 코드 모션이 효과음을 내던 순간과 같습니다(계획 §0.4 1번). 행위자 지점 자리는 클립 채널이 없어 쓰지 않습니다(계획 P6).</para>
     /// <para>
     /// 사건 완료는 첫 해제(Gate), 전체 종료는 모션 끝입니다. 자세는 모션이 스스로 빌리므로(공격 재생의 공격 자세) 실행 대여에 넣지 않습니다(포효의 정면 공격과 같음).
     /// 모션을 시작하지 못하면 항목 0이 바로 끝나고, 기준 순간·맞음을 기다리던 큐는 건너뜁니다. 그래서 처리기는 시작할 모션이 있을 때만 이 조립을 만듭니다
@@ -29,18 +29,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <para>앞 항목(<see cref="CombatAttackLead"/>, 대신 맞는 수호자 나가기)이 있으면 그 항목이 맨 앞에 오고, 모션과 시작 큐는 그 항목이 돌려준 시점에 시작하며,
     /// 맞는 순간 뒤 항목(대기·돌아오기)이 끝에 붙습니다(유닛 행동 설계 AA6). 그때 모션 번호는 앞 항목 수만큼 밀립니다.</para>
     /// <para>창구는 클립 공격 입구(<see cref="CombatClipAttack"/>)처럼 묶음 하나(<see cref="CombatCueSinks.ForAttack"/>)로 받고, 자리·앞 항목은 기본값 없이 받습니다(없는 값은 null).
-    /// 탄별 시점은 넣지 않아 투사체 소리는 Cue·Hit에 붙습니다(평가 C4-08 2단계, 작은 묶음 설계 SB1).</para>
+    /// 탄별 시점은 넣지 않아 투사체 소리는 Event1·Contact(FirstHit)에 붙습니다(평가 C4-08 2단계, 작은 묶음 설계 SB1).</para>
     /// </remarks>
     internal static class CombatCodeMotionAttack
     {
-        /// <param name="tryBeginMotion">코드 모션 입구입니다. 인자는 (모션 완료 콜백, 기준 순간 콜백, 타격 순간 콜백)입니다(<see cref="CombatAttackPlayback.TryBeginMotion"/>).</param>
+        /// <param name="tryBeginMotion">코드 모션 입구입니다. 인자는 (모션 완료 콜백, 기준 순간 콜백, 타격 해제 규칙 <see cref="CombatContactRelease"/>)입니다(<see cref="CombatAttackPlayback.TryBeginMotion"/>).</param>
         /// <param name="release">출처의 대상을 모두 해제하는 입구입니다(<see cref="ICombatSourceLifetime.ReleaseAll"/>). 타격 신호보다 먼저 부릅니다.</param>
+        /// <param name="releaseTarget">대상 하나를 해제하는 입구입니다(<see cref="ICombatSourceLifetime.Release"/>). 직선 코드 모션이 접촉마다 부릅니다
+        /// (관통·죽음의 손 View 설계 D6, 계획 TP-6). 근접·곡사는 쓰지 않습니다.</param>
         /// <param name="cues">공격 칸 큐입니다(공격 표시 값의 <c>Cues</c>).</param>
         /// <param name="sinks">공격 창구 묶음입니다(<see cref="CombatCueSinks.ForAttack"/>). 투사체 소리는 직선·곡사만 내며 비행 = 발사(MotionCue) + 지연, 착탄 = 맞음 + 지연입니다(투사체·피격 소리 설계 PS3).</param>
         /// <param name="actorBody">행위자 몸 자리입니다(큐 자리 <c>ActorBody</c>). 없으면 그 자리의 이펙트를 넣지 않습니다.</param>
         /// <param name="lead">공격 조립의 앞 항목입니다(대신 맞는 수호자 나가기·돌아오기, 유닛 행동 계획 TP-14). 없으면 조립이 지금과 같습니다.</param>
-        internal static CombatComposition Compose(CombatAttackShape shape, CombatEventCues cues, Func<Action, Action, Action, bool> tryBeginMotion,
-            Action release, CombatCueSinks sinks, Pose? actorBody, CombatAttackLead lead)
+        internal static CombatComposition Compose(CombatAttackShape shape, CombatEventCues cues,
+            Func<Action, Action, CombatContactRelease, bool> tryBeginMotion, Action<EntityId> releaseTarget, Action release, CombatCueSinks sinks,
+            Pose? actorBody, CombatAttackLead lead)
         {
             if (shape == null) throw new ArgumentNullException(nameof(shape));
             if (cues == null) throw new ArgumentNullException(nameof(cues));
@@ -52,13 +55,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 CombatPieceCompletion.FromSource(shape.Source, attacker, shape.Completion));
             // 앞 항목(수호자 나가기)이 있으면 뼈대와 시작 큐는 그 뒤입니다(유닛 행동 계획 TP-14).
             CombatPieceStart start = lead?.Begin(composition) ?? CombatPieceStart.AtStart();
-            // 해제가 먼저입니다(순서 규칙은 CombatPieceSignal.Hit 문서, 함수는 CombatHitMoment 하나).
+            // 해제가 먼저입니다(순서 규칙은 CombatPieceSignal.Hit 문서, 해제 규칙은 CombatContactRelease 하나 — 관통·죽음의 손 View 설계 D6).
             int motion = composition.Add(new CombatCodeMotionPiece((end, cue, hit) =>
-                tryBeginMotion(end, cue, CombatHitMoment.ReleaseThenSignal(release, hit))), start);
+                tryBeginMotion(end, cue, new CombatContactRelease(releaseTarget, release, hit))), start);
             var anchors = new CombatCueAnchors()
                 .StartAt(start)
-                .Set(CombatCueAnchor.Cue, motion, CombatPieceSignal.MotionCue)
-                .Set(CombatCueAnchor.Hit, motion, CombatPieceSignal.Hit)
+                .Set(CombatCueAnchor.Event1, motion, CombatPieceSignal.MotionCue)
+                .SetFirstHit(motion, CombatPieceSignal.Hit)
                 .Set(CombatCueAnchor.End, motion, CombatPieceSignal.End);
             CombatCueComposer.Add(composition, anchors, cues, CombatCuePoints.ForActor(attacker, actorBody), sinks);
             lead?.AfterHit(composition, motion);

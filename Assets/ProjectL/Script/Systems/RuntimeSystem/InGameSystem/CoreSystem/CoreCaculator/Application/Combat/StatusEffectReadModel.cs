@@ -27,11 +27,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (defense.Count != 0) result.Add(new DefenseDecreaseEffectSnapshot(CombatEffectiveStatsCalculator.PhysicalDefense(character), defense));
             var shields = Sources<ShieldStatus>(current);
             if (shields.Count != 0) result.Add(new ShieldEffectSnapshot(character.TraitEffects.ActiveShieldTotal, shields));
-            foreach (var key in new[] { StatusEffectKey.Disarm, StatusEffectKey.Bind })
+            foreach (var group in current.Entries.OfType<ActionRestrictionStatus>().GroupBy(s => s.Key).OrderBy(g => g.Key))
             {
-                var restrictions = current.Entries.OfType<ActionRestrictionStatus>().Where(s => s.Key == key)
-                    .Select(s => new StatusEffectSourceSnapshot(s)).ToArray();
-                if (restrictions.Length != 0) result.Add(new ActionRestrictionEffectSnapshot(key, restrictions));
+                var restrictions = group.Select(s => new StatusEffectSourceSnapshot(s)).ToArray();
+                result.Add(new ActionRestrictionEffectSnapshot(group.Key, restrictions));
             }
             var exposures = Sources<WeaknessExposureStatus>(current);
             if (exposures.Count != 0) result.Add(new WeaknessExposureEffectSnapshot(WeaknessExposureRules.EffectivePercent(current), exposures));

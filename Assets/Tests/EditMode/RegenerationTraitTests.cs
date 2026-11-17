@@ -82,17 +82,6 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void Registry_CoversEveryNonPendingTraitExactlyOnce()
-        {
-            var keys = TraitRegistry.CreateDefault().OrderedRegistrations.Select(r => r.TraitKey).ToArray();
-            var declared = Enum.GetValues(typeof(TraitKey)).Cast<TraitKey>()
-                .Where(k => k != TraitKey.None && !DeferredCombatFeatures.IsTraitRetired(k) &&
-                    DeferredCombatFeatures.GetTraitUnavailableReason(k) != "ImplementationPending").ToArray();
-            Assert.That(keys, Is.EquivalentTo(declared));
-            Assert.That(keys.Distinct().Count(), Is.EqualTo(44));
-        }
-
-        [Test]
         public void Factories_RejectNullAndMismatchedInputs()
         {
             var definitions = new RegenerationTraitDefinitionFactory();

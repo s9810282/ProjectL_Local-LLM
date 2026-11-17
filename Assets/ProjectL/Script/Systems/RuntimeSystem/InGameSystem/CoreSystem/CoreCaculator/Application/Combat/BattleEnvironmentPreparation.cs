@@ -12,7 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static IReadOnlyList<CharacterCombatFacts> Prepare(BattleInitialization initialization,
             IReadOnlyList<CharacterCombatFacts> characters, IReadOnlyList<StructureCombatFacts> structures,
             MainCharacterPersistentState main, EnvironmentSemanticBindings preparedBindings = null,
-            IReadOnlyList<ObstacleContentProfile> obstacleContents = null, MovementEnvironmentFacts preparedEnvironment = null)
+            IReadOnlyList<ObstacleContentProfile> obstacleContents = null, MovementEnvironmentFacts preparedEnvironment = null,
+            StageGimmickStateSet gimmicks = null)
         {
             if (initialization == null) throw new ArgumentNullException(nameof(initialization));
             if (characters == null) throw new ArgumentNullException(nameof(characters));
@@ -26,15 +27,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             bindings.ValidateInitialReferences(environment, structures);
 
             CellEnvironmentQuery.ValidateInitialPlacement(stage.MapWidth, stage.MapHeight, environment,
-                structures, characters, bindings, initialization.WallBlocking, stage.RailCells.ToArray());
+                structures, characters, bindings, initialization.WallBlocking, stage.RailCells.ToArray(), gimmicks);
 
             if (environment.Tiles.Any(source => bindings.TerrainSourceIds.Contains(source.Id) &&
                 !EnvironmentContentSupport.IsSupportedInitialTerrain(source)))
-                throw new NotSupportedException("초기 Terrain은 지원되는 위치 보정 또는 정적 지형 원본이어야 합니다.");
+                throw new NotSupportedException("초기 Terrain은 지원되는 지형 원본이어야 합니다.");
             if (environment.Tiles.Where(EnvironmentContentSupport.IsExclusiveTerrain)
                 .Any(source => !bindings.TerrainSourceIds.Contains(source.Id)))
                 throw new NotSupportedException("정적 지형 원본에는 Terrain 분류가 필요합니다.");
-            if (environment.Tiles.Where(t => t.Active && bindings.TerrainSourceIds.Contains(t.Id)).GroupBy(t => t.Cell)
+            if (environment.Tiles.Where(t => t.Active && t is not MovingPlatformFact &&
+                bindings.TerrainSourceIds.Contains(t.Id)).GroupBy(t => t.Cell)
                 .Any(group => group.Count() > 1 && group.Any(EnvironmentContentSupport.IsExclusiveTerrain)))
                 throw new NotSupportedException("정적 지형과 다른 Terrain의 같은 셀 조합은 아직 지원하지 않습니다.");
             if (environment.Tiles.Any(source => bindings.ObjectSourceIds.Contains(source.Id) &&

@@ -318,7 +318,7 @@ namespace ProjectL.Tests.Core
             BattleObjective objective = null)
         {
             var s = i.State;
-            var state = objective == null ? s : new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,objective,s.Allocation,s.ItemRandomState);
+            var state = objective == null ? s : new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,                s.WallBlocking,objective,s.Allocation,s.ItemRandomState);
             return new CombatCommandInput(i.Number, i.Kind, i.ActorId, i.Aim, state, i.Characters, i.Profiles, i.Main,
                 i.Owned, i.SoulCounts, i.Souls, i.Artifacts, i.TargetCell, i.Rotation, BattleFacts(spec ?? Spec),
                 i.ProcessingKind, i.Path, i.MovementContext, i.BattleInstanceId, i.ArtifactItems, i.EnvironmentBindings,

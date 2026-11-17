@@ -10,8 +10,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>진입 원본의 종류입니다(이동 접촉 설계 M1). 몸 조회가 종류별 표시에서 갈립니다.</summary>
     internal enum CombatContactSourceKind
     {
-        /// <summary>가시밭 칸(<see cref="CombatThornConsumedEvent"/>)입니다.</summary>
-        Thorn,
         /// <summary>오브젝트 원본(<see cref="CombatObjectActivationEvent"/>)입니다.</summary>
         Object,
         /// <summary>
@@ -24,22 +22,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// <summary>
     /// 결과의 각 걸음(<c>Moved</c>) 뒤에서 그 칸 진입 사건을 원본별 접촉 묶음으로 대응합니다(이동 접촉 설계 M1).
     /// 근거는 Core 사건 순서뿐입니다: Core는 걸음마다 <c>Moved</c>를 기록하고 곧바로 그 칸의 지형 진입 등록과 진입 처리
-    /// (가시 → 위험 타일 → 오브젝트 → 회복 타일)를 기록하며, 원본마다 효과(피해·회복·보유 효과·사망 등)를 바로 뒤에 둡니다. 칸·이름으로 추측하지 않습니다.
+    /// (위험 타일 → 오브젝트 → 회복 타일)를 기록하며, 원본마다 효과(피해·회복·보유 효과·사망 등)를 바로 뒤에 둡니다. 칸·이름으로 추측하지 않습니다.
     /// </summary>
     /// <remarks>
     /// <para>걸음 구간 = <c>Moved</c> 뒤 ~ 다음 이동 사건(누구든) 또는 새 행동(<see cref="CombatEventTypeTable.IsActionStart"/>) 전.</para>
     /// <para>
-    /// 접촉 원본 사건 = 가시 소비, 이 걸음의 이동자가 발동한 오브젝트, 들어간 칸의 일반 진입 규칙 타일 변경입니다.
+    /// 접촉 원본 사건 = 이 걸음의 이동자가 발동한 오브젝트, 들어간 칸의 일반 진입 규칙 타일 변경입니다.
     /// 접촉 묶음 = 원본 사건 하나와, 다음 원본 사건 전까지의 사건들입니다. 오브젝트 발동 뒤 같은 원본의 변경(<see cref="CombatMovementSourceEvent"/>)은
     /// 그 오브젝트 묶음입니다. 경로 도착 처리·이동 성공 효과는 마지막 묶음 뒤에 붙습니다(설계 M1).
     /// </para>
     /// <para>
-    /// 구간에서 첫 원본보다 앞선 사건(약한 지반 진입 등록·낙하·넉백 가시 피해 등)은 묶음이 없어 접촉으로 해제되지 않습니다. 시작 시점은 걸음 접촉 Gate의
+    /// 구간에서 첫 원본보다 앞선 사건(약한 지반 진입 등록·낙하 등)은 묶음이 없어 접촉으로 해제되지 않습니다. 시작 시점은 걸음 접촉 Gate의
     /// 규칙 3(걸음 사건 완료 뒤 — 순차 재생이라 첫 묶음 해제 때, 묶음이 없는 걸음이면 보간 끝)이고, 이동자 자신의 사건이면 규칙 1(남은 걸음 연출 끝)입니다(설계 M4).
     /// </para>
     /// <para>
-    /// 공격 넉백은 가시를 사건 없이 지우므로(Core <c>AttackKnockbackCalculator</c>) 가시 묶음이 없고, 요청 거리를 다 쓴 칸의 오브젝트 발동은
-    /// 공격 정산 사건 뒤(S12)에 기록됩니다. 해제 상태는 걸음 접촉 Gate가 소유합니다.
+    /// 요청 거리를 다 쓴 칸의 오브젝트 발동은 공격 정산 사건 뒤에 기록됩니다. 해제 상태는 걸음 접촉 Gate가 소유합니다.
     /// </para>
     /// </remarks>
     internal sealed class CombatStepContacts
@@ -81,7 +78,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             internal CombatEvent Source { get; }
             internal CombatContactSourceKind Kind { get; }
             internal CellCoord Cell { get; }
-            /// <summary>오브젝트·타일 원본 ID입니다. 가시는 0입니다.</summary>
+            /// <summary>오브젝트·타일 원본 ID입니다.</summary>
             internal long SourceId { get; }
         }
 
@@ -97,7 +94,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             Group group = null;
             foreach (CombatEvent item in result.Events)
             {
-                if (CombatEventTypeTable.IsMovement(item) || CombatEventTypeTable.IsActionStart(item))
+                if (CombatEventTypeTable.IsMovement(item) || CombatEventTypeTable.IsActionStart(item) ||
+                    item is CombatThornBombAttachedEvent or CombatThornBombDetonatedEvent)
                 {
                     group = null;
                     step = null;
@@ -148,9 +146,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             opened = null;
             switch (item)
             {
-                case CombatThornConsumedEvent thorn:
-                    opened = step.Add(item, CombatContactSourceKind.Thorn, thorn.Source.Cell, 0);
-                    return true;
                 case CombatObjectActivationEvent activation:
                     // 이 걸음의 이동자가 발동한 오브젝트만 접촉 원본입니다(깃발 떨어뜨림 즉시 획득 등 다른 도착자는 앞 묶음에 붙습니다).
                     if (activation.ActivatorId != step.Moved.Final.EntityId) return false;

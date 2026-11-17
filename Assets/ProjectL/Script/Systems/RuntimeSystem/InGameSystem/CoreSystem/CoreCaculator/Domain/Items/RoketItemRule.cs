@@ -17,7 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
 
             var holder = context.Recipient;
             if (holder.Items.EquippedItemKey != definition.Key || holder.Health.IsDead ||
-                context.Kind != CombatDamageKind.OrdinaryAttack || context.Attacker == null ||
+                (context.Kind != CombatDamageKind.OrdinaryAttack && context.Kind != CombatDamageKind.PlayerSkillAttack) || context.Attacker == null ||
                 !Hostility.AreHostile(context.Attacker.Owner, holder.Owner) ||
                 (long)context.DamageBeforeItems * 100 < (long)holder.Health.MaxHealth * spec.TriggerDamagePercent)
                 return ItemRuleDecision.NoActivation();

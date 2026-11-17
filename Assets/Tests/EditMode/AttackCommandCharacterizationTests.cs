@@ -42,10 +42,10 @@ namespace ProjectL.Tests.Core
         public void C2_OrdinarySplash_DirectObstacleHitsAndChainedBlast()
         {
             var i = CombatCommandTestData.Input();
-            var barrel = ObstacleReactionTests.Barrel(51, new CellCoord(5, 3), 10, 20);
-            var chained = ObstacleReactionTests.Barrel(53, new CellCoord(6, 3), 10, 20);
+            var barrel = ObstacleReactionTests.Barrel(51, new CellCoord(5, 3), 1, 20);
+            var chained = ObstacleReactionTests.Barrel(53, new CellCoord(6, 3), 3, 20);
             var supply = new StructureCombatFacts(new EntityId(52), new StructureSpec(EntityKey.Structure_Supplies,
-                1, 1, new[] { CellCoord.Zero }, 30, false, 0), new HealthStateSnapshot(30, 30),
+                1, 1, new[] { CellCoord.Zero }, 1, false, 0), new ObstacleDurabilitySnapshot(2, 2),
                 new CellCoord(4, 2), Rotation4.R0, new[] { new CellCoord(4, 2) }, Owner.Neutral);
             var input = ObstacleReactionTests.Copy(i,
                 characters: i.Characters.Where(c => c.EntityId != new EntityId(4)).ToArray(),
@@ -55,15 +55,13 @@ namespace ProjectL.Tests.Core
             Pin(input, NoRules, C2Expected);
         }
 
-        /// <summary>C3: 밀치기로 가시밭과 배지 오브젝트 칸에 도착한다(G5, G8 도착, G10 밀치기 가시).</summary>
+        /// <summary>C3: 밀치기로 배지 오브젝트 칸에 도착한다.</summary>
         [Test]
-        public void C3_Knockback_ThroughThornOntoObjectCell()
+        public void C3_Knockback_OntoObjectCell()
         {
             var destination = new CellCoord(5, 3);
             var input = CliffFallTests.WithEnvironment(CliffFallTests.Knockback(),
                 new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player }));
-            var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,new[] { new ThornFieldCellSnapshot(destination, 5, 7) },s.Turn,s.Environment));
             Pin(input, TornadoEnvironmentTests.Rules, C3Expected);
         }
         /// <summary>C5: 관통. ID 순서(2, 7, 9)와 진행 순서(9, 2, 7)가 다르고 아티팩트 공통 피해 사건이 있다(G6, G1).</summary>
@@ -76,18 +74,31 @@ namespace ProjectL.Tests.Core
             Pin(input, NoRules, C5Expected);
         }
 
-        /// <summary>C6: 밤 공격. 직접 피해 사망과 밀치기 가시 사망의 영혼 사건 시점(G7, I-3).</summary>
+        /// <summary>C6: 직접 피해 사망과 밀치기 도착 오브젝트 사망의 영혼 사건 시점.</summary>
         [Test]
-        public void C6_NightAttack_DirectDeathAndKnockbackThornDeath()
+        public void C6_DirectDeathAndKnockbackArrivalDeath()
         {
             var input = CombatCommandEffectTests.ActorEffect(new KnockbackTraitSpec(1), new KnockbackTraitStatusSnapshot(1));
             var chars = input.Characters.ToArray();
             chars[2] = CombatCommandTestData.With(chars[2], hp: 25);
             chars[4] = CombatCommandTestData.With(chars[4], hp: 1);
-            var state = new CombatCommandState(8,8,input.State.Phase,                input.State.Structures,new[] { new ThornFieldCellSnapshot(new CellCoord(5, 3), 5, 7) },turn: input.State.Turn);
+            var state = EnvironmentDamageTests.WithDamageObjects(new CombatCommandState(8,8,input.State.Phase,                input.State.Structures,turn: input.State.Turn), (new CellCoord(5, 3), 7));
             input = CombatCommandTestData.With(input, chars, state, artifacts: new ArtifactLoadoutSnapshot(0,
                 new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
-            Pin(input, NoRules, C6Expected);
+            var result = CombatCommandCalculator.Calculate(input, EnvironmentDamageTests.DamageRules);
+            Assert.That(result.Accepted, Is.True, result.Reason);
+            var events = result.Events.ToList();
+            int directDeath = events.FindIndex(e => e is CombatCharacterEvent c && c.Kind == CombatEventKind.Died &&
+                c.Final.EntityId == new EntityId(4));
+            int movement = events.FindIndex(e => e is CombatCharacterEvent c && c.Kind == CombatEventKind.Moved &&
+                c.Final.EntityId == new EntityId(2));
+            int arrivalDeath = events.FindIndex(e => e is CombatCharacterEvent c && c.Kind == CombatEventKind.Died &&
+                c.Final.EntityId == new EntityId(2));
+            Assert.That(directDeath, Is.GreaterThanOrEqualTo(0));
+            Assert.That(movement, Is.GreaterThan(directDeath));
+            Assert.That(arrivalDeath, Is.GreaterThan(movement));
+            Assert.That(result.Attack.Value.Hits.ToArray().Single(h => h.TargetId == new EntityId(2)).DamageDealt, Is.EqualTo(20));
+            Assert.That(result.Field.Final.Entries, Is.Empty);
         }
 
         /// <summary>C7: 연쇄 공격이 직접 맞고 살아남은 스플래시 대상을 다시 때린다. 공격 결과에는 연쇄 피해가 없다(G8, I-4).</summary>
@@ -127,7 +138,7 @@ namespace ProjectL.Tests.Core
                     new[] { actor }.Concat(seed.Characters.Skip(1)).Concat(new[] { doomed }).ToArray(), profiles: profiles),
                 new SheriffBadgeSourceFact(72, destination, 1, true, new[] { Owner.Player }));
             var s = input.State;
-            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment),
+            input = CombatCommandTestData.With(input, state: new CombatCommandState(s.BoardWidth,s.BoardHeight,                s.Phase,s.Structures,s.Turn,s.Environment),
                 artifacts: new ArtifactLoadoutSnapshot(0, new[] { new ArtifactPlacedEffectSnapshot(11, 4, ArtifactSoulSchemaTests.SoulEffect()) }));
             Pin(input, TornadoEnvironmentTests.Rules, C8Expected);
         }
@@ -141,20 +152,20 @@ namespace ProjectL.Tests.Core
             "final: C1:100, C2:100, C3:83, C4:83, C10:100, souls:0";
 
         private const string C2Expected =
-            "events: Attacked, HealthChanged:2, HealthChanged:3, StructureDied:51, ObstacleDestroyed:51, HealthChanged:2, HealthChanged:3, StructureHealthChanged:52, ObstacleHit:52, Held:1, StructureDied:53, ObstacleDestroyed:53, StructureDied:52, ObstacleDestroyed:52, Held:1\n" +
-            "previewEvents: Attacked, HealthChanged:2, HealthChanged:3, StructureDied:51, ObstacleDestroyed:51, HealthChanged:2, HealthChanged:3, StructureHealthChanged:52, ObstacleHit:52, Held:1, StructureDied:53, ObstacleDestroyed:53, StructureDied:52, ObstacleDestroyed:52, Held:1\n" +
-            "hits: 2:Primary:100:40:60, 3:Additional:70:34:66, 51:Additional:70:10:0, 52:Additional:70:30:0\n" +
-            "previewTargets: 2:Primary:40:20:60, 3:Additional:34:20:66, 51:Additional:14:0:0, 52:Additional:34:20:0\n" +
+            "events: Attacked, HealthChanged:2, HealthChanged:3, Durability:51:0, ObstacleDestroyed:51, HealthChanged:2, HealthChanged:3, Durability:52:1, ObstacleHit:52, Held:1, Durability:53:0, ObstacleDestroyed:53, Durability:52:0, ObstacleDestroyed:52, Held:1\n" +
+            "previewEvents: Attacked, HealthChanged:2, HealthChanged:3, Durability:51:0, ObstacleDestroyed:51, HealthChanged:2, HealthChanged:3, Durability:52:1, ObstacleHit:52, Held:1, Durability:53:0, ObstacleDestroyed:53, Durability:52:0, ObstacleDestroyed:52, Held:1\n" +
+            "hits: 2:Primary:100:40:60, 3:Additional:70:34:66, 51:Additional:70:0:0, 52:Additional:70:0:0\n" +
+            "previewTargets: 2:Primary:40:20:60, 3:Additional:34:20:66, 51:Additional:0:0:0, 52:Additional:0:0:0\n" +
             "affected: (3,2), (4,2), (5,2), (3,3), (4,3), (5,3), (3,4), (4,4), (5,4)\n" +
             "final: C1:100, C2:60, C3:66, C10:100, S51:0, S52:0, S53:0, souls:0";
 
         private const string C3Expected =
-            "events: Attacked, HealthChanged:2, HealthChanged:3, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, HealthChanged:2, Moved:3, Object:72:2, Held:2, Source:72\n" +
-            "previewEvents: Attacked, HealthChanged:2, HealthChanged:3, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, HealthChanged:2, Moved:3, Object:72:2, Held:2, Source:72\n" +
-            "hits: 2:Primary:100:27:73, 3:Additional:70:14:86\n" +
-            "previewTargets: 2:Primary:27:7:73, 3:Additional:14:0:86\n" +
+            "events: Attacked, HealthChanged:2, HealthChanged:3, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, Moved:3, Object:72:2, Held:2, Source:72\n" +
+            "previewEvents: Attacked, HealthChanged:2, HealthChanged:3, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, Moved:3, Object:72:2, Held:2, Source:72\n" +
+            "hits: 2:Primary:100:20:80, 3:Additional:70:14:86\n" +
+            "previewTargets: 2:Primary:20:0:80, 3:Additional:14:0:86\n" +
             "affected: (3,2), (4,2), (5,2), (3,3), (4,3), (5,3), (3,4), (4,4), (5,4)\n" +
-            "final: C1:100, C2:73, C3:86, C10:100, souls:0";
+            "final: C1:100, C2:80, C3:86, C10:100, souls:0";
 
         private const string C4Expected =
             "events: Attacked, HealthChanged:2, HealthChanged:4\n" +
@@ -171,14 +182,6 @@ namespace ProjectL.Tests.Core
             "previewTargets: 2:Primary:4:0:96, 7:Effect:2:0:98, 9:Effect:5:0:95\n" +
             "affected: (2,3), (3,3), (4,3), (5,3), (6,3), (7,3)\n" +
             "final: C1:100, C2:96, C7:98, C9:95, C10:100, souls:0";
-
-        private const string C6Expected =
-            "events: Attacked, HealthChanged:2, HealthChanged:3, Died:4, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, Died:2, Moved:3\n" +
-            "previewEvents: Attacked, HealthChanged:2, HealthChanged:3, Died:4, Effects:Knockback/c0, Effects:Knockback/c0, Moved:2, Died:2, Moved:3\n" +
-            "hits: 2:Primary:100:25:0, 3:Additional:70:14:86, 4:Additional:70:1:0\n" +
-            "previewTargets: 2:Primary:27:7:0, 3:Additional:14:0:86, 4:Additional:14:0:0\n" +
-            "affected: (3,2), (4,2), (5,2), (3,3), (4,3), (5,3), (3,4), (4,4), (5,4)\n" +
-            "final: C1:100, C2:0, C3:86, C4:0, C10:100, souls:0";
 
         private const string C7Expected =
             "events: Attacked, Died:2, HealthChanged:3, Effects:KillChainAttack/c0, HealthChanged:3\n" +
@@ -230,11 +233,11 @@ namespace ProjectL.Tests.Core
         {
             CombatCharacterEvent c => $"{c.Kind}:{c.Final.EntityId.Value}",
             CombatStructureEvent s => $"Structure{s.Kind}:{s.Final.EntityId.Value}",
+            CombatObstacleDurabilityEvent d => $"Durability:{d.ObstacleId.Value}:{d.Final.ObstacleDurability.RemainingHits}",
             CombatHeldEnvironmentEvent h => $"Held:{h.CharacterId.Value}",
             CombatObstacleReactionEvent o => $"Obstacle{o.Reaction}:{o.ObstacleId.Value}",
             CombatMovementSourceEvent m => $"Source:{(m.Final ?? m.Expected).Id}",
             CombatObjectActivationEvent a => $"Object:{a.Source.Id}:{a.ActivatorId.Value}",
-            CombatThornConsumedEvent t => $"ThornConsumed:({t.Source.Cell.X},{t.Source.Cell.Y})",
             CombatEffectsEvent f => "Effects:" + string.Join("+", f.Traits.Select(t => t.TraitKey.ToString())) + $"/c{f.Categories.Count}",
             CombatFallEvent f => $"Fell:{f.EntityId.Value}",
             _ => e.Kind.ToString(),

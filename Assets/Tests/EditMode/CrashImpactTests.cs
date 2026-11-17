@@ -199,7 +199,7 @@ namespace ProjectL.Tests.Core
             var result = Run(input);
             int control = Final(Run(WithoutTrait(input)), 3).Health.CurrentHealth;
             Assert.That(Final(result, 3).Health.CurrentHealth, Is.EqualTo(control - 100));
-            Assert.That(result.FinalState.Structures.Single().Health.CurrentHealth, Is.EqualTo(1000));
+            Assert.That(result.FinalState.Structures.Single().ObstacleDurability.RemainingHits, Is.EqualTo(1000));
             var collision = result.Attack.Value.Knockbacks.Single().Collision;
             Assert.That((collision.Kind, collision.EntityId), Is.EqualTo((AttackKnockbackCollisionKind.Structure, (EntityId?)new EntityId(40))));
             Assert.That(Signal(result).TargetIds, Is.EqualTo(new[] { new EntityId(3) }));
@@ -290,18 +290,12 @@ namespace ProjectL.Tests.Core
         }
 
         [Test]
-        public void LongerKnockback_SetsDistance_CrashImpactStillCollides()
+        public void ProfileRejectsKnockbackAndCrashImpactTogether()
         {
             var input = Input(actorCell: new CellCoord(0, 4), targetCell: new CellCoord(1, 4));
-            input = WithTraits(input, new TraitSpec[] { new KnockbackTraitSpec(5), new CrashImpactTraitSpec(3, 10, 10) },
-                new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(5), new CrashImpactTraitStatusSnapshot(3, 10, 10) });
-            input = WallMovementTests.WithWalls(input, WallStateLifecycleTests.Wall(71, new CellCoord(6, 4)));
-            var result = Run(input);
-            int control = Final(Run(WithoutTrait(input)), 3).Health.CurrentHealth;
-            // 거리 5(넉백)라 작렬 거리 3을 넘어 (5,4)까지 가고, 5번째 칸 (6,4) 벽에 부딪힌다. 부딪힘 비율은 작렬 값, 출처는 작렬이다.
-            Assert.That(Final(result, 3).Anchor, Is.EqualTo(new CellCoord(5, 4)));
-            Assert.That(Final(result, 3).Health.CurrentHealth, Is.EqualTo(control - 100));
-            Assert.That(Signal(result).TraitKey, Is.EqualTo(TraitKey.CrashImpact));
+            Assert.Throws<ArgumentException>(() => WithTraits(input,
+                new TraitSpec[] { new KnockbackTraitSpec(5), new CrashImpactTraitSpec(3, 10, 10) },
+                new TraitStatusSnapshot[] { new KnockbackTraitStatusSnapshot(5), new CrashImpactTraitStatusSnapshot(3, 10, 10) }));
         }
 
         [Test]

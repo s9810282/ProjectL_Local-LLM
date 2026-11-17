@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.BufferSystems.Character;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -24,7 +25,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// 호버 범위 원점 유닛은 완료 표시 목록(<see cref="CombatDisplaySnapshot"/>)에서 찾습니다.
     /// </remarks>
     internal sealed class CombatAttackFeedback : ICombatAttackRangeFeedback, ICombatUnitRangeFeedback, ICombatAttackTrajectoryFeedback,
-        ICombatKnockbackPreviewFeedback, ICombatRoarForecastFeedback
+        ICombatKnockbackPreviewFeedback, ICombatRoarForecastFeedback, ICombatPlayerSkillFeedback
     {
         private readonly FieldView _field;
         private readonly CombatUnitHudFeedback _hud;
@@ -38,6 +39,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly HashSet<CellCoord> _basicCells = new();
         // 호버 범위로 마지막에 그린 층들입니다(공격 층·이동 층, 없으면 None). 지울 때 그 층만 지웁니다.
         private FieldHighlightLayer _hoverRangeLayers;
+        // 스킬 선택 선을 다시 그리려고 둔 마지막 선택 값입니다. 예보가 경로 선을 그리는 동안은 선택 선 대신 경로 선입니다(전투 스킬 View 설계 SK2).
+        private readonly List<CellCoord> _skillPoints = new();
+        private EntityId _skillCaster;
+        private CombatAttackPresentationData _skillSettings;
+        private bool _skillPathShown;
 
         /// <param name="snapshot">호버 범위 원점 유닛을 찾는 완료 표시 목록입니다.</param>
         internal CombatAttackFeedback(FieldView field, CombatUnitHudFeedback hud, CombatAttackTrajectory trajectory,
@@ -86,6 +92,81 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
         #endregion
 
+        #region 플레이어 스킬 (ICombatPlayerSkillFeedback, 전투 스킬 View 설계 SK2)
+
+        void ICombatPlayerSkillFeedback.ShowSkillSelection(EntityId caster, IReadOnlyList<CellCoord> candidates, IReadOnlyList<CellCoord> points,
+            CombatAttackPresentationData settings)
+        {
+            if (_lifetime.IsReleased) return;
+            if (candidates == null) throw new ArgumentNullException(nameof(candidates));
+            if (points == null) throw new ArgumentNullException(nameof(points));
+            _skillCaster = caster;
+            _skillSettings = settings;
+            _skillPoints.Clear();
+            for (int i = 0; i < points.Count; i++)
+                _skillPoints.Add(points[i]);
+            _field.SetLayerCells(FieldHighlightLayer.SkillCandidate, candidates);
+            _field.SetLayerCells(FieldHighlightLayer.SkillPoint, _skillPoints);
+            if (!_skillPathShown)
+                DrawSkillLine();
+        }
+
+        void ICombatPlayerSkillFeedback.ClearSkillSelection()
+        {
+            if (_lifetime.IsReleased) return;
+            _field.ClearLayer(FieldHighlightLayer.SkillCandidate | FieldHighlightLayer.SkillPoint);
+            _skillPoints.Clear();
+            _skillCaster = EntityId.Empty;
+            _skillSettings = null;
+            if (!_skillPathShown)
+                _trajectory.Clear();
+        }
+
+        // 영향 칸은 닫힌 테두리로 그립니다. 열린 변의 원점은 선택 유닛 칸인데 시전자(메인)가 선택 유닛과 다를 수 있어서입니다(계획 TP-1 정정과 같은 까닭).
+        // 넉백은 공격 조준과 같은 출처(조준 출처)로 넉백 미리보기에 넘깁니다. 스킬 모드와 공격 모드는 전경이 배타라 함께 그리지 않습니다(계획 TP-4).
+        void ICombatPlayerSkillFeedback.ShowSkillForecast(EntityId caster, CombatPlayerSkillForecastView forecast, CombatAttackPresentationData settings)
+        {
+            if (_lifetime.IsReleased) return;
+            if (forecast == null) throw new ArgumentNullException(nameof(forecast));
+            _field.SetAffectedCells(forecast.AffectedCells, closeOutline: true);
+            if (forecast.Path.Count > 0)
+            {
+                _skillPathShown = true;
+                _trajectory.ShowPath(caster, forecast.Path, settings);
+            }
+            else if (_skillPathShown)
+            {
+                _skillPathShown = false;
+                DrawSkillLine();
+            }
+            _hud.ShowHealthPreview(forecast.Healths);
+            _knockback.ShowSkill(forecast.Knockbacks, forecast.OccupiedOf);
+        }
+
+        void ICombatPlayerSkillFeedback.ClearSkillForecast()
+        {
+            if (_lifetime.IsReleased) return;
+            _field.ClearLayer(FieldHighlightLayer.Affected);
+            _hud.ClearAttackHealthPreview();
+            _knockback.ClearAim();
+            if (_skillPathShown)
+            {
+                _skillPathShown = false;
+                DrawSkillLine();
+            }
+        }
+
+        // 시전자 → 고른 점을 차례로 잇는 선입니다. 점이 없거나 연출 값이 없으면 선을 지웁니다.
+        private void DrawSkillLine()
+        {
+            if (_skillPoints.Count == 0 || _skillSettings == null)
+                _trajectory.Clear();
+            else
+                _trajectory.ShowPath(_skillCaster, _skillPoints, _skillSettings);
+        }
+
+        #endregion
+
         #region 포효 예고 (ICombatRoarForecastFeedback, 포효 예고 설계 RF4·RF5)
 
         // 범위 칸은 포효 예고 층에, 넉백은 공격 조준과 같은 넉백 미리보기에 넘깁니다. 어느 넉백 출처를 그릴지는 넉백 미리보기가 정합니다(계획 TP-18·TP-19).
@@ -103,6 +184,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             if (_lifetime.IsReleased) return;
             _field.ClearLayer(FieldHighlightLayer.RoarForecast);
             _knockback.ClearRoar();
+        }
+
+        // 전경 입력 사실은 넉백 미리보기에 넘기기만 합니다. 넉백 출처를 고르는 규칙은 넉백 미리보기 한 곳입니다(새 SSOT 설계 SN3).
+        void ICombatRoarForecastFeedback.SetForegroundInput(bool active)
+        {
+            if (!_lifetime.IsReleased) _knockback.SetForegroundInput(active);
         }
 
         #endregion
@@ -148,9 +235,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _field.ClearLayer(FieldHighlightLayer.Affected | FieldHighlightLayer.PullDestination);
         }
 
-        void ICombatAttackRangeFeedback.ShowAttackHealthPreview(ReadOnlyMemory<AttackTargetPreview> targets)
+        void ICombatAttackRangeFeedback.ShowAttackHealthPreview(in AttackPreview attack)
         {
-            if (!_lifetime.IsReleased) _hud.ShowAttackHealthPreview(targets);
+            if (!_lifetime.IsReleased) _hud.ShowAttackHealthPreview(attack);
         }
 
         void ICombatAttackRangeFeedback.ClearAttackHealthPreview()

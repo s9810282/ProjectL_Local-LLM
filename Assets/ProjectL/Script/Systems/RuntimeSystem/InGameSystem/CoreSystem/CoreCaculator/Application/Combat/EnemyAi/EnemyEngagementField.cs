@@ -5,6 +5,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Movement;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.Traits.Rules;
 using Target = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyAi.EnemyDecisionContext.HostileTarget;
@@ -14,7 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// <summary>
     /// 한 행위자의 여러 턴 교전 거리다(적 AI 근간 개편 설계 6.3). 살아 있는 적대 유닛 모두를 대상으로, 각 대상의 공격 위치에서 거꾸로 정수 비용을 퍼뜨린다.
     /// 공격 위치는 공용 도달 판정(<see cref="EnemyAttackReach"/>)으로 찾고, 칸마다 남은 비용·가장 가까운 대상·공격 위치 여부를 보관한다.
-    /// 아군이 선 칸은 비용을 더해 지나갈 수 있고(<see cref="EnemyAiTuning.AllySoftCost"/>), 적대 유닛·벽·낭떠러지·구조물은 막는다.
+    /// 아군이 선 칸은 비용을 더해 지나갈 수 있고(<see cref="EnemyAiTuning.AllySoftCost"/>), 적대 유닛·벽·낭떠러지·구조물·기믹 확정 점유는 막는다.
     /// 이번 턴 이동은 여전히 단단한 점유 규칙을 쓴다. 본부는 닿는 유닛 공격 위치가 없을 때만 대상이다.
     /// </summary>
     internal sealed class EnemyEngagementField
@@ -83,13 +84,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var environment = geometry.Environment;
 
             // 여러 턴 추정 전용 색인이다. 이번 턴 경로의 PursuitTraversal과 달리 아군 칸을 따로 둔다.
-            var terrain = new HashSet<CellCoord>();
-            foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, input.EnvironmentBindings, StaticTerrainKind.Wall))
-            {
-                if (cell.HasValue) terrain.Add(cell.Value);
-                yield return 0;
-            }
-            foreach (var cell in EnvironmentTerrainRules.TerrainCellSteps(environment, input.EnvironmentBindings, StaticTerrainKind.Cliff))
+            // 막는 칸은 PursuitTraversal과 같다: 기믹 확정 점유(사슬 머리 등)와 자발 진입을 막는 지형.
+            var terrain = new HashSet<CellCoord>(GimmickOccupancyRules.BlockingCells(input.State.Gimmicks));
+            foreach (var cell in EnvironmentTerrainRules.VoluntaryBlockedCellSteps(environment, input.EnvironmentBindings))
             {
                 if (cell.HasValue) terrain.Add(cell.Value);
                 yield return 0;
@@ -159,9 +156,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
 
             var profile = CombatCommandCalculator.RequiredProfile(input, actor);
-            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile);
+            int damage = CombatAttackCalculator.CommonAttackDamage(input, actor, profile, CombatDamageKind.OrdinaryAttack);
             int radius = BoundRadius(actor, profile);
-            var relocations = new EnemyAttackReach.Relocations();
+            var relocations = new EnemyAttackReach.Relocations(input, actor, geometry);
             yield return 0;
             foreach (var group in new[] { units, headquarters })
             {
@@ -231,7 +228,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             HealthStateSnapshot health;
             if (context.Units.TryGetValue(target.Id, out var unit)) health = unit.Health;
-            else if (context.Structures.TryGetValue(target.Id, out var structure)) health = structure.Health;
+            else if (context.Structures.TryGetValue(target.Id, out var structure) && structure.ObstacleDurability == null)
+                health = structure.Health;
             else return 0;
             long loss = EnemyUtilityScorer.LossPermille(damage, health.CurrentHealth, health.MaxHealth);
             return damage >= health.CurrentHealth ? checked(loss + EnemyUtilityScorer.OpposingEliminationWeight) : loss;
@@ -260,14 +258,16 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// 공격 위치 후보 칸의 대상까지 체비쇼프 반경이다. <see cref="CombatAttackQueries.EnumerateAimsThatCanHit"/>와 같은 기준을 쓴다:
-        /// 선택 사거리(지형은 줄이기만 하고 끌어오기만 늘림)와 스플래시 한 칸. 관통과 전체 지정은 판 끝까지 닿아 -1(전체 탐색)이다.
+        /// 선택 사거리(지형은 줄이기만 하고 끌어오기만 늘림)와 지정 모양의 너비, 스플래시 한 칸을 봅니다.
+        /// 관통과 전체 지정은 판 끝까지 닿아 -1(전체 탐색)입니다.
         /// </summary>
         private static int BoundRadius(CharacterCombatFacts actor, CombatAttackProfile profile)
         {
             var method = profile.Method;
             if (profile.UsesPiercingShot || method.ChoiceMode == TargetingChoiceMode.All) return -1;
             int range = PullAttackCalculator.SelectionRange(actor, profile, actor.Stats.AppointRange);
-            return checked(range + (method.Splash == TargetingSplash.None ? 0 : 1));
+            int maximumDistance = AppointShapeCalculator.MaximumBaseDistance(method, range);
+            return checked(maximumDistance + (method.Splash == TargetingSplash.None ? 0 : 1));
         }
 
         private static int Chebyshev(CellCoord cell, IReadOnlyCollection<CellCoord> cells)

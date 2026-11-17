@@ -3,6 +3,7 @@ using ProjectL.Systems.DataBaseSystem.Data.View.CombatPresentation;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Unit;
 using UnityEngine;
@@ -11,8 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 {
     /// <summary>
     /// 공격 연출 종류 하나의 지식입니다(View 3라운드 W8, 설계 §6.2). 목표점·궤적·코드 모션·출처 발사가 종류마다 다른 곳을 이 한 클래스가 답합니다.
-    /// 종류별 구현은 <see cref="CombatAttackStyles.Of"/>로 찾습니다. 클립 공격의 해제는 종류마다 다르지 않아 처리기가 출처의 대상을 모두 해제합니다
-    /// (옛 Ballista 관통 길만 대상별로 해제했고, 그 길과 함께 종류별 해제 입구를 걷었습니다).
+    /// 종류별 구현은 <see cref="CombatAttackStyles.Of"/>로 찾습니다. 해제 규칙은 종류마다 다르지 않습니다(해제 규칙 <see cref="CombatContactRelease"/> 하나 — 원거리는 대상마다 마지막 접촉,
+    /// 근접·곡사는 한 번에 모두, 관통·죽음의 손 View 설계 D6).
     /// </summary>
     /// <remarks>
     /// 수명(Gate·투사체 진행·Tick·취소)은 공격 재생에 남고, 전략은 좁은 맥락(<see cref="ICombatAttackStyleContext"/>)으로만 씁니다.
@@ -36,12 +37,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
             return ResolveTarget(primaryCell, direction, affectedCells, mapper, origin, out target);
         }
 
+        /// <summary>
+        /// 실제 탄의 목표점(월드, 필드 바닥 높이)입니다. 관통이면 탄이 사라지는 점(<see cref="CombatProjectileContacts.VanishPoint"/>, 관통·죽음의 손 View 설계 D1)이고,
+        /// 아니면 <see cref="TryTarget"/>과 같습니다. 실제 공격(코드 모션·출처 발사)과 궤적 미리보기가 같은 값을 넘겨 부릅니다.
+        /// </summary>
+        /// <param name="piercingShot">Core 관통 기록입니다. 없으면 null입니다.</param>
+        internal bool TryShotTarget(CellCoord? primaryCell, Rotation4 direction, ReadOnlySpan<CellCoord> affectedCells,
+            PiercingShotDelivery piercingShot, FieldGridMapper mapper, Vector3 origin, out Vector3 target)
+        {
+            if (piercingShot == null)
+                return TryTarget(primaryCell, direction, affectedCells, mapper, origin, out target);
+            if (mapper == null)
+                throw new ArgumentNullException(nameof(mapper));
+            target = CombatProjectileContacts.VanishPoint(piercingShot, mapper, origin);
+            return true;
+        }
+
         /// <summary>종류마다의 목표점 해석입니다. Mapper는 <see cref="TryTarget"/>이 검사했습니다.</summary>
         protected abstract bool ResolveTarget(CellCoord? primaryCell, Rotation4 direction, ReadOnlySpan<CellCoord> affectedCells,
             FieldGridMapper mapper, Vector3 origin, out Vector3 target);
 
         /// <summary>궤적 미리보기가 곡선인지입니다(곡사).</summary>
         internal virtual bool DrawsArc => false;
+
+        /// <summary>
+        /// 가능 응답의 궤적을 대상마다 한 줄씩 긋는지입니다(직선). 어느 대상에 긋는지는 궤적 구성이 정합니다(궤적 대상별 선 설계 PT1).
+        /// </summary>
+        internal virtual bool DrawsPerTarget => false;
 
         /// <summary>
         /// 궤적의 출발 기준점(월드)과 곡사 높이입니다. 궤적이 없는 종류(근접)와 표시 없는 공격자는 false입니다(공격 궤적 설계 TJ4).
@@ -71,18 +93,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <paramref name="shape"/>가 null이면 정면 공격 모션이고, <see cref="SupportsFacingMotion"/>인 종류만 그렇게 부릅니다.
         /// </summary>
         /// <param name="shape">공격 모양입니다(특성 발동 연출 설계 TA5). 공격자는 <paramref name="attackerId"/>와 같습니다(공격 재생이 확인).</param>
-        /// <param name="hit">타격 순간입니다(대상 해제, 투사체 종류는 접촉 이펙트 뒤).</param>
+        /// <param name="hit">타격 해제 규칙입니다(<see cref="CombatContactRelease"/>). 근접·곡사는 타격 순간 <see cref="CombatContactRelease.Finish"/> 한 번,
+        /// 직선은 접촉마다 <see cref="CombatContactRelease.Contact"/>입니다(투사체 종류는 접촉 이펙트 뒤, 관통·죽음의 손 View 설계 D6).</param>
         /// <param name="cue">기준 순간입니다(근접 = 타격 직전, 직선·곡사 = 발사, 조각 신호 <c>MotionCue</c>). 옛 효과음 순간과 같습니다.</param>
         internal abstract bool TryBeginCodeMotion(ICombatAttackStyleContext context, EntityId attackerId, CombatAttackShape shape,
-            CombatAttackPresentationData settings, FieldGridMapper mapper, Action hit, Action cue, Action completed, int version);
+            CombatAttackPresentationData settings, FieldGridMapper mapper, CombatContactRelease hit, Action cue, Action completed, int version);
 
         /// <summary>
         /// 출처 발사(클립 공격의 발사 조각)입니다. 투사체를 쏘지 않는 종류(근접)는 예외입니다.
         /// </summary>
         /// <param name="up">정규화한 필드 위쪽입니다.</param>
         /// <param name="attackFacing">접촉 자리가 수평 길이 없이 정해질 때의 회전(공격 방향)입니다.</param>
+        /// <param name="hit">접촉마다 (닿은 대상, 이 탄의 마지막 접촉인지)를 받는 입구입니다. 대상 없는 접촉은 빈 대상입니다(관통·죽음의 손 View 설계 §3.1).</param>
         internal virtual ICombatShot FireShot(ICombatAttackStyleContext context, CombatAttackShape shape, CombatAttackPresentationData settings,
-            Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action hit, Action arrived, int version) =>
+            Vector3 from, FieldGridMapper mapper, Vector3 up, Quaternion attackFacing, Action<EntityId, bool> hit, Action arrived, int version) =>
             throw new InvalidOperationException($"[CombatAttackStyle] 출처 발사는 직선·곡사만 쏩니다: {Kind}");
 
         /// <summary>
@@ -127,7 +151,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         }
 
         internal sealed override bool TryBeginCodeMotion(ICombatAttackStyleContext context, EntityId attackerId, CombatAttackShape shape,
-            CombatAttackPresentationData settings, FieldGridMapper mapper, Action hit, Action cue, Action completed, int version)
+            CombatAttackPresentationData settings, FieldGridMapper mapper, CombatContactRelease hit, Action cue, Action completed, int version)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             CombatProjectilePool pool = PoolOf(context, settings);
@@ -139,8 +163,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 if (shape != null)
                 {
                     // 외형별 목표점 원본은 이 전략 하나입니다(궤적 미리보기와 공유, 공격 궤적 구현 평가 P-V1). 직선·근접은 항상 답합니다.
-                    // 목표 칸은 실제 타격 칸입니다(끌어오기면 Core가 준 도착 칸).
-                    TryTarget(shape.DeliveryCell, shape.Direction, shape.AffectedCells.Span, mapper, pose.Position, out target);
+                    // 목표 칸은 실제 타격 칸입니다(끌어오기면 Core가 준 도착 칸). 관통 탄은 사라지는 점까지 날아갑니다(관통·죽음의 손 View 설계 D1).
+                    TryShotTarget(shape.DeliveryCell, shape.Direction, shape.AffectedCells.Span, shape.PiercingShot, mapper, pose.Position, out target);
                     direction = mapper.RotationToWorld(shape.Direction);
                 }
                 else
@@ -160,6 +184,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         /// <summary>코드 모션 애니메이션을 만듭니다. <paramref name="shape"/>가 null이면 정면 공격 모션입니다.</summary>
         protected abstract ICombatAttackAnimation CreateAnimation(ICombatAttackStyleContext context, CombatAttackPresentationData settings,
             FieldGridMapper mapper, CombatProjectilePool pool, ICombatAttackUnitPose pose, Vector3 target, Quaternion direction,
-            CombatAttackShape shape, Action hit, Action cue);
+            CombatAttackShape shape, CombatContactRelease hit, Action cue);
     }
 }

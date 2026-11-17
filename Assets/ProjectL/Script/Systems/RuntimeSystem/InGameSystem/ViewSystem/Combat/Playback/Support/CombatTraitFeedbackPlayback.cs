@@ -30,11 +30,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatTraitStateEvidenceRegistry _evidence;
         // 오래 보이는 이펙트 부품입니다. 발동 시작을 알려 상태 외형의 다시 내기 발동이면 그 유지 이펙트를 다시 내게 합니다(이펙트 끝 규칙 계획 TP-E13).
         private readonly CombatPersistentEffects _persistent;
-        private readonly CombatPreAttackPresentationStarts _preAttackStarts;
-        internal CombatTraitFeedbackPlayback(CombatActivationRows rows, CombatMomentCuePlayback cues, CombatPieceRunPlayer pieces, CombatBodyTextWindow text, CombatShownFacts facts, Func<FieldGridMapper> mapper, Func<int> generation, CombatTraitStateEvidenceRegistry evidence, CombatPersistentEffects persistent,
-            CombatPreAttackPresentationStarts preAttackStarts = null)
+        internal CombatTraitFeedbackPlayback(CombatActivationRows rows, CombatMomentCuePlayback cues, CombatPieceRunPlayer pieces, CombatBodyTextWindow text, CombatShownFacts facts, Func<FieldGridMapper> mapper, Func<int> generation, CombatTraitStateEvidenceRegistry evidence, CombatPersistentEffects persistent)
         {
-            _preAttackStarts = preAttackStarts;
             _persistent = persistent ?? throw new ArgumentNullException(nameof(persistent));
             _rows = rows ?? throw new ArgumentNullException(nameof(rows));
             _cues = cues ?? throw new ArgumentNullException(nameof(cues));
@@ -76,8 +73,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatActivationRow row = occurrence.Row;
             if (!row.Exists || row.Timing != CombatActivationCueTiming.ActivationStart)
                 return;
-            if (_cues.TryPlayAccent(row.Cues, CombatCuePoints.ForActivation(trait, _facts.StandingBodyOf, _mapper), actionGroup))
-                _preAttackStarts?.TraitStarted(trait, generation);
+            _cues.TryPlayAccent(row.Cues, CombatCuePoints.ForActivation(trait, _facts.StandingBodyOf, _mapper), actionGroup);
             var composition = CombatComposition.ForAccent();
             if (generation != _generation())
                 return;
@@ -111,11 +107,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
                     if (cue.Point == CombatCuePoint.SubjectBody || binding.Unit == trait.SourceUnitId)
                         effects.Add(cue);
                 bool first = _session.TryBeginShake(binding.Occurrence);
-                var cues = new CombatEventCues(effects, first ? row.Cues.Shakes : null, null, null);
+                var cues = new CombatEventCues(effects, first ? row.Cues.Shakes : null, null);
                 Pose? body = _facts.StandingBodyOf(binding.Unit);
-                if (_cues.TryPlayAccent(cues, CombatCuePoints.ForActivation(trait.SourceUnitId, binding.Unit == trait.SourceUnitId ? body : null,
-                    body.HasValue ? new[] { new CombatCuePoints.Body(binding.Unit, body.Value) } : Array.Empty<CombatCuePoints.Body>(), Array.Empty<Pose>())))
-                    _preAttackStarts?.TraitStarted(trait, generation);
+                _cues.TryPlayAccent(cues, CombatCuePoints.ForActivation(trait.SourceUnitId, binding.Unit == trait.SourceUnitId ? body : null,
+                    body.HasValue ? new[] { new CombatCuePoints.Body(binding.Unit, body.Value) } : Array.Empty<CombatCuePoints.Body>(), Array.Empty<Pose>()));
                 var composition = CombatComposition.ForAccent();
                 if (generation != _generation())
                     return;
@@ -131,10 +126,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         internal void AddText(CombatComposition composition, TraitActivationSnapshot trait, EntityId? only = null, int? cells = null) =>
             AddText(composition, _rows.Of(trait), trait, only, cells);
 
-        /// <summary>특성 처리기가 유닛 행동 실행을 실제로 연 뒤 통지합니다. 실패·생략한 행동은 부르지 않습니다.</summary>
-        internal void ActionStarted(TraitActivationSnapshot trait, int generation) =>
-            _preAttackStarts?.TraitStarted(trait, generation);
-
         private void AddText(CombatComposition composition, CombatActivationRow row, TraitActivationSnapshot trait, EntityId? only, int? cells)
         {
             if (row.Text == null)
@@ -142,14 +133,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             if (_text == null)
                 throw new InvalidOperationException("[CombatTraitFeedback] 텍스트 창구가 연결되지 않았습니다.");
             string label = row.Text.Format(row.Name, cells);
-            Action started = _preAttackStarts?.CaptureTraitStart(trait, _generation());
             bool includesSource = row.Text.Target is CombatBodyTextTarget.Source or CombatBodyTextTarget.All;
             if (includesSource && (!only.HasValue || only == trait.SourceUnitId))
-                composition.Add(new CombatBodyTextPiece(_text, trait.SourceUnitId, label, row.Text, started), CombatPieceStart.AtStart());
+                composition.Add(new CombatBodyTextPiece(_text, trait.SourceUnitId, label, row.Text), CombatPieceStart.AtStart());
             if (row.Text.Target is CombatBodyTextTarget.Targets or CombatBodyTextTarget.All)
                 foreach (EntityId target in trait.TargetIds)
                     if ((!includesSource || target != trait.SourceUnitId) && (!only.HasValue || only == target))
-                        composition.Add(new CombatBodyTextPiece(_text, target, label, row.Text, started), CombatPieceStart.AtStart());
+                        composition.Add(new CombatBodyTextPiece(_text, target, label, row.Text), CombatPieceStart.AtStart());
         }
 
         private void Play(CombatComposition composition)

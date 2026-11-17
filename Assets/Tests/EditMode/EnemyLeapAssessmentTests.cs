@@ -151,19 +151,22 @@ namespace ProjectL.Tests.Core
         public void NonMineIntermediateEffectsRemainVisible()
         {
             var route = LeapRoute();
-            var input = TraitTrailTestData.Environment(CombatCommandTestData.With(route,
-                    state: route.State.With(thornFields: new[] { new ThornFieldCellSnapshot(Crossing, 2, 7) })),
-                MineEnvironmentTests.Mine(cell: Crossing),
+            var input = TraitTrailTestData.Environment(route, MineEnvironmentTests.Mine(cell: Crossing),
                 new StaticTerrainFact(71, Crossing, StaticTerrainKind.WeakGround, true, new[] { Owner.Player }, 2));
-            var actual = RecordActual(input, TornadoEnvironmentTests.Rules);
+            input = CombatCommandTestData.With(input, state: EnvironmentDamageTests.WithDamageObjects(input.State, (Crossing, 7)));
+            var actual = CombatCommandCalculator.Calculate(input, TornadoEnvironmentTests.Rules);
+            Assert.That(actual.Accepted, Is.True, actual.Reason);
             Assert.That(MovementTestData.Actor(actual).Health.CurrentHealth, Is.EqualTo(93));
             Assert.That(actual.PathMovement.EnteredCells, Is.EqualTo(new[] { Crossing, Endpoint }));
             Assert.That(actual.FinalState.Environment.Tiles.OfType<StaticTerrainFact>().Single().EntryCount, Is.EqualTo(1));
             Assert.That(actual.FinalState.Environment.Tiles.OfType<MineSourceFact>().Single().Active, Is.True);
-            // 도약 무시(R-1)로 정밀 평가가 돌고, 중간 칸 가시 피해(7/100)가 그 결과에 그대로 보인다.
+            Assert.That(input.Characters.Single(c => c.EntityId == input.ActorId).Health.CurrentHealth, Is.EqualTo(100));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(input.State).Single().Cell, Is.EqualTo(Crossing));
+            Assert.That(EnvironmentDamageTests.ActiveDamageTiles(actual.FinalState), Is.Empty);
+            // 도약은 지뢰만 건넌다. 다른 도착 규칙의 결과를 정밀 평가가 약속하지 않는다.
             var facts = EnemyActionAssessmentTests.Assess(input, TornadoEnvironmentTests.Rules, out _);
-            Assert.That(facts.IsPrecise, Is.True);
-            Assert.That(facts.AlliedHpLossPermille, Is.EqualTo(70));
+            Assert.That(facts.IsPrecise, Is.False);
+            Assert.That(facts.Gaps.HasFlag(CombatAssessmentGap.UnsupportedEffect), Is.True);
         }
 
         private static CombatCommandInput LeapRoute() =>
@@ -174,7 +177,7 @@ namespace ProjectL.Tests.Core
         {
             var input = EnemyUtilityDecisionTests.Approach();
             var state = new CombatCommandState(5, 1, input.State.Phase,
-                input.State.Structures, input.State.ThornFields, input.State.Turn);
+                input.State.Structures, input.State.Turn);
             input = CombatCommandTestData.With(input, state: state, characters: new[] { input.Characters[0], input.Characters[1],
                 CombatCommandTestData.With(input.Characters[2], position: new CellCoord(4, 0)) });
             input = TraitCombatFixtures.Equip(input, EntityKey.Unit_Demon, new LeapTraitSpec());

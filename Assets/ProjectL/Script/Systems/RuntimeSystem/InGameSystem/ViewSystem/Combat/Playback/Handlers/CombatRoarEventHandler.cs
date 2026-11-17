@@ -79,7 +79,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatComposition composition = Compose(roar, _abilityMotion,
                 // 공격 사건 없는 정면 공격입니다. 박치기 = 포효 출처의 대상 모두 해제 → 타격 신호(범용 연출 구조 계획 P8, 입구 하나).
                 (end, hit) => _attacks.TryBeginMotion(roar.BossId, null, _mapper(), () => _sound.Play(roar),
-                    CombatHitMoment.ReleaseThenSignal(() => _attacks.ReleaseAll(roar, version), hit), end, version),
+                    CombatContactRelease.AllAtOnce(() => _attacks.ReleaseAll(roar, version), hit), end, version),
                 _highlight, _camera, _cameraMotion);
             return _pieces.TryBegin(composition, completed, version);
         }

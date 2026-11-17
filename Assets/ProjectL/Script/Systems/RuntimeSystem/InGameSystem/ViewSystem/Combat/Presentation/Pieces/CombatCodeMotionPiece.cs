@@ -10,7 +10,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
     /// 시작 입구(<c>tryBegin</c>)는 (완료 콜백, 기준 순간 콜백, 타격 순간 콜백)을 받아 모션을 시작하면 true, 시작하지 않으면 false입니다.
     /// false면 바로 끝나 다음 항목이 이어지고, 기준 순간·타격을 기다리던 항목은 시작하지 않고 끝난 것으로 봅니다(설계 BP2 보충).
     /// 기준 순간은 <see cref="CombatPieceSignal.MotionCue"/>, 타격은 <see cref="CombatPieceSignal.Hit"/>로 맥락의 신호 입구를 거쳐 실행에 바로 전합니다.
-    /// 타격 신호는 대상을 해제한 뒤 냅니다(순서는 입구를 만드는 조립이 <see cref="Attack.CombatHitMoment.ReleaseThenSignal"/>로 지킴).
+    /// 타격 신호는 대상을 해제한 뒤 냅니다(순서는 입구를 만드는 조립이 해제 규칙 <see cref="Attack.CombatContactRelease"/>로 지킴).
     /// 진행·취소·공격 자세 대여는 공격 재생기가 맡습니다. 포효의 정면 공격(<see cref="CombatFacingAttackPiece"/>)과 같은 꼴이고, 기준 순간 신호만 더 냅니다.
     /// </remarks>
     internal sealed class CombatCodeMotionPiece : ICombatPresentationPiece

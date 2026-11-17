@@ -68,15 +68,15 @@ namespace ProjectL.Tests.Core
             Assert.That(DeferredCombatFeatures.IsTraitAvailable(TraitKey.Regeneration), Is.True);
             Assert.That(DeferredCombatFeatures.IsTraitAvailable(TraitKey.Intimidation), Is.True);
             Assert.That(DeferredCombatFeatures.GetTraitAvailability(TraitKey.Intimidation).PartialUnavailableReason, Is.Empty);
-            foreach (var key in new[] { TraitKey.Necromancy, TraitKey.ThornField, TraitKey.Focus })
+            foreach (var key in new[] { TraitKey.Necromancy, TraitKey.Focus })
             {
                 Assert.That(DeferredCombatFeatures.IsTraitAvailable(key), Is.False);
                 Assert.That(DeferredCombatFeatures.GetTraitUnavailableReason(key), Is.EqualTo("DeferredUnitTurnTiming"));
             }
-            var retired = new[] { TraitKey.MoveAttackDiscount, TraitKey.DoorBreaching, TraitKey.ContemptForWeak,
+            var retired = new[] { TraitKey.MoveAttackDiscount, TraitKey.ThornField, TraitKey.DoorBreaching, TraitKey.ContemptForWeak,
                 TraitKey.PrecisionShot, TraitKey.DoubleShot, TraitKey.LuckyBullet, TraitKey.ChainExplosion };
             foreach (var key in retired) Assert.That(DeferredCombatFeatures.IsTraitRetired(key), Is.True);
-            Assert.That(retired.Select(k => (int)k), Is.EqualTo(new[] { 20, 130, 140, 150, 160, 170, 180 }));
+            Assert.That(retired.Select(k => (int)k), Is.EqualTo(new[] { 20, 40, 130, 140, 150, 160, 170, 180 }));
             Assert.That(DeferredCombatFeatures.IsFlagPickupAvailable, Is.False);
         }
 

@@ -47,6 +47,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             if (TerrainSourceIds.Any(id => !sourceIds.Contains(id)) ||
                 ObjectSourceIds.Any(id => !sourceIds.Contains(id)))
                 throw new ArgumentException("분류한 원본이 초기 환경에 없습니다.", nameof(environment));
+            if (environment.Tiles.OfType<MovingPlatformFact>().Any(p => !TerrainSourceIds.Contains(p.Id)))
+                throw new ArgumentException("플랫폼 원본은 지형으로 분류해야 합니다.", nameof(environment));
             if (ObstacleEntityIds.Any(id => !structureIds.Contains(id)))
                 throw new ArgumentException("분류한 장애물이 초기 구조물에 없습니다.", nameof(structures));
         }

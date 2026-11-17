@@ -28,12 +28,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         private readonly CombatSceneEventPresenter _events;
         private readonly FieldRailwayPresenter _railway;
         private readonly FieldView _field;
-        private readonly FieldThornPresenter _thorns;
         private readonly CombatRailwayContactPlayback _railwayContact;
         // 기차가 필드를 지나는 동안의 카메라 연출(흔들림·줌)입니다(카메라 연출 조각 설계 K9·K10). 늘 있고, 낼 값이 없으면 진입·이탈 알림을 받지 않습니다.
         private readonly CombatTrainCamera _trainCamera;
         // 실패 정리용 버전입니다. 기차 접촉 취소·결과 준비·사건 시작마다 올립니다. 재진입한 취소 뒤 이전 실패 정리가 새 재생을 지우지 않게 합니다.
-        // Tick 중 재진입한 취소 뒤 레일 Tick을 건너뛰는 판정에도 씁니다. 사건 Presenter의 재생 세대(공격·걸음·반응 완료 무효화)와 범위가 다른 별도 카운터입니다(구조 개선 SV3).
+        // Tick 중 재진입한 취소 뒤 레일 Tick을 건너뛰는 판정에도 씁니다. 사건 Presenter의 재생 세대(공격·걸음·조각 실행 완료 무효화)와 범위가 다른 별도 카운터입니다(구조 개선 SV3).
         private int _cleanupVersion;
         private bool _released;
 
@@ -44,7 +43,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             CombatSceneEventPresenter events,
             FieldRailwayPresenter railway,
             FieldView field,
-            FieldThornPresenter thorns,
             Func<CharacterCombatFacts, FieldGridMapper, CombatBody> characterBody,
             CombatCameraWindow camera,
             CombatCameraMotionSettings cameraMotion)
@@ -52,7 +50,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
             _events = events ?? throw new ArgumentNullException(nameof(events));
             _railway = railway ?? throw new ArgumentNullException(nameof(railway));
             _field = field != null ? field : throw new ArgumentNullException(nameof(field));
-            _thorns = thorns ?? throw new ArgumentNullException(nameof(thorns));
             _trainCamera = new CombatTrainCamera(camera ?? throw new ArgumentNullException(nameof(camera)),
                 cameraMotion ?? throw new ArgumentNullException(nameof(cameraMotion)));
             // 기차 카메라 값이 없으면 진입·이탈 알림을 받지 않습니다(필드 구간도 계산하지 않음).
@@ -167,7 +164,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Playback
         public void CancelMovement() => RunAll(CancelRailwayContacts, _events.CancelMovement, _railway.Cancel);
 
         // 화약통·지뢰 폭발은 순간 큐라 사건 Presenter의 취소(이펙트 창구 회수)가 함께 회수합니다(이펙트 창구 확장 설계 EC9).
-        public void CancelPresentation() => RunAll(CancelPendingEvents, _events.CancelPresentation, _railway.Cancel, _thorns.Clear);
+        public void CancelPresentation() => RunAll(CancelPendingEvents, _events.CancelPresentation, _railway.Cancel);
 
         /// <summary>표시 재연결·해제 시 진행 중인 사건 자원을 모두 반환합니다.</summary>
         internal void CancelPendingEvents() => CancelRailwayContacts();

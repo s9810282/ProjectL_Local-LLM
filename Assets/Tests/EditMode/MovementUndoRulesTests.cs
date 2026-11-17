@@ -20,7 +20,7 @@ namespace ProjectL.Tests.Core
             var moved = MovementUndoTestData.Run(input);
             var current = MovementUndoTestData.After(moved);
             var s = current.State;
-            var smaller = new CombatCommandState(3, s.BoardHeight, s.Phase, s.Structures, s.ThornFields, s.Turn,
+            var smaller = new CombatCommandState(3, s.BoardHeight, s.Phase, s.Structures, s.Turn,
                 s.Environment, s.EnvironmentProgress, s.WallBlocking, s.Objective, s.Allocation, s.ItemRandomState, s.Rewards, s.TraitTurn, s.MovementUndo);
             current = current.WithWorld(smaller, current.Characters, current.Main, current.SoulCounts, current.Souls, current.EnvironmentBindings);
             var result = MovementUndoTestData.Run(MovementUndoTestData.Command(current, CombatCommandKind.UndoMove, moved.Input.Number));

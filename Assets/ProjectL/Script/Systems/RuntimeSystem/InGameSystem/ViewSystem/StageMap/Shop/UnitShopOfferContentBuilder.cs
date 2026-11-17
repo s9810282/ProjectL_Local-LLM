@@ -32,8 +32,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageMap.Shop
         {
             return new StageOfferCardContent(_findIcon(offer.CharacterKey),
                 _findName(offer.CharacterKey), text.FormatPrice(offer.Cost),
-                text.FormatLine(StageOfferLineKind.UnitDetails, offer.InitialLevel, CountOwned(offer.CharacterKey)),
-                purchased ? text.CompletedButtonText : text.SelectButtonText, !hasPurchase, purchased);
+                string.Empty,
+                purchased ? text.CompletedButtonText : text.SelectButtonText, !hasPurchase, purchased,
+                unitLevelText: text.FormatLine(StageOfferLineKind.UnitLevel, offer.InitialLevel),
+                unitOwnedText: text.FormatLine(StageOfferLineKind.UnitOwnedCount, CountOwned(offer.CharacterKey)));
         }
 
         private int CountOwned(EntityKey key)

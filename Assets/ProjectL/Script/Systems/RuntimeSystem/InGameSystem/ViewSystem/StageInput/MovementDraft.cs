@@ -80,6 +80,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.StageInput
         internal void Suspend() { PointerValid = false; IsSuspended = true; }
         internal void MarkPointerInvalid() { PointerValid = false; }
 
+        /// <summary>현재 행위자의 원점을 유지하며 새로 받은 Core 경로부터 편집을 이어갑니다.</summary>
+        internal void ReplacePath(MovementPath path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (!IsActive || path.Origin != _cells[0])
+                throw new InvalidOperationException("이동 초안과 교체 경로의 원점이 다릅니다.");
+
+            _cells.Clear();
+            _cells.AddRange(path.Cells);
+            _snapshot = path;
+            Revision++;
+            PointerValid = true;
+            IsSuspended = false;
+        }
+
         // Core가 확인한 접두 경로만 남긴다. 포인터의 재진입 전까지 유효 드롭으로 취급하지 않는다.
         internal void RetainPrefix(int validStepCount)
         {

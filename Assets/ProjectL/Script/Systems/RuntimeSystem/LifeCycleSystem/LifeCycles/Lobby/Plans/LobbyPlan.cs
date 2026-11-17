@@ -74,9 +74,10 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Lobby.Plans
                     ILifeCycleManager manager = lifeCycles.LifeCycleManager;
                     LobbyDepartureRequest request = facts.Departure;
                     // 같은 우선순위라 등록 순서대로 같은 Runner Tick에 이어 실행된다. 전환은 마지막 Job 안에서 한다(Q-LJ1).
+                    // 메인 키는 제출 때 요청에 실린 값만 넘긴다. 실행 순간의 화면 선택은 읽지 않는다(로비 메인 선택 설계 LM5).
                     return new List<IJobService>
                     {
-                        new RunStartJob(service.CoreGroup.RunStart, new LobbyRunStartOutcome(request),
+                        new RunStartJob(service.CoreGroup.RunStart, new LobbyRunStartOutcome(request), request.MainCharacterKey,
                             buffers.CombatStateReadSink, buffers.StageViewWriteSink, buffers.CharacterReadSink, LobbyJobPriority.Departure),
                         new LobbyTransitionJob(request, manager, audio)
                     };

@@ -56,6 +56,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
         private readonly TutorialViewPresentationRecord _presentation = new();
         private readonly Action<string> _log;
         private readonly ITutorialInputReceiverSlot _inputSlot;
+        private readonly bool _autoStartTutorial;
 
         private ITutorialDefinitionTableQuery _definitions;
         private ITutorialBufferStore _store;
@@ -88,13 +89,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
 
         /// <param name="log">세션 진행을 남기는 개발 로그입니다. 없으면 남기지 않습니다.</param>
         /// <param name="inputSlot">튜토리얼 "다음" 입력의 수신 자리입니다. 초기화 때 입력 어댑터를 연결합니다. 입력을 조립하지 않는 시험에서는 생략합니다.</param>
+        /// <param name="autoStartTutorial">화면 연결 때 튜토리얼을 자동 시작할지입니다. 생성 시 고정하며 초기화·정리 수명에는 영향을 주지 않습니다.</param>
         internal TutorialViewSystem(RuntimeFaultBoundary faults, Func<CombatInputWindow> readInputWindow, Action<string> log = null,
-            ITutorialInputReceiverSlot inputSlot = null)
+            ITutorialInputReceiverSlot inputSlot = null, bool autoStartTutorial = true)
         {
             _faults = faults ?? throw new ArgumentNullException(nameof(faults));
             _readInputWindow = readInputWindow ?? throw new ArgumentNullException(nameof(readInputWindow));
             _log = log;
             _inputSlot = inputSlot;
+            _autoStartTutorial = autoStartTutorial;
         }
 
         /// <summary>지금 화면 연결 번호입니다. 연결이 없으면 0입니다.</summary>
@@ -278,6 +281,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Tutorial
             _display.Attach();
             _contextId = ++_lastContextId;
             _store.SetContext(_contextId, TutorialUnavailableReason.None);
+
+            // 개발 재생의 선택 기능이다. 정상적인 자동 시작 생략이며, 화면 연결·정리 계약은 유지한다.
+            if (!_autoStartTutorial)
+            {
+                _log?.Invoke($"[Tutorial] 화면 연결 {_contextId}: 개발 설정으로 자동 시작을 건너뜁니다.");
+                return;
+            }
 
             TutorialViewTargetMiss miss = TutorialViewTarget.Find(_combat, _current, _stages, _definitions, _state,
                 out int tutorialKey);

@@ -18,7 +18,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
         private sealed class LineInput
         {
             [SerializeField] internal StageOfferLineKind kind;
-            [Tooltip("UnitDetails: {0} 레벨, {1} 보유 수 / ItemDetails: {0} 설명 / RecoveryProjected: {0} 예상 회복량 / RecoveryMaxHealthProjected: {0} 예상 최대 체력 증가량 / "
+            [Tooltip("UnitLevel: {0} 레벨 / UnitOwnedCount: {0} 보유 수 / UnitDetails: 옛 합친 글({0} 레벨, {1} 보유 수) / ItemDetails: {0} 설명 / RecoveryProjected: {0} 예상 회복량 / RecoveryMaxHealthProjected: {0} 예상 최대 체력 증가량 / "
                 + "TraitGrowthHeader: {0} 유닛 이름, {1} 레벨, {2} 종류 낱말 / TraitAcquireLabel·TraitEnhanceLabel: 낱말 / "
                 + "TrainingDetails: {0} 효과·수치 변화 글, {1} 특성 기본 설명 / TrainingRank: {0} 지금, {1} 다음 / TrainingEmpty·TrainingUnitNoTrait: 글 / "
                 + "TrainingEffectEnabled·TrainingEffectDisabled: 적용·미적용 상태 낱말(인자 없음) / "
@@ -46,7 +46,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.View.Table.StageOfferText.Item
             [SerializeField] private StageMapRole mapRole = StageMapRole.Regular;
             [Tooltip("EventNameText 글입니다. 건물 호버의 제목이기도 합니다.")]
             [SerializeField] private string eventName;
-            [Tooltip("EventDescText 글입니다. 건물 호버의 설명이기도 합니다.")]
+            [Tooltip("스테이지 건물 호버에 표시할 일반 설명입니다. 선택 팝업에는 표시하지 않고, 팝업의 대상·훈련 안내는 Lines에서 가져옵니다.")]
             [SerializeField, TextArea(1, 4)] private string eventDescription;
             [Tooltip("보유 골드 꼴입니다. {0}에 골드가 들어갑니다. 비우면 골드 칸이 꺼집니다.")]
             [SerializeField] private string goldFormat;

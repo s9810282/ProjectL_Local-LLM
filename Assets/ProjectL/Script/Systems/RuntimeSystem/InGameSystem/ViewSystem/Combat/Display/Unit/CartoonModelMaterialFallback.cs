@@ -7,6 +7,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
     /// <summary>기존 모델의 비 Cartoon 재질만 전투 표시용 Cartoon 재질로 바꿉니다.</summary>
     /// <remarks>
     /// Cartoon 슬롯은 공유 재질을 사용합니다. 이전 모델 재질의 복사본만 소유하고 파괴합니다.
+    /// 유닛 모델 부분(<see cref="UnitModelParts.Is"/>)만 바꿉니다. 체력 숫자·커서처럼 몸이 아닌 표시는 재질을 그대로 둡니다.
     /// </remarks>
     internal sealed class CartoonModelMaterialFallback : IDisposable
     {
@@ -23,9 +24,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
 
             Shader cartoon = GetDefaults().shader;
             foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true))
-                AddLegacyRenderer(renderer, cartoon);
+                if (UnitModelParts.Is(renderer))
+                    AddLegacyRenderer(renderer, cartoon);
             foreach (SkinnedMeshRenderer renderer in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-                AddLegacyRenderer(renderer, cartoon);
+                if (UnitModelParts.Is(renderer))
+                    AddLegacyRenderer(renderer, cartoon);
         }
 
         internal bool IsEnabled => _enabled;

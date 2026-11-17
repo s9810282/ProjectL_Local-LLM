@@ -155,12 +155,12 @@ namespace ProjectL.Tests.Core
             var summoner = CombatCommandTestData.Character(Summoner.Value, EntityKey.Unit_Demon, new CellCoord(2, 3), Owner.Enemy);
             var s = source.State;
             var turn = source.State.Turn;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                s.ThornFields,turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,s.Objective,                new CombatAllocationFacts(11, 1));
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,s.Objective,                new CombatAllocationFacts(11, 1));
             return CombatCommandTestData.With(source, source.Characters.Append(summoner).ToArray(), state);
         }
 
         private static CombatCommandState With(CombatCommandState s, CombatAllocationFacts allocation, CombatTurnFacts turn) =>
-            new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                s.ThornFields,turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,s.Objective,allocation);
+            new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,                turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,s.Objective,allocation);
 
         private static CombatTurnFacts Turn(CombatTurnFacts t, CombatSummonRecord[] summons) => new CombatTurnFacts(t.StagePhase, t.ControllerPhase, t.ControllerTurnSequence,
             t.CompletedPlayerTurnCount, t.EnemyOrigins, summons);

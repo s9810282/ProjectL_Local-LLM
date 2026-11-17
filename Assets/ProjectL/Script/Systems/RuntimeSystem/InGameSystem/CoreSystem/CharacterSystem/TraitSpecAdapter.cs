@@ -19,7 +19,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
             {
                 FocusTraitData t => new FocusTraitSpec(t.DamagePerStack, t.MaxStacks),
                 PiercingFalloffTraitData t => new PiercingFalloffTraitSpec(t.ReductionPercentPerTarget, t.MaxTargetsPerRay),
-                ThornFieldTraitData t => new ThornFieldTraitSpec(t.ThornDamage, t.LifetimeUnitTurns, t.DefenseReductionPercent, t.TickPhase),
                 KnockbackTraitData t => new KnockbackTraitSpec(t.DistanceCells),
                 DistanceDamageScaleTraitData t => new DistanceDamageScaleTraitSpec(t.PercentByDistance),
                 KillChainAttackTraitData => new KillChainAttackTraitSpec(),
@@ -29,7 +28,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CharacterSystem
                 IntimidationTraitData t => new IntimidationTraitSpec(t.AttackReductionPercent),
                 HuntersMarkTraitData t => new HuntersMarkTraitSpec(t.BonusDamagePercent, t.DurationAffectedSideTurnEnds),
                 PullTraitData t => new PullTraitSpec(t.ExtraRangeCells),
+                DeadHandTraitData t => new DeadHandTraitSpec(t.DamagePercent),
                 ImpactBoltTraitData t => new ImpactBoltTraitSpec(t.DistanceCells),
+                ThornBombTraitData t => new ThornBombTraitSpec(t.DamagePercent),
                 CrashImpactTraitData t => new CrashImpactTraitSpec(t.DistanceCells, t.WallDamagePercent, t.UnitDamagePercent),
                 VanguardTraitData t => new VanguardTraitSpec(t.AttackBonus, t.DurationControllerTurnEnds),
                 CleanSweepTraitData t => new CleanSweepTraitSpec(t.AttackBonusPerAllyAttack, t.DurationControllerTurnEnds),

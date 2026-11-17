@@ -1,4 +1,4 @@
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Field
 {
@@ -12,10 +12,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         FieldGridMapper Mapper { get; }
 
         /// <summary>
-        /// 경로를 궤적으로 그립니다. 점은 필드 셀 루트 로컬 좌표이고, 배열 앞쪽 <paramref name="count"/>개를 씁니다.
-        /// 막힘이면 막힘 색과 끝점의 표지로 그립니다. 궤적 부품이 없는 필드(재질 없는 설정)에서는 아무것도 하지 않습니다.
+        /// 경로마다 궤적 선 하나로 그리고, 전보다 줄었으면 남는 선은 숨깁니다(궤적 대상별 선 설계 PT5).
+        /// 막힘이면 모든 선이 막힘 색과 끝점의 표지입니다. 궤적 부품이 없는 필드(재질 없는 설정)에서는 아무것도 하지 않습니다.
         /// </summary>
-        void ShowAttackTrajectory(Vector3[] localPath, int count, bool blocked);
+        void ShowAttackTrajectories(IReadOnlyList<FieldTrajectoryPath> paths, bool blocked);
 
         /// <summary>궤적을 숨깁니다. 여러 번 불려도 안전합니다.</summary>
         void ClearAttackTrajectory();

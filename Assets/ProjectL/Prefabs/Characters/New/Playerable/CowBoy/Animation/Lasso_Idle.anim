@@ -1,0 +1,4657 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!74 &7400000
+AnimationClip:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Lasso_Idle
+  serializedVersion: 7
+  m_Legacy: 0
+  m_Compressed: 0
+  m_UseHighQualityCurve: 1
+  m_RotationCurves:
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.9957708, y: 0.0101062115, z: 0.003915449, w: -0.09123072}
+        inSlope: {x: -0.008714676, y: 0.018255137, z: -0.02816995, w: -0.09210402}
+        outSlope: {x: -0.008714676, y: 0.018255137, z: -0.02816995, w: -0.09210402}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.4166667
+        value: {x: 0.9964778, y: 0.018299213, z: -0.0034406001, w: -0.081763856}
+        inSlope: {x: 0.0077590933, y: -0.0050875936, z: -0.0035894625, w: 0.09313209}
+        outSlope: {x: 0.0077590933, y: -0.0050875936, z: -0.0035894625, w: 0.09313209}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.7916667
+        value: {x: 0.9947205, y: 0.014270261, z: -0.0024266539, w: -0.10159499}
+        inSlope: {x: -0.013691419, y: 0.020776425, z: 0.009966491, w: -0.13182774}
+        outSlope: {x: -0.013691419, y: 0.020776425, z: 0.009966491, w: -0.13182774}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.4166667
+        value: {x: 0.99615175, y: 0.012940474, z: 0.0039532357, w: -0.086595155}
+        inSlope: {x: -0.0029382692, y: -0.0313453, z: 0.000651256, w: -0.038426917}
+        outSlope: {x: -0.0029382692, y: -0.0313453, z: 0.000651256, w: -0.038426917}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.8333334
+        value: {x: 0.996444, y: 0.0050778477, z: 0.005555048, w: -0.08392082}
+        inSlope: {x: 0.009974966, y: 0.021671511, z: 0.013973892, w: 0.12088415}
+        outSlope: {x: 0.009974966, y: 0.021671511, z: 0.013973892, w: 0.12088415}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.1666667
+        value: {x: 0.99719834, y: 0.000013448474, z: 0.0098475125, w: -0.07415165}
+        inSlope: {x: -0.007836327, y: -0.054130167, z: 0.0077095036, w: -0.10427515}
+        outSlope: {x: -0.007836327, y: -0.054130167, z: 0.0077095036, w: -0.10427515}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.5833335
+        value: {x: 0.9952187, y: -0.002291357, z: 0.011175329, w: -0.097003184}
+        inSlope: {x: 0.009313356, y: 0.032843523, z: -0.003452479, w: 0.09473592}
+        outSlope: {x: 0.009313356, y: 0.032843523, z: -0.003452479, w: 0.09473592}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.9957708, y: 0.0101062115, z: 0.003915449, w: -0.09123072}
+        inSlope: {x: -0.00860599, y: 0.018903611, z: -0.027948959, w: -0.09539009}
+        outSlope: {x: -0.00860599, y: 0.018903611, z: -0.027948959, w: -0.09539009}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.27027336, y: -0.009927348, z: -0.0059842775, w: 0.96271384}
+        inSlope: {x: -0.05609393, y: -0.0028413087, z: -0.008229308, w: 0.015592575}
+        outSlope: {x: -0.05609393, y: -0.0028413087, z: -0.008229308, w: 0.015592575}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.7916667
+        value: {x: 0.26548687, y: -0.0072961776, z: -0.0013504677, w: 0.96408594}
+        inSlope: {x: -0.039929133, y: 0.023387516, z: 0.01873942, w: 0.01120233}
+        outSlope: {x: -0.039929133, y: 0.023387516, z: 0.01873942, w: 0.01120233}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.5
+        value: {x: 0.27027336, y: -0.009927348, z: -0.0059842775, w: 0.96271384}
+        inSlope: {x: -0.04340277, y: -0.03147743, z: -0.022831284, w: 0.011717314}
+        outSlope: {x: -0.04340277, y: -0.03147743, z: -0.022831284, w: 0.011717314}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.25
+        value: {x: 0.27374786, y: -0.018041413, z: -0.0069097034, w: 0.96160746}
+        inSlope: {x: -0.012410411, y: -0.0044353153, z: 0.00661694, w: 0.003497603}
+        outSlope: {x: -0.012410411, y: -0.0044353153, z: 0.00661694, w: 0.003497603}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.6666667
+        value: {x: 0.2743909, y: -0.012033087, z: -0.003993084, w: 0.9615347}
+        inSlope: {x: 0.03891985, y: 0.017937027, z: 0.00089393946, w: -0.010871867}
+        outSlope: {x: 0.03891985, y: 0.017937027, z: 0.00089393946, w: -0.010871867}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.27027336, y: -0.009927348, z: -0.0059842775, w: 0.96271384}
+        inSlope: {x: -0.055175036, y: -0.0024821928, z: -0.008985524, w: 0.015481054}
+        outSlope: {x: -0.055175036, y: -0.0024821928, z: -0.008985524, w: 0.015481054}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.22235847, y: -0.005799535, z: -0.0035910527, w: 0.97494113}
+        inSlope: {x: -0.047465444, y: 0.0016918592, z: -0.0070039686, w: 0.010757446}
+        outSlope: {x: -0.047465444, y: 0.0016918592, z: -0.0070039686, w: 0.010757446}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.75
+        value: {x: 0.22130248, y: -0.00551664, z: -0.0035432049, w: 0.9751832}
+        inSlope: {x: -0.035893865, y: 0.008183097, z: 0.016710749, w: 0.008252623}
+        outSlope: {x: -0.035893865, y: 0.008183097, z: 0.016710749, w: 0.008252623}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.5
+        value: {x: 0.22235847, y: -0.005799535, z: -0.0035910527, w: 0.97494113}
+        inSlope: {x: -0.04248957, y: -0.015399521, z: -0.019122764, w: 0.009530779}
+        outSlope: {x: -0.04248957, y: -0.015399521, z: -0.019122764, w: 0.009530779}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.2083335
+        value: {x: 0.22603047, y: -0.011094726, z: -0.0079464475, w: 0.97402465}
+        inSlope: {x: -0.021859836, y: -0.010515427, z: 0.0033784339, w: 0.0049853344}
+        outSlope: {x: -0.021859836, y: -0.010515427, z: 0.0033784339, w: 0.0049853344}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.7083335
+        value: {x: 0.22907399, y: -0.0077302386, z: -0.002881407, w: 0.97337407}
+        inSlope: {x: 0.023435896, y: 0.012162498, z: 0.004658065, w: -0.005398036}
+        outSlope: {x: 0.023435896, y: 0.012162498, z: 0.004658065, w: -0.005398036}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.22235847, y: -0.005799535, z: -0.0035910527, w: 0.97494113}
+        inSlope: {x: -0.050348476, y: 0.0022187764, z: -0.0067284307, w: 0.011529966}
+        outSlope: {x: -0.050348476, y: 0.0022187764, z: -0.0067284307, w: 0.011529966}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.37633273, y: -0.0071865157, z: -0.0017486479, w: 0.9264551}
+        inSlope: {x: -0.050510645, y: 0.007771656, z: -0.004770253, w: 0.02049923}
+        outSlope: {x: -0.050510645, y: 0.007771656, z: -0.004770253, w: 0.02049923}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.75
+        value: {x: 0.3764897, y: -0.0055889743, z: -0.004646019, w: 0.9263923}
+        inSlope: {x: -0.04726697, y: 0.0006845157, z: 0.01251059, w: 0.019276861}
+        outSlope: {x: -0.04726697, y: 0.0006845157, z: 0.01251059, w: 0.019276861}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.5
+        value: {x: 0.37633273, y: -0.0071865157, z: -0.0017486479, w: 0.9264551}
+        inSlope: {x: -0.047981836, y: -0.010608584, z: -0.014846525, w: 0.019381275}
+        outSlope: {x: -0.047981836, y: -0.010608584, z: -0.014846525, w: 0.019381275}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2
+        value: {x: 0.38308078, y: -0.007836807, z: -0.0071895565, w: 0.9236536}
+        inSlope: {x: 0.027639983, y: -0.00527653, z: -0.006676294, w: -0.011549949}
+        outSlope: {x: 0.027639983, y: -0.00527653, z: -0.006676294, w: -0.011549949}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.625
+        value: {x: 0.3776749, y: -0.011418218, z: -0.0034684516, w: 0.92586136}
+        inSlope: {x: 0.045444533, y: 0.012224043, z: 0.013736806, w: -0.018335598}
+        outSlope: {x: 0.045444533, y: 0.012224043, z: 0.013736806, w: -0.018335598}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.37633273, y: -0.0071865157, z: -0.0017486479, w: 0.9264551}
+        inSlope: {x: -0.05148645, y: 0.007998099, z: -0.0036298332, w: 0.021040043}
+        outSlope: {x: -0.05148645, y: 0.007998099, z: -0.0036298332, w: 0.021040043}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.42551616, y: -0.0067666005, z: -0.00058550894, w: 0.90492535}
+        inSlope: {x: -0.0076653957, y: 0.0110964775, z: -0.0019141305, w: 0.003680706}
+        outSlope: {x: -0.0076653957, y: 0.0110964775, z: -0.0019141305, w: 0.003680706}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.9583334
+        value: {x: 0.42018625, y: -0.003288579, z: -0.002762443, w: 0.9074277}
+        inSlope: {x: -0.02307022, y: -0.012699573, z: 0.015927508, w: 0.010689499}
+        outSlope: {x: -0.02307022, y: -0.012699573, z: 0.015927508, w: 0.010689499}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.6666667
+        value: {x: 0.42342958, y: -0.00618299, z: -0.0029017855, w: 0.9059033}
+        inSlope: {x: -0.016415827, y: 0.0074900948, z: -0.014865887, w: 0.007676121}
+        outSlope: {x: -0.016415827, y: 0.0074900948, z: -0.014865887, w: 0.007676121}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.4166667
+        value: {x: 0.41977468, y: -0.0070777177, z: -0.00791438, w: 0.90756625}
+        inSlope: {x: -0.024270726, y: -0.013831215, z: 0.014415935, w: 0.011245945}
+        outSlope: {x: -0.024270726, y: -0.013831215, z: 0.014415935, w: 0.011245945}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.42551616, y: -0.0067666005, z: -0.00058550894, w: 0.90492535}
+        inSlope: {x: 0.009172475, y: 0.009811647, z: -0.00008819891, w: -0.004235761}
+        outSlope: {x: 0.009172475, y: 0.009811647, z: -0.00008819891, w: -0.004235761}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.16341351, y: -0.001138795, z: -0.0074569383, w: 0.9865288}
+        inSlope: {x: 0.047349572, y: 0.0020684581, z: 0.013544407, w: -0.0077905655}
+        outSlope: {x: 0.047349572, y: 0.0020684581, z: 0.013544407, w: -0.0077905655}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 0.5416667
+        value: {x: 0.16383797, y: 0.00044944073, z: 0.0029441507, w: 0.9864828}
+        inSlope: {x: -0.031547055, y: 0.0009144414, z: 0.005990088, w: 0.0052292324}
+        outSlope: {x: -0.031547055, y: 0.0009144414, z: 0.005990088, w: 0.0052292324}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.2083334
+        value: {x: 0.16481549, y: -0.0010703914, z: -0.0070090233, w: 0.986299}
+        inSlope: {x: -0.043067377, y: -0.0015635114, z: -0.010238728, w: 0.007125384}
+        outSlope: {x: -0.043067377, y: -0.0015635114, z: -0.010238728, w: 0.007125384}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 1.9583334
+        value: {x: 0.16637008, y: 0.00011857598, z: 0.0007772923, w: 0.98606306}
+        inSlope: {x: -0.04468958, y: 0.0025650512, z: 0.01679843, w: 0.0075295046}
+        outSlope: {x: -0.04468958, y: 0.0025650512, z: 0.01679843, w: 0.0075295046}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 2.7083335
+        value: {x: 0.16414286, y: -0.0013161901, z: -0.008618673, w: 0.98639804}
+        inSlope: {x: -0.04105983, y: -0.00081682217, z: -0.0053502256, w: 0.0067877825}
+        outSlope: {x: -0.04105983, y: -0.00081682217, z: -0.0053502256, w: 0.0067877825}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.16341351, y: -0.001138795, z: -0.0074569383, w: 0.9865288}
+        inSlope: {x: 0.03911963, y: 0.0017092526, z: 0.011194812, w: -0.0063586477}
+        outSlope: {x: 0.03911963, y: 0.0017092526, z: 0.011194812, w: -0.0063586477}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+  m_CompressedRotationCurves: []
+  m_EulerCurves: []
+  m_PositionCurves: []
+  m_ScaleCurves:
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.94456863, y: 0.944569, z: 0.94456893}
+        inSlope: {x: 0.088422775, y: 0.088424206, z: 0.088419914}
+        outSlope: {x: 0.088422775, y: 0.088424206, z: 0.088419914}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.7916667
+        value: {x: 0.9526643, y: 0.95266443, z: 0.9526644}
+        inSlope: {x: 0.05318496, y: 0.05318782, z: 0.053185675}
+        outSlope: {x: 0.05318496, y: 0.05318782, z: 0.053185675}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.4583334
+        value: {x: 0.9421377, y: 0.9421378, z: 0.9421378}
+        inSlope: {x: 0.054595523, y: 0.054599814, z: 0.05460196}
+        outSlope: {x: 0.054595523, y: 0.054599814, z: 0.05460196}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2
+        value: {x: 0.93984365, y: 0.9398438, z: 0.93984365}
+        inSlope: {x: -0.034394488, y: -0.034393057, z: -0.034394488}
+        outSlope: {x: -0.034394488, y: -0.034393057, z: -0.034394488}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2.625
+        value: {x: 0.9358812, y: 0.9358815, z: 0.9358815}
+        inSlope: {x: -0.051496327, y: -0.051493466, z: -0.051497042}
+        outSlope: {x: -0.051496327, y: -0.051493466, z: -0.051497042}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.94456863, y: 0.944569, z: 0.94456893}
+        inSlope: {x: 0.08761344, y: 0.087622024, z: 0.08762059}
+        outSlope: {x: 0.08761344, y: 0.087622024, z: 0.08762059}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 1.074772, y: 1.0747714, z: 1.074772}
+        inSlope: {x: 0.081064224, y: 0.08107567, z: 0.08107281}
+        outSlope: {x: 0.081064224, y: 0.08107567, z: 0.08107281}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.5
+        value: {x: 1.0639129, y: 1.0639124, z: 1.0639129}
+        inSlope: {x: -0.025716301, y: -0.025716301, z: -0.02571487}
+        outSlope: {x: -0.025716301, y: -0.025716301, z: -0.02571487}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1
+        value: {x: 1.076993, y: 1.0769928, z: 1.0769932}
+        inSlope: {x: -0.053697087, y: -0.05370424, z: -0.05370424}
+        outSlope: {x: -0.053697087, y: -0.05370424, z: -0.05370424}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.5
+        value: {x: 1.074772, y: 1.0747714, z: 1.074772}
+        inSlope: {x: 0.08264634, y: 0.08265063, z: 0.0826492}
+        outSlope: {x: 0.08264634, y: 0.08265063, z: 0.0826492}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2
+        value: {x: 1.0614018, y: 1.0614016, z: 1.0614023}
+        inSlope: {x: -0.0328245, y: -0.03282307, z: -0.0328245}
+        outSlope: {x: -0.0328245, y: -0.03282307, z: -0.0328245}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2.5833335
+        value: {x: 1.0740798, y: 1.0740799, z: 1.0740803}
+        inSlope: {x: -0.0829812, y: -0.08297691, z: -0.0829812}
+        outSlope: {x: -0.0829812, y: -0.08297691, z: -0.0829812}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 1.074772, y: 1.0747714, z: 1.074772}
+        inSlope: {x: 0.08883796, y: 0.088823654, z: 0.088829376}
+        outSlope: {x: 0.08883796, y: 0.088823654, z: 0.088829376}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 1.0048457, y: 1.0048456, z: 1.0048461}
+        inSlope: {x: -0.06572056, y: -0.06572342, z: -0.06572914}
+        outSlope: {x: -0.06572056, y: -0.06572342, z: -0.06572914}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.75
+        value: {x: 1.0031252, y: 1.0031252, z: 1.0031253}
+        inSlope: {x: -0.017482284, y: -0.017477993, z: -0.017479423}
+        outSlope: {x: -0.017482284, y: -0.017477993, z: -0.017479423}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.4583334
+        value: {x: 1.0073347, y: 1.007334, z: 1.0073344}
+        inSlope: {x: -0.061566412, y: -0.061567843, z: -0.061564982}
+        outSlope: {x: -0.061566412, y: -0.061567843, z: -0.061564982}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2.25
+        value: {x: 1.0117396, y: 1.0117394, z: 1.0117397}
+        inSlope: {x: 0.0043473286, y: 0.004345898, z: 0.004345898}
+        outSlope: {x: 0.0043473286, y: 0.004345898, z: 0.004345898}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 1.0048457, y: 1.0048456, z: 1.0048461}
+        inSlope: {x: -0.07580309, y: -0.075808816, z: -0.07580023}
+        outSlope: {x: -0.07580309, y: -0.075808816, z: -0.07580023}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.9591885, y: 0.9591884, z: 0.95918846}
+        inSlope: {x: -0.10694933, y: -0.1069479, z: -0.10695076}
+        outSlope: {x: -0.10694933, y: -0.1069479, z: -0.10695076}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.45833334
+        value: {x: 0.96477586, y: 0.9647758, z: 0.9647759}
+        inSlope: {x: 0.07832481, y: 0.078328386, z: 0.07832123}
+        outSlope: {x: 0.07832481, y: 0.078328386, z: 0.07832123}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1
+        value: {x: 0.9572516, y: 0.9572518, z: 0.95725185}
+        inSlope: {x: 0.049718115, y: 0.0497174, z: 0.049720977}
+        outSlope: {x: 0.049718115, y: 0.0497174, z: 0.049720977}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.5
+        value: {x: 0.9591885, y: 0.9591884, z: 0.95918846}
+        inSlope: {x: -0.099575, y: -0.09958215, z: -0.099582866}
+        outSlope: {x: -0.099575, y: -0.09958215, z: -0.099582866}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.9583334
+        value: {x: 0.96808267, y: 0.9680825, z: 0.9680825}
+        inSlope: {x: 0.082519844, y: 0.08251841, z: 0.0825177}
+        outSlope: {x: 0.082519844, y: 0.08251841, z: 0.0825177}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2.5833335
+        value: {x: 0.9633402, y: 0.96333975, z: 0.96334016}
+        inSlope: {x: 0.07697519, y: 0.07697805, z: 0.07697662}
+        outSlope: {x: 0.07697519, y: 0.07697805, z: 0.07697662}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.9591885, y: 0.9591884, z: 0.95918846}
+        inSlope: {x: -0.11041159, y: -0.11041445, z: -0.11041302}
+        outSlope: {x: -0.11041159, y: -0.11041445, z: -0.11041302}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+  - curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: {x: 0.9876102, y: 0.98760605, z: 0.9876067}
+        inSlope: {x: 0.004650593, y: 0.0046520233, z: 0.004650593}
+        outSlope: {x: 0.004650593, y: 0.0046520233, z: 0.004650593}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.875
+        value: {x: 0.97842145, y: 0.97841763, z: 0.97841823}
+        inSlope: {x: -0.03327871, y: -0.03327871, z: -0.03327728}
+        outSlope: {x: -0.03327871, y: -0.03327871, z: -0.03327728}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 1.75
+        value: {x: 0.9866281, y: 0.98662394, z: 0.98662454}
+        inSlope: {x: -0.003928898, y: -0.0039281826, z: -0.0039281826}
+        outSlope: {x: -0.003928898, y: -0.0039281826, z: -0.0039281826}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 2.4166667
+        value: {x: 0.97663254, y: 0.97662866, z: 0.9766292}
+        inSlope: {x: -0.03040761, y: -0.030404033, z: -0.030404033}
+        outSlope: {x: -0.03040761, y: -0.030404033, z: -0.030404033}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      - serializedVersion: 3
+        time: 3
+        value: {x: 0.9876102, y: 0.98760605, z: 0.9876067}
+        inSlope: {x: 0.01502615, y: 0.015021859, z: 0.01502615}
+        outSlope: {x: 0.01502615, y: 0.015021859, z: 0.01502615}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+  m_FloatCurves: []
+  m_PPtrCurves: []
+  m_SampleRate: 24
+  m_WrapMode: 0
+  m_Bounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0, y: 0, z: 0}
+  m_ClipBindingConstant:
+    genericBindings:
+    - serializedVersion: 2
+      path: 742319681
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 3107467226
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 985471627
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1648690057
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1293049218
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1643095515
+      attribute: 2
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 742319681
+      attribute: 3
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 3107467226
+      attribute: 3
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1648690057
+      attribute: 3
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1293049218
+      attribute: 3
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 1643095515
+      attribute: 3
+      script: {fileID: 0}
+      typeID: 4
+      customType: 0
+      isPPtrCurve: 0
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    pptrCurveMapping: []
+  m_AnimationClipSettings:
+    serializedVersion: 2
+    m_AdditiveReferencePoseClip: {fileID: 0}
+    m_AdditiveReferencePoseTime: 0
+    m_StartTime: 0
+    m_StopTime: 3
+    m_OrientationOffsetY: 0
+    m_Level: 0
+    m_CycleOffset: 0
+    m_HasAdditiveReferencePose: 0
+    m_LoopTime: 1
+    m_LoopBlend: 0
+    m_LoopBlendOrientation: 0
+    m_LoopBlendPositionY: 0
+    m_LoopBlendPositionXZ: 0
+    m_KeepOriginalOrientation: 0
+    m_KeepOriginalPositionY: 1
+    m_KeepOriginalPositionXZ: 0
+    m_HeightFromFeet: 0
+    m_Mirror: 0
+  m_EditorCurves:
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9957708
+        inSlope: -0.008714676
+        outSlope: -0.008714676
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: 0.9964778
+        inSlope: 0.0077590933
+        outSlope: 0.0077590933
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.9947205
+        inSlope: -0.013691419
+        outSlope: -0.013691419
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: 0.99615175
+        inSlope: -0.0029382692
+        outSlope: -0.0029382692
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: 0.996444
+        inSlope: 0.009974966
+        outSlope: 0.009974966
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: 0.99719834
+        inSlope: -0.007836327
+        outSlope: -0.007836327
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 0.9952187
+        inSlope: 0.009313356
+        outSlope: 0.009313356
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9957708
+        inSlope: -0.00860599
+        outSlope: -0.00860599
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.0101062115
+        inSlope: 0.018255137
+        outSlope: 0.018255137
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: 0.018299213
+        inSlope: -0.0050875936
+        outSlope: -0.0050875936
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.014270261
+        inSlope: 0.020776425
+        outSlope: 0.020776425
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: 0.012940474
+        inSlope: -0.0313453
+        outSlope: -0.0313453
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: 0.0050778477
+        inSlope: 0.021671511
+        outSlope: 0.021671511
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: 0.000013448474
+        inSlope: -0.054130167
+        outSlope: -0.054130167
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: -0.002291357
+        inSlope: 0.032843523
+        outSlope: 0.032843523
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.0101062115
+        inSlope: 0.018903611
+        outSlope: 0.018903611
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.003915449
+        inSlope: -0.02816995
+        outSlope: -0.02816995
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: -0.0034406001
+        inSlope: -0.0035894625
+        outSlope: -0.0035894625
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.0024266539
+        inSlope: 0.009966491
+        outSlope: 0.009966491
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: 0.0039532357
+        inSlope: 0.000651256
+        outSlope: 0.000651256
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: 0.005555048
+        inSlope: 0.013973892
+        outSlope: 0.013973892
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: 0.0098475125
+        inSlope: 0.0077095036
+        outSlope: 0.0077095036
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 0.011175329
+        inSlope: -0.003452479
+        outSlope: -0.003452479
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.003915449
+        inSlope: -0.027948959
+        outSlope: -0.027948959
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.09123072
+        inSlope: -0.09210402
+        outSlope: -0.09210402
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: -0.081763856
+        inSlope: 0.09313209
+        outSlope: 0.09313209
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.10159499
+        inSlope: -0.13182774
+        outSlope: -0.13182774
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: -0.086595155
+        inSlope: -0.038426917
+        outSlope: -0.038426917
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: -0.08392082
+        inSlope: 0.12088415
+        outSlope: 0.12088415
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: -0.07415165
+        inSlope: -0.10427515
+        outSlope: -0.10427515
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: -0.097003184
+        inSlope: 0.09473592
+        outSlope: 0.09473592
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.09123072
+        inSlope: -0.09539009
+        outSlope: -0.09539009
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.27027336
+        inSlope: -0.05609393
+        outSlope: -0.05609393
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.26548687
+        inSlope: -0.039929133
+        outSlope: -0.039929133
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.27027336
+        inSlope: -0.04340277
+        outSlope: -0.04340277
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 0.27374786
+        inSlope: -0.012410411
+        outSlope: -0.012410411
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: 0.2743909
+        inSlope: 0.03891985
+        outSlope: 0.03891985
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.27027336
+        inSlope: -0.055175036
+        outSlope: -0.055175036
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.009927348
+        inSlope: -0.0028413087
+        outSlope: -0.0028413087
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.0072961776
+        inSlope: 0.023387516
+        outSlope: 0.023387516
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.009927348
+        inSlope: -0.03147743
+        outSlope: -0.03147743
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: -0.018041413
+        inSlope: -0.0044353153
+        outSlope: -0.0044353153
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: -0.012033087
+        inSlope: 0.017937027
+        outSlope: 0.017937027
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.009927348
+        inSlope: -0.0024821928
+        outSlope: -0.0024821928
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0059842775
+        inSlope: -0.008229308
+        outSlope: -0.008229308
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.0013504677
+        inSlope: 0.01873942
+        outSlope: 0.01873942
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.0059842775
+        inSlope: -0.022831284
+        outSlope: -0.022831284
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: -0.0069097034
+        inSlope: 0.00661694
+        outSlope: 0.00661694
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: -0.003993084
+        inSlope: 0.00089393946
+        outSlope: 0.00089393946
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0059842775
+        inSlope: -0.008985524
+        outSlope: -0.008985524
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.96271384
+        inSlope: 0.015592575
+        outSlope: 0.015592575
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.96408594
+        inSlope: 0.01120233
+        outSlope: 0.01120233
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.96271384
+        inSlope: 0.011717314
+        outSlope: 0.011717314
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 0.96160746
+        inSlope: 0.003497603
+        outSlope: 0.003497603
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: 0.9615347
+        inSlope: -0.010871867
+        outSlope: -0.010871867
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.96271384
+        inSlope: 0.015481054
+        outSlope: 0.015481054
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.22235847
+        inSlope: -0.047465444
+        outSlope: -0.047465444
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 0.22130248
+        inSlope: -0.035893865
+        outSlope: -0.035893865
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.22235847
+        inSlope: -0.04248957
+        outSlope: -0.04248957
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: 0.22603047
+        inSlope: -0.021859836
+        outSlope: -0.021859836
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 0.22907399
+        inSlope: 0.023435896
+        outSlope: 0.023435896
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.22235847
+        inSlope: -0.050348476
+        outSlope: -0.050348476
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.005799535
+        inSlope: 0.0016918592
+        outSlope: 0.0016918592
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.00551664
+        inSlope: 0.008183097
+        outSlope: 0.008183097
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.005799535
+        inSlope: -0.015399521
+        outSlope: -0.015399521
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: -0.011094726
+        inSlope: -0.010515427
+        outSlope: -0.010515427
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.0077302386
+        inSlope: 0.012162498
+        outSlope: 0.012162498
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.005799535
+        inSlope: 0.0022187764
+        outSlope: 0.0022187764
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0035910527
+        inSlope: -0.0070039686
+        outSlope: -0.0070039686
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.0035432049
+        inSlope: 0.016710749
+        outSlope: 0.016710749
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.0035910527
+        inSlope: -0.019122764
+        outSlope: -0.019122764
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: -0.0079464475
+        inSlope: 0.0033784339
+        outSlope: 0.0033784339
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.002881407
+        inSlope: 0.004658065
+        outSlope: 0.004658065
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0035910527
+        inSlope: -0.0067284307
+        outSlope: -0.0067284307
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.97494113
+        inSlope: 0.010757446
+        outSlope: 0.010757446
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 0.9751832
+        inSlope: 0.008252623
+        outSlope: 0.008252623
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.97494113
+        inSlope: 0.009530779
+        outSlope: 0.009530779
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: 0.97402465
+        inSlope: 0.0049853344
+        outSlope: 0.0049853344
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 0.97337407
+        inSlope: -0.005398036
+        outSlope: -0.005398036
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.97494113
+        inSlope: 0.011529966
+        outSlope: 0.011529966
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.37633273
+        inSlope: -0.050510645
+        outSlope: -0.050510645
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 0.3764897
+        inSlope: -0.04726697
+        outSlope: -0.04726697
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.37633273
+        inSlope: -0.047981836
+        outSlope: -0.047981836
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 0.38308078
+        inSlope: 0.027639983
+        outSlope: 0.027639983
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 0.3776749
+        inSlope: 0.045444533
+        outSlope: 0.045444533
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.37633273
+        inSlope: -0.05148645
+        outSlope: -0.05148645
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0071865157
+        inSlope: 0.007771656
+        outSlope: 0.007771656
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.0055889743
+        inSlope: 0.0006845157
+        outSlope: 0.0006845157
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.0071865157
+        inSlope: -0.010608584
+        outSlope: -0.010608584
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: -0.007836807
+        inSlope: -0.00527653
+        outSlope: -0.00527653
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: -0.011418218
+        inSlope: 0.012224043
+        outSlope: 0.012224043
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0071865157
+        inSlope: 0.007998099
+        outSlope: 0.007998099
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0017486479
+        inSlope: -0.004770253
+        outSlope: -0.004770253
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.004646019
+        inSlope: 0.01251059
+        outSlope: 0.01251059
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.0017486479
+        inSlope: -0.014846525
+        outSlope: -0.014846525
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: -0.0071895565
+        inSlope: -0.006676294
+        outSlope: -0.006676294
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: -0.0034684516
+        inSlope: 0.013736806
+        outSlope: 0.013736806
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0017486479
+        inSlope: -0.0036298332
+        outSlope: -0.0036298332
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9264551
+        inSlope: 0.02049923
+        outSlope: 0.02049923
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 0.9263923
+        inSlope: 0.019276861
+        outSlope: 0.019276861
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.9264551
+        inSlope: 0.019381275
+        outSlope: 0.019381275
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 0.9236536
+        inSlope: -0.011549949
+        outSlope: -0.011549949
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 0.92586136
+        inSlope: -0.018335598
+        outSlope: -0.018335598
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9264551
+        inSlope: 0.021040043
+        outSlope: 0.021040043
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.42551616
+        inSlope: -0.0076653957
+        outSlope: -0.0076653957
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: 0.42018625
+        inSlope: -0.02307022
+        outSlope: -0.02307022
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: 0.42342958
+        inSlope: -0.016415827
+        outSlope: -0.016415827
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 0.41977468
+        inSlope: -0.024270726
+        outSlope: -0.024270726
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.42551616
+        inSlope: 0.009172475
+        outSlope: 0.009172475
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0067666005
+        inSlope: 0.0110964775
+        outSlope: 0.0110964775
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: -0.003288579
+        inSlope: -0.012699573
+        outSlope: -0.012699573
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: -0.00618299
+        inSlope: 0.0074900948
+        outSlope: 0.0074900948
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: -0.0070777177
+        inSlope: -0.013831215
+        outSlope: -0.013831215
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0067666005
+        inSlope: 0.009811647
+        outSlope: 0.009811647
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.00058550894
+        inSlope: -0.0019141305
+        outSlope: -0.0019141305
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: -0.002762443
+        inSlope: 0.015927508
+        outSlope: 0.015927508
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: -0.0029017855
+        inSlope: -0.014865887
+        outSlope: -0.014865887
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: -0.00791438
+        inSlope: 0.014415935
+        outSlope: 0.014415935
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.00058550894
+        inSlope: -0.00008819891
+        outSlope: -0.00008819891
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.90492535
+        inSlope: 0.003680706
+        outSlope: 0.003680706
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: 0.9074277
+        inSlope: 0.010689499
+        outSlope: 0.010689499
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: 0.9059033
+        inSlope: 0.007676121
+        outSlope: 0.007676121
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 0.90756625
+        inSlope: 0.011245945
+        outSlope: 0.011245945
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.90492535
+        inSlope: -0.004235761
+        outSlope: -0.004235761
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.16341351
+        inSlope: 0.047349572
+        outSlope: 0.047349572
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.16383797
+        inSlope: -0.031547055
+        outSlope: -0.031547055
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: 0.16481549
+        inSlope: -0.043067377
+        outSlope: -0.043067377
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.16637008
+        inSlope: -0.04468958
+        outSlope: -0.04468958
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 0.16414286
+        inSlope: -0.04105983
+        outSlope: -0.04105983
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.16341351
+        inSlope: 0.03911963
+        outSlope: 0.03911963
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.001138795
+        inSlope: 0.0020684581
+        outSlope: 0.0020684581
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.00044944073
+        inSlope: 0.0009144414
+        outSlope: 0.0009144414
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: -0.0010703914
+        inSlope: -0.0015635114
+        outSlope: -0.0015635114
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.00011857598
+        inSlope: 0.0025650512
+        outSlope: 0.0025650512
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.0013161901
+        inSlope: -0.00081682217
+        outSlope: -0.00081682217
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.001138795
+        inSlope: 0.0017092526
+        outSlope: 0.0017092526
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.0074569383
+        inSlope: 0.013544407
+        outSlope: 0.013544407
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.0029441507
+        inSlope: 0.005990088
+        outSlope: 0.005990088
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: -0.0070090233
+        inSlope: -0.010238728
+        outSlope: -0.010238728
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.0007772923
+        inSlope: 0.01679843
+        outSlope: 0.01679843
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.008618673
+        inSlope: -0.0053502256
+        outSlope: -0.0053502256
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.0074569383
+        inSlope: 0.011194812
+        outSlope: 0.011194812
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9865288
+        inSlope: -0.0077905655
+        outSlope: -0.0077905655
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.9864828
+        inSlope: 0.0052292324
+        outSlope: 0.0052292324
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: 0.986299
+        inSlope: 0.007125384
+        outSlope: 0.007125384
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.98606306
+        inSlope: 0.0075295046
+        outSlope: 0.0075295046
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 0.98639804
+        inSlope: 0.0067877825
+        outSlope: 0.0067877825
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9865288
+        inSlope: -0.0063586477
+        outSlope: -0.0063586477
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalRotation.w
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.94456863
+        inSlope: 0.088422775
+        outSlope: 0.088422775
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.9526643
+        inSlope: 0.05318496
+        outSlope: 0.05318496
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 0.9421377
+        inSlope: 0.054595523
+        outSlope: 0.054595523
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 0.93984365
+        inSlope: -0.034394488
+        outSlope: -0.034394488
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 0.9358812
+        inSlope: -0.051496327
+        outSlope: -0.051496327
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.94456863
+        inSlope: 0.08761344
+        outSlope: 0.08761344
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.944569
+        inSlope: 0.088424206
+        outSlope: 0.088424206
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.95266443
+        inSlope: 0.05318782
+        outSlope: 0.05318782
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 0.9421378
+        inSlope: 0.054599814
+        outSlope: 0.054599814
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 0.9398438
+        inSlope: -0.034393057
+        outSlope: -0.034393057
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 0.9358815
+        inSlope: -0.051493466
+        outSlope: -0.051493466
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.944569
+        inSlope: 0.087622024
+        outSlope: 0.087622024
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.94456893
+        inSlope: 0.088419914
+        outSlope: 0.088419914
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 0.9526644
+        inSlope: 0.053185675
+        outSlope: 0.053185675
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 0.9421378
+        inSlope: 0.05460196
+        outSlope: 0.05460196
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 0.93984365
+        inSlope: -0.034394488
+        outSlope: -0.034394488
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 0.9358815
+        inSlope: -0.051497042
+        outSlope: -0.051497042
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.94456893
+        inSlope: 0.08762059
+        outSlope: 0.08762059
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.074772
+        inSlope: 0.081064224
+        outSlope: 0.081064224
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5
+        value: 1.0639129
+        inSlope: -0.025716301
+        outSlope: -0.025716301
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1.076993
+        inSlope: -0.053697087
+        outSlope: -0.053697087
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 1.074772
+        inSlope: 0.08264634
+        outSlope: 0.08264634
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 1.0614018
+        inSlope: -0.0328245
+        outSlope: -0.0328245
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 1.0740798
+        inSlope: -0.0829812
+        outSlope: -0.0829812
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.074772
+        inSlope: 0.08883796
+        outSlope: 0.08883796
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.0747714
+        inSlope: 0.08107567
+        outSlope: 0.08107567
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5
+        value: 1.0639124
+        inSlope: -0.025716301
+        outSlope: -0.025716301
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1.0769928
+        inSlope: -0.05370424
+        outSlope: -0.05370424
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 1.0747714
+        inSlope: 0.08265063
+        outSlope: 0.08265063
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 1.0614016
+        inSlope: -0.03282307
+        outSlope: -0.03282307
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 1.0740799
+        inSlope: -0.08297691
+        outSlope: -0.08297691
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.0747714
+        inSlope: 0.088823654
+        outSlope: 0.088823654
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.074772
+        inSlope: 0.08107281
+        outSlope: 0.08107281
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5
+        value: 1.0639129
+        inSlope: -0.02571487
+        outSlope: -0.02571487
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1.0769932
+        inSlope: -0.05370424
+        outSlope: -0.05370424
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 1.074772
+        inSlope: 0.0826492
+        outSlope: 0.0826492
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 1.0614023
+        inSlope: -0.0328245
+        outSlope: -0.0328245
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 1.0740803
+        inSlope: -0.0829812
+        outSlope: -0.0829812
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.074772
+        inSlope: 0.088829376
+        outSlope: 0.088829376
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.0048457
+        inSlope: -0.06572056
+        outSlope: -0.06572056
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 1.0031252
+        inSlope: -0.017482284
+        outSlope: -0.017482284
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 1.0073347
+        inSlope: -0.061566412
+        outSlope: -0.061566412
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 1.0117396
+        inSlope: 0.0043473286
+        outSlope: 0.0043473286
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.0048457
+        inSlope: -0.07580309
+        outSlope: -0.07580309
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.0048456
+        inSlope: -0.06572342
+        outSlope: -0.06572342
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 1.0031252
+        inSlope: -0.017477993
+        outSlope: -0.017477993
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 1.007334
+        inSlope: -0.061567843
+        outSlope: -0.061567843
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 1.0117394
+        inSlope: 0.004345898
+        outSlope: 0.004345898
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.0048456
+        inSlope: -0.075808816
+        outSlope: -0.075808816
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.0048461
+        inSlope: -0.06572914
+        outSlope: -0.06572914
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 1.0031253
+        inSlope: -0.017479423
+        outSlope: -0.017479423
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4583334
+        value: 1.0073344
+        inSlope: -0.061564982
+        outSlope: -0.061564982
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 1.0117397
+        inSlope: 0.004345898
+        outSlope: 0.004345898
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 1.0048461
+        inSlope: -0.07580023
+        outSlope: -0.07580023
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9591885
+        inSlope: -0.10694933
+        outSlope: -0.10694933
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.45833334
+        value: 0.96477586
+        inSlope: 0.07832481
+        outSlope: 0.07832481
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.9572516
+        inSlope: 0.049718115
+        outSlope: 0.049718115
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.9591885
+        inSlope: -0.099575
+        outSlope: -0.099575
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.96808267
+        inSlope: 0.082519844
+        outSlope: 0.082519844
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 0.9633402
+        inSlope: 0.07697519
+        outSlope: 0.07697519
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9591885
+        inSlope: -0.11041159
+        outSlope: -0.11041159
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9591884
+        inSlope: -0.1069479
+        outSlope: -0.1069479
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.45833334
+        value: 0.9647758
+        inSlope: 0.078328386
+        outSlope: 0.078328386
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.9572518
+        inSlope: 0.0497174
+        outSlope: 0.0497174
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.9591884
+        inSlope: -0.09958215
+        outSlope: -0.09958215
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.9680825
+        inSlope: 0.08251841
+        outSlope: 0.08251841
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 0.96333975
+        inSlope: 0.07697805
+        outSlope: 0.07697805
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9591884
+        inSlope: -0.11041445
+        outSlope: -0.11041445
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.95918846
+        inSlope: -0.10695076
+        outSlope: -0.10695076
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.45833334
+        value: 0.9647759
+        inSlope: 0.07832123
+        outSlope: 0.07832123
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.95725185
+        inSlope: 0.049720977
+        outSlope: 0.049720977
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 0.95918846
+        inSlope: -0.099582866
+        outSlope: -0.099582866
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.9680825
+        inSlope: 0.0825177
+        outSlope: 0.0825177
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 0.96334016
+        inSlope: 0.07697662
+        outSlope: 0.07697662
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.95918846
+        inSlope: -0.11041302
+        outSlope: -0.11041302
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9876102
+        inSlope: 0.004650593
+        outSlope: 0.004650593
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.875
+        value: 0.97842145
+        inSlope: -0.03327871
+        outSlope: -0.03327871
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.75
+        value: 0.9866281
+        inSlope: -0.003928898
+        outSlope: -0.003928898
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 0.97663254
+        inSlope: -0.03040761
+        outSlope: -0.03040761
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9876102
+        inSlope: 0.01502615
+        outSlope: 0.01502615
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.98760605
+        inSlope: 0.0046520233
+        outSlope: 0.0046520233
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.875
+        value: 0.97841763
+        inSlope: -0.03327871
+        outSlope: -0.03327871
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.75
+        value: 0.98662394
+        inSlope: -0.0039281826
+        outSlope: -0.0039281826
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 0.97662866
+        inSlope: -0.030404033
+        outSlope: -0.030404033
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.98760605
+        inSlope: 0.015021859
+        outSlope: 0.015021859
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.9876067
+        inSlope: 0.004650593
+        outSlope: 0.004650593
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.875
+        value: 0.97841823
+        inSlope: -0.03327728
+        outSlope: -0.03327728
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.75
+        value: 0.98662454
+        inSlope: -0.0039281826
+        outSlope: -0.0039281826
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 0.9766292
+        inSlope: -0.030404033
+        outSlope: -0.030404033
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 0.9876067
+        inSlope: 0.01502615
+        outSlope: 0.01502615
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: m_LocalScale.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  m_EulerEditorCurves:
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 44.209625
+        inSlope: -6.243408
+        outSlope: -6.243408
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 44.226963
+        inSlope: -5.832718
+        outSlope: -5.832718
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 44.209625
+        inSlope: -5.9699707
+        outSlope: -5.967041
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: 45.036343
+        inSlope: 3.4047775
+        outSlope: 3.4041686
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: 44.36846
+        inSlope: 5.6578493
+        outSlope: 5.661438
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 44.209625
+        inSlope: -6.3688965
+        outSlope: -6.3688965
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -1.1696768
+        inSlope: 0.96831894
+        outSlope: 0.96831894
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -1.1077551
+        inSlope: 0.9355979
+        outSlope: 0.9355979
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -1.1696768
+        inSlope: -2.2785683
+        outSlope: -2.3036556
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: -1.6206268
+        inSlope: -1.3363588
+        outSlope: -1.340669
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: -1.9049747
+        inSlope: 2.5350163
+        outSlope: 2.5092068
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -1.1696768
+        inSlope: 1.0754318
+        outSlope: 1.0754318
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.6913715
+        inSlope: -0.13014388
+        outSlope: -0.13014388
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -1.0248197
+        inSlope: 1.983129
+        outSlope: 1.983129
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.6913715
+        inSlope: -2.6428392
+        outSlope: -2.6673226
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2
+        value: -1.5638672
+        inSlope: -1.4596617
+        outSlope: -1.4638475
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.625
+        value: -1.2061335
+        inSlope: 2.6529174
+        outSlope: 2.6273394
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.6913715
+        inSlope: 0.06087923
+        outSlope: 0.06087923
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 25.691864
+        inSlope: -5.581665
+        outSlope: -5.581665
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: 25.567987
+        inSlope: -4.2057877
+        outSlope: -4.2057877
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 25.691864
+        inSlope: -5.0319214
+        outSlope: -5.031285
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: 26.112951
+        inSlope: -2.5791612
+        outSlope: -2.5793495
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 26.48124
+        inSlope: 2.7688751
+        outSlope: 2.7697332
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 25.691864
+        inSlope: -5.9228897
+        outSlope: -5.9228897
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.8205741
+        inSlope: 0.073678255
+        outSlope: 0.073678255
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.78302646
+        inSlope: 1.4913588
+        outSlope: 1.4913588
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.8205741
+        inSlope: -2.3577182
+        outSlope: -2.3601766
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: -1.6085361
+        inSlope: -1.1575048
+        outSlope: -1.1580484
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -1.0478649
+        inSlope: 1.6313667
+        outSlope: 1.628312
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.8205741
+        inSlope: 0.14378671
+        outSlope: 0.14378671
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.6092041
+        inSlope: -0.75849605
+        outSlope: -0.75849605
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.75
+        value: -0.59402394
+        inSlope: 2.3171968
+        outSlope: 2.3171968
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -0.6092041
+        inSlope: -2.7107055
+        outSlope: -2.7130537
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.2083335
+        value: -1.3079122
+        inSlope: 0.17787093
+        outSlope: 0.17599511
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.58578074
+        inSlope: 0.9110162
+        outSlope: 0.9071144
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.6092041
+        inSlope: -0.70833594
+        outSlope: -0.70833594
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 31.350567
+        inSlope: -6.6895027
+        outSlope: -6.6895027
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 30.78944
+        inSlope: -4.7394295
+        outSlope: -4.73703
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: 31.350567
+        inSlope: -5.269932
+        outSlope: -5.2717743
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: 31.750856
+        inSlope: -1.4668655
+        outSlope: -1.4671277
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: 31.841866
+        inSlope: 4.6546316
+        outSlope: 4.6548395
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 31.350567
+        inSlope: -6.585172
+        outSlope: -6.585172
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -1.4996011
+        inSlope: -0.5120288
+        outSlope: -0.5120288
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.98617727
+        inSlope: 3.6518042
+        outSlope: 3.6585195
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -1.4996011
+        inSlope: -4.7124977
+        outSlope: -4.7077723
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: -2.5936856
+        inSlope: -0.28907585
+        outSlope: -0.2880855
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: -1.7087784
+        inSlope: 2.2836726
+        outSlope: 2.2811055
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -1.4996011
+        inSlope: -0.5075878
+        outSlope: -0.5075878
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -1.1331406
+        inSlope: -1.0049888
+        outSlope: -1.0049888
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -0.43206385
+        inSlope: 3.2289243
+        outSlope: 3.235909
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.5
+        value: -1.1331406
+        inSlope: -3.894492
+        outSlope: -3.889557
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.25
+        value: -1.5611362
+        inSlope: 0.74533844
+        outSlope: 0.7454909
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.6666667
+        value: -0.9633423
+        inSlope: 0.6915454
+        outSlope: 0.68796426
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -1.1331406
+        inSlope: -1.1022723
+        outSlope: -1.1022723
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -10.472812
+        inSlope: -10.563663
+        outSlope: -10.563663
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: -9.370955
+        inSlope: 10.710235
+        outSlope: 10.7103195
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -11.656745
+        inSlope: -15.19001
+        outSlope: -15.188492
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: -9.940543
+        inSlope: -4.407829
+        outSlope: -4.408656
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: -9.630941
+        inSlope: 13.874786
+        outSlope: 13.876194
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: -8.504557
+        inSlope: -11.909642
+        outSlope: -11.906912
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: -11.129521
+        inSlope: 10.864192
+        outSlope: 10.864199
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -10.472812
+        inSlope: -10.936983
+        outSlope: -10.936983
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 179.65308
+        inSlope: 3.6043944
+        outSlope: 3.6043944
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: -179.42802
+        inSlope: 0.16270751
+        outSlope: 0.1619873
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: -179.54791
+        inSlope: -0.633667
+        outSlope: -0.6077636
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: 179.67221
+        inSlope: -0.36665034
+        outSlope: -0.35661626
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: 179.40614
+        inSlope: -1.4982057
+        outSlope: -1.4904326
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: 178.86223
+        inSlope: -1.4604949
+        outSlope: -1.479968
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: 178.675
+        inSlope: 0.7807982
+        outSlope: 0.7807986
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 179.65308
+        inSlope: 3.591432
+        outSlope: 3.591432
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 178.86882
+        inSlope: -2.4577513
+        outSlope: -2.4577513
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4166667
+        value: 177.849
+        inSlope: 0.6431396
+        outSlope: 0.6430664
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7916667
+        value: 178.31003
+        inSlope: -2.4050293
+        outSlope: -2.4039547
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.4166667
+        value: 178.54
+        inSlope: 3.6507566
+        outSlope: 3.6480105
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.8333334
+        value: 179.46606
+        inSlope: -2.454346
+        outSlope: -2.4505002
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.1666667
+        value: -179.91695
+        inSlope: 6.4702597
+        outSlope: 6.4775376
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.5833335
+        value: -179.60706
+        inSlope: -3.9717765
+        outSlope: -3.9717789
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 178.86882
+        inSlope: -2.5315804
+        outSlope: -2.5315804
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.9131116
+        inSlope: 1.6384573
+        outSlope: 1.6384573
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.36061403
+        inSlope: 0.7232214
+        outSlope: 0.7226119
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: -0.8590824
+        inSlope: -1.2221724
+        outSlope: -1.2212632
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.09536988
+        inSlope: 2.0427759
+        outSlope: 2.0427754
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -1.0558916
+        inSlope: -0.6221365
+        outSlope: -0.6245081
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.9131116
+        inSlope: 1.3500139
+        outSlope: 1.3500139
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.2835161
+        inSlope: 0.4803993
+        outSlope: 0.4803993
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 0.11209877
+        inSlope: 0.2098807
+        outSlope: 0.20877422
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: -0.2679066
+        inSlope: -0.33401683
+        outSlope: -0.33230424
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 0.02987079
+        inSlope: 0.61391526
+        outSlope: 0.6139152
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: -0.32858866
+        inSlope: -0.14542314
+        outSlope: -0.14982429
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.2835161
+        inSlope: 0.3894674
+        outSlope: 0.3894674
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 18.808567
+        inSlope: 5.505059
+        outSlope: 5.505059
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5416667
+        value: 18.859224
+        inSlope: -3.6658945
+        outSlope: -3.6658716
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.2083334
+        value: 18.971615
+        inSlope: -5.008169
+        outSlope: -5.0082245
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.9583334
+        value: 19.153648
+        inSlope: -5.1966248
+        outSlope: -5.196624
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.7083335
+        value: 18.89275
+        inSlope: -4.772292
+        outSlope: -4.772346
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 18.808567
+        inSlope: 4.5473614
+        outSlope: 4.5473614
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001/\uBF08\uB300.006"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -0.61241776
+        inSlope: 0.5496226
+        outSlope: 0.5496226
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: -0.68880975
+        inSlope: 1.6588799
+        outSlope: 1.660282
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: -0.9373044
+        inSlope: -1.776219
+        outSlope: -1.7757459
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: -1.796526
+        inSlope: 1.4151688
+        outSlope: 1.4152845
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -0.61241776
+        inSlope: 0.7165763
+        outSlope: 0.7165763
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.z
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: -1.1447943
+        inSlope: 1.6696945
+        outSlope: 1.6696945
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: -0.7342226
+        inSlope: -0.8198183
+        outSlope: -0.81647724
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: -1.2201511
+        inSlope: 0.15198746
+        outSlope: 0.15263796
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: -1.7242956
+        inSlope: -1.0287209
+        outSlope: -1.0272659
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: -1.1447943
+        inSlope: 1.5705148
+        outSlope: 1.5705148
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.y
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 50.364017
+        inSlope: -0.96685654
+        outSlope: -0.96685654
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9583334
+        value: 49.690323
+        inSlope: -2.90746
+        outSlope: -2.90821
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1.6666667
+        value: 50.09745
+        inSlope: -2.088081
+        outSlope: -2.0880432
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.4166667
+        value: 49.626198
+        inSlope: -3.0609436
+        outSlope: -3.0614583
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 3
+        value: 50.364017
+        inSlope: 1.1665716
+        outSlope: 1.1665716
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    attribute: localEulerAngles.x
+    path: "\uC544\uB9C8\uCE04\uC5B4/\uBF08\uB300.005/CTRL_Body/BaseHumanBone/MCH-hand_ik.parent.R/hand_ik.R/lasso.001/\uBF08\uB300/\uBF08\uB300.004/\uBF08\uB300.002/\uBF08\uB300.005/\uBF08\uB300.001"
+    classID: 4
+    script: {fileID: 0}
+    flags: 0
+  m_HasGenericRootTransform: 0
+  m_HasMotionFloatCurves: 0
+  m_Events: []

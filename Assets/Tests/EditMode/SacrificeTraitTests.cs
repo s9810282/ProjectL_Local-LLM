@@ -427,7 +427,7 @@ namespace ProjectL.Tests.Core
             Assert.That(result.Events.OfType<CombatEffectsEvent>().SelectMany(e => e.Traits)
                 .Any(t => t.TraitActivationKind == TraitActivationKind.InstantDefeat), Is.False);
             Assert.That(result.Events.OfType<CombatCharacterEvent>().Any(e => e.DamageCause == CombatDamageCause.InstantDefeat), Is.False);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [TestCase(false)]

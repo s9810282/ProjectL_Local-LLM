@@ -4,6 +4,7 @@ using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Base;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 
 namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
 {
@@ -15,6 +16,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
         void ShowCombat();
         void ShowDevelopmentCombat();
         void ShowTitle();
+        /// <summary>로비 Scope의 메인 선택을 읽습니다. 반환값을 폐기하면 해당 연결만 해제합니다.</summary>
+        IDisposable BindLobbyMainPortrait(Func<EntityKey> readMain);
     }
 
     /// <summary>씬별 표시 정책을 UI 등록·화면 이력 구현과 분리합니다.</summary>
@@ -41,6 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
             }
             main.SetHealthBarVisible(false);
             main.SetGoldVisible(false);
+            main.SetLobbyPortrait(true);
             _ui.OpenUI(UIId.AfterTitle);
             _ui.OpenUI(UIId.MainCharactor);
             _ui.OpenChildUI(UIId.MainCharactor, UIId.Reputation);
@@ -51,6 +55,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
         public void ShowCombat()
         {
             var main = Main;
+            main.SetLobbyPortrait(false);
             // Lobby에서 닫은 유지 UI를 기존 스테이지·전투 표시로 복원합니다.
             _ui.OpenGlobalUI();
             _ui.OpenUI(UIId.MainCharactor);
@@ -72,6 +77,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem
             foreach (var pair in _globals)
                 if (pair.Key != UIId.Setting && pair.Key != UIId.Loading && pair.Value != null) _ui.CloseUI(pair.Key);
         }
+
+        public IDisposable BindLobbyMainPortrait(Func<EntityKey> readMain) => Main.BindLobbyMainPortrait(readMain);
 
         private MainCharactorUI Main => _globals.TryGetValue(UIId.MainCharactor, out var view) && view is MainCharactorUI main
             ? main : throw new InvalidOperationException("[GlobalUIPresentation] MainCharactor UI가 등록되어야 재화 표시를 전환할 수 있습니다.");

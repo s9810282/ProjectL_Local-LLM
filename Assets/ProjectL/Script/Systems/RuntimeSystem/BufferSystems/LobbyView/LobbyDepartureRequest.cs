@@ -1,4 +1,5 @@
 using System;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 
 namespace ProjectL.Systems.RuntimeSystem.BufferSystems.LobbyView
@@ -21,10 +22,18 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.LobbyView
     /// <see cref="IsRejected"/>·<see cref="IsFaulted"/>·<see cref="IsQueued"/>·<see cref="IsPrepared"/>·
     /// <see cref="IsTransitionSucceeded"/>)만 읽고, 단계는 View 취소와 실행 계층 Job만 바꿉니다.
     /// 단계를 바꿀 수 있는지는 <see cref="CanMove"/> 표 한 곳이 정합니다(로비 재구성 설계 §4.7).
+    /// 출발할 메인 키(<see cref="MainCharacterKey"/>)는 생성 때 한 번 정해지고 이후 바뀌지 않습니다.
     /// </remarks>
     public sealed class LobbyDepartureRequest : ILobbyDepartureState
     {
         public int Number { get; }
+
+        /// <summary>
+        /// 제출 때 고른 다음 Run 메인 키입니다. null이면 로드아웃 기본 메인으로 시작합니다.
+        /// 값이 있으면 <see cref="EntityKey.None"/>이라도 그대로 Core에 넘기며 기본값으로 바꾸지 않습니다(로비 메인 선택 설계 LM4).
+        /// </summary>
+        public EntityKey? MainCharacterKey { get; }
+
         public LobbyDepartureStatus Status { get; private set; }
         public RosterAcquireResult Result { get; private set; }
 
@@ -57,11 +66,12 @@ namespace ProjectL.Systems.RuntimeSystem.BufferSystems.LobbyView
         /// <remarks>전환 단계는 성공 결과(Prepared)에서만 오므로 단계만 봅니다(로비 리팩토링 2차 설계 N-20).</remarks>
         public bool IsTransitionSucceeded => Status == LobbyDepartureStatus.Transitioning;
 
-        internal LobbyDepartureRequest(int number)
+        internal LobbyDepartureRequest(int number, EntityKey? mainCharacterKey)
         {
             if (number < 1)
                 throw new ArgumentOutOfRangeException(nameof(number));
             Number = number;
+            MainCharacterKey = mainCharacterKey;
         }
 
         /// <summary>시작 전(제출만 된) 요청만 취소합니다. 등록된 Job은 취소된 요청을 보고 Core를 부르지 않습니다.</summary>

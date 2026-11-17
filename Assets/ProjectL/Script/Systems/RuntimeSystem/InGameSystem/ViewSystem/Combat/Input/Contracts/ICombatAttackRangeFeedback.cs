@@ -32,7 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.Co
         void ClearAttackBlockers();
 
         /// <summary>Core 응답의 대상별 예상 잔여 체력으로 이전 프리뷰를 교체합니다.</summary>
-        void ShowAttackHealthPreview(ReadOnlyMemory<AttackTargetPreview> targets);
+        void ShowAttackHealthPreview(in AttackPreview attack);
 
         /// <summary>예상 체력을 실제 체력 표시로 복원합니다.</summary>
         void ClearAttackHealthPreview();

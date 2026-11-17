@@ -29,11 +29,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public IReadOnlyList<EntityId> BlockingStructureIds { get; }
         public IReadOnlyList<EntityId> CharacterIds { get; }
         public bool IsWallOccupied { get; }
+        public bool IsGimmickBlocked { get; }
 
         public CellEnvironmentSnapshot(CellCoord cell, bool isInside,
             IReadOnlyList<long> terrainSourceIds, IReadOnlyList<long> objectSourceIds,
             IReadOnlyList<EntityId> obstacleIds, IReadOnlyList<EntityId> blockingStructureIds,
-            IReadOnlyList<EntityId> characterIds, bool isWallOccupied = false)
+            IReadOnlyList<EntityId> characterIds, bool isWallOccupied = false, bool isGimmickBlocked = false)
         {
             var terrain = EnvironmentSemanticBindings.CopySourceIds(terrainSourceIds, nameof(terrainSourceIds));
             var objects = EnvironmentSemanticBindings.CopySourceIds(objectSourceIds, nameof(objectSourceIds));
@@ -51,6 +52,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             Cell = cell;
             IsInside = isInside;
             IsWallOccupied = isWallOccupied;
+            if (isGimmickBlocked && !isInside) throw new ArgumentException("보드 밖에 기믹 점유를 표시할 수 없습니다.");
+            IsGimmickBlocked = isGimmickBlocked;
             TerrainSourceIds = Array.AsReadOnly(terrain);
             ObjectSourceIds = Array.AsReadOnly(objects);
             ObstacleIds = Array.AsReadOnly(obstacles);

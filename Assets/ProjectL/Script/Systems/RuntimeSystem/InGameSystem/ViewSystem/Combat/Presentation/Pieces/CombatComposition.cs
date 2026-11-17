@@ -156,7 +156,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         internal CombatPieceScope Scope { get; }
 
-        /// <summary>행동 실행이 진행하는 동안 뒤 재생기(걸음·반응)의 Tick을 멈추는지입니다. 다른 행동 실행과 달리 필드 행동(<see cref="ForFieldAction"/>)은 멈추지 않습니다.</summary>
+        /// <summary>
+        /// 행동 실행이 히트 전인 동안 뒤 재생기(걸음 등)의 Tick을 멈추는지입니다. 같은 조각 실행 재생기 안의 유닛 실행(피격·사망 반응 포함)은 멈추지 않습니다.
+        /// 다른 행동 실행과 달리 필드 행동(<see cref="ForFieldAction"/>)은 멈추지 않습니다.
+        /// </summary>
         internal bool PausesOtherPlayers { get; }
 
         /// <summary>유닛 실행의 주체입니다. 행동 실행이면 비어 있습니다.</summary>
@@ -205,7 +208,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
 
         /// <summary>
         /// 유닛 연출을 기다리지 않고 함께 진행하는 필드 행동(움직이는 토네이도)의 조립을 시작합니다. 행동 실행이라 다음 사건은 막지만,
-        /// 진행 중인 걸음·반응은 멈추지 않습니다(토네이도 View 설계 TN10).
+        /// 진행 중인 걸음은 멈추지 않습니다(토네이도 View 설계 TN10, 피격·사망 반응은 유닛 실행이라 원래 멈추지 않음).
         /// </summary>
         internal static CombatComposition ForFieldAction() =>
             new(CombatPieceScope.Action, EntityId.Empty, false, CombatPieceCompletion.General, pausesOtherPlayers: false);
@@ -229,24 +232,33 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
         internal bool IsEmpty => _items.Count == 0;
 
         /// <summary>
-        /// 이 유닛 실행이 주체의 밀림 걸음(넉백 등 밀린 이동)을 막지 않는지입니다(넉백 피격 연출, 임시 — 2026-11-11 사용자 "피격과 동시에 밀림").
-        /// 밀림과 함께 가는 피격(자세를 빌리지 않아 걸음 배치와 겹칠 수 있음)만 켭니다. 피격과 밀림 사이에 끼는 그 주체의 특성 발동·상태 사건도 막지 않고,
-        /// 그 주체의 다른 캐릭터 사건(피격·사망 등)과 행동·출처를 여는 사건은 이 실행이 끝날 때까지 기다립니다(판정은 조각 실행 재생기 <c>PassesPushAlongsideHit</c>).
+        /// 이 유닛 실행이 그 주체의 어떤 사건을 막지 않거나 어떤 사건에 끊기는지의 규칙입니다(피격 구조 정리 설계 HC3). 없으면 null이고 지금처럼 주체 막기 규칙만 씁니다.
+        /// 지금 쓰는 곳은 밀림과 함께 가는 피격(<c>CombatPushAlongsidePass</c>)과 연발 앞 탄의 접촉 피격(<c>CombatNextHitPass</c>)입니다.
+        /// 조각 실행 재생기는 이 규칙에 묻기만 하고 사건 지식을 갖지 않습니다.
         /// </summary>
-        internal bool AllowsSubjectPush { get; private set; }
+        internal ICombatRunSubjectPass SubjectPass { get; private set; }
 
-        /// <summary>이 유닛 실행이 주체의 밀림 걸음을 막지 않게 합니다(<see cref="AllowsSubjectPush"/>). 자세 채널을 빌리는 실행은 거절합니다.</summary>
-        internal CombatComposition AllowSubjectPush()
+        /// <summary>
+        /// 통과 규칙 하나를 줍니다(<see cref="SubjectPass"/>). 사망이 아닌 유닛 실행에만, 한 번만 줍니다(계획 TP-3).
+        /// 규칙이 자세를 막으면(<see cref="ICombatRunSubjectPass.ForbidsPose"/>) 이미 적은 자세 대여를 거절하고, 뒤의 자세 대여도 <see cref="Lease"/>가 거절합니다.
+        /// </summary>
+        internal CombatComposition PassSubject(ICombatRunSubjectPass pass)
         {
             RequireOpen();
-            if (Scope != CombatPieceScope.Unit)
-                throw new InvalidOperationException("[CombatComposition] 밀림 걸음과 겹치는 것은 유닛 실행만 됩니다.");
-            for (int i = 0; i < _leases.Count; i++)
+            if (pass == null) throw new ArgumentNullException(nameof(pass));
+            if (Scope != CombatPieceScope.Unit || IsDeath)
+                throw new InvalidOperationException("[CombatComposition] 통과 규칙은 사망이 아닌 유닛 실행에만 줍니다.");
+            if (SubjectPass != null)
+                throw new InvalidOperationException("[CombatComposition] 통과 규칙은 하나만 줍니다.");
+            if (pass.ForbidsPose)
             {
-                if (_leases[i].Channel == CombatPieceChannel.Pose)
-                    throw new InvalidOperationException("[CombatComposition] 자세를 빌리는 실행은 밀림 걸음과 겹칠 수 없습니다(걸음 배치와 함께 못 씀).");
+                for (int i = 0; i < _leases.Count; i++)
+                {
+                    if (_leases[i].Channel == CombatPieceChannel.Pose)
+                        throw new InvalidOperationException("[CombatComposition] 자세를 빌리는 실행에는 자세를 막는 통과 규칙을 줄 수 없습니다(걸음 배치와 함께 못 씀).");
+                }
             }
-            AllowsSubjectPush = true;
+            SubjectPass = pass;
             return this;
         }
 
@@ -261,8 +273,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presenta
                 throw new ArgumentOutOfRangeException(nameof(channel));
             if (IsSceneChannel(channel))
                 throw new ArgumentException($"[CombatComposition] 장면 채널은 전용 함수로 빌립니다: {channel}", nameof(channel));
-            if (AllowsSubjectPush && channel == CombatPieceChannel.Pose)
-                throw new InvalidOperationException("[CombatComposition] 밀림 걸음과 겹치는 실행은 자세를 빌릴 수 없습니다.");
+            if (SubjectPass?.ForbidsPose == true && channel == CombatPieceChannel.Pose)
+                throw new InvalidOperationException("[CombatComposition] 자세를 막는 통과 규칙이 있는 실행은 자세를 빌릴 수 없습니다(걸음 배치와 함께 못 씀).");
             for (int i = 0; i < _leases.Count; i++)
             {
                 if (_leases[i].Unit == unit && _leases[i].Channel == channel)

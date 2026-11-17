@@ -12,6 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
         [SerializeField] private Button button;
         [SerializeField] private Image icon;
         [SerializeField] private TMP_Text nameText;
+        [SerializeField] private Image levelBadge;
+        [SerializeField] private TMP_Text levelText;
         [Tooltip("공용 설명창의 표시 위치입니다. 전투 정보창에서는 아이콘 내부에 연결합니다.")]
         [SerializeField] private RectTransform tooltipAnchor;
 
@@ -25,7 +27,7 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': abilitySlots[{index}].tooltipAnchor는 아이콘 내부의 별도 기준점이어야 합니다.");
         }
 
-        internal void Validate(Transform owner, string field, bool requireName = false)
+        internal void Validate(Transform owner, string field, bool requireName = false, bool requireLevel = false)
         {
             if (button == null || icon == null)
                 throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': {field}.button·icon 참조가 필요합니다.");
@@ -37,6 +39,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': {field}.nameText(AbilIcon/Name) 참조가 필요합니다.");
             if (nameText != null && (nameText.transform == icon.transform || !nameText.transform.IsChildOf(icon.transform)))
                 throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': {field}.nameText는 아이콘 내부의 별도 텍스트여야 합니다.");
+            // 등급 배지를 쓰는 슬롯만 두 참조를 연결합니다.
+            if (requireLevel || levelBadge != null || levelText != null)
+            {
+                if (levelBadge == null || levelText == null)
+                    throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': {field}.levelBadge·levelText 참조가 필요합니다.");
+                Transform badge = levelBadge.transform;
+                if (badge.parent != button.transform || icon.transform.IsChildOf(badge) ||
+                    levelText.transform.parent != badge || levelBadge.raycastTarget || levelText.raycastTarget)
+                    throw new InvalidOperationException($"[UnitAbilitySlot] '{owner.name}': {field}.levelBadge는 버튼의 별도 자식이며 levelText를 포함해야 합니다. 두 그래픽의 Raycast Target은 꺼야 합니다.");
+            }
         }
 
         internal void Render(UnitCardTraitContent content, bool visible)
@@ -47,10 +59,16 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
             if (icon.sprite != sprite) icon.sprite = sprite;
             icon.enabled = visible && sprite != null;
             if (nameText != null) nameText.text = Content.Name ?? string.Empty;
+            if (levelText != null)
+            {
+                string label = Content.FormatLevel();
+                levelText.text = label;
+                levelBadge.gameObject.SetActive(label.Length > 0);
+            }
             if (button.gameObject.activeSelf != visible) button.gameObject.SetActive(visible);
         }
 
-        /// <summary>목록 갱신 때만 호출합니다. 아이콘의 자식 인덱스를 따라 복제본의 참조를 연결합니다.</summary>
+        /// <summary>목록 갱신 때만 호출합니다. 버튼의 자식 인덱스를 따라 복제본의 참조를 연결합니다.</summary>
         internal UnitAbilitySlot Clone(Transform parent)
         {
             Button clone = UnityEngine.Object.Instantiate(button, parent, false);
@@ -61,6 +79,10 @@ namespace ProjectL.Systems.RuntimeSystem.GlobalSystem.UISystem.Screens.Global
                 icon = MapTransform(icon.transform, button.transform, clone.transform).GetComponent<Image>(),
                 nameText = nameText == null ? null :
                     MapTransform(nameText.transform, button.transform, clone.transform).GetComponent<TMP_Text>(),
+                levelBadge = levelBadge == null ? null :
+                    MapTransform(levelBadge.transform, button.transform, clone.transform).GetComponent<Image>(),
+                levelText = levelText == null ? null :
+                    MapTransform(levelText.transform, button.transform, clone.transform).GetComponent<TMP_Text>(),
                 tooltipAnchor = tooltipAnchor == null ? null :
                     (RectTransform)MapTransform(tooltipAnchor, button.transform, clone.transform)
             };

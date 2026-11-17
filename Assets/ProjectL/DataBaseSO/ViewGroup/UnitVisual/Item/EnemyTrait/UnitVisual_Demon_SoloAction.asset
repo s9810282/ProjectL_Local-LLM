@@ -33,3 +33,10 @@ MonoBehaviour:
     obstacleDestroyedCues:
       effects: []
       shakes: []
+    attackSounds: []
+    hitSounds: []
+    deathSounds:
+    - sound: 5
+      anchor: 1
+      contactFilter: 1
+      delay: 0

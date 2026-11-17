@@ -22,13 +22,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         }
 
-        public void BindActions(Action attack, Action endTurn, Action returnToCheckpoint)
+        public void BindActions(Action attack, Action endTurn, Action returnToCheckpoint, Action skill)
         {
             // 해제 뒤 새 연결은 무시하지만, 연결 해제(모두 null)는 정리 콜백이므로 항상 전달한다.
-            bool unbind = attack == null && endTurn == null && returnToCheckpoint == null;
+            bool unbind = attack == null && endTurn == null && returnToCheckpoint == null && skill == null;
             if (_lifetime.IsReleased && !unbind)
                 return;
-            _actions.Bind(attack, endTurn, returnToCheckpoint);
+            _actions.Bind(attack, endTurn, returnToCheckpoint, skill);
         }
 
         public void SetActionsAvailable(in CombatActionButtons buttons)
@@ -41,6 +41,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         internal void Hide() => _actions.SetAvailable(default);
 
         /// <summary>씬 연결 해제 때 세 입구 연결을 끊습니다.</summary>
-        internal void Unbind() => _actions.Bind(null, null, null);
+        internal void Unbind() => _actions.Bind(null, null, null, null);
     }
 }

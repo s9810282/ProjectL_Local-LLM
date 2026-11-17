@@ -23,7 +23,6 @@ MonoBehaviour:
     attackPresentation: {fileID: 0}
     reactionPresentation: {fileID: 0}
     unitSoundPreset: -1
-    attackSoundSlotIndex: -1
     obstacleHitCues:
       effects: []
       shakes: []
@@ -36,3 +35,6 @@ MonoBehaviour:
         positionOffset: {x: 0, y: 0, z: 0}
         rotationOffset: {x: -90, y: 0, z: 0}
       shakes: []
+    attackSounds: []
+    hitSounds: []
+    deathSounds: []

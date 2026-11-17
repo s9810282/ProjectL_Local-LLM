@@ -19,7 +19,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
                 final.SpecializationCategory != CategoryKey.Cannon ||
                 expected.Id != final.Id || expected.CharacterKey != final.CharacterKey || expected.Role != final.Role ||
                 expected.Level != final.Level || expected.Experience != final.Experience ||
-                expected.HunterAttackBonus != final.HunterAttackBonus || !expected.SameGrowth(final))
+                expected.HunterAttackBonus != final.HunterAttackBonus ||
+                expected.PlayerSkillUpgrade != final.PlayerSkillUpgrade || !expected.SameGrowth(final))
                 throw new ArgumentException("전직은 미전직 메인의 병과만 Rider·Heavy·Cannon 중 하나로 바꿀 수 있습니다.", nameof(final));
         }
     }

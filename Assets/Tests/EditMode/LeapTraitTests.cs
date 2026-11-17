@@ -161,9 +161,8 @@ namespace ProjectL.Tests.Core
             var input = MovementTestData.SafeRoute(CellCoord.Zero,CellCoord.Right,new CellCoord(2, 0),new CellCoord(3, 0));
             input = TraitCombatFixtures.Equip(input, EntityKey.Unit_Akimbo, new LeapTraitSpec(), new GroundCompactionTraitSpec(1, 1));
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == input.ActorId
-                ? c.WithHealth(new HealthStateSnapshot(3, 100)) : c).ToArray(), state: input.State.With(
-                    thornFields: new[] { new ThornFieldCellSnapshot(CellCoord.Right, 3, 4) }));
-            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new ThornMovementTileRule() });
+                ? c.WithHealth(new HealthStateSnapshot(3, 100)) : c).ToArray(), state: EnvironmentDamageTests.WithDamageTiles(input.State, (CellCoord.Right, 4)));
+            var result = CombatCommandCalculator.Calculate(input, new IMovementTileRule[] { new EnvironmentDamageTests.DamageRule() });
             Assert.That(result.Accepted, Is.True, result.Reason);
             Assert.That(result.PathMovement.DistanceSpent, Is.EqualTo(1));
             Assert.That(result.PathMovement.EnteredCells, Is.EqualTo(new[] { CellCoord.Right }));

@@ -13,6 +13,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
         public UnitTraitData Enhanced { get; }
         public TraitRankValues Rank2 { get; }
         public TraitRankValues Rank3 { get; }
+        public bool AllowUnchangedRankValues { get; }
         public bool IsTrainable => Rank2 != null;
         public string Name { get; }
         public string Description { get; }
@@ -20,14 +21,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
         public string EnhancedDescription { get; }
 
         public TraitGrowthDefinitionData(UnitTraitData normal, UnitTraitData enhanced, string name, string description,
-            string enhancedName, string enhancedDescription, TraitRankValues rank2 = null, TraitRankValues rank3 = null)
-            : this(TraitGrowthGroup.Common, normal, enhanced, name, description, enhancedName, enhancedDescription, rank2, rank3)
+            string enhancedName, string enhancedDescription, TraitRankValues rank2 = null, TraitRankValues rank3 = null,
+            bool allowUnchangedRankValues = false)
+            : this(TraitGrowthGroup.Common, normal, enhanced, name, description, enhancedName, enhancedDescription, rank2, rank3,
+                allowUnchangedRankValues)
         {
         }
 
         public TraitGrowthDefinitionData(TraitGrowthGroup group, UnitTraitData normal, UnitTraitData enhanced, string name,
             string description, string enhancedName, string enhancedDescription, TraitRankValues rank2 = null,
-            TraitRankValues rank3 = null)
+            TraitRankValues rank3 = null, bool allowUnchangedRankValues = false)
         {
             if (group == TraitGrowthGroup.Unspecified || !System.Enum.IsDefined(typeof(TraitGrowthGroup), group))
                 throw new ArgumentOutOfRangeException(nameof(group), group, "특성 성장 그룹을 명시해야 합니다.");
@@ -46,6 +49,7 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.TraitGrowth.Item
             }
             Rank2 = rank2;
             Rank3 = rank3;
+            AllowUnchangedRankValues = allowUnchangedRankValues;
             Group = group;
             Normal = normal;
             Enhanced = enhanced;

@@ -11,7 +11,7 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Presentation
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.Map
 {
     /// <summary>
-    /// 필드와 그 위 물체(격자·바닥 타일 바탕·선로·오브젝트·지형·특성 흔적·기믹·가시밭)의 구성과 그리기입니다(씬 표시 나누기 설계 DS5).
+    /// 필드와 그 위 물체(격자·바닥 타일 바탕·선로·오브젝트·지형·특성 흔적·기믹)의 구성과 그리기입니다(씬 표시 나누기 설계 DS5).
     /// </summary>
     /// <remarks>
     /// 언제 부를지와 정리·해제 목록의 차례는 표시(<see cref="CombatSceneDisplay"/>)가 정합니다(설계 §3.8). 여기서는 단계 본문과
@@ -31,21 +31,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         private readonly FieldObjectPresenter _objects;
         private readonly FieldTerrainPresenter _terrain;
         private readonly FieldRailwayPresenter _railway;
-        private readonly FieldThornPresenter _thorns;
         // 특성 흔적 지형(땅 다지기·먼지 연막) 표시입니다(특성 시스템 View 설계 TS7). Object·Terrain처럼 Mapper를 붙잡지 않습니다.
         private readonly FieldTrailPresenter _trails;
         // 토네이도·낙석 경고·하붑은 진입 중 보드 완성까지 보류하고, 이후에는 기존 사실대로 바로 그립니다.
         private readonly CombatEntryDeferredDisplay _deferredDisplay;
 
         /// <param name="tileSurface">배경이 맞춘 바닥 타일 높이 표입니다. 자리는 늘 넘기고(타일 높이 계획 P10), 배경이 타일 방식이 아니면 null입니다.</param>
-        /// <param name="thorns">가시밭 표시입니다(프리팹은 DB 표가 검사, View 3라운드 W12-5).</param>
         /// <param name="trails">특성 흔적 지형 표시입니다(외형은 특성 외형 표의 흔적 칸, 특성 시스템 View 설계 TS7).</param>
         /// <param name="tornado">움직이는 토네이도 표시입니다(토네이도 View 설계 TN3). 진입 보류가 그리고, 여기서는 정리·해제만 합니다.</param>
         /// <param name="rockfall">낙석 표시입니다(낙석 View 설계 RF2). 진입 보류가 그리고, 여기서는 정리·해제만 합니다.</param>
         /// <param name="haboob">하붑 구름 표시입니다(하붑 View 계획 HP-17). 진입 보류가 그리고, 여기서는 정리·해제만 합니다.</param>
         internal CombatFieldDisplay(FieldView field, StageFieldViewData config, IColorSystemService colors, IAreaOutlineSystemService areaOutlines,
             IMeshSystemService meshes, CombatMapTileSurface tileSurface, FieldObjectPresenter objects, FieldTerrainPresenter terrain,
-            FieldRailwayPresenter railway, FieldThornPresenter thorns, FieldTrailPresenter trails, FieldTornadoPresenter tornado,
+            FieldRailwayPresenter railway, FieldTrailPresenter trails, FieldTornadoPresenter tornado,
             FieldRockfallPresenter rockfall, FieldHaboobPresenter haboob, CombatEntryDeferredDisplay deferredDisplay)
         {
             _field = field != null ? field : throw new ArgumentNullException(nameof(field));
@@ -57,7 +55,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _objects = objects ?? throw new ArgumentNullException(nameof(objects));
             _terrain = terrain ?? throw new ArgumentNullException(nameof(terrain));
             _railway = railway ?? throw new ArgumentNullException(nameof(railway));
-            _thorns = thorns ?? throw new ArgumentNullException(nameof(thorns));
             _trails = trails ?? throw new ArgumentNullException(nameof(trails));
             if (tornado == null) throw new ArgumentNullException(nameof(tornado));
             if (rockfall == null) throw new ArgumentNullException(nameof(rockfall));
@@ -65,8 +62,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             _deferredDisplay = deferredDisplay ?? throw new ArgumentNullException(nameof(deferredDisplay));
 
             // Mapper를 붙잡고 스스로 진행할 수 있는 필드 표시입니다(정리 묶음 D8의 필드 몫).
-            BoundClears = new Action[] { _railway.Clear, _thorns.Clear };
-            BoundReleases = new Action[] { _railway.Release, _thorns.Release };
+            BoundClears = new Action[] { _railway.Clear };
+            BoundReleases = new Action[] { _railway.Release };
             // Mapper를 붙잡지 않는 필드 표시입니다. 설치 직전에는 비우지 않고 새 Mapper로 다시 그립니다(D8).
             ObjectClears = new Action[] { _objects.Clear, _terrain.Clear };
             ObjectReleases = new Action[] { _objects.Release, _terrain.Release };
@@ -78,10 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
         /// <summary>이번 설치의 격자입니다. 구성 전·정리·해제 뒤에는 null입니다.</summary>
         internal FieldGridMapper Mapper => _field.Mapper;
 
-        /// <summary>선로·가시밭의 정리 묶음입니다(정리 묶음 <c>_fieldBound</c>의 필드 몫).</summary>
+        /// <summary>선로의 정리 묶음입니다(정리 묶음 <c>_fieldBound</c>의 필드 몫).</summary>
         internal Action[] BoundClears { get; }
 
-        /// <summary>선로·가시밭의 해제 묶음입니다.</summary>
+        /// <summary>선로의 해제 묶음입니다.</summary>
         internal Action[] BoundReleases { get; }
 
         /// <summary>오브젝트·지형의 정리 묶음입니다.</summary>
@@ -120,7 +117,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
                 _field.RepaintSurface();
         }
 
-        /// <summary>오브젝트 → 지형 → 특성 흔적 → 기믹(진입 보류 경유) → 가시밭을 최종 사실로 그립니다.</summary>
+        /// <summary>오브젝트 → 지형 → 특성 흔적 → 기믹(진입 보류 경유)을 최종 사실로 그립니다.</summary>
         internal void RenderObjects(CombatStateData state, int stageKey)
         {
             // 격자는 단계마다 다시 읽습니다(옛 표시와 같음).
@@ -129,8 +126,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Display.
             // 특성 흔적은 바닥 지형 위에 겹칩니다. 사건 시점에 놓은 것을 최종 사실로 다시 맞춥니다(특성 시스템 View 설계 TS7).
             _trails.Render(state.Environment, _field.Mapper);
             _deferredDisplay.Render(state.Gimmicks, state.ReadTornadoAreas(Owner.Player), _field.Mapper);
-            // 새 생성 칸은 모든 사건을 재생한 뒤 전달받은 Core 목록만으로 표시합니다.
-            _thorns.Sync(state.CommandState.ThornFields, _field.Mapper);
         }
 
         /// <summary>구성한 필드를 놓습니다(정리·해제 목록의 마지막). 셀 색은 되돌리지 않습니다.</summary>

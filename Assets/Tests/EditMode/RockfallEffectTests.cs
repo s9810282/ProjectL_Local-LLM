@@ -22,7 +22,7 @@ namespace ProjectL.Tests.Core
                 .WithHealth(new HealthStateSnapshot(4, 4));
             input = CombatCommandTestData.With(input, characters: input.Characters.Select(c => c.EntityId == actor.EntityId ? actor : c).ToArray());
             var second = CombatGimmickCalculator.TryAdvance(input, new StageGimmickBoundary(Owner.Enemy, 4));
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(second.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(second.Events));
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace ProjectL.Tests.Core
                 Assert.That(after.StatusEffects.Entries.OfType<ActionRestrictionStatus>().Single().Key, Is.EqualTo(StatusEffectKey.Bind));
             }
             Assert.That(result.Events.OfType<CombatCharacterEvent>().SelectMany(e => e.DamageOrigins), Is.Empty);
-            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadAll(result.Events));
+            Assert.DoesNotThrow(() => CombatChangeEvidenceReader.ReadEventShapes(result.Events));
         }
 
         [TestCase(Owner.Player, Owner.Player)]

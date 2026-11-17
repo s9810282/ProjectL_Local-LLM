@@ -2,6 +2,7 @@
 using CombatInputProfiler = global::ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.CombatInputProfiler;
 #endif
 using System;
+using System.Linq;
 using ProjectL.Systems.RuntimeSystem.GlobalSystem.AudioSystem;
 using System.Collections.Generic;
 using ProjectL.Systems.RuntimeSystem.ErrorHandling;
@@ -398,8 +399,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
 #endif
 
             if (attack.CanAttack)
-                _feedback.ShowAffectedCells(attack.AffectedCells.ToArray(), attack.Pull,
-                    closeOutline: attack.ProjectedCategory.Key == CategoryKey.Cannon);
+            {
+                var cells = attack.AffectedCells.ToArray();
+                // 연쇄 폭발이 맞히는 칸도 영향 칸으로 보입니다. 범위는 Core가 폭발마다 주는 칸 그대로입니다(가시 폭탄 Phase 4 D4).
+                if (attack.ThornBombExplosions.Count > 0)
+                    cells = cells.Concat(attack.ThornBombExplosions.SelectMany(explosion => explosion.BlastCells)).Distinct().ToArray();
+                _feedback.ShowAffectedCells(cells, attack.Pull, closeOutline: attack.ProjectedCategory.Key == CategoryKey.Cannon);
+            }
             else
                 _feedback.ClearAffectedCells();
 
@@ -420,7 +426,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Combat.Input.In
             // 움직이는 유닛 위에 화살표가 겹치지 않게 합니다(넉백 미리보기 결정 Q-KBb1 A). 넉백은 이 요청을 보낼 때 이미 지웠습니다.
             if (attack.CanAttack && CanShowHealthPreview(facts))
             {
-                _feedback.ShowAttackHealthPreview(attack.Targets);
+                _feedback.ShowAttackHealthPreview(attack);
                 _knockback.ShowKnockbackPreview(attack);
             }
             else

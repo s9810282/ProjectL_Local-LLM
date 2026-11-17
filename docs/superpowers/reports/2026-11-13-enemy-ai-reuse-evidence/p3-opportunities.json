@@ -1,0 +1,2709 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "360ab06e9e626cd3aaffcf10fe5d279fbde66135",
+  "phase2SourceHashes": [
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs",
+      "sha256": "fc122206c6de1b5e3e3c0e8dc849e2852a04f27bcfe96e590674a0f0de9d792d"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs",
+      "sha256": "1ce3c6ebd42ef9bd4b7e7bc59ceba4da702c11194c5692fda33d6c0e117a405c"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs",
+      "sha256": "3b7555734829b9e6b5e574fd6d0afa943d541f64a3214a1ec57abc16ed0dc71d"
+    }
+  ],
+  "phase3SourceHashes": [
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiReuseMeasurements.cs",
+      "sha256": "bfd1db748b9421dfe30a622053185aa750ae3b7908047170fa569522900d892f"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatActionAssessment.cs",
+      "sha256": "a7c2b652bf20d59a35db3ded8ce4fcd0bb1da5d84841fc36fd65e3cf9d4c9e59"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionContext.cs",
+      "sha256": "0398cab16005e1190c63c5d24219ab5851061dd51ca44fd03fee3feb0a27a90c"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAssessmentVisibilityReuseTests.cs",
+      "sha256": "07d25da6ecaf1c407f175e26e2e7dfff37d069d189bef33c916ffb868ff0b1a8"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAssessmentVisibilityReuseTests.cs.meta",
+      "sha256": "53a8e97d3eb6d29ad7f1a682122b4e0f13ad3804a71cd02457367fe9f33e68f8"
+    }
+  ],
+  "preservedPreflightHashes": [
+    {
+      "path": "Assets/Audio/FMODplus/New Fmod Event Catalog.asset",
+      "sha256": "F20461F3B4EB6BE81BAB0F1AB9D3D4918F92B27BDB20752FDBA72EE851BDEF12"
+    },
+    {
+      "path": "Assets/Plugins/FMOD/Cache/Editor/FMODStudioCache.asset",
+      "sha256": "9E4DE776DC4423C29A02F2B52A84F2EEF29AD8F482506E2226E55C4F7C091AE6"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/SCDream7 SDF.asset",
+      "sha256": "2D0D6E6985F5D6CBFE3363153700FCD91D6EFA779FD2735133166BA724D1642D"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/Unchained-Halftone SDF.asset",
+      "sha256": "4C271FB844412EDC32B6138434919E33E5E6965C84AC358CDC35AD03F84F8653"
+    },
+    {
+      "path": "Assets/ProjectL/Resources/Font/Unchained-Regular SDF.asset",
+      "sha256": "2D395118855719C9F43F441E17EB291F8EA5AE11E864A54859ED141C54351361"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/CombatAttackQueries.cs",
+      "sha256": "1CE3C6EBD42EF9BD4B7E7BC59CEBA4DA702C11194C5692FDA33D6C0E117A405C"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyAttackReach.cs",
+      "sha256": "FC122206C6DE1B5E3E3C0E8DC849E2852A04F27BCFE96E590674A0F0DE9D792D"
+    },
+    {
+      "path": "Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyEngagementField.cs",
+      "sha256": "5A905CDA3648E8474D61DC69EC57036522E778FC20FED169D06DF0CAC59CBC9A"
+    },
+    {
+      "path": "Assets/Settings/PC_RPAsset.asset",
+      "sha256": "3B9B9201519C0D40221988CB27CD52387EC41DF257FE2DD497F6684A105CB76F"
+    },
+    {
+      "path": "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset",
+      "sha256": "755598A93AAFF35A78B021B0BE8B493FF056ACB6368FB781108F9F3EFAA8224C"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CombatAttackPreparationTests.cs",
+      "sha256": "E67150E4CB5F1E2BFC45E5CE47494F31A2C456D8ED80968938E66F953B4175AA"
+    },
+    {
+      "path": "Assets/Tests/EditMode/CombatAttackPreparationTests.cs.meta",
+      "sha256": "7F8616EBB11B37613E8651569F8DA195C3B2479A93B478C2AA7873536719F8C6"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAiReuseMeasurements.cs.meta",
+      "sha256": "B2E9D7F3A3388E2040A68AB3C667E723915B03B96820CA9DBABDA9A40FCD2A05"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs",
+      "sha256": "3B7555734829B9E6B5E574FD6D0AFA943D541F64A3214A1EC57ABC16ED0DC71D"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyAttackReachReuseTests.cs.meta",
+      "sha256": "7FB0C64606C986B74F528A5EE6736C694E7CAD59C0BCF0C34ACB5139B5770998"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyDecisionReuseParityTests.cs",
+      "sha256": "E974D7BC4D6CC64AAE815C96A81544FFE4C83DA776A8EA26FC94A38FA62F7C32"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EnemyDecisionReuseParityTests.cs.meta",
+      "sha256": "F342DFBA4385C5FB58000C9E8A4BE6414DC54EF07F87FF5B8E22364A90AD1455"
+    },
+    {
+      "path": "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset",
+      "sha256": "BADE25830034A7FFCCE99BC07E08F7B7516A9F116985E1C4756BCC1ED322A4F2"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-13-enemy-ai-computation-reuse-plan.md",
+      "sha256": "A79B47A3DFBFEAC0B43DE6440E693A9E075132601F818FCD78D85ED7CFBF61FA"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-12-enemy-ai-latency-analysis.md",
+      "sha256": "15452945053EC19D68C688380C671A85F94F8B97D7A86E5CFE86EF277E52A6F9"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/baseline-manifest.json",
+      "sha256": "42AACFF95B1D3E25CA12618C45080DE1724B18312D232AE3459AC1E78D848DDD"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p0-diagnostic.patch",
+      "sha256": "5C826F04EB113DBEE943766BBB57ADCC4989A6DCA3DBF1AE63299ED5D20E4B84"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p0-opportunities.json",
+      "sha256": "8F612C5149B0A11D4657F5F4A9C88EBFFDED6901F434FB6C39345EA26A3B4688"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p0-performance.md",
+      "sha256": "1760CC62F4B8104F268FCB04AE505EB25BA4CEB01248EED6BFDE82CEFF6BE659"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p1-diagnostic.patch",
+      "sha256": "94B33B80CE684DF429323C8189195AA3B3F43F1D44678B7242490826D1CF676D"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p1-opportunities.json",
+      "sha256": "0D781B2A0689A01B5B4FC56728C6DEC4EDBF67AA9A9EE19C548639A98445CDBC"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p1-performance.md",
+      "sha256": "42DD48A5BB134C41EFD0711AA4CF718C4CEA7E6B3751CFFD7006EBC88A4539E6"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p2-opportunities.json",
+      "sha256": "D2A17C4F53DD300E57AAB30DC09FF1C74271238310E1E3CEBF72AE88B9E502FA"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-11-13-enemy-ai-reuse-evidence/p2-performance.md",
+      "sha256": "20FBC38EB6E54C3A9F45885B05C91F7510CD3CF3DB27C41A8263CD2E825B5666"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-13-enemy-ai-computation-reuse-design.md",
+      "sha256": "702069BA640DC9D2292635E866CD66E7C6C8F453A19DE8DF377CD0D024697DEA"
+    },
+    {
+      "path": "ProjectSettings/GraphicsSettings.asset",
+      "sha256": "56C816BD980CA4B9C5A33F5EF233BCAEA6C08505A1AF65AC5E5E633CE8BAD6FE"
+    },
+    {
+      "path": "ProjectSettings/ProjectSettings.asset",
+      "sha256": "C4968E25E4056B79ECE453F7B8389249FBFCA0BBA36064BDA6988AF7B2E02A23"
+    }
+  ],
+  "diagnosticPatches": [
+    {
+      "path": "Logs\\EnemyAi\\20261113-reuse-p3-audit\\p3-before-diagnostic.patch",
+      "sha256": "52c8edb416a19b6073486a7ccdd729d2ffbe691d16d309d738851e593eddf4d5"
+    },
+    {
+      "path": "Logs\\EnemyAi\\20261113-reuse-p3-audit\\p3-after-diagnostic.patch",
+      "sha256": "f35a6ecb2fce0b7c3817da9c1378c7ee83106d9718e044cefa9b35c383868493"
+    }
+  ],
+  "frozen": {
+    "references": [
+      {
+        "file": "baseline-default.json",
+        "sha256": "a04635402e16cbff4cc669ad12573fff7467e397a710bbc281f6645a49d4f7d2",
+        "tuning": [
+          50,
+          50,
+          50
+        ]
+      },
+      {
+        "file": "baseline-current-tuning.json",
+        "sha256": "f0749d18c0cbb5a0997f7b6922e7ce61c96642874b29740013233bf1525541f2",
+        "tuning": [
+          20,
+          20,
+          200
+        ]
+      }
+    ],
+    "partitions": [
+      1,
+      2,
+      31
+    ],
+    "scenariosPerProfile": 56,
+    "totalComparisons": 336
+  },
+  "verification": {
+    "focused": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p3-green",
+      "xmlSha256": "478c5e30e1ffda82adf8441f401c9bd22c64fd88f1456cfa1a85fbb62988681c",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 0.9055161,
+      "suites": {
+        "ProjectL.Tests.Core.EnemyAssessmentVisibilityReuseTests": 7
+      }
+    },
+    "restored": {
+      "directory": "Logs\\EnemyAi\\20261113-reuse-p3-verify-restored",
+      "xmlSha256": "d5830570f5f5467e87ac37ef4ca959cc42df1a5ceb8dcb26c2dce03110e44111",
+      "passed": 160,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 240.0540444,
+      "suites": {
+        "ProjectL.Tests.Core.AttackPreviewParityTests": 2,
+        "ProjectL.Tests.Core.EnemyActionAssessmentTests": 26,
+        "ProjectL.Tests.Core.EnemyAlliedExposureTests": 16,
+        "ProjectL.Tests.Core.EnemyAssessmentVisibilityReuseTests": 7,
+        "ProjectL.Tests.Core.EnemyAttackReachReuseTests": 20,
+        "ProjectL.Tests.Core.EnemyCombinedHazardAssessmentTests": 14,
+        "ProjectL.Tests.Core.EnemyDecisionBudgetTests": 6,
+        "ProjectL.Tests.Core.EnemyDecisionReuseParityTests": 6,
+        "ProjectL.Tests.Core.EnemyDecisionSideCacheTests": 4,
+        "ProjectL.Tests.Core.EnemyEffectHarmScopeTests": 20,
+        "ProjectL.Tests.Core.EnemyFollowupEstimateTests": 35,
+        "ProjectL.Tests.Core.EnemyForcedMovementAssessmentTests": 4
+      }
+    },
+    "counts": [
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-counts-before",
+        "xmlSha256": "f9be14862cb5c09d959ca89131d810bddbc55c32dd35c6ec9512c535d2a933b6",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 1.8771587,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-counts-after",
+        "xmlSha256": "54b45535da81e4eeac2347e780c9f5abd599bd269766e773f9428bd1c5df4cfe",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 1.8428841,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      }
+    ],
+    "timing": [
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-1",
+        "xmlSha256": "c6005b9416fb8d2d086f7ff66596d474380cf603ea37af9cfb868ac12505f37e",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.8196614,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-2",
+        "xmlSha256": "db6204dbdd21fd449a445d29c6fa39f29ac4924f2a626c17398d8fc6d04174ed",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.6932096,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-3",
+        "xmlSha256": "9ebd8dc870a761cb13b7bdf16ad15b49fafcfeb23f06bbbc4f302990d97f69ba",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.8458443,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-1",
+        "xmlSha256": "cb2885c826347c3b7b75920dddd03f132993e248653e21bbe544fd604706a0c6",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.7731135,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-2",
+        "xmlSha256": "1fd1c39db76d8e570a14660a0098782dd63a4255fa1efb212329ab7d6558a15c",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.8207733,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      },
+      {
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-3",
+        "xmlSha256": "fa8efc5a5cfd7448c34fa52eba2d7b60b55f35edc78e899a42b1b6e0d3a5f716",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "durationSeconds": 11.9093522,
+        "suites": {
+          "ProjectL.Tests.Core.EnemyAiReuseMeasurements": 1
+        }
+      }
+    ]
+  },
+  "timing": {
+    "matchedScenarioSignatures": 30,
+    "paired": [
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "prep": {
+          "before": [
+            {
+              "median": 32.58075,
+              "p95": 78.3521
+            },
+            {
+              "median": 32.06045,
+              "p95": 72.0215
+            },
+            {
+              "median": 32.563950000000006,
+              "p95": 68.146
+            }
+          ],
+          "after": [
+            {
+              "median": 31.9127,
+              "p95": 64.7861
+            },
+            {
+              "median": 31.49205,
+              "p95": 68.5648
+            },
+            {
+              "median": 30.949350000000003,
+              "p95": 68.8812
+            }
+          ],
+          "beforeMedian": 32.563950000000006,
+          "afterMedian": 31.49205,
+          "shiftPercent": -3.291676838958435
+        },
+        "total": {
+          "before": [
+            {
+              "median": 32.96535,
+              "p95": 78.7265
+            },
+            {
+              "median": 32.3969,
+              "p95": 72.5185
+            },
+            {
+              "median": 32.90535,
+              "p95": 68.5172
+            }
+          ],
+          "after": [
+            {
+              "median": 32.2537,
+              "p95": 65.1679
+            },
+            {
+              "median": 31.837049999999998,
+              "p95": 68.9156
+            },
+            {
+              "median": 31.322,
+              "p95": 69.2359
+            }
+          ],
+          "beforeMedian": 32.90535,
+          "afterMedian": 31.837049999999998,
+          "shiftPercent": -3.246584521969831
+        }
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "prep": {
+          "before": [
+            {
+              "median": 11.529900000000001,
+              "p95": 16.1572
+            },
+            {
+              "median": 11.7256,
+              "p95": 17.3248
+            },
+            {
+              "median": 11.960049999999999,
+              "p95": 16.5058
+            }
+          ],
+          "after": [
+            {
+              "median": 12.04175,
+              "p95": 18.2449
+            },
+            {
+              "median": 11.799900000000001,
+              "p95": 15.051
+            },
+            {
+              "median": 11.56045,
+              "p95": 15.4601
+            }
+          ],
+          "beforeMedian": 11.7256,
+          "afterMedian": 11.799900000000001,
+          "shiftPercent": 0.633656273452976
+        },
+        "total": {
+          "before": [
+            {
+              "median": 12.37365,
+              "p95": 16.9723
+            },
+            {
+              "median": 12.54975,
+              "p95": 21.3541
+            },
+            {
+              "median": 12.931049999999999,
+              "p95": 17.8566
+            }
+          ],
+          "after": [
+            {
+              "median": 12.918949999999999,
+              "p95": 20.1962
+            },
+            {
+              "median": 12.63585,
+              "p95": 16.0711
+            },
+            {
+              "median": 12.36235,
+              "p95": 16.4876
+            }
+          ],
+          "beforeMedian": 12.54975,
+          "afterMedian": 12.63585,
+          "shiftPercent": 0.6860694436144232
+        }
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "prep": {
+          "before": [
+            {
+              "median": 12.59695,
+              "p95": 17.2672
+            },
+            {
+              "median": 12.81645,
+              "p95": 16.0064
+            },
+            {
+              "median": 12.6497,
+              "p95": 16.2889
+            }
+          ],
+          "after": [
+            {
+              "median": 12.4514,
+              "p95": 19.5643
+            },
+            {
+              "median": 12.6303,
+              "p95": 17.3605
+            },
+            {
+              "median": 12.7147,
+              "p95": 18.825
+            }
+          ],
+          "beforeMedian": 12.6497,
+          "afterMedian": 12.6303,
+          "shiftPercent": -0.15336332086925974
+        },
+        "total": {
+          "before": [
+            {
+              "median": 13.36675,
+              "p95": 18.2401
+            },
+            {
+              "median": 13.5817,
+              "p95": 17.0104
+            },
+            {
+              "median": 13.4313,
+              "p95": 17.2574
+            }
+          ],
+          "after": [
+            {
+              "median": 13.16755,
+              "p95": 20.5368
+            },
+            {
+              "median": 13.3798,
+              "p95": 18.2144
+            },
+            {
+              "median": 13.456800000000001,
+              "p95": 19.6583
+            }
+          ],
+          "beforeMedian": 13.4313,
+          "afterMedian": 13.3798,
+          "shiftPercent": -0.383432728030797
+        }
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "prep": {
+          "before": [
+            {
+              "median": 31.055149999999998,
+              "p95": 62.0538
+            },
+            {
+              "median": 30.902299999999997,
+              "p95": 62.7775
+            },
+            {
+              "median": 31.1117,
+              "p95": 67.4582
+            }
+          ],
+          "after": [
+            {
+              "median": 30.05105,
+              "p95": 80.9073
+            },
+            {
+              "median": 29.6126,
+              "p95": 103.449
+            },
+            {
+              "median": 33.16775,
+              "p95": 84.2414
+            }
+          ],
+          "beforeMedian": 31.055149999999998,
+          "afterMedian": 30.05105,
+          "shiftPercent": -3.233280148381179
+        },
+        "total": {
+          "before": [
+            {
+              "median": 31.37855,
+              "p95": 62.3933
+            },
+            {
+              "median": 31.237299999999998,
+              "p95": 63.1003
+            },
+            {
+              "median": 31.4394,
+              "p95": 67.7892
+            }
+          ],
+          "after": [
+            {
+              "median": 30.3855,
+              "p95": 82.2496
+            },
+            {
+              "median": 29.95205,
+              "p95": 103.7771
+            },
+            {
+              "median": 33.555,
+              "p95": 84.5677
+            }
+          ],
+          "beforeMedian": 31.37855,
+          "afterMedian": 30.3855,
+          "shiftPercent": -3.1647415192862627
+        }
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "prep": {
+          "before": [
+            {
+              "median": 11.231300000000001,
+              "p95": 16.5935
+            },
+            {
+              "median": 11.1506,
+              "p95": 16.0486
+            },
+            {
+              "median": 10.9779,
+              "p95": 14.4335
+            }
+          ],
+          "after": [
+            {
+              "median": 10.75005,
+              "p95": 12.2011
+            },
+            {
+              "median": 11.0481,
+              "p95": 15.3269
+            },
+            {
+              "median": 12.82425,
+              "p95": 22.4367
+            }
+          ],
+          "beforeMedian": 11.1506,
+          "afterMedian": 11.0481,
+          "shiftPercent": -0.9192330457553965
+        },
+        "total": {
+          "before": [
+            {
+              "median": 11.9848,
+              "p95": 17.5564
+            },
+            {
+              "median": 11.94095,
+              "p95": 16.987
+            },
+            {
+              "median": 11.77755,
+              "p95": 15.9867
+            }
+          ],
+          "after": [
+            {
+              "median": 11.48485,
+              "p95": 13.0049
+            },
+            {
+              "median": 11.84685,
+              "p95": 16.3526
+            },
+            {
+              "median": 13.7538,
+              "p95": 23.9528
+            }
+          ],
+          "beforeMedian": 11.94095,
+          "afterMedian": 11.84685,
+          "shiftPercent": -0.7880445023218496
+        }
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "prep": {
+          "before": [
+            {
+              "median": 12.59455,
+              "p95": 18.9512
+            },
+            {
+              "median": 12.5027,
+              "p95": 16.5836
+            },
+            {
+              "median": 12.41685,
+              "p95": 19.2222
+            }
+          ],
+          "after": [
+            {
+              "median": 12.23485,
+              "p95": 21.3684
+            },
+            {
+              "median": 12.485700000000001,
+              "p95": 17.2624
+            },
+            {
+              "median": 13.3367,
+              "p95": 17.753
+            }
+          ],
+          "beforeMedian": 12.5027,
+          "afterMedian": 12.485700000000001,
+          "shiftPercent": -0.13597063034384016
+        },
+        "total": {
+          "before": [
+            {
+              "median": 13.3674,
+              "p95": 20.9325
+            },
+            {
+              "median": 13.24795,
+              "p95": 17.6055
+            },
+            {
+              "median": 13.13065,
+              "p95": 20.1847
+            }
+          ],
+          "after": [
+            {
+              "median": 12.940100000000001,
+              "p95": 25.4887
+            },
+            {
+              "median": 13.15685,
+              "p95": 18.1438
+            },
+            {
+              "median": 14.12885,
+              "p95": 18.6459
+            }
+          ],
+          "beforeMedian": 13.24795,
+          "afterMedian": 13.15685,
+          "shiftPercent": -0.6876535614944168
+        }
+      }
+    ],
+    "before": [
+      {
+        "run": 1,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-1",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 32.58075,
+              "p95": 78.3521
+            },
+            "total": {
+              "median": 32.96535,
+              "p95": 78.7265
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 274.2565,
+                "total": 318.1312
+              },
+              {
+                "seed": 7,
+                "prep": 33.9998,
+                "total": 34.3384
+              },
+              {
+                "seed": 19,
+                "prep": 32.2552,
+                "total": 32.6125
+              },
+              {
+                "seed": 41,
+                "prep": 36.2953,
+                "total": 36.6979
+              },
+              {
+                "seed": 97,
+                "prep": 31.7774,
+                "total": 32.1404
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.529900000000001,
+              "p95": 16.1572
+            },
+            "total": {
+              "median": 12.37365,
+              "p95": 16.9723
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 165.4331,
+                "total": 192.2985
+              },
+              {
+                "seed": 7,
+                "prep": 12.2355,
+                "total": 13.0107
+              },
+              {
+                "seed": 19,
+                "prep": 12.1631,
+                "total": 13.0414
+              },
+              {
+                "seed": 41,
+                "prep": 13.0671,
+                "total": 14.144
+              },
+              {
+                "seed": 97,
+                "prep": 10.7519,
+                "total": 11.5384
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.59695,
+              "p95": 17.2672
+            },
+            "total": {
+              "median": 13.36675,
+              "p95": 18.2401
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 24.263,
+                "total": 25.6701
+              },
+              {
+                "seed": 7,
+                "prep": 12.4858,
+                "total": 13.8026
+              },
+              {
+                "seed": 19,
+                "prep": 12.3875,
+                "total": 13.1307
+              },
+              {
+                "seed": 41,
+                "prep": 53.7141,
+                "total": 54.88
+              },
+              {
+                "seed": 97,
+                "prep": 13.2127,
+                "total": 13.9599
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 31.055149999999998,
+              "p95": 62.0538
+            },
+            "total": {
+              "median": 31.37855,
+              "p95": 62.3933
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 58.6779,
+                "total": 59.4776
+              },
+              {
+                "seed": 7,
+                "prep": 34.0459,
+                "total": 34.3858
+              },
+              {
+                "seed": 19,
+                "prep": 30.5489,
+                "total": 30.8863
+              },
+              {
+                "seed": 41,
+                "prep": 29.4537,
+                "total": 29.7817
+              },
+              {
+                "seed": 97,
+                "prep": 30.5685,
+                "total": 30.9203
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.231300000000001,
+              "p95": 16.5935
+            },
+            "total": {
+              "median": 11.9848,
+              "p95": 17.5564
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 11.1627,
+                "total": 12.0113
+              },
+              {
+                "seed": 7,
+                "prep": 11.2446,
+                "total": 12.053
+              },
+              {
+                "seed": 19,
+                "prep": 11.445,
+                "total": 12.3415
+              },
+              {
+                "seed": 41,
+                "prep": 10.5344,
+                "total": 11.292
+              },
+              {
+                "seed": 97,
+                "prep": 11.2364,
+                "total": 12.035
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.59455,
+              "p95": 18.9512
+            },
+            "total": {
+              "median": 13.3674,
+              "p95": 20.9325
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 12.688,
+                "total": 13.4052
+              },
+              {
+                "seed": 7,
+                "prep": 13.0775,
+                "total": 14.2119
+              },
+              {
+                "seed": 19,
+                "prep": 12.4327,
+                "total": 13.1925
+              },
+              {
+                "seed": 41,
+                "prep": 12.6764,
+                "total": 13.451
+              },
+              {
+                "seed": 97,
+                "prep": 12.7836,
+                "total": 13.4566
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "run": 2,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-2",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 32.06045,
+              "p95": 72.0215
+            },
+            "total": {
+              "median": 32.3969,
+              "p95": 72.5185
+            },
+            "gc0Samples": 6,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 277.2172,
+                "total": 328.3926
+              },
+              {
+                "seed": 7,
+                "prep": 31.0941,
+                "total": 31.4925
+              },
+              {
+                "seed": 19,
+                "prep": 44.973,
+                "total": 45.3906
+              },
+              {
+                "seed": 41,
+                "prep": 35.1454,
+                "total": 35.5261
+              },
+              {
+                "seed": 97,
+                "prep": 41.8031,
+                "total": 42.1433
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.7256,
+              "p95": 17.3248
+            },
+            "total": {
+              "median": 12.54975,
+              "p95": 21.3541
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 165.5916,
+                "total": 194.4374
+              },
+              {
+                "seed": 7,
+                "prep": 11.4318,
+                "total": 12.2441
+              },
+              {
+                "seed": 19,
+                "prep": 11.8797,
+                "total": 12.7763
+              },
+              {
+                "seed": 41,
+                "prep": 10.4556,
+                "total": 11.172
+              },
+              {
+                "seed": 97,
+                "prep": 10.8082,
+                "total": 11.5509
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.81645,
+              "p95": 16.0064
+            },
+            "total": {
+              "median": 13.5817,
+              "p95": 17.0104
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 24.5861,
+                "total": 26.0738
+              },
+              {
+                "seed": 7,
+                "prep": 11.8313,
+                "total": 12.5097
+              },
+              {
+                "seed": 19,
+                "prep": 18.9793,
+                "total": 22.114
+              },
+              {
+                "seed": 41,
+                "prep": 12.7817,
+                "total": 13.4832
+              },
+              {
+                "seed": 97,
+                "prep": 12.9354,
+                "total": 13.6649
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 30.902299999999997,
+              "p95": 62.7775
+            },
+            "total": {
+              "median": 31.237299999999998,
+              "p95": 63.1003
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 32.4067,
+                "total": 32.768
+              },
+              {
+                "seed": 7,
+                "prep": 30.1721,
+                "total": 30.502
+              },
+              {
+                "seed": 19,
+                "prep": 32.0959,
+                "total": 32.4314
+              },
+              {
+                "seed": 41,
+                "prep": 29.9764,
+                "total": 30.3293
+              },
+              {
+                "seed": 97,
+                "prep": 30.7167,
+                "total": 31.046
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.1506,
+              "p95": 16.0486
+            },
+            "total": {
+              "median": 11.94095,
+              "p95": 16.987
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 11.52,
+                "total": 12.2941
+              },
+              {
+                "seed": 7,
+                "prep": 11.5972,
+                "total": 12.378
+              },
+              {
+                "seed": 19,
+                "prep": 16.7153,
+                "total": 17.6902
+              },
+              {
+                "seed": 41,
+                "prep": 12.3364,
+                "total": 13.2308
+              },
+              {
+                "seed": 97,
+                "prep": 10.8941,
+                "total": 11.6384
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.5027,
+              "p95": 16.5836
+            },
+            "total": {
+              "median": 13.24795,
+              "p95": 17.6055
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 12.1303,
+                "total": 12.8639
+              },
+              {
+                "seed": 7,
+                "prep": 12.7778,
+                "total": 13.4761
+              },
+              {
+                "seed": 19,
+                "prep": 13.1106,
+                "total": 13.8042
+              },
+              {
+                "seed": 41,
+                "prep": 12.0588,
+                "total": 12.7863
+              },
+              {
+                "seed": 97,
+                "prep": 13.0994,
+                "total": 13.8206
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "run": 3,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-before-3",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 32.563950000000006,
+              "p95": 68.146
+            },
+            "total": {
+              "median": 32.90535,
+              "p95": 68.5172
+            },
+            "gc0Samples": 6,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 284.8455,
+                "total": 329.0596
+              },
+              {
+                "seed": 7,
+                "prep": 37.0773,
+                "total": 37.6352
+              },
+              {
+                "seed": 19,
+                "prep": 39.1545,
+                "total": 39.6001
+              },
+              {
+                "seed": 41,
+                "prep": 32.8727,
+                "total": 33.28
+              },
+              {
+                "seed": 97,
+                "prep": 32.2117,
+                "total": 32.8301
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.960049999999999,
+              "p95": 16.5058
+            },
+            "total": {
+              "median": 12.931049999999999,
+              "p95": 17.8566
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 182.9081,
+                "total": 215.1014
+              },
+              {
+                "seed": 7,
+                "prep": 12.0197,
+                "total": 12.8255
+              },
+              {
+                "seed": 19,
+                "prep": 10.8819,
+                "total": 11.6873
+              },
+              {
+                "seed": 41,
+                "prep": 16.4641,
+                "total": 17.7597
+              },
+              {
+                "seed": 97,
+                "prep": 10.8529,
+                "total": 11.6285
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.6497,
+              "p95": 16.2889
+            },
+            "total": {
+              "median": 13.4313,
+              "p95": 17.2574
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 24.7218,
+                "total": 26.4613
+              },
+              {
+                "seed": 7,
+                "prep": 13.1804,
+                "total": 13.8825
+              },
+              {
+                "seed": 19,
+                "prep": 20.3749,
+                "total": 22.5063
+              },
+              {
+                "seed": 41,
+                "prep": 13.1706,
+                "total": 13.8849
+              },
+              {
+                "seed": 97,
+                "prep": 11.6898,
+                "total": 12.3531
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 31.1117,
+              "p95": 67.4582
+            },
+            "total": {
+              "median": 31.4394,
+              "p95": 67.7892
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 32.2617,
+                "total": 32.5975
+              },
+              {
+                "seed": 7,
+                "prep": 30.9947,
+                "total": 31.3574
+              },
+              {
+                "seed": 19,
+                "prep": 30.4312,
+                "total": 30.7774
+              },
+              {
+                "seed": 41,
+                "prep": 31.1305,
+                "total": 31.4708
+              },
+              {
+                "seed": 97,
+                "prep": 30.3127,
+                "total": 30.6328
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 10.9779,
+              "p95": 14.4335
+            },
+            "total": {
+              "median": 11.77755,
+              "p95": 15.9867
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 11.356,
+                "total": 12.1117
+              },
+              {
+                "seed": 7,
+                "prep": 10.7275,
+                "total": 11.4654
+              },
+              {
+                "seed": 19,
+                "prep": 25.7549,
+                "total": 30.0656
+              },
+              {
+                "seed": 41,
+                "prep": 11.2832,
+                "total": 12.0758
+              },
+              {
+                "seed": 97,
+                "prep": 10.8164,
+                "total": 11.5758
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.41685,
+              "p95": 19.2222
+            },
+            "total": {
+              "median": 13.13065,
+              "p95": 20.1847
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 12.3101,
+                "total": 13.0207
+              },
+              {
+                "seed": 7,
+                "prep": 11.9699,
+                "total": 12.6469
+              },
+              {
+                "seed": 19,
+                "prep": 12.2676,
+                "total": 12.9711
+              },
+              {
+                "seed": 41,
+                "prep": 12.1406,
+                "total": 12.819
+              },
+              {
+                "seed": 97,
+                "prep": 13.4382,
+                "total": 14.2246
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "after": [
+      {
+        "run": 1,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-1",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 31.9127,
+              "p95": 64.7861
+            },
+            "total": {
+              "median": 32.2537,
+              "p95": 65.1679
+            },
+            "gc0Samples": 4,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 271.9281,
+                "total": 316.6694
+              },
+              {
+                "seed": 7,
+                "prep": 51.0172,
+                "total": 51.6513
+              },
+              {
+                "seed": 19,
+                "prep": 60.1245,
+                "total": 60.497
+              },
+              {
+                "seed": 41,
+                "prep": 31.2131,
+                "total": 31.5813
+              },
+              {
+                "seed": 97,
+                "prep": 37.5918,
+                "total": 38.1656
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 12.04175,
+              "p95": 18.2449
+            },
+            "total": {
+              "median": 12.918949999999999,
+              "p95": 20.1962
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 169.3549,
+                "total": 200.5929
+              },
+              {
+                "seed": 7,
+                "prep": 11.2957,
+                "total": 12.0856
+              },
+              {
+                "seed": 19,
+                "prep": 11.6228,
+                "total": 12.4771
+              },
+              {
+                "seed": 41,
+                "prep": 12.3814,
+                "total": 13.2256
+              },
+              {
+                "seed": 97,
+                "prep": 11.6151,
+                "total": 12.4464
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.4514,
+              "p95": 19.5643
+            },
+            "total": {
+              "median": 13.16755,
+              "p95": 20.5368
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 28.9002,
+                "total": 30.989
+              },
+              {
+                "seed": 7,
+                "prep": 12.6299,
+                "total": 13.3229
+              },
+              {
+                "seed": 19,
+                "prep": 13.2032,
+                "total": 13.9375
+              },
+              {
+                "seed": 41,
+                "prep": 13.094,
+                "total": 13.7798
+              },
+              {
+                "seed": 97,
+                "prep": 12.326,
+                "total": 13.0132
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 30.05105,
+              "p95": 80.9073
+            },
+            "total": {
+              "median": 30.3855,
+              "p95": 82.2496
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 30.5434,
+                "total": 30.8736
+              },
+              {
+                "seed": 7,
+                "prep": 29.4434,
+                "total": 29.9002
+              },
+              {
+                "seed": 19,
+                "prep": 30.1385,
+                "total": 30.4752
+              },
+              {
+                "seed": 41,
+                "prep": 67.9439,
+                "total": 68.2684
+              },
+              {
+                "seed": 97,
+                "prep": 29.5991,
+                "total": 29.9781
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 10.75005,
+              "p95": 12.2011
+            },
+            "total": {
+              "median": 11.48485,
+              "p95": 13.0049
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 11.314,
+                "total": 12.097
+              },
+              {
+                "seed": 7,
+                "prep": 10.8886,
+                "total": 11.6507
+              },
+              {
+                "seed": 19,
+                "prep": 10.4843,
+                "total": 11.1892
+              },
+              {
+                "seed": 41,
+                "prep": 10.8127,
+                "total": 11.5487
+              },
+              {
+                "seed": 97,
+                "prep": 10.7166,
+                "total": 11.5174
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.23485,
+              "p95": 21.3684
+            },
+            "total": {
+              "median": 12.940100000000001,
+              "p95": 25.4887
+            },
+            "gc0Samples": 3,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 12.1679,
+                "total": 12.865
+              },
+              {
+                "seed": 7,
+                "prep": 12.8536,
+                "total": 13.572
+              },
+              {
+                "seed": 19,
+                "prep": 11.8522,
+                "total": 12.5298
+              },
+              {
+                "seed": 41,
+                "prep": 12.6293,
+                "total": 13.3136
+              },
+              {
+                "seed": 97,
+                "prep": 11.6679,
+                "total": 12.3505
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "run": 2,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-2",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 31.49205,
+              "p95": 68.5648
+            },
+            "total": {
+              "median": 31.837049999999998,
+              "p95": 68.9156
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 270.0949,
+                "total": 313.5933
+              },
+              {
+                "seed": 7,
+                "prep": 52.4932,
+                "total": 53.1387
+              },
+              {
+                "seed": 19,
+                "prep": 29.3927,
+                "total": 29.7328
+              },
+              {
+                "seed": 41,
+                "prep": 71.666,
+                "total": 72.0328
+              },
+              {
+                "seed": 97,
+                "prep": 30.1336,
+                "total": 30.4668
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.799900000000001,
+              "p95": 15.051
+            },
+            "total": {
+              "median": 12.63585,
+              "p95": 16.0711
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 168.9992,
+                "total": 199.0932
+              },
+              {
+                "seed": 7,
+                "prep": 16.0495,
+                "total": 17.4407
+              },
+              {
+                "seed": 19,
+                "prep": 14.391,
+                "total": 15.3764
+              },
+              {
+                "seed": 41,
+                "prep": 11.0477,
+                "total": 11.8279
+              },
+              {
+                "seed": 97,
+                "prep": 11.1528,
+                "total": 11.924
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.6303,
+              "p95": 17.3605
+            },
+            "total": {
+              "median": 13.3798,
+              "p95": 18.2144
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 23.907,
+                "total": 25.5277
+              },
+              {
+                "seed": 7,
+                "prep": 12.8516,
+                "total": 13.5826
+              },
+              {
+                "seed": 19,
+                "prep": 12.1851,
+                "total": 12.9535
+              },
+              {
+                "seed": 41,
+                "prep": 12.3094,
+                "total": 16.1525
+              },
+              {
+                "seed": 97,
+                "prep": 12.9668,
+                "total": 13.7777
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 29.6126,
+              "p95": 103.449
+            },
+            "total": {
+              "median": 29.95205,
+              "p95": 103.7771
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 28.5867,
+                "total": 28.8934
+              },
+              {
+                "seed": 7,
+                "prep": 30.5538,
+                "total": 30.8767
+              },
+              {
+                "seed": 19,
+                "prep": 28.7498,
+                "total": 29.065
+              },
+              {
+                "seed": 41,
+                "prep": 29.0539,
+                "total": 29.3758
+              },
+              {
+                "seed": 97,
+                "prep": 28.8638,
+                "total": 29.1796
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.0481,
+              "p95": 15.3269
+            },
+            "total": {
+              "median": 11.84685,
+              "p95": 16.3526
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 11.2009,
+                "total": 11.9704
+              },
+              {
+                "seed": 7,
+                "prep": 10.8868,
+                "total": 11.6477
+              },
+              {
+                "seed": 19,
+                "prep": 23.6898,
+                "total": 26.1475
+              },
+              {
+                "seed": 41,
+                "prep": 11.7999,
+                "total": 12.6252
+              },
+              {
+                "seed": 97,
+                "prep": 10.3758,
+                "total": 11.1732
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.485700000000001,
+              "p95": 17.2624
+            },
+            "total": {
+              "median": 13.15685,
+              "p95": 18.1438
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 13.022,
+                "total": 13.723
+              },
+              {
+                "seed": 7,
+                "prep": 13.1438,
+                "total": 13.8682
+              },
+              {
+                "seed": 19,
+                "prep": 12.2775,
+                "total": 12.9716
+              },
+              {
+                "seed": 41,
+                "prep": 12.0602,
+                "total": 12.7258
+              },
+              {
+                "seed": 97,
+                "prep": 12.4161,
+                "total": 13.1163
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "run": 3,
+        "directory": "Logs\\EnemyAi\\20261113-reuse-p3-after-3",
+        "runtime": {
+          "frequency": "10000000",
+          "runtime": "4.0.30319.42000",
+          "os": "Microsoft Windows NT 10.0.22631.0",
+          "allocationCalibration": "0",
+          "allocationSupported": "False",
+          "warmups": "3",
+          "samplesPerSeed": "12"
+        },
+        "summary": [
+          {
+            "tuning": "50/50/50",
+            "fixture": "U8",
+            "prep": {
+              "median": 30.949350000000003,
+              "p95": 68.8812
+            },
+            "total": {
+              "median": 31.322,
+              "p95": 69.2359
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 268.396,
+                "total": 313.866
+              },
+              {
+                "seed": 7,
+                "prep": 32.7514,
+                "total": 33.196
+              },
+              {
+                "seed": 19,
+                "prep": 30.8384,
+                "total": 31.1956
+              },
+              {
+                "seed": 41,
+                "prep": 33.2288,
+                "total": 33.5872
+              },
+              {
+                "seed": 97,
+                "prep": 34.6454,
+                "total": 35.0315
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "H8",
+            "prep": {
+              "median": 11.56045,
+              "p95": 15.4601
+            },
+            "total": {
+              "median": 12.36235,
+              "p95": 16.4876
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 164.4362,
+                "total": 193.6253
+              },
+              {
+                "seed": 7,
+                "prep": 11.5937,
+                "total": 12.3416
+              },
+              {
+                "seed": 19,
+                "prep": 12.5446,
+                "total": 13.4601
+              },
+              {
+                "seed": 41,
+                "prep": 14.9089,
+                "total": 15.9079
+              },
+              {
+                "seed": 97,
+                "prep": 11.3639,
+                "total": 12.1027
+              }
+            ]
+          },
+          {
+            "tuning": "50/50/50",
+            "fixture": "X8",
+            "prep": {
+              "median": 12.7147,
+              "p95": 18.825
+            },
+            "total": {
+              "median": 13.456800000000001,
+              "p95": 19.6583
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 23.2824,
+                "total": 24.8003
+              },
+              {
+                "seed": 7,
+                "prep": 13.0413,
+                "total": 13.7834
+              },
+              {
+                "seed": 19,
+                "prep": 12.2444,
+                "total": 12.9254
+              },
+              {
+                "seed": 41,
+                "prep": 12.9018,
+                "total": 14.0939
+              },
+              {
+                "seed": 97,
+                "prep": 13.0967,
+                "total": 13.8434
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "U8",
+            "prep": {
+              "median": 33.16775,
+              "p95": 84.2414
+            },
+            "total": {
+              "median": 33.555,
+              "p95": 84.5677
+            },
+            "gc0Samples": 5,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 67.2273,
+                "total": 67.5543
+              },
+              {
+                "seed": 7,
+                "prep": 29.9405,
+                "total": 30.2733
+              },
+              {
+                "seed": 19,
+                "prep": 29.3157,
+                "total": 29.6429
+              },
+              {
+                "seed": 41,
+                "prep": 42.5525,
+                "total": 43.3112
+              },
+              {
+                "seed": 97,
+                "prep": 36.1117,
+                "total": 36.5014
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "H8",
+            "prep": {
+              "median": 12.82425,
+              "p95": 22.4367
+            },
+            "total": {
+              "median": 13.7538,
+              "p95": 23.9528
+            },
+            "gc0Samples": 2,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 13.6554,
+                "total": 15.2085
+              },
+              {
+                "seed": 7,
+                "prep": 12.8179,
+                "total": 13.7509
+              },
+              {
+                "seed": 19,
+                "prep": 13.1651,
+                "total": 14.2689
+              },
+              {
+                "seed": 41,
+                "prep": 11.6069,
+                "total": 12.4298
+              },
+              {
+                "seed": 97,
+                "prep": 11.9442,
+                "total": 13.3308
+              }
+            ]
+          },
+          {
+            "tuning": "20/20/200",
+            "fixture": "X8",
+            "prep": {
+              "median": 13.3367,
+              "p95": 17.753
+            },
+            "total": {
+              "median": 14.12885,
+              "p95": 18.6459
+            },
+            "gc0Samples": 1,
+            "first": [
+              {
+                "seed": 1,
+                "prep": 12.6106,
+                "total": 13.398
+              },
+              {
+                "seed": 7,
+                "prep": 12.7034,
+                "total": 13.4459
+              },
+              {
+                "seed": 19,
+                "prep": 12.8516,
+                "total": 13.5835
+              },
+              {
+                "seed": 41,
+                "prep": 16.8378,
+                "total": 17.7234
+              },
+              {
+                "seed": 97,
+                "prep": 12.8348,
+                "total": 13.6727
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "cases": [
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "seed": 1,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "seed": 7,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "seed": 19,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "seed": 41,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "seed": 97,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "seed": 1,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "seed": 7,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "seed": 19,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "seed": 41,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "seed": 97,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "seed": 1,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "seed": 7,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "seed": 19,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "seed": 41,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "seed": 97,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "seed": 1,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "seed": 7,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "seed": 19,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "seed": 41,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "seed": 97,
+        "requests": 56,
+        "builds": 1,
+        "previews": 14,
+        "capHits": 0,
+        "intentSha256": "f9bdaf31d649d0eac487956f60b01de82ed6f68b832af020e5a135e444379392",
+        "buildsBefore": 56,
+        "removed": 55
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "seed": 1,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "seed": 7,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "seed": 19,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "seed": 41,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "seed": 97,
+        "requests": 14,
+        "builds": 4,
+        "previews": 5,
+        "capHits": 0,
+        "intentSha256": "d68add390bf447451c13c1734ff6d25cccc085f35d57235e6908850fa929c547",
+        "buildsBefore": 14,
+        "removed": 10
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "seed": 1,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "seed": 7,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "seed": 19,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "seed": 41,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "seed": 97,
+        "requests": 18,
+        "builds": 4,
+        "previews": 6,
+        "capHits": 0,
+        "intentSha256": "b78b2abb84e10bc9ddde95f10f10615d3aa74d44ed742b5661b9a37d1a664e29",
+        "buildsBefore": 18,
+        "removed": 14
+      }
+    ],
+    "summary": [
+      {
+        "tuning": "50/50/50",
+        "fixture": "U8",
+        "requests": 280,
+        "buildsBefore": 280,
+        "buildsAfter": 5,
+        "removed": 275
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "H8",
+        "requests": 70,
+        "buildsBefore": 70,
+        "buildsAfter": 20,
+        "removed": 50
+      },
+      {
+        "tuning": "50/50/50",
+        "fixture": "X8",
+        "requests": 90,
+        "buildsBefore": 90,
+        "buildsAfter": 20,
+        "removed": 70
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "U8",
+        "requests": 280,
+        "buildsBefore": 280,
+        "buildsAfter": 5,
+        "removed": 275
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "H8",
+        "requests": 70,
+        "buildsBefore": 70,
+        "buildsAfter": 20,
+        "removed": 50
+      },
+      {
+        "tuning": "20/20/200",
+        "fixture": "X8",
+        "requests": 90,
+        "buildsBefore": 90,
+        "buildsAfter": 20,
+        "removed": 70
+      }
+    ]
+  }
+}

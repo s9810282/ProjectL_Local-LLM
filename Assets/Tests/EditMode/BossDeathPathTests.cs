@@ -63,7 +63,7 @@ namespace ProjectL.Tests.Core
         private static CombatCommandInput Designated(CombatCommandInput input)
         {
             var s = input.State;
-            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.ThornFields,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(BossRoarTests.Boss),                s.Allocation);
+            var state = new CombatCommandState(s.BoardWidth,s.BoardHeight,s.Phase,s.Structures,s.Turn,s.Environment,s.EnvironmentProgress,s.WallBlocking,BattleObjective.DesignatedBoss(BossRoarTests.Boss),                s.Allocation);
             return CombatCommandTestData.With(input, state: state);
         }
 

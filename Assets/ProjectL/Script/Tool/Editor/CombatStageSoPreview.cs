@@ -278,16 +278,18 @@ namespace ProjectL.Tool.Editor
                     // FieldTerrainPresenter.LocalPosition·FieldObjectPresenter.LocalPosition: 타일 위 지형은 칸 바탕(CellBaseToLocal), 오브젝트는 칸 표면
                     // (CellSurfaceToLocal) + 외형 오프셋입니다. 회전은 외형 회전 × 프리팹 회전, 배율은 프리팹 배율 × 외형 배율입니다.
                     Vector2Int anchor = document.AnchorOf(placed.Item);
-                    float height = placed.Layer == CombatStageSoLayer.Terrain ? space.BaseAt(anchor) : space.SurfaceAt(anchor);
+                    bool isTerrain = placed.Layer == CombatStageSoLayer.Terrain;
+                    float height = isTerrain ? space.BaseAt(anchor) : space.SurfaceAt(anchor);
+                    float cellScale = isTerrain && visual?.Prefab != null ? visuals.TerrainCellScale : 1f;
                     // 토네이도는 FieldTornadoPresenter.BodyPosition·Create: 중심 기준 자리이고, 프리팹 기준 칸 수에 맞춰 보정과 배율을 함께 키웁니다.
                     string definition = document.DefinitionOf(placed.Item);
-                    bool tornado = placed.Layer == CombatStageSoLayer.Terrain && CombatStageSoAssets.IsTornado(definition);
+                    bool tornado = isTerrain && CombatStageSoAssets.IsTornado(definition);
                     float bodyRatio = tornado ? CombatStageSoAssets.TornadoBodyRatio(definition) : 1f;
                     position = (tornado ? space.TornadoPosition(anchor, CombatStageSoAssets.TornadoSideLength(definition))
-                        : space.CellCenter(anchor) + Vector3.up * height) + (visual?.LocalOffset ?? Vector3.zero) * bodyRatio;
+                        : space.CellCenter(anchor) + Vector3.up * height) + (visual?.LocalOffset ?? Vector3.zero) * cellScale * bodyRatio;
                     rotation = CombatStageSoSpace.Facing(VisualRotation(document, placed.Item)) *
                         (visual?.Prefab != null ? visual.Prefab.transform.localRotation : Quaternion.identity);
-                    scale = visual?.Prefab != null ? Vector3.Scale(visual.Prefab.transform.localScale, visual.LocalScale) * bodyRatio : Vector3.one;
+                    scale = visual?.Prefab != null ? Vector3.Scale(visual.Prefab.transform.localScale, visual.LocalScale * cellScale) * bodyRatio : Vector3.one;
                 }
                 if (visual?.Prefab == null)
                 {

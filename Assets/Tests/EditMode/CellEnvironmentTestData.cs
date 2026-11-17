@@ -15,7 +15,7 @@ namespace ProjectL.Tests.Core
 
         internal static CombatCommandState State(MovementEnvironmentFacts environment,
             params StructureCombatFacts[] structures) =>
-            new(4,5,CombatFlowPhase.PlayerInput,structures,                Array.Empty<ThornFieldCellSnapshot>(),                environment: environment);
+            new(4,5,CombatFlowPhase.PlayerInput,structures,                environment: environment);
 
         internal static MovementEnvironmentFacts Environment(params MovementTileFact[] sources) => new(sources);
 
