@@ -17,7 +17,7 @@ from dataclasses import dataclass
 import random
 from typing import TYPE_CHECKING, Iterable
 
-from .analysis import Option, attack_results
+from .analysis import Option, attack_destinations, attack_results
 from .rules import EndTurn, apply
 from .state import BattleState
 from .targeting import Side
@@ -91,8 +91,13 @@ def _replies(board: BattleState, side: Side, evaluator: Evaluator) -> tuple[list
     opp_before = evaluator.assets(board, opponent)
     replies: list[Reply] = []
     idle: list[int] = []
+    limit = evaluator.config.reply_move_attack_cells
     for unit in sorted(board.living(side), key=lambda u: u.uid):
-        results = attack_results(board, unit)
+        # 속도 개선 SP2: 이동 + 공격은 이번 공격 손실 상위 도착 칸에서만 돌린다(끄면 None = 옛 동작)
+        attack_cells = type(evaluator).best_cells(
+            attack_destinations(board, unit) if limit > 0 else [],
+            lambda cell, unit=unit: evaluator.reply_score(board, unit, cell), limit)
+        results = attack_results(board, unit, attack_cells=attack_cells)
         if not results:
             idle.append(unit.uid)
             continue

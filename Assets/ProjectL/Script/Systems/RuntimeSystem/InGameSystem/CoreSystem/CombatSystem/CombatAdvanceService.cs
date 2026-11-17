@@ -45,6 +45,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         private bool _immediateRequired;
         private bool _hasSpentFrame;
         private int _lastSpentFrame;
+        // 연구 저장소 전용(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP7): 턴 계획 AI 계획 시간 기록.
+        private long _sessionStartTimestamp;
+        private bool _planReported;
 
         internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
         internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
@@ -124,19 +127,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                     }
                     _immediateRequired = !CombatCommandCalculator.RequiresEnemyDecision(input);
                     if (!_immediateRequired)
+                    {
                         _session = new EnemyDecisionSession(input, _movementRules, _settings, SideCacheFor(input));
+                        _sessionStartTimestamp = start;
+                        _planReported = false;
+                    }
                 }
                 else if (!_immediateRequired && !_session.IsReady) _session.Step();
 
                 long end = _readTimestamp();
                 RecordAtom(start, end);
-                while (!_immediateRequired && !_session.IsReady && !BudgetSpent(start, end))
+                // 연구 저장소 전용 연결(설계 BP3): 턴 계획 AI가 일 스레드 계산을 기다리는 동안은 이 프레임을 멈춘다(헛돌지 않게).
+                while (!_immediateRequired && !_session.IsReady && !_session.IsWaiting && !BudgetSpent(start, end))
                 {
                     long atomStart = end;
                     _session.Step();
                     end = _readTimestamp();
                     RecordAtom(atomStart, end);
                 }
+                if (!_immediateRequired) ReportTurnPlan();
                 return _immediateRequired ? AdvancePreparationState.NotRequired :
                     _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
             }
@@ -268,6 +277,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         }
 
         private bool BudgetSpent(long start, long end) => (double)(end - start) * 1000 >= _timestampFrequency;
+
+        /// <summary>
+        /// 연구 저장소 전용(설계 BP7): 턴 계획 AI가 새로 계획해 결정이 나오면, 준비를 시작한 뒤 걸린 시간과 계산량을 콘솔에 한 줄 남긴다.
+        /// 보관한 계획에서 꺼낸 결정은 남기지 않는다.
+        /// </summary>
+        private void ReportTurnPlan()
+        {
+            if (_settings.DecisionModel != EnemyDecisionModel.TurnPlanner || _planReported || !_session.IsReady) return;
+            _planReported = true;
+            var diagnostics = _session.Diagnostics;
+            if (diagnostics.CacheHits > 0 && diagnostics.CapHits == 0) return;
+            double seconds = (double)(_readTimestamp() - _sessionStartTimestamp) / _timestampFrequency;
+            global::UnityEngine.Debug.Log($"[턴 계획 AI] 준비 시작부터 결정까지 {seconds:F1}초, 정산 {diagnostics.PreviewCalls}번, 판 매김 {diagnostics.ExpandedNodes}번" +
+                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : ""));
+        }
 
         private void RecordAtom(long start, long end)
         {

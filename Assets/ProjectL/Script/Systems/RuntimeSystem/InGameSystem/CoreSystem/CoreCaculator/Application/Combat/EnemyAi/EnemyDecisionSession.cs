@@ -21,6 +21,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private bool _disposed;
         private bool _faulted;
         private readonly bool _immediateCompatibility;
+        // 연구 저장소 전용 연결: 턴 계획 AI가 일 스레드 계산을 기다리는 중인지(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP3).
+        private bool _waiting;
 
         public EnemyDecisionSession(CombatCommandInput input, IReadOnlyList<IMovementTileRule> movementRules,
             EnemyDecisionSettings settings)
@@ -61,10 +63,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Diagnostics = diagnostics ?? new EnemyDecisionDiagnostics();
             _immediateCompatibility = immediateCompatibility;
             _steps = (immediateCompatibility ? SelectImmediate(input, movementRules, settings) :
-                SelectUtility(input, movementRules, settings, sideCache)).GetEnumerator();
+                settings.DecisionModel == EnemyDecisionModel.TurnPlanner
+                    // 연구 저장소 전용 연결: 턴 계획 AI(Assets/ResearchEnemyPlanner, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP3).
+                    ? EnemyPlanner.EnemyTurnPlanner.Steps(input, movementRules, sideCache, Diagnostics, decision => _selected = decision,
+                        () => SelectUtility(input, movementRules, settings, sideCache), waiting => _waiting = waiting)
+                    : SelectUtility(input, movementRules, settings, sideCache)).GetEnumerator();
         }
 
         public bool IsReady => _selected != null;
+        /// <summary>
+        /// 결정이 다른 스레드의 계산을 기다리는 중이다(연구 저장소 전용, 턴 계획 AI만). 이때 <see cref="Step"/>을 더 불러도 진행하지 않으므로
+        /// 준비하는 쪽은 그 프레임을 멈춰도 된다.
+        /// </summary>
+        public bool IsWaiting => _waiting;
         public long WorkVersion => _version;
         internal string WorkPhase { get; private set; } = "DecisionInitialize";
         public EnemyDecision Decision => _selected ?? throw new InvalidOperationException("행동 선택이 끝나지 않았습니다.");

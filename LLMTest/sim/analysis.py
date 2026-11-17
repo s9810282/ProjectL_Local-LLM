@@ -43,8 +43,18 @@ def _targets_near(state: BattleState, unit: Unit, cell: Cell, slack: int = 1) ->
     return any(max(abs(c[0] - cell[0]), abs(c[1] - cell[1])) <= reach for c in cells)
 
 
-def unit_options(state: BattleState, unit: Unit, *, moves: bool = True) -> list[Option]:
-    """이 유닛의 (이동 + 공격) 조합 전부. 이동만 하는 선택지도 포함한다. 대기는 넣지 않는다."""
+def attack_destinations(state: BattleState, unit: Unit) -> list[Cell]:
+    """이동 + 공격을 만들 수 있는 도착 칸(사거리 + 1 안에 무언가 있는 칸). unit_options·attack_results와 같은 순서·거름."""
+    if unit.use is not ActionUse.AVAILABLE:
+        return []
+    return [cell for cell in reachable(state, unit) if _targets_near(state, unit, cell)]
+
+
+def unit_options(state: BattleState, unit: Unit, *, moves: bool = True,
+                 attack_cells: set[Cell] | None = None) -> list[Option]:
+    """이 유닛의 (이동 + 공격) 조합 전부. 이동만 하는 선택지도 포함한다. 대기는 넣지 않는다.
+    attack_cells가 있으면 그 도착 칸에서만 이동 + 공격을 만든다(속도 개선 설계 docs/2026-11-18-planner-candidate-pruning-design.md
+    SP1). None이면 거르지 않는다(옛 동작)."""
     options: list[Option] = []
     if can_attack(state, unit):
         for attack, _ in legal_attacks(state, unit):
@@ -55,6 +65,8 @@ def unit_options(state: BattleState, unit: Unit, *, moves: bool = True) -> list[
             options.append(Option(unit.uid, move, None))
             if not _targets_near(state, unit, destination):
                 continue
+            if attack_cells is not None and destination not in attack_cells:
+                continue
             moved = apply(state, move)
             mover = moved.units[unit.uid]
             if mover.alive and moved.outcome is None:
@@ -63,9 +75,11 @@ def unit_options(state: BattleState, unit: Unit, *, moves: bool = True) -> list[
     return options
 
 
-def attack_results(state: BattleState, unit: Unit) -> list[tuple[Option, BattleState]]:
+def attack_results(state: BattleState, unit: Unit,
+                   attack_cells: set[Cell] | None = None) -> list[tuple[Option, BattleState]]:
     """공격이 들어 있는 조합(제자리 공격, 이동 + 공격)마다 (옵션, 엔진으로 돌린 뒤 판).
-    순서·거름은 unit_options와 같다(이동만 하는 것은 뺀다). 이동한 판을 한 번만 만들어 다시 쓴다."""
+    순서·거름은 unit_options와 같다(이동만 하는 것은 뺀다). 이동한 판을 한 번만 만들어 다시 쓴다.
+    attack_cells가 있으면 그 도착 칸에서만 이동 + 공격을 돌린다(속도 개선 설계 SP2). None이면 거르지 않는다."""
     results: list[tuple[Option, BattleState]] = []
     if can_attack(state, unit):
         for attack, _ in legal_attacks(state, unit):
@@ -73,6 +87,8 @@ def attack_results(state: BattleState, unit: Unit) -> list[tuple[Option, BattleS
     if unit.use is ActionUse.AVAILABLE:
         for destination, path in reachable(state, unit).items():
             if not _targets_near(state, unit, destination):
+                continue
+            if attack_cells is not None and destination not in attack_cells:
                 continue
             move = Move(unit.uid, path)
             moved = apply(state, move)

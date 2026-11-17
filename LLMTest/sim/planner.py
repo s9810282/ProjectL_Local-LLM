@@ -18,7 +18,7 @@ from dataclasses import dataclass, field, replace
 import random
 import time
 
-from .analysis import Option, simulate, unit_options
+from .analysis import Option, attack_destinations, simulate, unit_options
 from .evaluate import Evaluator, PlannerConfig
 from .policy import Policy
 from .rules import EndTurn
@@ -29,23 +29,30 @@ from .targeting import Side
 def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
     """이름으로 계획 AI를 만든다:
     plan{K}[:f{겁}][:o{기회}][:n{유닛당 후보}][:r{다시 매김}][:d{결과마다 빔 수}][:g{승리 대상 걸음}][:t{함께 닿음}]
+        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}]
     (예: plan4 = 다시 매김 4, plan4:r0 = 다시 매김 끔(옛 동작), plan4:d1 = 빔 다양성 켬, plan4:f0.8:o0.3:r8,
-    plan4:g1:t0.5 = 승리 대상 노림 켬 — 설계 docs/2026-11-14-planner-goal-pressure-design.md)."""
+    plan4:g1:t0.5 = 승리 대상 노림 켬 — 설계 docs/2026-11-14-planner-goal-pressure-design.md,
+    plan4:g1:m3:q2 = 이동 + 공격 도착 칸 거름 — 설계 docs/2026-11-18-planner-candidate-pruning-design.md)."""
     head, *rest = name.split(":")
     values = {"beam": int(head[4:] or PlannerConfig().beam)}
     for part in rest:
         key = {"f": "fear", "o": "opportunity", "n": "per_unit", "r": "rerank", "d": "distinct",
-               "g": "goal_step", "t": "goal_together"}.get(part[:1])
+               "g": "goal_step", "t": "goal_together", "m": "move_attack_cells",
+               "q": "reply_move_attack_cells"}.get(part[:1])
         if key is None:
             raise ValueError(f"모르는 계획 AI 설정: {part} "
-                             "(f겁, o기회, n유닛당 후보, r다시 매김, d빔 다양성, g승리 대상 걸음, t함께 닿음)")
-        values[key] = int(part[1:]) if key in ("per_unit", "rerank", "distinct") else float(part[1:])
+                             "(f겁, o기회, n유닛당 후보, r다시 매김, d빔 다양성, g승리 대상 걸음, t함께 닿음, "
+                             "m이동 + 공격 도착 칸, q응수 도착 칸)")
+        integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells")
+        values[key] = int(part[1:]) if integer else float(part[1:])
     if values.get("rerank", 0) < 0:
         raise ValueError(f"다시 매김 수는 0 이상이어야 합니다: {name}")
     if values.get("distinct", 0) < 0:
         raise ValueError(f"빔 다양성 수는 0 이상이어야 합니다: {name}")
     if values.get("goal_step", 0) < 0 or values.get("goal_together", 0) < 0:
         raise ValueError(f"승리 대상 노림 값은 0 이상이어야 합니다: {name}")
+    if values.get("move_attack_cells", 0) < 0 or values.get("reply_move_attack_cells", 0) < 0:
+        raise ValueError(f"도착 칸 수는 0 이상이어야 합니다: {name}")
     config = PlannerConfig(**values)
     prefix = "enemy" if side is Side.ENEMY else "player"
     return PlannerPolicy(side, config, name=f"{prefix}-{name}")
@@ -234,7 +241,11 @@ class PlannerPolicy(Policy):
         """유닛 하나의 확장 후보: 공격 조합 전부 + 이동만 상위 move_only개 → V 상위 per_unit개."""
         config = self.config
         attacks, moves = [], []
-        for option in unit_options(state, unit):
+        # 속도 개선 SP1: 이동 + 공격은 빠른 점수 상위 도착 칸에서만 만든다(끄면 None = 옛 동작)
+        attack_cells = Evaluator.best_cells(
+            attack_destinations(state, unit) if config.move_attack_cells > 0 else [],
+            lambda cell: evaluator.move_attack_score(state, unit, cell), config.move_attack_cells)
+        for option in unit_options(state, unit, attack_cells=attack_cells):
             (attacks if option.attack is not None else moves).append(option)
         if moves:
             moves.sort(key=lambda o: -self._quick_move_score(state, unit, o, evaluator))
@@ -254,12 +265,7 @@ class PlannerPolicy(Policy):
         moved = replace(unit, cell=cell)
         targets = evaluator._targets(state, self.side)
         _, _, gain = evaluator._best_strike(state, moved, targets, own=True)
-        danger = 0
-        for attacker in state.living(self.side.other):
-            percent = evaluator.reach(attacker, attacker.cell).get(cell, 0)
-            if percent and attacker.defn.can_attack and "disarm" not in attacker.statuses:
-                danger += evaluator.estimate(state, attacker, moved, percent)
-        loss = min(danger, unit.hp) * unit.attack * (self.config.main_weight if unit.is_main else 1)
+        loss = evaluator.danger_loss(state, unit, cell)
         if gain == 0:   # 칠 대상이 없으면 가까워지는 쪽
             field = evaluator._distance_field(state, evaluator._targets(state, self.side))
             gain = -self.config.step_penalty * field.get(cell, 99)

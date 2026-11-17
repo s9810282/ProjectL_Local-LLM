@@ -1,0 +1,215 @@
+diff --git a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningData.cs b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningData.cs
+index 4527a9ef..2ec5f180 100644
+--- a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningData.cs
++++ b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningData.cs
+@@ -18,19 +18,24 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
+         public int ThreatAversionPercent { get; }
+         /// <summary>다음 기회에 칠 수 있는 자리의 값 비율(%)입니다.</summary>
+         public int NextTurnApproachPercent { get; }
++        /// <summary>적 행동을 고르는 방식입니다(연구 저장소 전용 연결, 기본은 지금 AI).</summary>
++        public EnemyDecisionModel DecisionModel { get; }
+ 
+-        public EnemyAiTuningData(int deathTradeThresholdPercent, int threatAversionPercent, int nextTurnApproachPercent)
++        public EnemyAiTuningData(int deathTradeThresholdPercent, int threatAversionPercent, int nextTurnApproachPercent,
++            EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility)
+         {
+             DeathTradeThresholdPercent = deathTradeThresholdPercent;
+             ThreatAversionPercent = threatAversionPercent;
+             NextTurnApproachPercent = nextTurnApproachPercent;
++            DecisionModel = decisionModel;
+         }
+ 
+         /// <summary>조정값을 담은 결정 설정입니다. 평가 한도는 계약 기본값입니다.</summary>
+         public EnemyDecisionSettings ToSettings() => new EnemyDecisionSettings(
+             deathTradeThresholdPercent: DeathTradeThresholdPercent,
+             threatAversionPercent: ThreatAversionPercent,
+-            nextTurnApproachPercent: NextTurnApproachPercent);
++            nextTurnApproachPercent: NextTurnApproachPercent,
++            decisionModel: DecisionModel);
+ 
+         public void Validate()
+         {
+diff --git a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningDataSO.cs b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningDataSO.cs
+index b34684f2..0bc4c879 100644
+--- a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningDataSO.cs
++++ b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningDataSO.cs
+@@ -47,9 +47,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
+         [SerializeField, Range(0, EnemyDecisionSettings.MaxTuningPercent)]
+         private int nextTurnApproachPercent = EnemyDecisionSettings.DefaultNextTurnApproachPercent;
+ 
++        // 연구 저장소 전용 연결(LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP2). 팀 저장소에는 없는 칸이다.
++        [Header("적 AI 종류 (연구용)")]
++        [Tooltip("Utility: 지금 게임 적 AI(기본).\n" +
++            "TurnPlanner: 연구용 턴 계획 AI(Assets/ResearchEnemyPlanner). 적 턴 전체를 한 번에 계획하고, 위 세 조정값은 쓰지 않습니다.")]
++        [SerializeField]
++        private EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility;
++
+         public override IData GetData()
+         {
+-            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent);
++            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent, decisionModel);
+             data.Validate();
+             return data;
+         }
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
+index bbaed00d..9cd747c8 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
+@@ -45,6 +45,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+         private bool _immediateRequired;
+         private bool _hasSpentFrame;
+         private int _lastSpentFrame;
++        // 연구 저장소 전용(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP7): 턴 계획 AI 계획 시간 기록.
++        private long _sessionStartTimestamp;
++        private bool _planReported;
+ 
+         internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
+         internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
+@@ -124,19 +127,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+                     }
+                     _immediateRequired = !CombatCommandCalculator.RequiresEnemyDecision(input);
+                     if (!_immediateRequired)
++                    {
+                         _session = new EnemyDecisionSession(input, _movementRules, _settings, SideCacheFor(input));
++                        _sessionStartTimestamp = start;
++                        _planReported = false;
++                    }
+                 }
+                 else if (!_immediateRequired && !_session.IsReady) _session.Step();
+ 
+                 long end = _readTimestamp();
+                 RecordAtom(start, end);
+-                while (!_immediateRequired && !_session.IsReady && !BudgetSpent(start, end))
++                // 연구 저장소 전용 연결(설계 BP3): 턴 계획 AI가 일 스레드 계산을 기다리는 동안은 이 프레임을 멈춘다(헛돌지 않게).
++                while (!_immediateRequired && !_session.IsReady && !_session.IsWaiting && !BudgetSpent(start, end))
+                 {
+                     long atomStart = end;
+                     _session.Step();
+                     end = _readTimestamp();
+                     RecordAtom(atomStart, end);
+                 }
++                if (!_immediateRequired) ReportTurnPlan();
+                 return _immediateRequired ? AdvancePreparationState.NotRequired :
+                     _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+             }
+@@ -269,6 +278,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+ 
+         private bool BudgetSpent(long start, long end) => (double)(end - start) * 1000 >= _timestampFrequency;
+ 
++        /// <summary>
++        /// 연구 저장소 전용(설계 BP7): 턴 계획 AI가 새로 계획해 결정이 나오면, 준비를 시작한 뒤 걸린 시간과 계산량을 콘솔에 한 줄 남긴다.
++        /// 보관한 계획에서 꺼낸 결정은 남기지 않는다.
++        /// </summary>
++        private void ReportTurnPlan()
++        {
++            if (_settings.DecisionModel != EnemyDecisionModel.TurnPlanner || _planReported || !_session.IsReady) return;
++            _planReported = true;
++            var diagnostics = _session.Diagnostics;
++            if (diagnostics.CacheHits > 0 && diagnostics.CapHits == 0) return;
++            double seconds = (double)(_readTimestamp() - _sessionStartTimestamp) / _timestampFrequency;
++            global::UnityEngine.Debug.Log($"[턴 계획 AI] 준비 시작부터 결정까지 {seconds:F1}초, 정산 {diagnostics.PreviewCalls}번, 판 매김 {diagnostics.ExpandedNodes}번" +
++                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : ""));
++        }
++
+         private void RecordAtom(long start, long end)
+         {
+             long elapsed = end - start;
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSession.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSession.cs
+index c971d76a..eb23c951 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSession.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSession.cs
+@@ -21,6 +21,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+         private bool _disposed;
+         private bool _faulted;
+         private readonly bool _immediateCompatibility;
++        // 연구 저장소 전용 연결: 턴 계획 AI가 일 스레드 계산을 기다리는 중인지(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP3).
++        private bool _waiting;
+ 
+         public EnemyDecisionSession(CombatCommandInput input, IReadOnlyList<IMovementTileRule> movementRules,
+             EnemyDecisionSettings settings)
+@@ -61,10 +63,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             Diagnostics = diagnostics ?? new EnemyDecisionDiagnostics();
+             _immediateCompatibility = immediateCompatibility;
+             _steps = (immediateCompatibility ? SelectImmediate(input, movementRules, settings) :
+-                SelectUtility(input, movementRules, settings, sideCache)).GetEnumerator();
++                settings.DecisionModel == EnemyDecisionModel.TurnPlanner
++                    // 연구 저장소 전용 연결: 턴 계획 AI(Assets/ResearchEnemyPlanner, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP3).
++                    ? EnemyPlanner.EnemyTurnPlanner.Steps(input, movementRules, sideCache, Diagnostics, decision => _selected = decision,
++                        () => SelectUtility(input, movementRules, settings, sideCache), waiting => _waiting = waiting)
++                    : SelectUtility(input, movementRules, settings, sideCache)).GetEnumerator();
+         }
+ 
+         public bool IsReady => _selected != null;
++        /// <summary>
++        /// 결정이 다른 스레드의 계산을 기다리는 중이다(연구 저장소 전용, 턴 계획 AI만). 이때 <see cref="Step"/>을 더 불러도 진행하지 않으므로
++        /// 준비하는 쪽은 그 프레임을 멈춰도 된다.
++        /// </summary>
++        public bool IsWaiting => _waiting;
+         public long WorkVersion => _version;
+         internal string WorkPhase { get; private set; } = "DecisionInitialize";
+         public EnemyDecision Decision => _selected ?? throw new InvalidOperationException("행동 선택이 끝나지 않았습니다.");
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSideCache.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSideCache.cs
+index 7af342f2..1e99dd7e 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSideCache.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/Combat/EnemyAi/EnemyDecisionSideCache.cs
+@@ -27,6 +27,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+         private EnemyThreatField.ReadSet _threatReads;
+         private EnemyThreatField _threat;
+ 
++        /// <summary>
++        /// 턴 계획 AI가 이번 적 진영 턴에 세운 계획이다(연구 저장소 전용 연결, Assets/ResearchEnemyPlanner, 설계 CP4).
++        /// 전투나 진영 턴이 바뀌면(<see cref="EnterScope"/>) 버린다.
++        /// </summary>
++        internal EnemyPlanner.EnemyTurnPlan TurnPlan { get; set; }
++
+         // 시험·측정용 수치다. 결정에는 쓰지 않는다.
+         internal int ScopeResets { get; private set; }
+         internal int ForecastHits { get; private set; }
+@@ -49,6 +55,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
+             _forecast = null;
+             _threatReads = null;
+             _threat = null;
++            TurnPlan = null;
+         }
+ 
+         /// <summary>놓친 이유별 횟수다(구조:처음 다른 항목, 측정용). 보관한 항목이 없으면 "empty"다.</summary>
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
+index 5ae529b5..82005ab6 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
+@@ -2,6 +2,16 @@ using System;
+ 
+ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi
+ {
++    /// <summary>
++    /// 적 행동을 고르는 방식이다(연구 저장소 전용 연결, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP2).
++    /// Utility = 지금 게임 적 AI(기본), TurnPlanner = 연구용 턴 계획 AI(Assets/ResearchEnemyPlanner).
++    /// </summary>
++    public enum EnemyDecisionModel
++    {
++        Utility = 0,
++        TurnPlanner = 1
++    }
++
+     /// <summary>결정을 시작할 때 고정하는 선택적 평가 한도와 기획 조정값이다.</summary>
+     public sealed class EnemyDecisionSettings
+     {
+@@ -26,12 +36,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
+         public int DeathTradeThresholdPercent { get; }
+         public int ThreatAversionPercent { get; }
+         public int NextTurnApproachPercent { get; }
++        /// <summary>적 행동을 고르는 방식이다(연구용). 기본은 지금 AI다.</summary>
++        public EnemyDecisionModel DecisionModel { get; }
+ 
+         public EnemyDecisionSettings(int attackCandidateLimit = 4, int moveCandidateLimit = 6, int refinedMoveLimit = 2,
+             int followupAimLimit = 1, int actorPreviewLimit = 8, int decisionPreviewLimit = 16,
+             int alternateRouteNodeLimit = 256, int deathTradeThresholdPercent = DefaultDeathTradeThresholdPercent,
+-            int threatAversionPercent = DefaultThreatAversionPercent, int nextTurnApproachPercent = DefaultNextTurnApproachPercent)
++            int threatAversionPercent = DefaultThreatAversionPercent, int nextTurnApproachPercent = DefaultNextTurnApproachPercent,
++            EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility)
+         {
++            DecisionModel = Enum.IsDefined(typeof(EnemyDecisionModel), decisionModel)
++                ? decisionModel : throw new ArgumentOutOfRangeException(nameof(decisionModel));
+             DeathTradeThresholdPercent = Percent(deathTradeThresholdPercent, nameof(deathTradeThresholdPercent));
+             ThreatAversionPercent = Percent(threatAversionPercent, nameof(threatAversionPercent));
+             NextTurnApproachPercent = Percent(nextTurnApproachPercent, nameof(nextTurnApproachPercent));

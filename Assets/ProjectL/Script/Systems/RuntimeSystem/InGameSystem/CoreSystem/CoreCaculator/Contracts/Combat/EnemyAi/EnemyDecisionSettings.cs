@@ -2,6 +2,16 @@ using System;
 
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi
 {
+    /// <summary>
+    /// 적 행동을 고르는 방식이다(연구 저장소 전용 연결, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP2).
+    /// Utility = 지금 게임 적 AI(기본), TurnPlanner = 연구용 턴 계획 AI(Assets/ResearchEnemyPlanner).
+    /// </summary>
+    public enum EnemyDecisionModel
+    {
+        Utility = 0,
+        TurnPlanner = 1
+    }
+
     /// <summary>결정을 시작할 때 고정하는 선택적 평가 한도와 기획 조정값이다.</summary>
     public sealed class EnemyDecisionSettings
     {
@@ -26,12 +36,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int DeathTradeThresholdPercent { get; }
         public int ThreatAversionPercent { get; }
         public int NextTurnApproachPercent { get; }
+        /// <summary>적 행동을 고르는 방식이다(연구용). 기본은 지금 AI다.</summary>
+        public EnemyDecisionModel DecisionModel { get; }
 
         public EnemyDecisionSettings(int attackCandidateLimit = 4, int moveCandidateLimit = 6, int refinedMoveLimit = 2,
             int followupAimLimit = 1, int actorPreviewLimit = 8, int decisionPreviewLimit = 16,
             int alternateRouteNodeLimit = 256, int deathTradeThresholdPercent = DefaultDeathTradeThresholdPercent,
-            int threatAversionPercent = DefaultThreatAversionPercent, int nextTurnApproachPercent = DefaultNextTurnApproachPercent)
+            int threatAversionPercent = DefaultThreatAversionPercent, int nextTurnApproachPercent = DefaultNextTurnApproachPercent,
+            EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility)
         {
+            DecisionModel = Enum.IsDefined(typeof(EnemyDecisionModel), decisionModel)
+                ? decisionModel : throw new ArgumentOutOfRangeException(nameof(decisionModel));
             DeathTradeThresholdPercent = Percent(deathTradeThresholdPercent, nameof(deathTradeThresholdPercent));
             ThreatAversionPercent = Percent(threatAversionPercent, nameof(threatAversionPercent));
             NextTurnApproachPercent = Percent(nextTurnApproachPercent, nameof(nextTurnApproachPercent));

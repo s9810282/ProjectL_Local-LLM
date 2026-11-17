@@ -18,19 +18,24 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
         public int ThreatAversionPercent { get; }
         /// <summary>다음 기회에 칠 수 있는 자리의 값 비율(%)입니다.</summary>
         public int NextTurnApproachPercent { get; }
+        /// <summary>적 행동을 고르는 방식입니다(연구 저장소 전용 연결, 기본은 지금 AI).</summary>
+        public EnemyDecisionModel DecisionModel { get; }
 
-        public EnemyAiTuningData(int deathTradeThresholdPercent, int threatAversionPercent, int nextTurnApproachPercent)
+        public EnemyAiTuningData(int deathTradeThresholdPercent, int threatAversionPercent, int nextTurnApproachPercent,
+            EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility)
         {
             DeathTradeThresholdPercent = deathTradeThresholdPercent;
             ThreatAversionPercent = threatAversionPercent;
             NextTurnApproachPercent = nextTurnApproachPercent;
+            DecisionModel = decisionModel;
         }
 
         /// <summary>조정값을 담은 결정 설정입니다. 평가 한도는 계약 기본값입니다.</summary>
         public EnemyDecisionSettings ToSettings() => new EnemyDecisionSettings(
             deathTradeThresholdPercent: DeathTradeThresholdPercent,
             threatAversionPercent: ThreatAversionPercent,
-            nextTurnApproachPercent: NextTurnApproachPercent);
+            nextTurnApproachPercent: NextTurnApproachPercent,
+            decisionModel: DecisionModel);
 
         public void Validate()
         {

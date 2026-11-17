@@ -47,9 +47,16 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
         [SerializeField, Range(0, EnemyDecisionSettings.MaxTuningPercent)]
         private int nextTurnApproachPercent = EnemyDecisionSettings.DefaultNextTurnApproachPercent;
 
+        // 연구 저장소 전용 연결(LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP2). 팀 저장소에는 없는 칸이다.
+        [Header("적 AI 종류 (연구용)")]
+        [Tooltip("Utility: 지금 게임 적 AI(기본).\n" +
+            "TurnPlanner: 연구용 턴 계획 AI(Assets/ResearchEnemyPlanner). 적 턴 전체를 한 번에 계획하고, 위 세 조정값은 쓰지 않습니다.")]
+        [SerializeField]
+        private EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility;
+
         public override IData GetData()
         {
-            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent);
+            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent, decisionModel);
             data.Validate();
             return data;
         }

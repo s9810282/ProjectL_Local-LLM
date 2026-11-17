@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 연구용 측정 도구(LLMTest/core_port/README.md). Unity 밖에서 Core 소스를 그대로 묶어 빌드한다. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>ProjectL.Tests.Core</AssemblyName>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0618;CS0162;CS0168;CS0219;CS0414;CS0649;CS1998;CS8632;NU1701</NoWarn>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../../../../Assets/Tests/EditMode/*.cs" />
+    <Compile Include="Program.cs" />
+    <ProjectReference Include="../Contracts/Contracts.csproj" />
+    <ProjectReference Include="../Domain/Domain.csproj" />
+    <ProjectReference Include="../Application/Application.csproj" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnitLite" Version="3.14.0" />
+  </ItemGroup>
+</Project>

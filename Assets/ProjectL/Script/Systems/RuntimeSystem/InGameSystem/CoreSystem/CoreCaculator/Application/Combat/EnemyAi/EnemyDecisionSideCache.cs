@@ -27,6 +27,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private EnemyThreatField.ReadSet _threatReads;
         private EnemyThreatField _threat;
 
+        /// <summary>
+        /// 턴 계획 AI가 이번 적 진영 턴에 세운 계획이다(연구 저장소 전용 연결, Assets/ResearchEnemyPlanner, 설계 CP4).
+        /// 전투나 진영 턴이 바뀌면(<see cref="EnterScope"/>) 버린다.
+        /// </summary>
+        internal EnemyPlanner.EnemyTurnPlan TurnPlan { get; set; }
+
         // 시험·측정용 수치다. 결정에는 쓰지 않는다.
         internal int ScopeResets { get; private set; }
         internal int ForecastHits { get; private set; }
@@ -49,6 +55,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _forecast = null;
             _threatReads = null;
             _threat = null;
+            TurnPlan = null;
         }
 
         /// <summary>놓친 이유별 횟수다(구조:처음 다른 항목, 측정용). 보관한 항목이 없으면 "empty"다.</summary>

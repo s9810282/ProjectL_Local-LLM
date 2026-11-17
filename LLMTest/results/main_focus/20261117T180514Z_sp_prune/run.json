@@ -1,0 +1,14 @@
+{
+  "folders": [
+    "results\\sim\\20261117T180514Z_sp_prune_g1",
+    "results\\sim\\20261117T180514Z_sp_prune_g2",
+    "results\\sim\\20261117T180514Z_sp_prune_g3",
+    "results\\sim\\20261117T180514Z_sp_prune_g4",
+    "results\\sim\\20261117T180514Z_sp_prune_g5"
+  ],
+  "battles": 720,
+  "replay_only": false,
+  "mismatched": 0,
+  "kill_beam": 16,
+  "seconds": 67.0
+}

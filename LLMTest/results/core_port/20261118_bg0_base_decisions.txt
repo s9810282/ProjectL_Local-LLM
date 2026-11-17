@@ -1,0 +1,638 @@
+plan N5 1 sims=2059 reply=1532 evals=1318 beam=5 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N5 1 rejects=0 fallbacks=0 cacheHits=10
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan N5 7 sims=2059 reply=1532 evals=1318 beam=5 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N5 7 rejects=0 fallbacks=0 cacheHits=10
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan N6 1 sims=2792 reply=1628 evals=1780 beam=6 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N6 1 rejects=0 fallbacks=0 cacheHits=12
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan N6 7 sims=2792 reply=1628 evals=1780 beam=6 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N6 7 rejects=0 fallbacks=0 cacheHits=12
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan N8 1 sims=4058 reply=1928 evals=2444 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N8 1 rejects=0 fallbacks=0 cacheHits=16
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan N8 7 sims=4058 reply=1928 evals=2444 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn N8 7 rejects=0 fallbacks=0 cacheHits=16
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan W8 1 sims=1845 reply=531 evals=349 beam=8 fail=0 reranked=True flipped=False
+  Move#13 path 4,2>5,2>6,2>7,2
+  Move#12 path 3,2>4,2>5,2>6,2
+  Move#11 path 2,2>3,2>4,2>5,2
+  Move#16 path 4,3>5,3>6,3>7,3
+  Move#15 path 3,3>4,3>5,3>6,3
+  Move#14 path 2,3>3,3>4,3>5,3
+  Move#17 path 2,4>2,5>3,5>4,5
+  Move#18 path 3,4>4,4>5,4>6,4
+turn W8 1 rejects=0 fallbacks=0 cacheHits=8
+  Move#13 path 4,2>5,2>6,2>7,2
+  Move#12 path 3,2>4,2>5,2>6,2
+  Move#11 path 2,2>3,2>4,2>5,2
+  Move#16 path 4,3>5,3>6,3>7,3
+  Move#15 path 3,3>4,3>5,3>6,3
+  Move#14 path 2,3>3,3>4,3>5,3
+  Move#17 path 2,4>2,5>3,5>4,5
+  Move#18 path 3,4>4,4>5,4>6,4
+  End
+plan W8 7 sims=1845 reply=531 evals=349 beam=8 fail=0 reranked=True flipped=False
+  Move#13 path 4,2>5,2>6,2>7,2
+  Move#12 path 3,2>4,2>5,2>6,2
+  Move#11 path 2,2>3,2>4,2>5,2
+  Move#16 path 4,3>5,3>6,3>7,3
+  Move#15 path 3,3>4,3>5,3>6,3
+  Move#14 path 2,3>3,3>4,3>5,3
+  Move#17 path 2,4>2,5>3,5>4,5
+  Move#18 path 3,4>4,4>5,4>6,4
+turn W8 7 rejects=0 fallbacks=0 cacheHits=8
+  Move#13 path 4,2>5,2>6,2>7,2
+  Move#12 path 3,2>4,2>5,2>6,2
+  Move#11 path 2,2>3,2>4,2>5,2
+  Move#16 path 4,3>5,3>6,3>7,3
+  Move#15 path 3,3>4,3>5,3>6,3
+  Move#14 path 2,3>3,3>4,3>5,3
+  Move#17 path 2,4>2,5>3,5>4,5
+  Move#18 path 3,4>4,4>5,4>6,4
+  End
+plan U8 1 sims=1841 reply=570 evals=346 beam=8 fail=0 reranked=True flipped=False
+turn U8 1 rejects=0 fallbacks=0 cacheHits=0
+  End
+plan U8 7 sims=1841 reply=570 evals=346 beam=8 fail=0 reranked=True flipped=False
+turn U8 7 rejects=0 fallbacks=0 cacheHits=0
+  End
+plan A8 1 sims=3186 reply=1792 evals=1709 beam=8 fail=0 reranked=True flipped=False
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Direction/Left
+  Move#17 path 7,2>6,2
+  Attack#17 aim All/None
+  Move#13 path 7,1>7,2>7,3>6,3
+  Attack#13 aim All/None
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Direction/Left
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn A8 1 rejects=0 fallbacks=0 cacheHits=16
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Direction/Left
+  Move#17 path 7,2>6,2
+  Attack#17 aim All/None
+  Move#13 path 7,1>7,2>7,3>6,3
+  Attack#13 aim All/None
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Direction/Left
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan A8 7 sims=3186 reply=1792 evals=1709 beam=8 fail=0 reranked=True flipped=False
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Direction/Left
+  Move#17 path 7,2>6,2
+  Attack#17 aim All/None
+  Move#13 path 7,1>7,2>7,3>6,3
+  Attack#13 aim All/None
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Direction/Left
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn A8 7 rejects=0 fallbacks=0 cacheHits=16
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Direction/Left
+  Move#17 path 7,2>6,2
+  Attack#17 aim All/None
+  Move#13 path 7,1>7,2>7,3>6,3
+  Attack#13 aim All/None
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Direction/Left
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan T8 1 sims=2350 reply=1793 evals=1428 beam=8 fail=0 reranked=True flipped=False
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@4,0/None taunt 4
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@4,0/None taunt 4
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None taunt 4
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None taunt 4
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,1/None taunt 2
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,1/None taunt 2
+  Move#16 path 6,2>5,2>4,2>4,1
+  Attack#16 aim Cell@0,1/None taunt 2
+  Attack#12 aim Cell@4,0/None taunt 4
+turn T8 1 rejects=0 fallbacks=0 cacheHits=15
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@4,0/None taunt 4
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@4,0/None taunt 4
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None taunt 4
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None taunt 4
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,1/None taunt 2
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,1/None taunt 2
+  Move#16 path 6,2>5,2>4,2>4,1
+  Attack#16 aim Cell@0,1/None taunt 2
+  Attack#12 aim Cell@4,0/None taunt 4
+  End
+plan T8 7 sims=2350 reply=1793 evals=1428 beam=8 fail=0 reranked=True flipped=False
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@4,0/None taunt 4
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@4,0/None taunt 4
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None taunt 4
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None taunt 4
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,1/None taunt 2
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,1/None taunt 2
+  Move#16 path 6,2>5,2>4,2>4,1
+  Attack#16 aim Cell@0,1/None taunt 2
+  Attack#12 aim Cell@4,0/None taunt 4
+turn T8 7 rejects=0 fallbacks=0 cacheHits=15
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@4,0/None taunt 4
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@4,0/None taunt 4
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None taunt 4
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None taunt 4
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,1/None taunt 2
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,1/None taunt 2
+  Move#16 path 6,2>5,2>4,2>4,1
+  Attack#16 aim Cell@0,1/None taunt 2
+  Attack#12 aim Cell@4,0/None taunt 4
+  End
+plan R8 1 sims=4058 reply=1444 evals=2444 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn R8 1 rejects=0 fallbacks=0 cacheHits=16
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan R8 7 sims=4058 reply=1444 evals=2444 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+turn R8 7 rejects=0 fallbacks=0 cacheHits=16
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#18 path 8,2>7,2>6,2>5,2
+  Attack#18 aim Cell@2,0/None
+  Move#14 path 8,1>7,1>6,1>5,1
+  Attack#14 aim Cell@2,0/None
+  End
+plan X8 1 sims=2589 reply=1688 evals=1206 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>5,3>4,3>3,3
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@2,0/None
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@2,0/None
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None
+  Attack#12 aim Cell@2,0/None
+turn X8 1 rejects=0 fallbacks=0 cacheHits=15
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>5,3>4,3>3,3
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@2,0/None
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@2,0/None
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None
+  Attack#12 aim Cell@2,0/None
+  End
+plan X8 7 sims=2589 reply=1688 evals=1206 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>5,3>4,3>3,3
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@2,0/None
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@2,0/None
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None
+  Attack#12 aim Cell@2,0/None
+turn X8 7 rejects=0 fallbacks=0 cacheHits=15
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>5,3>4,3>3,3
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>6,3>5,3>4,3
+  Attack#16 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>7,3>6,3
+  Attack#18 aim Cell@2,0/None
+  Move#17 path 7,2>7,3>7,4>6,4
+  Attack#17 aim Cell@2,0/None
+  Move#13 path 7,1>7,2>7,3>7,4
+  Attack#13 aim Cell@4,0/None
+  Move#14 path 8,1>8,2>8,3>7,3
+  Attack#14 aim Cell@4,0/None
+  Attack#12 aim Cell@2,0/None
+  End
+plan H8 1 sims=2627 reply=1400 evals=1230 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>8,4>7,4
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>8,0>7,0>6,0
+  Attack#14 aim Cell@2,0/None
+  Move#17 path 7,2>6,2>5,2>5,1
+  Move#13 path 7,1>7,0
+  Attack#13 aim Cell@4,0/None
+turn H8 1 rejects=0 fallbacks=0 cacheHits=15
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>8,4>7,4
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>8,0>7,0>6,0
+  Attack#14 aim Cell@2,0/None
+  Move#13 path 7,1>6,1>5,1>5,0
+  Attack#13 aim Cell@2,0/None
+  Move#17 path 7,2>7,1>7,0
+  Attack#17 aim Cell@4,0/None
+  End
+plan H8 7 sims=2627 reply=1400 evals=1230 beam=8 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>8,4>7,4
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>8,0>7,0>6,0
+  Attack#14 aim Cell@2,0/None
+  Move#17 path 7,2>6,2>5,2>5,1
+  Move#13 path 7,1>7,0
+  Attack#13 aim Cell@4,0/None
+turn H8 7 rejects=0 fallbacks=0 cacheHits=15
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>3,1
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1
+  Attack#12 aim Cell@0,0/None
+  Move#18 path 8,2>8,3>8,4>7,4
+  Attack#18 aim Cell@4,0/None
+  Move#14 path 8,1>8,0>7,0>6,0
+  Attack#14 aim Cell@2,0/None
+  Move#13 path 7,1>6,1>5,1>5,0
+  Attack#13 aim Cell@2,0/None
+  Move#17 path 7,2>7,1>7,0
+  Attack#17 aim Cell@4,0/None
+  End
+plan G16 1 sims=9100 reply=0 evals=5157 beam=10 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#19 path 5,3>4,3>3,3>2,3
+  Attack#19 aim Cell@0,0/None
+  Move#20 path 6,3>5,3>4,3>3,3
+  Attack#20 aim Cell@0,0/None
+  Move#21 path 7,3>6,3>5,3>4,3
+  Attack#21 aim Cell@0,0/None
+  Move#23 path 5,4>4,4>3,4>2,4
+  Attack#23 aim Cell@0,0/None
+turn G16 1 rejects=0 fallbacks=0 cacheHits=19
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#19 path 5,3>4,3>3,3>2,3
+  Attack#19 aim Cell@0,0/None
+  Move#20 path 6,3>5,3>4,3>3,3
+  Attack#20 aim Cell@0,0/None
+  Move#21 path 7,3>6,3>5,3>4,3
+  Attack#21 aim Cell@0,0/None
+  Move#23 path 5,4>4,4>3,4>2,4
+  Attack#23 aim Cell@0,0/None
+plan G16 7 sims=9100 reply=0 evals=5157 beam=10 fail=0 reranked=True flipped=False
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#19 path 5,3>4,3>3,3>2,3
+  Attack#19 aim Cell@0,0/None
+  Move#20 path 6,3>5,3>4,3>3,3
+  Attack#20 aim Cell@0,0/None
+  Move#21 path 7,3>6,3>5,3>4,3
+  Attack#21 aim Cell@0,0/None
+  Move#23 path 5,4>4,4>3,4>2,4
+  Attack#23 aim Cell@0,0/None
+turn G16 7 rejects=0 fallbacks=0 cacheHits=19
+  Move#11 path 5,1>4,1>3,1>3,0
+  Attack#11 aim Cell@0,0/None
+  Move#12 path 6,1>5,1>4,1>3,1
+  Attack#12 aim Cell@0,0/None
+  Move#13 path 7,1>6,1>5,1>4,1
+  Attack#13 aim Cell@0,0/None
+  Move#15 path 5,2>4,2>3,2>2,2
+  Attack#15 aim Cell@0,0/None
+  Move#16 path 6,2>5,2>4,2>3,2
+  Attack#16 aim Cell@0,0/None
+  Move#17 path 7,2>6,2>5,2>4,2
+  Attack#17 aim Cell@0,0/None
+  Move#19 path 5,3>4,3>3,3>2,3
+  Attack#19 aim Cell@0,0/None
+  Move#20 path 6,3>5,3>4,3>3,3
+  Attack#20 aim Cell@0,0/None
+  Move#21 path 7,3>6,3>5,3>4,3
+  Attack#21 aim Cell@0,0/None
+  Move#23 path 5,4>4,4>3,4>2,4
+  Attack#23 aim Cell@0,0/None

@@ -16,7 +16,7 @@ V = 자산(우리) − 자산(상대) − 겁 × 위험(우리) + 기회 × 기�
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .assets import Cell, Objective
 from .reply import engine_terms
@@ -41,6 +41,8 @@ class PlannerConfig:
     reinforcement_discount: float = 0.5   # 증원 할인
     goal_step: float = 0.0                # G1: 승리 대상까지 남은 걸음당 승리 대상 가치의 몇 %를 빼나(0 = 끔)
     goal_together: float = 0.0            # G2: 함께 닿음 배수(0 = 끔)
+    move_attack_cells: int = 0            # 속도 개선 SP1: 이동 + 공격을 만들 도착 칸을 빠른 점수 상위 몇 개로(0 = 거르지 않음)
+    reply_move_attack_cells: int = 0      # 속도 개선 SP2: 2단 평가 응수의 이동 + 공격 도착 칸 수(0 = 거르지 않음)
 
     @property
     def rerank_count(self) -> int:
@@ -67,6 +69,7 @@ class Evaluator:
             for defn, _ in stage.reinforcement.pool:
                 self.pool_power[defn.name] = float(defn.attack * defn.max_hp)
         self._reach: dict[tuple[int, Cell], dict[Cell, int]] = {}
+        self._strike: dict[tuple[int, Cell], dict[Cell, int]] = {}
         self._fields: dict[tuple, dict[Cell, int]] = {}
 
     # ---------------------------------------------------------------- 자산
@@ -87,19 +90,29 @@ class Evaluator:
     def reach(self, unit: Unit, cell: Cell) -> dict[Cell, int]:
         """그 유닛이 cell에 있으면 다음 턴에 (이동해서) 공격이 닿는 칸 → 적용 비율(지정 칸 100, 스플래시 칸 스플래시 %)."""
         key = (unit.uid, cell)
-        if key in self._reach:
-            return self._reach[key]
+        if key not in self._reach:
+            self._reach[key] = self._coverage(unit, cell, moving=True)
+        return self._reach[key]
+
+    def strike(self, unit: Unit, cell: Cell) -> dict[Cell, int]:
+        """그 유닛이 cell에 서서 이번에 공격이 닿는 칸 → 적용 비율(이동은 더하지 않는다). 속도 개선 설계 SP1."""
+        key = (unit.uid, cell)
+        if key not in self._strike:
+            self._strike[key] = self._coverage(unit, cell, moving=False)
+        return self._strike[key]
+
+    def _coverage(self, unit: Unit, cell: Cell, moving: bool) -> dict[Cell, int]:
+        """도달 표·이번 공격 칸의 공통 계산. 계획 시작 판에 유닛을 cell로 옮겨, (moving이면 이동으로 닿는 칸까지) 공격 칸을 모은다."""
         probe = self.base.clone()
         probe.turn_side = unit.side
         if unit.uid not in probe.units:     # 계획 중에 생긴 유닛(지금은 없음)
-            self._reach[key] = {}
             return {}
         mover = probe.units[unit.uid]
         mover.cell, mover.hp = cell, max(1, unit.hp)
         mover.use = ActionUse.AVAILABLE
         mover.statuses = {k: v for k, v in unit.statuses.items() if k not in ("moved", "disarm")}
         result: dict[Cell, int] = {}
-        spots = [cell, *reachable(probe, mover)]
+        spots = [cell, *reachable(probe, mover)] if moving else [cell]
         splash = unit.defn.targeting.splash_percent
         for spot in spots:
             mover.cell = spot
@@ -113,7 +126,6 @@ class Evaluator:
                 for target in extra:
                     if result.get(target, 0) < splash:
                         result[target] = splash
-        self._reach[key] = result
         return result
 
     # ---------------------------------------------------------------- 피해 예상
@@ -159,6 +171,51 @@ class Evaluator:
             if value > best[2]:
                 best = (target, damage, value)
         return best
+
+    # ---------------------------------------------------------------- 도착 칸 점수(속도 개선 설계 SP1·SP2)
+    def strike_value(self, state: BattleState, unit: Unit, cell: Cell, targets: list) -> float:
+        """그 유닛이 cell에 서서 이번에 칠 수 있는 가장 좋은 공격 하나로 잃게 하는 자산. 공격할 수 없으면 0."""
+        if not unit.defn.can_attack or "disarm" in unit.statuses:
+            return 0.0
+        moved = replace(unit, cell=cell)
+        cover = self.strike(unit, cell)
+        best = 0.0
+        for target in targets:
+            cells = (target.cell,) if isinstance(target, Unit) else target.cells
+            percent = max((cover.get(c, 0) for c in cells), default=0)
+            if percent > 0:
+                best = max(best, self._loss(target, self.estimate(state, moved, target, percent)))
+        return best
+
+    def danger_loss(self, state: BattleState, unit: Unit, cell: Cell) -> float:
+        """그 유닛이 cell에 있을 때 상대 유닛들이 지금 자리에서 그 칸에 줄 수 있는 피해를 더해 잃는 자산(빠른 이동 점수와 같은 식)."""
+        moved = replace(unit, cell=cell)
+        danger = 0
+        for attacker in state.living(unit.side.other):
+            percent = self.reach(attacker, attacker.cell).get(cell, 0)
+            if percent and attacker.defn.can_attack and "disarm" not in attacker.statuses:
+                danger += self.estimate(state, attacker, moved, percent)
+        return min(danger, unit.hp) * unit.attack * (self.config.main_weight if unit.is_main else 1)
+
+    def move_attack_score(self, state: BattleState, unit: Unit, cell: Cell) -> float:
+        """SP1 도착 칸 점수: 기회 × 이번 공격의 손실 − 겁 × 그 칸에서 맞을 피해 − 그 칸의 G1 몫(승리 대상 걸음을 켰을 때)."""
+        config = self.config
+        score = (config.opportunity * self.strike_value(state, unit, cell, self._targets(state, unit.side))
+                 - config.fear * self.danger_loss(state, unit, cell))
+        if config.goal_step > 0:
+            score -= self.goal_penalty(state, replace(unit, cell=cell), cell, self.win_targets(state, unit.side))
+        return score
+
+    def reply_score(self, state: BattleState, unit: Unit, cell: Cell) -> float:
+        """SP2 응수 도착 칸 점수: 이번 공격의 손실(응수는 순이득이 가장 큰 공격 하나만 고르므로 겁 항목이 없다)."""
+        return self.strike_value(state, unit, cell, self._targets(state, unit.side))
+
+    @staticmethod
+    def best_cells(cells: list[Cell], score, limit: int) -> set[Cell] | None:
+        """점수 상위 limit개 칸(같으면 먼저 나온 칸). limit이 0이거나 칸이 limit개 이하이면 None(거르지 않음)."""
+        if limit <= 0 or len(cells) <= limit:
+            return None
+        return set(sorted(cells, key=lambda c: -score(c))[:limit])
 
     # ---------------------------------------------------------------- 위험·기회·거리
     def risk(self, state: BattleState, side: Side) -> float:
