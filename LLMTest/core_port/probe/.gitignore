@@ -1,0 +1,6 @@
+planner/
+artifacts/
+bin/
+obj/
+# 저장소 루트 .gitignore는 Unity가 만드는 *.csproj를 뺀다. 이 측정 도구의 프로젝트 파일은 직접 쓴 것이라 다시 넣는다.
+!*.csproj

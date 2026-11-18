@@ -1,0 +1,96 @@
+N5   allocated     1091 MB, sampled     1101 MB (672 kinds)
+     LINQ·람다·반복기                   40.4%
+     Core 형식 (배열·집합·사전)            19.6%
+     Core 단계 반복기(yield)            13.8%
+     Core 형식 (객체)                   8.7%
+     캐릭터 사실 (객체·배열·사전)              6.8%
+     시스템 배열·컬렉션                     5.2%
+     사건 관련 (LINQ·람다)                2.4%
+     사건·증거 (객체·목록)                  1.8%
+     시스템 기타                         1.3%
+     계획 AI 형식                       0.1%
+N8   allocated     2133 MB, sampled     2153 MB (726 kinds)
+     LINQ·람다·반복기                   41.7%
+     Core 형식 (배열·집합·사전)            20.2%
+     Core 단계 반복기(yield)            13.9%
+     Core 형식 (객체)                   8.3%
+     캐릭터 사실 (객체·배열·사전)              6.6%
+     시스템 배열·컬렉션                     4.8%
+     사건 관련 (LINQ·람다)                1.7%
+     사건·증거 (객체·목록)                  1.5%
+     시스템 기타                         1.1%
+     계획 AI 형식                       0.1%
+T8   allocated     3084 MB, sampled     3113 MB (767 kinds)
+     LINQ·람다·반복기                   46.9%
+     Core 형식 (배열·집합·사전)            19.8%
+     Core 형식 (객체)                  13.5%
+     Core 단계 반복기(yield)             8.2%
+     시스템 배열·컬렉션                     5.0%
+     캐릭터 사실 (객체·배열·사전)              4.1%
+     사건·증거 (객체·목록)                  0.8%
+     사건 관련 (LINQ·람다)                0.8%
+     시스템 기타                         0.8%
+     계획 AI 형식                       0.1%
+G16  allocated     5199 MB, sampled     5246 MB (734 kinds)
+     LINQ·람다·반복기                   43.4%
+     Core 형식 (배열·집합·사전)            21.9%
+     Core 단계 반복기(yield)            12.3%
+     캐릭터 사실 (객체·배열·사전)              7.4%
+     Core 형식 (객체)                   7.3%
+     시스템 배열·컬렉션                     4.6%
+     시스템 기타                         1.2%
+     사건 관련 (LINQ·람다)                0.9%
+     사건·증거 (객체·목록)                  0.8%
+     계획 AI 형식                       0.2%
+ALL  allocated    11507 MB, sampled    11613 MB
+     LINQ·람다·반복기                   43.8%
+     Core 형식 (배열·집합·사전)            20.8%
+     Core 단계 반복기(yield)            11.6%
+     Core 형식 (객체)                   9.3%
+     캐릭터 사실 (객체·배열·사전)              6.3%
+     시스템 배열·컬렉션                     4.8%
+     사건 관련 (LINQ·람다)                1.2%
+     시스템 기타                         1.1%
+     사건·증거 (객체·목록)                  1.1%
+     계획 AI 형식                       0.1%
+top types (all boards):
+    3.3%  캐릭터 사실 (객체·배열·사전)            ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts[]
+    2.8%  Core 형식 (배열·집합·사전)           System.Collections.Generic.HashSet`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    2.4%  Core 단계 반복기(yield)           <CaptureSteps>d__7
+    2.4%  시스템 배열·컬렉션                   System.Int32[]
+    2.4%  LINQ·람다·반복기                  System.ArrayEnumerator
+    2.3%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatAttackProfile,System.Boolean]
+    2.3%  Core 단계 반복기(yield)           <SelectionSteps>d__12
+    1.9%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.TraitTrailFact,System.Boolean]
+    1.5%  LINQ·람다·반복기                  <>c__DisplayClass3_0
+    1.5%  Core 형식 (배열·집합·사전)           Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId][]
+    1.4%  Core 형식 (배열·집합·사전)           ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord[]
+    1.3%  Core 단계 반복기(yield)           <CollectSteps>d__1
+    1.2%  Core 단계 반복기(yield)           <SelectionCellSteps>d__13
+    1.2%  Core 형식 (객체)                 ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatCommandInput
+    1.2%  캐릭터 사실 (객체·배열·사전)            Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts][]
+    1.2%  Core 단계 반복기(yield)           <FindBlockSteps>d__9
+    1.2%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts,System.Boolean]
+    1.2%  LINQ·람다·반복기                  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatAttackProfile]
+    1.1%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.AppliedStatus,System.Boolean]
+    1.1%  Core 형식 (배열·집합·사전)           ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact.ArtifactCombatUnitFact[]
+    1.0%  Core 단계 반복기(yield)           <ResolveSteps>d__2
+    1.0%  Core 형식 (배열·집합·사전)           ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey[]
+    1.0%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.StaticTerrainFact,System.Boolean]
+    1.0%  LINQ·람다·반복기                  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord]
+    0.9%  LINQ·람다·반복기                  <>c__DisplayClass12_0
+    0.9%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.HaboobGimmickState,System.Boolean]
+    0.9%  LINQ·람다·반복기                  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.StaticTerrainFact]
+    0.9%  Core 형식 (배열·집합·사전)           System.Collections.Generic.HashSet`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord]
+    0.9%  Core 형식 (객체)                 ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitKey
+    0.9%  LINQ·람다·반복기                  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    0.8%  LINQ·람다·반복기                  <>c__DisplayClass34_0
+    0.8%  Core 형식 (배열·집합·사전)           ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.EffectRuleBinding[]
+    0.8%  LINQ·람다·반복기                  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.HaboobGimmickState]
+    0.8%  LINQ·람다·반복기                  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster.OwnedCharacterRecord,System.Boolean]
+    0.8%  Core 형식 (배열·집합·사전)           System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.EffectRuleBinding]
+    0.8%  LINQ·람다·반복기                  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.AttackDecreaseStatus]
+    0.8%  LINQ·람다·반복기                  WhereEnumerableIterator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.TraitTrailFact]
+    0.8%  LINQ·람다·반복기                  <>c__DisplayClass27_0
+    0.7%  LINQ·람다·반복기                  <>c__DisplayClass2_0
+    0.7%  LINQ·람다·반복기                  <>c__DisplayClass5_0
