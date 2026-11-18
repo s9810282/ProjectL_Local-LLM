@@ -67,10 +67,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal double ElapsedMilliseconds { get; }
         /// <summary>한 턴 더 보기가 둬 본 플레이어 응수 수(진단). 옛 깊은 V면 0.</summary>
         internal int LookaheadReplies { get; }
+        /// <summary>예상 피해를 물은 수(진단, 기억 설계 DM-a).</summary>
+        internal long DamageCalls { get; }
+        /// <summary>그중 기억한 답을 쓴 수.</summary>
+        internal long DamageHits { get; }
+        /// <summary>그중 DM2로 막혀 기억하지 않은 수.</summary>
+        internal long DamageBlocked { get; }
+        /// <summary>확인 모드에서 기억한 답과 다시 계산한 답이 달랐던 수(확인 모드가 아니면 0).</summary>
+        internal long DamageMismatches { get; }
+        internal string LastDamageMismatch { get; }
 
         internal EnemyTurnPlanStats(int simulations, int replySimulations, int evaluations, int beamSteps,
-            int failures, string lastFailure, bool reranked, bool flipped, double elapsedMilliseconds, int lookaheadReplies = 0)
+            int failures, string lastFailure, bool reranked, bool flipped, double elapsedMilliseconds, int lookaheadReplies = 0,
+            PlannerDamageMemo damage = null)
         {
+            DamageCalls = damage?.Calls ?? 0;
+            DamageHits = damage?.Hits ?? 0;
+            DamageBlocked = damage?.Blocked ?? 0;
+            DamageMismatches = damage?.Mismatches ?? 0;
+            LastDamageMismatch = damage?.LastMismatch;
             Simulations = simulations;
             ReplySimulations = replySimulations;
             Evaluations = evaluations;

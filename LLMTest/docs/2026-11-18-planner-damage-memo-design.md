@@ -1,6 +1,6 @@
 # 계획 AI 예상 피해 기억해 두기 설계 (초안, 2026-11-18)
 
-> **상태: 결정 완료(2026-11-18 사용자 "권장안대로, DM-0" = Q-DM1~Q-DM4 모두 권장안). DM-0 측정 완료(§11) — 결과로 DM3 대신 DM5(§11.3)를 제안, Q-DM5 결정 대기. 계획 AI 코드 변경 없음.**
+> **상태: 결정 완료(2026-11-18 사용자 "권장안대로, DM-0" = Q-DM1~Q-DM4 모두 권장안). DM-0 측정 완료(§11). Q-DM5 A 결정(2026-11-18 사용자 "대표 객체로 가자, DM-a 진행해"). DM-a 완료: 결정 기록 기억 전후 같음, `memocheck` 어긋남 0·적중 97.3%(§12.5). DM-b 측정: l1 계획 시간 −22%·할당 −28%(§13). Unity 에디터 컴파일·재생 확인은 사용자.**
 > 사용자 요청 "응, 설계해 줘"(2026-11-18). 앞 측정: [병렬 설계](2026-11-18-planner-background-parallel-design.md) §16(우리 코드 몫)·§17(예상 피해 되풀이).
 > 범위: 연구 저장소(Local LLM)의 계획 AI(`Assets/ResearchEnemyPlanner/`)만. 팀 저장소·develop에는 올리지 않는다. 사용자 지시(2026-11-18 "Enemy AI 관련으로는 우리가 수정해도 문제 없어")의 범위 안이다. 게임 규칙 함수(Core 피해 식)는 바꾸지 않는다.
 
@@ -183,3 +183,86 @@
 |---|---|---|
 | Q-DM5 | 기억 열쇠의 유닛 자리를 대표 객체(DM5)로 하나 | **A 대표 객체(DM5), DM3는 빼기.** B 처음 설계대로 DM3(약 68%) |
 
+
+**결정(2026-11-18 사용자 "Q-DM5 대표 객체로 가자, DM-a 진행해"):** Q-DM5 A. DM3(`MoveTo` 표)는 넣지 않는다.
+
+## 12 DM-a 구현 (2026-11-18)
+
+### 12.1 바꾼 파일
+
+| 파일 | 바꾼 것 |
+|---|---|
+| `Assets/ResearchEnemyPlanner/PlannerDamageMemo.cs`(+ `.meta`, 새 파일) | 기억 표, 열쇠(DM1), 막기(DM2), 대표 객체(DM5), 확인 모드·끄기(측정 전용 정적 값 `Check`·`Disabled`), 진단 수 |
+| `Assets/ResearchEnemyPlanner/PlannerEvaluator.cs` | `Estimate`가 기억을 거쳐 Core 피해 식(`ComputeDamage`, 옛 본문 그대로)을 부름. 진단 창구 `DamageMemo` |
+| `Assets/ResearchEnemyPlanner/EnemyTurnPlan.cs`, `EnemyTurnPlanner.cs` | 계획 수치에 `DamageCalls`·`DamageHits`·`DamageBlocked`·`DamageMismatches`·`LastDamageMismatch`(생성자 끝 선택 인자) |
+| `LLMTest/core_port/harness/Harness/Program.cs` | `memocheck` 모드, 어느 모드에나 붙는 `--no-memo` |
+| `LLMTest/core_port/probe/Harness/ProbeMain.cs` | `--no-memo`. `damage` 모드는 늘 기억을 끈다(켜 두면 기억에 걸리지 않은 질문만 기록되어 §17·DM-0과 다른 것을 잰다) |
+
+Core 파일·게임 규칙·`hooks.patch`는 바꾸지 않았다. `dump`가 적는 줄은 바꾸지 않았다(기억 전후 파일을 그대로 비교하려고).
+
+### 12.2 측정 사본(DM-0 `DamageLog` L8)과 다른 점
+
+모두 같은 답이 나오는 쪽으로만 바꿨다. `memocheck`가 확인한다.
+
+- 열쇠는 `object[]` 대신 구조체(`DamageKey`)다. 판에서 읽는 몫 중 객체 목록(도발 공격자·먼지 연막 흔적·참호 보유자)은 하나라도 있을 때만 작은 객체(`Extra`)를 만든다.
+- 프로필은 고른 프로필 대신 프로필 목록 객체를 넣는다(L6). 같은 목록과 같은 값의 유닛이면 Core가 고르는 프로필도 같다. DM-0에서 L6과 L7의 적중은 같았다.
+- 결속 보너스는 대상이 결속 특성을 가질 때만 Core 함수를 부른다(그 함수는 결속이 아니면 0을 돌려준다).
+- 먼지 연막은 판에 먼지 연막 흔적이 하나라도 있을 때만 Core 함수를 부른다(그 함수는 먼지 연막 흔적만 고른다).
+- 참호 보유자 목록과 먼지 연막 유무는 판마다 한 번(바로 앞에 물은 판 하나만 기억). 특성 키 확인·결속·참호 여부는 대표마다 한 번, 받는 피해 규칙 판정은 대표 × 프로필 목록마다 한 번.
+- 대표 찾기는 위치·체력·행동 사용·영역이 다르면 비교하지 않는다(그러면 `SameValues`가 거짓이다). 전투 기록이 같으면 `With` 사본 없이 바로 `SameValues`를 부른다.
+- 지형 비율은 판에 모래폭풍·고지대 칸이 하나라도 있을 때만 Core `RemainingDamagePercent`를 부른다(없으면 그 함수는 늘 100). 판마다 한 번 Core `TerrainCells`(Core가 `HasTerrain`과 같은 판정이라고 밝힌 함수)로 본다. DM-b 첫 측정에서 질문마다 부르는 이 함수의 LINQ 할당이 우리 코드 몫을 2.9% → 8.4%로 늘려 넣었다(§13).
+
+### 12.3 확인 명령
+
+```powershell
+# 1) 빌드(.NET 8 SDK)
+dotnet build LLMTest/core_port/harness/Harness
+# 2) 기억 없이 기준 결정 기록(설계 DM4: 넣기 전 기준. 기억을 끈 길은 옛 코드와 같은 Core 호출이다)
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- dump LLMTest/results/core_port/20261118_dma_base_l1.txt --no-memo
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- dump LLMTest/results/core_port/20261118_dma_base_l0.txt N5,N6,N8,W8,U8,A8,T8,R8,X8,H8,G16 1,7 l0 --no-memo
+# 3) 기억 켜고 같은 기록 → 두 파일이 같아야 함
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- dump LLMTest/results/core_port/20261118_dma_memo_l1.txt
+# 4) 어긋남 0, 적중률
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- memocheck
+```
+
+판 아이디는 `EnemyAiBenchmarkFixtures.Ids`(N5·N6·N8·W8·U8·A8·T8·R8·X8·H8·G16). 시간·할당 전후(`probe`, `--no-memo` 대 기본)는 DM-b.
+
+### 12.4 남은 것·주의
+
+- Core 쪽은 처음에 VS 2022 MSBuild로 Unity의 `ProjectL.Core.Application.csproj`를 빌드해 오류 0을 확인했다. 그 뒤 이 PC(DESKTOP-U1C90FB)에 .NET 8 SDK 8.0.428을 사용자 폴더(`%LOCALAPPDATA%\Microsoft\dotnet`, PATH 안 바꿈)에 설치해 측정 도구를 빌드했다(사용자 승인, 공식 `dotnet-install.ps1`). 측정 도구 빌드 오류 0(경고 7은 원래 있던 시험 파일 진입점 경고).
+- Unity 에디터가 이 프로젝트를 열고 있어 배치 컴파일·Unity 시험은 돌리지 않았다. 에디터 로그는 다른 프로젝트 것이라 이 프로젝트의 에디터 컴파일 결과는 확인하지 못했다.
+- 대표 표(`_units`)는 계획 하나 동안 물어 본 사실 객체를 모두 붙잡는다(DM-0 측정 사본과 같다). 계획 동안 살아 남는 객체가 늘어 GC 세대 이동이 늘 수 있다. DM-b에서 할당과 함께 본다.
+- `Check`·`Disabled`는 정적 값이다. 게임은 바꾸지 않는다. 여러 코어(BG-b)로 가면 진단 수와 기억 표를 일꾼마다 나눠야 한다(§8).
+
+### 12.5 DM-a 결과 (2026-11-18)
+
+| 확인 | 결과 | 원본(`LLMTest/results/core_port/`) |
+|---|---|---|
+| 측정 도구 빌드 | 오류 0 | — |
+| 결정 기록 l1(판 11 × 씨앗 1·7, 계획 + 적 턴 전체) | 기억 끔·켬 두 파일이 바이트까지 같음 | `20261118_dma_base_l1.txt` = `20261118_dma_memo_l1.txt` |
+| 결정 기록 l0(계획만) | 같음 | `20261118_dma_base_l0.txt` = `20261118_dma_memo_l0.txt` |
+| `memocheck`(44계획) | 어긋남 0, 막힘 0, 예상 피해 4,838,458번 중 4,707,540번 기억 적중(97.3%) | `20261118_dma_memocheck.txt` |
+
+- 판별 적중 92.5%(T8, 판에서 읽는 몫이 있는 판)~98.9%(G16). DM-0 L8 예상(97.4%/97.3%)과 같다.
+- W8·U8은 예상 피해를 한 번도 묻지 않는다(0번). 원래 그렇다(기억과 무관).
+- 지형 빠른 길(§12.2 끝)을 넣은 뒤 다시 돌린 결정 기록·`memocheck`도 같다(`20261118_dmb_memo_l1.txt`·`_l0.txt`, `20261118_dmb_memocheck.txt`).
+
+## 13 DM-b 측정 (2026-11-18)
+
+측정 사본(`probe`, Release, 판 N5·N8·T8·G16, 씨앗 1)으로 기억 끔(`--no-memo`)과 켬을 번갈아 두 번씩 돌렸다. 이 PC(DESKTOP-U1C90FB)에서 잰 값이라 작업 PC의 §16 값과 직접 비교하지 않는다. 원본: `LLMTest/results/core_port/20261118_dmb_probe2.txt`(지형 빠른 길 넣은 뒤). 넣기 전 측정은 `20261118_dmb_probe.txt`.
+
+| 판 4개 합 | 기억 끔(2회) | 기억 켬(2회) | 변화 |
+|---|---|---|---|
+| l1 계획 시간 | 5,527 / 5,599 ms | 4,341 / 4,301 ms | 약 −22% |
+| l1 할당 | 9,983 MB | 7,170 MB | −28.2% |
+| l0 계획 시간 | 6,536 / 6,453 ms | 5,376 / 5,344 ms | 약 −17% |
+| l0 할당 | 11,101 MB | 8,288 MB | −25.3% |
+
+- 예상(§11.4: 시간 최대 약 21%, 할당 최대 약 30%)과 비슷하다. 할당은 판마다 같은 값이 두 번 다 나왔다(결정적), 시간은 흔들림이 판마다 수% 있다.
+- 예상 피해 칸의 몫: l1 할당 34.9% → 8.9%, 시간 27% → 5%. 대신 우리 코드 몫이 할당 2.9% → 4.4%, 시간 5.4% → 7.7~8.1%로 늘었다(열쇠·대표 찾기·기억 표). 지형 빠른 길 전에는 할당 8.4%였다.
+- 판별(l1 할당): N5 −20%, N8 −26%, T8 −15%, G16 −36%. G16 시간은 약 −29%. N5 l0 시간은 차이가 흔들림 안이다(836~967 대 917~929 ms).
+- 정산(l1 할당 약 39% → 약 54%로 몫이 커짐)이 이제 가장 큰 덩어리다.
+- 대표 표가 계획 동안 붙잡는 객체가 GC 멈춤에 주는 영향은 이 측정으로 볼 수 없다. Unity 재생(프레임 진단의 GC 수집 프레임 수)으로 사용자가 본다.
+
+남은 것: Unity 에디터 컴파일 확인·재생 확인(사용자), 게임에서의 기다린 프레임·GC 수집 프레임 수 전후.

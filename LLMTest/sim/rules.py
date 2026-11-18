@@ -837,6 +837,13 @@ def legal_attacks(state: BattleState, unit: Unit, useful_only: bool = True) -> l
             continue
         if useful_only and not plan.hits and plan.pull is None:
             continue
+        # 같은 편만 맞는 조준(캐논이 제 편을 쏘는 것)은 뺀다. 판 값이 죽은 같은 편의 거리 벌점·위험을 함께 지워
+        # 그런 조준을 좋게 볼 수 있어서다(2026-11-18). 같은 편이 스플래시로 함께 맞는 조준·끌어오기는 남긴다.
+        # Unity 계획 AI PlannerCandidates.Aims와 같은 규칙.
+        if useful_only and plan.pull is None and unit.defn.trait("Pull") is None and plan.hits and all(
+                (state.units[h.target] if h.kind == "unit" else state.structures[h.target]).side is unit.side
+                for h in plan.hits):
+            continue
         result.append((Attack(unit.uid, aim), plan))
     return result
 

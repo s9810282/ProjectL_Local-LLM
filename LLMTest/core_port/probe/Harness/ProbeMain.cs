@@ -18,6 +18,13 @@ public static class ProbeMain
     public static int Main(string[] args)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
+        // 예상 피해 기억(DM-a)이 켜져 있으면 damage 모드는 기억에 걸리지 않은 질문만 본다. 옛 되풀이 측정(§17·DM-0)과 같게 재려면 끈다.
+        // --no-memo: 시간·할당을 기억 없이 잴 때도(DM-b 전후 비교) 쓴다.
+        if (args.Contains("--no-memo") || args.Length > 0 && args[0] == "damage")
+        {
+            PlannerDamageMemo.Disabled = true;
+            args = args.Where(a => a != "--no-memo").ToArray();
+        }
         if (args.Length > 0 && args[0] == "damage")
             return Damage(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids,
                 args.Length > 2 ? args[2].Split(',') : new[] { "l0", "l1" });

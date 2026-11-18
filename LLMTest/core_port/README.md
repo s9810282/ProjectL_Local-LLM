@@ -22,6 +22,7 @@
 | `EnemyTurnPlan.cs` | 한 적 턴의 계획(행동마다 행동 전 판 서명)과 계획 수치 | — |
 | `PlannerBoard.cs` | 공정 입력(적이 모르는 칸 빼기 + 난수 씨앗), 판 서명, 입력 다시 만들기, 행동 돌리기(`PlannerSimulator`) | `planner.signature`, `prediction_seed` |
 | `PlannerEvaluator.cs` | 빠른 V(자산·위험·기회·거리 벌점·G1), 도달 표, 예상 피해, 빠른 이동 점수 | `evaluate.Evaluator` |
+| `PlannerDamageMemo.cs` | 예상 피해 기억(계획 하나 동안, 대표 객체 열쇠). 같은 답이 확실한 질문만 다시 쓴다([기억 설계](../docs/2026-11-18-planner-damage-memo-design.md) §12) | — (Core 판에만) |
 | `PlannerCandidates.cs` | 유닛 하나의 후보(제자리 공격·이동·이동 + 공격, 도발 규칙) | `analysis.unit_options` |
 | `PlannerBeam.cs` | 빔 탐색, 다시 매김 후보 모음 | `PlannerPolicy._make_plan` |
 | `PlannerReply.cs` | 깊은 V: 한 턴 더 보기(위험 판에서 플레이어 유닛을 차례대로 둔 뒤 판의 빠른 V). 옛 깊은 V(위험 판·기회 판에서 따로 고른 응수)도 남김 | `reply.py` |
@@ -81,7 +82,7 @@ git checkout FETCH_HEAD -- . ':(exclude)LLMTest' ':(exclude)Assets/ResearchEnemy
 git apply --3way LLMTest/core_port/hooks.patch
 ```
 
-4. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다.
+4. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다. **예상 피해 기억 확인 `memocheck`(아래 §4)를 꼭 돌린다.** 기억은 "Core 피해 식이 두 유닛 사실 말고 판에서 읽는 것"을 설계 시점에 확인한 목록에 기댄다. develop에서 피해 식이 새로 읽는 것이 생기면 어긋남이 나온다. 어긋남이 0이 아니면 멈추고 보고한다.
 5. 연결 줄을 고쳤으면 패치를 다시 만든다: 위 표의 고친 파일(코드 여섯 + 조정 에셋)은 `git diff 07561fc7 -- <파일>`, 새 파일 넷은 `git diff --no-index -- /dev/null <파일>`을 이어 붙인다. `git apply -R --check`로 확인한다.
 
 ## 4 측정 도구
@@ -120,6 +121,14 @@ dotnet run --project LLMTest/core_port/harness/Harness --no-build -- dump out.tx
 ```
 
 기준 판 11개 × 씨앗 1·7의 계획과 적 턴 전체 행동을 파일에 적는다(시간 없음). 고치기 전후 파일을 그대로 비교해 결정이 같은지 본다. BG-0 기준은 `LLMTest/results/core_port/20261118_bg0_base_decisions.txt`. 끝 인자로 깊은 V 종류를 고른다(`dump out.txt N5,N8 1,7 l0`). 게임 길과 다른 종류면 계획만 적는다.
+
+```bash
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- memocheck
+```
+
+예상 피해 기억 확인([기억 설계](../docs/2026-11-18-planner-damage-memo-design.md) DM4·§12). 기억한 답이 있어도 늘 다시 계산해 비교한다. 판 11개 × 씨앗 1·7 × l0·l1마다 물은 수·적중·막힘·어긋남을 적고, 어긋남이 하나라도 있으면 종료 값 1. 2026-11-18 결과: 적중 97.3%, 막힘 0, 어긋남 0(`LLMTest/results/core_port/20261118_dmb_memocheck.txt`).
+
+어느 모드에나 `--no-memo`를 붙이면 기억을 끈다(기억 전후 비교). DM-a 기준 결정 기록은 `20261118_dma_base_l1.txt`·`_l0.txt`(기억 끔)이고, 기억 켠 기록이 이것과 같아야 한다.
 
 ```bash
 dotnet run --project LLMTest/core_port/harness/Harness --no-build -- lookahead

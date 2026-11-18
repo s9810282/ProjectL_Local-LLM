@@ -29,7 +29,7 @@ from .targeting import Side
 def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
     """이름으로 계획 AI를 만든다:
     plan{K}[:f{겁}][:o{기회}][:n{유닛당 후보}][:r{다시 매김}][:d{결과마다 빔 수}][:g{승리 대상 걸음}][:t{함께 닿음}]
-        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}][:l{한 턴 더 보기}]
+        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}][:l{한 턴 더 보기}][:s{살아 있음}][:a{걸음 포화}][:w{자산 비율}][:k{걸음 로그}]
     (예: plan4 = 다시 매김 4, plan4:r0 = 다시 매김 끔(옛 동작), plan4:d1 = 빔 다양성 켬, plan4:f0.8:o0.3:r8,
     plan4:g1:t0.5 = 승리 대상 노림 켬 — 설계 docs/2026-11-14-planner-goal-pressure-design.md,
     plan4:g1:m3:q2 = 이동 + 공격 도착 칸 거름 — 설계 docs/2026-11-18-planner-candidate-pruning-design.md,
@@ -39,12 +39,14 @@ def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
     for part in rest:
         key = {"f": "fear", "o": "opportunity", "n": "per_unit", "r": "rerank", "d": "distinct",
                "g": "goal_step", "t": "goal_together", "m": "move_attack_cells",
-               "q": "reply_move_attack_cells", "l": "lookahead"}.get(part[:1])
+               "q": "reply_move_attack_cells", "l": "lookahead", "s": "survival", "a": "approach",
+               "w": "ratio", "k": "log_approach"}.get(part[:1])
         if key is None:
             raise ValueError(f"모르는 계획 AI 설정: {part} "
                              "(f겁, o기회, n유닛당 후보, r다시 매김, d빔 다양성, g승리 대상 걸음, t함께 닿음, "
-                             "m이동 + 공격 도착 칸, q응수 도착 칸, l한 턴 더 보기)")
-        integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells", "lookahead")
+                             "m이동 + 공격 도착 칸, q응수 도착 칸, l한 턴 더 보기, s살아 있음, a걸음 포화, w자산 비율, k걸음 로그)")
+        integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells", "lookahead",
+                          "approach", "log_approach")
         values[key] = int(part[1:]) if integer else float(part[1:])
     if values.get("rerank", 0) < 0:
         raise ValueError(f"다시 매김 수는 0 이상이어야 합니다: {name}")
@@ -54,6 +56,12 @@ def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
         raise ValueError(f"승리 대상 노림 값은 0 이상이어야 합니다: {name}")
     if values.get("move_attack_cells", 0) < 0 or values.get("reply_move_attack_cells", 0) < 0:
         raise ValueError(f"도착 칸 수는 0 이상이어야 합니다: {name}")
+    if any(values.get(k, 0) < 0 for k in ("survival", "approach", "ratio", "log_approach")):
+        raise ValueError(f"곡선 항목 값은 0 이상이어야 합니다: {name}")
+    if values.get("ratio", 0) > 1:
+        raise ValueError(f"자산 비율 몫은 1 이하여야 합니다: {name}")
+    if values.get("approach", 0) > 0 and values.get("log_approach", 0) > 0:
+        raise ValueError(f"걸음 포화(a)와 걸음 로그(k)는 함께 쓸 수 없습니다: {name}")
     if values.get("lookahead", 0) not in (0, 1):
         raise ValueError(f"한 턴 더 보기는 0 또는 1이어야 합니다: {name}")
     config = PlannerConfig(**values)
@@ -271,7 +279,7 @@ class PlannerPolicy(Policy):
         loss = evaluator.danger_loss(state, unit, cell)
         if gain == 0:   # 칠 대상이 없으면 가까워지는 쪽
             field = evaluator._distance_field(state, evaluator._targets(state, self.side))
-            gain = -self.config.step_penalty * field.get(cell, 99)
+            gain = -self.config.step_penalty * self.config.step_units(field.get(cell, 99))
         score = self.config.opportunity * gain - self.config.fear * loss
         if self.config.goal_step > 0:
             score -= evaluator.goal_penalty(state, moved, cell, evaluator.win_targets(state, self.side))

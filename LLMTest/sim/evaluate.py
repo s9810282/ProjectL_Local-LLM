@@ -15,6 +15,8 @@ V = 자산(우리) − 자산(상대) − 겁 × 위험(우리) + 기회 × 기�
 
 from __future__ import annotations
 
+import math
+
 from collections import deque
 from dataclasses import dataclass, replace
 
@@ -44,16 +46,32 @@ class PlannerConfig:
     move_attack_cells: int = 0            # 속도 개선 SP1: 이동 + 공격을 만들 도착 칸을 빠른 점수 상위 몇 개로(0 = 거르지 않음)
     reply_move_attack_cells: int = 0      # 속도 개선 SP2: 2단 평가 응수의 이동 + 공격 도착 칸 수(0 = 거르지 않음)
     lookahead: int = 0                    # 한 턴 더 보기: 1이면 깊은 평가가 상대 턴 전체를 차례대로 둬 보고 그 뒤 판을 빠른 V로(0 = 끔)
+    survival: float = 0.0                 # 곡선 항목 CV1: 산 유닛 전력에 더하는 "살아 있음" 덩어리(공격력 × 최대HP의 배수, 0 = 끔)
+    approach: int = 0                     # 곡선 항목 CV2: 걸음 벌점 포화 k(벌점 = 상수 × k × b / (b + k), 0 = 직선)
+    ratio: float = 0.0                    # 곡선 항목 CV3: 자산을 비율(로그)로 보는 몫 w(0 = 차이 그대로, 1 = 로그 비율만)
+    log_approach: int = 0                 # 곡선 항목 CV4: 걸음 벌점 로그 k(벌점 = 상수 × k × ln(1 + b / k), 0 = 직선)
 
     @property
     def rerank_count(self) -> int:
         return self.beam if self.rerank is None else self.rerank
 
+    def step_units(self, steps: int) -> float:
+        """걸음 벌점·G1·빠른 이동 점수가 곱하는 걸음 양. 끄면 걸음 수 그대로, CV2는 k × b / (b + k), CV4는 k × ln(1 + b / k).
+        설계 docs/2026-11-18-planner-curved-terms-design.md CV2."""
+        if steps <= 0:
+            return float(steps)
+        if self.log_approach > 0:     # CV4: 가까우면 직선과 비슷하고, 멀어져도 계속 커진다(상한 없음)
+            return self.log_approach * math.log1p(steps / self.log_approach)
+        if self.approach <= 0:
+            return float(steps)
+        return self.approach * steps / (steps + self.approach)
+
 
 def unit_power(unit: Unit, config: PlannerConfig) -> float:
+    """유닛 전력 = 공격력 × (HP + 살아 있음 × 최대HP), 메인은 × 메인 배수. 죽으면 0(CV1)."""
     if not unit.alive:
         return 0.0
-    power = unit.attack * unit.hp
+    power = unit.attack * (unit.hp + config.survival * unit.max_hp)
     return power * config.main_weight if unit.is_main else float(power)
 
 
@@ -68,7 +86,10 @@ class Evaluator:
         self.pool_power = {}
         if stage.reinforcement is not None:
             for defn, _ in stage.reinforcement.pool:
-                self.pool_power[defn.name] = float(defn.attack * defn.max_hp)
+                # 남은 증원은 다친 적 없는 유닛과 같은 전력(살아 있음 덩어리 포함, CV1).
+                self.pool_power[defn.name] = float(defn.attack * defn.max_hp * (1 + config.survival))
+        # CV3 자산 비율의 기준 크기 R: 계획 시작 판의 두 진영 자산 평균(계획 한 번 동안 고정).
+        self.asset_scale = (self.assets(base, Side.PLAYER) + self.assets(base, Side.ENEMY)) / 2
         self._reach: dict[tuple[int, Cell], dict[Cell, int]] = {}
         self._strike: dict[tuple[int, Cell], dict[Cell, int]] = {}
         self._fields: dict[tuple, dict[Cell, int]] = {}
@@ -141,10 +162,13 @@ class Evaluator:
         return hit_damage(state, attacker, hit, attacker.attack)
 
     def _loss(self, target: Unit | Structure, damage: int) -> float:
-        """그 피해로 잃는 자산(전력 점)."""
+        """그 피해로 잃는 자산(전력 점). 자산(unit_power)과 같은 규칙: 죽이면 살아 있음 덩어리까지(CV1).
+        위험·기회·도착 칸 점수·응수 손실이 모두 이 함수 하나를 쓴다."""
         if isinstance(target, Unit):
-            lost = min(damage, target.hp) * target.attack
-            return lost * self.config.main_weight if target.is_main else float(lost)
+            lost = float(min(damage, target.hp) * target.attack)
+            if damage >= target.hp and self.config.survival > 0:
+                lost += self.config.survival * target.attack * target.max_hp
+            return lost * self.config.main_weight if target.is_main else lost
         return self.hq_value * min(damage, target.hp) / target.max_hp
 
     def _targets(self, state: BattleState, side: Side) -> list:
@@ -196,7 +220,7 @@ class Evaluator:
             percent = self.reach(attacker, attacker.cell).get(cell, 0)
             if percent and attacker.defn.can_attack and "disarm" not in attacker.statuses:
                 danger += self.estimate(state, attacker, moved, percent)
-        return min(danger, unit.hp) * unit.attack * (self.config.main_weight if unit.is_main else 1)
+        return self._loss(moved, danger)
 
     def move_attack_score(self, state: BattleState, unit: Unit, cell: Cell) -> float:
         """SP1 도착 칸 점수: 기회 × 이번 공격의 손실 − 겁 × 그 칸에서 맞을 피해 − 그 칸의 G1 몫(승리 대상 걸음을 켰을 때)."""
@@ -251,7 +275,7 @@ class Evaluator:
             if steps is None:
                 continue
             beyond = max(0, steps - unit.defn.move - max(0, unit.defn.attack_range - 1))
-            penalty += self.config.step_penalty * beyond
+            penalty += self.config.step_penalty * self.config.step_units(beyond)
         return gain, penalty
 
     def _distance_field(self, state: BattleState, targets: list) -> dict[Cell, int]:
@@ -325,7 +349,7 @@ class Evaluator:
         if steps == 0:
             return 0.0
         reference = max(self.win_value(target) for target in targets)
-        return self.config.goal_step * reference / 100 * steps
+        return self.config.goal_step * reference / 100 * self.config.step_units(steps)
 
     def goal_together_value(self, state: BattleState, side: Side, targets: list) -> float:
         """G2(§2.3): 대상마다 t × 가치 × r², r = min(1, 다음 턴에 닿는 우리 유닛 예상 피해 합 / 대상 HP). 가장 큰 것.
@@ -361,6 +385,18 @@ class Evaluator:
         return g1, self.goal_together_value(state, side, targets)
 
     # ---------------------------------------------------------------- 합
+    def asset_terms(self, mine: float, theirs: float) -> tuple[float, float, float]:
+        """(자산 항, 위험 배수, 기회 배수). CV3(설계 docs/2026-11-18-planner-curved-terms-design.md §6).
+        끄면 (우리 − 상대, 1, 1). 켜면 자산 항 = (1 − w)(우리 − 상대) + w × R × ln(우리 / 상대).
+        위험·기회는 자산을 깎는 양이라 로그의 기울기(R / 우리, R / 상대)를 곱해 같은 단위로 맞춘다."""
+        w = self.config.ratio
+        if w <= 0:
+            return mine - theirs, 1.0, 1.0
+        scale = max(self.asset_scale, 1.0)
+        m, t = mine + 1.0, theirs + 1.0     # 0에서 로그가 터지지 않게(전멸은 승패로 먼저 끝남)
+        term = (1 - w) * (mine - theirs) + w * scale * math.log(m / t)
+        return term, (1 - w) + w * scale / m, (1 - w) + w * scale / t
+
     def breakdown(self, state: BattleState, side: Side) -> dict:
         win = Outcome.PLAYER_WIN if side is Side.PLAYER else Outcome.ENEMY_WIN
         if state.outcome is not None:
@@ -370,7 +406,8 @@ class Evaluator:
         risk = self.risk(state, side)
         gain, penalty = self.opportunity(state, side)
         config = self.config
-        total = mine - theirs - config.fear * risk + config.opportunity * gain - penalty
+        asset, risk_w, gain_w = self.asset_terms(mine, theirs)
+        total = asset - config.fear * risk_w * risk + config.opportunity * gain_w * gain - penalty
         goal_step, goal_together = self.goal_terms(state, side)
         if config.goal_step > 0 or config.goal_together > 0:     # 끄면 옛 합을 그대로(P6)
             total += goal_step + goal_together
@@ -399,7 +436,9 @@ class Evaluator:
         mine, theirs = self.assets(state, side), self.assets(state, side.other)
         terms = engine_terms(state, side, self, seed)
         config = self.config
-        total = mine - theirs - config.fear * terms.risk + config.opportunity * terms.opportunity - terms.step_penalty
+        asset, risk_w, gain_w = self.asset_terms(mine, theirs)
+        total = (asset - config.fear * risk_w * terms.risk + config.opportunity * gain_w * terms.opportunity
+                 - terms.step_penalty)
         goal_step, goal_together = self.goal_terms(state, side)     # 빠른 V와 같은 판·같은 도달 표(Q-G4)
         if config.goal_step > 0 or config.goal_together > 0:
             total += goal_step + goal_together

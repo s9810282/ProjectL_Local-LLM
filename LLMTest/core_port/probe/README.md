@@ -22,7 +22,7 @@ dotnet build LLMTest/core_port/probe/Harness -c Release --artifacts-path LLMTest
 dotnet LLMTest/core_port/probe/artifacts/bin/Harness/release/ProjectL.Tests.Core.dll N5,N8,T8,G16 l0,l1
 ```
 
-인자: 판 ID 목록, 깊은 V 방식(`l0` 옛 깊은 V, `l1` 한 턴 더 보기). 판마다 데운 뒤 한 번 잰다.
+인자: 판 ID 목록, 깊은 V 방식(`l0` 옛 깊은 V, `l1` 한 턴 더 보기). 판마다 데운 뒤 한 번 잰다. `--no-memo`를 붙이면 예상 피해 기억을 끈다(기억 전후 비교, [기억 설계](../../docs/2026-11-18-planner-damage-memo-design.md) §12). `damage` 모드는 늘 기억을 끄고 돈다(켜 두면 기억에 걸리지 않은 질문만 기록된다).
 
 예상 피해 되풀이 세기(병렬 설계 §17, 기억 열쇠 L6~L8은 기억 설계 §11):
 

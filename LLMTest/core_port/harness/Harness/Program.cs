@@ -13,6 +13,15 @@ public static class HarnessProgram
 {
     public static int Main(string[] args)
     {
+        // --no-memo: 예상 피해 기억을 끈다(기억 설계 DM-a의 기준 결정 기록 만들기). 어느 모드에나 붙일 수 있다.
+        if (args.Contains("--no-memo"))
+        {
+            PlannerDamageMemo.Disabled = true;
+            args = args.Where(a => a != "--no-memo").ToArray();
+        }
+        if (args.Length > 0 && args[0] == "memocheck")
+            return MemoCheck(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids,
+                args.Length > 2 ? args[2].Split(',').Select(int.Parse).ToArray() : new[] { 1, 7 });
         if (args.Length > 0 && args[0] == "tests")
             return new NUnitLite.AutoRun(typeof(HarnessProgram).Assembly).Execute(args.Skip(1).ToArray());
         if (args.Length > 0 && args[0] == "turns") return Turns(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
@@ -254,6 +263,37 @@ public static class HarnessProgram
         System.IO.File.WriteAllLines(path, lines);
         Console.WriteLine($"wrote {lines.Count} lines -> {path}");
         return 0;
+    }
+
+    /// <summary>
+    /// 예상 피해 기억 확인(기억 설계 DM4). 기억한 답이 있어도 늘 다시 계산해 비교한다(다시 계산한 값을 쓰므로 결정은 기억 없을 때와 같다).
+    /// 판·씨앗·깊은 V 종류(l0·l1)마다 물은 수·적중·막힘·어긋남을 적는다. 어긋남이 하나라도 있으면 실패(0이 아닌 종료 값)다.
+    /// </summary>
+    static int MemoCheck(string[] ids, int[] seeds)
+    {
+        var rules = EnemyAiBenchmarkFixtures.Rules;
+        PlannerDamageMemo.Check = true;
+        long mismatches = 0, calls = 0, hits = 0, blocked = 0;
+        Console.WriteLine("fixture seed look | calls  hits  hit%  blocked mismatches | plan ms");
+        foreach (var lookahead in new[] { false, true })
+            foreach (var id in ids)
+                foreach (var seed in seeds)
+                {
+                    var input = Consistent(id, seed);
+                    EnemyTurnPlan plan = null;
+                    var watch = Stopwatch.StartNew();
+                    foreach (var _ in EnemyTurnPlanner.Plan(input, rules, new EnemyDecisionDiagnostics(), value => plan = value,
+                        EnemyTurnPlannerStyle.Default.WithLookahead(lookahead))) { }
+                    var s = plan.Stats;
+                    calls += s.DamageCalls; hits += s.DamageHits; blocked += s.DamageBlocked; mismatches += s.DamageMismatches;
+                    double rate = s.DamageCalls == 0 ? 0 : 100.0 * s.DamageHits / s.DamageCalls;
+                    Console.WriteLine($"{id,-4} {seed,4} {(lookahead ? "l1" : "l0"),4} | {s.DamageCalls,8} {s.DamageHits,8} {rate,5:F1} " +
+                        $"{s.DamageBlocked,7} {s.DamageMismatches,10} | {watch.Elapsed.TotalMilliseconds,8:F0}");
+                    if (s.DamageMismatches > 0) Console.WriteLine("   last mismatch: " + s.LastDamageMismatch);
+                }
+        PlannerDamageMemo.Check = false;
+        Console.WriteLine($"total calls={calls} hits={hits} ({(calls == 0 ? 0 : 100.0 * hits / calls):F1}%) blocked={blocked} mismatches={mismatches}");
+        return mismatches == 0 ? 0 : 1;
     }
 
     /// <summary>

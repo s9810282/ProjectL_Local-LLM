@@ -97,6 +97,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var profile = CombatCommandCalculator.RequiredProfile(board, unit);
             var environment = board.State.Environment.VisibleTo(unit.Owner);
             bool taunted = taunters != null && taunters.Count > 0;
+            bool pulls = HasPull(profile);
             foreach (var aim in aims)
             {
                 var evaluation = CombatAttackQueries.Selection(query, unit, profile, aim, environment);
@@ -104,12 +105,34 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var targets = evaluation.Selection.Targets.Select(t => t.Key);
                 if (!taunted)
                 {
-                    if (targets.Any()) yield return (aim, default);
+                    if (targets.Any() && (pulls || targets.Any(id => !IsOwnSide(board, unit, id)))) yield return (aim, default);
                     continue;
                 }
                 var hit = targets.FirstOrDefault(id => taunters.Contains(id));
                 if (!hit.IsEmpty) yield return (aim, hit);
             }
+        }
+
+        /// <summary>
+        /// 대상이 공격자와 같은 편(유닛·구조물)인가. 같은 편만 맞는 조준(캐논이 제 편을 쏘는 것)은 후보에서 뺀다 — 판 값이
+        /// 죽은 같은 편의 거리 벌점·위험을 함께 지워 그런 조준을 좋게 볼 수 있어서다(2026-11-18 사용자 재생 보고).
+        /// 같은 편이 스플래시로 함께 맞는 조준은 남긴다(그 피해는 Core 결과로 셈). 시뮬레이터 <c>legal_attacks</c>와 같은 규칙.
+        /// </summary>
+        private static bool IsOwnSide(CombatCommandInput board, CharacterCombatFacts unit, EntityId id)
+        {
+            foreach (var c in board.Characters)
+                if (c.EntityId == id) return c.Owner == unit.Owner;
+            foreach (var s in board.State.Structures)
+                if (s.EntityId == id) return s.Owner == unit.Owner;
+            return false;
+        }
+
+        /// <summary>끌어오기 유닛은 같은 편을 옮기기만 하는 조준도 쓸모가 있어 거르지 않는다(시뮬레이터 <c>plan.pull</c>).</summary>
+        private static bool HasPull(CombatAttackProfile profile)
+        {
+            foreach (var trait in profile.Definition.Traits.Span)
+                if (trait.TraitKey == TraitKey.Pull) return true;
+            return false;
         }
 
         /// <summary>그 유닛이 스스로 걸어 닿는 칸마다 경로(게임 이동 범위와 같은 탐색). 움직일 수 없으면 없음.</summary>

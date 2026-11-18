@@ -218,7 +218,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             completed(new EnemyTurnPlan(steps, before,
                 new EnemyTurnPlanStats(beamSimulations, simulator.Simulations - beamSimulations, evaluator.Evaluations, beam.BeamSteps,
                     simulator.Failures, simulator.LastFailure, reranked, !ReferenceEquals(chosen, beam.Best), watch.Elapsed.TotalMilliseconds,
-                    lookaheadReplies)));
+                    lookaheadReplies, evaluator.DamageMemo)));
         }
     }
 }

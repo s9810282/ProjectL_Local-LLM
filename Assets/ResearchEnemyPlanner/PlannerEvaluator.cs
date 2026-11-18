@@ -41,6 +41,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly Dictionary<EntityKey, double> _poolPower = new Dictionary<EntityKey, double>();
         private readonly CombatEffectEngine _engine = new CombatEffectEngine();
         private readonly TargetDamagePipeline _pipeline = new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault()));
+        private readonly PlannerDamageMemo _damage;
+
+        /// <summary>예상 피해 기억의 진단 수(계획 하나 동안).</summary>
+        internal PlannerDamageMemo DamageMemo => _damage;
 
         internal CombatCommandInput Base { get; }
         /// <summary>이번 계획의 성향·계산 크기 값(조정 에셋 프리셋, 비어 있으면 기본값).</summary>
@@ -54,6 +58,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             Base = root ?? throw new ArgumentNullException(nameof(root));
             Style = style ?? EnemyTurnPlannerStyle.Default;
+            _damage = new PlannerDamageMemo(ComputeDamage);
             HeadquartersValue = root.Characters.Where(c => c.Owner == Owner.Enemy)
                 .Sum(c => (double)c.Stats.AttackPower * c.Health.MaxHealth);
             foreach (var profile in root.Profiles)
@@ -171,11 +176,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// 공통 피해(<see cref="BaseDamage"/>)를 미리 구해 둔 예상 피해. 한 공격자가 여러 대상을 볼 때 공통 피해를 한 번만 계산한다
-        /// (할당 줄이기 AL-1, 결정 같음).
+        /// (할당 줄이기 AL-1, 결정 같음). 같은 답이 확실한 질문은 기억해 두고 다시 쓴다(<see cref="PlannerDamageMemo"/>).
         /// </summary>
         internal int Estimate(CombatCommandInput board, CharacterCombatFacts attacker, int damage, PlannerTarget target, int percent)
         {
             var role = percent >= 100 ? AttackTargetRole.Primary : AttackTargetRole.Additional;
+            return _damage.Estimate(board, attacker, damage, target, role, percent);
+        }
+
+        /// <summary>Core 피해 식을 그대로 부른다(기억 없이).</summary>
+        private int ComputeDamage(CombatCommandInput board, CharacterCombatFacts attacker, int damage, PlannerTarget target,
+            AttackTargetRole role, int percent)
+        {
             var result = target.IsUnit
                 ? CombatDamageCalculator.Attack(board, _engine, _pipeline, attacker, target.Unit, damage, role, percent,
                     attacker.Anchor, null, board.State.Environment)

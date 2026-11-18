@@ -193,7 +193,7 @@ def _step_penalty(board: BattleState, side: Side, idle: list[int], evaluator: Ev
         if steps is None:
             continue
         beyond = max(0, steps - unit.defn.move - max(0, unit.defn.attack_range - 1))
-        penalty += evaluator.config.step_penalty * beyond
+        penalty += evaluator.config.step_penalty * evaluator.config.step_units(beyond)
     return penalty
 
 
