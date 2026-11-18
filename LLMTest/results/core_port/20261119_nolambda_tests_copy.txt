@@ -1,0 +1,152 @@
+NUnitLite 3.14.0 (.NET Standard 2.0)
+Copyright (c) 2023 Charlie Poole, Rob Prouse
+
+Runtime Environment
+   OS Version: Microsoft Windows 10.0.22000
+  CLR Version: 8.0.34
+
+Test Files
+    C:/Unity Project/ProjectL_Local-LLM/LLMTest/core_port/nolambda/Harness/bin/Release/net8.0/ProjectL.Tests.Core.dll
+
+Test Discovery
+  Start time: 2026-11-18 15:05:00Z
+    End time: 2026-11-18 15:05:01Z
+    Duration: 0.147 seconds
+
+=> ProjectL.Tests.Core.AttackPreviewParityTests.FrozenMovementContinuationSemanticsMatch
+weak-knockback
+=> ProjectL.Tests.Core.AttackPreviewParityTests.FrozenPreviewAndActualSemanticsMatch
+N5-1
+=> ProjectL.Tests.Core.ChapterStageRepeatReductionTests.Generate_WidthSixPreservesTopologyAndReportsElapsedTime(Nearest)
+Nearest: 16 enabled width-six graphs, 31 middle nodes each, 10.668 ms total.
+=> ProjectL.Tests.Core.ChapterStageRepeatReductionTests.Generate_WidthSixPreservesTopologyAndReportsElapsedTime(Random)
+Random: 16 enabled width-six graphs, 31 middle nodes each, 11.184 ms total.
+=> ProjectL.Tests.Core.ChapterStageRepeatReductionTests.Generate_WidthSixPreservesTopologyAndReportsElapsedTime(WeightedRandom)
+WeightedRandom: 16 enabled width-six graphs, 31 middle nodes each, 10.175 ms total.
+=> ProjectL.Tests.Core.EnemyDecisionSideCacheTests.CacheOnOffIdenticalTraces
+decisions=123 forecastHits=90 threatHits=48 misses=[forecast:empty=12 forecast:main=12 threat:empty=12 threat:players=54]
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.OwnerAttackForcedMovementIsLeftToPrecisePreview(Knockback)
+Attack: gaps=HiddenEnvironment, previews=0, actual=43-54-E1-04-E9-3A-70-E9-8D-52-BB-B3-8E-C7-12-AF-DF-84-7C-FA-E4-4E-4A-59-E8-A3-22-1F-DD-E4-94-60
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.OwnerAttackForcedMovementIsLeftToPrecisePreview(Pull)
+Attack: gaps=HiddenEnvironment, previews=0, actual=9F-C6-CE-61-20-1C-76-7D-6F-87-E4-EE-BF-00-F7-E4-53-2F-4F-96-65-7B-2B-C3-CC-F6-A9-5E-4E-12-59-05
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.RemoteClassifiedEffectDoesNotExpandMoveOrAttackHarm(Hunter,RandomOutcome)
+Attack: gaps=HiddenEnvironment, RandomOutcome, previews=0, actual=65-5A-7B-6B-3E-16-E4-FF-AE-97-DC-C2-06-71-1B-2D-AA-93-07-05-53-9F-D7-07-AF-78-E6-BA-05-DB-5C-6E
+Move: gaps=HiddenEnvironment, RandomOutcome, previews=0, actual=91-7E-BD-8E-74-78-87-27-1E-29-61-9A-DA-F7-A5-E8-41-19-C7-C0-55-D3-FF-C1-6A-E2-75-8C-1F-99-2B-0A
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.RemoteClassifiedEffectDoesNotExpandMoveOrAttackHarm(Bleeding,None)
+Attack: gaps=HiddenEnvironment, previews=0, actual=08-18-DA-CC-E7-FB-E3-39-23-2F-BD-C8-CC-26-2E-8D-A4-EC-CA-86-57-81-7E-5E-21-B3-1E-73-F0-1F-2B-DB
+Move: gaps=HiddenEnvironment, previews=0, actual=4A-60-8E-B3-80-8D-C5-FB-5A-C8-B4-A1-0B-F4-64-7F-D2-B0-E2-9D-A0-27-95-F6-53-87-21-E9-07-39-7F-A5
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.RemoteClassifiedEffectDoesNotExpandMoveOrAttackHarm(Disarm,None)
+Attack: gaps=HiddenEnvironment, previews=0, actual=9D-75-51-FA-02-C8-71-04-9F-14-F5-AA-78-2C-2D-81-51-01-5D-91-C4-41-A0-81-CF-6C-1D-9B-02-BA-A0-B8
+Move: gaps=HiddenEnvironment, previews=0, actual=22-68-00-92-A3-14-47-C4-8B-D4-26-9F-86-1C-B2-E9-94-BC-94-F0-03-E6-43-1C-D3-CB-78-B2-A5-C1-C0-83
+=> ProjectL.Tests.Core.EnemyEffectHarmScopeTests.UndeclaredKnockbackCapabilityIsLeftToPrecisePreview
+Attack: gaps=HiddenEnvironment, previews=0, actual=A1-A2-6A-94-B3-9B-C7-50-DE-19-28-C7-EC-D4-79-0F-40-FB-C8-BE-D2-15-FA-AF-0E-48-4A-72-CD-DB-D6-E6
+=> ProjectL.Tests.Core.EnemyEngagementProgressTests.CandidateAndDecisionPartitionsAreIdentical
+partition=1; mapNodes=88; work=1496; previews=2
+partition=2; mapNodes=88; work=1496; previews=2
+partition=31; mapNodes=88; work=1496; previews=2
+=> ProjectL.Tests.Core.EnemyEngagementProgressTests.FixedIntentExecutionIsUnchanged(False)
+fixed-intent=B9-88-38-3E-5C-0A-88-E1-D3-D3-4E-36-96-3B-A7-D0-A9-88-DB-CF-13-0D-64-92-DE-F9-DE-FB-E2-50-33-46
+=> ProjectL.Tests.Core.EnemyEngagementProgressTests.FixedIntentExecutionIsUnchanged(True)
+fixed-intent=5C-CC-91-5B-B6-01-09-8F-75-FE-E7-68-40-FC-23-C3-99-88-CB-A6-37-6A-31-BF-80-D2-7E-F2-52-51-4E-24
+=> ProjectL.Tests.Core.EnemyFollowupEstimateTests.FixedMoveAndAttackExecutionIsUnchanged(False,False)
+fixed-intent=C1-24-BB-69-28-E8-BA-98-33-5F-61-EE-E7-31-90-B1-A7-1A-6A-7F-49-A3-08-46-35-D3-5F-E1-F8-EB-4D-DB
+=> ProjectL.Tests.Core.EnemyFollowupEstimateTests.FixedMoveAndAttackExecutionIsUnchanged(True,False)
+fixed-intent=02-2A-E6-8C-3B-78-0A-74-8F-63-CF-2F-CD-A5-71-C6-F8-B8-B9-AC-A5-21-ED-89-74-94-7C-71-A6-6C-61-7F
+=> ProjectL.Tests.Core.EnemyFollowupEstimateTests.FixedMoveAndAttackExecutionIsUnchanged(True,True)
+fixed-intent=7C-35-25-8D-38-57-FF-FC-E5-3D-34-B2-B0-35-92-FD-B8-8D-81-1C-8D-6A-EB-66-F9-4F-61-AA-30-6F-C9-24
+=> ProjectL.Tests.Core.EnemyFollowupEstimateTests.PartitionDecisionsAndBudgetsAgree
+partition=1; previews=3; refined=2; work=2046
+partition=2; previews=3; refined=2; work=2046
+partition=31; previews=3; refined=2; work=2046
+=> ProjectL.Tests.Core.EnemyForecastBindDecisionTests.ZeroDamageRockfallEscapeStrictlyBeatsHold(1)
+safe-move=F2-37-73-00-BA-4B-66-8D-BB-D2-8D-99-28-BE-27-27-48-21-BE-BA-81-85-55-91-5F-01-2A-31-2E-A2-5B-E9
+end-side=D7-66-DA-47-85-AB-BF-61-35-5B-27-D9-A0-64-4A-4A-E9-34-00-3B-C2-F1-9B-AB-5C-DC-80-9D-AC-24-7C-0E
+=> ProjectL.Tests.Core.EnemyForecastBindDecisionTests.ZeroDamageRockfallEscapeStrictlyBeatsHold(2)
+safe-move=F2-37-73-00-BA-4B-66-8D-BB-D2-8D-99-28-BE-27-27-48-21-BE-BA-81-85-55-91-5F-01-2A-31-2E-A2-5B-E9
+end-side=D7-66-DA-47-85-AB-BF-61-35-5B-27-D9-A0-64-4A-4A-E9-34-00-3B-C2-F1-9B-AB-5C-DC-80-9D-AC-24-7C-0E
+=> ProjectL.Tests.Core.EnemyForecastBindDecisionTests.ZeroDamageRockfallEscapeStrictlyBeatsHold(31)
+safe-move=F2-37-73-00-BA-4B-66-8D-BB-D2-8D-99-28-BE-27-27-48-21-BE-BA-81-85-55-91-5F-01-2A-31-2E-A2-5B-E9
+end-side=D7-66-DA-47-85-AB-BF-61-35-5B-27-D9-A0-64-4A-4A-E9-34-00-3B-C2-F1-9B-AB-5C-DC-80-9D-AC-24-7C-0E
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.IntermediateLeapMineDoesNotAddBlastExposure
+actual=77-57-2D-CE-58-E6-E0-D0-A9-0C-E6-27-87-5D-04-00-27-C7-54-79-FE-82-96-84-00-01-0B-12-51-94-0A-06
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.LeapDoesNotExemptPassengerArrival
+actual=AB-20-E7-31-52-15-40-05-D1-BF-8E-BB-7F-BE-E7-EC-26-66-48-13-1E-A5-E1-AB-C5-4B-06-36-E4-17-DB-F8
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.OrdinaryTraversalAndLeapLandingRetainMineRisk(False)
+actual=96-28-57-06-C6-24-33-23-4C-85-43-3D-83-99-73-CD-84-A8-E1-C4-0B-E7-88-E7-B4-FB-F5-89-AF-59-55-29
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.OrdinaryTraversalAndLeapLandingRetainMineRisk(True)
+actual=8B-28-FA-06-D9-1A-74-09-67-79-C6-D7-03-99-D2-7F-6C-F9-9B-0C-1D-42-E4-67-72-CA-C2-4C-68-25-25-15
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.RandomLandingRetainsPossibleMineContacts
+actual=2D-7A-19-16-1F-38-68-83-42-E1-AD-8C-0B-6B-B0-A8-06-2E-76-0B-0E-AB-24-EA-FF-D9-CB-5F-40-3C-B4-05
+=> ProjectL.Tests.Core.EnemyLeapAssessmentTests.UnresolvedForcedArrivalRetainsPossibleMineContacts
+actual=9C-B1-E2-DD-0D-AF-95-10-80-0D-0F-7E-3F-F9-F6-F2-74-95-16-5D-83-AA-2E-46-96-8A-CC-13-4F-B9-7D-BE
+=> ProjectL.Tests.Core.EnemyPreviewPreparationTests.RepeatedEffectCaptureDoesNotRebuildRegistrationMetadata(False)
+trait=False, captures=32, registryBuilds=0, captureMs=0.027, registryMs=0.000
+=> ProjectL.Tests.Core.EnemyPreviewPreparationTests.RepeatedEffectCaptureDoesNotRebuildRegistrationMetadata(True)
+trait=True, captures=32, registryBuilds=0, captureMs=0.010, registryMs=0.000
+
+Tests Not Run
+
+1) Explicit : ProjectL.Tests.Core.EnemyAiPerformanceMeasurements.CaptureCorpus
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+2) Explicit : ProjectL.Tests.Core.EnemyAiPerformanceMeasurements.CaptureForcedPathLeaf
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+3) Explicit : ProjectL.Tests.Core.EnemyAiPerformanceMeasurements.CapturePreviewWork
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+4) Explicit : ProjectL.Tests.Core.EnemyAiPerformanceMeasurements.CaptureSacrificeLeaf
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+5) Explicit : ProjectL.Tests.Core.EnemyAiReuseMeasurements.CaptureAssessmentVisibilityWork
+Requires a dedicated assessment visibility measurement run.
+
+6) Explicit : ProjectL.Tests.Core.EnemyAiReuseMeasurements.CaptureReuseWork
+Requires a dedicated reuse measurement run.
+
+7) Explicit : ProjectL.Tests.Core.EnemyAssessmentMeasurements.CaptureAssessmentAndForecastCosts
+Dedicated Phase 4 Core measurement
+
+8) Explicit : ProjectL.Tests.Core.EnemyCandidateForecastMeasurements.Capture
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+9) Explicit : ProjectL.Tests.Core.EnemyDecisionReuseParityTests.CaptureCurrentBehavior
+Creates the immutable Phase 0 references.
+
+10) Explicit : ProjectL.Tests.Core.EnemyDecisionStepMeasurements.CaptureDecisionSteps
+Requires an isolated Unity run and PROJECTL_ENEMY_AI_RAW.
+
+11) Explicit : ProjectL.Tests.Core.EnemyUtilityAcceptanceMeasurements.CaptureScheduleParityAndDecisionRecords
+Requires an isolated Phase 7 diagnostic capture.
+
+Errors, Failures and Warnings
+
+1) Failed : ProjectL.Tests.Core.AttackPreviewParityTests.FrozenMovementContinuationSemanticsMatch
+  weak-knockback 미등록 사실/사건 형식
+  Expected: <empty>
+  But was:  < "System.Collections.ObjectModel.ReadOnlyCollection`1[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitKey, ProjectL.Core.Contracts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId, ProjectL.Core.Contracts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]" >
+   at ProjectL.Tests.Core.AttackPreviewParityTests.CheckVectors(IEnumerable`1 vectors, String relativePath, String captureMode) in C:\Unity Project\ProjectL_Local-LLM\Assets\Tests\EditMode\AttackPreviewParityTests.cs:line 75
+   at ProjectL.Tests.Core.AttackPreviewParityTests.FrozenMovementContinuationSemanticsMatch() in C:\Unity Project\ProjectL_Local-LLM\Assets\Tests\EditMode\AttackPreviewParityTests.cs:line 39
+
+2) Failed : ProjectL.Tests.Core.AttackPreviewParityTests.FrozenPreviewAndActualSemanticsMatch
+  N5-1 미등록 사실/사건 형식
+  Expected: <empty>
+  But was:  < "System.Collections.ObjectModel.ReadOnlyCollection`1[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitKey, ProjectL.Core.Contracts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "System.Collections.ObjectModel.ReadOnlyDictionary`2[[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId, ProjectL.Core.Contracts, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]" >
+   at ProjectL.Tests.Core.AttackPreviewParityTests.CheckVectors(IEnumerable`1 vectors, String relativePath, String captureMode) in C:\Unity Project\ProjectL_Local-LLM\Assets\Tests\EditMode\AttackPreviewParityTests.cs:line 75
+   at ProjectL.Tests.Core.AttackPreviewParityTests.FrozenPreviewAndActualSemanticsMatch() in C:\Unity Project\ProjectL_Local-LLM\Assets\Tests\EditMode\AttackPreviewParityTests.cs:line 33
+
+Run Settings
+    Number of Test Workers: 32
+    Work Directory: C:\Unity Project\ProjectL_Local-LLM
+    Internal Trace: Off
+
+Test Run Summary
+  Overall result: Failed
+  Test Count: 6096, Passed: 6083, Failed: 2, Warnings: 0, Inconclusive: 0, Skipped: 11
+    Failed Tests - Failures: 2, Errors: 0, Invalid: 0
+    Skipped Tests - Ignored: 0, Explicit: 11, Other: 0
+  Start time: 2026-11-18 15:05:01Z
+    End time: 2026-11-18 15:05:21Z
+    Duration: 20.072 seconds
+
+Results (nunit3) saved as C:/Users/HYEON2~1/AppData/Local/Temp/claude/a0bdf4c4f539228b/1c732cb5-fd99-4319-8634-3f61e4f82d41/scratchpad/tests_nolambda.xml

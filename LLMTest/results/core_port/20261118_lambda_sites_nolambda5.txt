@@ -1,0 +1,81 @@
+sampled 5522 MB over N5,N8,T8,G16 (l1)
+    4.1%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts[]
+    3.6%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord[]
+    3.6%  System.Int32[]
+    3.1%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId][]
+    2.3%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts][]
+    2.2%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatCommandInput
+    2.2%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Artifact.ArtifactCombatUnitFact[]
+    2.0%  System.Collections.Generic.HashSet`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord]
+    1.8%  System.Collections.Generic.HashSet`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    1.7%  <CollectSteps>d__1
+    1.6%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey[]
+    1.5%  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    1.4%  <ResolveSteps>d__2
+    1.4%  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord]
+    1.4%  <FindBlockSteps>d__9
+    1.3%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitKey
+    1.1%  CombatAttackQueries.SelectionDirect [람다 묶음]
+    1.1%  System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    1.1%  System.ArrayEnumerator
+    1.0%  System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord]
+    1.0%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.AttackCellSelection
+    1.0%  System.Collections.Generic.HashSet`1[System.Int64]
+    0.9%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOwnerKind
+    0.9%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord][]
+    0.9%  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.CellCoord,System.Boolean]
+    0.8%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.EffectRuleBinding[]
+    0.8%  System.Collections.Generic.HashSet`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId]
+    0.8%  TraitPresenceReconciler.CalculateSteps [람다 묶음]
+    0.8%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.HealthStateSnapshot][]
+    0.8%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.AttackSelectionEvaluation
+    0.8%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts
+    0.7%  System.String
+    0.7%  System.Comparison`1[System.Int32]
+    0.7%  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts,System.Boolean]
+    0.7%  System.Action`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.AttackBlockedContact]
+    0.7%  System.Collections.Generic.Stack`1[System.Collections.Generic.SortedSet`1+Node[System.Collections.Generic.KeyValuePair`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole]]]
+    0.6%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId,System.Int32][]
+    0.6%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TargetingShape
+    0.6%  System.Action`1[System.Collections.Generic.KeyValuePair`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole][]]
+    0.6%  Enumerator[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    0.5%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Snapshots.HealthStateSnapshot
+    0.5%  System.Collections.Generic.SortedDictionary`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole]
+    0.5%  System.Action`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.AttackCellSelection,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Results.AttackFailureReason]
+    0.5%  TraitPresenceReconciler.CalculateSteps [반복기]
+    0.5%  TraitPresenceReconciler+Reconciliation.Run [반복기]
+    0.4%  System.Collections.Generic.TreeSet`1[System.Collections.Generic.KeyValuePair`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole]]
+    0.4%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatCommandTransition
+    0.4%  System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.EffectRuleBinding]
+    0.4%  Enumerator[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyPlanner.PlannerTarget]
+    0.4%  System.Linq.OrderedEnumerable`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    0.4%  DistinctIterator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    0.4%  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.ReconstructionStatus]
+    0.4%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId[]
+    0.4%  Entry[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey][]
+    0.4%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatCommandState
+    0.4%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.EffectRuleBinding
+    0.4%  System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Transitions.EffectStateExpectation]
+    0.3%  System.Collections.Generic.List`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.StructureCombatFacts]
+    0.3%  CombatCommandCalculator.FinishSteps [반복기]
+    0.3%  <>c__DisplayClass4_0
+    0.3%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Transitions.EffectStateExpectation[]
+    0.3%  System.Collections.Generic.Dictionary`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId,System.Int32]
+    0.3%  PlannerDamageMemo.TryKey [람다 묶음]
+    0.3%  System.SZGenericArrayEnumerator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CombatEvent]
+    0.3%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster.OwnedCharacterRecord[]
+    0.3%  System.Linq.EnumerableSorter`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    0.3%  SelectEnumerableIterator`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.TauntedStatus,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.EffectOriginKey]
+    0.3%  WhereEnumerableIterator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    0.3%  System.ValueTuple`2[System.Int64,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts][]
+    0.3%  Node[System.ValueTuple`2[System.Int32,System.Int32]]
+    0.3%  MovementProjection+InputWork.Build [반복기]
+    0.2%  ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Domain.CombatEffects.Evaluations.EffectAttackSweepEvaluation
+    0.2%  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.Traits.RoarTraitSpec]
+    0.2%  KeyValuePairComparer[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole]
+    0.2%  Enumerator[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId,System.Int32]
+    0.2%  System.Collections.Generic.Dictionary`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.CharacterCombatFacts]
+    0.2%  <OfTypeIterator>d__66`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.CombatEffects.TauntedStatus]
+    0.2%  Node[System.Collections.Generic.KeyValuePair`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.EntityId,ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.AttackTargetRole]][]
+    0.2%  DistinctIterator`1[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids.CharacterInstanceId]
+    0.2%  System.Func`2[ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.MovementEffectUse,System.Boolean]

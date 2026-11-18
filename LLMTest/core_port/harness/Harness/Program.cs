@@ -32,6 +32,9 @@ public static class HarnessProgram
         if (args.Length > 0 && args[0] == "allocparts") return AllocParts(args.Length > 1 ? args[1] : "N8");
         if (args.Length > 0 && args[0] == "alloc") return Alloc(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "allocbytype") return AllocByType(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
+        if (args.Length > 0 && args[0] == "allocbysite") return AllocBySite(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
+        if (args.Length > 0 && args[0] == "bench") return Bench(args.Length > 1 ? args[1].Split(',') : new[] { "N5", "N8", "T8", "G16" },
+            args.Length > 2 ? int.Parse(args[2]) : 3);
         if (args.Length > 0 && args[0] == "settle") return Settle(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "style") return Style(args.Length > 1 ? args[1] : "N8");
         if (args.Length > 0 && args[0] == "seq")
@@ -666,6 +669,89 @@ public static class HarnessProgram
         return 0;
     }
 
+    /// <summary>
+    /// 계획 하나(l1)의 할당을 "어느 Core 함수의 람다·반복기가 만들었나"로 나눈다(람다 걷기 측정, 2026-11-18).
+    /// 할당 표본의 형식 핸들(TypeID)을 Core·계획 AI 어셈블리의 형식과 맞춰, 람다 묶음 객체(<c>&lt;&gt;c__DisplayClass</c>)와
+    /// 반복기(<c>&lt;함수&gt;d__N</c>)를 둘러싼 형식·함수 이름으로 바꾼다. 대리자(<c>Func</c>)·LINQ 반복기 자체는 자리를 알 수 없어 형식 이름으로 남긴다.
+    /// </summary>
+    static int AllocBySite(string[] ids)
+    {
+        var rules = EnemyAiBenchmarkFixtures.Rules;
+        var handles = new Dictionary<long, Type>();
+        foreach (var t in CoreTypes.Values)
+            try { handles[t.TypeHandle.Value.ToInt64()] = t; } catch { }
+        var total = new Dictionary<string, long>();
+        long all = 0;
+        foreach (var id in ids)
+        {
+            var input = Consistent(id, 1);
+            foreach (var _ in EnemyTurnPlanner.Plan(input, rules, null, value => { })) { }
+            Dictionary<(string, long), long> bytes;
+            using (var sampler = new AllocationSampler(byHandle: true))
+            {
+                System.Threading.Thread.Sleep(500);
+                foreach (var _ in EnemyTurnPlanner.Plan(input, rules, null, value => { })) { }
+                System.Threading.Thread.Sleep(2000);
+                bytes = sampler.SnapshotByHandle();
+            }
+            foreach (var pair in bytes)
+            {
+                string site = Site(pair.Key.Item1, handles.TryGetValue(pair.Key.Item2, out var type) ? type : null);
+                total[site] = total.TryGetValue(site, out var v) ? v + pair.Value : pair.Value;
+                all += pair.Value;
+            }
+        }
+        Console.WriteLine($"sampled {all / 1048576.0:F0} MB over {string.Join(",", ids)} (l1)");
+        foreach (var pair in total.OrderByDescending(p => p.Value).Take(80))
+            Console.WriteLine($"  {100.0 * pair.Value / all,5:F1}%  {pair.Key}");
+        return 0;
+    }
+
+    /// <summary>람다 묶음·반복기 형식이면 "둘러싼 형식.함수 [종류]", 아니면 형식 이름.</summary>
+    static string Site(string name, Type type)
+    {
+        if (type == null || type.DeclaringType == null) return name;
+        var outer = type.DeclaringType;
+        while (outer.DeclaringType != null && outer.Name.StartsWith("<")) outer = outer.DeclaringType;
+        string owner = outer.FullName.Substring(outer.FullName.LastIndexOf('.') + 1);
+        if (type.Name.StartsWith("<>c__DisplayClass"))
+        {
+            var lambdas = type.GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly)
+                .Select(m => m.Name).Where(n => n.StartsWith("<")).Select(n => n.Substring(1, n.IndexOf('>') - 1)).Distinct().ToArray();
+            return $"{owner}.{string.Join("/", lambdas)} [람다 묶음]";
+        }
+        if (type.Name.StartsWith("<") && type.Name.Contains(">d__"))
+            return $"{owner}.{type.Name.Substring(1, type.Name.IndexOf('>') - 1)} [반복기]";
+        return $"{owner}+{type.Name}";
+    }
+
+    /// <summary>계획 하나(l1)의 시간·할당. 판마다 한 번 데운 뒤 rounds번 잰 평균(람다 걷기 측정, 2026-11-18).</summary>
+    static int Bench(string[] ids, int rounds)
+    {
+        var rules = EnemyAiBenchmarkFixtures.Rules;
+        double allMs = 0, allMb = 0;
+        foreach (var id in ids)
+        {
+            var input = Consistent(id, 1);
+            foreach (var _ in EnemyTurnPlanner.Plan(input, rules, null, value => { })) { }
+            double ms = 0, mb = 0;
+            for (int r = 0; r < rounds; r++)
+            {
+                GC.Collect();
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                var watch = Stopwatch.StartNew();
+                foreach (var _ in EnemyTurnPlanner.Plan(input, rules, null, value => { })) { }
+                ms += watch.Elapsed.TotalMilliseconds;
+                mb += (GC.GetAllocatedBytesForCurrentThread() - before) / 1048576.0;
+            }
+            ms /= rounds; mb /= rounds;
+            allMs += ms; allMb += mb;
+            Console.WriteLine($"{id,-4} | {ms,8:F0} ms | {mb,8:F0} MB");
+        }
+        Console.WriteLine($"ALL  | {allMs,8:F0} ms | {allMb,8:F0} MB");
+        return 0;
+    }
+
     static readonly Dictionary<string, Type> CoreTypes = AppDomain.CurrentDomain.GetAssemblies()
         .Where(a => a.GetName().Name.StartsWith("ProjectL"))
         .SelectMany(a => { try { return a.GetTypes(); } catch (System.Reflection.ReflectionTypeLoadException e) { return e.Types.Where(t => t != null); } })
@@ -864,9 +950,11 @@ public static class HarnessProgram
 sealed class AllocationSampler : System.Diagnostics.Tracing.EventListener
 {
     readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _bytes = new();
+    readonly System.Collections.Concurrent.ConcurrentDictionary<(string, long), long> _byHandle = new();
+    readonly bool _keepHandle;
     bool _on;
 
-    public AllocationSampler() { _on = true; }
+    public AllocationSampler(bool byHandle = false) { _on = true; _keepHandle = byHandle; }
 
     protected override void OnEventSourceCreated(System.Diagnostics.Tracing.EventSource source)
     {
@@ -884,6 +972,18 @@ sealed class AllocationSampler : System.Diagnostics.Tracing.EventListener
         string name = e.Payload[nameAt] as string ?? "?";
         long amount = Convert.ToInt64(e.Payload[amountAt]);
         _bytes.AddOrUpdate(name, amount, (_, v) => v + amount);
+        if (_keepHandle)
+        {
+            int handleAt = e.PayloadNames.IndexOf("TypeID");
+            long handle = handleAt < 0 ? 0 : e.Payload[handleAt] switch { IntPtr h => h.ToInt64(), UIntPtr h => (long)h.ToUInt64(), ulong h => (long)h, var h => Convert.ToInt64(h) };
+            _byHandle.AddOrUpdate((name, handle), amount, (_, v) => v + amount);
+        }
+    }
+
+    public Dictionary<(string, long), long> SnapshotByHandle()
+    {
+        _on = false;
+        return new Dictionary<(string, long), long>(_byHandle);
     }
 
     public Dictionary<string, long> Snapshot()

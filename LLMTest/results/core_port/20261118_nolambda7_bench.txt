@@ -1,0 +1,60 @@
+## round 1 base
+N5   |      681 ms |      672 MB
+N8   |     1014 ms |     1322 MB
+T8   |     1167 ms |     1984 MB
+G16  |     2253 ms |     3193 MB
+ALL  |     5114 ms |     7171 MB
+## round 1 nolambda7
+N5   |      697 ms |      492 MB
+N8   |      842 ms |      958 MB
+T8   |      906 ms |     1278 MB
+G16  |     1965 ms |     2313 MB
+ALL  |     4410 ms |     5041 MB
+## round 2 base
+N5   |      657 ms |      672 MB
+N8   |      939 ms |     1322 MB
+T8   |     1125 ms |     1984 MB
+G16  |     2146 ms |     3193 MB
+ALL  |     4867 ms |     7171 MB
+## round 2 nolambda7
+N5   |      636 ms |      492 MB
+N8   |      789 ms |      958 MB
+T8   |      853 ms |     1278 MB
+G16  |     1758 ms |     2313 MB
+ALL  |     4036 ms |     5041 MB
+## round 3 base
+N5   |      687 ms |      672 MB
+N8   |      919 ms |     1322 MB
+T8   |     1052 ms |     1984 MB
+G16  |     2051 ms |     3193 MB
+ALL  |     4708 ms |     7171 MB
+## round 3 nolambda7
+N5   |      688 ms |      492 MB
+N8   |      733 ms |      958 MB
+T8   |      853 ms |     1278 MB
+G16  |     1710 ms |     2313 MB
+ALL  |     3984 ms |     5041 MB
+## round 4 base
+N5   |      630 ms |      672 MB
+N8   |     1573 ms |     1322 MB
+T8   |     1807 ms |     1984 MB
+G16  |     2662 ms |     3193 MB
+ALL  |     6672 ms |     7171 MB
+## round 4 nolambda7
+N5   |      699 ms |      492 MB
+N8   |      778 ms |      958 MB
+T8   |     1081 ms |     1278 MB
+G16  |     2166 ms |     2313 MB
+ALL  |     4724 ms |     5041 MB
+## round 5 base
+N5   |      613 ms |      672 MB
+N8   |      886 ms |     1322 MB
+T8   |     1179 ms |     1984 MB
+G16  |     2343 ms |     3193 MB
+ALL  |     5021 ms |     7171 MB
+## round 5 nolambda7
+N5   |      569 ms |      492 MB
+N8   |      745 ms |      958 MB
+T8   |      892 ms |     1278 MB
+G16  |     1899 ms |     2313 MB
+ALL  |     4104 ms |     5041 MB

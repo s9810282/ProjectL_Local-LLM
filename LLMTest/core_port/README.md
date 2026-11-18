@@ -163,4 +163,5 @@ dotnet run --project LLMTest/core_port/harness/Harness --no-build -- allocbytype
 계획 하나(l0)가 할당한 메모리를 형식별로 나눈다(런타임 할당 표본). 결과 해석은 [병렬 설계](../docs/2026-11-18-planner-background-parallel-design.md) §15.
 
 - 위 `dotnet build`·`dotnet run`은 Debug다. Release(`-c Release`)가 약 2배 빠르므로(병렬 설계 §16) 시간은 같은 설정끼리만 비교한다.
+- `allocbysite N5,N8,T8,G16`: 계획 하나(l1)의 할당을 람다 묶음·반복기를 둘러싼 Core 함수 이름으로 나눈다. `bench N5,N8,T8,G16 3`: 판마다 데운 뒤 3번 잰 계획 시간·할당 평균. Core 람다를 반복문으로 바꾼 측정용 사본과 비교는 [`nolambda/README.md`](nolambda/README.md)(결과 [병렬 설계](../docs/2026-11-18-planner-background-parallel-design.md) §18).
 - 계획 AI가 부른 Core 함수 안과 우리 코드의 몫을 나눠 재는 측정 사본, 예상 피해 되풀이·기억 열쇠 측정은 [`probe/README.md`](probe/README.md).
