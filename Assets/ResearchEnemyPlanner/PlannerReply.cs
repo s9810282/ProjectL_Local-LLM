@@ -9,22 +9,88 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contr
 namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyPlanner
 {
     /// <summary>
-    /// 깊은 판 평가 V_deep(설계 CP8). 연구 시뮬레이터 <c>sim/reply.py</c>와 같은 절차:
-    /// 위험 판 = 적 턴을 끝내고 플레이어 턴을 연 판, 기회 판 = 거기서 플레이어가 아무것도 안 하고 턴을 넘긴 판.
-    /// 그 편 유닛마다 공격이 든 후보를 엔진으로 돌려 순이득(빼앗은 자산 − 잃은 자산)이 가장 큰 것 하나를 고르고(0 이하면 없음),
-    /// 고른 행동들의 대상별 잃은 HP를 더해 HP에서 자른 손실이 위험·기회다. 자산·G1은 빠른 V와 같다.
+    /// 깊은 판 평가 V_deep(설계 CP8). 연구 시뮬레이터 <c>sim/reply.py</c>와 같은 절차. 응수 규칙은 둘 다 같다:
+    /// 그 편 유닛 하나가 공격이 든 후보를 엔진으로 돌려 순이득(빼앗은 자산 − 잃은 자산)이 가장 큰 것 하나를 고른다(0 이하면 없음).
+    /// <list type="bullet">
+    /// <item>한 턴 더 보기(<see cref="EnemyTurnPlannerStyle.Lookahead"/>, 시뮬레이터 <c>lookahead_board</c>): 위험 판에서 플레이어 유닛을
+    /// 차례대로 바뀐 판에서 두고, 턴을 넘긴 판(다시 적 차례)의 빠른 V.</item>
+    /// <item>옛 깊은 V(시뮬레이터 <c>engine_terms</c>): 위험 판 = 적 턴을 끝내고 플레이어 턴을 연 판, 기회 판 = 거기서 플레이어가 아무것도
+    /// 안 하고 턴을 넘긴 판. 유닛마다 같은 판에서 따로 고른 행동들의 대상별 잃은 HP를 더해 HP에서 자른 손실이 위험·기회다.
+    /// 자산·G1은 빠른 V와 같다.</item>
+    /// </list>
     /// 턴을 넘긴 판은 난수를 같은 씨앗으로 다시 맞춘다.
     /// </summary>
     internal static class PlannerReply
     {
+        /// <summary>
+        /// 깊은 V 하나. 종류는 <see cref="PlannerEvaluator.Style"/>의 한 턴 더 보기가 정한다.
+        /// completed(값, 한 턴 더 보기가 둬 본 플레이어 응수 수 — 옛 깊은 V면 0).
+        /// </summary>
         internal static IEnumerable<int> DeepSteps(PlannerState state, PlannerEvaluator evaluator, PlannerSimulator simulator,
-            uint seed, Action<double> completed)
+            uint seed, Action<double, int> completed)
         {
             if (state.IsEnded)
             {
-                completed(PlannerEvaluator.Terminal(state.Outcome));
+                completed(PlannerEvaluator.Terminal(state.Outcome), 0);
                 yield break;
             }
+            var steps = evaluator.Style.Lookahead
+                ? LookaheadSteps(state, evaluator, simulator, seed, completed)
+                : TermSteps(state, evaluator, simulator, seed, value => completed(value, 0));
+            foreach (var _ in steps) yield return 0;
+        }
+
+        /// <summary>
+        /// 한 턴 더 보기(LLMTest/docs/2026-11-18-planner-two-turn-lookahead-design.md LA1·LA2 A, 시뮬레이터 <c>lookahead_board</c>·
+        /// <c>sequential_turn</c>): 위험 판(적 턴을 끝내고 플레이어 턴을 연 판)에서 플레이어 유닛을 번호 순으로, 그 순간 필드에 산
+        /// 유닛마다 바뀐 판에서 응수 규칙(<see cref="BestReplySteps"/>)으로 하나씩 둔다. 순이득이 0 이하뿐이거나 공격할 것이 없는 유닛은
+        /// 그 자리에 있는다(TP-2). 다 두면 턴을 넘긴 판(다시 적 차례)의 빠른 V가 값이다. 도중에 전투가 끝나면 ±승리 값.
+        /// 엔진이 턴 넘김을 거절하면(시뮬레이터에는 없는 경우) 더 보지 않고 그때 판의 빠른 V를 쓴다.
+        /// </summary>
+        private static IEnumerable<int> LookaheadSteps(PlannerState state, PlannerEvaluator evaluator, PlannerSimulator simulator,
+            uint seed, Action<double, int> completed)
+        {
+            var riskBoard = TurnToPlayer(state, simulator, seed);
+            yield return 0;
+            if (riskBoard != null && riskBoard.IsEnded)
+            {
+                completed(PlannerEvaluator.Terminal(riskBoard.Outcome), 0);
+                yield break;
+            }
+            if (riskBoard == null || !IsPlayerInput(riskBoard.Input))
+            {
+                completed(evaluator.Value(state), 0);
+                yield break;
+            }
+            var board = PlannerBoard.Rebuild(riskBoard.Input, CombatProcessingKind.Command, CombatCommandKind.EndPlayerTurn);
+            int replies = 0;
+            foreach (var id in PlannerEvaluator.Living(board, Owner.Player).Select(c => c.EntityId).ToArray())
+            {
+                var unit = board.Characters.SingleOrDefault(c => c.EntityId == id);
+                if (unit == null || !PlannerEvaluator.OnField(unit)) continue;
+                PlannerState best = null;
+                foreach (var _ in BestReplySteps(board, unit, Owner.Player, evaluator, simulator,
+                    evaluator.Assets(board, Owner.Player), evaluator.Assets(board, Owner.Enemy), (had, chosen) => best = chosen))
+                    yield return 0;
+                if (best == null) continue;
+                replies++;
+                if (best.IsEnded)
+                {
+                    completed(PlannerEvaluator.Terminal(best.Outcome), replies);
+                    yield break;
+                }
+                // 다음 유닛은 지금 응수와 같은 꼴의 새 명령 입력에서 고른다(앞 행동의 의도·경로를 넘기지 않게).
+                board = PlannerBoard.Rebuild(best.Input, CombatProcessingKind.Command, CombatCommandKind.EndPlayerTurn);
+            }
+            var played = TurnToEnemy(board, simulator, seed);
+            yield return 0;
+            completed(evaluator.Value(played ?? new PlannerState(board, StageOutcome.InProgress)), replies);
+        }
+
+        /// <summary>옛 깊은 V: 위험 판·기회 판에서 유닛마다 같은 판에서 따로 고른 응수(시뮬레이터 <c>engine_terms</c>).</summary>
+        private static IEnumerable<int> TermSteps(PlannerState state, PlannerEvaluator evaluator, PlannerSimulator simulator,
+            uint seed, Action<double> completed)
+        {
             var board = state.Input;
             double total = evaluator.Assets(board, Owner.Enemy) - evaluator.Assets(board, Owner.Player);
             double risk = 0.0, gain = 0.0, penalty = 0.0;
@@ -47,7 +113,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     penalty = StepPenalty(chanceBoard.Input, idle, evaluator);
                 }
             }
-            total += -EnemyTurnPlannerConfig.Fear * risk + EnemyTurnPlannerConfig.Opportunity * gain - penalty;
+            total += -evaluator.Style.Fear * risk + evaluator.Style.Opportunity * gain - penalty;
             completed(total + evaluator.GoalTerm(board));
         }
 
@@ -96,7 +162,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// side 유닛마다(번호 순) 가장 좋은 공격 응수 하나의 "상대 편 대상별 잃은 HP"를 losses에 넣는다. 공격 후보가 하나도 없는 유닛은 idle.
-        /// board는 side 차례여야 한다(플레이어 = 명령 입력, 적 = 자동 진행 입력).
+        /// 유닛마다 같은 판에서 따로 고른다. board는 side 차례여야 한다(플레이어 = 명령 입력, 적 = 자동 진행 입력).
         /// </summary>
         private static IEnumerable<int> ReplySteps(CombatCommandInput board, Owner side, PlannerEvaluator evaluator,
             PlannerSimulator simulator, List<Dictionary<long, int>> losses, List<int> idle)
@@ -106,26 +172,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             double opponentBefore = evaluator.Assets(board, opponent);
             foreach (var unit in PlannerEvaluator.Living(board, side).ToArray())
             {
-                var results = new List<PlannerState>();
-                foreach (var _ in AttackResultSteps(board, unit, side, simulator, results)) yield return 0;
-                if (results.Count == 0)
+                bool hadOptions = false;
+                PlannerState best = null;
+                foreach (var _ in BestReplySteps(board, unit, side, evaluator, simulator, ownBefore, opponentBefore,
+                    (had, chosen) => { hadOptions = had; best = chosen; }))
+                    yield return 0;
+                if (!hadOptions)
                 {
                     idle?.Add(unit.EntityId.Value);
                     continue;
                 }
-                PlannerState best = null;
-                double bestGain = 0.0;
-                foreach (var after in results)
-                {
-                    double gain = (opponentBefore - evaluator.Assets(after.Input, opponent)) - (ownBefore - evaluator.Assets(after.Input, side));
-                    if (gain > 0 && (best == null || gain > bestGain))
-                    {
-                        best = after;
-                        bestGain = gain;
-                    }
-                }
                 if (best != null) losses.Add(LostHealth(board, best.Input, opponent));
             }
+        }
+
+        /// <summary>
+        /// board에서 unit(side 편)의 응수 하나(시뮬레이터 <c>_best_reply</c>): 공격이 든 후보 중 그 편 순이득
+        /// (빼앗은 자산 − 잃은 자산, 기준은 ownBefore·opponentBefore)이 가장 큰 것. 같으면 먼저 나온 것.
+        /// completed(공격 후보가 하나라도 있었나, 고른 뒤 판 — 순이득이 0 이하뿐이면 null). 측정 도구의 확인 모드도 부른다.
+        /// </summary>
+        internal static IEnumerable<int> BestReplySteps(CombatCommandInput board, CharacterCombatFacts unit, Owner side,
+            PlannerEvaluator evaluator, PlannerSimulator simulator, double ownBefore, double opponentBefore,
+            Action<bool, PlannerState> completed)
+        {
+            var opponent = PlannerEvaluator.Other(side);
+            var results = new List<PlannerState>();
+            foreach (var _ in AttackResultSteps(board, unit, side, simulator, results)) yield return 0;
+            PlannerState best = null;
+            double bestGain = 0.0;
+            foreach (var after in results)
+            {
+                double gain = (opponentBefore - evaluator.Assets(after.Input, opponent)) - (ownBefore - evaluator.Assets(after.Input, side));
+                if (gain > 0 && (best == null || gain > bestGain))
+                {
+                    best = after;
+                    bestGain = gain;
+                }
+            }
+            completed(results.Count > 0, best);
         }
 
         /// <summary>공격이 들어 있는 조합(제자리 공격, 이동 + 공격)마다 엔진으로 돌린 뒤 판. 시뮬레이터 <c>attack_results</c>와 같은 꼴.</summary>
@@ -223,7 +307,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             foreach (int id in idle)
             {
                 var unit = board.Characters.SingleOrDefault(c => c.EntityId.Value == id);
-                if (unit != null) penalty += EnemyTurnPlannerConfig.StepPenalty * PlannerEvaluator.Beyond(unit, field);
+                if (unit != null) penalty += evaluator.Style.StepPenalty * PlannerEvaluator.Beyond(unit, field);
             }
             return penalty;
         }

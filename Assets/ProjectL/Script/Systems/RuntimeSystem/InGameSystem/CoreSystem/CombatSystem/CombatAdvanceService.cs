@@ -48,6 +48,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         // 연구 저장소 전용(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP7): 턴 계획 AI 계획 시간 기록.
         private long _sessionStartTimestamp;
         private bool _planReported;
+        // 연구 저장소 전용 진단(설계 §13): 계획 AI를 기다리는 동안의 프레임 시간(ms)과 그 프레임에 GC 수집이 있었는지.
+        private readonly List<(float milliseconds, bool collected)> _waitFrames = new List<(float, bool)>();
+        private int _lastCollectionCount = -1;
 
         internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
         internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
@@ -146,6 +149,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                     RecordAtom(atomStart, end);
                 }
                 if (!_immediateRequired) ReportTurnPlan();
+                RecordWaitFrame(!_immediateRequired && _session != null && _session.IsWaiting);
                 return _immediateRequired ? AdvancePreparationState.NotRequired :
                     _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
             }
@@ -226,6 +230,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             _sourceRun = default;
             _immediateRequired = false;
             session?.Dispose();
+            _waitFrames.Clear();
+            _lastCollectionCount = -1;
         }
 
         public void Tick(float deltatime)
@@ -280,8 +286,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
 
         /// <summary>
         /// 연구 저장소 전용(설계 BP7): 턴 계획 AI가 새로 계획해 결정이 나오면, 준비를 시작한 뒤 걸린 시간과 계산량을 콘솔에 한 줄 남긴다.
-        /// 보관한 계획에서 꺼낸 결정은 남기지 않는다.
+        /// 보관한 계획에서 꺼낸 결정은 남기지 않는다. 쓴 성향 값(조정 에셋 프리셋, Core 이식 설계 §11)도 같은 줄에 적는다.
         /// </summary>
+        private static string StyleText(EnemyTurnPlannerStyle style) =>
+            $"성향 겁 {style.Fear:0.##} 기회 {style.Opportunity:0.##} 메인 배수 {style.MainWeight:0.##} 메인 거리 {style.GoalStepPercent:0.##}% " +
+            $"걸음 {style.StepPenalty:0.##} 증원 {style.ReinforcementDiscount:0.##} 한 턴 더 {(style.Lookahead ? "켬" : "끔")} " +
+            $"빔 {style.Beam} 후보 {style.PerUnit}/{style.MoveOnly} 다시 매김 {style.Rerank}";
+
         private void ReportTurnPlan()
         {
             if (_settings.DecisionModel != EnemyDecisionModel.TurnPlanner || _planReported || !_session.IsReady) return;
@@ -290,7 +301,45 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             if (diagnostics.CacheHits > 0 && diagnostics.CapHits == 0) return;
             double seconds = (double)(_readTimestamp() - _sessionStartTimestamp) / _timestampFrequency;
             global::UnityEngine.Debug.Log($"[턴 계획 AI] 준비 시작부터 결정까지 {seconds:F1}초, 정산 {diagnostics.PreviewCalls}번, 판 매김 {diagnostics.ExpandedNodes}번" +
-                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : ""));
+                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : "") + " | " + StyleText(_settings.PlannerStyle));
+            ReportWaitFrames();
+        }
+
+        /// <summary>
+        /// 연구 저장소 전용 진단(설계 §13): 기다리는 프레임마다 앞 프레임의 길이(<c>Time.unscaledDeltaTime</c>)와,
+        /// 그 사이 GC 수집 횟수(<c>GC.CollectionCount(0)</c>)가 늘었는지를 모은다. 앞 프레임 길이를 다음 프레임에 읽으므로
+        /// 수집 표시는 "이번 길이를 잰 구간 안에 수집이 끝났나"다.
+        /// </summary>
+        private void RecordWaitFrame(bool waiting)
+        {
+            if (!waiting) return;
+            int collections = GC.CollectionCount(0);
+            bool collected = _lastCollectionCount >= 0 && collections != _lastCollectionCount;
+            if (_lastCollectionCount >= 0)
+                _waitFrames.Add((global::UnityEngine.Time.unscaledDeltaTime * 1000f, collected));
+            _lastCollectionCount = collections;
+        }
+
+        /// <summary>모은 프레임을 한 줄로: 수, 중간값·90%·가장 긴 값, 8.3ms를 넘은 수, GC 수집이 있던 프레임 수와 그중 8.3ms를 넘은 수.</summary>
+        private void ReportWaitFrames()
+        {
+            if (_waitFrames.Count == 0) return;
+            var lengths = new List<float>(_waitFrames.Count);
+            int over = 0, collectedFrames = 0, collectedOver = 0;
+            foreach (var (milliseconds, collected) in _waitFrames)
+            {
+                lengths.Add(milliseconds);
+                bool isOver = milliseconds > 8.33f;
+                if (isOver) over++;
+                if (collected) collectedFrames++;
+                if (collected && isOver) collectedOver++;
+            }
+            lengths.Sort();
+            float At(double fraction) => lengths[Math.Min(lengths.Count - 1, (int)(fraction * lengths.Count))];
+            global::UnityEngine.Debug.Log($"[턴 계획 AI] 기다린 프레임 {lengths.Count}개: 중간 {At(0.5):F1}ms, 90% {At(0.9):F1}ms, 가장 김 {lengths[lengths.Count - 1]:F1}ms, " +
+                $"8.3ms 넘음 {over}개 | GC 수집 있던 프레임 {collectedFrames}개(그중 8.3ms 넘음 {collectedOver}개)");
+            _waitFrames.Clear();
+            _lastCollectionCount = -1;
         }
 
         private void RecordAtom(long start, long end)

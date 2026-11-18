@@ -24,13 +24,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 계획 중 예외가 나면 그 행동은 지금 AI로 고르고 진단 <see cref="EnemyDecisionDiagnostics.CapHits"/>를 센다(게임이 멈추지 않게).
         /// 계획 계산은 일 스레드에서 돈다(LLMTest/docs/2026-11-18-planner-background-parallel-design.md BP1). 기다리는 동안
         /// <paramref name="waiting"/>(true)를 알리고, 단계는 계산이 끝났는지만 보고 바로 돌아간다.
+        /// <paramref name="style"/>은 조정 에셋의 성향 프리셋 값이다(결정 설정 <see cref="EnemyDecisionSettings.PlannerStyle"/>).
         /// </summary>
         internal static IEnumerable<int> Steps(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
-            EnemyDecisionSideCache sideCache, EnemyDecisionDiagnostics diagnostics, Action<EnemyDecision> select,
-            Func<IEnumerable<int>> utility, Action<bool> waiting = null)
+            EnemyTurnPlannerStyle style, EnemyDecisionSideCache sideCache, EnemyDecisionDiagnostics diagnostics,
+            Action<EnemyDecision> select, Func<IEnumerable<int>> utility, Action<bool> waiting = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (rules == null) throw new ArgumentNullException(nameof(rules));
+            if (style == null) throw new ArgumentNullException(nameof(style));
             if (diagnostics == null) throw new ArgumentNullException(nameof(diagnostics));
             sideCache?.EnterScope(input);
             string signature = PlannerBoard.Signature(input);
@@ -48,7 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             {
                 EnemyTurnPlan made = null;
                 bool failed = false;
-                foreach (var _ in Background(input, rules, diagnostics, value => made = value, () => failed = true, waiting)) yield return 0;
+                foreach (var _ in Background(input, rules, style, diagnostics, value => made = value, () => failed = true, waiting))
+                    yield return 0;
                 if (failed || made == null || !made.TryNext(signature, out first))
                 {
                     diagnostics.CapHits++;
@@ -68,7 +71,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             {
                 EnemyTurnPlan made = null;
                 bool failed = false;
-                foreach (var _ in Background(input, rules, diagnostics, value => made = value, () => failed = true, waiting)) yield return 0;
+                foreach (var _ in Background(input, rules, style, diagnostics, value => made = value, () => failed = true, waiting))
+                    yield return 0;
                 if (!failed && made != null && made.TryNext(signature, out var second) && !second.Equals(first))
                 {
                     if (sideCache != null) sideCache.TurnPlan = made;
@@ -87,10 +91,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 세션이 기다리는 도중 버려지면(반복기 Dispose) finally에서 취소 신호를 보내, 일 스레드가 다음 멈춤 자리에서 멈춘다.
         /// </summary>
         private static IEnumerable<int> Background(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
-            EnemyDecisionDiagnostics diagnostics, Action<EnemyTurnPlan> completed, Action failed, Action<bool> waiting)
+            EnemyTurnPlannerStyle style, EnemyDecisionDiagnostics diagnostics, Action<EnemyTurnPlan> completed, Action failed,
+            Action<bool> waiting)
         {
             var cancel = new CancellationTokenSource();
-            var task = Task.Run(() => Run(input, rules, cancel.Token), cancel.Token);
+            var task = Task.Run(() => Run(input, rules, style, cancel.Token), cancel.Token);
             // 버려진 계산의 예외도 관찰해 둔다(관찰하지 않은 작업 예외 경고를 막는다). 취소 신호는 계산이 끝난 뒤 버린다.
             task.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
             task.ContinueWith(_ => cancel.Dispose());
@@ -118,34 +123,65 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             completed(plan);
         }
 
-        /// <summary>일 스레드에서 도는 계획 하나. 계획의 멈춤 자리(행동 정산 한 번 단위)마다 취소를 확인한다.</summary>
-        private static EnemyTurnPlan Run(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules, CancellationToken cancel)
+        /// <summary>
+        /// 일 스레드에서 도는 계획 하나. 계획의 멈춤 자리(행동 정산 한 번 단위)마다 취소를 확인한다.
+        /// 계산 동안만 스레드 우선순위를 <see cref="EnemyTurnPlannerConfig.WorkerPriority"/>로 바꾸고 끝나면 되돌린다(우선순위 실험).
+        /// 스레드 풀 스레드라 되돌리지 않으면 다른 작업이 낮은 우선순위를 물려받는다.
+        /// </summary>
+        private static EnemyTurnPlan Run(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules, EnemyTurnPlannerStyle style,
+            CancellationToken cancel)
         {
-            EnemyTurnPlan made = null;
-            foreach (var _ in Plan(input, rules, null, value => made = value)) cancel.ThrowIfCancellationRequested();
-            return made;
+            var thread = Thread.CurrentThread;
+            var previous = thread.Priority;
+            bool changed = false;
+            if (EnemyTurnPlannerConfig.WorkerPriority != previous)
+            {
+                // 실행기가 우선순위 바꾸기를 받지 않으면 그대로 계산한다(실험이 계산을 막지 않게).
+                try
+                {
+                    thread.Priority = EnemyTurnPlannerConfig.WorkerPriority;
+                    changed = true;
+                }
+                catch (Exception exception) when (exception is ThreadStateException || exception is NotSupportedException ||
+                                                  exception is PlatformNotSupportedException)
+                {
+                }
+            }
+            try
+            {
+                EnemyTurnPlan made = null;
+                foreach (var _ in Plan(input, rules, null, value => made = value, style)) cancel.ThrowIfCancellationRequested();
+                return made;
+            }
+            finally
+            {
+                if (changed) thread.Priority = previous;
+            }
         }
 
         /// <summary>
-        /// 턴 계획 하나: 공정 입력(설계 TP-3) → 빔 탐색 → 다시 매김(빠른 V 상위 <see cref="EnemyTurnPlannerConfig.Rerank"/>개를 깊은 V로).
+        /// 턴 계획 하나: 공정 입력(설계 TP-3) → 빔 탐색 → 다시 매김(빠른 V 상위 <see cref="EnemyTurnPlannerStyle.Rerank"/>개를 깊은 V로).
         /// 결과는 행동마다 "행동 전 판 서명"을 붙인 계획이다. 시험·측정 도구는 이 함수를 예외 거름 없이 직접 부른다.
+        /// style은 성향·계산 크기 값이다(null이면 <see cref="EnemyTurnPlannerStyle.Default"/>). 게임은 조정 에셋의 프리셋 값을 넘긴다.
         /// </summary>
         internal static IEnumerable<int> Plan(CombatCommandInput input, IReadOnlyList<IMovementTileRule> rules,
-            EnemyDecisionDiagnostics diagnostics, Action<EnemyTurnPlan> completed)
+            EnemyDecisionDiagnostics diagnostics, Action<EnemyTurnPlan> completed, EnemyTurnPlannerStyle style = null)
         {
             var watch = Stopwatch.StartNew();
+            style ??= EnemyTurnPlannerStyle.Default;
             var fair = PlannerBoard.Fair(input);
             var root = new PlannerState(fair, StageOutcome.InProgress);
-            var evaluator = new PlannerEvaluator(fair);
+            var evaluator = new PlannerEvaluator(fair, style);
             var simulator = new PlannerSimulator(rules);
             var beam = new PlannerBeam(root, evaluator, simulator);
             foreach (var _ in beam.Run()) yield return 0;
             var chosen = beam.Best;
             int beamSimulations = simulator.Simulations;
             bool reranked = false;
-            if (EnemyTurnPlannerConfig.Rerank > 0)
+            int lookaheadReplies = 0;
+            if (style.Rerank > 0)
             {
-                var top = beam.Pool.OrderByDescending(n => n.Value).Take(EnemyTurnPlannerConfig.Rerank).ToList();
+                var top = beam.Pool.OrderByDescending(n => n.Value).Take(style.Rerank).ToList();
                 if (top.Count >= 2)
                 {
                     uint seed = PlannerBoard.Seed(input);
@@ -154,7 +190,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     foreach (var node in top)
                     {
                         double deep = 0.0;
-                        foreach (var _ in PlannerReply.DeepSteps(node.State, evaluator, simulator, seed, value => deep = value))
+                        foreach (var _ in PlannerReply.DeepSteps(node.State, evaluator, simulator, seed,
+                            (value, replies) => { deep = value; lookaheadReplies += replies; }))
                             yield return 0;
                         if (pick == null || deep > pickValue)
                         {
@@ -180,7 +217,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             completed(new EnemyTurnPlan(steps, before,
                 new EnemyTurnPlanStats(beamSimulations, simulator.Simulations - beamSimulations, evaluator.Evaluations, beam.BeamSteps,
-                    simulator.Failures, simulator.LastFailure, reranked, !ReferenceEquals(chosen, beam.Best), watch.Elapsed.TotalMilliseconds)));
+                    simulator.Failures, simulator.LastFailure, reranked, !ReferenceEquals(chosen, beam.Best), watch.Elapsed.TotalMilliseconds,
+                    lookaheadReplies)));
         }
     }
 }

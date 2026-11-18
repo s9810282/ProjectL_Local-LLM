@@ -16,3 +16,4 @@ MonoBehaviour:
   threatAversionPercent: 20
   nextTurnApproachPercent: 200
   decisionModel: 1
+  plannerPreset: {fileID: 11400000, guid: 4172a88f9c734fab9c593c029259da6c, type: 2}

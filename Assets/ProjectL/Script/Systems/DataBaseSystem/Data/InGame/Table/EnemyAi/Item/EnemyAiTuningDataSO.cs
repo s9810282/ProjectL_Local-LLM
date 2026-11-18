@@ -54,9 +54,19 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
         [SerializeField]
         private EnemyDecisionModel decisionModel = EnemyDecisionModel.Utility;
 
+        // 연구 저장소 전용 연결(LLMTest/docs/2026-11-18-core-turn-planner-port-design.md §11). 아래 상자는 판 점수 식이다(저장하지 않는 설명).
+        [InspectorNote(EnemyTurnPlannerPresetSO.Formula)]
+        [Tooltip("턴 계획 AI 성향 프리셋 (EnemyTurnPlannerPresetSO)\n" +
+            "Decision Model이 TurnPlanner일 때만 씁니다. 비우면 기본값(연구 시뮬레이터 plan4:g1:l1과 같은 값)입니다.\n" +
+            "값마다의 뜻은 프리셋 SO의 칸에 마우스를 올리면 나옵니다. 값은 게임 시작 때 한 번 읽으므로, 바꾸면 다음 재생부터 적용됩니다.")]
+        [SerializeField]
+        private EnemyTurnPlannerPresetSO plannerPreset;
+
         public override IData GetData()
         {
-            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent, decisionModel);
+            var style = plannerPreset != null ? plannerPreset.ToStyle() : EnemyTurnPlannerStyle.Default;
+            var data = new EnemyAiTuningData(deathTradeThresholdPercent, threatAversionPercent, nextTurnApproachPercent, decisionModel,
+                style);
             data.Validate();
             return data;
         }

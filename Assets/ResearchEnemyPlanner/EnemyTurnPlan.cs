@@ -50,7 +50,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
     /// <summary>
     /// 계획 하나의 수치: 빔에서 돌린 행동 수, 2단 평가에서 돌린 행동 수, 빠른 V로 매긴 판 수, 빔 단계 수,
-    /// 예외로 거절로 본 행동 수와 마지막 문구, 다시 매겼는지, 다시 매김이 빠른 V 1등과 다른 계획을 골랐는지, 계획에 걸린 시간.
+    /// 예외로 거절로 본 행동 수와 마지막 문구, 다시 매겼는지, 다시 매김이 빠른 V 1등과 다른 계획을 골랐는지, 계획에 걸린 시간,
+    /// 한 턴 더 보기가 둬 본 플레이어 응수 수(다시 매긴 판 전부의 합).
     /// </summary>
     internal readonly struct EnemyTurnPlanStats
     {
@@ -64,9 +65,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal bool Flipped { get; }
         /// <summary>계획 계산에 걸린 시간(밀리초, 측정용).</summary>
         internal double ElapsedMilliseconds { get; }
+        /// <summary>한 턴 더 보기가 둬 본 플레이어 응수 수(진단). 옛 깊은 V면 0.</summary>
+        internal int LookaheadReplies { get; }
 
         internal EnemyTurnPlanStats(int simulations, int replySimulations, int evaluations, int beamSteps,
-            int failures, string lastFailure, bool reranked, bool flipped, double elapsedMilliseconds)
+            int failures, string lastFailure, bool reranked, bool flipped, double elapsedMilliseconds, int lookaheadReplies = 0)
         {
             Simulations = simulations;
             ReplySimulations = replySimulations;
@@ -77,6 +80,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Reranked = reranked;
             Flipped = flipped;
             ElapsedMilliseconds = elapsedMilliseconds;
+            LookaheadReplies = lookaheadReplies;
         }
     }
 }

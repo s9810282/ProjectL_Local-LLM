@@ -90,7 +90,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     }
                 }
                 // 같은 값이면 먼저 만든 것(시뮬레이터의 안정 정렬과 같다).
-                frontier = order.Select(k => children[k]).OrderByDescending(n => n.Value).Take(EnemyTurnPlannerConfig.Beam).ToList();
+                frontier = order.Select(k => children[k]).OrderByDescending(n => n.Value).Take(_evaluator.Style.Beam).ToList();
                 if (frontier.Count > 0) BeamSteps++;
                 foreach (var node in frontier)
                     if (seen.Add(PlannerBoard.Signature(node.State.Input) + (node.State.IsEnded ? "#" + node.State.Outcome : "")))
@@ -113,7 +113,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var attacks = options.Where(o => o.HasAttack).ToList();
             var moves = options.Where(o => !o.HasAttack)
                 .Select(o => (option: o, score: _evaluator.QuickMoveScore(board.Input, unit, o.Path.Endpoint)))
-                .OrderByDescending(p => p.score).Take(EnemyTurnPlannerConfig.MoveOnly).Select(p => p.option);
+                .OrderByDescending(p => p.score).Take(_evaluator.Style.MoveOnly).Select(p => p.option);
             var scored = new List<(PlannerOption, PlannerState, double, string)>();
             foreach (var option in attacks.Concat(moves))
             {
@@ -129,7 +129,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 if (after != null) scored.Add((option, after, _evaluator.Value(after), moved));
                 yield return 0;
             }
-            output.AddRange(scored.OrderByDescending(s => s.Item3).Take(EnemyTurnPlannerConfig.PerUnit));
+            output.AddRange(scored.OrderByDescending(s => s.Item3).Take(_evaluator.Style.PerUnit));
         }
     }
 }

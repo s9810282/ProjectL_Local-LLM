@@ -84,32 +84,81 @@ def lost_hp(before: BattleState, after: BattleState, side: Side) -> dict[TargetK
     return lost
 
 
+def _best_reply(board: BattleState, unit, side: Side, evaluator: Evaluator,
+                own_before: float, opp_before: float) -> tuple[bool, tuple | None]:
+    """board에서 unit(side 편)의 응수 하나: 공격이 든 후보 중 그 편 순이득이 가장 큰 것. (후보가 있었나, (option, gain, after) 또는 None).
+    순이득이 0 이하뿐이면 None(아무것도 안 한다고 본다, Q-R1). 같으면 먼저 나온 것."""
+    opponent = side.other
+    limit = evaluator.config.reply_move_attack_cells
+    # 속도 개선 SP2: 이동 + 공격은 이번 공격 손실 상위 도착 칸에서만 돌린다(끄면 None = 옛 동작)
+    attack_cells = type(evaluator).best_cells(
+        attack_destinations(board, unit) if limit > 0 else [],
+        lambda cell: evaluator.reply_score(board, unit, cell), limit)
+    results = attack_results(board, unit, attack_cells=attack_cells)
+    if not results:
+        return False, None
+    best = None
+    for option, after in results:
+        gain = (opp_before - evaluator.assets(after, opponent)) - (own_before - evaluator.assets(after, side))
+        if gain > 0 and (best is None or gain > best[1]):
+            best = (option, gain, after)
+    return True, best
+
+
 def _replies(board: BattleState, side: Side, evaluator: Evaluator) -> tuple[list[Reply], list[int]]:
-    """(고른 응수들, 공격 후보가 하나도 없는 유닛들). board는 side 차례여야 한다."""
+    """(고른 응수들, 공격 후보가 하나도 없는 유닛들). board는 side 차례여야 한다. 유닛마다 같은 판에서 따로 고른다."""
     opponent = side.other
     own_before = evaluator.assets(board, side)
     opp_before = evaluator.assets(board, opponent)
     replies: list[Reply] = []
     idle: list[int] = []
-    limit = evaluator.config.reply_move_attack_cells
     for unit in sorted(board.living(side), key=lambda u: u.uid):
-        # 속도 개선 SP2: 이동 + 공격은 이번 공격 손실 상위 도착 칸에서만 돌린다(끄면 None = 옛 동작)
-        attack_cells = type(evaluator).best_cells(
-            attack_destinations(board, unit) if limit > 0 else [],
-            lambda cell, unit=unit: evaluator.reply_score(board, unit, cell), limit)
-        results = attack_results(board, unit, attack_cells=attack_cells)
-        if not results:
+        had_options, best = _best_reply(board, unit, side, evaluator, own_before, opp_before)
+        if not had_options:
             idle.append(unit.uid)
             continue
-        best = None
-        for option, after in results:
-            gain = (opp_before - evaluator.assets(after, opponent)) - (own_before - evaluator.assets(after, side))
-            if gain > 0 and (best is None or gain > best[1]):    # 같으면 먼저 나온 것
-                best = (option, gain, after)
         if best is not None:
             option, gain, after = best
             replies.append(Reply(unit.uid, option, gain, lost_hp(board, after, opponent)))
     return replies, idle
+
+
+def sequential_turn(board: BattleState, side: Side, evaluator: Evaluator) -> tuple[BattleState, list[Reply]]:
+    """한 턴 더 보기의 상대 모델(설계 docs/2026-11-18-planner-two-turn-lookahead-design.md LA2 A): board(side 차례)에서 side 유닛을
+    uid 순으로, 그 순간 살아 있는 유닛마다 **바뀐 판에서** 응수 규칙으로 하나씩 둔다. 순이득이 0 이하뿐이거나 공격할 것이 없는 유닛은
+    그 자리에 있는다(TP-2). 전투가 끝나면 멈춘다. (다 둔 판, 고른 응수들)."""
+    opponent = side.other
+    replies: list[Reply] = []
+    for uid in sorted(u.uid for u in board.living(side)):
+        if board.outcome is not None:
+            break
+        unit = board.units.get(uid)
+        if unit is None or not unit.alive:
+            continue
+        _, best = _best_reply(board, unit, side, evaluator,
+                              evaluator.assets(board, side), evaluator.assets(board, opponent))
+        if best is None:
+            continue
+        option, gain, after = best
+        replies.append(Reply(uid, option, gain, lost_hp(board, after, opponent)))
+        board = after
+    return board, replies
+
+
+def lookahead_board(state: BattleState, side: Side, evaluator: Evaluator, seed: int) -> tuple[BattleState, list[Reply]]:
+    """한 턴 더 보기(LA1): state(side 차례, 계획이 끝난 판)에서 턴을 넘긴 판 R(reply_boards와 같은 판)에서 상대 턴을
+    차례대로 두고, 다시 턴을 넘긴 판 P(side 차례). 난수는 턴을 넘길 때마다 같은 씨앗으로 맞춘다. 도중에 끝나면 그 판."""
+    if state.outcome is not None:
+        raise ValueError("끝난 판에는 응수가 없습니다")
+    if state.turn_side is not side:
+        raise ValueError(f"{side.value} 차례 판이어야 합니다(지금 {state.turn_side.value})")
+    risk_board = _seeded(apply(_seeded(state, seed), EndTurn()), seed)
+    if risk_board.outcome is not None:
+        return risk_board, []
+    played, replies = sequential_turn(risk_board, side.other, evaluator)
+    if played.outcome is not None:
+        return played, replies
+    return _seeded(apply(_seeded(played, seed), EndTurn()), seed), replies
 
 
 def best_replies(board: BattleState, side: Side, evaluator: Evaluator) -> list[Reply]:

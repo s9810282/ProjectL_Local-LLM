@@ -65,7 +65,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _steps = (immediateCompatibility ? SelectImmediate(input, movementRules, settings) :
                 settings.DecisionModel == EnemyDecisionModel.TurnPlanner
                     // 연구 저장소 전용 연결: 턴 계획 AI(Assets/ResearchEnemyPlanner, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md CP3).
-                    ? EnemyPlanner.EnemyTurnPlanner.Steps(input, movementRules, sideCache, Diagnostics, decision => _selected = decision,
+                    ? EnemyPlanner.EnemyTurnPlanner.Steps(input, movementRules, settings.PlannerStyle, sideCache, Diagnostics,
+                        decision => _selected = decision,
                         () => SelectUtility(input, movementRules, settings, sideCache), waiting => _waiting = waiting)
                     : SelectUtility(input, movementRules, settings, sideCache)).GetEnumerator();
         }

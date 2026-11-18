@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
@@ -30,6 +31,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// 빠른 판 평가 V(설계 CP6). 식은 연구 시뮬레이터 <c>sim/evaluate.py</c>와 같다:
     /// V = 자산(우리) − 자산(상대) − 겁 × 위험 + 기회 × 기회 − 거리 벌점 + G1.
     /// 한 번의 계획 동안 쓰고, 도달 표는 계획 시작 판(<see cref="Base"/>) 기준으로 (유닛, 칸)마다 기억한다.
+    /// 식의 값(겁·기회·메인 배수·G1·걸음 벌점·증원 할인)은 <see cref="Style"/>(조정 에셋 프리셋)에서 읽는다.
     /// </summary>
     internal sealed class PlannerEvaluator
     {
@@ -41,14 +43,17 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private readonly TargetDamagePipeline _pipeline = new TargetDamagePipeline(new CategoryMatchupResolver(CategoryMatchupSpec.CreateDefault()));
 
         internal CombatCommandInput Base { get; }
+        /// <summary>이번 계획의 성향·계산 크기 값(조정 에셋 프리셋, 비어 있으면 기본값).</summary>
+        internal EnemyTurnPlannerStyle Style { get; }
         /// <summary>본진 값(설계 TP-1): 입력의 모든 적 캐릭터(죽은 유닛 포함)의 공격력 × 최대 HP 합.</summary>
         internal double HeadquartersValue { get; }
         /// <summary>빠른 V로 매긴 판 수(진단).</summary>
         internal int Evaluations { get; private set; }
 
-        internal PlannerEvaluator(CombatCommandInput root)
+        internal PlannerEvaluator(CombatCommandInput root, EnemyTurnPlannerStyle style = null)
         {
             Base = root ?? throw new ArgumentNullException(nameof(root));
+            Style = style ?? EnemyTurnPlannerStyle.Default;
             HeadquartersValue = root.Characters.Where(c => c.Owner == Owner.Enemy)
                 .Sum(c => (double)c.Stats.AttackPower * c.Health.MaxHealth);
             foreach (var profile in root.Profiles)
@@ -70,10 +75,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static IEnumerable<StructureCombatFacts> Headquarters(CombatCommandInput board) =>
             board.State.Structures.Where(s => s.Owner == Owner.Enemy && s.Definition.Key == EntityKey.Structure_Headquarters && !s.IsDestroyed);
 
-        internal static double Power(CharacterCombatFacts c)
+        internal double Power(CharacterCombatFacts c)
         {
             double power = (double)c.Stats.EffectiveAttackPower * c.Health.CurrentHealth;
-            return IsMain(c) ? power * EnemyTurnPlannerConfig.MainWeight : power;
+            return IsMain(c) ? power * Style.MainWeight : power;
         }
 
         internal double Assets(CombatCommandInput board, Owner side)
@@ -91,7 +96,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (alive && spec != null && pool.IsEnabled)
                 for (int index = 0; index < spec.Pool.Count; index++)
                     if (_poolPower.TryGetValue(spec.Pool[index].UnitKey, out var power))
-                        total += EnemyTurnPlannerConfig.ReinforcementDiscount * power * pool.RemainingCount(spec, index);
+                        total += Style.ReinforcementDiscount * power * pool.RemainingCount(spec, index);
             return total;
         }
 
@@ -109,7 +114,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (target.IsUnit)
             {
                 double lost = (double)Math.Min(damage, target.Unit.Health.CurrentHealth) * target.Unit.Stats.EffectiveAttackPower;
-                return IsMain(target.Unit) ? lost * EnemyTurnPlannerConfig.MainWeight : lost;
+                return IsMain(target.Unit) ? lost * Style.MainWeight : lost;
             }
             var health = target.Structure.Health;
             return HeadquartersValue * Math.Min(damage, health.CurrentHealth) / Math.Max(1, health.MaxHealth);
@@ -240,7 +245,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     continue;
                 }
                 field ??= DistanceField(board, targets);
-                penalty += EnemyTurnPlannerConfig.StepPenalty * Beyond(unit, field);
+                penalty += Style.StepPenalty * Beyond(unit, field);
             }
             return (gain, penalty);
         }
@@ -302,8 +307,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Living(board, Owner.Player).Where(IsMain).Select(c => new PlannerTarget(c)).ToList();
 
         /// <summary>승리 대상 가치. 최대 HP 기준으로 고정한다(다쳐도 끌림이 줄지 않게).</summary>
-        internal static double WinValue(PlannerTarget target) =>
-            (double)target.Unit.Stats.EffectiveAttackPower * target.Unit.Health.MaxHealth * EnemyTurnPlannerConfig.MainWeight;
+        internal double WinValue(PlannerTarget target) =>
+            (double)target.Unit.Stats.EffectiveAttackPower * target.Unit.Health.MaxHealth * Style.MainWeight;
 
         /// <summary>그 유닛이 cell에 있을 때 승리 대상까지 모자란 걸음. 다음 턴에 칠 수 있으면 0. 공격할 수 없는 종류·길 없는 칸도 0.</summary>
         internal int GoalSteps(CombatCommandInput board, CharacterCombatFacts unit, CellCoord cell, IReadOnlyList<PlannerTarget> targets)
@@ -320,11 +325,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// <summary>G1의 유닛 하나 몫(빼는 점수, 0 이상). 판 평가와 빠른 이동 점수가 함께 부른다.</summary>
         internal double GoalPenalty(CombatCommandInput board, CharacterCombatFacts unit, CellCoord cell, IReadOnlyList<PlannerTarget> targets)
         {
-            if (EnemyTurnPlannerConfig.GoalStep <= 0 || targets.Count == 0) return 0.0;
+            if (Style.GoalStepPercent <= 0 || targets.Count == 0) return 0.0;
             int steps = GoalSteps(board, unit, cell, targets);
             if (steps == 0) return 0.0;
             double reference = targets.Max(WinValue);
-            return EnemyTurnPlannerConfig.GoalStep * reference / 100 * steps;
+            return Style.GoalStepPercent * reference / 100 * steps;
         }
 
         internal double GoalTerm(CombatCommandInput board)
@@ -346,9 +351,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (state.IsEnded) return Terminal(state.Outcome);
             var board = state.Input;
             double total = Assets(board, Owner.Enemy) - Assets(board, Owner.Player);
-            total -= EnemyTurnPlannerConfig.Fear * Risk(board, Owner.Enemy);
+            total -= Style.Fear * Risk(board, Owner.Enemy);
             var (gain, penalty) = Opportunity(board, Owner.Enemy);
-            total += EnemyTurnPlannerConfig.Opportunity * gain - penalty;
+            total += Style.Opportunity * gain - penalty;
             return total + GoalTerm(board);
         }
 
@@ -370,13 +375,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 danger += Estimate(board, attacker, self, percent);
             }
             double loss = (double)Math.Min(danger, unit.Health.CurrentHealth) * unit.Stats.EffectiveAttackPower *
-                (IsMain(unit) ? EnemyTurnPlannerConfig.MainWeight : 1.0);
+                (IsMain(unit) ? Style.MainWeight : 1.0);
             if (gain == 0)
             {
                 var field = DistanceField(board, targets);
-                gain = -EnemyTurnPlannerConfig.StepPenalty * (field.TryGetValue(destination, out var steps) ? steps : 99);
+                gain = -Style.StepPenalty * (field.TryGetValue(destination, out var steps) ? steps : 99);
             }
-            double score = EnemyTurnPlannerConfig.Opportunity * gain - EnemyTurnPlannerConfig.Fear * loss;
+            double score = Style.Opportunity * gain - Style.Fear * loss;
             return score - GoalPenalty(board, moved, destination, WinTargets(board));
         }
     }

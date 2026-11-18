@@ -29,21 +29,22 @@ from .targeting import Side
 def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
     """이름으로 계획 AI를 만든다:
     plan{K}[:f{겁}][:o{기회}][:n{유닛당 후보}][:r{다시 매김}][:d{결과마다 빔 수}][:g{승리 대상 걸음}][:t{함께 닿음}]
-        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}]
+        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}][:l{한 턴 더 보기}]
     (예: plan4 = 다시 매김 4, plan4:r0 = 다시 매김 끔(옛 동작), plan4:d1 = 빔 다양성 켬, plan4:f0.8:o0.3:r8,
     plan4:g1:t0.5 = 승리 대상 노림 켬 — 설계 docs/2026-11-14-planner-goal-pressure-design.md,
-    plan4:g1:m3:q2 = 이동 + 공격 도착 칸 거름 — 설계 docs/2026-11-18-planner-candidate-pruning-design.md)."""
+    plan4:g1:m3:q2 = 이동 + 공격 도착 칸 거름 — 설계 docs/2026-11-18-planner-candidate-pruning-design.md,
+    plan4:g1:l1 = 한 턴 더 보기 — 설계 docs/2026-11-18-planner-two-turn-lookahead-design.md)."""
     head, *rest = name.split(":")
     values = {"beam": int(head[4:] or PlannerConfig().beam)}
     for part in rest:
         key = {"f": "fear", "o": "opportunity", "n": "per_unit", "r": "rerank", "d": "distinct",
                "g": "goal_step", "t": "goal_together", "m": "move_attack_cells",
-               "q": "reply_move_attack_cells"}.get(part[:1])
+               "q": "reply_move_attack_cells", "l": "lookahead"}.get(part[:1])
         if key is None:
             raise ValueError(f"모르는 계획 AI 설정: {part} "
                              "(f겁, o기회, n유닛당 후보, r다시 매김, d빔 다양성, g승리 대상 걸음, t함께 닿음, "
-                             "m이동 + 공격 도착 칸, q응수 도착 칸)")
-        integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells")
+                             "m이동 + 공격 도착 칸, q응수 도착 칸, l한 턴 더 보기)")
+        integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells", "lookahead")
         values[key] = int(part[1:]) if integer else float(part[1:])
     if values.get("rerank", 0) < 0:
         raise ValueError(f"다시 매김 수는 0 이상이어야 합니다: {name}")
@@ -53,6 +54,8 @@ def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
         raise ValueError(f"승리 대상 노림 값은 0 이상이어야 합니다: {name}")
     if values.get("move_attack_cells", 0) < 0 or values.get("reply_move_attack_cells", 0) < 0:
         raise ValueError(f"도착 칸 수는 0 이상이어야 합니다: {name}")
+    if values.get("lookahead", 0) not in (0, 1):
+        raise ValueError(f"한 턴 더 보기는 0 또는 1이어야 합니다: {name}")
     config = PlannerConfig(**values)
     prefix = "enemy" if side is Side.ENEMY else "player"
     return PlannerPolicy(side, config, name=f"{prefix}-{name}")

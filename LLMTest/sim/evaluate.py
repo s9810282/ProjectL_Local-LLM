@@ -19,7 +19,7 @@ from collections import deque
 from dataclasses import dataclass, replace
 
 from .assets import Cell, Objective
-from .reply import engine_terms
+from .reply import engine_terms, lookahead_board
 from .rules import RuleError, attack_aims, coverage_parts, hit_damage, reachable, Hit
 from .state import ActionUse, BattleState, Outcome, Structure, Unit
 from .targeting import Side
@@ -43,6 +43,7 @@ class PlannerConfig:
     goal_together: float = 0.0            # G2: 함께 닿음 배수(0 = 끔)
     move_attack_cells: int = 0            # 속도 개선 SP1: 이동 + 공격을 만들 도착 칸을 빠른 점수 상위 몇 개로(0 = 거르지 않음)
     reply_move_attack_cells: int = 0      # 속도 개선 SP2: 2단 평가 응수의 이동 + 공격 도착 칸 수(0 = 거르지 않음)
+    lookahead: int = 0                    # 한 턴 더 보기: 1이면 깊은 평가가 상대 턴 전체를 차례대로 둬 보고 그 뒤 판을 빠른 V로(0 = 끔)
 
     @property
     def rerank_count(self) -> int:
@@ -380,11 +381,21 @@ class Evaluator:
         return self.breakdown(state, side)["total"]
 
     def deep_breakdown(self, state: BattleState, side: Side, seed: int) -> dict:
-        """V_deep: breakdown과 같은 식, 위험·기회·거리 벌점은 엔진 응수. state는 side 차례여야 한다(끝난 판은 ±WIN)."""
+        """V_deep: breakdown과 같은 식, 위험·기회·거리 벌점은 엔진 응수. state는 side 차례여야 한다(끝난 판은 ±WIN).
+        한 턴 더 보기(config.lookahead == 1, 설계 docs/2026-11-18-planner-two-turn-lookahead-design.md LA1)면 상대 턴을 차례대로
+        둬 본 뒤 판(다시 side 차례)의 빠른 V다."""
         win = Outcome.PLAYER_WIN if side is Side.PLAYER else Outcome.ENEMY_WIN
         if state.outcome is not None:
             value = WIN if state.outcome is win else -WIN
             return {"outcome": state.outcome.value, "total": value}
+        if self.config.lookahead == 1:
+            board, replies = lookahead_board(state, side, self, seed)
+            if board.outcome is not None:
+                value = WIN if board.outcome is win else -WIN
+                return {"outcome": board.outcome.value, "total": value, "lookahead": 1, "replies": len(replies)}
+            result = dict(self.breakdown(board, side))
+            result.update(lookahead=1, replies=len(replies))
+            return result
         mine, theirs = self.assets(state, side), self.assets(state, side.other)
         terms = engine_terms(state, side, self, seed)
         config = self.config

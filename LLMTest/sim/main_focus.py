@@ -272,6 +272,7 @@ class EnemyTurn:
     start: BattleState          # 적 턴 시작 판(턴 시작·증원 뒤, 적 행동 전)
     end: BattleState            # 적 행동이 끝난 판(턴 끝내기 전, 전투가 끝났으면 그 판)
     segment: list               # 그 사이 사건
+    after: BattleState | None = None    # 다음 적 턴 시작 판, 없으면 전투가 끝난 판(한 턴 더 보기 설계 T6)
 
 
 def replay(initial: BattleState, actions: list[dict]) -> tuple[list[EnemyTurn], BattleState]:
@@ -290,7 +291,20 @@ def replay(initial: BattleState, actions: list[dict]) -> tuple[list[EnemyTurn], 
             current = None
         if isinstance(action, EndTurn) and state.turn_side is Side.ENEMY and state.outcome is None:
             current = (state, len(state.log))
+    for index, turn in enumerate(turns):
+        turn.after = turns[index + 1].start if index + 1 < len(turns) else state
     return turns, state
+
+
+def exposure(turn: EnemyTurn) -> tuple[int, int]:
+    """새 성향 지표(한 턴 더 보기 설계 Q-LA5 A): 그 적 턴이 끝날 때 살아 있던 적 유닛 중 다음 적 턴 시작(또는 전투 끝) 전에 죽은 수와,
+    그중 그 적 턴에 공격(자폭 포함)하지 않았던 수. 다음 적 턴 시작의 효과로 죽은 것도 들어간다."""
+    if turn.after is None:
+        return 0, 0
+    acted = {entry["uid"] for entry in turn.segment if entry["type"] in ("attack", "self_destruct")}
+    killed = [unit.uid for unit in turn.end.living(Side.ENEMY)
+              if not (unit.uid in turn.after.units and turn.after.units[unit.uid].alive)]
+    return len(killed), sum(1 for uid in killed if uid not in acted)
 
 
 def same_log(state: BattleState, saved: list) -> bool:
@@ -345,6 +359,7 @@ def analyze_file(job: tuple[str, bool]) -> dict:
         opp = opportunity(turn.start)
         result = turn_result(turn.start, turn.end, turn.segment, opp.reach)
         walk = idle_walk(turn.start, turn.end, turn.segment)
+        killed, killed_idle = exposure(turn)
         main = turn.start.main_character()
         rows.append({
             "file": Path(path).name, "stage": record["stage"], "seed": record["seed"],
@@ -357,6 +372,7 @@ def analyze_file(job: tuple[str, bool]) -> dict:
             "category": classify(opp, result),
             "idle_units": walk.units, "idle_toward": walk.toward, "idle_still": walk.still, "idle_away": walk.away,
             "idle_closer": walk.closer, "near2_end": walk.near2_end, "seconds": opp.seconds,
+            "exposed_killed": killed, "exposed_killed_idle": killed_idle,
         })
     return {"file": path, "same": True, "rows": rows}
 
@@ -432,6 +448,13 @@ def summarize(rows: list[dict]) -> list[dict]:
             if reachable else None,
             "instead": instead,
             "idle_walk": idle_walk_summary,
+            "exposure": {       # 적 턴 뒤 플레이어 턴에 잡힌 적(한 턴 더 보기 설계 Q-LA5 A)
+                "killed": sum(r.get("exposed_killed", 0) for r in items),
+                "killed_idle": sum(r.get("exposed_killed_idle", 0) for r in items),
+                "killed_per_turn": round(statistics.mean(r.get("exposed_killed", 0) for r in items), 3) if items else None,
+                "killed_idle_per_turn": round(statistics.mean(r.get("exposed_killed_idle", 0) for r in items), 3)
+                if items else None,
+            },
             "by_outcome": by_outcome,
             "seconds_per_turn": round(statistics.mean(r["seconds"] for r in items), 3) if items else None,
         })
