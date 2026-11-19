@@ -32,7 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (left == projection.Input.Path.Origin) return;
             if (EnvironmentTerrainRules.BlocksVoluntaryEntry(projection.Environment, projection.Bindings, left)) return;
             var actor = projection.Actor;
-            if (!actor.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.GroundCompaction || t.Key == TraitKey.DustScreen)) return;
+            if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(actor.Stats.TraitStatuses, TraitKey.GroundCompaction, TraitKey.DustScreen)) return;
             foreach (var binding in CombatCommandEffects.Capture(actor, CombatCommandCalculator.RequiredProfile(projection.Input, actor, projection.ProfileReads)))
             {
                 var input = new EffectRuleInput(binding.Origin, binding.ExpectedState);

@@ -16,10 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             ReadOnlySpan<StructureCombatFacts> eligibleStructures)
         {
             if (selection == null) throw new ArgumentNullException(nameof(selection));
-            KeyValuePair<EntityId, AttackTargetRole>[] result = null;
-            foreach (var _ in CollectSteps(selection, eligibleCharacters.ToArray(), eligibleStructures.ToArray(),
-                value => result = value)) { }
-            return result;
+            return CollectDirect(selection, eligibleCharacters.ToArray(), eligibleStructures.ToArray());
         }
 
         internal static IEnumerable<string> CollectSteps(AttackCellSelection selection,
@@ -64,6 +61,49 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
             completed(result);
             yield return "SelectionTargetsComplete";
+        }
+
+        internal static KeyValuePair<EntityId, AttackTargetRole>[] CollectDirect(AttackCellSelection selection,
+            IReadOnlyList<CharacterCombatFacts> eligibleCharacters, IReadOnlyList<StructureCombatFacts> eligibleStructures)
+        {
+            if (selection == null)
+                throw new ArgumentNullException(nameof(selection));
+            var designated = new HashSet<CellCoord>();
+            for (int i = 0; i < selection.DesignatedCells.Length; i++)
+            {
+                designated.Add(selection.DesignatedCells.Span[i]);
+                { }
+            }
+            var additional = new HashSet<CellCoord>();
+            for (int i = 0; i < selection.AdditionalCells.Length; i++)
+            {
+                additional.Add(selection.AdditionalCells.Span[i]);
+                { }
+            }
+            var roles = new SortedDictionary<EntityId, AttackTargetRole>();
+            foreach (var character in eligibleCharacters)
+            {
+                var facts = character
+                    ?? throw new ArgumentException("대상 사실은 null일 수 없습니다.", nameof(eligibleCharacters));
+                AddRole(roles, facts.EntityId, ResolveRole(selection.PrimaryCell, designated, additional, facts.OccupiedCells));
+                { }
+            }
+            foreach (var structure in eligibleStructures)
+            {
+                var facts = structure
+                    ?? throw new ArgumentException("대상 사실은 null일 수 없습니다.", nameof(eligibleStructures));
+                AddRole(roles, facts.EntityId, ResolveRole(selection.PrimaryCell, designated, additional, facts.OccupiedCells));
+                { }
+            }
+            var result = new KeyValuePair<EntityId, AttackTargetRole>[roles.Count];
+            int index = 0;
+            foreach (var entry in roles)
+            {
+                result[index++] = entry;
+                { }
+            }
+            return (result);
+            { }
         }
 
         public AttackTargetRole ResolveRole(AttackCellSelection selection, IReadOnlyList<CellCoord> occupiedCells)

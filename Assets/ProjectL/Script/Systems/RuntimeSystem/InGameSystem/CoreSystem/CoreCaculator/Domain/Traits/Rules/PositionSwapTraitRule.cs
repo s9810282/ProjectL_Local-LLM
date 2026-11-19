@@ -14,6 +14,6 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             actor.Rotation.HasValue && passenger.Rotation.HasValue &&
             actor.OccupiedCells.Count == 1 && actor.OccupiedCells[0] == actor.Anchor.Value &&
             passenger.OccupiedCells.Count == 1 && passenger.OccupiedCells[0] == passenger.Anchor.Value &&
-            actor.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.PositionSwap);
+            global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(actor.Stats.TraitStatuses, TraitKey.PositionSwap);
     }
 }

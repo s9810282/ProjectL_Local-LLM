@@ -28,7 +28,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead).OrderBy(c => c.EntityId).ToArray();
             foreach (var source in allies)
             {
-                if (!source.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Vanguard || t.Key == TraitKey.CleanSweep)) continue;
+                if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(source.Stats.TraitStatuses, TraitKey.Vanguard, TraitKey.CleanSweep)) continue;
                 var profile = CombatCommandCalculator.RequiredProfile(input, source);
                 foreach (var binding in CombatCommandEffects.Capture(source, profile))
                 {

@@ -820,11 +820,56 @@ def apply_batch6() -> None:
     path.write_text(t, encoding="utf-8", newline="")
 
 
-def main() -> None:
+HELPER_REL = "Contracts/Common/TraitStatusScan.cs"
+# Assets에 넣을 때 쓰는 고정 .meta(GUID가 실행마다 바뀌지 않게).
+HELPER_META = """fileFormatVersion: 2
+guid: 7c1f0a4e2b9d4f6e8a35d0c9e1b2f347
+"""
+
+
+def _load_base(rev: str | None) -> None:
+    """src/에 고치기 전 Core를 놓는다. rev가 있으면 그 git 판에서, 없으면 Assets에서."""
     if SRC.exists():
         shutil.rmtree(SRC)
-    for part in ("Contracts", "Domain", "Application"):
-        shutil.copytree(CORE / part, SRC / part, ignore=shutil.ignore_patterns("*.meta"))
+    if rev is None:
+        if (CORE / HELPER_REL).exists():
+            raise SystemExit("Assets의 Core에는 이미 적용돼 있습니다. 고치기 전 판을 --base <git 판>으로 알려 주세요(README).")
+        for part in ("Contracts", "Domain", "Application"):
+            shutil.copytree(CORE / part, SRC / part, ignore=shutil.ignore_patterns("*.meta"))
+        return
+    import io, subprocess, tarfile
+    rel = CORE.relative_to(ROOT).as_posix()
+    data = subprocess.run(["git", "-C", str(ROOT), "archive", "--format=tar", f"{rev}:{rel}", "Contracts", "Domain", "Application"],
+                          check=True, capture_output=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+        members = [m for m in tar.getmembers() if m.isfile() and m.name.endswith(".cs")]
+        tar.extractall(SRC, members=members)
+
+
+def _apply_to_assets() -> None:
+    """src/에서 달라진 .cs를 Assets의 Core에 넣는다(연구 저장소 전용, 2026-11-19 사용자 "Project_LLM이니까 해도 된다")."""
+    import filecmp
+    changed = 0
+    for f in SRC.rglob("*.cs"):
+        dest = CORE / f.relative_to(SRC)
+        if dest.exists() and filecmp.cmp(f, dest, shallow=False):
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(f, dest)
+        changed += 1
+    meta = CORE / (HELPER_REL + ".meta")
+    if not meta.exists():
+        meta.write_text(HELPER_META, encoding="utf-8", newline="\n")
+    print(f"Assets Core: {changed} files written")
+
+
+def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base", help="고치기 전 Core를 읽을 git 판(없으면 Assets에서 복사)")
+    parser.add_argument("--apply", action="store_true", help="바꾼 결과를 Assets의 Core에 넣는다")
+    args = parser.parse_args()
+    _load_base(args.base)
     for rel, old, new in EDITS:
         path = SRC / rel
         text = path.read_text(encoding="utf-8")
@@ -838,6 +883,8 @@ def main() -> None:
     apply_batch5()
     apply_batch6()
     print(f"src/ made, edits {len(EDITS)}, pattern replacements {patterned}")
+    if args.apply:
+        _apply_to_assets()
 
 
 if __name__ == "__main__":

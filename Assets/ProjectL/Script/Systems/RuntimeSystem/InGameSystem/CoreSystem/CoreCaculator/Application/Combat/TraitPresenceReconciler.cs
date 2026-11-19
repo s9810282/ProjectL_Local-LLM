@@ -28,6 +28,25 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return result;
         }
 
+        private static List<TraitShieldGrant> UnmanagedShields(IReadOnlyList<TraitShieldGrant> shields)
+        {
+            var result = new List<TraitShieldGrant>();
+            for (int i = 0; i < shields.Count; i++) if (!IsPresenceManagedShield(shields[i].Origin)) result.Add(shields[i]);
+            return result;
+        }
+
+        private static TraitShieldGrant ShieldOf(IReadOnlyList<TraitShieldGrant> shields, EffectOriginKey origin)
+        {
+            TraitShieldGrant found = null;
+            for (int i = 0; i < shields.Count; i++)
+            {
+                if (shields[i].Origin != origin) continue;
+                if (found != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                found = shields[i];
+            }
+            return found;
+        }
+
         private static IEnumerable<int> CalculateSteps(CombatCommandInput input, IReadOnlyList<CharacterCombatFacts> projected,
             Owner? endedSide, CombatProfileReadSet profileReads, Action<CharacterChanges> completed)
         {
@@ -39,8 +58,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             {
                 if (!source.Health.IsDead)
                 {
-                    var traits = source.Stats.TraitStatuses.ToArray();
-                    if (traits.Any(t => t.Key == TraitKey.SoloAction || t.Key == TraitKey.Cohesion))
+                    // 반복기 안에서는 Span을 못 돌려 지역 함수로(LINQ 없이 같은 판정).
+                    static void Scan(ReadOnlyMemory<Contracts.Snapshots.Traits.TraitStatusSnapshot> statuses, out bool presence, out bool taunts)
+                    {
+                        presence = false; taunts = false;
+                        foreach (var t in statuses.Span)
+                        {
+                            if (t.Key == TraitKey.SoloAction || t.Key == TraitKey.Cohesion) presence = true;
+                            if (t.Key == TraitKey.Taunt) taunts = true;
+                        }
+                    }
+                    Scan(source.Stats.TraitStatuses, out bool presence, out bool taunts);
+                    if (presence)
                     {
                         foreach (var binding in CombatCommandEffects.Capture(source, CombatCommandCalculator.RequiredProfile(input, source, profileReads)))
                         {
@@ -48,7 +77,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                             yield return 0;
                         }
                     }
-                    if (source.Area == CharacterRuntimeArea.Field && traits.Any(t => t.Key == TraitKey.Taunt)) anyTaunter = true;
+                    if (source.Area == CharacterRuntimeArea.Field && taunts) anyTaunter = true;
                 }
                 yield return 0;
             }
@@ -59,14 +88,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 var currentEffects = recipient.TraitEffects;
                 var shields = currentEffects.Shields.Count == 0 && sources.Count == 0
                     ? null
-                    : recipient.Health.IsDead ? new List<TraitShieldGrant>() : currentEffects.Shields
-                        .Where(g => !IsPresenceManagedShield(g.Origin)).ToList();
+                    : recipient.Health.IsDead ? new List<TraitShieldGrant>() : UnmanagedShields(currentEffects.Shields);
                 if (!recipient.Health.IsDead)
                 {
                     foreach (var entry in sources)
                     {
                         yield return 0;
-                        var prior = currentEffects.Shields.SingleOrDefault(g => g.Origin == entry.Binding.Origin);
+                        var prior = ShieldOf(currentEffects.Shields, entry.Binding.Origin);
                         var bound = new EffectRuleInput(entry.Binding.Origin, entry.Binding.ExpectedState);
                         var grant = entry.Binding.Rule switch
                         {
@@ -96,7 +124,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                     var statuses = AppliedStatusRules.ReplaceTaunted(final.StatusEffects, TauntedOrigins(input, projected, recipient, anyTaunter, profileReads));
                     if (!ReferenceEquals(statuses, final.StatusEffects)) final = final.WithStatusEffects(statuses);
                 }
-                if (final.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Rampage))
+                if (global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(final.Stats.TraitStatuses, TraitKey.Rampage))
                     final = RampageApplication.Reconcile(final, final.OwnedId.HasValue
                         ? input.Owned.Single(o => o.Id == final.OwnedId.Value).HunterAttackBonus : 0);
                 if (!ReferenceEquals(final, recipient)) changes.Add(new CharacterStateChange(recipient, final));

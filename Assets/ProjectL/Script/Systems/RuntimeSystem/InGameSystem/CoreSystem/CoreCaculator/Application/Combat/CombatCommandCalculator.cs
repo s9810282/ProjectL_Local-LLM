@@ -504,15 +504,38 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character)
         {
+            var profiles = input.Profiles;
             if (character.OwnedId.HasValue)
             {
-                var exact = input.Profiles.SingleOrDefault(p => p.OwnedId == character.OwnedId && p.Definition.Key == character.CharacterKey);
+                CombatAttackProfile exact = null;
+                for (int i = 0; i < profiles.Count; i++)
+                {
+                    var p = profiles[i];
+                    if (p.OwnedId != character.OwnedId || p.Definition.Key != character.CharacterKey) continue;
+                    if (exact != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                    exact = p;
+                }
                 if (exact != null) return exact;
-                if (input.Owned.SingleOrDefault(o => o.Id == character.OwnedId.Value)?.Growth.IsEmpty == false)
+                var owned = input.Owned;
+                OwnedCharacterRecord record = null;
+                for (int i = 0; i < owned.Count; i++)
+                {
+                    if (owned[i].Id != character.OwnedId.Value) continue;
+                    if (record != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                    record = owned[i];
+                }
+                if (record?.Growth.IsEmpty == false)
                     throw new InvalidOperationException("특성이 성장한 개체의 전용 프로필이 없습니다.");
             }
-            return input.Profiles.SingleOrDefault(p => !p.OwnedId.HasValue && p.Definition.Key == character.CharacterKey) ??
-                throw new InvalidOperationException("명시적으로 연결한 지정 방식과 유닛 정의가 필요합니다.");
+            CombatAttackProfile shared = null;
+            for (int i = 0; i < profiles.Count; i++)
+            {
+                var p = profiles[i];
+                if (p.OwnedId.HasValue || p.Definition.Key != character.CharacterKey) continue;
+                if (shared != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                shared = p;
+            }
+            return shared ?? throw new InvalidOperationException("명시적으로 연결한 지정 방식과 유닛 정의가 필요합니다.");
         }
 
         internal static CombatAttackProfile RequiredProfile(CombatCommandInput input, CharacterCombatFacts character,

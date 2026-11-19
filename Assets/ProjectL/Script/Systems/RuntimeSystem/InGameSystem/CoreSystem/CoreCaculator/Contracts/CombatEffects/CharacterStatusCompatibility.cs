@@ -62,27 +62,43 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             status is ActionRestrictionStatus && status.Key is StatusEffectKey.Disarm or StatusEffectKey.Bind;
         private static bool IsTraitEffect(AppliedStatus status) => status is AttackIncreaseStatus || status is ShieldStatus;
 
+        private static readonly Func<AppliedStatus, bool> DebuffFilter = IsDebuff;
+        private static readonly Func<AppliedStatus, bool> TraitEffectFilter = IsTraitEffect;
+
         private static bool Matches(StatusEffectSet statuses, StatusEffectSet imported, Func<AppliedStatus, bool> owns)
         {
             if (statuses.Entries.Count == 0 && imported.Entries.Count == 0) return true;
-            var current = statuses.Entries.Where(owns).ToArray();
-            var incoming = imported.Entries.Where(owns).ToArray();
-            return current.Select(s => s.Key).Concat(incoming.Select(s => s.Key)).Distinct().All(key =>
-                new StatusEffectSet(current.Where(s => s.Key == key).ToArray()).SameValues(
-                    new StatusEffectSet(incoming.Where(s => s.Key == key).ToArray())));
+            List<AppliedStatus> current = null, incoming = null;
+            foreach (var s in statuses.Entries) if (owns(s)) (current ??= new List<AppliedStatus>()).Add(s);
+            foreach (var s in imported.Entries) if (owns(s)) (incoming ??= new List<AppliedStatus>()).Add(s);
+            if (current == null && incoming == null) return true;
+            current ??= new List<AppliedStatus>();
+            incoming ??= new List<AppliedStatus>();
+            var keys = new List<StatusEffectKey>();
+            foreach (var s in current) if (!keys.Contains(s.Key)) keys.Add(s.Key);
+            foreach (var s in incoming) if (!keys.Contains(s.Key)) keys.Add(s.Key);
+            foreach (var key in keys)
+                {
+                    var mine = new List<AppliedStatus>();
+                    var theirs = new List<AppliedStatus>();
+                    foreach (var c in current) if (c.Key == key) mine.Add(c);
+                    foreach (var c in incoming) if (c.Key == key) theirs.Add(c);
+                    if (!new StatusEffectSet(mine.ToArray()).SameValues(new StatusEffectSet(theirs.ToArray()))) return false;
+                }
+            return true;
         }
 
-        internal static bool MatchesDebuffs(StatusEffectSet statuses, CharacterDebuffState debuffs) => Matches(statuses, Import(debuffs, null), IsDebuff);
-        internal static bool MatchesTraitEffects(StatusEffectSet statuses, CharacterTraitEffects effects) => Matches(statuses, Import(null, effects), IsTraitEffect);
+        internal static bool MatchesDebuffs(StatusEffectSet statuses, CharacterDebuffState debuffs) => Matches(statuses, Import(debuffs, null), DebuffFilter);
+        internal static bool MatchesTraitEffects(StatusEffectSet statuses, CharacterTraitEffects effects) => Matches(statuses, Import(null, effects), TraitEffectFilter);
 
         private static StatusEffectSet Replace(StatusEffectSet current, StatusEffectSet imported, Func<AppliedStatus, bool> owns) =>
             Matches(current, imported, owns) ? current :
                 new StatusEffectSet(current.Entries.Where(s => !owns(s)).Concat(imported.Entries.Where(owns)).ToArray());
 
         internal static StatusEffectSet ReplaceDebuffs(StatusEffectSet current, CharacterDebuffState debuffs) =>
-            debuffs == null ? current : Replace(current, Import(debuffs, null), IsDebuff);
+            debuffs == null ? current : Replace(current, Import(debuffs, null), DebuffFilter);
 
         internal static StatusEffectSet ReplaceTraitEffects(StatusEffectSet current, CharacterTraitEffects effects) =>
-            effects == null ? current : Replace(current, Import(null, effects), IsTraitEffect);
+            effects == null ? current : Replace(current, Import(null, effects), TraitEffectFilter);
     }
 }

@@ -10,7 +10,8 @@
 | 자리 | 내용 |
 |---|---|
 | `Assets/ResearchEnemyPlanner/` | 계획 AI 코드 전부(+ `.meta`). `ResearchEnemyPlanner.asmref`로 `ProjectL.Core.Application` 어셈블리에 붙는다 |
-| `LLMTest/core_port/hooks.patch` | 기존 게임 파일 여섯 곳에 넣은 연결 줄(아래 표) |
+| `LLMTest/core_port/hooks.patch` | 기존 게임 파일에 넣은 연결 줄(아래 표) |
+| `LLMTest/core_port/nolambda/make.py` | Core 계산기의 람다(LINQ·단계 함수 콜백)를 같은 결과의 반복문·단계 없는 판으로 바꿔 넣는 스크립트(2026-11-19부터 이 저장소의 Core에 적용, 아래 §3의 4번, [`nolambda/README.md`](nolambda/README.md)) |
 | `LLMTest/core_port/harness/` | Unity 밖에서 Core를 묶어 계획 AI를 돌려 보는 측정 도구(저장소 시험이 아니다) |
 
 계획 AI 코드(`Assets/ResearchEnemyPlanner/`):
@@ -40,6 +41,7 @@
 | `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset`(새 파일) | 기본 프리셋(값 = 기본값) |
 | `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyAiTuning_Default.asset` | `decisionModel: 1`(TurnPlanner), `plannerPreset` = 기본 프리셋 |
 | `…/CoreSystem/CombatSystem/CombatAdvanceService.cs` | 계획 AI가 일 스레드를 기다리는 동안 그 프레임 준비를 멈춤, 새 계획이 나오면 콘솔에 시간·쓴 성향 값 한 줄(2026-11-18 BG-a. 그 전의 12ms 예산 줄은 걷음, 예산은 모두 1ms). 기다리는 동안 프레임마다 시간과 GC 수집 여부를 모아 계획이 끝날 때 한 줄로 냄(프레임 진단, 병렬 설계 §13.1. 그 전의 GC 조각 1ms 실험은 걷음) |
+| `…/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs` | 판단 12행: 연출이 남아 있어도 자동 국면의 적 결정 준비(`PrepareAdvance`)는 등록한다(2026-11-19 속도 방향 A, 병렬 설계 §20). 준비된 결정의 실행·그 밖의 자동 진행은 그대로 연출 끝 뒤 |
 
 ## 2 켜고 끄기
 
@@ -82,8 +84,9 @@ git checkout FETCH_HEAD -- . ':(exclude)LLMTest' ':(exclude)Assets/ResearchEnemy
 git apply --3way LLMTest/core_port/hooks.patch
 ```
 
-4. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다. **예상 피해 기억 확인 `memocheck`(아래 §4)를 꼭 돌린다.** 기억은 "Core 피해 식이 두 유닛 사실 말고 판에서 읽는 것"을 설계 시점에 확인한 목록에 기댄다. develop에서 피해 식이 새로 읽는 것이 생기면 어긋남이 나온다. 어긋남이 0이 아니면 멈추고 보고한다.
-5. 연결 줄을 고쳤으면 패치를 다시 만든다: 위 표의 고친 파일(코드 여섯 + 조정 에셋)은 `git diff 07561fc7 -- <파일>`, 새 파일 넷은 `git diff --no-index -- /dev/null <파일>`을 이어 붙인다. `git apply -R --check`로 확인한다.
+4. **Core 람다 걷기를 다시 넣는다**(2026-11-19부터). develop 판 Core는 람다가 그대로이므로, 3번 뒤에 `python -I LLMTest/core_port/nolambda/make.py --apply`를 돌린다. 고칠 문장이 develop에서 바뀌었으면 스크립트가 멈춘다 — 그 자리를 `make.py`에서 고치거나 빼고 다시 돌린 뒤 사용자에게 보고한다. 새 파일 `Contracts/Common/TraitStatusScan.cs`(+ `.meta`)는 develop에 없는 파일이라 1번에서 지워져도 스크립트가 다시 만든다.
+5. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다. **예상 피해 기억 확인 `memocheck`(아래 §4)를 꼭 돌린다.** 기억은 "Core 피해 식이 두 유닛 사실 말고 판에서 읽는 것"을 설계 시점에 확인한 목록에 기댄다. develop에서 피해 식이 새로 읽는 것이 생기면 어긋남이 나온다. 어긋남이 0이 아니면 멈추고 보고한다.
+6. 연결 줄을 고쳤으면 패치를 다시 만든다: 위 표의 고친 파일(코드 일곱 + 조정 에셋)은 `git diff 07561fc7 -- <파일>`, 새 파일 넷은 `git diff --no-index -- /dev/null <파일>`을 이어 붙인다. `git apply -R --check`로 확인한다.
 
 ## 4 측정 도구
 

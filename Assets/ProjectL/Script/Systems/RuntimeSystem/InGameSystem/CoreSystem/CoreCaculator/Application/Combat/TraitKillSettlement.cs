@@ -44,7 +44,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 HunterApplication.TargetDied(input, damage, death, credited);
                 if (!credited.HasValue || !damage.Characters.TryGetValue(credited.Value, out var source) ||
                     !new HostilityPolicy().AreHostile(source.Owner, death.Expected.Owner)) continue;
-                if (!source.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.CallOfBlood || t.Key == TraitKey.MoraleBoost)) continue;
+                if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(source.Stats.TraitStatuses, TraitKey.CallOfBlood, TraitKey.MoraleBoost)) continue;
                 var origin = death.DamageOrigins.FirstOrDefault(o => o.CreditedCharacterId == credited) ?? death.DamageOrigins.FirstOrDefault();
                 var profile = CombatCommandCalculator.RequiredProfile(input, source, damage.ProfileReads);
                 foreach (var binding in CombatCommandEffects.Capture(source, profile))

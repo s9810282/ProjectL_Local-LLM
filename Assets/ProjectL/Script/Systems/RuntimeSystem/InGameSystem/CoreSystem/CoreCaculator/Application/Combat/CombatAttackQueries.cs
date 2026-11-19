@@ -98,8 +98,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             using var sample = CoreProfiling.Sample(CoreProfileSection.AttackSelection);
             AttackSelectionEvaluation result = null;
-            foreach (var _ in SelectionSteps(input, actor, profile, aim, environment, walls, elevation, value => result = value,
-                preparation, damageKind, prepareSweep)) { }
+            result = SelectionDirect(input, actor, profile, aim, environment, walls, elevation,
+                preparation, damageKind, prepareSweep);
             return result;
         }
 
@@ -251,8 +251,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var emptyFailure = profile.Method.ChoiceMode == TargetingChoiceMode.All
                 ? AttackFailureReason.UnresolvedEmptyAll : AttackFailureReason.NoEligibleTargets;
             if (primaryFailure == AttackFailureReason.None)
-                selectedTargetId = targets.Where(t => t.Value == AttackTargetRole.Primary)
-                    .Select(t => t.Key).DefaultIfEmpty(EntityId.Empty).Single();
+                selectedTargetId = PrimaryTargetOf(targets);
 
             // 위치 없는 지정이 실패해도 실제로 도달한 표시 칸을 남긴다.
             AttackCellSelection reachable = null;
@@ -310,6 +309,102 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             yield return "SelectionComplete";
         }
 
+        private static AttackSelectionEvaluation SelectionDirect(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim? aim, MovementEnvironmentFacts environment, WallGeometry walls,
+            AttackElevation elevation, SelectionPreparation preparation = null,
+            CombatDamageKind damageKind = CombatDamageKind.OrdinaryAttack, bool prepareSweep = true)
+        {
+            preparation ??= PrepareSelection(input, actor, profile, environment, damageKind: damageKind);
+            preparation.RequireSource(input, actor, profile, environment, damageKind);
+            var (policy, range) = (preparation.Policy, preparation.Range);
+            AttackCellSelection selected = null;
+            AttackCellSelection sweepCells = null;
+            Action<AttackCellSelection> captureSweepCells = prepareSweep && preparation.Sweep.HasValue ? value => sweepCells = value : null;
+            AttackFailureReason failure = default;
+            (selected, failure) = SelectionCellsDirect(input, actor, profile, aim ?? input.Aim, range, policy, captureSweepCells);
+            if (failure != AttackFailureReason.None) { return AttackSelectionEvaluation.Failure(failure); }
+            var eligible = new List<CharacterCombatFacts>();
+            foreach (var candidate in input.Characters)
+            {
+                if (AttackTargetEligibility.CanTargetCharacter(actor, candidate, policy)) eligible.Add(candidate);
+            }
+            var structures = new List<StructureCombatFacts>();
+            foreach (var candidate in input.State.Structures)
+            {
+                if (!preparation.Sweep.HasValue && AttackTargetEligibility.CanTargetStructure(actor, candidate,
+                    input.EnvironmentBindings.ObstacleEntityIds.Contains(candidate.EntityId), policy)) structures.Add(candidate);
+            }
+            KeyValuePair<EntityId, AttackTargetRole>[] targets = null;
+            targets = AttackTargetResolver.CollectDirect(selected, eligible, structures);
+            // 벽 형상은 공개 지형 원본을, 고저는 이 연산의 관찰 환경을 읽는다.
+            if (walls == null)
+                foreach (var phase in WallGeometryBuilder.BuildSteps(input.State.BoardWidth, input.State.BoardHeight,
+                    input.State.Environment, input.EnvironmentBindings, input.State.WallBlocking, value => walls = value))
+                    { }
+            if (elevation == null)
+                foreach (var phase in AttackElevation.BuildSteps(environment ?? input.State.Environment,
+                    input.EnvironmentBindings, value => elevation = value)) { }
+            var primaryFailure = ValidatePrimary(input, actor, profile, selected, targets, policy, walls);
+            if (primaryFailure != AttackFailureReason.None && (!selected.PrimaryCell.HasValue || !walls.Occupies(selected.PrimaryCell.Value)))
+            {
+                return AttackSelectionEvaluation.Failure(primaryFailure);
+            }
+
+            EntityId selectedTargetId = EntityId.Empty;
+            var emptyFailure = profile.Method.ChoiceMode == TargetingChoiceMode.All
+                ? AttackFailureReason.UnresolvedEmptyAll : AttackFailureReason.NoEligibleTargets;
+            if (primaryFailure == AttackFailureReason.None)
+                selectedTargetId = PrimaryTargetOf(targets);
+
+            // 위치 없는 지정이 실패해도 실제로 도달한 표시 칸을 남긴다.
+            AttackCellSelection reachable = null;
+            IReadOnlyList<AttackBlockedContact> blocked = null;
+            (reachable, blocked) = AttackOcclusionResolver.ResolveCellsDirect(actor.Anchor.Value, selected, walls, elevation,
+                EffectiveOcclusion(profile, preparation.Sweep.HasValue));
+            if (primaryFailure != AttackFailureReason.None)
+            {
+                return AttackSelectionEvaluation.Failure(primaryFailure, blocked);
+            }
+            if (!selected.PrimaryCell.HasValue && targets.Length == 0)
+            {
+                CellCoord[] empty = null;
+                foreach (var phase in CombatAttackDelivery.DirectAffectedCellSteps(reachable, value => empty = value))
+                    { }
+                return AttackSelectionEvaluation.Failure(emptyFailure, emptyAreaCells: empty);
+            }
+            if (selected.PrimaryCell.HasValue && !reachable.PrimaryCell.HasValue)
+            {
+                return AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked);
+            }
+            targets = AttackTargetResolver.CollectDirect(reachable, eligible, structures);
+            if (!selected.PrimaryCell.HasValue && targets.Length == 0)
+            {
+                CellCoord[] empty = null;
+                foreach (var phase in CombatAttackDelivery.DirectAffectedCellSteps(reachable, value => empty = value))
+                    { }
+                return AttackSelectionEvaluation.Failure(AttackFailureReason.BlockedByWall, blocked, empty);
+            }
+            // 전달 검증은 일반 지정이 수락한 조준에만 적용한다.
+            if (selected.PrimaryCell.HasValue)
+            {
+                var deliveryFailure = CombatAttackDelivery.ValidateAim(profile, actor.Anchor.Value, selected.PrimaryCell.Value);
+                if (deliveryFailure != AttackFailureReason.None)
+                {
+                    return AttackSelectionEvaluation.Failure(deliveryFailure);
+                }
+            }
+            var resolved = new ResolvedAttackSelection(selected, reachable, targets, eligible, structures, policy, selectedTargetId);
+            PullAttackEvaluation pull = null;
+            if (preparation?.IncludesPreHitMovement ?? true)
+                foreach (var phase in PullAttackCalculator.EvaluateSteps(input, actor, profile, resolved,
+                    environment ?? input.State.Environment, walls, value => pull = value)) { }
+            return (pull != null && pull.FailureReason != AttackFailureReason.None
+                ? AttackSelectionEvaluation.Failure(pull.FailureReason, blocked)
+                : AttackSelectionEvaluation.Success(resolved, blocked, pull, prepareSweep && preparation.Sweep.HasValue
+                    ? DeadHandAttackCalculator.Prepare(input, actor, profile, resolved, preparation.Sweep.Value,
+                        environment ?? input.State.Environment, aim ?? input.Aim, sweepCells) : null));
+        }
+
         /// <summary>대상 점유와 무관한 지정 칸을 계산한다. 실행과 예상 위협이 같은 사거리·각도·지형 제한을 쓴다.</summary>
         internal static IEnumerable<string> SelectionCellSteps(CombatCommandInput input, CharacterCombatFacts actor,
             CombatAttackProfile profile, AttackAim aim, int range, AttackTargetingPolicy policy,
@@ -350,6 +445,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             }
             captureSweepCells?.Invoke(new AttackCellSelection(raw.PrimaryCell, sweepDesignated.ToArray(), raw.AdditionalCells.ToArray()));
             completed(new AttackCellSelection(raw.PrimaryCell, designated.ToArray(), additional.ToArray()), AttackFailureReason.None);
+        }
+
+        private static (AttackCellSelection, AttackFailureReason) SelectionCellsDirect(CombatCommandInput input, CharacterCombatFacts actor,
+            CombatAttackProfile profile, AttackAim aim, int range, AttackTargetingPolicy policy,
+            Action<AttackCellSelection> captureSweepCells = null)
+        {
+            AttackCellSelection raw = null;
+            AttackFailureReason failure = default;
+            (raw, failure) = AttackSelectionResolver.ResolveDirect(profile.Method, range, actor.Anchor.Value, actor.Owner, aim);
+            if (failure == AttackFailureReason.None && raw.PrimaryCell is CellCoord primary)
+            {
+                if (!input.State.IsInside(primary)) failure = AttackFailureReason.OutOfBounds;
+                else if (!CanDesignate(input, actor, primary)) failure = AttackFailureReason.HaboobDesignationBlocked;
+                else if (policy.ExcludesAdjacentDirectCells && CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, primary))
+                    failure = AttackFailureReason.AppointCellRejected;
+            }
+            if (failure != AttackFailureReason.None) { return (null, failure); }
+
+            var designated = new List<CellCoord>();
+            var additional = new List<CellCoord>();
+            var sweepDesignated = captureSweepCells == null ? null : new List<CellCoord>();
+            for (int i = 0; i < raw.DesignatedCells.Length; i++)
+            {
+                var cell = raw.DesignatedCells.Span[i];
+                if (!policy.ExcludesAdjacentDirectCells || raw.PrimaryCell.HasValue ||
+                    !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, cell))
+                {
+                    sweepDesignated?.Add(cell);
+                    if (input.State.IsInside(cell)) designated.Add(cell);
+                }
+            }
+            for (int i = 0; i < raw.AdditionalCells.Length; i++)
+            {
+                var cell = raw.AdditionalCells.Span[i];
+                if (input.State.IsInside(cell)) additional.Add(cell);
+            }
+            captureSweepCells?.Invoke(new AttackCellSelection(raw.PrimaryCell, sweepDesignated.ToArray(), raw.AdditionalCells.ToArray()));
+            return (new AttackCellSelection(raw.PrimaryCell, designated.ToArray(), additional.ToArray()), AttackFailureReason.None);
         }
 
         /// <summary>추적과 공격 선택이 실제 전달의 관통·벽·지정 규칙을 함께 사용합니다.</summary>
@@ -556,22 +689,48 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (profile.UsesPiercingShot)
             {
                 // 관통 피해의 대상 자격과 별개로 주 칸에는 적이 있어야 합니다.
-                var targetId = targets.Where(t => t.Value == AttackTargetRole.Primary)
-                    .Select(t => t.Key).DefaultIfEmpty(EntityId.Empty).Single();
-                if (!targetId.IsEmpty &&
-                    (input.Characters.Any(c => c.EntityId == targetId && AimHostility.AreHostile(actor.Owner, c.Owner)) ||
-                     input.State.Structures.Any(s => s.EntityId == targetId && AimHostility.AreHostile(actor.Owner, s.Owner))))
-                    return AttackFailureReason.None;
+                var targetId = PrimaryTargetOf(targets);
+                if (!targetId.IsEmpty)
+                {
+                    foreach (var c in input.Characters)
+                        if (c.EntityId == targetId && AimHostility.AreHostile(actor.Owner, c.Owner)) return AttackFailureReason.None;
+                    foreach (var s in input.State.Structures)
+                        if (s.EntityId == targetId && AimHostility.AreHostile(actor.Owner, s.Owner)) return AttackFailureReason.None;
+                }
             }
-            else if (policy.AllowsEmptySingle || targets.Any(t => t.Value == AttackTargetRole.Primary))
+            else
             {
-                return AttackFailureReason.None;
+                if (policy.AllowsEmptySingle) return AttackFailureReason.None;
+                foreach (var t in targets) if (t.Value == AttackTargetRole.Primary) return AttackFailureReason.None;
             }
             // 주변의 유효 대상이 빈 칸이나 아군 중심 지정의 자격을 대신하지 않습니다.
-            bool occupied = input.Characters.Any(c => c.Area == CharacterRuntimeArea.Field &&
-                !c.Health.IsDead && c.OccupiedCells.Contains(primary)) ||
-                input.State.Structures.Any(s => !s.Health.IsDead && s.OccupiedCells.Contains(primary));
+            bool occupied = false;
+            foreach (var c in input.Characters)
+                if (c.Area == CharacterRuntimeArea.Field && !c.Health.IsDead && Holds(c.OccupiedCells, primary)) { occupied = true; break; }
+            if (!occupied)
+                foreach (var s in input.State.Structures)
+                    if (!s.Health.IsDead && Holds(s.OccupiedCells, primary)) { occupied = true; break; }
             return occupied ? AttackFailureReason.NonHostile : AttackFailureReason.InvalidPrimaryTarget;
+        }
+
+        private static bool Holds(IReadOnlyList<CellCoord> cells, CellCoord cell)
+        {
+            for (int i = 0; i < cells.Count; i++) if (cells[i] == cell) return true;
+            return false;
+        }
+
+        private static EntityId PrimaryTargetOf(IReadOnlyList<KeyValuePair<EntityId, AttackTargetRole>> targets)
+        {
+            EntityId found = EntityId.Empty;
+            bool any = false;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i].Value != AttackTargetRole.Primary) continue;
+                if (any) throw new InvalidOperationException("Sequence contains more than one element");
+                found = targets[i].Key;
+                any = true;
+            }
+            return found;
         }
 
         internal static AttackRangeResult Range(CombatCommandInput input)
@@ -590,11 +749,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 ? cells : RangeCells(input, actor, profile, policy, preparation.BasicRange);
             var mask = new HashSet<CellCoord>(cells);
             var basicMask = ReferenceEquals(cells, basicCells) ? mask : new HashSet<CellCoord>(basicCells);
-            var ids = input.Characters.Where(c => AttackTargetEligibility.CanTargetCharacter(actor, c, policy) &&
-                c.OccupiedCells.Any(mask.Contains)).Select(c => c.EntityId)
-                .Concat(input.State.Structures.Where(s => !preparation.Sweep.HasValue && AttackTargetEligibility.CanTargetStructure(actor, s,
-                    input.EnvironmentBindings.ObstacleEntityIds.Contains(s.EntityId), policy) &&
-                    s.OccupiedCells.Any(basicMask.Contains)).Select(s => s.EntityId)).Distinct().OrderBy(id => id).ToArray();
+            var idSet = new HashSet<EntityId>();
+            var idList = new List<EntityId>();
+            foreach (var c in input.Characters)
+            {
+                if (!AttackTargetEligibility.CanTargetCharacter(actor, c, policy)) continue;
+                var occupied = c.OccupiedCells;
+                for (int i = 0; i < occupied.Count; i++)
+                    if (mask.Contains(occupied[i])) { if (idSet.Add(c.EntityId)) idList.Add(c.EntityId); break; }
+            }
+            if (!preparation.Sweep.HasValue)
+                foreach (var st in input.State.Structures)
+                {
+                    if (!AttackTargetEligibility.CanTargetStructure(actor, st,
+                        input.EnvironmentBindings.ObstacleEntityIds.Contains(st.EntityId), policy)) continue;
+                    var occupied = st.OccupiedCells;
+                    for (int i = 0; i < occupied.Count; i++)
+                        if (basicMask.Contains(occupied[i])) { if (idSet.Add(st.EntityId)) idList.Add(st.EntityId); break; }
+                }
+            idList.Sort();
+            var ids = idList.ToArray();
             IEnumerable<AttackAim> candidates = profile.Method.ChoiceMode == TargetingChoiceMode.Single
                 ? cells.Select(AttackAim.ForCell)
                 : profile.Method.ChoiceMode == TargetingChoiceMode.All ? new[] { AttackAim.ForAll() }
@@ -602,15 +776,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             var walls = WallGeometryBuilder.Build(input.State.BoardWidth, input.State.BoardHeight, input.State.Environment,
                 input.EnvironmentBindings, input.State.WallBlocking);
             var elevation = AttackElevation.From(environment, input.EnvironmentBindings);
-            var aims = candidates.Where(a => Selection(input, actor, profile, a, environment, walls, elevation,
-                preparation: preparation, prepareSweep: false).FailureReason == AttackFailureReason.None)
-                .Distinct().ToArray();
+            var aimSet = new HashSet<AttackAim>();
+            var aimList = new List<AttackAim>();
+            foreach (var a in candidates)
+                if (Selection(input, actor, profile, a, environment, walls, elevation,
+                    preparation: preparation, prepareSweep: false).FailureReason == AttackFailureReason.None && aimSet.Add(a))
+                    aimList.Add(a);
+            var aims = aimList.ToArray();
             var direct = AttackOcclusionResolver.ResolveCells(actor.Anchor.Value,
                 new AttackCellSelection(null, cells, Array.Empty<CellCoord>()), walls, elevation, EffectiveOcclusion(profile, preparation.Sweep.HasValue));
             // 마무리 사격 대상: 실제 공격과 같은 판정 입구로 사거리 안 대상만 거른다(마무리 사격 대상 표시 설계 FS1, Q-FS1 A).
-            var instantDefeat = ids.Where(id => FinishingShotApplication.Qualifies(input, actor,
-                input.Characters.SingleOrDefault(c => c.EntityId == id),
-                input.State.Structures.SingleOrDefault(s => s.EntityId == id))).ToArray();
+            var defeatList = new List<EntityId>();
+            foreach (var id in ids)
+            {
+                CharacterCombatFacts character = null;
+                foreach (var c in input.Characters)
+                    if (c.EntityId == id)
+                    {
+                        if (character != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                        character = c;
+                    }
+                StructureCombatFacts structure = null;
+                foreach (var st in input.State.Structures)
+                    if (st.EntityId == id)
+                    {
+                        if (structure != null) throw new InvalidOperationException("Sequence contains more than one matching element");
+                        structure = st;
+                    }
+                if (FinishingShotApplication.Qualifies(input, actor, character, structure)) defeatList.Add(id);
+            }
+            var instantDefeat = defeatList.ToArray();
             return AttackRangeResult.Success(actor.EntityId, cells, ids, aims, direct.BlockedContacts, basicCells, instantDefeat);
         }
 
@@ -656,10 +851,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         private static CellCoord[] RangeCells(CombatCommandInput input, CharacterCombatFacts actor, CombatAttackProfile profile,
             AttackTargetingPolicy policy, int range)
         {
-            return new AppointRangeCalculator().CalculateRangeCells(profile.Method, range, actor.Anchor.Value, actor.Owner)
-                .Where(c => IsRangeCell(input, actor, profile, policy, c))
-                .OrderBy(c => c.Y).ThenBy(c => c.X).ToArray();
+            var kept = new List<CellCoord>();
+            foreach (var c in new AppointRangeCalculator().CalculateRangeCells(profile.Method, range, actor.Anchor.Value, actor.Owner))
+                if (IsRangeCell(input, actor, profile, policy, c)) kept.Add(c);
+            kept.Sort(CellOrder);
+            return kept.ToArray();
         }
+
+        private static readonly Comparison<CellCoord> CellOrder = (a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X);
 
         private static bool IsRangeCell(CombatCommandInput input, CharacterCombatFacts actor, CombatAttackProfile profile,
             AttackTargetingPolicy policy, CellCoord cell) =>
@@ -668,9 +867,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatAttackDelivery.ValidateAim(profile, actor.Anchor.Value, cell) == AttackFailureReason.None &&
             (!policy.ExcludesAdjacentDirectCells || !CannonAppointExclusionCalculator.IsForbidden(actor.OccupiedCells, cell));
 
-        private static bool CanDesignate(CombatCommandInput input, CharacterCombatFacts actor, CellCoord primary) =>
-            input.State.Gimmicks.Entries.OfType<HaboobGimmickState>().All(h =>
-                HaboobTargetingRules.CanDesignate(h.Cells, actor.Anchor.Value, primary));
+        private static bool CanDesignate(CombatCommandInput input, CharacterCombatFacts actor, CellCoord primary)
+        {
+            var entries = input.State.Gimmicks.Entries;
+            for (int i = 0; i < entries.Count; i++)
+                if (entries[i] is HaboobGimmickState h && !HaboobTargetingRules.CanDesignate(h.Cells, actor.Anchor.Value, primary))
+                    return false;
+            return true;
+        }
 
         internal static CombatCommandInput WithAim(CombatCommandInput input, AttackAim aim) =>
             input.WithIntent(input.Kind, aim, input.TargetCell, input.Path, input.MovementContext);

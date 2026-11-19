@@ -17,7 +17,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static bool IsImmune(CombatCommandInput input, CharacterCombatFacts victim, out bool preventedBySteadfastWill)
         {
             bool forcedImmune = UnitBehaviorRules.IsForcedMovementImmune(input, victim);
-            bool traitImmune = victim.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.SteadfastWill) &&
+            bool traitImmune = global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(victim.Stats.TraitStatuses, TraitKey.SteadfastWill) &&
                 CombatCommandEffects.Capture(victim, CombatCommandCalculator.RequiredProfile(input, victim))
                     .Any(binding => binding.Rule is SteadfastWillEffectRule rule &&
                         rule.GrantsKnockbackImmunity(new EffectRuleInput(binding.Origin, binding.ExpectedState), victim.EntityId));

@@ -368,12 +368,32 @@ index 5ae529b5..b92f4bc9 100644
              DeathTradeThresholdPercent = Percent(deathTradeThresholdPercent, nameof(deathTradeThresholdPercent));
              ThreatAversionPercent = Percent(threatAversionPercent, nameof(threatAversionPercent));
              NextTurnApproachPercent = Percent(nextTurnApproachPercent, nameof(nextTurnApproachPercent));
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs
+index cc8a36d4..10a32440 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs
+@@ -171,8 +171,15 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
+             }
+ 
+             // 12. 연출이 남았으면 상태를 바꾸는 처리를 등록하지 않는다. 최신 결과가 확인 전에 덮이지 않게 한다.
++            // 연구 저장소 전용(속도 방향 A, 병렬 설계 §20): 적 결정 준비는 Core 상태를 읽기만 하고 결과를 게시하지 않으므로
++            // 연출이 도는 동안 먼저 돈다(기다림을 연출 뒤에 숨김). 준비된 결정의 실행(PreparedAdvance)과 그 밖의 자동 진행은 아래 13행이 연출 끝 뒤에 한다.
+             if (facts.HasUnpresentedResult)
++            {
++                if (facts.Phase == CombatFlowPhase.Automatic &&
++                    (facts.Preparation == AdvancePreparationState.Required || facts.Preparation == AdvancePreparationState.Preparing))
++                    return new CombatStep(CombatStepKind.PrepareAdvance, facts.LatestResultSequence);
+                 return CombatStep.Nothing;
++            }
+ 
+             // 13. 자동 국면은 연출이 끝난 뒤 한 걸음씩 진행한다.
+             if (facts.Phase == CombatFlowPhase.Automatic)
 diff --git a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs
 new file mode 100644
-index 00000000..28b60a44
+index 00000000..e42e7fcb
 --- /dev/null
 +++ b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,186 @@
 +using System;
 +using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
 +using UnityEngine;
@@ -459,12 +479,18 @@ index 00000000..28b60a44
 +
 +        [Header("계산 크기 (계획 시간에 영향)")]
 +        [Tooltip("빔 (기본 4, 1 이상)\n" +
-+            "적 행동을 하나 정할 때마다 남기는 좋은 판 수입니다. 키우면 더 넓게 보지만 계획 시간이 거의 그만큼 늘어납니다.")]
++            "판 = 전투를 한 순간 멈춘 상태(유닛 위치·HP·행동 여부 등)입니다. 적 유닛 하나가 행동할 때마다, 남아 있는 판들에서\n" +
++            "아직 안 움직인 유닛을 움직여 본 새 판이 생깁니다(유닛마다 '유닛당 후보' 개, 결과가 같은 판은 하나로 합침).\n" +
++            "그중 점수(V)가 높은 판을 이 개수만큼만 남겨 다음 유닛 차례로 이어 봅니다. 나머지 판은 버립니다.\n" +
++            "· 1: 매번 가장 좋아 보이는 판 하나만 따라갑니다(지금 좋아 보여도 나중에 나쁜 길을 못 피할 수 있음).\n" +
++            "· 키우면: 더 많은 판을 이어 봐 더 좋은 계획을 찾을 수 있지만, 남긴 판마다 다시 다 계산하므로 계획 시간이 거의 그만큼 늘어납니다.")]
 +        [SerializeField, Min(1)]
 +        private int beam = EnemyTurnPlannerStyle.DefaultBeam;
 +
 +        [Tooltip("유닛당 후보 (기본 6, 1 이상)\n" +
-+            "유닛 하나에서 펼쳐 보는 행동 수(V 상위)입니다. 키우면 시간이 늘어납니다.")]
++            "유닛 하나의 후보(공격이 든 행동 전부 + '이동만 후보')를 모두 엔진으로 돌려 V를 매긴 뒤, 다음 판으로 남기는 V 상위 개수입니다.\n" +
++            "그 판에서 할 수 있는 행동 수가 아니라 남기는 수입니다. 후보는 이 값과 상관없이 모두 돌려 보므로,\n" +
++            "키워도 시간은 조금만 늘어납니다(남긴 판도 어차피 '빔' 개로 다시 잘림). 키우면 빔에 오르는 후보가 더 다양해집니다.")]
 +        [SerializeField, Min(1)]
 +        private int perUnit = EnemyTurnPlannerStyle.DefaultPerUnit;
 +

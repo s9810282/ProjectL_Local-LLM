@@ -39,13 +39,21 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         /// 대기 포효를 원래 명령 결과 뒤에 붙인다. 거절·종료면 그대로 돌려준다. 한 호출 안에서 보스당 최대 1회 포효하고(G6-3),
         /// 남은 대기는 다음 반응 경계가 처리한다. 반응 단계의 Attack은 비어 있으므로 Merge 결과의 Attack은 원래 명령 것이다(D8).
         /// </summary>
+        private static bool HasRoarProfile(IReadOnlyList<CombatAttackProfile> profiles)
+        {
+            for (int i = 0; i < profiles.Count; i++)
+                foreach (var trait in profiles[i].Definition.Traits.Span)
+                    if (trait is RoarTraitSpec) return true;
+            return false;
+        }
+
         internal static CombatCommandTransition ApplyPendingReactions(CombatCommandTransition transition,
             IReadOnlyList<IMovementTileRule> rules)
         {
             if (transition == null) throw new ArgumentNullException(nameof(transition));
             if (!transition.Accepted || transition.FinalState.Phase == CombatFlowPhase.Finished) return transition;
             // 포효 정의가 없는 전투는 투영을 만들지 않고 그대로 돌려준다.
-            if (!transition.Input.Profiles.Any(p => p.Definition.Traits.ToArray().OfType<RoarTraitSpec>().Any())) return transition;
+            if (!HasRoarProfile(transition.Input.Profiles)) return transition;
             var steps = new List<CombatCommandTransition> { transition };
             var current = CombatCommandComposition.Project(transition);
             var roared = transition.Events.OfType<CombatRoarEvent>().Select(e => e.BossId).ToHashSet();

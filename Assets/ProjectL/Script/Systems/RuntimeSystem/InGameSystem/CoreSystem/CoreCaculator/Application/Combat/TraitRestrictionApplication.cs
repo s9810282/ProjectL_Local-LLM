@@ -21,7 +21,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             if (plan.Selection.SelectedTargetId.IsEmpty || plan.Selection.SelectedTargetId != targetId ||
                 !world.Characters.TryGetValue(recipientId, out var victim) || victim.Health.IsDead ||
                 !new HostilityPolicy().AreHostile(plan.Actor.Owner, victim.Owner)) return;
-            if (!plan.Actor.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Disarm || t.Key == TraitKey.AnkleBreaker)) return;
+            if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(plan.Actor.Stats.TraitStatuses, TraitKey.Disarm, TraitKey.AnkleBreaker)) return;
             var current = victim.Debuffs;
             var statuses = victim.StatusEffects;
             foreach (var binding in plan.Bindings)

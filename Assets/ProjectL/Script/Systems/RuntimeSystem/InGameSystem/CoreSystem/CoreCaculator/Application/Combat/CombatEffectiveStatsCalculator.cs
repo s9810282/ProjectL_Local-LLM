@@ -74,7 +74,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static int CohesionDefenseBonus(CombatCommandInput input, CharacterCombatFacts character,
             System.Collections.Generic.IReadOnlyList<CharacterCombatFacts> characters, CombatProfileReadSet profileReads = null)
         {
-            if (!character.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Cohesion)) return 0;
+            if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(character.Stats.TraitStatuses, TraitKey.Cohesion)) return 0;
             var spec = CombatCommandCalculator.RequiredProfile(input, character, profileReads).Definition.Traits.ToArray().OfType<CohesionTraitSpec>().Single();
             return new CohesionTraitRule().Defense(new CohesionTraitDefinition(spec.DefensePerAdjacentAlly, spec.ShieldAmountPerAlly,
                 spec.RadiusCells, spec.ResetEveryControllerTurnEnds), character, characters);

@@ -171,8 +171,15 @@ namespace ProjectL.Systems.RuntimeSystem.LifeCycleSystem.LifeCycles.Combat.Plans
             }
 
             // 12. 연출이 남았으면 상태를 바꾸는 처리를 등록하지 않는다. 최신 결과가 확인 전에 덮이지 않게 한다.
+            // 연구 저장소 전용(속도 방향 A, 병렬 설계 §20): 적 결정 준비는 Core 상태를 읽기만 하고 결과를 게시하지 않으므로
+            // 연출이 도는 동안 먼저 돈다(기다림을 연출 뒤에 숨김). 준비된 결정의 실행(PreparedAdvance)과 그 밖의 자동 진행은 아래 13행이 연출 끝 뒤에 한다.
             if (facts.HasUnpresentedResult)
+            {
+                if (facts.Phase == CombatFlowPhase.Automatic &&
+                    (facts.Preparation == AdvancePreparationState.Required || facts.Preparation == AdvancePreparationState.Preparing))
+                    return new CombatStep(CombatStepKind.PrepareAdvance, facts.LatestResultSequence);
                 return CombatStep.Nothing;
+            }
 
             // 13. 자동 국면은 연출이 끝난 뒤 한 걸음씩 진행한다.
             if (facts.Phase == CombatFlowPhase.Automatic)

@@ -23,13 +23,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         public bool TryResolve(TargetingMethodSpec method, int range, CellCoord origin, Owner owner, AttackAim aim,
             out AttackCellSelection cells, out AttackFailureReason failureReason)
         {
-            AttackCellSelection resolved = null;
-            AttackFailureReason failure = default;
-            foreach (var _ in ResolveSteps(method, range, origin, owner, aim, (value, reason) =>
-                { resolved = value; failure = reason; })) { }
-            cells = resolved;
-            failureReason = failure;
-            return failure == AttackFailureReason.None;
+            (cells, failureReason) = ResolveDirect(method, range, origin, owner, aim);
+            return failureReason == AttackFailureReason.None;
         }
 
         internal static IEnumerable<string> ResolveSteps(TargetingMethodSpec method, int range, CellCoord origin, Owner owner,
@@ -62,6 +57,38 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
             completed(new AttackCellSelection(null, cells.ToArray(), Array.Empty<CellCoord>()), AttackFailureReason.None);
             yield return "SelectionMaskComplete";
+        }
+
+        internal static (AttackCellSelection, AttackFailureReason) ResolveDirect(TargetingMethodSpec method, int range, CellCoord origin, Owner owner,
+            AttackAim aim)
+        {
+            var failure = ValidateAim(method, range, origin, owner, aim);
+            if (failure != AttackFailureReason.None)
+            {
+                return (null, failure);
+                { }
+                { }
+            }
+            { }
+
+            if (method.ChoiceMode == TargetingChoiceMode.Single)
+            {
+                CellCoord primary = aim.Cell.Value;
+                var additional = AppointShapeCalculator.Translate(AppointShapeCalculator.CreateSplashOffsets(method.Splash), primary);
+                return (new AttackCellSelection(primary, new[] { primary }, additional), AttackFailureReason.None);
+                { }
+                { }
+            }
+            var cells = new List<CellCoord>();
+            var direction = method.ChoiceMode == TargetingChoiceMode.All ? (AttackDirection?)null : aim.Direction;
+            foreach (var offset in AppointShapeCalculator.MaskSteps(method.Shape, range, direction, method.Width))
+            {
+                if (offset.HasValue && TargetingAngleCalculator.Contains(method.ChoiceAngle, owner, CellCoord.Zero, offset.Value))
+                    cells.Add(new CellCoord(checked(origin.X + offset.Value.X), checked(origin.Y + offset.Value.Y)));
+                { }
+            }
+            return (new AttackCellSelection(null, cells.ToArray(), Array.Empty<CellCoord>()), AttackFailureReason.None);
+            { }
         }
 
         internal static AttackFailureReason ValidateAim(TargetingMethodSpec method, int range, CellCoord origin, Owner owner, AttackAim aim)

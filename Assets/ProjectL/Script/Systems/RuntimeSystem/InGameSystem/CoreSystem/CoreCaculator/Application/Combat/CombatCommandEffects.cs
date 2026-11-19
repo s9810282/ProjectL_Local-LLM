@@ -120,12 +120,18 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CombatProfileReadSet profileReads = null)
         {
             var own = Capture(recipient, CombatCommandCalculator.RequiredProfile(input, recipient, profileReads));
-            var auras = characters.Where(c => c.EntityId != recipient.EntityId && !c.Health.IsDead && c.Area == CharacterRuntimeArea.Field &&
-                    c.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Entrenchment))
-                .SelectMany(c => Capture(c, CombatCommandCalculator.RequiredProfile(input, c, profileReads)).Where(b => b.Rule is EntrenchmentEffectRule));
-            var bindings = own.Concat(auras).ToList();
+            var bindings = new List<EffectRuleBinding>(own);
+            for (int i = 0; i < characters.Count; i++)
+            {
+                var c = characters[i];
+                if (c.EntityId == recipient.EntityId || c.Health.IsDead || c.Area != CharacterRuntimeArea.Field ||
+                    !global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(c.Stats.TraitStatuses, TraitKey.Entrenchment))
+                    continue;
+                foreach (var b in Capture(c, CombatCommandCalculator.RequiredProfile(input, c, profileReads)))
+                    if (b.Rule is EntrenchmentEffectRule) bindings.Add(b);
+            }
             selectedDust = DustScreenTraitRule.DefenseSourcesAt(recipient, environment ?? input.State.Environment);
-            var dust = selectedDust.FirstOrDefault();
+            var dust = selectedDust.Count > 0 ? selectedDust[0] : null;
             if (dust != null)
             {
                 bindings.RemoveAll(b => b.Origin == dust.Origin);
@@ -137,9 +143,38 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static EffectRuleBinding[] Capture(CharacterCombatFacts character, CombatAttackProfile profile)
         {
             using var sample = CoreProfiling.Sample(CoreProfileSection.AttackEffectBinding);
-            var bindings = new List<EffectRuleBinding>();
-            foreach (var binding in CaptureSteps(character, profile))
-                if (binding != null) bindings.Add(binding);
+            var statuses = character.Stats.TraitStatuses.Span;
+            var specs = profile.Definition.Traits.Span;
+            if (statuses.Length != specs.Length)
+                throw new InvalidOperationException("특성 정의와 공개 상태의 개수가 다릅니다.");
+            var bindings = new List<EffectRuleBinding>(specs.Length + 1);
+            foreach (var spec in specs)
+            {
+                TraitStatusSnapshot status = null;
+                bool found = false;
+                foreach (var candidate in statuses)
+                {
+                    if (candidate.Key != spec.TraitKey) continue;
+                    if (found) throw new InvalidOperationException("Sequence contains more than one matching element");
+                    status = candidate;
+                    found = true;
+                }
+                if (!found) throw new InvalidOperationException("Sequence contains no matching element");
+                var registration = _traitRegistry.GetRequiredRegistration(spec.TraitKey);
+                var definition = registration.TraitDefinitionFactory.BuildDefinition(spec);
+                if (!DeferredCombatFeatures.IsTraitAvailable(spec.TraitKey)) continue;
+                bindings.Add(new EffectRuleBinding(TraitEffectOrigin.Create(character.EntityId, spec.TraitKey),
+                    registration.EffectRuleFactory(definition), Capture(status)));
+            }
+            var category = character.Stats.Category;
+            if (category.Key != profile.Definition.CombatCategoryKey ||
+                character.Stats.SpecializationCategory != profile.Definition.SpecializationCategory)
+                throw new InvalidOperationException("캐릭터와 정의의 Category가 다릅니다.");
+            if (category.Key == CategoryKey.Cannon)
+                bindings.Add(new EffectRuleBinding(CategoryEffectOrigin.Create(character.EntityId, category.Key,
+                    CategoryRuleKey.SafeBombardment),
+                    CategoryRuleFactories.CreateRule(new SafeBombardmentCategoryRuleDefinition()),
+                    StatelessEffectStateSnapshot.Instance));
             return bindings.ToArray();
         }
 

@@ -27,7 +27,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             EnvironmentSemanticBindings bindings, CellCoord cell, StaticTerrainKind kind)
         {
             ValidateTerrainQuery(environment, bindings, kind);
-            return environment.Tiles.OfType<StaticTerrainFact>().Any(t => t.Cell == cell && IsTerrain(t, bindings, kind));
+            var tiles = environment.Tiles;
+            for (int i = 0; i < tiles.Count; i++)
+                if (tiles[i] is StaticTerrainFact t && t.Cell == cell && IsTerrain(t, bindings, kind)) return true;
+            return false;
         }
 
         /// <summary><paramref name="kind"/> 지형이 있는 칸 전체다. <see cref="HasTerrain"/>와 같은 판정을 쓴다.</summary>

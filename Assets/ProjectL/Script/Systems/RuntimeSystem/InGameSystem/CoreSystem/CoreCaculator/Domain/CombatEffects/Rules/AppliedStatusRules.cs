@@ -128,7 +128,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (current == null) throw new ArgumentNullException(nameof(current));
             if (!ActionRestrictionStatus.Supports(key)) throw new ArgumentOutOfRangeException(nameof(key));
-            return current.Entries.Any(s => s is ActionRestrictionStatus && s.Key == key);
+            foreach (var s in current.Entries) if (s is ActionRestrictionStatus && s.Key == key) return true;
+            return false;
         }
 
         public static StatusEffectSet ClearForDeathOrBattleEnd(StatusEffectSet current) =>
@@ -138,7 +139,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (current == null) throw new ArgumentNullException(nameof(current));
             int total = 0;
-            foreach (var status in current.Entries.OfType<AttackIncreaseStatus>()) total = checked(total + status.Amount);
+            foreach (var entry in current.Entries) if (entry is AttackIncreaseStatus status) total = checked(total + status.Amount);
             return total;
         }
 
@@ -146,7 +147,14 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         {
             if (current == null) throw new ArgumentNullException(nameof(current));
             if (attackPower < 0) throw new ArgumentOutOfRangeException(nameof(attackPower));
-            int percent = current.Entries.OfType<AttackDecreaseStatus>().SingleOrDefault()?.ReductionPercent ?? 0;
+            AttackDecreaseStatus decrease = null;
+            foreach (var entry in current.Entries)
+                if (entry is AttackDecreaseStatus d)
+                {
+                    if (decrease != null) throw new InvalidOperationException("Sequence contains more than one element");
+                    decrease = d;
+                }
+            int percent = decrease?.ReductionPercent ?? 0;
             return checked((int)((long)attackPower * (100 - percent) / 100));
         }
 
@@ -156,8 +164,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             BigInteger numerator = defense;
             BigInteger denominator = BigInteger.One;
-            foreach (var status in current.Entries.OfType<DefenseDecreaseStatus>())
+            foreach (var entry in current.Entries)
             {
+                if (!(entry is DefenseDecreaseStatus status)) continue;
                 numerator *= 100 - status.ReductionPercent;
                 denominator *= 100;
                 if (numerator.IsZero) return 0;

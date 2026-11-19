@@ -32,7 +32,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         internal static bool Qualifies(CombatCommandInput input, CharacterCombatFacts actor, CharacterCombatFacts target,
             StructureCombatFacts structure = null)
         {
-            if (target == null && structure == null || !actor.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.FinishingShot)) return false;
+            if (target == null && structure == null || !global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(actor.Stats.TraitStatuses, TraitKey.FinishingShot)) return false;
             var health = target?.Health ?? structure.Health;
             var owner = target?.Owner ?? structure.Owner;
             if (health.IsDead || !new HostilityPolicy().AreHostile(actor.Owner, owner)) return false;

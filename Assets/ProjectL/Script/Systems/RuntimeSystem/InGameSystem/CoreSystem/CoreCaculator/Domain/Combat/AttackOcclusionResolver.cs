@@ -15,9 +15,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static AttackBlockedContact CheckDirect(CellCoord attacker, CellCoord contact, WallGeometry walls,
             AttackElevation elevation, AttackOcclusionSpec policy)
         {
-            AttackBlockedContact result = null;
-            foreach (var _ in CheckDirectSteps(attacker, contact, walls, elevation, policy, value => result = value)) { }
-            return result;
+            return CheckDirectNow(attacker, contact, walls, elevation, policy);
         }
 
         internal static IEnumerable<string> CheckDirectSteps(CellCoord attacker, CellCoord contact, WallGeometry walls,
@@ -39,9 +37,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static (AttackCellSelection Cells, IReadOnlyList<AttackBlockedContact> BlockedContacts) ResolveCells(
             CellCoord attacker, AttackCellSelection selected, WallGeometry walls, AttackElevation elevation, AttackOcclusionSpec policy)
         {
-            (AttackCellSelection, IReadOnlyList<AttackBlockedContact>) result = default;
-            foreach (var _ in ResolveCellSteps(attacker, selected, walls, elevation, policy, (cells, blocked) => result = (cells, blocked))) { }
-            return result;
+            return ResolveCellsDirect(attacker, selected, walls, elevation, policy);
         }
 
         internal static IEnumerable<string> ResolveCellSteps(CellCoord attacker, AttackCellSelection selected, WallGeometry walls,
@@ -84,6 +80,54 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             yield return "SelectionOcclusionComplete";
         }
 
+        internal static (AttackCellSelection, IReadOnlyList<AttackBlockedContact>) ResolveCellsDirect(CellCoord attacker, AttackCellSelection selected, WallGeometry walls,
+            AttackElevation elevation, AttackOcclusionSpec policy)
+        {
+            if (selected == null) throw new ArgumentNullException(nameof(selected));
+            if (walls == null) throw new ArgumentNullException(nameof(walls));
+            if (elevation == null) throw new ArgumentNullException(nameof(elevation));
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+            var blocked = new List<AttackBlockedContact>();
+            var direct = new List<CellCoord>();
+            for (int i = 0; i < selected.DesignatedCells.Length; i++)
+            {
+                var cell = selected.DesignatedCells.Span[i];
+                var contact = OccupiedContact(attacker, cell, walls, AttackOcclusionPhase.Direct);
+                if (contact == null)
+                    contact = CheckDirectNow(attacker, cell, walls, elevation, policy);
+                if (contact == null) direct.Add(cell);
+                else blocked.Add(contact);
+                { }
+            }
+            CellCoord? primary = selected.PrimaryCell.HasValue && direct.Count != 0 ? selected.PrimaryCell : null;
+            var additional = new List<CellCoord>();
+            if (primary.HasValue)
+            {
+                for (int i = 0; i < selected.AdditionalCells.Length; i++)
+                {
+                    var cell = selected.AdditionalCells.Span[i];
+                    var contact = OccupiedContact(primary.Value, cell, walls, AttackOcclusionPhase.Propagation);
+                    if (contact == null)
+                        contact = FindBlockDirect(primary.Value, cell, walls, AttackOcclusionPhase.Propagation,
+                            policy.Propagation == AttackWallPropagation.IgnoreWalls);
+                    if (contact == null) additional.Add(cell);
+                    else blocked.Add(contact);
+                    { }
+                }
+            }
+            return (new AttackCellSelection(primary, direct.ToArray(), additional.ToArray()), blocked.AsReadOnly());
+            { }
+        }
+
+        private static AttackBlockedContact CheckDirectNow(CellCoord attacker, CellCoord contact, WallGeometry walls,
+            AttackElevation elevation, AttackOcclusionSpec policy)
+        {
+            if (elevation == null) throw new ArgumentNullException(nameof(elevation));
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+            return FindBlockDirect(attacker, contact, walls, AttackOcclusionPhase.Direct,
+                policy.Delivery == AttackWallDelivery.IgnoreWalls || elevation.BypassesWalls(attacker, contact));
+        }
+
         /// <summary>특성이 만든 파급 셀에도 같은 벽 정책을 적용한다. 생성 범위와 효과 정산은 호출자가 소유한다.</summary>
         internal static (CellCoord[] Cells, IReadOnlyList<AttackBlockedContact> BlockedContacts) ResolvePropagationCells(
             CellCoord impact, ReadOnlySpan<CellCoord> cells, WallGeometry walls, AttackOcclusionSpec policy)
@@ -123,9 +167,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
         internal static AttackBlockedContact FindBlock(CellCoord origin, CellCoord contact, WallGeometry walls,
             AttackOcclusionPhase phase, bool ignoreWalls)
         {
-            AttackBlockedContact result = null;
-            foreach (var _ in FindBlockSteps(origin, contact, walls, phase, ignoreWalls, value => result = value)) { }
-            return result;
+            return FindBlockDirect(origin, contact, walls, phase, ignoreWalls);
         }
 
         private static IEnumerable<string> FindBlockSteps(CellCoord origin, CellCoord contact, WallGeometry walls,
@@ -164,6 +206,44 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.D
             }
             completed(new AttackBlockedContact(origin, contact, phase, nearest.SourceIds, nearest.Cells));
             yield return "SelectionWallEvidence";
+        }
+
+        private static AttackBlockedContact FindBlockDirect(CellCoord origin, CellCoord contact, WallGeometry walls,
+            AttackOcclusionPhase phase, bool ignoreWalls)
+        {
+            if (walls == null) throw new ArgumentNullException(nameof(walls));
+            if (phase != AttackOcclusionPhase.Direct && phase != AttackOcclusionPhase.Propagation)
+                throw new ArgumentOutOfRangeException(nameof(phase));
+            if (ignoreWalls || walls.Runs.Count == 0)
+            {
+                return (null);
+                { }
+            }
+
+            WallRun nearest = null;
+            var nearestEntry = SegmentParameter.One;
+            foreach (var run in walls.Runs)
+                foreach (var part in run.Parts)
+                {
+                    if (WallSegmentClipper.IntersectsPart(origin, contact, part, out var entry))
+                    {
+                        int order = entry.CompareTo(nearestEntry);
+                        if (nearest == null || order < 0 || order == 0 && run.ComponentKey < nearest.ComponentKey)
+                        {
+                            nearest = run;
+                            nearestEntry = entry;
+                        }
+                    }
+                    { }
+                }
+
+            if (nearest == null)
+            {
+                return (null);
+                { }
+            }
+            return (new AttackBlockedContact(origin, contact, phase, nearest.SourceIds, nearest.Cells));
+            { }
         }
     }
 }

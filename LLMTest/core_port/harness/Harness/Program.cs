@@ -32,6 +32,7 @@ public static class HarnessProgram
         if (args.Length > 0 && args[0] == "allocparts") return AllocParts(args.Length > 1 ? args[1] : "N8");
         if (args.Length > 0 && args[0] == "alloc") return Alloc(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "allocbytype") return AllocByType(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
+        if (args.Length > 0 && args[0] == "settlerepeat") return SettleRepeat(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "allocbysite") return AllocBySite(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "bench") return Bench(args.Length > 1 ? args[1].Split(',') : new[] { "N5", "N8", "T8", "G16" },
             args.Length > 2 ? int.Parse(args[2]) : 3);
@@ -704,6 +705,40 @@ public static class HarnessProgram
         Console.WriteLine($"sampled {all / 1048576.0:F0} MB over {string.Join(",", ids)} (l1)");
         foreach (var pair in total.OrderByDescending(p => p.Value).Take(80))
             Console.WriteLine($"  {100.0 * pair.Value / all,5:F1}%  {pair.Key}");
+        return 0;
+    }
+
+    /// <summary>
+    /// 계획 하나(l1)에서 같은 정산이 몇 번 되풀이되나(속도 방향 C, 병렬 설계 §21). 정산마다 두 열쇠로 센다.
+    /// 좁은 열쇠 = 판 상태 객체·캐릭터 목록 객체가 같고 행동이 같음(확실히 같은 정산). 넓은 열쇠 = 판 서명(위치·체력·행동 사용)이 같고 행동이 같음
+    /// (서명에 없는 상태가 다르면 다른 정산일 수 있어 위쪽 한계).
+    /// </summary>
+    static int SettleRepeat(string[] ids)
+    {
+        var rules = EnemyAiBenchmarkFixtures.Rules;
+        Console.WriteLine("fixture | settlements | exact repeats | signature repeats");
+        long all = 0, allExact = 0, allWide = 0;
+        foreach (var id in ids)
+        {
+            var input = Consistent(id, 1);
+            var exact = new HashSet<(object, object, string)>();
+            var wide = new HashSet<string>();
+            long total = 0, exactHits = 0, wideHits = 0;
+            PlannerSimulator.Observe = (board, decision) =>
+            {
+                string action = decision != null ? Text(decision)
+                    : board.Kind + "#" + board.ActorId.Value + (board.Path != null ? " path " + string.Join(">", board.Path.Cells.Select(c => c.X + "," + c.Y)) : "")
+                      + " aim " + board.Aim.Kind + (board.Aim.Cell.HasValue ? "@" + board.Aim.Cell.Value.X + "," + board.Aim.Cell.Value.Y : "") + "/" + board.Aim.Direction;
+                total++;
+                if (!exact.Add((board.State, board.Characters, action))) exactHits++;
+                if (!wide.Add(PlannerBoard.Signature(board) + "||" + action)) wideHits++;
+            };
+            try { foreach (var _ in EnemyTurnPlanner.Plan(input, rules, null, value => { })) { } }
+            finally { PlannerSimulator.Observe = null; }
+            Console.WriteLine($"{id,-4} | {total,8} | {exactHits,7} ({100.0 * exactHits / Math.Max(1, total),5:F1}%) | {wideHits,7} ({100.0 * wideHits / Math.Max(1, total),5:F1}%)");
+            all += total; allExact += exactHits; allWide += wideHits;
+        }
+        Console.WriteLine($"ALL  | {all,8} | {allExact,7} ({100.0 * allExact / Math.Max(1, all),5:F1}%) | {allWide,7} ({100.0 * allWide / Math.Max(1, all),5:F1}%)");
         return 0;
     }
 

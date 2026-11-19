@@ -68,7 +68,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         private static bool IsSource(CharacterCombatFacts character) =>
             !character.Health.IsDead && character.Area == CharacterRuntimeArea.Field &&
-            character.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice);
+            global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(character.Stats.TraitStatuses, TraitKey.Sacrifice);
 
         internal static SacrificeHitUpgrade? ResolveSingle(CombatCommandInput input, Dictionary<EntityId, CharacterCombatFacts> characters,
             CharacterCombatFacts actor, EntityId original, int raw, AttackTargetRole role, int percent, CombatDamageOrigin origin,
@@ -87,7 +87,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             CharacterCombatFacts actor, EntityId original, EntityId sourceId, List<CombatEvent> events = null, CombatDamageOrigin origin = null)
         {
             if (!characters.TryGetValue(sourceId, out var source) || !characters.TryGetValue(original, out var recipient)) return false;
-            if (source.Health.IsDead || source.Area != CharacterRuntimeArea.Field || !source.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.Sacrifice)) return false;
+            if (source.Health.IsDead || source.Area != CharacterRuntimeArea.Field || !global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(source.Stats.TraitStatuses, TraitKey.Sacrifice)) return false;
             var binding = Binding(input, source);
             var bound = new EffectRuleInput(binding.Origin, binding.ExpectedState);
             var rule = (SacrificeEffectRule)binding.Rule;

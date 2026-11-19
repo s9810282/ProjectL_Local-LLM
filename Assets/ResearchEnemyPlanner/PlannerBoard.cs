@@ -127,13 +127,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
         }
 
+        /// <summary>
+        /// 측정 전용(정산 되풀이 세기, 병렬 설계 §21): 정산 하나마다 (입력, 적 결정 또는 null)을 알린다. 평소에는 null이라 아무 일도 하지 않는다.
+        /// </summary>
+        internal static Action<CombatCommandInput, EnemyDecision> Observe;
+
         /// <summary>적 진영 턴 판(또는 진영 시작 판)에 적 결정 하나를 정산한다.</summary>
-        internal PlannerState ApplyEnemy(PlannerState board, EnemyDecision decision) =>
-            Run(() => CombatCommandCalculator.AdvancePrepared(board.Input, decision, Rules));
+        internal PlannerState ApplyEnemy(PlannerState board, EnemyDecision decision)
+        {
+            Observe?.Invoke(board.Input, decision);
+            return Run(() => CombatCommandCalculator.AdvancePrepared(board.Input, decision, Rules));
+        }
 
         /// <summary>명령 입력(플레이어 차례)에 행동 하나를 정산한다.</summary>
-        internal PlannerState ApplyCommand(CombatCommandInput command) =>
-            Run(() => CombatCommandCalculator.Calculate(command, Rules));
+        internal PlannerState ApplyCommand(CombatCommandInput command)
+        {
+            Observe?.Invoke(command, null);
+            return Run(() => CombatCommandCalculator.Calculate(command, Rules));
+        }
 
         private PlannerState Run(Func<CombatCommandTransition> calculate)
         {

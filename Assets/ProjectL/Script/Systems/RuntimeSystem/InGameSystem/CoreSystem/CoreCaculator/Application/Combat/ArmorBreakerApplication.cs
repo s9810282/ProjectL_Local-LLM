@@ -20,7 +20,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             if (!characters.TryGetValue(recipient, out var victim) || victim.Health.IsDead ||
                 !new HostilityPolicy().AreHostile(actor.Owner, victim.Owner)) return;
-            if (!actor.Stats.TraitStatuses.ToArray().Any(t => t.Key == TraitKey.ArmorBreaker)) return;
+            if (!global::ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common.TraitStatusScan.Has(actor.Stats.TraitStatuses, TraitKey.ArmorBreaker)) return;
             foreach (var binding in CombatCommandEffects.Capture(actor, CombatCommandCalculator.RequiredProfile(input, actor)))
                 if (binding.Rule is ArmorBreakerEffectRule rule)
                 {
