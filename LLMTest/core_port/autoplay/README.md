@@ -47,3 +47,4 @@ bash LLMTest/core_port/autoplay/run_player.sh auto1 auto
 - 게임 창이 뜨고 가짜 키·클릭이 들어가므로, 도는 동안(한 번에 약 1분) 마우스·키보드를 쓰지 않는다.
 - 긴 프레임 원인 보기(병렬 설계 §27): `bash LLMTest/core_port/autoplay/run_player.sh rounds1 auto 6` — 셋째 인자가 볼 적 턴 수다(기본 1). `done.txt`의 `spike` 줄이 8.3ms 넘은 프레임(메인 스레드에서 시간이 든 구간 위쪽), `watch` 줄이 구간별 첫 값과 그 뒤 값이다. 6번이면 약 2분 걸린다.
 - 넷째 인자부터는 빌드에 그대로 넘긴다. 미리 정산 실험(병렬 설계 §28): `bash LLMTest/core_port/autoplay/run_player.sh pre_on1 auto 6 -researchPresettle`. 인자가 없으면 꺼져 있다.
+- 미리 컴파일 실험(병렬 설계 §29): `bash LLMTest/core_port/autoplay/run_player.sh pw_combat auto 3 -researchPrewarm Combat`. 범위 `"*"`는 게임 어셈블리 전부, `"**"`는 엔진까지다. 결과의 `prewarm` 줄이 컴파일한 메서드 수와 든 시간이다.

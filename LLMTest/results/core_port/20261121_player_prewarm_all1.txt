@@ -1,0 +1,85 @@
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=4194304"
+    "memorysetup-bucket-allocator-block-count=1"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=4194304"
+    "memorysetup-profiler-bucket-allocator-block-count=1"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=4194304"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+## pw_all1 (auto) front=True done=True
+status=ok problems=86458
+player development=True gc=auto screen=1920x1080
+[Exception] UnityException: TagToID can only be called from the main thread.
+[Exception] Exception: Blitter is already initialized. Please only initialize the blitter once or you will leak engine resources. If you need to re-initialize the blitter with different shaders destroy & recreate it.
+[Exception] Exception: Blitter is already initialized. Please only initialize the blitter once or you will leak engine resources. If you need to re-initialize the blitter with different shaders destroy & recreate it.
+[Exception] Exception: Blitter is already initialized. Please only initialize the blitter once or you will leak engine resources. If you need to re-initialize the blitter with different shaders destroy & recreate it.
+[Exception] Exception: Blitter is already initialized. Please only initialize the blitter once or you will leak engine resources. If you need to re-initialize the blitter with different shaders destroy & recreate it.
+note wait deck=False field=True
+note wait canSelect=False
+placeTry cell=6,0 screen=640,323 units=7
+placeTry cell=5,0 screen=592,356 units=7
+placeTry cell=7,0 screen=688,289 units=7
+placeTry cell=4,0 screen=545,390 units=7
+recorders=2214 timeMarkers=3204 jitNames=Mono.JIT
+mainPlaced attempt=4 units=8
+atMainPlaced prewarm done scope=* types=5056 methods=28533 skipped=119 failed=14 seconds=1.60 prepareMs=1 pointerMs=1509 startedAt=0.24s now=22.73s
+gc requested=auto actual=unchanged incremental=True heapMB=27 usedMB=22
+[턴 계획 AI] 준비 시작부터 결정까지 2.7초, 정산 552번, 판 매김 203번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 1514개: 중간 0.7ms, 90% 2.0ms, 가장 김 4.9ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 266개(그중 8.3ms 넘음 0개)
+round=1 atDecision heapMB=27 usedMB=24 collections=295
+lastSubmitToDecision=2.7s
+waitFrames count=4360 median=0.7ms p99=2.6ms max=5.4ms over8.3=0 over16.7=0 over33=0
+spike round=1 after t=0.02s ms=10.2 gc=1 | Core.Calc.EnemyActionExecution=11.2; PlayerLoop=10.2; Update.ScriptRunBehaviourUpdate=9.3; BehaviourUpdate=9.3; Core.Calc.ProjectionCurrentInput=2.7; GC.Collect=2.2; Combat.Action.Playback.Enemy.Character.Moved.Dispatch=2.2; GC.Alloc=0.5; Core.Combat.Publish=0.5; PostLateUpdate.FinishFrameRendering=0.3; Core.Calc.MovementUndoReconcile=0.3
+recorders=2225 timeMarkers=3215 jitNames=Mono.JIT
+spike round=2 wait t=2.51s ms=9.6 gc=0 | PlayerLoop=9.5; Update.ScriptRunBehaviourUpdate=5.7; BehaviourUpdate=5.7; Combat.Action.Playback.System.Railway.Tick=5.6; Combat.Action.Playback.Enemy.Character.Died.Handle=5.4; Combat.Result.PresentEvent=5.4; Combat.Action.Playback.Enemy.Character.Died.Prepare=3.2; Combat.Action.Playback.Enemy.Character.Died.Begin=3.2; PostLateUpdate.UpdateAllSkinnedMeshes=2.4; MeshSkinning.Update=2.4; MeshSkinning.SkinOnGPU=2.4; MeshSkinning.SkinOnGPUNonBatched=2.4; Loading.ReadObject=2.3; Loading.ReadObjectThreaded=1.8; Loading.AwakeFromLoad=0.5; PostLateUpdate.FinishFrameRendering=0.4
+[턴 계획 AI] 준비 시작부터 결정까지 1.8초, 정산 266번, 판 매김 89번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 1097개: 중간 0.6ms, 90% 1.5ms, 가장 김 4.1ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 166개(그중 8.3ms 넘음 0개)
+round=2 atDecision heapMB=27 usedMB=25 collections=764
+lastSubmitToDecision=6.8s
+recorders=2230 timeMarkers=3235 jitNames=Mono.JIT
+[턴 계획 AI] 준비 시작부터 결정까지 2.2초, 정산 326번, 판 매김 96번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 1340개: 중간 0.6ms, 90% 1.1ms, 가장 김 4.1ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 198개(그중 8.3ms 넘음 0개)
+round=3 atDecision heapMB=27 usedMB=25 collections=1114
+lastSubmitToDecision=2.2s
+recorders=2235 timeMarkers=3240 jitNames=Mono.JIT
+gcEnd heapMB=27 usedMB=23 collections=1328
+waitFramesAll count=17001 median=0.7ms p99=2.5ms max=9.6ms over8.3=1 over16.7=0 over33=0
+afterFrames count=44163 median=0.7ms p99=2.0ms max=10.2ms over8.3=1 over16.7=0 over33=0
+prewarm done scope=* types=5056 methods=28533 skipped=119 failed=14 seconds=1.60 prepareMs=1 pointerMs=1509 startedAt=0.24s
+watch Core.Calc.EnemyActionExecution first=11.2ms laterFrames=17 laterMax=9.6ms laterMean=4.55ms
+watch Core.Calc.EnemyPreparation first=4.5ms laterFrames=3971 laterMax=6.9ms laterMean=0.01ms
+watch Combat.Action.Playback.Enemy.Character.Died.Handle first=5.4ms laterFrames=1 laterMax=1.0ms laterMean=0.99ms
+watch Combat.Result.PresentEvent first=0.2ms laterFrames=18 laterMax=5.4ms laterMean=0.65ms
+watch Combat.Action.Playback.Enemy.Character.Died.Begin first=3.2ms laterFrames=1 laterMax=0.7ms laterMean=0.71ms
+watch Core.Combat.Command first=2.5ms laterFrames=3 laterMax=1.8ms laterMean=1.46ms
+watch Combat.Action.Playback.Enemy.Character.Moved.Dispatch first=2.2ms laterFrames=36 laterMax=0.2ms laterMean=0.06ms
+watch Combat.Action.Playback.Enemy.Attack.Handle first=2.1ms laterFrames=0 laterMax=0.0ms laterMean=0.00ms
+watch Combat.Result.Finalize first=0.9ms laterFrames=26 laterMax=1.9ms laterMean=0.65ms
+watch Core.Combat.Publish first=1.8ms laterFrames=27 laterMax=0.6ms laterMean=0.42ms
+watch Combat.Units.ApplyHUD first=0.2ms laterFrames=80 laterMax=1.5ms laterMean=0.10ms
+watch Combat.Action.Playback.System.Railway.Begin first=1.4ms laterFrames=1 laterMax=0.3ms laterMean=0.31ms
+watch Core.Calc.EnemySourceValidation first=0.0ms laterFrames=44527 laterMax=1.3ms laterMean=0.00ms
+watch Core.Combat.Advance first=0.9ms laterFrames=5 laterMax=1.2ms laterMean=1.04ms
+watch Core.Combat.Calculate first=0.5ms laterFrames=9 laterMax=1.2ms laterMean=0.57ms

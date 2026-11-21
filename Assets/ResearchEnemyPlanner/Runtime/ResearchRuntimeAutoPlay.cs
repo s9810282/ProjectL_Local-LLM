@@ -209,6 +209,7 @@ public sealed class ResearchRuntimeAutoPlay : MonoBehaviour
             _placed = true;
             StartRecorders();
             Append($"mainPlaced attempt={_point} units={units}");
+            Append("atMainPlaced " + ResearchJitPrewarm.Status + $" now={Time.realtimeSinceStartupAsDouble:F2}s");
             return;
         }
         _step = _step >= 6 ? 0 : _step + 1;
@@ -380,6 +381,7 @@ public sealed class ResearchRuntimeAutoPlay : MonoBehaviour
         Append($"gcEnd {Heap()} collections={GC.CollectionCount(0) - _collectionsAtStart}");
         if (_rounds > 1) Append("waitFramesAll " + _waitFrames);
         Append("afterFrames " + _afterFrames);
+        Append(ResearchJitPrewarm.Status);
         foreach (var watch in _watches.Where(w => w.Count > 0 && (w.First >= 1.0 || w.LaterMax >= 1.0)).OrderByDescending(w => Math.Max(w.First, w.LaterMax)))
             Append(string.Format(CultureInfo.InvariantCulture, "watch {0} first={1:F1}ms{2} laterFrames={3} laterMax={4:F1}ms laterMean={5:F2}ms", watch.Name, watch.First,
                 watch.Late ? "(late)" : "", watch.Count - 1, watch.LaterMax, watch.Count > 1 ? watch.LaterSum / (watch.Count - 1) : 0));
