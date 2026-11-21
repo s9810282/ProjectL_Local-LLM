@@ -12,6 +12,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
     /// 노드 = (판, 아직 안 움직인 유닛, 지금까지 행동). 단계마다 남은 유닛의 후보를 엔진으로 돌려 V로 매기고,
     /// 같은 판은 V가 가장 높은 것 하나만, 상위 K개만 다음 단계로 넘긴다. 시작 판("아무것도 안 함")도 후보다.
     /// 다시 매김 후보 모음(<see cref="Pool"/>)은 시작 판 + 단계마다 남긴 판(서명이 같으면 처음 것)이다.
+    /// 계획을 고를 때(<see cref="Best"/> 갱신, 다시 매김 후보·깊은 값 비교)는 판 값에서 행동 규칙 벌점(<see cref="IdleCost"/>)을 뺀 값으로 견준다.
+    /// 빔 안에서 판을 줄 세우는 값은 판 값 그대로다.
     /// </summary>
     internal sealed class PlannerBeam
     {
@@ -47,6 +49,31 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
             _simulator = simulator ?? throw new ArgumentNullException(nameof(simulator));
         }
+
+        /// <summary>
+        /// 행동 규칙 벌점(시뮬레이터 <c>idle_cost</c>): 그 판에서 아직 이동도 공격도 하지 않은 우리 유닛마다
+        /// 행동 규칙 값(<see cref="EnemyTurnPlannerStyle.MustAct"/>) × 공격력 × 최대 HP(메인은 × 메인 배수).
+        /// 이번 턴에 이미 이동한 유닛과 필드에 없는 유닛은 세지 않는다. 값이 0이면 0이다(끔).
+        /// 뜻: 행동해서 판 값이 유닛 전력 × 행동 규칙 값보다 많이 떨어질 때만 제자리에 있는다.
+        /// </summary>
+        internal double IdleCost(Node node)
+        {
+            double rate = _evaluator.Style.MustAct;
+            if (rate <= 0) return 0.0;
+            double total = 0.0;
+            var characters = node.State.Input.Characters;
+            foreach (int id in node.Remaining)
+            {
+                var unit = characters.SingleOrDefault(c => c.EntityId.Value == id);
+                if (unit == null || !PlannerEvaluator.OnField(unit) || unit.ActionUse != UnitActionUse.Available) continue;
+                double power = (double)unit.Stats.EffectiveAttackPower * unit.Health.MaxHealth;
+                total += rate * (PlannerEvaluator.IsMain(unit) ? power * _evaluator.Style.MainWeight : power);
+            }
+            return total;
+        }
+
+        /// <summary>계획을 고를 때의 값: 빠른 판 값 − 행동 규칙 벌점(시뮬레이터 <c>_plan_value</c>).</summary>
+        internal double PlanValue(Node node) => node.Value - IdleCost(node);
 
         internal IEnumerable<int> Run()
         {
@@ -95,7 +122,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 foreach (var node in frontier)
                     if (seen.Add(PlannerBoard.Signature(node.State.Input) + (node.State.IsEnded ? "#" + node.State.Outcome : "")))
                         Pool.Add(node);
-                if (frontier.Count > 0 && frontier[0].Value > Best.Value) Best = frontier[0];
+                // 깊이가 같은 판은 남은 유닛 수가 같아 행동 규칙 벌점도 거의 같다. 깊이끼리 견줄 때 벌점을 뺀 값으로 본다.
+                if (frontier.Count > 0 && PlanValue(frontier[0]) > PlanValue(Best)) Best = frontier[0];
                 if (frontier.Count > 0 && frontier[0].State.IsEnded) break;
                 yield return 0;
             }

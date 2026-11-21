@@ -161,6 +161,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
 
         /// <summary>
         /// 턴 계획 하나: 공정 입력(설계 TP-3) → 빔 탐색 → 다시 매김(빠른 V 상위 <see cref="EnemyTurnPlannerStyle.Rerank"/>개를 깊은 V로).
+        /// 행동 규칙(<see cref="EnemyTurnPlannerStyle.MustAct"/>)을 켜면 다시 매김 후보를 고를 때와 깊은 V를 견줄 때도
+        /// 같은 벌점(<see cref="PlannerBeam.IdleCost"/>)을 뺀다(시뮬레이터 <c>_rerank</c>와 같다). 끄면 벌점이 0이라 값이 그대로다.
         /// 결과는 행동마다 "행동 전 판 서명"을 붙인 계획이다. 시험·측정 도구는 이 함수를 예외 거름 없이 직접 부른다.
         /// style은 성향·계산 크기 값이다(null이면 <see cref="EnemyTurnPlannerStyle.Default"/>). 게임은 조정 에셋의 프리셋 값을 넘긴다.
         /// </summary>
@@ -181,7 +183,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             int lookaheadReplies = 0;
             if (style.Rerank > 0)
             {
-                var top = beam.Pool.OrderByDescending(n => n.Value).Take(style.Rerank).ToList();
+                var top = beam.Pool.OrderByDescending(n => beam.PlanValue(n)).Take(style.Rerank).ToList();
                 if (top.Count >= 2)
                 {
                     uint seed = PlannerBoard.Seed(input);
@@ -193,10 +195,11 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                         foreach (var _ in PlannerReply.DeepSteps(node.State, evaluator, simulator, seed,
                             (value, replies) => { deep = value; lookaheadReplies += replies; }))
                             yield return 0;
-                        if (pick == null || deep > pickValue)
+                        double total = deep - beam.IdleCost(node);
+                        if (pick == null || total > pickValue)
                         {
                             pick = node;
-                            pickValue = deep;
+                            pickValue = total;
                         }
                     }
                     chosen = pick;

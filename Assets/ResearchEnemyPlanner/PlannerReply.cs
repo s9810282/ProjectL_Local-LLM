@@ -302,7 +302,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
         {
             var targets = PlannerEvaluator.Targets(board, Owner.Enemy);
             if (idle.Count == 0 || targets.Count == 0) return 0.0;
-            var field = evaluator.DistanceField(board, targets);
+            var field = evaluator.DistanceField(board, evaluator.StepTargets(board, Owner.Enemy));
             double penalty = 0.0;
             foreach (int id in idle)
             {

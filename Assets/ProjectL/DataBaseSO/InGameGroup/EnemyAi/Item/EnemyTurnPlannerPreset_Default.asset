@@ -23,3 +23,6 @@ MonoBehaviour:
   perUnit: 6
   moveOnly: 3
   rerank: 4
+  mustAct: 0.25
+  stepAnchor: 1
+  pooledChance: 1

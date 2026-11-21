@@ -16,6 +16,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
     /// 턴 계획 AI의 성향·계산 크기 값이다(연구 저장소 전용 연결, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md §11).
     /// 조정 에셋의 프리셋 SO(EnemyTurnPlannerPresetSO)가 만들고, 비어 있으면 <see cref="Default"/>(연구 시뮬레이터 plan4:g1:l1과 같은 값)다.
     /// 판 점수 식과 값마다의 뜻은 프리셋 SO의 설명에 있다.
+    /// 행동 규칙·걸음 벌점 대상 고정·기회 모으기는 기본이 끔이다(LLMTest/docs/2026-11-19-research-planner-value-fix-port-design.md).
     /// </summary>
     public sealed class EnemyTurnPlannerStyle
     {
@@ -30,6 +31,9 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public const int DefaultPerUnit = 6;
         public const int DefaultMoveOnly = 3;
         public const int DefaultRerank = 4;
+        public const double DefaultMustAct = 0.0;
+        public const bool DefaultStepAnchor = false;
+        public const bool DefaultPooledChance = false;
 
         public static EnemyTurnPlannerStyle Default { get; } = new EnemyTurnPlannerStyle();
 
@@ -55,12 +59,28 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
         public int MoveOnly { get; }
         /// <summary>끝난 계획 중 빠른 V 상위 몇 개를 깊은 V로 다시 매기나. 2보다 작으면 다시 매기지 않는다.</summary>
         public int Rerank { get; }
+        /// <summary>
+        /// 행동 규칙(시뮬레이터 :i): 아직 이동도 공격도 하지 않은 우리 유닛마다 계획 값에서 빼는 양이다(유닛 전력 = 공격력 × 최대 HP의 배수).
+        /// 행동해서 판 값이 이보다 많이 떨어질 때만 제자리에 있는다. 0이면 끔.
+        /// </summary>
+        public double MustAct { get; }
+        /// <summary>
+        /// 걸음 벌점 대상 고정(시뮬레이터 :v): 걸음 벌점의 거리를 재는 상대에, 계획을 시작할 때 살아 있었지만 그 판에서는 쓰러진 상대를
+        /// 계획 시작 판의 칸으로 남긴다. 가까운 상대를 잡아도 남은 유닛들의 걸음 벌점이 한꺼번에 늘지 않는다. false면 그 판에서 살아 있는 상대만 본다.
+        /// </summary>
+        public bool StepAnchor { get; }
+        /// <summary>
+        /// 기회 모으기(시뮬레이터 :b): 다음 턴 기회를 위험처럼 대상마다 피해를 모아 그 대상의 남은 HP까지만 센다.
+        /// false면 유닛마다 따로 더한다(같은 대상을 노리는 유닛 수만큼 겹쳐 센다).
+        /// </summary>
+        public bool PooledChance { get; }
 
         public EnemyTurnPlannerStyle(double fear = DefaultFear, double opportunity = DefaultOpportunity,
             double mainWeight = DefaultMainWeight, double goalStepPercent = DefaultGoalStepPercent,
             double stepPenalty = DefaultStepPenalty, double reinforcementDiscount = DefaultReinforcementDiscount,
             bool lookahead = DefaultLookahead, int beam = DefaultBeam, int perUnit = DefaultPerUnit,
-            int moveOnly = DefaultMoveOnly, int rerank = DefaultRerank)
+            int moveOnly = DefaultMoveOnly, int rerank = DefaultRerank, double mustAct = DefaultMustAct,
+            bool stepAnchor = DefaultStepAnchor, bool pooledChance = DefaultPooledChance)
         {
             Fear = NonNegative(fear, nameof(fear));
             Opportunity = NonNegative(opportunity, nameof(opportunity));
@@ -73,11 +93,15 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
             PerUnit = perUnit >= 1 ? perUnit : throw new ArgumentOutOfRangeException(nameof(perUnit));
             MoveOnly = moveOnly >= 0 ? moveOnly : throw new ArgumentOutOfRangeException(nameof(moveOnly));
             Rerank = rerank >= 0 ? rerank : throw new ArgumentOutOfRangeException(nameof(rerank));
+            MustAct = NonNegative(mustAct, nameof(mustAct));
+            StepAnchor = stepAnchor;
+            PooledChance = pooledChance;
         }
 
         /// <summary>같은 값에 깊은 V 종류만 바꾼 값(측정 도구가 두 종류를 같은 실행에서 비교할 때).</summary>
         public EnemyTurnPlannerStyle WithLookahead(bool lookahead) => new EnemyTurnPlannerStyle(Fear, Opportunity, MainWeight,
-            GoalStepPercent, StepPenalty, ReinforcementDiscount, lookahead, Beam, PerUnit, MoveOnly, Rerank);
+            GoalStepPercent, StepPenalty, ReinforcementDiscount, lookahead, Beam, PerUnit, MoveOnly, Rerank,
+            MustAct, StepAnchor, PooledChance);
 
         private static double NonNegative(double value, string parameter) =>
             value >= 0 && !double.IsInfinity(value) ? value : throw new ArgumentOutOfRangeException(parameter);

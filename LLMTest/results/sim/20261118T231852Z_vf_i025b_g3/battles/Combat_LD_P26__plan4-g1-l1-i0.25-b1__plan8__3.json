@@ -1,0 +1,4536 @@
+{
+ "record": {
+  "stage": "Combat_LD_P26",
+  "seed": 3,
+  "player": "player-plan8",
+  "enemy": "enemy-plan4:g1:l1:i0.25:b1",
+  "outcome": "player_win",
+  "rounds": 10,
+  "gimmicks_off": "rockfall",
+  "player_units_lost": 2,
+  "player_hp_lost": 84,
+  "main_hp": 18,
+  "enemy_units_lost": 11,
+  "enemy_spawned": 8,
+  "hq_hp": 0,
+  "first_attack_round": 1,
+  "first_enemy_attack_round": 1,
+  "enemy_hold_ratio": 0.0,
+  "hold_reasons": {},
+  "mean_gap": 6.5,
+  "falls": {
+   "enemy": 4
+  },
+  "friendly_fire": {
+   "player": 7
+  },
+  "planner": {
+   "player": {
+    "plans": 11,
+    "replans": 1,
+    "reranks": 11,
+    "deep_evals": 88,
+    "flips": 5,
+    "beam_steps": 39,
+    "beam_nodes": 312,
+    "beam_results": 156,
+    "seconds": 9.233,
+    "deep_seconds": 3.178
+   },
+   "enemy": {
+    "plans": 9,
+    "replans": 0,
+    "reranks": 9,
+    "deep_evals": 36,
+    "flips": 5,
+    "beam_steps": 24,
+    "beam_nodes": 96,
+    "beam_results": 51,
+    "seconds": 1.94,
+    "deep_seconds": 1.174
+   }
+  },
+  "seconds": 11.2,
+  "anomalies": []
+ },
+ "actions": [
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      3,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     6,
+     8
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     2,
+     7
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      4,
+      1
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     2,
+     5
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      4,
+      2
+     ],
+     [
+      4,
+      3
+     ],
+     [
+      4,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "aim": "Left"
+   }
+  },
+  {
+   "round": 1,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadCannon",
+    "uid": 2,
+    "path": [
+     [
+      10,
+      5
+     ],
+     [
+      9,
+      5
+     ],
+     [
+      8,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadCannon",
+    "uid": 2,
+    "aim": [
+     5,
+     3
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon",
+    "uid": 3,
+    "path": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      5
+     ],
+     [
+      6,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "path": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      5
+     ],
+     [
+      3,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "aim": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      3,
+      3
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      1,
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     3,
+     5
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      3,
+      4
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      3,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     7,
+     4
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      2,
+      4
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     3,
+     2
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      2,
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "aim": "Up"
+   }
+  },
+  {
+   "round": 2,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon",
+    "uid": 3,
+    "path": [
+     [
+      5,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Demon",
+    "uid": 3,
+    "aim": [
+     1,
+     3
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_SelfDestruct",
+    "uid": 11,
+    "path": [
+     [
+      9,
+      11
+     ],
+     [
+      9,
+      10
+     ],
+     [
+      8,
+      10
+     ],
+     [
+      8,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "path": [
+     [
+      3,
+      5
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      3,
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "aim": [
+     2,
+     2
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      1,
+      2
+     ],
+     [
+      0,
+      2
+     ],
+     [
+      0,
+      3
+     ],
+     [
+      0,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     4,
+     3
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "aim": "Right"
+   }
+  },
+  {
+   "round": 3,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 3,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "path": [
+     [
+      3,
+      3
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 1,
+    "aim": [
+     1,
+     3
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_SelfDestruct",
+    "uid": 11,
+    "path": [
+     [
+      8,
+      9
+     ],
+     [
+      7,
+      9
+     ],
+     [
+      6,
+      9
+     ],
+     [
+      6,
+      8
+     ]
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_AnkleBreaker",
+    "uid": 12,
+    "path": [
+     [
+      9,
+      12
+     ],
+     [
+      9,
+      11
+     ],
+     [
+      9,
+      10
+     ],
+     [
+      8,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      0,
+      4
+     ],
+     [
+      0,
+      5
+     ],
+     [
+      0,
+      6
+     ],
+     [
+      1,
+      6
+     ],
+     [
+      2,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      1,
+      3
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      3,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     2,
+     5
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      2,
+      5
+     ],
+     [
+      3,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 4,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_SelfDestruct",
+    "uid": 11,
+    "path": [
+     [
+      6,
+      8
+     ],
+     [
+      5,
+      8
+     ],
+     [
+      5,
+      7
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_AnkleBreaker",
+    "uid": 12,
+    "path": [
+     [
+      8,
+      10
+     ],
+     [
+      7,
+      10
+     ],
+     [
+      6,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadCannon_SoloAction",
+    "uid": 13,
+    "path": [
+     [
+      10,
+      11
+     ],
+     [
+      9,
+      11
+     ],
+     [
+      9,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 5,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      4,
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      2,
+      6
+     ],
+     [
+      2,
+      5
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      3,
+      5
+     ],
+     [
+      2,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 5,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_SelfDestruct",
+    "uid": 11,
+    "path": [
+     [
+      5,
+      8
+     ],
+     [
+      4,
+      8
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadCannon_SoloAction",
+    "uid": 13,
+    "path": [
+     [
+      9,
+      10
+     ],
+     [
+      8,
+      10
+     ],
+     [
+      7,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "path": [
+     [
+      12,
+      10
+     ],
+     [
+      11,
+      10
+     ],
+     [
+      11,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_AnkleBreaker",
+    "uid": 12,
+    "path": [
+     [
+      6,
+      10
+     ],
+     [
+      6,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 5,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      4,
+      3
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     8,
+     9
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      3,
+      4
+     ],
+     [
+      3,
+      5
+     ],
+     [
+      3,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     4,
+     8
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      2,
+      4
+     ],
+     [
+      2,
+      5
+     ],
+     [
+      3,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      2,
+      5
+     ],
+     [
+      2,
+      6
+     ],
+     [
+      2,
+      7
+     ],
+     [
+      3,
+      7
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 6,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Demon_AnkleBreaker",
+    "uid": 12,
+    "path": [
+     [
+      6,
+      9
+     ],
+     [
+      5,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "path": [
+     [
+      11,
+      9
+     ],
+     [
+      10,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      8,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 6,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      3,
+      5
+     ],
+     [
+      4,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     5,
+     9
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      4,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     9,
+     9
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      3,
+      7
+     ],
+     [
+      4,
+      7
+     ],
+     [
+      4,
+      8
+     ],
+     [
+      5,
+      8
+     ]
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "aim": "Right"
+   }
+  },
+  {
+   "round": 7,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 7,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadCannon_StationaryFire",
+    "uid": 15,
+    "path": [
+     [
+      9,
+      11
+     ],
+     [
+      9,
+      10
+     ],
+     [
+      8,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadCannon_StationaryFire",
+    "uid": 15,
+    "aim": [
+     5,
+     8
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "path": [
+     [
+      7,
+      9
+     ],
+     [
+      6,
+      9
+     ],
+     [
+      6,
+      8
+     ],
+     [
+      6,
+      7
+     ]
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "aim": [
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "round": 7,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "path": [
+     [
+      5,
+      5
+     ],
+     [
+      6,
+      5
+     ],
+     [
+      6,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     10,
+     10
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      5,
+      6
+     ],
+     [
+      5,
+      7
+     ],
+     [
+      5,
+      8
+     ],
+     [
+      5,
+      9
+     ],
+     [
+      5,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     5,
+     8
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "path": [
+     [
+      5,
+      9
+     ],
+     [
+      6,
+      9
+     ],
+     [
+      7,
+      9
+     ],
+     [
+      8,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_ShotGun",
+    "uid": 8,
+    "aim": "Up"
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      3,
+      6
+     ],
+     [
+      4,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     6,
+     7
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 8,
+   "side": "enemy",
+   "action": {
+    "type": "move",
+    "unit": "Unit_UndeadRider_Disarm",
+    "uid": 16,
+    "path": [
+     [
+      12,
+      10
+     ],
+     [
+      11,
+      10
+     ],
+     [
+      10,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadRider_Disarm",
+    "uid": 16,
+    "aim": [
+     8,
+     9
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "aim": [
+     6,
+     6
+    ]
+   }
+  },
+  {
+   "round": 8,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     10,
+     10
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      5,
+      10
+     ],
+     [
+      6,
+      10
+     ],
+     [
+      7,
+      10
+     ],
+     [
+      8,
+      10
+     ],
+     [
+      9,
+      10
+     ]
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     9,
+     12
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "path": [
+     [
+      4,
+      6
+     ],
+     [
+      4,
+      5
+     ]
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Akimbo",
+    "uid": 7,
+    "aim": [
+     6,
+     7
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "player",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 9,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadHeavy",
+    "uid": 14,
+    "aim": [
+     6,
+     6
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "enemy",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_UndeadCannon_ArmorBreaker",
+    "uid": 17,
+    "aim": [
+     8,
+     9
+    ]
+   }
+  },
+  {
+   "round": 9,
+   "side": "enemy",
+   "action": {
+    "type": "end_turn"
+   }
+  },
+  {
+   "round": 10,
+   "side": "player",
+   "action": {
+    "type": "move",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "path": [
+     [
+      9,
+      10
+     ],
+     [
+      9,
+      11
+     ],
+     [
+      10,
+      11
+     ]
+    ]
+   }
+  },
+  {
+   "round": 10,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Cowboy",
+    "uid": 10,
+    "aim": [
+     11,
+     11
+    ]
+   }
+  },
+  {
+   "round": 10,
+   "side": "player",
+   "action": {
+    "type": "attack",
+    "unit": "Unit_Ballista",
+    "uid": 9,
+    "aim": [
+     10,
+     10
+    ]
+   }
+  },
+  {
+   "log": [
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 1
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      6,
+      8
+     ],
+     "hits": [
+      {
+       "target": 5,
+       "name": "Unit_Gravekeeper",
+       "damage": 7,
+       "absorbed": 0,
+       "hp": [
+        24,
+        17
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "fall",
+     "uid": 5,
+     "unit": "Unit_Gravekeeper",
+     "cell": [
+      4,
+      10
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 5,
+     "unit": "Unit_Gravekeeper",
+     "path": [
+      [
+       4,
+       10
+      ]
+     ],
+     "fell": true
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       2,
+       2
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 4,
+     "targetName": "Unit_Demon",
+     "from": [
+      2,
+      7
+     ],
+     "to": [
+      2,
+      5
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      2,
+      7
+     ],
+     "hits": [
+      {
+       "target": 4,
+       "name": "Unit_Demon",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        20,
+        11
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       4,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       3
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      2,
+      5
+     ],
+     "hits": [
+      {
+       "target": 4,
+       "name": "Unit_Demon",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        11,
+        2
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       4,
+       2
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "aim": "Left",
+     "hits": [
+      {
+       "target": 4,
+       "name": "Unit_Demon",
+       "damage": 6,
+       "absorbed": 0,
+       "hp": [
+        2,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "designated"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 1
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 1
+    },
+    {
+     "type": "reinforce",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "cell": [
+      9,
+      11
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 2,
+     "unit": "Unit_UndeadCannon",
+     "path": [
+      [
+       10,
+       5
+      ],
+      [
+       9,
+       5
+      ],
+      [
+       8,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 2,
+     "unit": "Unit_UndeadCannon",
+     "aim": [
+      5,
+      3
+     ],
+     "hits": [
+      {
+       "target": 8,
+       "name": "Unit_ShotGun",
+       "damage": 7,
+       "absorbed": 0,
+       "hp": [
+        35,
+        28
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 3,
+     "unit": "Unit_Demon",
+     "path": [
+      [
+       7,
+       6
+      ],
+      [
+       6,
+       6
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       6,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       5,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      2,
+      4
+     ],
+     "hits": [
+      {
+       "target": 10,
+       "name": "Unit_Cowboy",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        25,
+        17
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 1
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 2
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       3,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       1,
+       3
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      3,
+      5
+     ],
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        35,
+        26
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       3,
+       2
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      7,
+      4
+     ],
+     "hits": [
+      {
+       "target": 2,
+       "name": "Unit_UndeadCannon",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        12,
+        4
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      },
+      {
+       "target": 3,
+       "name": "Unit_Demon",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        20,
+        12
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "fall",
+     "uid": 2,
+     "unit": "Unit_UndeadCannon",
+     "cell": [
+      9,
+      6
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 2,
+     "unit": "Unit_UndeadCannon",
+     "path": [
+      [
+       9,
+       6
+      ]
+     ],
+     "fell": true
+    },
+    {
+     "type": "knockback",
+     "uid": 3,
+     "unit": "Unit_Demon",
+     "path": [
+      [
+       5,
+       4
+      ]
+     ],
+     "fell": false
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       2,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       2
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 9,
+     "targetName": "Unit_Ballista",
+     "from": [
+      3,
+      2
+     ],
+     "to": [
+      2,
+      2
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      3,
+      2
+     ],
+     "hits": []
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       4,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "aim": "Up",
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 6,
+       "absorbed": 0,
+       "hp": [
+        26,
+        20
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "designated"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 2
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 2
+    },
+    {
+     "type": "reinforce",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "cell": [
+      9,
+      12
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 3,
+     "unit": "Unit_Demon",
+     "path": [
+      [
+       5,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 3,
+     "unit": "Unit_Demon",
+     "aim": [
+      1,
+      3
+     ],
+     "hits": [
+      {
+       "target": 7,
+       "name": "Unit_Akimbo",
+       "damage": 7,
+       "absorbed": 0,
+       "hp": [
+        30,
+        23
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "path": [
+      [
+       9,
+       11
+      ],
+      [
+       9,
+       10
+      ],
+      [
+       8,
+       10
+      ],
+      [
+       8,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       3
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      2,
+      2
+     ],
+     "hits": [
+      {
+       "target": 9,
+       "name": "Unit_Ballista",
+       "damage": 4,
+       "absorbed": 0,
+       "hp": [
+        15,
+        11
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 2
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 3
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      2,
+      4
+     ],
+     "hits": [
+      {
+       "target": 3,
+       "name": "Unit_Demon",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        12,
+        3
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       1,
+       2
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 3,
+     "targetName": "Unit_Demon",
+     "from": [
+      2,
+      4
+     ],
+     "to": [
+      1,
+      4
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      2,
+      4
+     ],
+     "hits": [
+      {
+       "target": 3,
+       "name": "Unit_Demon",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        3,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       2,
+       2
+      ],
+      [
+       1,
+       2
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      4,
+      3
+     ],
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        25,
+        16
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "path": [],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "aim": "Right",
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 6,
+       "absorbed": 0,
+       "hp": [
+        16,
+        10
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "designated"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 3
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 3
+    },
+    {
+     "type": "reinforce",
+     "uid": 13,
+     "unit": "Unit_UndeadCannon_SoloAction",
+     "cell": [
+      10,
+      11
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       3,
+       3
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 1,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      1,
+      3
+     ],
+     "hits": [
+      {
+       "target": 7,
+       "name": "Unit_Akimbo",
+       "damage": 5,
+       "absorbed": 0,
+       "hp": [
+        23,
+        18
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "path": [
+      [
+       8,
+       9
+      ],
+      [
+       7,
+       9
+      ],
+      [
+       6,
+       9
+      ],
+      [
+       6,
+       8
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "path": [
+      [
+       9,
+       12
+      ],
+      [
+       9,
+       11
+      ],
+      [
+       9,
+       10
+      ],
+      [
+       8,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 3
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 4
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       2,
+       6
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 1,
+     "targetName": "Unit_UndeadHeavy",
+     "from": [
+      2,
+      4
+     ],
+     "to": [
+      2,
+      5
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      2,
+      4
+     ],
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 6,
+       "absorbed": 0,
+       "hp": [
+        15,
+        9
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      2,
+      5
+     ],
+     "hits": [
+      {
+       "target": 1,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        9,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "kill_chain",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "hit": {
+      "target": 11,
+      "name": "Unit_Demon_SelfDestruct",
+      "damage": 9,
+      "absorbed": 0,
+      "hp": [
+       20,
+       11
+      ],
+      "killed": false
+     }
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 4
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 4
+    },
+    {
+     "type": "reinforce",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "cell": [
+      12,
+      10
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "path": [
+      [
+       6,
+       8
+      ],
+      [
+       5,
+       8
+      ],
+      [
+       5,
+       7
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "path": [
+      [
+       8,
+       10
+      ],
+      [
+       7,
+       10
+      ],
+      [
+       6,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 13,
+     "unit": "Unit_UndeadCannon_SoloAction",
+     "path": [
+      [
+       10,
+       11
+      ],
+      [
+       9,
+       11
+      ],
+      [
+       9,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 4
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 5
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       3
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      5,
+      6
+     ],
+     "hits": [
+      {
+       "target": 11,
+       "name": "Unit_Demon_SelfDestruct",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        11,
+        3
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "path": [
+      [
+       5,
+       8
+      ]
+     ],
+     "fell": false
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       2,
+       6
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       3,
+       5
+      ],
+      [
+       2,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 5
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 5
+    },
+    {
+     "type": "move",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "path": [
+      [
+       5,
+       8
+      ],
+      [
+       4,
+       8
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 13,
+     "unit": "Unit_UndeadCannon_SoloAction",
+     "path": [
+      [
+       9,
+       10
+      ],
+      [
+       8,
+       10
+      ],
+      [
+       7,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       12,
+       10
+      ],
+      [
+       11,
+       10
+      ],
+      [
+       11,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "path": [
+      [
+       6,
+       10
+      ],
+      [
+       6,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 5
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 6
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      8,
+      9
+     ],
+     "hits": [
+      {
+       "target": 13,
+       "name": "Unit_UndeadCannon_SoloAction",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        12,
+        4
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "fall",
+     "uid": 13,
+     "unit": "Unit_UndeadCannon_SoloAction",
+     "cell": [
+      6,
+      11
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 13,
+     "unit": "Unit_UndeadCannon_SoloAction",
+     "path": [
+      [
+       6,
+       11
+      ]
+     ],
+     "fell": true
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       6
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      4,
+      8
+     ],
+     "hits": [
+      {
+       "target": 11,
+       "name": "Unit_Demon_SelfDestruct",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        3,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "self_destruct",
+     "uid": 11,
+     "unit": "Unit_Demon_SelfDestruct",
+     "hits": []
+    },
+    {
+     "type": "kill_chain",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "hit": {
+      "target": 14,
+      "name": "Unit_UndeadHeavy",
+      "damage": 9,
+      "absorbed": 0,
+      "hp": [
+       35,
+       26
+      ],
+      "killed": false
+     }
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       2,
+       5
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       3,
+       7
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 6
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 6
+    },
+    {
+     "type": "reinforce",
+     "uid": 15,
+     "unit": "Unit_UndeadCannon_StationaryFire",
+     "cell": [
+      9,
+      10
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "path": [
+      [
+       6,
+       9
+      ],
+      [
+       5,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       11,
+       9
+      ],
+      [
+       10,
+       9
+      ],
+      [
+       9,
+       9
+      ],
+      [
+       8,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 6
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 7
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       5,
+       6
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 12,
+     "targetName": "Unit_Demon_AnkleBreaker",
+     "from": [
+      5,
+      9
+     ],
+     "to": [
+      5,
+      7
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      5,
+      9
+     ],
+     "hits": [
+      {
+       "target": 12,
+       "name": "Unit_Demon_AnkleBreaker",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        20,
+        11
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "collapse",
+     "cells": [
+      [
+       5,
+       7
+      ]
+     ]
+    },
+    {
+     "type": "fall",
+     "uid": 12,
+     "unit": "Unit_Demon_AnkleBreaker",
+     "cell": [
+      5,
+      7
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      9,
+      9
+     ],
+     "hits": [
+      {
+       "target": 14,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        31,
+        22
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      },
+      {
+       "target": 15,
+       "name": "Unit_UndeadCannon_StationaryFire",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        12,
+        4
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "knockback",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       7,
+       9
+      ]
+     ],
+     "fell": false
+    },
+    {
+     "type": "knockback",
+     "uid": 15,
+     "unit": "Unit_UndeadCannon_StationaryFire",
+     "path": [
+      [
+       9,
+       11
+      ]
+     ],
+     "fell": false
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       4,
+       8
+      ],
+      [
+       5,
+       8
+      ]
+     ]
+    },
+    {
+     "type": "collapse",
+     "cells": [
+      [
+       4,
+       8
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "aim": "Right",
+     "hits": [
+      {
+       "target": 14,
+       "name": "Unit_UndeadHeavy",
+       "damage": 6,
+       "absorbed": 0,
+       "hp": [
+        22,
+        16
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "designated"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 7
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 7
+    },
+    {
+     "type": "reinforce",
+     "uid": 16,
+     "unit": "Unit_UndeadRider_Disarm",
+     "cell": [
+      12,
+      10
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 15,
+     "unit": "Unit_UndeadCannon_StationaryFire",
+     "path": [
+      [
+       9,
+       11
+      ],
+      [
+       9,
+       10
+      ],
+      [
+       8,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 15,
+     "unit": "Unit_UndeadCannon_StationaryFire",
+     "aim": [
+      5,
+      8
+     ],
+     "hits": [
+      {
+       "target": 8,
+       "name": "Unit_ShotGun",
+       "damage": 15,
+       "absorbed": 0,
+       "hp": [
+        28,
+        13
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "path": [
+      [
+       7,
+       9
+      ],
+      [
+       6,
+       9
+      ],
+      [
+       6,
+       8
+      ],
+      [
+       6,
+       7
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      5,
+      6
+     ],
+     "hits": [
+      {
+       "target": 10,
+       "name": "Unit_Cowboy",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        17,
+        9
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 7
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 8
+    },
+    {
+     "type": "move",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "path": [
+      [
+       5,
+       5
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       6,
+       6
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      10,
+      10
+     ],
+     "hits": [
+      {
+       "target": 6,
+       "name": "Structure_Headquarters",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        30,
+        21
+       ],
+       "killed": false,
+       "kind": "structure",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       5,
+       6
+      ],
+      [
+       5,
+       7
+      ],
+      [
+       5,
+       8
+      ],
+      [
+       5,
+       9
+      ],
+      [
+       5,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 8,
+     "targetName": "Unit_ShotGun",
+     "from": [
+      5,
+      8
+     ],
+     "to": [
+      5,
+      9
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      5,
+      8
+     ],
+     "hits": []
+    },
+    {
+     "type": "move",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "path": [
+      [
+       5,
+       9
+      ],
+      [
+       6,
+       9
+      ],
+      [
+       7,
+       9
+      ],
+      [
+       8,
+       9
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 8,
+     "unit": "Unit_ShotGun",
+     "aim": "Up",
+     "hits": [
+      {
+       "target": 15,
+       "name": "Unit_UndeadCannon_StationaryFire",
+       "damage": 5,
+       "absorbed": 0,
+       "hp": [
+        4,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "designated"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       3,
+       6
+      ],
+      [
+       4,
+       6
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      6,
+      7
+     ],
+     "hits": [
+      {
+       "target": 14,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        21,
+        12
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 8
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 8
+    },
+    {
+     "type": "reinforce",
+     "uid": 17,
+     "unit": "Unit_UndeadCannon_ArmorBreaker",
+     "cell": [
+      9,
+      12
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 16,
+     "unit": "Unit_UndeadRider_Disarm",
+     "path": [
+      [
+       12,
+       10
+      ],
+      [
+       11,
+       10
+      ],
+      [
+       10,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 16,
+     "unit": "Unit_UndeadRider_Disarm",
+     "aim": [
+      8,
+      9
+     ],
+     "hits": [
+      {
+       "target": 8,
+       "name": "Unit_ShotGun",
+       "damage": 15,
+       "absorbed": 0,
+       "hp": [
+        13,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      6,
+      6
+     ],
+     "hits": [
+      {
+       "target": 9,
+       "name": "Unit_Ballista",
+       "damage": 4,
+       "absorbed": 0,
+       "hp": [
+        11,
+        7
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 8
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 9
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      10,
+      10
+     ],
+     "hits": [
+      {
+       "target": 16,
+       "name": "Unit_UndeadRider_Disarm",
+       "damage": 12,
+       "absorbed": 0,
+       "hp": [
+        12,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "primary"
+      },
+      {
+       "target": 6,
+       "name": "Structure_Headquarters",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        21,
+        12
+       ],
+       "killed": false,
+       "kind": "structure",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       5,
+       10
+      ],
+      [
+       6,
+       10
+      ],
+      [
+       7,
+       10
+      ],
+      [
+       8,
+       10
+      ],
+      [
+       9,
+       10
+      ]
+     ]
+    },
+    {
+     "type": "pull",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "target": 17,
+     "targetName": "Unit_UndeadCannon_ArmorBreaker",
+     "from": [
+      9,
+      12
+     ],
+     "to": [
+      9,
+      11
+     ],
+     "fell": false
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      9,
+      12
+     ],
+     "hits": [
+      {
+       "target": 17,
+       "name": "Unit_UndeadCannon_ArmorBreaker",
+       "damage": 11,
+       "absorbed": 0,
+       "hp": [
+        12,
+        1
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "move",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "path": [
+      [
+       4,
+       6
+      ],
+      [
+       4,
+       5
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 7,
+     "unit": "Unit_Akimbo",
+     "aim": [
+      6,
+      7
+     ],
+     "hits": [
+      {
+       "target": 14,
+       "name": "Unit_UndeadHeavy",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        17,
+        8
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "player",
+     "round": 9
+    },
+    {
+     "type": "turn_begin",
+     "side": "enemy",
+     "round": 9
+    },
+    {
+     "type": "reinforce",
+     "uid": 18,
+     "unit": "Unit_Demon_SoloAction",
+     "cell": [
+      12,
+      9
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 14,
+     "unit": "Unit_UndeadHeavy",
+     "aim": [
+      6,
+      6
+     ],
+     "hits": [
+      {
+       "target": 9,
+       "name": "Unit_Ballista",
+       "damage": 4,
+       "absorbed": 0,
+       "hp": [
+        7,
+        3
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 17,
+     "unit": "Unit_UndeadCannon_ArmorBreaker",
+     "aim": [
+      8,
+      9
+     ],
+     "hits": [
+      {
+       "target": 10,
+       "name": "Unit_Cowboy",
+       "damage": 5,
+       "absorbed": 0,
+       "hp": [
+        9,
+        4
+       ],
+       "killed": false,
+       "kind": "unit",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "turn_end",
+     "side": "enemy",
+     "round": 9
+    },
+    {
+     "type": "turn_begin",
+     "side": "player",
+     "round": 10
+    },
+    {
+     "type": "move",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "path": [
+      [
+       9,
+       10
+      ],
+      [
+       9,
+       11
+      ],
+      [
+       10,
+       11
+      ]
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 10,
+     "unit": "Unit_Cowboy",
+     "aim": [
+      11,
+      11
+     ],
+     "hits": [
+      {
+       "target": 6,
+       "name": "Structure_Headquarters",
+       "damage": 10,
+       "absorbed": 0,
+       "hp": [
+        12,
+        2
+       ],
+       "killed": false,
+       "kind": "structure",
+       "role": "primary"
+      }
+     ]
+    },
+    {
+     "type": "attack",
+     "uid": 9,
+     "unit": "Unit_Ballista",
+     "aim": [
+      10,
+      10
+     ],
+     "hits": [
+      {
+       "target": 10,
+       "name": "Unit_Cowboy",
+       "damage": 7,
+       "absorbed": 0,
+       "hp": [
+        4,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "additional"
+      },
+      {
+       "target": 17,
+       "name": "Unit_UndeadCannon_ArmorBreaker",
+       "damage": 8,
+       "absorbed": 0,
+       "hp": [
+        1,
+        0
+       ],
+       "killed": true,
+       "kind": "unit",
+       "role": "additional"
+      },
+      {
+       "target": 6,
+       "name": "Structure_Headquarters",
+       "damage": 9,
+       "absorbed": 0,
+       "hp": [
+        2,
+        0
+       ],
+       "killed": true,
+       "kind": "structure",
+       "role": "additional"
+      }
+     ]
+    },
+    {
+     "type": "outcome",
+     "outcome": "player_win",
+     "round": 10
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+  "args": {
+    "stages": "['Combat_LD_P23', 'Combat_LD_P24', 'Combat_LD_P25']",
+    "seeds": "8",
+    "seed_start": "8",
+    "player": "rush,plan8:r0,plan8",
+    "enemy": "plan4:g1:l1:p0.75:y2:i0.25:v1:b1",
+    "max_rounds": "20",
+    "log": "True",
+    "out": "results\\sim\\20261119T040743Z_vf3_s8_p075y2_g2"
+  },
+  "battles": 72
+}

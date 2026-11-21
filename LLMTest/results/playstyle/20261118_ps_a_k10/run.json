@@ -1,0 +1,12 @@
+{
+ "folders": [
+  "results\\sim\\20261118T101913Z_cv_k10_g1",
+  "results\\sim\\20261118T101913Z_cv_k10_g2",
+  "results\\sim\\20261118T101913Z_cv_k10_g3",
+  "results\\sim\\20261118T101913Z_cv_k10_g4",
+  "results\\sim\\20261118T101913Z_cv_k10_g5"
+ ],
+ "battles": 360,
+ "same": 360,
+ "seconds": 6.3
+}

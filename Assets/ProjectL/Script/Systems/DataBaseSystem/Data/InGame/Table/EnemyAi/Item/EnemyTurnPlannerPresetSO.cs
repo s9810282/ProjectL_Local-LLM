@@ -29,7 +29,13 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
             "   끝난 계획 중 V 상위 '다시 매김' 개를 깊게 다시 봐서 가장 좋은 것을 고릅니다.\n" +
             "· 한 턴 더 보기 켬: 깊게 보기 = 플레이어 턴을 엔진으로 끝까지 둬 본 뒤(다시 적 차례) 판의 V.\n" +
             "   플레이어는 유닛 번호 순으로 그때 가장 이득인 공격 하나를 하고, 이득 나는 공격이 없으면 제자리에 있다고 봅니다.\n" +
-            "· 끔: 깊게 보기 = 위 V에서 위험·기회·걸음 벌점을 엔진으로 둬 본 값으로 바꾼 것.";
+            "· 끔: 깊게 보기 = 위 V에서 위험·기회·걸음 벌점을 엔진으로 둬 본 값으로 바꾼 것.\n\n" +
+            "자연스러움 (셋 다 끄면 위 식 그대로):\n" +
+            "· 행동 규칙: 계획을 고를 때, 아직 이동도 공격도 안 한 우리 유닛마다 공격력 × 최대 HP × 행동 규칙 값을 뺍니다(메인은 × 메인 배수).\n" +
+            "   행동해서 판 점수가 그만큼보다 많이 떨어질 때만 제자리에 있습니다.\n" +
+            "· 걸음 벌점 대상 고정: 걸음 벌점의 거리를 재는 상대에, 이번 계획에서 잡은 상대를 계획을 시작할 때 서 있던 칸으로 남깁니다.\n" +
+            "   가까운 상대를 잡아도 남은 유닛들의 걸음 벌점이 한꺼번에 늘지 않습니다.\n" +
+            "· 기회 모으기: 기회를 위험처럼 대상마다 피해를 더해 그 대상의 남은 HP에서 자릅니다(같은 대상을 여러 유닛 몫으로 겹쳐 세지 않음).";
 
         [InspectorNote(Formula)]
         [Header("성향")]
@@ -109,13 +115,36 @@ namespace ProjectL.Systems.DataBaseSystem.Data.InGame.Table.EnemyAi.Item
         [SerializeField, Min(0)]
         private int rerank = EnemyTurnPlannerStyle.DefaultRerank;
 
+        [Header("자연스러움 (새 프리셋은 모두 끔 · 기본 프리셋 에셋은 켬)")]
+        [Tooltip("행동 규칙 (기본 0 = 끔, 0 이상, 시뮬레이터 :i)\n" +
+            "아직 이동도 공격도 안 한 적 유닛마다 계획 점수에서 '공격력 × 최대 HP × 이 값'을 뺍니다.\n" +
+            "행동해서 판 점수가 그만큼보다 많이 떨어질 때만 제자리에 있습니다.\n" +
+            "· 0: 끔. 판 점수가 같거나 낮아지면 제자리에 서 있을 수 있습니다.\n" +
+            "· 0.25: 연구 시뮬레이터에서 고른 값. 서 있는 유닛이 거의 없어집니다.")]
+        [SerializeField, Min(0f)]
+        private float mustAct = (float)EnemyTurnPlannerStyle.DefaultMustAct;
+
+        [Tooltip("걸음 벌점 대상 고정 (기본 끔, 시뮬레이터 :v1)\n" +
+            "끔: 걸음 벌점은 그 판에서 살아 있는 상대까지의 걸음으로 잽니다. 가까운 상대를 잡으면 남은 상대가 멀어 벌점이 한꺼번에 늘고,\n" +
+            "   그래서 다 죽어가는 유닛을 잡지 않고 옆을 도는 버릇이 생깁니다.\n" +
+            "켬: 이번 계획에서 잡은 상대도 계획을 시작할 때 서 있던 칸으로 남겨 잽니다. 잡아도 벌점이 늘지 않습니다.")]
+        [SerializeField]
+        private bool stepAnchor = EnemyTurnPlannerStyle.DefaultStepAnchor;
+
+        [Tooltip("기회 모으기 (기본 끔, 시뮬레이터 :b1)\n" +
+            "끔: 기회를 적 유닛마다 따로 더합니다. 여러 유닛이 같은 상대를 노리면 그 상대의 남은 HP를 여러 번 세어,\n" +
+            "   지금 쳐서 HP를 깎으면 얻는 것보다 기회가 더 줄어 '지금 치면 손해'로 계산됩니다.\n" +
+            "켬: 위험처럼 상대마다 피해를 더해 그 상대의 남은 HP에서 자릅니다.")]
+        [SerializeField]
+        private bool pooledChance = EnemyTurnPlannerStyle.DefaultPooledChance;
+
         /// <summary>프리셋 값을 Core가 받는 값 묶음으로 바꿉니다. 범위 밖이면 DB 생성에서 멈춥니다.</summary>
         internal EnemyTurnPlannerStyle ToStyle()
         {
             try
             {
                 return new EnemyTurnPlannerStyle(fear, opportunity, mainWeight, goalStepPercent, stepPenalty, reinforcementDiscount,
-                    lookahead, beam, perUnit, moveOnly, rerank);
+                    lookahead, beam, perUnit, moveOnly, rerank, mustAct, stepAnchor, pooledChance);
             }
             catch (ArgumentOutOfRangeException exception)
             {

@@ -8,6 +8,9 @@
   M개를 깊은 평가(다음 턴 추정을 엔진 응수로)로 다시 매겨 고른다. M = 0이면 빠른 V 1등(옛 동작).
 - 빔 다양성(설계 docs/2026-11-13-planner-beam-diversity-design.md D1·D2): 켜면 단계마다 결과 열쇠(우리 유닛이 선 칸만
   뺀 판)가 같은 판은 빠른 V 상위 몇 개만 빔에 남긴다. 끄면(0) 옛 동작.
+- 행동 규칙(설계 docs/2026-11-18-enemy-playstyle-knobs-design.md PK6, `:i`): 켜면 계획을 고를 때, 아직 행동하지 않은
+  유닛마다 그 유닛 전력 × 값만큼 계획 값에서 뺀다. 그래서 유닛은 "행동해서 보는 손해가 그 값보다 클 때"만 제자리에
+  있고, 아니면 그 성격의 판 값(V)이 가장 좋게 보는 행동을 한다. 판 값 자체(V)는 바꾸지 않는다. 끄면(0) 옛 동작.
 - 승리 대상 노림(설계 docs/2026-11-14-planner-goal-pressure-design.md): V의 G1·G2는 evaluate.py가 더한다.
   여기서는 이동만 하는 후보 점수에 G1의 유닛 하나 몫을 더한다(P5). 끄면(0) 옛 동작.
 """
@@ -29,7 +32,8 @@ from .targeting import Side
 def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
     """이름으로 계획 AI를 만든다:
     plan{K}[:f{겁}][:o{기회}][:n{유닛당 후보}][:r{다시 매김}][:d{결과마다 빔 수}][:g{승리 대상 걸음}][:t{함께 닿음}]
-        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}][:l{한 턴 더 보기}][:s{살아 있음}][:a{걸음 포화}][:w{자산 비율}][:k{걸음 로그}]
+        [:m{이동 + 공격 도착 칸 수}][:q{응수 도착 칸 수}][:l{한 턴 더 보기}][:s{살아 있음}][:a{걸음 포화}][:w{자산 비율}][:k{걸음 로그}][:p{자기 보존}][:i{행동 규칙}]
+        [:v{걸음 벌점 대상 고정 0|1}][:b{기회 모으기 0|1}][:y{다친 유닛 살리기}]
     (예: plan4 = 다시 매김 4, plan4:r0 = 다시 매김 끔(옛 동작), plan4:d1 = 빔 다양성 켬, plan4:f0.8:o0.3:r8,
     plan4:g1:t0.5 = 승리 대상 노림 켬 — 설계 docs/2026-11-14-planner-goal-pressure-design.md,
     plan4:g1:m3:q2 = 이동 + 공격 도착 칸 거름 — 설계 docs/2026-11-18-planner-candidate-pruning-design.md,
@@ -40,13 +44,15 @@ def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
         key = {"f": "fear", "o": "opportunity", "n": "per_unit", "r": "rerank", "d": "distinct",
                "g": "goal_step", "t": "goal_together", "m": "move_attack_cells",
                "q": "reply_move_attack_cells", "l": "lookahead", "s": "survival", "a": "approach",
-               "w": "ratio", "k": "log_approach"}.get(part[:1])
+               "w": "ratio", "k": "log_approach", "p": "preserve", "i": "must_act",
+               "v": "step_anchor", "b": "pooled_chance", "y": "preserve_hurt"}.get(part[:1])
         if key is None:
             raise ValueError(f"모르는 계획 AI 설정: {part} "
                              "(f겁, o기회, n유닛당 후보, r다시 매김, d빔 다양성, g승리 대상 걸음, t함께 닿음, "
-                             "m이동 + 공격 도착 칸, q응수 도착 칸, l한 턴 더 보기, s살아 있음, a걸음 포화, w자산 비율, k걸음 로그)")
+                             "m이동 + 공격 도착 칸, q응수 도착 칸, l한 턴 더 보기, s살아 있음, a걸음 포화, w자산 비율, k걸음 로그, p자기 보존, i행동 규칙, "
+                             "v걸음 벌점 대상 고정, b기회 모으기, y다친 유닛 살리기)")
         integer = key in ("per_unit", "rerank", "distinct", "move_attack_cells", "reply_move_attack_cells", "lookahead",
-                          "approach", "log_approach")
+                          "approach", "log_approach", "step_anchor", "pooled_chance")
         values[key] = int(part[1:]) if integer else float(part[1:])
     if values.get("rerank", 0) < 0:
         raise ValueError(f"다시 매김 수는 0 이상이어야 합니다: {name}")
@@ -56,14 +62,17 @@ def planner_from_name(side: Side, name: str) -> "PlannerPolicy":
         raise ValueError(f"승리 대상 노림 값은 0 이상이어야 합니다: {name}")
     if values.get("move_attack_cells", 0) < 0 or values.get("reply_move_attack_cells", 0) < 0:
         raise ValueError(f"도착 칸 수는 0 이상이어야 합니다: {name}")
-    if any(values.get(k, 0) < 0 for k in ("survival", "approach", "ratio", "log_approach")):
-        raise ValueError(f"곡선 항목 값은 0 이상이어야 합니다: {name}")
+    if any(values.get(k, 0) < 0 for k in ("survival", "approach", "ratio", "log_approach", "preserve", "must_act",
+                                          "preserve_hurt")):
+        raise ValueError(f"곡선·성격 항목 값은 0 이상이어야 합니다: {name}")
     if values.get("ratio", 0) > 1:
         raise ValueError(f"자산 비율 몫은 1 이하여야 합니다: {name}")
     if values.get("approach", 0) > 0 and values.get("log_approach", 0) > 0:
         raise ValueError(f"걸음 포화(a)와 걸음 로그(k)는 함께 쓸 수 없습니다: {name}")
     if values.get("lookahead", 0) not in (0, 1):
         raise ValueError(f"한 턴 더 보기는 0 또는 1이어야 합니다: {name}")
+    if values.get("step_anchor", 0) not in (0, 1) or values.get("pooled_chance", 0) not in (0, 1):
+        raise ValueError(f"판 값 고치기(v·b)는 0 또는 1이어야 합니다: {name}")
     config = PlannerConfig(**values)
     prefix = "enemy" if side is Side.ENEMY else "player"
     return PlannerPolicy(side, config, name=f"{prefix}-{name}")
@@ -150,7 +159,7 @@ class PlannerPolicy(Policy):
         seed = prediction_seed(state, self.side)
         root = state.clone()
         root.rng = random.Random(seed)
-        evaluator = Evaluator(root, config)
+        evaluator = Evaluator(root, config, self.side)
         movable = frozenset(u.uid for u in root.living(self.side) if u.use in (ActionUse.AVAILABLE, ActionUse.MOVED))
         start = _Node(root, movable, [], evaluator.value(root, self.side))
         best = start
@@ -183,7 +192,8 @@ class PlannerPolicy(Policy):
                 if key not in seen:
                     seen.add(key)
                     pool.append(node)
-            if frontier and frontier[0].value > best.value:
+            # 깊이가 같은 판은 남은 유닛 수가 같아 행동 규칙 벌점도 거의 같다. 깊이끼리 견줄 때 벌점을 뺀 값으로 본다.
+            if frontier and self._plan_value(frontier[0]) > self._plan_value(best):
                 best = frontier[0]
             if frontier and frontier[0].state.outcome is not None:
                 break
@@ -203,6 +213,25 @@ class PlannerPolicy(Policy):
             plan.append((action, before, after_signature))
             before = after_signature
         return plan
+
+    def idle_cost(self, node: _Node) -> float:
+        """행동 규칙(PK6): 이 판에서 아직 이동도 공격도 하지 않은 우리 유닛마다 유닛 전력(공격력 × 최대HP, 메인은 × 메인 배수)
+        × must_act. 이번 턴에 이미 이동한 유닛(MOVED)과 죽은 유닛은 세지 않는다. 끄면 0."""
+        rate = self.config.must_act
+        if rate <= 0:
+            return 0.0
+        total = 0.0
+        for uid in node.remaining:
+            unit = node.state.units.get(uid)
+            if unit is None or not unit.alive or unit.use is not ActionUse.AVAILABLE:
+                continue
+            power = unit.attack * unit.max_hp
+            total += rate * (power * self.config.main_weight if unit.is_main else power)
+        return total
+
+    def _plan_value(self, node: _Node) -> float:
+        """계획을 고를 때의 값: 빠른 판 값 − 행동 규칙 벌점."""
+        return node.value - self.idle_cost(node)
 
     def _keep(self, ranked: list[_Node]) -> list[_Node]:
         """빠른 V 순으로 줄 선 자식에서 빔에 남길 K개. 빔 다양성을 켜면 결과 열쇠마다 최대 distinct개
@@ -225,13 +254,16 @@ class PlannerPolicy(Policy):
         """빠른 V 상위 M개를 깊은 평가로 다시 매겨 (고른 판, 그 깊은 평가 내역, 빠른 V 1등과 다른가).
         후보가 하나뿐이면 None.
         같으면 빠른 V가 큰 것, 그것도 같으면 먼저 모은 것(정렬이 안정적이라 앞에 있는 것)."""
-        top = sorted(pool, key=lambda n: -n.value)[:self.config.rerank_count]
+        top = sorted(pool, key=lambda n: -self._plan_value(n))[:self.config.rerank_count]
         if len(top) < 2:
             return None
         started = time.perf_counter()
         chosen, chosen_breakdown = None, None
         for node in top:
             breakdown = evaluator.deep_breakdown(node.state, self.side, seed)
+            idle = self.idle_cost(node)
+            if idle:     # 행동 규칙: 깊은 평가 값에서도 같은 벌점을 뺀다(끄면 옛 내역 그대로)
+                breakdown = dict(breakdown, idleCost=idle, total=breakdown["total"] - idle)
             if chosen is None or breakdown["total"] > chosen_breakdown["total"]:
                 chosen, chosen_breakdown = node, breakdown
         self.stats.reranks += 1
@@ -277,8 +309,8 @@ class PlannerPolicy(Policy):
         targets = evaluator._targets(state, self.side)
         _, _, gain = evaluator._best_strike(state, moved, targets, own=True)
         loss = evaluator.danger_loss(state, unit, cell)
-        if gain == 0:   # 칠 대상이 없으면 가까워지는 쪽
-            field = evaluator._distance_field(state, evaluator._targets(state, self.side))
+        if gain == 0:   # 칠 대상이 없으면 가까워지는 쪽(거리 대상은 판 값과 같은 것: VF1을 켜면 잡은 대상의 칸도)
+            field = evaluator._distance_field(state, evaluator.step_targets(state, self.side))
             gain = -self.config.step_penalty * self.config.step_units(field.get(cell, 99))
         score = self.config.opportunity * gain - self.config.fear * loss
         if self.config.goal_step > 0:

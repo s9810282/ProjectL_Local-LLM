@@ -1,0 +1,337 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c4af9bd96934e3cae5ae59f1998d613, type: 3}
+  m_Name: Combat_Research_AiCheck
+  m_EditorClassIdentifier: 
+  timelineSeed: 1
+  fieldDefinition: {fileID: 11400000, guid: b97591644ec8c4dfab1aef299420cb09, type: 2}
+  unitRoster: {fileID: 11400000, guid: 8d7a8a554bd442a1a1e4aee5a492bb78, type: 2}
+  economy: {fileID: 11400000, guid: fcf75043588945418c434ee40d9ece82, type: 2}
+  objectiveKind: 1
+  initialEnemyPlacements:
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 11
+      y: 5
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 13
+      y: 5
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 1
+      y: 12
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 2
+      y: 12
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 3
+      y: 12
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 1
+      y: 11
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 2
+      y: 11
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 12
+      y: 13
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  - unitDefinition: {fileID: 11400000, guid: 8691f0aecbdb41d79c20b0675842d0d8, type: 2}
+    anchor:
+      x: 13
+      y: 13
+    rotation: 0
+    isVictoryTarget: 0
+    startingItem: {fileID: 0}
+  enemyLoadout: {fileID: 0}
+  enemyLevel: 1
+  nexusReinforcements:
+    enabled: 0
+    spawnCountPerTurn: 1
+    rangePadding: 2
+    fieldEnemyLimit: 4
+    pool:
+    - unitDefinition: {fileID: 11400000, guid: 3ffd5477df6549f4dab7837602762b3b, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 04e21ec1d311c4b40a8366745a3f45ee, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: aec8ab9029280fa44a4419d032c871e7, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 979cda7d873f49fe8c96a6972ea60112, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: acc0a2ae127be0949a209796ab5373d6, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: e9ad3c469ac878241b685603e8b625d2, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 18c4d4a195e532c498fdaa5c553fba3e, type: 2}
+      count: 1
+    - unitDefinition: {fileID: 11400000, guid: 01f24bba909dcf645add3fd28fd205f6, type: 2}
+      count: 1
+  structureCatalog: []
+  initialEnemyStructurePlacements: []
+  playerDeploymentCells:
+  - x: 0
+    y: 0
+  - x: 1
+    y: 0
+  - x: 2
+    y: 0
+  - x: 3
+    y: 0
+  - x: 11
+    y: 0
+  - x: 12
+    y: 0
+  - x: 13
+    y: 0
+  - x: 0
+    y: 1
+  - x: 1
+    y: 1
+  - x: 2
+    y: 1
+  - x: 3
+    y: 1
+  - x: 11
+    y: 1
+  - x: 12
+    y: 1
+  - x: 13
+    y: 1
+  - x: 0
+    y: 2
+  - x: 1
+    y: 2
+  - x: 2
+    y: 2
+  - x: 3
+    y: 2
+  - x: 11
+    y: 2
+  - x: 12
+    y: 2
+  - x: 13
+    y: 2
+  mainCharacterAnchor:
+    x: 0
+    y: 0
+  mainCharacterRotation: 0
+  headquarters: {fileID: 11400000, guid: 6719927199564b8f8f0d29d1fb5e25f4, type: 2}
+  enemyHeadquartersAnchor:
+    x: 6
+    y: 13
+  enemyHeadquartersRotation: 0
+  environment:
+    terrainPlacements:
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 1
+      cell:
+        x: 7
+        y: 0
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 2
+      cell:
+        x: 7
+        y: 1
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 3
+      cell:
+        x: 7
+        y: 2
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 4
+      cell:
+        x: 7
+        y: 3
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 5
+      cell:
+        x: 7
+        y: 4
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 6
+      cell:
+        x: 7
+        y: 5
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 7
+      cell:
+        x: 7
+        y: 6
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 8
+      cell:
+        x: 10
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 9
+      cell:
+        x: 11
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 10
+      cell:
+        x: 12
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 11
+      cell:
+        x: 13
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 12
+      cell:
+        x: 14
+        y: 11
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 13
+      cell:
+        x: 10
+        y: 12
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 14
+      cell:
+        x: 10
+        y: 13
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    - definition: {fileID: 11400000, guid: 53257e8874554d73a75d8ca177f14c4c, type: 2}
+      sourceId: 15
+      cell:
+        x: 10
+        y: 14
+      knownTo: 0100000002000000
+      randomizeInitialPosition: 0
+      tornadoInitialHorizontalSign: 0
+    obstaclePlacements: []
+    objectPlacements: []
+  cornerCutTicks: 128
+  railwayEnabled: 0
+  railway:
+    railCells: []
+    firstActivationAfterControllerTurns: 3
+    repeatIntervalControllerTurns: 3
+  rockfall:
+    enabled: 0
+    cooldownControllerTurns: 2
+    warningControllerTurns: 2
+    minimumRockCount: 3
+    maximumRockCount: 5
+    maximumHealthLossPercent: 20
+    bindAffectedSideTurns: 1
+    footprintOffsets:
+    - x: 0
+      y: 0
+  haboob:
+    enabled: 0
+    relocationIntervalControllerTurns: 2
+    warningLeadControllerTurns: 1
+    footprintOffsets:
+    - x: 1
+      y: 0
+    - x: 2
+      y: 0
+    - x: 0
+      y: 1
+    - x: 1
+      y: 1
+    - x: 2
+      y: 1
+    - x: 3
+      y: 1
+    - x: 0
+      y: 2
+    - x: 1
+      y: 2
+    - x: 2
+      y: 2
+    - x: 3
+      y: 2
+    - x: 1
+      y: 3
+    - x: 2
+      y: 3
+    fixedInitialAnchor: 0
+    initialAnchor:
+      x: 0
+      y: 0
+  initialWallCells: []
+  staticTerrainPlacements: []

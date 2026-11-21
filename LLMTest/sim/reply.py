@@ -185,7 +185,7 @@ def _step_penalty(board: BattleState, side: Side, idle: list[int], evaluator: Ev
     targets = evaluator._targets(board, side)
     if not idle or not targets:
         return 0.0
-    field = evaluator._distance_field(board, targets)
+    field = evaluator._distance_field(board, evaluator.step_targets(board, side))     # VF1을 켜면 잡은 대상의 칸도
     penalty = 0.0
     for uid in idle:
         unit = board.units[uid]

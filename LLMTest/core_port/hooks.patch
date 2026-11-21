@@ -76,10 +76,18 @@ index b34684f2..b017925e 100644
              return data;
          }
 diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
-index bbaed00d..117dff83 100644
+index bbaed00d..5ff41c6d 100644
 --- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
 +++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CombatSystem/CombatAdvanceService.cs
-@@ -45,6 +45,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+@@ -1,6 +1,7 @@
+ using System;
+ using System.Collections.Generic;
+ using System.Diagnostics;
++using System.Threading.Tasks;
+ using ProjectL.Framework.Composition;
+ using ProjectL.Framework.SystemBase;
+ using ProjectL.Systems.DataBaseSystem;
+@@ -45,6 +46,19 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
          private bool _immediateRequired;
          private bool _hasSpentFrame;
          private int _lastSpentFrame;
@@ -89,15 +97,32 @@ index bbaed00d..117dff83 100644
 +        // 연구 저장소 전용 진단(설계 §13): 계획 AI를 기다리는 동안의 프레임 시간(ms)과 그 프레임에 GC 수집이 있었는지.
 +        private readonly List<(float milliseconds, bool collected)> _waitFrames = new List<(float, bool)>();
 +        private int _lastCollectionCount = -1;
++        // 연구 저장소 전용 실험(병렬 설계 §28): 정한 행동의 정산을 메인 스레드 밖에서 미리 해 두고, 실행 때는 게시만 한다.
++        // 실행 인자 -researchPresettle 이 있을 때만 켠다(에디터·기본 실행은 지금 동작 그대로).
++        private static readonly bool PresettleEnabled = Array.IndexOf(Environment.GetCommandLineArgs(), "-researchPresettle") >= 0;
++        private CombatCommandInput _sessionInput;
++        private EnemyDecision _presettleDecision;
++        private Task<CombatCommandTransition> _presettle;
++        private int _presettleUsed, _presettleInline;
  
          internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
          internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
-@@ -124,19 +130,26 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+@@ -88,7 +102,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+             if (!IsEnemyController) return AdvancePreparationState.NotRequired;
+             if (!current) return AdvancePreparationState.Required;
+             if (_immediateRequired) return AdvancePreparationState.NotRequired;
+-            return _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
++            return DecisionReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+         }
+ 
+         public AdvancePreparationState PrepareAdvanceSlice()
+@@ -124,21 +138,30 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                      }
                      _immediateRequired = !CombatCommandCalculator.RequiresEnemyDecision(input);
                      if (!_immediateRequired)
 +                    {
                          _session = new EnemyDecisionSession(input, _movementRules, _settings, SideCacheFor(input));
++                        _sessionInput = input;
 +                        _sessionStartTimestamp = start;
 +                        _planReported = false;
 +                    }
@@ -116,20 +141,120 @@ index bbaed00d..117dff83 100644
                      RecordAtom(atomStart, end);
                  }
 +                if (!_immediateRequired) ReportTurnPlan();
++                if (!_immediateRequired) BeginPresettle();
 +                RecordWaitFrame(!_immediateRequired && _session != null && _session.IsWaiting);
                  return _immediateRequired ? AdvancePreparationState.NotRequired :
-                     _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+-                    _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
++                    DecisionReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
              }
-@@ -217,6 +230,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+             catch
+             {
+@@ -166,21 +189,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+             }
+             try
+             {
+-                InputCaptureCount++;
+-                var input = _assembler.AssembleDecision(CreateRequest(), out var fresh);
+-                if (!CanAdvance)
+-                {
+-                    CancelPreparation();
+-                    return PreparedAdvanceResult.Cancelled;
+-                }
+-                if (input == null || !SourceIsCurrent || !_assembler.IsCurrent(fresh))
++                // 미리 정산해 둔 결과가 있으면(§28) 다시 조립·정산하지 않는다. 그 결과는 준비 때 고정한 입력으로 낸 것이고,
++                // 그 입력의 원본이 지금도 그대로인지(SourceIsCurrent)는 위와 아래에서 확인한다.
++                var fresh = _source;
++                var transition = TakePresettled();
++                if (transition == null)
+                 {
+-                    CancelPreparation();
+-                    return PreparedAdvanceResult.Stale;
++                    InputCaptureCount++;
++                    var input = _assembler.AssembleDecision(CreateRequest(), out fresh);
++                    if (!CanAdvance)
++                    {
++                        CancelPreparation();
++                        return PreparedAdvanceResult.Cancelled;
++                    }
++                    if (input == null || !SourceIsCurrent || !_assembler.IsCurrent(fresh))
++                    {
++                        CancelPreparation();
++                        return PreparedAdvanceResult.Stale;
++                    }
++                    using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
++                        transition = CombatCommandCalculator.AdvancePrepared(input, _session.Decision, _movementRules);
+                 }
+-                CombatCommandTransition transition;
+-                using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
+-                    transition = CombatCommandCalculator.AdvancePrepared(input, _session.Decision, _movementRules);
+                 if (!CanAdvance)
+                 {
+                     CancelPreparation();
+@@ -193,6 +222,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+                 }
+                 if (!transition.Accepted)
+                 {
++                    DropPresettle();
+                     _session.RejectSelected();
+                     return PreparedAdvanceResult.RetryPreparation;
+                 }
+@@ -216,7 +246,55 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+             _source = null;
              _sourceRun = default;
              _immediateRequired = false;
++            _sessionInput = null;
++            DropPresettle();
              session?.Dispose();
 +            _waitFrames.Clear();
 +            _lastCollectionCount = -1;
++        }
++
++        /// <summary>결정이 나왔고, 미리 정산을 켰으면 그 정산도 끝났다. 정산이 끝날 때까지는 "준비 중"으로 답해 메인 스레드가 기다리지 않게 한다.</summary>
++        private bool DecisionReady => _session != null && _session.IsReady &&
++            (!PresettleEnabled || _presettle != null && ReferenceEquals(_presettleDecision, _session.Decision) && _presettle.IsCompleted);
++
++        /// <summary>
++        /// 연구 저장소 전용 실험(§28): 결정이 나오면 그 행동의 정산을 일 스레드에 맡긴다. 입력은 준비 때 고정한 불변 입력이고
++        /// 정산은 그 입력과 결정만 읽으므로(계획 AI가 스레드에서 도는 정산과 같은 계산기) 메인 스레드와 함께 돌아도 된다.
++        /// </summary>
++        private void BeginPresettle()
++        {
++            if (!PresettleEnabled || _session == null || !_session.IsReady) return;
++            var decision = _session.Decision;
++            if (_presettle != null && ReferenceEquals(_presettleDecision, decision)) return;
++            DropPresettle();
++            var input = _sessionInput;
++            var rules = _movementRules;
++            _presettleDecision = decision;
++            _presettle = Task.Run(() => CombatCommandCalculator.AdvancePrepared(input, decision, rules));
++        }
++
++        /// <summary>지금 결정으로 미리 정산해 둔 결과다. 없으면 null이다. 아직 덜 끝났으면 끝날 때까지 기다리고, 정산이 던진 예외는 여기서 다시 던진다.</summary>
++        private CombatCommandTransition TakePresettled()
++        {
++            if (_presettle == null || !ReferenceEquals(_presettleDecision, _session.Decision))
++            {
++                if (PresettleEnabled) _presettleInline++;
++                return null;
++            }
++            var task = _presettle;
++            _presettle = null;
++            _presettleDecision = null;
++            _presettleUsed++;
++            return task.GetAwaiter().GetResult();
++        }
++
++        /// <summary>쓰지 않게 된 미리 정산을 버린다. 도는 중이면 끝까지 돌게 두되(읽기만 한다), 그 예외는 받아 버린다.</summary>
++        private void DropPresettle()
++        {
++            var task = _presettle;
++            _presettle = null;
++            _presettleDecision = null;
++            task?.ContinueWith(static finished => { _ = finished.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
          }
  
          public void Tick(float deltatime)
-@@ -269,6 +284,64 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
+@@ -269,6 +347,66 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
  
          private bool BudgetSpent(long start, long end) => (double)(end - start) * 1000 >= _timestampFrequency;
  
@@ -140,7 +265,8 @@ index bbaed00d..117dff83 100644
 +        private static string StyleText(EnemyTurnPlannerStyle style) =>
 +            $"성향 겁 {style.Fear:0.##} 기회 {style.Opportunity:0.##} 메인 배수 {style.MainWeight:0.##} 메인 거리 {style.GoalStepPercent:0.##}% " +
 +            $"걸음 {style.StepPenalty:0.##} 증원 {style.ReinforcementDiscount:0.##} 한 턴 더 {(style.Lookahead ? "켬" : "끔")} " +
-+            $"빔 {style.Beam} 후보 {style.PerUnit}/{style.MoveOnly} 다시 매김 {style.Rerank}";
++            $"빔 {style.Beam} 후보 {style.PerUnit}/{style.MoveOnly} 다시 매김 {style.Rerank} " +
++            $"행동 규칙 {style.MustAct:0.##} 걸음 대상 고정 {(style.StepAnchor ? "켬" : "끔")} 기회 모으기 {(style.PooledChance ? "켬" : "끔")}";
 +
 +        private void ReportTurnPlan()
 +        {
@@ -150,7 +276,8 @@ index bbaed00d..117dff83 100644
 +            if (diagnostics.CacheHits > 0 && diagnostics.CapHits == 0) return;
 +            double seconds = (double)(_readTimestamp() - _sessionStartTimestamp) / _timestampFrequency;
 +            global::UnityEngine.Debug.Log($"[턴 계획 AI] 준비 시작부터 결정까지 {seconds:F1}초, 정산 {diagnostics.PreviewCalls}번, 판 매김 {diagnostics.ExpandedNodes}번" +
-+                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : "") + " | " + StyleText(_settings.PlannerStyle));
++                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : "") +
++                (PresettleEnabled ? $", 미리 정산 씀 {_presettleUsed}번·못 씀 {_presettleInline}번" : "") + " | " + StyleText(_settings.PlannerStyle));
 +            ReportWaitFrames();
 +        }
 +
@@ -255,10 +382,10 @@ index 7af342f2..1e99dd7e 100644
  
          /// <summary>놓친 이유별 횟수다(구조:처음 다른 항목, 측정용). 보관한 항목이 없으면 "empty"다.</summary>
 diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
-index 5ae529b5..b92f4bc9 100644
+index 5ae529b5..c535a7f8 100644
 --- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
 +++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Contracts/Combat/EnemyAi/EnemyDecisionSettings.cs
-@@ -2,6 +2,87 @@ using System;
+@@ -2,6 +2,111 @@ using System;
  
  namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi
  {
@@ -276,6 +403,7 @@ index 5ae529b5..b92f4bc9 100644
 +    /// 턴 계획 AI의 성향·계산 크기 값이다(연구 저장소 전용 연결, LLMTest/docs/2026-11-18-core-turn-planner-port-design.md §11).
 +    /// 조정 에셋의 프리셋 SO(EnemyTurnPlannerPresetSO)가 만들고, 비어 있으면 <see cref="Default"/>(연구 시뮬레이터 plan4:g1:l1과 같은 값)다.
 +    /// 판 점수 식과 값마다의 뜻은 프리셋 SO의 설명에 있다.
++    /// 행동 규칙·걸음 벌점 대상 고정·기회 모으기는 기본이 끔이다(LLMTest/docs/2026-11-19-research-planner-value-fix-port-design.md).
 +    /// </summary>
 +    public sealed class EnemyTurnPlannerStyle
 +    {
@@ -290,6 +418,9 @@ index 5ae529b5..b92f4bc9 100644
 +        public const int DefaultPerUnit = 6;
 +        public const int DefaultMoveOnly = 3;
 +        public const int DefaultRerank = 4;
++        public const double DefaultMustAct = 0.0;
++        public const bool DefaultStepAnchor = false;
++        public const bool DefaultPooledChance = false;
 +
 +        public static EnemyTurnPlannerStyle Default { get; } = new EnemyTurnPlannerStyle();
 +
@@ -315,12 +446,28 @@ index 5ae529b5..b92f4bc9 100644
 +        public int MoveOnly { get; }
 +        /// <summary>끝난 계획 중 빠른 V 상위 몇 개를 깊은 V로 다시 매기나. 2보다 작으면 다시 매기지 않는다.</summary>
 +        public int Rerank { get; }
++        /// <summary>
++        /// 행동 규칙(시뮬레이터 :i): 아직 이동도 공격도 하지 않은 우리 유닛마다 계획 값에서 빼는 양이다(유닛 전력 = 공격력 × 최대 HP의 배수).
++        /// 행동해서 판 값이 이보다 많이 떨어질 때만 제자리에 있는다. 0이면 끔.
++        /// </summary>
++        public double MustAct { get; }
++        /// <summary>
++        /// 걸음 벌점 대상 고정(시뮬레이터 :v): 걸음 벌점의 거리를 재는 상대에, 계획을 시작할 때 살아 있었지만 그 판에서는 쓰러진 상대를
++        /// 계획 시작 판의 칸으로 남긴다. 가까운 상대를 잡아도 남은 유닛들의 걸음 벌점이 한꺼번에 늘지 않는다. false면 그 판에서 살아 있는 상대만 본다.
++        /// </summary>
++        public bool StepAnchor { get; }
++        /// <summary>
++        /// 기회 모으기(시뮬레이터 :b): 다음 턴 기회를 위험처럼 대상마다 피해를 모아 그 대상의 남은 HP까지만 센다.
++        /// false면 유닛마다 따로 더한다(같은 대상을 노리는 유닛 수만큼 겹쳐 센다).
++        /// </summary>
++        public bool PooledChance { get; }
 +
 +        public EnemyTurnPlannerStyle(double fear = DefaultFear, double opportunity = DefaultOpportunity,
 +            double mainWeight = DefaultMainWeight, double goalStepPercent = DefaultGoalStepPercent,
 +            double stepPenalty = DefaultStepPenalty, double reinforcementDiscount = DefaultReinforcementDiscount,
 +            bool lookahead = DefaultLookahead, int beam = DefaultBeam, int perUnit = DefaultPerUnit,
-+            int moveOnly = DefaultMoveOnly, int rerank = DefaultRerank)
++            int moveOnly = DefaultMoveOnly, int rerank = DefaultRerank, double mustAct = DefaultMustAct,
++            bool stepAnchor = DefaultStepAnchor, bool pooledChance = DefaultPooledChance)
 +        {
 +            Fear = NonNegative(fear, nameof(fear));
 +            Opportunity = NonNegative(opportunity, nameof(opportunity));
@@ -333,11 +480,15 @@ index 5ae529b5..b92f4bc9 100644
 +            PerUnit = perUnit >= 1 ? perUnit : throw new ArgumentOutOfRangeException(nameof(perUnit));
 +            MoveOnly = moveOnly >= 0 ? moveOnly : throw new ArgumentOutOfRangeException(nameof(moveOnly));
 +            Rerank = rerank >= 0 ? rerank : throw new ArgumentOutOfRangeException(nameof(rerank));
++            MustAct = NonNegative(mustAct, nameof(mustAct));
++            StepAnchor = stepAnchor;
++            PooledChance = pooledChance;
 +        }
 +
 +        /// <summary>같은 값에 깊은 V 종류만 바꾼 값(측정 도구가 두 종류를 같은 실행에서 비교할 때).</summary>
 +        public EnemyTurnPlannerStyle WithLookahead(bool lookahead) => new EnemyTurnPlannerStyle(Fear, Opportunity, MainWeight,
-+            GoalStepPercent, StepPenalty, ReinforcementDiscount, lookahead, Beam, PerUnit, MoveOnly, Rerank);
++            GoalStepPercent, StepPenalty, ReinforcementDiscount, lookahead, Beam, PerUnit, MoveOnly, Rerank,
++            MustAct, StepAnchor, PooledChance);
 +
 +        private static double NonNegative(double value, string parameter) =>
 +            value >= 0 && !double.IsInfinity(value) ? value : throw new ArgumentOutOfRangeException(parameter);
@@ -346,7 +497,7 @@ index 5ae529b5..b92f4bc9 100644
      /// <summary>결정을 시작할 때 고정하는 선택적 평가 한도와 기획 조정값이다.</summary>
      public sealed class EnemyDecisionSettings
      {
-@@ -26,12 +107,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
+@@ -26,12 +131,20 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.C
          public int DeathTradeThresholdPercent { get; }
          public int ThreatAversionPercent { get; }
          public int NextTurnApproachPercent { get; }
@@ -368,6 +519,23 @@ index 5ae529b5..b92f4bc9 100644
              DeathTradeThresholdPercent = Percent(deathTradeThresholdPercent, nameof(deathTradeThresholdPercent));
              ThreatAversionPercent = Percent(threatAversionPercent, nameof(threatAversionPercent));
              NextTurnApproachPercent = Percent(nextTurnApproachPercent, nameof(nextTurnApproachPercent));
+diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs
+index 1cf7ded7..306fa559 100644
+--- a/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs
++++ b/Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/ViewSystem/Boot/GameBootstrap.cs
+@@ -180,6 +180,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
+                 bool autoStartTutorial = true;
+ #if UNITY_EDITOR
+                 autoStartTutorial = !GameBootstrapEditorOverrides.Enabled || GameBootstrapEditorOverrides.UseTutorial;
++#endif
++#if DEVELOPMENT_BUILD && !UNITY_EDITOR
++                // 연구 저장소 전용(병렬 설계 §26): 개발 빌드를 실행 인자 -researchNoTutorial로 띄우면 튜토리얼을 자동 시작하지 않는다.
++                // 에디터의 Play From Boot 설정(Use Tutorial 끔)과 같은 뜻이다. 빌드 자동 재생이 전투로 바로 들어가는 데 쓴다.
++                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-researchNoTutorial") >= 0)
++                    autoStartTutorial = false;
+ #endif
+                 _runtime = FrameworkRuntimeFactory.Create(CreateDevBattleSource(), _faults, autoStartTutorial);
+                 _runtime.BindScene();
 diff --git a/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs b/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs
 index cc8a36d4..10a32440 100644
 --- a/Assets/ProjectL/Script/Systems/RuntimeSystem/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs
@@ -390,10 +558,10 @@ index cc8a36d4..10a32440 100644
              if (facts.Phase == CombatFlowPhase.Automatic)
 diff --git a/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs
 new file mode 100644
-index 00000000..e42e7fcb
+index 00000000..cea073e4
 --- /dev/null
 +++ b/Assets/ProjectL/Script/Systems/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,215 @@
 +using System;
 +using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
 +using UnityEngine;
@@ -425,7 +593,13 @@ index 00000000..e42e7fcb
 +            "   끝난 계획 중 V 상위 '다시 매김' 개를 깊게 다시 봐서 가장 좋은 것을 고릅니다.\n" +
 +            "· 한 턴 더 보기 켬: 깊게 보기 = 플레이어 턴을 엔진으로 끝까지 둬 본 뒤(다시 적 차례) 판의 V.\n" +
 +            "   플레이어는 유닛 번호 순으로 그때 가장 이득인 공격 하나를 하고, 이득 나는 공격이 없으면 제자리에 있다고 봅니다.\n" +
-+            "· 끔: 깊게 보기 = 위 V에서 위험·기회·걸음 벌점을 엔진으로 둬 본 값으로 바꾼 것.";
++            "· 끔: 깊게 보기 = 위 V에서 위험·기회·걸음 벌점을 엔진으로 둬 본 값으로 바꾼 것.\n\n" +
++            "자연스러움 (셋 다 끄면 위 식 그대로):\n" +
++            "· 행동 규칙: 계획을 고를 때, 아직 이동도 공격도 안 한 우리 유닛마다 공격력 × 최대 HP × 행동 규칙 값을 뺍니다(메인은 × 메인 배수).\n" +
++            "   행동해서 판 점수가 그만큼보다 많이 떨어질 때만 제자리에 있습니다.\n" +
++            "· 걸음 벌점 대상 고정: 걸음 벌점의 거리를 재는 상대에, 이번 계획에서 잡은 상대를 계획을 시작할 때 서 있던 칸으로 남깁니다.\n" +
++            "   가까운 상대를 잡아도 남은 유닛들의 걸음 벌점이 한꺼번에 늘지 않습니다.\n" +
++            "· 기회 모으기: 기회를 위험처럼 대상마다 피해를 더해 그 대상의 남은 HP에서 자릅니다(같은 대상을 여러 유닛 몫으로 겹쳐 세지 않음).";
 +
 +        [InspectorNote(Formula)]
 +        [Header("성향")]
@@ -505,13 +679,36 @@ index 00000000..e42e7fcb
 +        [SerializeField, Min(0)]
 +        private int rerank = EnemyTurnPlannerStyle.DefaultRerank;
 +
++        [Header("자연스러움 (새 프리셋은 모두 끔 · 기본 프리셋 에셋은 켬)")]
++        [Tooltip("행동 규칙 (기본 0 = 끔, 0 이상, 시뮬레이터 :i)\n" +
++            "아직 이동도 공격도 안 한 적 유닛마다 계획 점수에서 '공격력 × 최대 HP × 이 값'을 뺍니다.\n" +
++            "행동해서 판 점수가 그만큼보다 많이 떨어질 때만 제자리에 있습니다.\n" +
++            "· 0: 끔. 판 점수가 같거나 낮아지면 제자리에 서 있을 수 있습니다.\n" +
++            "· 0.25: 연구 시뮬레이터에서 고른 값. 서 있는 유닛이 거의 없어집니다.")]
++        [SerializeField, Min(0f)]
++        private float mustAct = (float)EnemyTurnPlannerStyle.DefaultMustAct;
++
++        [Tooltip("걸음 벌점 대상 고정 (기본 끔, 시뮬레이터 :v1)\n" +
++            "끔: 걸음 벌점은 그 판에서 살아 있는 상대까지의 걸음으로 잽니다. 가까운 상대를 잡으면 남은 상대가 멀어 벌점이 한꺼번에 늘고,\n" +
++            "   그래서 다 죽어가는 유닛을 잡지 않고 옆을 도는 버릇이 생깁니다.\n" +
++            "켬: 이번 계획에서 잡은 상대도 계획을 시작할 때 서 있던 칸으로 남겨 잽니다. 잡아도 벌점이 늘지 않습니다.")]
++        [SerializeField]
++        private bool stepAnchor = EnemyTurnPlannerStyle.DefaultStepAnchor;
++
++        [Tooltip("기회 모으기 (기본 끔, 시뮬레이터 :b1)\n" +
++            "끔: 기회를 적 유닛마다 따로 더합니다. 여러 유닛이 같은 상대를 노리면 그 상대의 남은 HP를 여러 번 세어,\n" +
++            "   지금 쳐서 HP를 깎으면 얻는 것보다 기회가 더 줄어 '지금 치면 손해'로 계산됩니다.\n" +
++            "켬: 위험처럼 상대마다 피해를 더해 그 상대의 남은 HP에서 자릅니다.")]
++        [SerializeField]
++        private bool pooledChance = EnemyTurnPlannerStyle.DefaultPooledChance;
++
 +        /// <summary>프리셋 값을 Core가 받는 값 묶음으로 바꿉니다. 범위 밖이면 DB 생성에서 멈춥니다.</summary>
 +        internal EnemyTurnPlannerStyle ToStyle()
 +        {
 +            try
 +            {
 +                return new EnemyTurnPlannerStyle(fear, opportunity, mainWeight, goalStepPercent, stepPenalty, reinforcementDiscount,
-+                    lookahead, beam, perUnit, moveOnly, rerank);
++                    lookahead, beam, perUnit, moveOnly, rerank, mustAct, stepAnchor, pooledChance);
 +            }
 +            catch (ArgumentOutOfRangeException exception)
 +            {
@@ -599,10 +796,10 @@ index 00000000..f5543ceb
 +  assetBundleVariant:
 diff --git a/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset
 new file mode 100644
-index 00000000..527b16f6
+index 00000000..1298cfb9
 --- /dev/null
 +++ b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,28 @@
 +%YAML 1.1
 +%TAG !u! tag:unity3d.com,2011:
 +--- !u!114 &11400000
@@ -628,6 +825,9 @@ index 00000000..527b16f6
 +  perUnit: 6
 +  moveOnly: 3
 +  rerank: 4
++  mustAct: 0.25
++  stepAnchor: 1
++  pooledChance: 1
 diff --git a/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset.meta b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset.meta
 new file mode 100644
 index 00000000..8d11fc29
@@ -636,6 +836,54 @@ index 00000000..8d11fc29
 @@ -0,0 +1,8 @@
 +fileFormatVersion: 2
 +guid: 4172a88f9c734fab9c593c029259da6c
++NativeFormatImporter:
++  externalObjects: {}
++  mainObjectFileID: 11400000
++  userData:
++  assetBundleName:
++  assetBundleVariant:
+diff --git a/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset
+new file mode 100644
+index 00000000..7ca750fb
+--- /dev/null
++++ b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset
+@@ -0,0 +1,28 @@
++%YAML 1.1
++%TAG !u! tag:unity3d.com,2011:
++--- !u!114 &11400000
++MonoBehaviour:
++  m_ObjectHideFlags: 0
++  m_CorrespondingSourceObject: {fileID: 0}
++  m_PrefabInstance: {fileID: 0}
++  m_PrefabAsset: {fileID: 0}
++  m_GameObject: {fileID: 0}
++  m_Enabled: 1
++  m_EditorHideFlags: 0
++  m_Script: {fileID: 11500000, guid: 5409815859044ae7a5caa4d79a0b5749, type: 3}
++  m_Name: EnemyTurnPlannerPreset_Before1119
++  m_EditorClassIdentifier:
++  fear: 0.5
++  opportunity: 0.5
++  mainWeight: 3
++  goalStepPercent: 1
++  stepPenalty: 10
++  reinforcementDiscount: 0.5
++  lookahead: 1
++  beam: 4
++  perUnit: 6
++  moveOnly: 3
++  rerank: 4
++  mustAct: 0
++  stepAnchor: 0
++  pooledChance: 0
+diff --git a/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset.meta b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset.meta
+new file mode 100644
+index 00000000..be995c9a
+--- /dev/null
++++ b/Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset.meta
+@@ -0,0 +1,8 @@
++fileFormatVersion: 2
++guid: 55913aa4aba1443db64925ea70626085
 +NativeFormatImporter:
 +  externalObjects: {}
 +  mainObjectFileID: 11400000

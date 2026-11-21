@@ -14,6 +14,7 @@
 | `LLMTest/core_port/nolambda/make.py` | Core 계산기의 람다(LINQ·단계 함수 콜백)를 같은 결과의 반복문·단계 없는 판으로 바꿔 넣는 스크립트(2026-11-19부터 이 저장소의 Core에 적용, 아래 §3의 4번, [`nolambda/README.md`](nolambda/README.md)) |
 | `LLMTest/core_port/autoplay/` + `Assets/ResearchEnemyPlanner/Editor/` | 열려 있는 에디터에서 재생·메인 배치·전투 진입·턴 종료를 스스로 돌려 계획 AI 콘솔 줄을 받는 자동 재생([`autoplay/README.md`](autoplay/README.md)) |
 | `LLMTest/core_port/harness/` | Unity 밖에서 Core를 묶어 계획 AI를 돌려 보는 측정 도구(저장소 시험이 아니다) |
+| `LLMTest/core_port/check_stage/` | 재생 확인용 스테이지 `Combat_Research_AiCheck`를 만드는 스크립트(`make_check_stage.py`, `--remove`로 지움)와 시뮬레이터 미리 보기(`preview.py`). 스테이지 에셋 셋과 표 등록 둘을 만든다. 무엇을 보는 판인지는 [판 값 고치기 이식 설계](../docs/2026-11-19-research-planner-value-fix-port-design.md) §8.6 |
 
 계획 AI 코드(`Assets/ResearchEnemyPlanner/`):
 
@@ -23,10 +24,10 @@
 | `EnemyTurnPlannerConfig.cs` | 고정 값 둘(끝난 판 값, 계산 스레드 우선순위 Lowest). 성향·계산 크기 값은 조정 에셋 프리셋으로 옮김(아래 §2) | `PlannerConfig` |
 | `EnemyTurnPlan.cs` | 한 적 턴의 계획(행동마다 행동 전 판 서명)과 계획 수치 | — |
 | `PlannerBoard.cs` | 공정 입력(적이 모르는 칸 빼기 + 난수 씨앗), 판 서명, 입력 다시 만들기, 행동 돌리기(`PlannerSimulator`) | `planner.signature`, `prediction_seed` |
-| `PlannerEvaluator.cs` | 빠른 V(자산·위험·기회·거리 벌점·G1), 도달 표, 예상 피해, 빠른 이동 점수 | `evaluate.Evaluator` |
+| `PlannerEvaluator.cs` | 빠른 V(자산·위험·기회·거리 벌점·G1), 도달 표, 예상 피해, 빠른 이동 점수. 걸음 벌점 대상 고정(`StepTargets`)·기회 모으기(`Opportunity`)는 프리셋 값이 켤 때만(2026-11-19) | `evaluate.Evaluator` |
 | `PlannerDamageMemo.cs` | 예상 피해 기억(계획 하나 동안, 대표 객체 열쇠). 같은 답이 확실한 질문만 다시 쓴다([기억 설계](../docs/2026-11-18-planner-damage-memo-design.md) §12) | — (Core 판에만) |
 | `PlannerCandidates.cs` | 유닛 하나의 후보(제자리 공격·이동·이동 + 공격, 도발 규칙) | `analysis.unit_options` |
-| `PlannerBeam.cs` | 빔 탐색, 다시 매김 후보 모음 | `PlannerPolicy._make_plan` |
+| `PlannerBeam.cs` | 빔 탐색, 다시 매김 후보 모음. 행동 규칙 벌점(`IdleCost`·`PlanValue`, 프리셋 값이 0이면 0) | `PlannerPolicy._make_plan`·`idle_cost` |
 | `PlannerReply.cs` | 깊은 V: 한 턴 더 보기(위험 판에서 플레이어 유닛을 차례대로 둔 뒤 판의 빠른 V). 옛 깊은 V(위험 판·기회 판에서 따로 고른 응수)도 남김 | `reply.py` |
 
 기존 파일에 넣은 연결 줄(`hooks.patch`):
@@ -38,8 +39,9 @@
 | `…/Application/Combat/EnemyAi/EnemyDecisionSideCache.cs` | 턴 계획 보관 칸 `TurnPlan`, 범위가 바뀌면 비움 |
 | `…/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningData.cs` | 값 `DecisionModel`·`PlannerStyle`, `ToSettings()`가 넘김 |
 | `…/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyAiTuningDataSO.cs` | 인스펙터 칸 "적 AI 종류 (연구용)", 성향 프리셋 칸과 그 위 판 점수 식 상자 |
-| `…/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs`(새 파일) | 성향 프리셋 입력 SO, 판 점수 식 `Formula`, 설명 상자 속성·그리기 |
-| `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset`(새 파일) | 기본 프리셋(값 = 기본값) |
+| `…/DataBaseSystem/Data/InGame/Table/EnemyAi/Item/EnemyTurnPlannerPresetSO.cs`(새 파일) | 성향 프리셋 입력 SO, 판 점수 식 `Formula`, 설명 상자 속성·그리기. "자연스러움" 칸 셋(행동 규칙·걸음 벌점 대상 고정·기회 모으기, 새 프리셋은 끔) |
+| `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyTurnPlannerPreset_Default.asset`(새 파일) | 기본 프리셋. 성향·계산 크기는 코드 기본값, "자연스러움" 셋은 켬(행동 규칙 0.25·걸음 벌점 대상 고정·기회 모으기, 2026-11-19 [판 값 고치기 이식 설계](../docs/2026-11-19-research-planner-value-fix-port-design.md)) |
+| `…/EnemyAi/Item/EnemyTurnPlannerPreset_Before1119.asset`(새 파일) | 옛 값 프리셋: 위와 같되 "자연스러움" 셋이 꺼져 있다(2026-11-19 전의 적). 견줄 때 조정 에셋에 끼운다 |
 | `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyAiTuning_Default.asset` | `decisionModel: 1`(TurnPlanner), `plannerPreset` = 기본 프리셋 |
 | `…/CoreSystem/CombatSystem/CombatAdvanceService.cs` | 계획 AI가 일 스레드를 기다리는 동안 그 프레임 준비를 멈춤, 새 계획이 나오면 콘솔에 시간·쓴 성향 값 한 줄(2026-11-18 BG-a. 그 전의 12ms 예산 줄은 걷음, 예산은 모두 1ms). 기다리는 동안 프레임마다 시간과 GC 수집 여부를 모아 계획이 끝날 때 한 줄로 냄(프레임 진단, 병렬 설계 §13.1. 그 전의 GC 조각 1ms 실험은 걷음) |
 | `…/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs` | 판단 12행: 연출이 남아 있어도 자동 국면의 적 결정 준비(`PrepareAdvance`)는 등록한다(2026-11-19 속도 방향 A, 병렬 설계 §20). 준비된 결정의 실행·그 밖의 자동 진행은 그대로 연출 끝 뒤 |
@@ -57,6 +59,7 @@
 2. 값을 바꾼다. 칸에 마우스를 올리면 뜻이 나오고, 맨 위 상자가 판 점수 식이다.
 3. 조정 에셋 `EnemyAiTuning_Default.asset`의 **Planner Preset** 칸에 넣고 재생한다. 비우면 기본값이다.
 4. 콘솔의 `[턴 계획 AI] 준비 시작부터 결정까지 …` 줄 끝에 쓴 값이 나온다.
+5. 2026-11-19 전의 적과 견주려면 **Planner Preset** 칸에 `EnemyTurnPlannerPreset_Before1119`를 넣는다("자연스러움" 셋이 꺼진 값). 돌아올 때는 `EnemyTurnPlannerPreset_Default`를 다시 넣는다.
 
 **지금 알아 둘 것 (2026-11-18 BG-a):** 계획은 일 스레드에서 돈다(`LLMTest/docs/2026-11-18-planner-background-parallel-design.md`). 그래서 계산하는 동안에도 프레임은 거의 떨어지지 않을 것으로 본다(추정, 재생 확인 전). 대신 기다림은 계산 시간 그대로라, 적 턴 첫 행동까지 Unity 에디터에서 약 20초로 본다(추정: 12ms 예산 때 사용자가 본 30초 이상에서 계산 몫만). 계획이 끝나면 콘솔에 `[턴 계획 AI] 준비 시작부터 결정까지 N초 …` 한 줄이 남는다. 첫 행동 뒤에는 보관한 계획에서 바로 꺼낸다. 여러 코어로 나눠 계산하는 일(BG-b)은 아직이다.
 
@@ -87,8 +90,9 @@ git apply --3way LLMTest/core_port/hooks.patch
 ```
 
 4. **Core 람다 걷기를 다시 넣는다**(2026-11-19부터). develop 판 Core는 람다가 그대로이므로, 3번 뒤에 `python -I LLMTest/core_port/nolambda/make.py --apply`를 돌린다. 고칠 문장이 develop에서 바뀌었으면 스크립트가 멈춘다 — 그 자리를 `make.py`에서 고치거나 빼고 다시 돌린 뒤 사용자에게 보고한다. 새 파일 `Contracts/Common/TraitStatusScan.cs`(+ `.meta`)는 develop에 없는 파일이라 1번에서 지워져도 스크립트가 다시 만든다.
-5. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다. **예상 피해 기억 확인 `memocheck`(아래 §4)를 꼭 돌린다.** 기억은 "Core 피해 식이 두 유닛 사실 말고 판에서 읽는 것"을 설계 시점에 확인한 목록에 기댄다. develop에서 피해 식이 새로 읽는 것이 생기면 어긋남이 나온다. 어긋남이 0이 아니면 멈추고 보고한다.
-6. 연결 줄을 고쳤으면 패치를 다시 만든다: 위 표의 고친 파일(코드 일곱 + 조정 에셋)은 `git diff 07561fc7 -- <파일>`, 새 파일 넷은 `git diff --no-index -- /dev/null <파일>`을 이어 붙인다. `git apply -R --check`로 확인한다.
+5. 재생 확인용 스테이지를 쓰려면 다시 만든다(develop에 없는 에셋이라 1번에서 지워진다): `python -I LLMTest/core_port/check_stage/make_check_stage.py`.
+6. Unity 배치 컴파일(오류 0)과 측정 도구(아래)로 확인한다. **예상 피해 기억 확인 `memocheck`(아래 §4)를 꼭 돌린다.** 기억은 "Core 피해 식이 두 유닛 사실 말고 판에서 읽는 것"을 설계 시점에 확인한 목록에 기댄다. develop에서 피해 식이 새로 읽는 것이 생기면 어긋남이 나온다. 어긋남이 0이 아니면 멈추고 보고한다.
+7. 연결 줄을 고쳤으면 패치를 다시 만든다: 위 표의 고친 파일(코드 여덟 + 조정 에셋)은 `git diff 07561fc7 -- <파일>`, 새 파일 여섯(프리셋 SO·기본 프리셋·옛 값 프리셋과 그 `.meta`)도 커밋된 뒤에는 같은 명령 `git diff 07561fc7 -- <파일>`을 파일마다 이어 붙인다(아직 커밋 전인 새 파일은 줄 끝을 LF로 바꾼 내용으로 새 파일 꼴을 직접 만든다 — 2026-11-19 옛 값 프리셋을 그렇게 넣었다). `git apply -R --check`로 확인한다.
 
 ## 4 측정 도구
 
@@ -140,6 +144,12 @@ dotnet run --project LLMTest/core_port/harness/Harness --no-build -- lookahead
 ```
 
 같은 실행에서 옛 깊은 V(l0)와 한 턴 더 보기(l1)의 계획 시간·할당·엔진 수·계획이 같은지를 판마다 적는다.
+
+```bash
+dotnet run --project LLMTest/core_port/harness/Harness --no-build -- valuefix
+```
+
+"자연스러움" 값 확인([판 값 고치기 이식 설계](../docs/2026-11-19-research-planner-value-fix-port-design.md) §4·§8). 판 11개 × 씨앗 1·7을 값 넷(끔 / 행동 규칙 0.25만 / 걸음 벌점 대상 고정 + 기회 모으기 / 셋 다)으로 계획하고 적 턴 전체를 진행해 행동 수·제자리 유닛 수·적 턴 뒤 플레이어 메인 HP·거절·대체·후보 예외·계획 하나의 엔진 수와 시간을 적는다. 이어서 막판 판(HP 1인 플레이어 유닛 옆에 적 둘, 메인은 멀리)에서 값마다 그 유닛을 잡는지 적는다. 거절·대체·후보 예외가 있거나, 끈 값이 막판 판에서 잡거나, 대상 고정을 켠 값이 못 잡으면 종료 값이 0이 아니다. `valuefix N8,G16 1 show`처럼 판·씨앗을 고르고 `show`로 행동 목록을 본다. 2026-11-19 결과: `LLMTest/results/core_port/20261119_valuefix_vpc.txt`.
 
 ```bash
 dotnet run --project LLMTest/core_port/harness/Harness --no-build -- seq N5,N8 weak

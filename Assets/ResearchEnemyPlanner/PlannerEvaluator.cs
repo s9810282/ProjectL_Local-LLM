@@ -113,6 +113,24 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return targets;
         }
 
+        /// <summary>
+        /// 걸음 벌점의 거리를 재는 상대다(빠른 V·응수 걸음 벌점·빠른 이동 점수가 함께 부른다). 시뮬레이터 <c>step_targets</c>와 같다.
+        /// 끄면 그 판에서 살아 있는 상대(<see cref="Targets"/>)다. 걸음 벌점 대상 고정(<see cref="EnemyTurnPlannerStyle.StepAnchor"/>)을 켜면
+        /// 계획 시작 판(<see cref="Base"/>)에서는 살아 있었지만 이 판에서는 쓰러진 상대를 계획 시작 판의 칸으로 더한다.
+        /// 가까운 상대를 잡았다고 남은 유닛들의 걸음 벌점이 한꺼번에 늘지 않게 한다(늘면 "잡으면 손해"로 계산돼 다 죽어가는 유닛을 잡지 않는다).
+        /// 죽은 순간의 칸이 아니라 시작 판의 칸을 쓰는 까닭: Core는 사망한 캐릭터의 위치 값을 지운다(CombatCommandCalculator.Copy).
+        /// 다음 턴 계획은 그때 살아 있는 상대로 새로 시작한다.
+        /// </summary>
+        internal List<PlannerTarget> StepTargets(CombatCommandInput board, Owner side)
+        {
+            var targets = Targets(board, side);
+            if (!Style.StepAnchor) return targets;
+            var standing = new HashSet<long>(targets.Select(t => t.Key));
+            foreach (var fallen in Targets(Base, side))
+                if (!standing.Contains(fallen.Key)) targets.Add(fallen);
+            return targets;
+        }
+
         /// <summary>그 피해로 잃는 자산.</summary>
         internal double Loss(PlannerTarget target, int damage)
         {
@@ -241,24 +259,36 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
             return incoming.Values.Sum(pair => Loss(pair.target, pair.damage));
         }
 
-        /// <summary>(기회, 거리 벌점). 우리 유닛마다 다음 턴의 가장 좋은 공격 하나. 닿는 대상이 없으면 거리 벌점.</summary>
+        /// <summary>
+        /// (기회, 거리 벌점). 우리 유닛마다 다음 턴의 가장 좋은 공격 하나. 닿는 대상이 없으면 거리 벌점.
+        /// 기회 모으기(<see cref="EnemyTurnPlannerStyle.PooledChance"/>)를 켜면 <see cref="Risk"/>처럼 대상마다 피해를 모아 그 대상의 남은 HP에서 자른다.
+        /// 끈 식은 같은 대상을 노리는 유닛 수만큼 남은 HP를 겹쳐 세어, 지금 쳐서 HP를 깎으면 얻는 것(한 번)보다 기회(여러 번)가 더 줄었다.
+        /// </summary>
         internal (double gain, double penalty) Opportunity(CombatCommandInput board, Owner side)
         {
             var targets = Targets(board, side);
             if (targets.Count == 0) return (0.0, 0.0);
             double gain = 0.0, penalty = 0.0;
+            bool pooled = Style.PooledChance;
+            var incoming = pooled ? new Dictionary<long, (PlannerTarget target, int damage)>() : null;
             Dictionary<CellCoord, int> field = null;
             foreach (var unit in Living(board, side))
             {
-                var (target, _, value) = BestStrike(board, unit, targets, own: true);
+                var (target, damage, value) = BestStrike(board, unit, targets, own: true);
                 if (target.HasValue)
                 {
-                    gain += value;
+                    if (pooled)
+                    {
+                        long key = target.Value.Key;
+                        incoming[key] = incoming.TryGetValue(key, out var sum) ? (sum.target, sum.damage + damage) : (target.Value, damage);
+                    }
+                    else gain += value;
                     continue;
                 }
-                field ??= DistanceField(board, targets);
+                field ??= DistanceField(board, StepTargets(board, side));
                 penalty += Style.StepPenalty * Beyond(unit, field);
             }
+            if (pooled) gain = incoming.Values.Sum(pair => Loss(pair.target, pair.damage));
             return (gain, penalty);
         }
 
@@ -390,7 +420,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.A
                 (IsMain(unit) ? Style.MainWeight : 1.0);
             if (gain == 0)
             {
-                var field = DistanceField(board, targets);
+                // 거리 대상은 판 값(Opportunity)과 같은 것: 걸음 벌점 대상 고정을 켜면 이번 계획에서 잡은 상대의 칸도 남는다.
+                var field = DistanceField(board, StepTargets(board, Owner.Enemy));
                 gain = -Style.StepPenalty * (field.TryGetValue(destination, out var steps) ? steps : 99);
             }
             double score = Style.Opportunity * gain - Style.Fear * loss;

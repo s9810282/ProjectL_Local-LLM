@@ -8,6 +8,10 @@ V = 자산(우리) − 자산(상대) − 겁 × 위험(우리) + 기회 × 기�
   특성(처치 연쇄·넉백 등)은 위험·기회 예상에 넣지 않는다. 실제로 둔 행동의 결과에는 엔진이 다 넣는다.
 - 깊은 판 평가 V_deep(deep_breakdown): 같은 식에서 위험·기회·거리 벌점만 엔진 응수(reply.py)로 바꾼다.
   계획 AI가 빔의 마지막 후보 몇 개를 다시 매길 때 쓴다. 설계 docs/2026-11-13-planner-engine-reply-design.md R2.
+- 판 값 고치기 VF1·VF2(설계 docs/2026-11-18-enemy-playstyle-knobs-design.md §12.8·§13): 지금 치면 손해로 계산되던 두 항목.
+  VF1(step_anchor): 거리 벌점의 대상을 계획 시작 때 살아 있던 상대로 고정 — 잡아도 벌점이 늘지 않는다.
+  VF2(pooled_chance): 기회를 위험처럼 대상마다 피해를 모아 남은 HP까지만 — 같은 대상을 여러 유닛 몫으로 겹쳐 세지 않는다.
+  둘 다 끄면(0) 옛 V와 같다.
 - 승리 대상 노림 G1·G2(goal_terms): 상대가 잃으면 지는 것(적 → 플레이어 메인, 플레이어 → 적 본진·격파 대상)을
   멀리서는 걸어 다가가고(G1) 가까이서는 함께 닿게(G2) 한다. 빠른 V·깊은 V 모두 같은 판·같은 도달 표로 더한다.
   손잡이를 끄면(0) 옛 V와 같다. 설계 docs/2026-11-14-planner-goal-pressure-design.md §2.
@@ -27,6 +31,7 @@ from .state import ActionUse, BattleState, Outcome, Structure, Unit
 from .targeting import Side
 
 WIN = 1e9
+HURT_RATIO = 0.5        # PK0b: 계획을 시작할 때 HP가 최대의 이 비율 이하면 "다친 유닛"
 
 
 @dataclass(frozen=True)
@@ -50,6 +55,15 @@ class PlannerConfig:
     approach: int = 0                     # 곡선 항목 CV2: 걸음 벌점 포화 k(벌점 = 상수 × k × b / (b + k), 0 = 직선)
     ratio: float = 0.0                    # 곡선 항목 CV3: 자산을 비율(로그)로 보는 몫 w(0 = 차이 그대로, 1 = 로그 비율만)
     log_approach: int = 0                 # 곡선 항목 CV4: 걸음 벌점 로그 k(벌점 = 상수 × k × ln(1 + b / k), 0 = 직선)
+    preserve: float = 0.0                 # 성격 손잡이 PK0 자기 보존: 계획하는 편 유닛에만 붙는 "살아 있음" 덩어리(0 = 끔)
+    preserve_hurt: float = 0.0            # 성격 손잡이 PK0b 다친 유닛 살리기: 계획을 시작할 때 다친(HP ≤ 최대의 절반) 우리 유닛에만
+                                          # 더 붙는 "살아 있음" 덩어리(0 = 끔). 안 다친 유닛은 그대로 싸운다
+    must_act: float = 0.0                 # 행동 규칙 PK6: 행동 안 한 유닛마다 계획 값에서 빼는 양(유닛 전력의 배수, 0 = 끔).
+                                          # 유닛은 행동의 손해가 이 값보다 클 때만 제자리에 있는다
+    step_anchor: int = 0                  # 판 값 고치기 VF1: 1이면 거리 벌점의 대상을 계획 시작 때 살아 있던 상대로 고정한다
+                                          # (이번 계획에서 잡은 대상의 칸도 "닿은 곳"으로 남아 잡아도 벌점이 늘지 않는다, 0 = 끔)
+    pooled_chance: int = 0                # 판 값 고치기 VF2: 1이면 다음 턴 기회를 대상마다 피해를 모아 남은 HP까지만 센다
+                                          # (위험과 같은 방식. 같은 대상을 노리는 유닛 수만큼 겹쳐 세지 않는다, 0 = 끔)
 
     @property
     def rerank_count(self) -> int:
@@ -78,16 +92,27 @@ def unit_power(unit: Unit, config: PlannerConfig) -> float:
 class Evaluator:
     """한 번의 계획(한 턴) 동안 쓰는 평가기. 도달 표는 계획 시작 판을 기준으로 만들고 (유닛, 칸)마다 기억한다."""
 
-    def __init__(self, base: BattleState, config: PlannerConfig = PlannerConfig()):
+    def __init__(self, base: BattleState, config: PlannerConfig = PlannerConfig(), side: Side | None = None):
+        """side = 계획하는 편. 자기 보존(PK0·PK0b)은 이 편 유닛에만 걸리므로, 켜려면 side가 있어야 한다."""
+        if (config.preserve > 0 or config.preserve_hurt > 0) and side is None:
+            raise ValueError("자기 보존(preserve·preserve_hurt)을 켜려면 평가기에 계획하는 편(side)을 줘야 합니다")
         self.base = base
         self.config = config
+        self.side = side
+        # PK0b: 다쳤는지는 계획 시작 판으로 정해 계획 한 번 동안 고정한다. 판마다 다시 보면 "응수에 맞아 다치면
+        # 살아 있음 덩어리가 새로 붙어 자산이 느는" 거꾸로 된 값이 생긴다.
+        self._hurt = frozenset(
+            u.uid for u in (base.living(side) if side is not None and config.preserve_hurt > 0 else [])
+            if u.hp <= HURT_RATIO * u.max_hp)
         stage = base.board.stage
         self.hq_value = float(sum(e.unit.attack * e.unit.max_hp for e in stage.enemies))
         self.pool_power = {}
         if stage.reinforcement is not None:
             for defn, _ in stage.reinforcement.pool:
                 # 남은 증원은 다친 적 없는 유닛과 같은 전력(살아 있음 덩어리 포함, CV1).
-                self.pool_power[defn.name] = float(defn.attack * defn.max_hp * (1 + config.survival))
+                # 증원은 적 편이다. 적이 계획하는 편이면 자기 보존 덩어리도 같이 든다(PK0).
+                keep = config.preserve if side is Side.ENEMY else 0.0
+                self.pool_power[defn.name] = float(defn.attack * defn.max_hp * (1 + config.survival + keep))
         # CV3 자산 비율의 기준 크기 R: 계획 시작 판의 두 진영 자산 평균(계획 한 번 동안 고정).
         self.asset_scale = (self.assets(base, Side.PLAYER) + self.assets(base, Side.ENEMY)) / 2
         self._reach: dict[tuple[int, Cell], dict[Cell, int]] = {}
@@ -95,8 +120,20 @@ class Evaluator:
         self._fields: dict[tuple, dict[Cell, int]] = {}
 
     # ---------------------------------------------------------------- 자산
+    def keep_value(self, unit: Unit) -> float:
+        """자기 보존(PK0) 덩어리: 계획하는 편의 유닛이 살아 있는 값(공격력 × 최대HP × 값, 메인은 × 메인 배수).
+        상대 편 유닛은 0이다 — 상대를 잡는 이득은 커지지 않는다(설계 docs/2026-11-18-enemy-playstyle-knobs-design.md PK0).
+        계획을 시작할 때 다친 유닛에는 preserve_hurt만큼 더 붙는다(PK0b, §13)."""
+        if unit.side is not self.side:
+            return 0.0
+        rate = self.config.preserve + (self.config.preserve_hurt if unit.uid in self._hurt else 0.0)
+        if rate <= 0:
+            return 0.0
+        value = rate * unit.attack * unit.max_hp
+        return value * self.config.main_weight if unit.is_main else value
+
     def assets(self, state: BattleState, side: Side) -> float:
-        total = sum(unit_power(u, self.config) for u in state.living(side))
+        total = sum(unit_power(u, self.config) + self.keep_value(u) for u in state.living(side))
         if side is Side.ENEMY:
             hq_alive = False
             for structure in state.structures.values():
@@ -168,7 +205,10 @@ class Evaluator:
             lost = float(min(damage, target.hp) * target.attack)
             if damage >= target.hp and self.config.survival > 0:
                 lost += self.config.survival * target.attack * target.max_hp
-            return lost * self.config.main_weight if target.is_main else lost
+            lost = lost * self.config.main_weight if target.is_main else lost
+            if damage >= target.hp:
+                lost += self.keep_value(target)     # 계획하는 편 유닛이 죽을 때만(PK0)
+            return lost
         return self.hq_value * min(damage, target.hp) / target.max_hp
 
     def _targets(self, state: BattleState, side: Side) -> list:
@@ -177,6 +217,29 @@ class Evaluator:
         if side is Side.PLAYER:
             targets += [s for s in state.structures.values() if s.side is Side.ENEMY and s.alive]
         return targets
+
+    def step_targets(self, state: BattleState, side: Side) -> list:
+        """거리 벌점을 재는 대상(빠른 V·응수 거리 벌점·이동만 후보 점수가 함께 부른다).
+        끄면 지금 살아 있는 상대(_targets)다. VF1을 켜면 계획 시작 판에서 살아 있었지만 이 판에서는 죽은 상대를
+        **계획 시작 판의 칸에** 더한다: 가까운 상대를 잡았다고 남은 유닛들의 거리 벌점이 한꺼번에 늘지 않게 한다.
+        다음 턴 계획은 그때 살아 있는 상대로 다시 시작하므로 남은 상대 쪽으로의 끌림은 한 턴 뒤에 돌아온다.
+        죽은 순간의 칸이 아니라 시작 판의 칸을 쓰는 까닭: 게임 Core는 죽은 캐릭터의 위치 값을 지운다
+        (CombatCommandCalculator.Copy). Unity 계획 AI와 같은 정의로 맞춘다(이식 설계 Q-VP2)."""
+        targets = self._targets(state, side)
+        if self.config.step_anchor <= 0:
+            return targets
+        fallen: list = []
+        for unit in self.base.living(side.other):
+            now = state.units.get(unit.uid)
+            if now is None or not now.alive:
+                fallen.append(unit)          # 시작 판의 유닛(시작 판의 칸)
+        if side is Side.PLAYER:
+            for structure in self.base.structures.values():
+                if structure.side is Side.ENEMY and structure.alive:
+                    now = state.structures.get(structure.sid)
+                    if now is not None and not now.alive:
+                        fallen.append(now)
+        return targets + fallen
 
     def _best_strike(self, state: BattleState, attacker: Unit, targets: list,
                      own: bool = False) -> tuple[object | None, int, float]:
@@ -258,24 +321,37 @@ class Evaluator:
         return sum(self._loss(objects[ident], damage) for ident, damage in incoming.items())
 
     def opportunity(self, state: BattleState, side: Side) -> tuple[float, float]:
-        """(기회, 거리 벌점). 우리 유닛마다 다음 턴의 가장 좋은 공격 하나. 닿는 대상이 없으면 거리 벌점."""
+        """(기회, 거리 벌점). 우리 유닛마다 다음 턴의 가장 좋은 공격 하나. 닿는 대상이 없으면 거리 벌점.
+        VF2(pooled_chance)를 켜면 위험(risk)처럼 대상마다 피해를 모아 그 대상의 남은 HP까지만 센다:
+        끈 식은 같은 대상을 노리는 유닛 수만큼 남은 HP를 겹쳐 세어, 지금 쳐서 HP를 깎으면 얻는 것(한 번)보다
+        기회(여러 번)가 더 줄어 "지금 치면 손해"가 됐다."""
         targets = self._targets(state, side)
         if not targets:
             return 0.0, 0.0
         gain, penalty = 0.0, 0.0
+        pooled = self.config.pooled_chance > 0
+        incoming: dict[int, int] = {}
+        objects: dict[int, object] = {}
         field = None
         for unit in state.living(side):
-            target, _, value = self._best_strike(state, unit, targets, own=True)
+            target, damage, value = self._best_strike(state, unit, targets, own=True)
             if target is not None:
-                gain += value
+                if pooled:
+                    ident = id(target)
+                    incoming[ident] = incoming.get(ident, 0) + damage
+                    objects[ident] = target
+                else:
+                    gain += value
                 continue
             if field is None:
-                field = self._distance_field(state, targets)
+                field = self._distance_field(state, self.step_targets(state, side))
             steps = field.get(unit.cell)
             if steps is None:
                 continue
             beyond = max(0, steps - unit.defn.move - max(0, unit.defn.attack_range - 1))
             penalty += self.config.step_penalty * self.config.step_units(beyond)
+        if pooled:
+            gain = sum(self._loss(objects[ident], damage) for ident, damage in incoming.items())
         return gain, penalty
 
     def _distance_field(self, state: BattleState, targets: list) -> dict[Cell, int]:

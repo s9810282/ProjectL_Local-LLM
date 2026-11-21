@@ -1,0 +1,12 @@
+{
+ "folders": [
+  "results\\sim\\20261118T144037Z_ps_p1f08_g1",
+  "results\\sim\\20261118T144037Z_ps_p1f08_g2",
+  "results\\sim\\20261118T144037Z_ps_p1f08_g3",
+  "results\\sim\\20261118T144037Z_ps_p1f08_g4",
+  "results\\sim\\20261118T144037Z_ps_p1f08_g5"
+ ],
+ "battles": 360,
+ "same": 360,
+ "seconds": 7.0
+}

@@ -1,0 +1,165 @@
+# 판 값 고치기·행동 규칙 확인(valuefix): 벤치마크 판 11개 x 씨앗 1,7, 값 넷
+# off = 끔, i = 행동 규칙 0.25만, vb = 걸음 벌점 대상 고정 + 기회 모으기, ivb = 셋 다(기본 프리셋에 넣을 값)
+# actions = 적 턴의 행동 수, idle = 이동도 공격도 안 한 적 유닛, mainHP = 적 턴 뒤 플레이어 메인 HP. 측정 도구 LLMTest/core_port/harness 모드 valuefix. 2026-11-19 VP-c
+fixture seed value | actions idle mainHP ended | rejects fallbacks fail | vs off
+N5     1 off | 10  0  60 - | 0 0 0 | 
+N5     1 i   | 10  0  60 - | 0 0 0 | same
+N5     1 vb  | 10  0  60 - | 0 0 0 | same
+N5     1 ivb | 10  0  60 - | 0 0 0 | same
+N5     7 off | 10  0  60 - | 0 0 0 | 
+N5     7 i   | 10  0  60 - | 0 0 0 | same
+N5     7 vb  | 10  0  60 - | 0 0 0 | same
+N5     7 ivb | 10  0  60 - | 0 0 0 | same
+N6     1 off | 12  0  50 - | 0 0 0 | 
+N6     1 i   | 12  0  50 - | 0 0 0 | same
+N6     1 vb  | 12  0  50 - | 0 0 0 | DIFF
+N6     1 ivb | 12  0  50 - | 0 0 0 | DIFF
+N6     7 off | 12  0  50 - | 0 0 0 | 
+N6     7 i   | 12  0  50 - | 0 0 0 | same
+N6     7 vb  | 12  0  50 - | 0 0 0 | DIFF
+N6     7 ivb | 12  0  50 - | 0 0 0 | DIFF
+N8     1 off | 16  0  40 - | 0 0 0 | 
+N8     1 i   | 16  0  40 - | 0 0 0 | same
+N8     1 vb  | 16  0  50 - | 0 0 0 | DIFF
+N8     1 ivb | 16  0  50 - | 0 0 0 | DIFF
+N8     7 off | 16  0  40 - | 0 0 0 | 
+N8     7 i   | 16  0  40 - | 0 0 0 | same
+N8     7 vb  | 16  0  50 - | 0 0 0 | DIFF
+N8     7 ivb | 16  0  50 - | 0 0 0 | DIFF
+W8     1 off |  8  0 100 - | 0 0 0 | 
+W8     1 i   |  8  0 100 - | 0 0 0 | same
+W8     1 vb  |  8  0 100 - | 0 0 0 | same
+W8     1 ivb |  8  0 100 - | 0 0 0 | same
+W8     7 off |  8  0 100 - | 0 0 0 | 
+W8     7 i   |  8  0 100 - | 0 0 0 | same
+W8     7 vb  |  8  0 100 - | 0 0 0 | same
+W8     7 ivb |  8  0 100 - | 0 0 0 | same
+U8     1 off |  0  8 100 - | 0 0 0 | 
+U8     1 i   |  8  0 100 - | 0 0 0 | DIFF
+U8     1 vb  |  0  8 100 - | 0 0 0 | same
+U8     1 ivb |  8  0 100 - | 0 0 0 | DIFF
+U8     7 off |  0  8 100 - | 0 0 0 | 
+U8     7 i   |  8  0 100 - | 0 0 0 | DIFF
+U8     7 vb  |  0  8 100 - | 0 0 0 | same
+U8     7 ivb |  8  0 100 - | 0 0 0 | DIFF
+A8     1 off | 16  0  63 - | 0 0 0 | 
+A8     1 i   | 16  0  63 - | 0 0 0 | same
+A8     1 vb  | 16  0  63 - | 0 0 0 | DIFF
+A8     1 ivb | 16  0  63 - | 0 0 0 | DIFF
+A8     7 off | 16  0  63 - | 0 0 0 | 
+A8     7 i   | 16  0  63 - | 0 0 0 | same
+A8     7 vb  | 16  0  63 - | 0 0 0 | DIFF
+A8     7 ivb | 16  0  63 - | 0 0 0 | DIFF
+T8     1 off | 15  0 100 - | 0 0 0 | 
+T8     1 i   | 15  0 100 - | 0 0 0 | same
+T8     1 vb  | 15  0 100 - | 0 0 0 | same
+T8     1 ivb | 15  0 100 - | 0 0 0 | same
+T8     7 off | 15  0 100 - | 0 0 0 | 
+T8     7 i   | 15  0 100 - | 0 0 0 | same
+T8     7 vb  | 15  0 100 - | 0 0 0 | same
+T8     7 ivb | 15  0 100 - | 0 0 0 | same
+R8     1 off | 16  0  40 - | 0 0 0 | 
+R8     1 i   | 16  0  40 - | 0 0 0 | same
+R8     1 vb  | 16  0  50 - | 0 0 0 | DIFF
+R8     1 ivb | 16  0  50 - | 0 0 0 | DIFF
+R8     7 off | 16  0  40 - | 0 0 0 | 
+R8     7 i   | 16  0  40 - | 0 0 0 | same
+R8     7 vb  | 16  0  50 - | 0 0 0 | DIFF
+R8     7 ivb | 16  0  50 - | 0 0 0 | DIFF
+X8     1 off | 15  0  70 - | 0 0 0 | 
+X8     1 i   | 15  0  70 - | 0 0 0 | same
+X8     1 vb  | 15  0  70 - | 0 0 0 | same
+X8     1 ivb | 15  0  70 - | 0 0 0 | same
+X8     7 off | 15  0  70 - | 0 0 0 | 
+X8     7 i   | 15  0  70 - | 0 0 0 | same
+X8     7 vb  | 15  0  70 - | 0 0 0 | same
+X8     7 ivb | 15  0  70 - | 0 0 0 | same
+H8     1 off | 16  0  60 - | 0 0 0 | 
+H8     1 i   | 16  0  60 - | 0 0 0 | same
+H8     1 vb  | 15  0  60 - | 0 0 0 | DIFF
+H8     1 ivb | 15  0  60 - | 0 0 0 | DIFF
+H8     7 off | 16  0  60 - | 0 0 0 | 
+H8     7 i   | 16  0  60 - | 0 0 0 | same
+H8     7 vb  | 15  0  60 - | 0 0 0 | DIFF
+H8     7 ivb | 15  0  60 - | 0 0 0 | DIFF
+G16    1 off | 20  0   0 ended | 0 0 0 | 
+G16    1 i   | 20  0   0 ended | 0 0 0 | same
+G16    1 vb  | 32  0  20 - | 0 0 0 | DIFF
+G16    1 ivb | 32  0  20 - | 0 0 0 | DIFF
+G16    7 off | 20  0   0 ended | 0 0 0 | 
+G16    7 i   | 20  0   0 ended | 0 0 0 | same
+G16    7 vb  | 32  0  20 - | 0 0 0 | DIFF
+G16    7 ivb | 32  0  20 - | 0 0 0 | DIFF
+
+# 막판 판(값 여섯: v = 대상 고정만, b = 기회 모으기만)
+endgame board: player main #1 far away (0,0), player unit #2 HP 1 at (13,13), enemies #11 (13,15) #12 (15,14)
+off  | killed #2: no  | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Move#12 path 15,14>15,13>15,12>15,11  End
+i    | killed #2: no  | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Move#12 path 15,14>15,13>15,12>15,11  End
+vb   | killed #2: yes | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Attack#11 aim Cell@13,13/None  Move#12 path 15,14>14,14>14,13>14,12  End
+ivb  | killed #2: yes | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Attack#11 aim Cell@13,13/None  Move#12 path 15,14>14,14>14,13>14,12  End
+v    | killed #2: yes | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Attack#11 aim Cell@13,13/None  Move#12 path 15,14>14,14>14,13>14,12  End
+b    | killed #2: no  | rejects 0 fallbacks 0 fail 0 | Move#11 path 13,15>12,15>12,14>12,13  Move#12 path 15,14>15,13>15,12>15,11  End
+
+# 끈 값과 다른 턴의 행동 목록(valuefix U8,H8 1 show)
+U8     1 off |  0  8 100 - | 0 0 0 | 
+         End
+U8     1 i   |  8  0 100 - | 0 0 0 | DIFF
+         Move#11 path 2,2>1,2>1,1>1,0  Move#12 path 3,2>2,2>2,1>2,0  Move#13 path 4,2>3,2>3,1>3,0  Move#14 path 2,3>1,3>1,2>1,1  Move#15 path 3,3>2,3>2,2>2,1  Move#16 path 4,3>4,2>4,1>4,0  Move#17 path 2,4>1,4>1,3>1,2  Move#18 path 3,4>3,3>3,2>3,1  End
+U8     1 vb  |  0  8 100 - | 0 0 0 | same
+U8     1 ivb |  8  0 100 - | 0 0 0 | DIFF
+         Move#11 path 2,2>1,2>1,1>1,0  Move#12 path 3,2>2,2>2,1>2,0  Move#13 path 4,2>3,2>3,1>3,0  Move#14 path 2,3>1,3>1,2>1,1  Move#15 path 3,3>2,3>2,2>2,1  Move#16 path 4,3>4,2>4,1>4,0  Move#17 path 2,4>1,4>1,3>1,2  Move#18 path 3,4>3,3>3,2>3,1  End
+H8     1 off | 16  0  60 - | 0 0 0 | 
+         Move#11 path 5,1>4,1>3,1>3,0  Attack#11 aim Cell@0,0/None  Move#15 path 5,2>4,2>3,2>3,1  Attack#15 aim Cell@0,0/None  Move#16 path 6,2>5,2>4,2>3,2  Attack#16 aim Cell@0,0/None  Move#12 path 6,1>5,1>4,1  Attack#12 aim Cell@0,0/None  Move#18 path 8,2>8,3>8,4>7,4  Attack#18 aim Cell@4,0/None  Move#14 path 8,1>8,0>7,0>6,0  Attack#14 aim Cell@2,0/None  Move#13 path 7,1>6,1>5,1>5,0  Attack#13 aim Cell@2,0/None  Move#17 path 7,2>7,1>7,0  Attack#17 aim Cell@4,0/None  End
+H8     1 i   | 16  0  60 - | 0 0 0 | same
+H8     1 vb  | 15  0  60 - | 0 0 0 | DIFF
+         Move#11 path 5,1>4,1>3,1>3,0  Attack#11 aim Cell@0,0/None  Move#15 path 5,2>4,2>3,2>3,1  Attack#15 aim Cell@0,0/None  Move#16 path 6,2>5,2>4,2>3,2  Attack#16 aim Cell@0,0/None  Move#12 path 6,1>5,1>4,1  Attack#12 aim Cell@0,0/None  Move#18 path 8,2>8,3>8,4>7,4  Attack#18 aim Cell@4,0/None  Move#17 path 7,2>6,2>6,1>6,0  Attack#17 aim Cell@2,0/None  Move#14 path 8,1>8,0>7,0  Attack#14 aim Cell@4,0/None  Attack#13 aim Cell@4,0/None  End
+H8     1 ivb | 15  0  60 - | 0 0 0 | DIFF
+         Move#11 path 5,1>4,1>3,1>3,0  Attack#11 aim Cell@0,0/None  Move#15 path 5,2>4,2>3,2>3,1  Attack#15 aim Cell@0,0/None  Move#16 path 6,2>5,2>4,2>3,2  Attack#16 aim Cell@0,0/None  Move#12 path 6,1>5,1>4,1  Attack#12 aim Cell@0,0/None  Move#18 path 8,2>8,3>8,4>7,4  Attack#18 aim Cell@4,0/None  Move#17 path 7,2>6,2>6,1>6,0  Attack#17 aim Cell@2,0/None  Move#14 path 8,1>8,0>7,0  Attack#14 aim Cell@4,0/None  Attack#13 aim Cell@4,0/None  End
+boards 2; turns that differ from off: i 1, vb 1, ivb 2; problems (rejects/fallbacks/failures) 0
+
+# 계획 비용(씨앗 1, 값 넷): plan: sims = 턴 시작 계획 하나가 엔진으로 돌린 행동 수, ms = 걸린 시간(Debug 빌드, 한 번 잰 값. 첫 줄 N5 off는 데우기 포함)
+fixture seed value | actions idle mainHP ended | rejects fallbacks fail | plan: sims ms | vs off
+N5     1 off | 10  0  60 - | 0 0 0 |   2480    1766 | 
+N5     1 i   | 10  0  60 - | 0 0 0 |   2480    1024 | same
+N5     1 vb  | 10  0  60 - | 0 0 0 |   2480     989 | same
+N5     1 ivb | 10  0  60 - | 0 0 0 |   2480     993 | same
+N6     1 off | 12  0  50 - | 0 0 0 |   3250    1366 | 
+N6     1 i   | 12  0  50 - | 0 0 0 |   3250    1405 | same
+N6     1 vb  | 12  0  50 - | 0 0 0 |   3215    1383 | DIFF
+N6     1 ivb | 12  0  50 - | 0 0 0 |   3215    1455 | DIFF
+N8     1 off | 16  0  40 - | 0 0 0 |   4516    2277 | 
+N8     1 i   | 16  0  40 - | 0 0 0 |   4516    2180 | same
+N8     1 vb  | 16  0  50 - | 0 0 0 |   4414    2214 | DIFF
+N8     1 ivb | 16  0  50 - | 0 0 0 |   4414    2150 | DIFF
+W8     1 off |  8  0 100 - | 0 0 0 |   1766    1029 | 
+W8     1 i   |  8  0 100 - | 0 0 0 |   1766     919 | same
+W8     1 vb  |  8  0 100 - | 0 0 0 |   1766     870 | same
+W8     1 ivb |  8  0 100 - | 0 0 0 |   1766     902 | same
+U8     1 off |  0  8 100 - | 0 0 0 |   1739     869 | 
+U8     1 i   |  8  0 100 - | 0 0 0 |   1739     878 | DIFF
+U8     1 vb  |  0  8 100 - | 0 0 0 |   1739     860 | same
+U8     1 ivb |  8  0 100 - | 0 0 0 |   1739     876 | DIFF
+A8     1 off | 16  0  63 - | 0 0 0 |   3578    1751 | 
+A8     1 i   | 16  0  63 - | 0 0 0 |   3578    1742 | same
+A8     1 vb  | 16  0  63 - | 0 0 0 |   3527    1671 | DIFF
+A8     1 ivb | 16  0  63 - | 0 0 0 |   3527    1692 | DIFF
+T8     1 off | 15  0 100 - | 0 0 0 |   2825    2362 | 
+T8     1 i   | 15  0 100 - | 0 0 0 |   2825    2124 | same
+T8     1 vb  | 15  0 100 - | 0 0 0 |   2825    2112 | same
+T8     1 ivb | 15  0 100 - | 0 0 0 |   2825    2336 | same
+R8     1 off | 16  0  40 - | 0 0 0 |   4290    1999 | 
+R8     1 i   | 16  0  40 - | 0 0 0 |   4290    2005 | same
+R8     1 vb  | 16  0  50 - | 0 0 0 |   4265    1998 | DIFF
+R8     1 ivb | 16  0  50 - | 0 0 0 |   4265    2110 | DIFF
+X8     1 off | 15  0  70 - | 0 0 0 |   2871    1522 | 
+X8     1 i   | 15  0  70 - | 0 0 0 |   2871    1626 | same
+X8     1 vb  | 15  0  70 - | 0 0 0 |   2871    1502 | same
+X8     1 ivb | 15  0  70 - | 0 0 0 |   2871    1525 | same
+H8     1 off | 16  0  60 - | 0 0 0 |   2804    1321 | 
+H8     1 i   | 16  0  60 - | 0 0 0 |   2804    1286 | same
+H8     1 vb  | 15  0  60 - | 0 0 0 |   2823    1320 | DIFF
+H8     1 ivb | 15  0  60 - | 0 0 0 |   2823    1325 | DIFF
+G16    1 off | 20  0   0 ended | 0 0 0 |   8014    5760 | 
+G16    1 i   | 20  0   0 ended | 0 0 0 |   8014    4996 | same
+G16    1 vb  | 32  0  20 - | 0 0 0 |  11463    6902 | DIFF
+G16    1 ivb | 32  0  20 - | 0 0 0 |  11463    6577 | DIFF

@@ -7,6 +7,10 @@ using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Appli
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.EnemyPlanner;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat;
 using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Combat.EnemyAi;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Common;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Ids;
+using ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Roster;
 using ProjectL.Tests.Core;
 
 public static class HarnessProgram
@@ -38,6 +42,10 @@ public static class HarnessProgram
             args.Length > 2 ? int.Parse(args[2]) : 3);
         if (args.Length > 0 && args[0] == "settle") return Settle(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids);
         if (args.Length > 0 && args[0] == "style") return Style(args.Length > 1 ? args[1] : "N8");
+        if (args.Length > 0 && args[0] == "valuefix")
+            return ValueFix(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids,
+                args.Length > 2 ? args[2].Split(',').Select(int.Parse).ToArray() : new[] { 1, 7 },
+                args.Length > 3 && args[3] == "show");
         if (args.Length > 0 && args[0] == "seq")
             return Sequential(args.Length > 1 ? args[1].Split(',') : EnemyAiBenchmarkFixtures.Ids, args.Length > 2 && args[2] == "weak");
         if (args.Length > 0 && args[0] == "lookahead")
@@ -472,6 +480,165 @@ public static class HarnessProgram
         Console.WriteLine($"custom differs from default: {direct.Stats.Simulations != basePlan.Stats.Simulations || direct.Stats.Evaluations != basePlan.Stats.Evaluations}");
         Console.WriteLine($"session = direct custom: {Text(viaSession) == Text(direct.Decisions[0])}");
         return 0;
+    }
+
+    /// <summary>
+    /// 판 값 고치기·행동 규칙 확인(포트 설계 LLMTest/docs/2026-11-19-research-planner-value-fix-port-design.md §4 확인 2·3).
+    /// 값 넷: off(끔), i(행동 규칙 0.25만), vb(걸음 벌점 대상 고정 + 기회 모으기), ivb(셋 다 = 기본 프리셋에 넣을 값).
+    /// (1) 벤치마크 판·씨앗마다 값마다 계획을 세우고 적 턴 전체를 게임처럼 진행해, 끈 값과 같은지·행동 수·
+    ///     이동도 공격도 안 한 적 유닛 수(제자리)·적 턴 뒤 플레이어 메인 HP·거절·대체·후보 예외·
+    ///     턴 시작 계획 하나가 엔진으로 돌린 행동 수와 걸린 시간(ms, 한 번 잰 값)을 적는다.
+    ///     거절·대체·후보 예외가 하나라도 있거나, 어떤 값이 모든 판에서 끈 값과 같으면(값이 계획기에 닿지 않음) 실패.
+    /// (2) 막판 판(<see cref="EndgameBoard"/>)에서 값마다 HP 1인 플레이어 유닛을 잡는지 적는다.
+    ///     끈 값이 잡거나 대상 고정을 켠 값이 못 잡으면 실패.
+    /// show면 끈 값과 다른 행동 목록을 모두 적는다(눈으로 볼 때).
+    /// </summary>
+    static int ValueFix(string[] ids, int[] seeds, bool show)
+    {
+        var rules = EnemyAiBenchmarkFixtures.Rules;
+        var styles = new (string name, EnemyTurnPlannerStyle style)[]
+        {
+            ("off", EnemyTurnPlannerStyle.Default),
+            ("i", new EnemyTurnPlannerStyle(mustAct: 0.25)),
+            ("vb", new EnemyTurnPlannerStyle(stepAnchor: true, pooledChance: true)),
+            ("ivb", new EnemyTurnPlannerStyle(mustAct: 0.25, stepAnchor: true, pooledChance: true)),
+        };
+        int problems = 0, boards = 0;
+        var differ = styles.ToDictionary(s => s.name, _ => 0);
+        Console.WriteLine("fixture seed value | actions idle mainHP ended | rejects fallbacks fail | plan: sims ms | vs off");
+        foreach (var id in ids)
+            foreach (var seed in seeds)
+            {
+                var input = Consistent(id, seed);
+                boards++;
+                string[] offDone = null;
+                foreach (var (name, style) in styles)
+                {
+                    var (plan, _) = PlanOnce(input, rules, style);
+                    var (done, rejects, fallbacks, board, ended) = PlayTurn(input, rules, style);
+                    int idle = ended ? 0 : PlannerEvaluator.Living(board, Owner.Enemy).Count(u => u.ActionUse == UnitActionUse.Available);
+                    var main = board.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
+                    int mainHp = PlannerEvaluator.OnField(main) ? main.Health.CurrentHealth : 0;
+                    var text = done.ToArray();
+                    offDone ??= text;
+                    bool same = text.SequenceEqual(offDone);
+                    if (!same) differ[name]++;
+                    if (rejects > 0 || fallbacks > 0 || plan.Stats.Failures > 0 || done.Contains("REJECTED-END")) problems++;
+                    Console.WriteLine($"{id,-4} {seed,3} {name,-3} | {done.Count - 1,2} {idle,2} {mainHp,3} {(ended ? "ended" : "-")} | {rejects} {fallbacks} {plan.Stats.Failures} | {plan.Stats.Simulations + plan.Stats.ReplySimulations,6} {plan.Stats.ElapsedMilliseconds,7:F0} | {(name == "off" ? "" : same ? "same" : "DIFF")}");
+                    if (show && !same) Console.WriteLine("         " + string.Join("  ", text));
+                    if (show && name == "off") Console.WriteLine("         " + string.Join("  ", text));
+                }
+            }
+        Console.WriteLine($"boards {boards}; turns that differ from off: " + string.Join(", ", styles.Skip(1).Select(s => $"{s.name} {differ[s.name]}")) +
+            $"; problems (rejects/fallbacks/failures) {problems}");
+        if (boards >= 11)
+            foreach (var (name, _) in styles.Skip(1))
+                if (differ[name] == 0) { Console.WriteLine($"{name} changed no turn: it may not reach the planner"); problems++; }
+
+        Console.WriteLine();
+        Console.WriteLine("endgame board: player main #1 far away (0,0), player unit #2 HP 1 at (13,13), enemies #11 (13,15) #12 (15,14)");
+        var endgame = EndgameBoard();
+        var endStyles = styles.Concat(new (string, EnemyTurnPlannerStyle)[]
+        {
+            ("v", new EnemyTurnPlannerStyle(stepAnchor: true)),
+            ("b", new EnemyTurnPlannerStyle(pooledChance: true)),
+        });
+        foreach (var (name, style) in endStyles)
+        {
+            var (plan, _) = PlanOnce(endgame, rules, style);
+            var (done, rejects, fallbacks, board, _) = PlayTurn(endgame, rules, style);
+            var weak = board.Characters.SingleOrDefault(c => c.EntityId.Value == 2);
+            bool killed = weak == null || !PlannerEvaluator.OnField(weak);
+            Console.WriteLine($"{name,-4} | killed #2: {(killed ? "yes" : "no ")} | rejects {rejects} fallbacks {fallbacks} fail {plan.Stats.Failures} | {string.Join("  ", done)}");
+            if (rejects > 0 || fallbacks > 0 || plan.Stats.Failures > 0) problems++;
+            if (name == "off" && killed) { Console.WriteLine("  off already kills: this board does not show the fault"); problems++; }
+            if (style.StepAnchor && !killed) { Console.WriteLine("  step anchor on still declines the kill"); problems++; }
+        }
+        return problems;
+    }
+
+    static (EnemyTurnPlan plan, EnemyDecisionDiagnostics diagnostics) PlanOnce(CombatCommandInput input,
+        IReadOnlyList<IMovementTileRule> rules, EnemyTurnPlannerStyle style)
+    {
+        EnemyTurnPlan plan = null;
+        var diagnostics = new EnemyDecisionDiagnostics();
+        foreach (var _ in EnemyTurnPlanner.Plan(input, rules, diagnostics, value => plan = value, style)) { }
+        return (plan, diagnostics);
+    }
+
+    /// <summary>적 턴 전체를 게임처럼(행동마다 새 세션, 같은 옆 캐시) 진행한다. 돌려주는 판은 마지막으로 받아들여진 행동 뒤의 판이다.</summary>
+    static (List<string> done, int rejects, int fallbacks, CombatCommandInput board, bool ended) PlayTurn(CombatCommandInput input,
+        IReadOnlyList<IMovementTileRule> rules, EnemyTurnPlannerStyle style)
+    {
+        var settings = new EnemyDecisionSettings(decisionModel: EnemyDecisionModel.TurnPlanner, plannerStyle: style);
+        var cache = new EnemyDecisionSideCache();
+        var board = input;
+        int rejects = 0, fallbacks = 0;
+        bool ended = false;
+        var done = new List<string>();
+        for (int guard = 0; guard < 64; guard++)
+        {
+            var diagnostics = new EnemyDecisionDiagnostics();
+            using var session = new EnemyDecisionSession(board, rules, settings, diagnostics, cache);
+            CombatCommandTransition transition;
+            while (true)
+            {
+                while (!session.IsReady) { session.Step(); if (session.IsWaiting) System.Threading.Thread.Sleep(1); }
+                transition = CombatCommandCalculator.AdvancePrepared(board, session.Decision, rules);
+                if (transition.Accepted || session.Decision.Kind == EnemyDecisionKind.EndEnemyPhase) break;
+                rejects++;
+                session.RejectSelected();
+            }
+            fallbacks += diagnostics.CapHits;
+            done.Add(Text(session.Decision));
+            if (!transition.Accepted) { done.Add("REJECTED-END"); break; }
+            if (session.Decision.Kind == EnemyDecisionKind.EndEnemyPhase) break;
+            board = CombatCommandComposition.Project(transition);
+            if (transition.Outcome.IsStageEnded) { ended = true; done.Add("End(stage ended)"); break; }
+        }
+        return (done, rejects, fallbacks, board, ended);
+    }
+
+    /// <summary>
+    /// 막판 판: 벤치마크 일반 판(EnemyAiBenchmarkFixtures.Build의 N 판)과 같은 값(HP 100, 공격 10, 이동 3, 사거리 4, 16×16, 적 진영 차례)에
+    /// 플레이어 메인(멀리 (0,0))과 HP 1인 플레이어 유닛((13,13)), 그 옆의 적 둘만 둔다.
+    /// 끈 값은 HP 1 유닛을 잡으면 남은 상대(메인)가 멀어 걸음 벌점이 두 유닛 몫으로 늘어 잡지 않는다(시뮬레이터 knobs 설계 §12.8).
+    /// </summary>
+    static CombatCommandInput EndgameBoard()
+    {
+        const int size = 16;
+        var template = CombatCommandTestData.Input(empty: true);
+        var characters = new[]
+        {
+            CombatCommandTestData.Character(1, EntityKey.Unit_MainCharacter, new CellCoord(0, 0), Owner.Player, 10, main: true),
+            CombatCommandTestData.With(CombatCommandTestData.Character(2, EntityKey.Unit_Cowboy, new CellCoord(13, 13), Owner.Player, 10), hp: 1),
+            CombatCommandTestData.With(CombatCommandTestData.Character(11, EntityKey.Unit_Demon, new CellCoord(13, 15), Owner.Enemy, 10), appointRange: 4),
+            CombatCommandTestData.With(CombatCommandTestData.Character(12, EntityKey.Unit_Demon, new CellCoord(15, 14), Owner.Enemy, 10), appointRange: 4),
+        };
+        var single = new TargetingMethodSpec(TargetingShape.RadialSquare, TargetingChoiceMode.Single, TargetingSplash.None, 0);
+        var profiles = characters.Select(c => c.CharacterKey).Distinct()
+            .Select(key => new CombatAttackProfile(CombatCommandTestData.Spec(key, 10, CategoryKey.Main), single)).ToArray();
+        var tiles = new List<MovementTileFact>();
+        var definitions = new List<ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Contracts.Commands.StageGimmicks.StageGimmickSpec>();
+        var environment = new MovementEnvironmentFacts(tiles);
+        var state = new CombatCommandState(size, size, CombatFlowPhase.Automatic,
+            Array.Empty<StructureCombatFacts>(), new CombatTurnFacts(StagePhase.Combat, controllerPhase: CombatControllerPhase.Enemy,
+                controllerTurnSequence: 2, completedPlayerTurnCount: 1, completedControllerTurnCount: 1),
+            environment, EnvironmentProgressFacts.Initial(environment, 1u), itemRandomState: 1u);
+        state = ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CoreCaculator.Application.Combat.StageGimmicks.StageGimmickComposition.Initialize(state, definitions);
+        var owned = characters.Where(c => c.OwnedId.HasValue)
+            .Select(c => new OwnedCharacterRecord(c.OwnedId.Value, c.CharacterKey, c.OwnershipRole.Value)).ToArray();
+        var input = new CombatCommandInput(0, CombatCommandKind.CompleteEnemyTurn, EntityId.Empty, default,
+            state, characters, profiles, template.Main, owned, owned.ToDictionary(o => o.Id, _ => 0),
+            template.Souls, template.Artifacts,
+            battle: new CombatBattleFacts(8, 1, 2, 2, Array.Empty<CharacterInstanceId>(), 0, Array.Empty<CellCoord>(), definitions),
+            processingKind: CombatProcessingKind.Advance, battleInstanceId: 1,
+            environmentBindings: new EnvironmentSemanticBindings(tiles.OfType<StaticTerrainFact>().Select(t => t.Id).ToArray(),
+                Array.Empty<long>(), Array.Empty<EntityId>()),
+            expectedBattleInstanceId: 1, expectedControllerTurnSequence: 2);
+        var main = input.Characters.Single(c => c.OwnershipRole == CharacterOwnershipRole.Main);
+        return input.WithWorld(input.State, input.Characters, input.Main.With(currentHealth: main.Health.CurrentHealth,
+            persistentMaxHealth: main.Health.MaxHealth, persistentAttack: main.Stats.AttackPower), input.SoulCounts, input.Souls, input.EnvironmentBindings);
     }
 
     /// <summary>

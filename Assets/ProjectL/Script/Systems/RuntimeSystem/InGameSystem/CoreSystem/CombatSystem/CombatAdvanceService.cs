@@ -354,7 +354,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         private static string StyleText(EnemyTurnPlannerStyle style) =>
             $"성향 겁 {style.Fear:0.##} 기회 {style.Opportunity:0.##} 메인 배수 {style.MainWeight:0.##} 메인 거리 {style.GoalStepPercent:0.##}% " +
             $"걸음 {style.StepPenalty:0.##} 증원 {style.ReinforcementDiscount:0.##} 한 턴 더 {(style.Lookahead ? "켬" : "끔")} " +
-            $"빔 {style.Beam} 후보 {style.PerUnit}/{style.MoveOnly} 다시 매김 {style.Rerank}";
+            $"빔 {style.Beam} 후보 {style.PerUnit}/{style.MoveOnly} 다시 매김 {style.Rerank} " +
+            $"행동 규칙 {style.MustAct:0.##} 걸음 대상 고정 {(style.StepAnchor ? "켬" : "끔")} 기회 모으기 {(style.PooledChance ? "켬" : "끔")}";
 
         private void ReportTurnPlan()
         {

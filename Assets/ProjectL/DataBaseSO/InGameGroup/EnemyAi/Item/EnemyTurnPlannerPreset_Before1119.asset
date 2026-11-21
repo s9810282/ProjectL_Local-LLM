@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5409815859044ae7a5caa4d79a0b5749, type: 3}
+  m_Name: EnemyTurnPlannerPreset_Before1119
+  m_EditorClassIdentifier:
+  fear: 0.5
+  opportunity: 0.5
+  mainWeight: 3
+  goalStepPercent: 1
+  stepPenalty: 10
+  reinforcementDiscount: 0.5
+  lookahead: 1
+  beam: 4
+  perUnit: 6
+  moveOnly: 3
+  rerank: 4
+  mustAct: 0
+  stepAnchor: 0
+  pooledChance: 0
