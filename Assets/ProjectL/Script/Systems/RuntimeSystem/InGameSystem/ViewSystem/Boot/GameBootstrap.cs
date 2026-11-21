@@ -181,6 +181,12 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.ViewSystem.Boot
 #if UNITY_EDITOR
                 autoStartTutorial = !GameBootstrapEditorOverrides.Enabled || GameBootstrapEditorOverrides.UseTutorial;
 #endif
+#if DEVELOPMENT_BUILD && !UNITY_EDITOR
+                // 연구 저장소 전용(병렬 설계 §26): 개발 빌드를 실행 인자 -researchNoTutorial로 띄우면 튜토리얼을 자동 시작하지 않는다.
+                // 에디터의 Play From Boot 설정(Use Tutorial 끔)과 같은 뜻이다. 빌드 자동 재생이 전투로 바로 들어가는 데 쓴다.
+                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-researchNoTutorial") >= 0)
+                    autoStartTutorial = false;
+#endif
                 _runtime = FrameworkRuntimeFactory.Create(CreateDevBattleSource(), _faults, autoStartTutorial);
                 _runtime.BindScene();
                 _runtime.InitData(database);

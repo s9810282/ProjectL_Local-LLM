@@ -11,7 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)../../../../Assets/ProjectL/Script/Systems/RuntimeSystem/InGameSystem/CoreSystem/CoreCaculator/Application/**/*.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)../../../../Assets/ResearchEnemyPlanner/**/*.cs" />
+    <!-- Editor 폴더(Unity 에디터 전용 스크립트)는 Unity 밖에서 빌드할 수 없어 뺀다. -->
+    <Compile Include="$(MSBuildThisFileDirectory)../../../../Assets/ResearchEnemyPlanner/**/*.cs"
+             Exclude="$(MSBuildThisFileDirectory)../../../../Assets/ResearchEnemyPlanner/Editor/**/*.cs;$(MSBuildThisFileDirectory)../../../../Assets/ResearchEnemyPlanner/Runtime/**/*.cs" />
     <ProjectReference Include="../Contracts/Contracts.csproj" />
     <ProjectReference Include="../Domain/Domain.csproj" />
   </ItemGroup>

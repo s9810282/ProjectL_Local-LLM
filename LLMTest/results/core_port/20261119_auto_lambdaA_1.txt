@@ -1,0 +1,12 @@
+status=ok problems=0
+codeOptimization=Release
+note wait deck=False field=True
+note wait canSelect=False
+placeTry cell=6,0 screen=640,323 units=7
+placeTry cell=5,0 screen=592,356 units=7
+placeTry cell=7,0 screen=688,289 units=7
+placeTry cell=4,0 screen=545,390 units=7
+mainPlaced attempt=4 units=8
+[턴 계획 AI] 준비 시작부터 결정까지 2.6초, 정산 552번, 판 매김 203번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 246개: 중간 4.5ms, 90% 8.0ms, 가장 김 20.7ms, 8.3ms 넘음 24개 | GC 수집 있던 프레임 5개(그중 8.3ms 넘음 1개)
+lastSubmitToDecision=2.7s

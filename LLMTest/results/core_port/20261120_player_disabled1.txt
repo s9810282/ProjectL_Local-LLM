@@ -1,0 +1,17 @@
+status=ok problems=0
+player development=True gc=disabled screen=1920x1080
+note wait deck=False field=True
+note wait canSelect=False
+placeTry cell=6,0 screen=640,323 units=7
+placeTry cell=5,0 screen=592,356 units=7
+placeTry cell=7,0 screen=688,289 units=7
+placeTry cell=4,0 screen=545,390 units=7
+mainPlaced attempt=4 units=8
+gc requested=disabled actual=Disabled incremental=True heapMB=26 usedMB=19
+[턴 계획 AI] 준비 시작부터 결정까지 2.5초, 정산 552번, 판 매김 203번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 552개: 중간 2.3ms, 90% 2.6ms, 가장 김 4.1ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 0개(그중 8.3ms 넘음 0개)
+atDecision heapMB=894 usedMB=881 collections=0
+lastSubmitToDecision=2.6s
+waitFrames count=1551 median=2.3ms p99=3.2ms max=8.8ms over8.3=1 over16.7=0 over33=0
+gcEnd heapMB=894 usedMB=891 collections=0
+afterFrames count=5391 median=2.2ms p99=2.8ms max=12.6ms over8.3=2 over16.7=0 over33=0

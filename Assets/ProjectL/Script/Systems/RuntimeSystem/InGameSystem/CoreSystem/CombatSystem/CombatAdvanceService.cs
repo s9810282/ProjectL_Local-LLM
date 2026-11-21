@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using ProjectL.Framework.Composition;
 using ProjectL.Framework.SystemBase;
 using ProjectL.Systems.DataBaseSystem;
@@ -51,6 +52,13 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
         // 연구 저장소 전용 진단(설계 §13): 계획 AI를 기다리는 동안의 프레임 시간(ms)과 그 프레임에 GC 수집이 있었는지.
         private readonly List<(float milliseconds, bool collected)> _waitFrames = new List<(float, bool)>();
         private int _lastCollectionCount = -1;
+        // 연구 저장소 전용 실험(병렬 설계 §28): 정한 행동의 정산을 메인 스레드 밖에서 미리 해 두고, 실행 때는 게시만 한다.
+        // 실행 인자 -researchPresettle 이 있을 때만 켠다(에디터·기본 실행은 지금 동작 그대로).
+        private static readonly bool PresettleEnabled = Array.IndexOf(Environment.GetCommandLineArgs(), "-researchPresettle") >= 0;
+        private CombatCommandInput _sessionInput;
+        private EnemyDecision _presettleDecision;
+        private Task<CombatCommandTransition> _presettle;
+        private int _presettleUsed, _presettleInline;
 
         internal long PreparationWorkVersion => _session?.WorkVersion ?? 0;
         internal EnemyDecisionDiagnostics PreparationDiagnostics => _session?.Diagnostics;
@@ -94,7 +102,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             if (!IsEnemyController) return AdvancePreparationState.NotRequired;
             if (!current) return AdvancePreparationState.Required;
             if (_immediateRequired) return AdvancePreparationState.NotRequired;
-            return _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+            return DecisionReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
         }
 
         public AdvancePreparationState PrepareAdvanceSlice()
@@ -132,6 +140,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                     if (!_immediateRequired)
                     {
                         _session = new EnemyDecisionSession(input, _movementRules, _settings, SideCacheFor(input));
+                        _sessionInput = input;
                         _sessionStartTimestamp = start;
                         _planReported = false;
                     }
@@ -149,9 +158,10 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                     RecordAtom(atomStart, end);
                 }
                 if (!_immediateRequired) ReportTurnPlan();
+                if (!_immediateRequired) BeginPresettle();
                 RecordWaitFrame(!_immediateRequired && _session != null && _session.IsWaiting);
                 return _immediateRequired ? AdvancePreparationState.NotRequired :
-                    _session.IsReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
+                    DecisionReady ? AdvancePreparationState.Ready : AdvancePreparationState.Preparing;
             }
             catch
             {
@@ -179,21 +189,27 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             }
             try
             {
-                InputCaptureCount++;
-                var input = _assembler.AssembleDecision(CreateRequest(), out var fresh);
-                if (!CanAdvance)
+                // 미리 정산해 둔 결과가 있으면(§28) 다시 조립·정산하지 않는다. 그 결과는 준비 때 고정한 입력으로 낸 것이고,
+                // 그 입력의 원본이 지금도 그대로인지(SourceIsCurrent)는 위와 아래에서 확인한다.
+                var fresh = _source;
+                var transition = TakePresettled();
+                if (transition == null)
                 {
-                    CancelPreparation();
-                    return PreparedAdvanceResult.Cancelled;
+                    InputCaptureCount++;
+                    var input = _assembler.AssembleDecision(CreateRequest(), out fresh);
+                    if (!CanAdvance)
+                    {
+                        CancelPreparation();
+                        return PreparedAdvanceResult.Cancelled;
+                    }
+                    if (input == null || !SourceIsCurrent || !_assembler.IsCurrent(fresh))
+                    {
+                        CancelPreparation();
+                        return PreparedAdvanceResult.Stale;
+                    }
+                    using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
+                        transition = CombatCommandCalculator.AdvancePrepared(input, _session.Decision, _movementRules);
                 }
-                if (input == null || !SourceIsCurrent || !_assembler.IsCurrent(fresh))
-                {
-                    CancelPreparation();
-                    return PreparedAdvanceResult.Stale;
-                }
-                CombatCommandTransition transition;
-                using (CoreProfiling.Sample(CoreProfileSection.EnemyActionExecution))
-                    transition = CombatCommandCalculator.AdvancePrepared(input, _session.Decision, _movementRules);
                 if (!CanAdvance)
                 {
                     CancelPreparation();
@@ -206,6 +222,7 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
                 }
                 if (!transition.Accepted)
                 {
+                    DropPresettle();
                     _session.RejectSelected();
                     return PreparedAdvanceResult.RetryPreparation;
                 }
@@ -229,9 +246,55 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             _source = null;
             _sourceRun = default;
             _immediateRequired = false;
+            _sessionInput = null;
+            DropPresettle();
             session?.Dispose();
             _waitFrames.Clear();
             _lastCollectionCount = -1;
+        }
+
+        /// <summary>결정이 나왔고, 미리 정산을 켰으면 그 정산도 끝났다. 정산이 끝날 때까지는 "준비 중"으로 답해 메인 스레드가 기다리지 않게 한다.</summary>
+        private bool DecisionReady => _session != null && _session.IsReady &&
+            (!PresettleEnabled || _presettle != null && ReferenceEquals(_presettleDecision, _session.Decision) && _presettle.IsCompleted);
+
+        /// <summary>
+        /// 연구 저장소 전용 실험(§28): 결정이 나오면 그 행동의 정산을 일 스레드에 맡긴다. 입력은 준비 때 고정한 불변 입력이고
+        /// 정산은 그 입력과 결정만 읽으므로(계획 AI가 스레드에서 도는 정산과 같은 계산기) 메인 스레드와 함께 돌아도 된다.
+        /// </summary>
+        private void BeginPresettle()
+        {
+            if (!PresettleEnabled || _session == null || !_session.IsReady) return;
+            var decision = _session.Decision;
+            if (_presettle != null && ReferenceEquals(_presettleDecision, decision)) return;
+            DropPresettle();
+            var input = _sessionInput;
+            var rules = _movementRules;
+            _presettleDecision = decision;
+            _presettle = Task.Run(() => CombatCommandCalculator.AdvancePrepared(input, decision, rules));
+        }
+
+        /// <summary>지금 결정으로 미리 정산해 둔 결과다. 없으면 null이다. 아직 덜 끝났으면 끝날 때까지 기다리고, 정산이 던진 예외는 여기서 다시 던진다.</summary>
+        private CombatCommandTransition TakePresettled()
+        {
+            if (_presettle == null || !ReferenceEquals(_presettleDecision, _session.Decision))
+            {
+                if (PresettleEnabled) _presettleInline++;
+                return null;
+            }
+            var task = _presettle;
+            _presettle = null;
+            _presettleDecision = null;
+            _presettleUsed++;
+            return task.GetAwaiter().GetResult();
+        }
+
+        /// <summary>쓰지 않게 된 미리 정산을 버린다. 도는 중이면 끝까지 돌게 두되(읽기만 한다), 그 예외는 받아 버린다.</summary>
+        private void DropPresettle()
+        {
+            var task = _presettle;
+            _presettle = null;
+            _presettleDecision = null;
+            task?.ContinueWith(static finished => { _ = finished.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void Tick(float deltatime)
@@ -301,7 +364,8 @@ namespace ProjectL.Systems.RuntimeSystem.InGameSystem.CoreSystem.CombatSystem
             if (diagnostics.CacheHits > 0 && diagnostics.CapHits == 0) return;
             double seconds = (double)(_readTimestamp() - _sessionStartTimestamp) / _timestampFrequency;
             global::UnityEngine.Debug.Log($"[턴 계획 AI] 준비 시작부터 결정까지 {seconds:F1}초, 정산 {diagnostics.PreviewCalls}번, 판 매김 {diagnostics.ExpandedNodes}번" +
-                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : "") + " | " + StyleText(_settings.PlannerStyle));
+                (diagnostics.CapHits > 0 ? $", 지금 AI로 대신함 {diagnostics.CapHits}번" : "") +
+                (PresettleEnabled ? $", 미리 정산 씀 {_presettleUsed}번·못 씀 {_presettleInline}번" : "") + " | " + StyleText(_settings.PlannerStyle));
             ReportWaitFrames();
         }
 

@@ -1,0 +1,80 @@
+status=ok problems=0
+player development=True gc=auto screen=1920x1080
+note wait deck=False field=True
+note wait canSelect=False
+placeTry cell=6,0 screen=640,323 units=7
+placeTry cell=5,0 screen=592,356 units=7
+placeTry cell=7,0 screen=688,289 units=7
+placeTry cell=4,0 screen=545,390 units=7
+recorders=2450 timeMarkers=3441 jitNames=Mono.JIT
+mainPlaced attempt=4 units=8
+gc requested=auto actual=unchanged incremental=True heapMB=26 usedMB=20
+spike round=1 wait t=0.03s ms=8.3 gc=0 | PlayerLoop=8.3; Update.ScriptRunBehaviourUpdate=6.5; BehaviourUpdate=6.5; Core.Calc.EnemyPreparation=6.4; CPU Render Thread Frame Time=1.4; PostLateUpdate.FinishFrameRendering=1.3; Inl_UniversalRenderTotal=1.3; Inl_RenderCameraStack=1.3; Inl_ScriptableRenderContext.Submit=0.7; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.4
+[턴 계획 AI] 준비 시작부터 결정까지 3.1초, 정산 552번, 판 매김 203번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 568개: 중간 2.4ms, 90% 3.8ms, 가장 김 6.5ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 285개(그중 8.3ms 넘음 0개)
+round=1 atDecision heapMB=26 usedMB=20 collections=286
+lastSubmitToDecision=3.1s
+waitFrames count=1579 median=2.3ms p99=5.5ms max=8.3ms over8.3=1 over16.7=0 over33=0
+spike round=1 after t=0.00s ms=9.4 gc=0 | PlayerLoop=9.3; Update.ScriptRunBehaviourUpdate=7.3; BehaviourUpdate=7.3; Core.Calc.EnemyPreparation=7.2; PostLateUpdate.FinishFrameRendering=1.5; Inl_UniversalRenderTotal=1.4; Inl_RenderCameraStack=1.4; CPU Render Thread Frame Time=1.3; Inl_ScriptableRenderContext.Submit=0.7; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.4
+spike round=1 after t=0.02s ms=15.2 gc=1 | PlayerLoop=15.1; Update.ScriptRunBehaviourUpdate=12.9; BehaviourUpdate=12.9; Core.Calc.EnemyActionExecution=10.7; Combat.Action.Playback.Enemy.Character.Moved.Dispatch=4.5; GC.Collect=1.9; PostLateUpdate.FinishFrameRendering=1.6; Inl_UniversalRenderTotal=1.6; Inl_RenderCameraStack=1.5; CPU Render Thread Frame Time=1.5; Inl_ScriptableRenderContext.Submit=0.8; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; Core.Combat.Publish=0.6; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; GC.Alloc=0.5; Core.Calc.ProjectionCurrentInput=0.4; RenderLoop.ScheduleDraw=0.4; Core.Calc.MovementUndoReconcile=0.3
+recorders=2461 timeMarkers=3452 jitNames=Mono.JIT
+spike round=2 wait t=0.01s ms=11.7 gc=0 | PlayerLoop=11.6; Update.ScriptRunBehaviourUpdate=9.2; BehaviourUpdate=9.2; Combat.Action.Playback.System.Railway.Begin=1.9; Core.Combat.Command=1.9; PostLateUpdate.FinishFrameRendering=1.6; Inl_UniversalRenderTotal=1.6; Inl_RenderCameraStack=1.5; CPU Render Thread Frame Time=1.5; Core.Combat.Calculate=1.2; Inl_ScriptableRenderContext.Submit=0.8; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.7; Core.Calc.CommandCompletion=0.6; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; Core.Combat.Publish=0.5; RenderLoop.ScheduleDraw=0.4; GameObject.Activate=0.3; GameObject.ActivateAwakeRecursively=0.3
+spike round=2 wait t=2.52s ms=18.0 gc=0 | PlayerLoop=17.9; Update.ScriptRunBehaviourUpdate=14.7; BehaviourUpdate=14.7; Combat.Action.Playback.System.Railway.Tick=14.5; Combat.Action.Playback.Enemy.Character.Died.Handle=13.9; Combat.Result.PresentEvent=13.9; Combat.Action.Playback.Enemy.Character.Died.Prepare=6.7; Combat.Action.Playback.Enemy.Character.Died.Begin=6.7; CPU Render Thread Frame Time=1.9; PostLateUpdate.FinishFrameRendering=1.8; Inl_UniversalRenderTotal=1.8; Inl_RenderCameraStack=1.8; Inl_ScriptableRenderContext.Submit=0.9; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.9; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.5; PreLateUpdate.ScriptRunBehaviourLateUpdate=0.4; LateBehaviourUpdate=0.4
+spike round=2 wait t=2.53s ms=10.3 gc=0 | PlayerLoop=10.2; Update.ScriptRunBehaviourUpdate=5.5; BehaviourUpdate=5.5; PostLateUpdate.FinishFrameRendering=3.1; Combat.Action.Playback.System.Railway.Tick=2.8; Combat.Action.Playback.Enemy.Character.Died.Handle=2.8; Combat.Result.PresentEvent=2.8; Combat.Action.Playback.Enemy.Character.Died.Prepare=2.5; Combat.Action.Playback.Enemy.Character.Died.Begin=2.5; Inl_UniversalRenderTotal=2.3; Inl_RenderCameraStack=2.2; ParticleSystem.WaitForPreviousRenderingToFinish=1.7; Gfx.WaitForRenderThread=1.6; CPU Render Thread Frame Time=1.5; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=1.1; Inl_ScriptableRenderContext.Submit=1.1; Combat.Action.Playback.Enemy.Character.Died.Tick=0.9; Gfx.WaitForPresentOnGfxThread=0.7; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.7; ExecuteRenderGraph=0.7; RenderLoop.ScheduleDraw=0.6; FixedUpdate.PhysicsFixedUpdate=0.5
+[턴 계획 AI] 준비 시작부터 결정까지 2.1초, 정산 266번, 판 매김 89번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 407개: 중간 2.3ms, 90% 3.7ms, 가장 김 6.0ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 172개(그중 8.3ms 넘음 0개)
+round=2 atDecision heapMB=26 usedMB=20 collections=465
+lastSubmitToDecision=7.2s
+recorders=2466 timeMarkers=3472 jitNames=Mono.JIT
+[턴 계획 AI] 준비 시작부터 결정까지 2.6초, 정산 326번, 판 매김 96번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 506개: 중간 2.4ms, 90% 3.7ms, 가장 김 6.3ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 206개(그중 8.3ms 넘음 0개)
+round=3 atDecision heapMB=26 usedMB=21 collections=675
+lastSubmitToDecision=2.7s
+spike round=3 after t=2.73s ms=8.5 gc=0 | PlayerLoop=8.4; Update.ScriptRunBehaviourUpdate=6.3; BehaviourUpdate=6.3; Core.Calc.EnemyActionExecution=3.6; PostLateUpdate.FinishFrameRendering=1.5; Inl_UniversalRenderTotal=1.4; Inl_RenderCameraStack=1.4; CPU Render Thread Frame Time=1.3; Inl_ScriptableRenderContext.Submit=0.7; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.7; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; Core.Combat.Publish=0.5; RenderLoop.ScheduleDraw=0.4; Core.Calc.MovementUndoReconcile=0.3
+spike round=3 after t=3.53s ms=12.5 gc=0 | PlayerLoop=12.4; Update.ScriptRunBehaviourUpdate=10.0; BehaviourUpdate=10.0; Combat.Action.Playback.Enemy.Attack.Handle=9.9; Combat.Result.PresentEvent=9.9; Combat.Action.Playback.Enemy.Attack.Prepare=4.1; Combat.Action.Playback.Enemy.Attack.Begin=3.8; PostLateUpdate.FinishFrameRendering=1.6; Inl_UniversalRenderTotal=1.6; CPU Render Thread Frame Time=1.5; Inl_RenderCameraStack=1.5; Inl_ScriptableRenderContext.Submit=0.8; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.7; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.4; Update.DirectorUpdate=0.3; Director.PrepareFrame=0.3
+spike round=3 after t=4.61s ms=9.4 gc=0 | PlayerLoop=9.3; PostLateUpdate.FinishFrameRendering=8.6; Gfx.WaitForPresentOnGfxThread=7.2; CPU Render Thread Frame Time=1.4; Inl_UniversalRenderTotal=1.3; Inl_RenderCameraStack=1.3; Inl_ScriptableRenderContext.Submit=0.7; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; ExecuteRenderGraph=0.6; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; RenderLoop.ScheduleDraw=0.3
+recorders=2471 timeMarkers=3477 jitNames=Mono.JIT
+[턴 계획 AI] 준비 시작부터 결정까지 3.3초, 정산 324번, 판 매김 96번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 643개: 중간 2.3ms, 90% 3.6ms, 가장 김 5.7ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 247개(그중 8.3ms 넘음 0개)
+round=4 atDecision heapMB=26 usedMB=21 collections=926
+lastSubmitToDecision=3.3s
+recorders=2472 timeMarkers=3478 jitNames=Mono.JIT
+spike round=5 wait t=5.02s ms=8.3 gc=0 | PlayerLoop=8.3; Update.ScriptRunBehaviourUpdate=6.1; BehaviourUpdate=6.1; Core.Combat.Advance=5.7; Core.Combat.Publish=4.0; CPU Render Thread Frame Time=1.5; PostLateUpdate.FinishFrameRendering=1.5; Inl_UniversalRenderTotal=1.4; Inl_RenderCameraStack=1.4; Core.Combat.Calculate=1.4; Inl_ScriptableRenderContext.Submit=0.7; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.7; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.4
+[턴 계획 AI] 준비 시작부터 결정까지 0.8초, 정산 129번, 판 매김 50번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 158개: 중간 2.3ms, 90% 3.5ms, 가장 김 5.2ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 64개(그중 8.3ms 넘음 0개)
+round=5 atDecision heapMB=26 usedMB=22 collections=995
+lastSubmitToDecision=5.8s
+recorders=2479 timeMarkers=3485 jitNames=Mono.JIT
+[턴 계획 AI] 준비 시작부터 결정까지 0.2초, 정산 43번, 판 매김 14번 | 성향 겁 0.5 기회 0.5 메인 배수 3 메인 거리 1% 걸음 10 증원 0.5 한 턴 더 켬 빔 4 후보 6/3 다시 매김 4 행동 규칙 0.25 걸음 대상 고정 켬 기회 모으기 켬
+[턴 계획 AI] 기다린 프레임 40개: 중간 2.3ms, 90% 3.7ms, 가장 김 5.4ms, 8.3ms 넘음 0개 | GC 수집 있던 프레임 18개(그중 8.3ms 넘음 0개)
+round=6 atDecision heapMB=26 usedMB=22 collections=1016
+lastSubmitToDecision=0.2s
+spike round=6 after t=0.79s ms=10.2 gc=1 | Core.Calc.EnemyActionExecution=11.0; PlayerLoop=10.1; Update.ScriptRunBehaviourUpdate=7.7; BehaviourUpdate=7.7; Core.Calc.CommandCompletion=2.8; Core.Combat.Publish=2.7; GC.Collect=2.3; PostLateUpdate.FinishFrameRendering=1.5; Inl_UniversalRenderTotal=1.5; Inl_RenderCameraStack=1.5; CPU Render Thread Frame Time=1.4; Inl_ScriptableRenderContext.Submit=0.8; Inl_UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.6; UniversalRenderPipeline.RenderSingleCameraInternal: Main Camera=0.5; ExecuteRenderGraph=0.5; RenderLoop.ScheduleDraw=0.4; Core.Calc.MovementUndoReconcile=0.4; Update.DirectorUpdate=0.3; Director.PrepareFrame=0.3
+recorders=2484 timeMarkers=3490 jitNames=Mono.JIT
+gcEnd heapMB=26 usedMB=22 collections=1018
+waitFramesAll count=10281 median=2.3ms p99=5.1ms max=18.0ms over8.3=5 over16.7=1 over33=0
+afterFrames count=33789 median=2.2ms p99=3.0ms max=15.2ms over8.3=6 over16.7=0 over33=0
+watch Combat.Action.Playback.Enemy.Character.Died.Handle first=13.9ms laterFrames=2 laterMax=2.8ms laterMean=1.92ms
+watch Combat.Result.PresentEvent first=0.3ms laterFrames=46 laterMax=13.9ms laterMean=0.98ms
+watch Core.Calc.EnemyActionExecution first=10.7ms laterFrames=29 laterMax=11.0ms laterMean=4.49ms
+watch Combat.Action.Playback.Enemy.Attack.Handle first=9.9ms laterFrames=5 laterMax=0.1ms laterMean=0.10ms
+watch Core.Calc.EnemyPreparation first=1.6ms laterFrames=2358 laterMax=7.2ms laterMean=0.02ms
+watch Combat.Action.Playback.Enemy.Character.Died.Begin first=6.7ms laterFrames=2 laterMax=2.5ms laterMean=1.62ms
+watch Core.Combat.Advance first=1.3ms laterFrames=11 laterMax=5.7ms laterMean=1.79ms
+watch Combat.Action.Playback.Enemy.Character.Moved.Dispatch first=4.5ms laterFrames=46 laterMax=0.2ms laterMean=0.06ms
+watch Core.Combat.Publish first=0.7ms laterFrames=48 laterMax=4.0ms laterMean=0.70ms
+watch Core.Combat.Preview first=1.2ms laterFrames=12 laterMax=3.9ms laterMean=0.89ms
+watch Combat.Action.Playback.Enemy.Attack.Begin first=3.8ms laterFrames=5 laterMax=0.0ms laterMean=0.04ms
+watch Core.Combat.Preview.UnitAttackRange first=3.7ms laterFrames=0 laterMax=0.0ms laterMean=0.00ms
+watch Combat.Result.Finalize first=1.2ms laterFrames=48 laterMax=2.9ms laterMean=0.75ms
+watch Combat.Action.Playback.System.MovementSource.Dispatch first=0.1ms(late) laterFrames=4 laterMax=2.6ms laterMean=0.72ms
+watch Combat.Action.Playback.System.MovementSource.Handle first=0.1ms(late) laterFrames=4 laterMax=2.6ms laterMean=0.72ms
+watch Core.Combat.Preview.ActionAvailabilities first=0.9ms laterFrames=5 laterMax=2.1ms laterMean=0.71ms
+watch Combat.Action.Playback.Player.Character.Died.Dispatch first=2.1ms laterFrames=0 laterMax=0.0ms laterMean=0.00ms
+watch Combat.Action.Playback.Player.Character.Died.Handle first=2.1ms laterFrames=0 laterMax=0.0ms laterMean=0.00ms
+watch Combat.Action.Playback.System.Railway.Begin first=1.9ms laterFrames=2 laterMax=0.3ms laterMean=0.31ms
+watch Core.Combat.Command first=1.4ms laterFrames=6 laterMax=1.9ms laterMean=1.48ms
+watch Combat.Action.Playback.Player.Character.Died.Begin first=1.8ms laterFrames=0 laterMax=0.0ms laterMean=0.00ms
+watch Combat.Units.ApplyHUD first=0.2ms laterFrames=132 laterMax=1.8ms laterMean=0.11ms
+watch Core.Combat.Calculate first=0.5ms laterFrames=18 laterMax=1.4ms laterMean=0.67ms
+watch Core.Calc.EnemySourceValidation first=0.2ms laterFrames=27796 laterMax=1.3ms laterMean=0.00ms

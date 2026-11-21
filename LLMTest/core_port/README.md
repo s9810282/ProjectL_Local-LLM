@@ -12,6 +12,7 @@
 | `Assets/ResearchEnemyPlanner/` | 계획 AI 코드 전부(+ `.meta`). `ResearchEnemyPlanner.asmref`로 `ProjectL.Core.Application` 어셈블리에 붙는다 |
 | `LLMTest/core_port/hooks.patch` | 기존 게임 파일에 넣은 연결 줄(아래 표) |
 | `LLMTest/core_port/nolambda/make.py` | Core 계산기의 람다(LINQ·단계 함수 콜백)를 같은 결과의 반복문·단계 없는 판으로 바꿔 넣는 스크립트(2026-11-19부터 이 저장소의 Core에 적용, 아래 §3의 4번, [`nolambda/README.md`](nolambda/README.md)) |
+| `LLMTest/core_port/autoplay/` + `Assets/ResearchEnemyPlanner/Editor/` | 열려 있는 에디터에서 재생·메인 배치·전투 진입·턴 종료를 스스로 돌려 계획 AI 콘솔 줄을 받는 자동 재생([`autoplay/README.md`](autoplay/README.md)) |
 | `LLMTest/core_port/harness/` | Unity 밖에서 Core를 묶어 계획 AI를 돌려 보는 측정 도구(저장소 시험이 아니다) |
 
 계획 AI 코드(`Assets/ResearchEnemyPlanner/`):
@@ -42,6 +43,7 @@
 | `Assets/ProjectL/DataBaseSO/InGameGroup/EnemyAi/Item/EnemyAiTuning_Default.asset` | `decisionModel: 1`(TurnPlanner), `plannerPreset` = 기본 프리셋 |
 | `…/CoreSystem/CombatSystem/CombatAdvanceService.cs` | 계획 AI가 일 스레드를 기다리는 동안 그 프레임 준비를 멈춤, 새 계획이 나오면 콘솔에 시간·쓴 성향 값 한 줄(2026-11-18 BG-a. 그 전의 12ms 예산 줄은 걷음, 예산은 모두 1ms). 기다리는 동안 프레임마다 시간과 GC 수집 여부를 모아 계획이 끝날 때 한 줄로 냄(프레임 진단, 병렬 설계 §13.1. 그 전의 GC 조각 1ms 실험은 걷음) |
 | `…/LifeCycleSystem/LifeCycles/Combat/Plans/CombatPlan.cs` | 판단 12행: 연출이 남아 있어도 자동 국면의 적 결정 준비(`PrepareAdvance`)는 등록한다(2026-11-19 속도 방향 A, 병렬 설계 §20). 준비된 결정의 실행·그 밖의 자동 진행은 그대로 연출 끝 뒤 |
+| `…/ViewSystem/Boot/GameBootstrap.cs` | 개발 빌드를 실행 인자 `-researchNoTutorial`로 띄우면 튜토리얼 자동 시작을 끔(2026-11-20, 빌드 자동 재생용, 병렬 설계 §26). 에디터·출시 빌드에는 영향 없음 |
 
 ## 2 켜고 끄기
 
